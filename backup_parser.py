@@ -372,7 +372,7 @@ def main():
     # iterate over all files in the root_path
 
     
-    html_file = 'data/GLO_Astarion_GD_VampireRevelation.html'#'data/MOO_Jailbreak_Wulbren.html'
+    html_file = 'data/BG3 - parsed dialogue (1.7)/Dialogs/Camp/CAMP_Ravengard.html'#'data/GLO_Astarion_GD_VampireRevelation.html'#'data/MOO_Jailbreak_Wulbren.html'
     root_nodes, all_nodes, metadata = parse_dialog_tree(html_file)
     output_data = {
         'metadata': metadata,
@@ -403,10 +403,7 @@ def main():
             print("  ...")
             break
     
-    # Check node 206 specifically for approval
-    if '206' in all_nodes:
-        print(f"\nNode 206 approval data: {all_nodes['206']['approval']}")
-    
+   
     # Check a node with approvals (for testing)
     for node_id, node_data in all_nodes.items():
         if node_data['approval']:

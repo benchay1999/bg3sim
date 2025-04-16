@@ -125,11 +125,20 @@ def extract_node_data(li):
         speaker = extract_speaker(li)
         text = extract_text(li)
         context = extract_context(li)
-    
+
+    # Override text specifically for rollresult nodes
+    if node_type == "rollresult":
+        if main_div:
+             div_text = ''.join(t for t in main_div.find_all(string=True, recursive=False))
+             match = re.search(r'\[RollResult\]\s*(True|False)', div_text)
+             if match:
+                 text = match.group(1) # Overwrite text
+             else:
+                 text = "" # Clear text if pattern not found for rollresult
+        
+
     is_jump = node_type == "jump"
     
-
-
     # Create node data structure
     node_data = {
         'id': node_id,
@@ -148,6 +157,28 @@ def extract_node_data(li):
         'children': {}
     }
     
+    # Blank out fields for specific node types *where appropriate*
+    if node_type in ["jump", "alias", "tagcinematic", "visualstate", "trade", "taganswer"]:
+         node_data['speaker'] = ""
+         node_data['text'] = ""
+    elif node_type == "rollresult": # Handle rollresult speaker separately
+         node_data['speaker'] = ""
+    elif node_type == "tagcinematic":
+        node_data['text'] = node_data['context']
+        node_data['link'] = ""
+        node_data['goto'] = ""
+
+    # Ensure jump nodes have clean core fields
+    if is_jump:
+        node_data['speaker'] = ""
+        node_data['text'] = ""
+        node_data['context'] = ""
+        node_data['checkflags'] = []
+        node_data['setflags'] = []
+        node_data['ruletags'] = []
+        node_data['approval'] = []
+        node_data['rolls'] = ""
+
     return node_data
 
 def extract_node_type(li):
@@ -171,6 +202,10 @@ def extract_node_type(li):
         return "visualstate"
     elif '[Trade]' in div_text:
         return "trade"
+    elif '[TagCinematic]' in div_text:
+        return "tagcinematic"
+    elif '[TagAnswer]' in div_text:
+        return "taganswer"
     
     return "normal"
 
@@ -230,16 +265,40 @@ def extract_speaker(element):
 
 def extract_text(element):
     """Extract dialogue text from a node"""
-    dialog = element.select_one('.dialog')
-    if dialog:
-        return dialog.text.strip()
+    # Find the main div first (direct child of li)
+    main_div = element.find('div', recursive=False)
+    if not main_div:
+        return ""
+
+    # Look for the dialog span as a direct child of the main div
+    dialog_span = main_div.find('span', class_='dialog', recursive=False)
+    if dialog_span:
+        # Get only the text directly within this span, avoiding child elements like <br> if possible
+        # Using .text gets all descendant text, which is usually what's needed here.
+        return dialog_span.text.strip()
+
     return ""
 
 def extract_context(element):
     """Extract context notes from a node"""
-    context = element.select_one('.context')
-    if context and 'title' in context.attrs:
-        return context['title'].strip()
+    # Find the main div first (direct child of li)
+    main_div = element.find('div', recursive=False)
+    if not main_div:
+        return ""
+    
+    # Look for the context span as a direct child of the main div
+    context_span = main_div.find('span', class_='context', recursive=False)
+    if context_span and 'title' in context_span.attrs:
+        return context_span['title'].strip()
+    
+    # Fallback: Check if context span is nested inside the speaker's inline-block div
+    # (Handles cases where context is attached to the speaker element visually)
+    speaker_container = main_div.find('div', style='display:inline-block;', recursive=False)
+    if speaker_container:
+        nested_context = speaker_container.find('span', class_='context') # Allow recursion here as it's within the speaker block
+        if nested_context and 'title' in nested_context.attrs:
+            return nested_context['title'].strip()
+
     return ""
 
 def extract_flags(element, flag_type):
@@ -393,7 +452,7 @@ def process_all_html_files(root_folder):
                     }
                     # Create output file path (same structure but with .json extension)
                     output_file = html_file.replace('.html', '.json')
-                    output_file = output_file.split('Dialogs/')[-1]
+                    output_file = output_file.split('/Dialogs/')[-1]
                     
                     output_root_path = "output"
                     output_file = os.path.join(output_root_path, output_file)
@@ -432,88 +491,5 @@ def main():
     # Process all HTML files
     process_all_html_files(root_folder)
 
-if __name__ == "__main__":
-    main()
-'''
-def main():
-    # Parse the dialogue tree
-    root_path = 'data/BG3 - parsed dialogue (1.7)/Dialogs'
-    # iterate over all files in the root_path
-
-    
-    html_file = 'CHA_BronzePlaque_AD_FL1Mural.html'#'data/LOW_BhaalApproach_PAD_FarslayerReaction.html'#'data/MOO_Jailbreak_Wulbren.html'
-    root_nodes, all_nodes = parse_dialog_tree(html_file)
-    
-    # Output in JSON format
-    with open(f'{html_file.replace(".html", "")}.json', 'w', encoding='utf-8') as f:
-        json.dump(root_nodes, f, indent=2)
-    
-    # Check node 20 as an example
-    if '20' in all_nodes:
-        print("Node 20 data:")
-        node_20 = all_nodes['20']
-        print(f"  Speaker: {node_20['speaker']}")
-        print(f"  Text: {node_20['text'][:50]}...")
-        print(f"  Checkflags: {node_20['checkflags']}")
-        print(f"  Setflags: {node_20['setflags']}")
-    
-    # Print some stats
-    print(f"\nTotal nodes: {len(all_nodes)}")
-    print(f"Root nodes: {len(root_nodes)}")
-    
-    # Print a sample of root nodes
-    print("\nRoot node IDs:")
-    for i, node_id in enumerate(sorted(root_nodes.keys(), key=int)):
-        print(f"  {node_id}")
-        if i >= 40:  # Show only first 40
-            print("  ...")
-            break
-    
-    # Check node 206 specifically for approval
-    if '206' in all_nodes:
-        print(f"\nNode 206 approval data: {all_nodes['206']['approval']}")
-    
-    # Check a node with approvals (for testing)
-    for node_id, node_data in all_nodes.items():
-        if node_data['approval']:
-            print(f"\nNode {node_id} has approvals: {node_data['approval']}")
-            break
-            
-    # Validation: Count and check speaker types
-    validate_speakers(all_nodes)
-
-def validate_speakers(all_nodes):
-    """Validate that speakers are correctly identified"""
-    player_nodes = []
-    npc_nodes = {}
-    
-    for node_id, node_data in all_nodes.items():
-        speaker = node_data.get('speaker', '')
-        
-        if speaker == 'Player':
-            player_nodes.append(node_id)
-        elif speaker:
-            if speaker not in npc_nodes:
-                npc_nodes[speaker] = []
-            npc_nodes[speaker].append(node_id)
-    
-    print("\nSpeaker validation:")
-    print(f"  Player nodes: {len(player_nodes)}")
-    print(f"  Sample player nodes: {player_nodes[:5]}")
-    
-    print(f"  NPC speakers: {len(npc_nodes)}")
-    for speaker, nodes in list(npc_nodes.items())[:3]:  # Show first 3 NPC types
-        print(f"    {speaker}: {len(nodes)} nodes (e.g., {nodes[:3]})")
-    
-    # Check node 92 specifically
-    if '92' in all_nodes:
-        print(f"\nNode 92 speaker: {all_nodes['92']['speaker']}")
-    
-    # Check some known player nodes
-    known_player_nodes = ['57', '258', '30', '206']
-    for node_id in known_player_nodes:
-        if node_id in all_nodes:
-            print(f"Node {node_id} speaker: {all_nodes[node_id]['speaker']}")
-'''
 if __name__ == "__main__":
     main()

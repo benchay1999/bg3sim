@@ -8,7 +8,7 @@ import random
 init()
 
 class DialogSimulator:
-    def __init__(self, json_file='data/MOO_Jailbreak_Wulbren.json'):
+    def __init__(self, json_file='CAMP_Ravengard.json'):
         """Initialize the dialog simulator with the specified JSON file"""
         with open(json_file, 'r', encoding='utf-8') as f:
             self.dialog_tree = json.load(f)
@@ -53,7 +53,8 @@ class DialogSimulator:
         self.visited_nodes = []
         
         # Track flags that have been set during playthrough
-        self.active_flags = set()
+        self.default_flags = ["ORI_INCLUSION_GALE", "ORI_INCLUSION_ASTARION", "ORI_INCLUSION_LAEZEL", "ORI_INCLUSION_SHADOWHEART", "ORI_INCLUSION_WYLL", "ORI_INCLUSION_KARLACH", "ORI_INCLUSION_HALSIN", "ORI_INCLUSION_MINTHARA", "ORI_INCLUSION_MINSC", "ORI_INCLUSION_RANDOM"]
+        self.active_flags = set(self.default_flags)
     
     def _is_child_node(self, node_id):
         """Check if a node is a child node of any other node"""
@@ -121,8 +122,8 @@ class DialogSimulator:
         
         # if setflags has a flag with " = False", remove it from the active flags
         for flag in node_data.get('setflags', []):
-            if " = False" in flag:
-                self.active_flags.remove(flag.split(' = False')[0].strip())
+            if "= False" in flag:
+                self.active_flags.remove(flag.split('= False')[0].strip())
             else:
                 self.active_flags.add(flag.strip())
     
@@ -133,10 +134,9 @@ class DialogSimulator:
         if not node_data.get('checkflags', []):
             return True
         # if checkflags has a flag with " = False", check whether it is not set.
-        
         for flag in node_data.get('checkflags', []):
-            if " = False" in flag:
-                if flag.split(' = False')[0].strip() in self.active_flags:
+            if "= False" in flag:
+                if flag.split('= False')[0].strip() in self.active_flags:
                     return False
             else:
                 if flag.strip() not in self.active_flags:
@@ -146,8 +146,8 @@ class DialogSimulator:
     def display_metadata(self):
         """Display the metadata"""
         print(f"\n{Fore.WHITE}===== METADATA ====={Style.RESET_ALL}")
-        print(f"Synopsis: {self.metadata['synopsis']}")
-        print(f"How to trigger: {self.metadata['how_to_trigger']}")
+        print(f"Synopsis: {self.metadata.get('synopsis', '')}")
+        print(f"How to trigger: {self.metadata.get('how_to_trigger', '')}")
     
     def display_node(self, node_id, node_data):
         """Display a dialog node with formatting"""
@@ -210,6 +210,8 @@ class DialogSimulator:
         # Include all direct child nodes, not just ones with text
         meaningful_options = {}
         for child_id, child_data in children.items():
+            if node_data.get('id') == "49":
+                import pdb; pdb.set_trace()
             child_node = self._get_node(child_id)
             if not child_node:
                 continue
@@ -341,6 +343,7 @@ class DialogSimulator:
             return node_id, None
         
         # ALWAYS follow jump nodes (regardless of whether they have children)
+        
         node_type = node.get('node_type', 'normal')
         if node_type == 'jump' and node.get('goto'):
             goto_node_id = node.get('goto')
@@ -349,14 +352,14 @@ class DialogSimulator:
                 return self.follow_node_path(goto_node_id)  # Recursively follow jump/goto chains
         
         # For non-jump nodes, only follow goto if they have no children
-        if not node.get('children') and node.get('goto'):
+        elif not node.get('children') and node.get('goto'):
             goto_node_id = node.get('goto')
             if goto_node_id:
                 print(f"{Fore.MAGENTA}[Following goto link to node {goto_node_id} (no children present)]{Style.RESET_ALL}")
                 return self.follow_node_path(goto_node_id)  # Recursively follow goto chains
         
         # For nodes with no children and no goto, follow link if present
-        if not node.get('children') and not node.get('goto') and node.get('link'):
+        elif not node.get('children') and not node.get('goto') and node.get('link'):
             link_node_id = node.get('link')
             if link_node_id:
                 print(f"{Fore.MAGENTA}[Following link to node {link_node_id} (no children or goto present)]{Style.RESET_ALL}")
@@ -461,7 +464,10 @@ class DialogSimulator:
                     if child_node:
                         # Add all required flags for this child
                         for flag in child_node.get('checkflags', []):
-                            self.active_flags.add(flag)
+                            if "= False" in flag:
+                                pass
+                            else:
+                                self.active_flags.add(flag)
             
             options = self.get_available_options(current_node)
                 
@@ -629,7 +635,10 @@ class DialogSimulator:
                 child_node = self._get_node(child_id)
                 if child_node:
                     for flag in child_node.get('checkflags', []):
-                        self.active_flags.add(flag)
+                        if "= False" in flag:
+                            pass
+                        else:
+                            self.active_flags.add(flag)
         
         # Get all available options based on direct children
         children = self.get_available_options(node)
@@ -802,7 +811,7 @@ class DialogSimulator:
             self.companion_approvals[companion] = 0
             self.companion_approval_history[companion] = []
         self.visited_nodes = []
-        self.active_flags = set()
+        self.active_flags = set(self.default_flags)
         print(f"\n{Fore.GREEN}Simulator state reset.{Style.RESET_ALL}")
 
     def export_paths_to_txt(self, all_paths, output_file='dialog_paths.txt'):
@@ -812,8 +821,8 @@ class DialogSimulator:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(f"Baldur's Gate 3 Dialog Paths\n")
             f.write(f"Total paths: {len(all_paths)}\n\n")
-            f.write(f"Synopsis: {self.metadata['synopsis']}\n")
-            f.write(f"How to trigger: {self.metadata['how_to_trigger']}\n\n")
+            f.write(f"Synopsis: {self.metadata.get('synopsis', '')}\n")
+            f.write(f"How to trigger: {self.metadata.get('how_to_trigger', '')}\n\n")
             
             for i, path in enumerate(all_paths, 1):
                 # Mark if the path ends at a leaf node
@@ -885,8 +894,75 @@ class DialogSimulator:
                     continue
                     
                 node = self._get_node(node_id)
-                if node:
-                    # Create a simplified copy of the node data for the traversal
+                if not node:
+                    # Handle case where node isn't found (e.g., broken link in path)
+                    traversal.append({
+                        "id": node_id,
+                        "error": "NODE_DATA_NOT_FOUND",
+                        "special_marker": True # Mark as special for easier filtering downstream
+                    })
+                    continue
+
+                # Check if it's an alias node
+                if node.get("node_type") == "alias":
+                    target_id = node.get('link') # Assuming 'link' holds the target ID for aliases
+                    target_node = self._get_node(target_id) if target_id else None
+
+                    if target_node:
+                        # Start with target node data, copying relevant fields
+                        node_data = {
+                            "id": node_id, # Use the original alias node ID for the path
+                            "speaker": target_node.get('speaker', 'Unknown'),
+                            "text": target_node.get('text', ''),
+                            "node_type": target_node.get('node_type', 'normal'), # Use target's type initially
+                            "checkflags": target_node.get('checkflags', []),
+                            "setflags": target_node.get('setflags', []),
+                            "goto": target_node.get('goto', ''),
+                            "link": target_node.get('link', ''), # Target's link, might be overridden
+                            "is_end": target_node.get('is_end', False),
+                            "approval": target_node.get('approval', [])
+                            # Add any other relevant fields from the node structure if needed
+                        }
+                        # Add a marker indicating resolution
+                        node_data['resolved_from_alias'] = target_id
+
+                        # Override with non-empty values from the alias node itself
+                        override_fields = ['speaker', 'text', 'checkflags', 'setflags', 'goto', 'link', 'is_end', 'approval'] # Add 'rolls' etc. if needed
+                        for field in override_fields:
+                            alias_value = node.get(field)
+                            is_non_empty = False
+                            if isinstance(alias_value, (str, list)):
+                                if alias_value: # Checks for non-empty string or list
+                                    is_non_empty = True
+                            elif field == 'is_end' and isinstance(alias_value, bool): # Override boolean if explicitly present in alias
+                                is_non_empty = True # The presence of the boolean key itself is information
+                            # Add checks for other types if necessary (e.g., int 0 might be a valid override)
+
+                            if is_non_empty:
+                                node_data[field] = alias_value
+                                # If alias overrides the type-defining fields, reflect that? For now, keeps target type.
+
+                        traversal.append(node_data)
+
+                    else:
+                        # Target node not found or no target_id, append raw alias info with an error
+                        node_data = {
+                            "id": node_id,
+                            "speaker": node.get('speaker', 'Unknown'),
+                            "text": node.get('text', ''),
+                            "node_type": node.get('node_type', 'alias'), # Keep type as alias
+                            "checkflags": node.get('checkflags', []),
+                            "setflags": node.get('setflags', []),
+                            "goto": node.get('goto', ''),
+                            "link": node.get('link', ''), # This is the target_id
+                            "is_end": node.get('is_end', False),
+                            "approval": node.get('approval', []),
+                            "error": f"ALIAS_TARGET_NOT_FOUND ({target_id})" if target_id else "ALIAS_TARGET_MISSING"
+                        }
+                        traversal.append(node_data)
+
+                else:
+                    # Not an alias node, create data as before
                     node_data = {
                         "id": node_id,
                         "speaker": node.get('speaker', 'Unknown'),
@@ -948,12 +1024,12 @@ def main():
     print(f"{Fore.BLUE}Export options: Save dialog paths to text and JSON files{Style.RESET_ALL}")
     
     # Check if dialog_tree.json exists
-    if not os.path.isfile('data/MOO_Jailbreak_Wulbren.json'):
+    if not os.path.isfile('output/Companions/ORI_Gale_DeathFlute.json'):
         print(f"{Fore.RED}Error: dialog_tree.json not found.{Style.RESET_ALL}")
         print("Please run the parser script first to generate the dialog tree.")
         return
     
-    simulator = DialogSimulator('data/MOO_Jailbreak_Wulbren.json')
+    simulator = DialogSimulator('output/Companions/ORI_Gale_DeathFlute.json')
     
     while True:
         print("\nSelect mode:")
