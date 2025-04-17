@@ -437,8 +437,7 @@ class DialogSimulator:
                     "goto": current_node.get('goto', ''),
                     "link": current_node.get('link', ''),
                     "is_end": current_node.get('is_end', False),
-                    "approval": current_node.get('approval', []),
-                    "context": current_node.get('context', '')
+                    "approval": current_node.get('approval', [])
                 }
                 visited_node_details.append(node_data)
             
@@ -508,33 +507,29 @@ class DialogSimulator:
                 f.write(f"Total nodes visited: {len(self.visited_nodes)}\n\n")
                 f.write(f"Path: {' -> '.join(self.visited_nodes)}\n\n")
                 
-                # Add details for each node in the path using our custom format
+                # Add details for each node in the path
                 f.write(f"Detailed Traversal:\n")
-                for node_data in visited_node_details:
-                    # Skip nodes without text
-                    if not node_data['text']:
-                        continue
-                        
-                    # Format the line according to requirements
-                    line = ""
+                for i, node_data in enumerate(visited_node_details, 1):
+                    node_id = node_data['id']
+                    speaker = node_data['speaker']
+                    text = node_data['text']
+                    node_type = node_data['node_type']
                     
-                    # Handle speaker/text part based on node type
-                    if node_data['node_type'] == 'tagcinematic':
-                        line = f"[description] {node_data['text']}"
-                    else:
-                        line = f"{node_data['speaker']}: {node_data['text']}"
+                    # Format basic node info
+                    f.write(f"{i}. Node {node_id} [{node_type}]: {speaker} - {text}\n")
                     
-                    # Add context if present (context isn't captured in node_data by default, so would need to be added)
-                    context = node_data['context']
-                    if context:
-                        line += f" || [context] {context}"
-                    
-                    # Add approval changes if present
+                    # Add flags and goto info if present
+                    if node_data['checkflags']:
+                        f.write(f"   Required flags: {', '.join(node_data['checkflags'])}\n")
+                    if node_data['setflags']:
+                        f.write(f"   Sets flags: {', '.join(node_data['setflags'])}\n")
+                    if node_data['goto']:
+                        f.write(f"   Goto: {node_data['goto']}\n")
+                    if node_data['link']:
+                        f.write(f"   Link: {node_data['link']}\n")
                     if node_data['approval']:
-                        line += f" || [approval] {', '.join(node_data['approval'])}"
-                    
-                    # Write the formatted line
-                    f.write(f"{line}\n")
+                        f.write(f"   Approval changes: {', '.join(node_data['approval'])}\n")
+                    f.write("\n")
             
             txt_file = output_file
             print(f"{Fore.GREEN}Traversal exported to {txt_file}{Style.RESET_ALL}")
@@ -668,7 +663,7 @@ class DialogSimulator:
             
         return all_paths
     
-    def simulate_all_paths(self, max_depth=20, print_paths=True, test_mode=False, export_txt=False, export_json=False, export_dict=False, verbose=False):
+    def simulate_all_paths(self, max_depth=20, print_paths=True, test_mode=False, export_txt=False, export_json=False, verbose=False):
         """Simulate all possible dialog paths for each root node
         
         Args:
@@ -677,11 +672,10 @@ class DialogSimulator:
             test_mode (bool): Whether to ignore flag requirements
             export_txt (bool): Whether to export paths to a text file
             export_json (bool): Whether to export traversals to a JSON file
-            export_dict (bool): Whether to export paths to a Python dictionary file
             verbose (bool): Whether to print detailed simulation logs
             
         Returns:
-            tuple: (all_paths, txt_file_path, json_file_path, dict_file_path)
+            tuple: (all_paths, txt_file_path, json_file_path)
         """
         print(f"\n{Fore.WHITE}===== DIALOG SIMULATOR - SIMULATION MODE ====={Style.RESET_ALL}")
         # show metadata
@@ -740,7 +734,6 @@ class DialogSimulator:
         # Export results if requested
         txt_file = None
         json_file = None
-        dict_file = None
         
         if export_txt:
             txt_file = self.export_paths_to_txt(all_paths)
@@ -750,10 +743,7 @@ class DialogSimulator:
             traversals = self.create_traversal_data(all_paths)
             json_file = self.export_traversals_to_json(traversals)
             
-        if export_dict:
-            dict_file = self.export_paths_to_dict(all_paths)
-            
-        return all_paths, txt_file, json_file, dict_file
+        return all_paths, txt_file, json_file
 
     def show_companion_status(self):
         """Display current companion approval status"""
@@ -823,10 +813,7 @@ class DialogSimulator:
         print(f"\n{Fore.GREEN}Simulator state reset.{Style.RESET_ALL}")
 
     def export_paths_to_txt(self, all_paths, output_file='dialog_paths.txt'):
-        """Export all simulated dialog paths to a text file, with the custom format:
-        "{speaker}: {text} || [context] {context} ||[approval] {list of approval changes, if exists}"
-        For tagcinematic nodes: "[description] {text}".
-        Each utterance on a separate line."""
+        """Export all simulated dialog paths to a text file"""
         print(f"{Fore.GREEN}Exporting {len(all_paths)} dialog paths to {output_file}...{Style.RESET_ALL}")
         
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -836,48 +823,49 @@ class DialogSimulator:
             f.write(f"How to trigger: {self.metadata.get('how_to_trigger', '')}\n\n")
             
             for i, path in enumerate(all_paths, 1):
-                f.write(f"Path {i}:\n")
+                # Mark if the path ends at a leaf node
+                last_node_id = path[-1]
+                is_leaf = (last_node_id not in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]) and self._is_leaf_node(last_node_id)
+                leaf_marker = "[LEAF NODE]" if is_leaf else ""
                 
-                # Add custom formatted output for each node in the path
+                # Check if the last node has a goto or link that could be followed
+                follow_info = ""
+                if last_node_id not in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]:
+                    last_node = self._get_node(last_node_id)
+                    if last_node:
+                        if last_node.get('goto'):
+                            follow_info = f" [GOTO: {last_node.get('goto')}]"
+                        elif last_node.get('link'):
+                            follow_info = f" [LINK: {last_node.get('link')}]"
+                
+                f.write(f"Path {i}: {' -> '.join(path)} {leaf_marker}{follow_info}\n")
+                
+                # Add details for each node in the path
+                f.write(f"  Detailed Path {i}:\n")
                 for node_id in path:
                     if node_id in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]:
-                        f.write(f"[{node_id}]\n")
+                        f.write(f"  - {node_id}\n")
                         continue
                         
                     node = self._get_node(node_id)
-                    if not node:
-                        continue
+                    if node:
+                        speaker = node.get('speaker', 'Unknown')
+                        text = node.get('text', '(No text)')
+                        node_type = node.get('node_type', 'normal')
                         
-                    speaker = node.get('speaker', 'Unknown')
-                    text = node.get('text', '')
-                    context = node.get('context', '')
-                    approvals = node.get('approval', [])
-                    
-                    # Skip nodes without text
-                    if not text:
-                        continue
-                    
-                    # Format the line according to requirements
-                    line = ""
-                    
-                    # Handle speaker/text part based on node type
-                    if node.get('node_type') == 'tagcinematic':
-                        line = f"[description] {text}"
-                    else:
-                        line = f"{speaker}: {text}"
-                    
-                    # Add context if present
-                    if context:
-                        line += f" || [context] {context}"
-                    
-                    # Add approval changes if present
-                    if approvals:
-                        line += f" || [approval] {', '.join(approvals)}"
-                    
-                    # Write the formatted line
-                    f.write(f"{line}\n")
-                
-                f.write("\n")  # Add extra line between paths
+                        # Format basic node info
+                        f.write(f"  - Node {node_id} [{node_type}]: {speaker} - {text}\n")
+                        
+                        # Add flags and goto info if present
+                        if node.get('checkflags'):
+                            f.write(f"    Required flags: {', '.join(node.get('checkflags', []))}\n")
+                        if node.get('setflags'):
+                            f.write(f"    Sets flags: {', '.join(node.get('setflags', []))}\n")
+                        if node.get('goto'):
+                            f.write(f"    Goto: {node.get('goto')}\n")
+                        if node.get('link'):
+                            f.write(f"    Link: {node.get('link')}\n")
+                f.write("\n")
                 
         print(f"{Fore.GREEN}Paths exported successfully to {output_file}{Style.RESET_ALL}")
         return output_file
@@ -930,8 +918,8 @@ class DialogSimulator:
                             "goto": target_node.get('goto', ''),
                             "link": target_node.get('link', ''), # Target's link, might be overridden
                             "is_end": target_node.get('is_end', False),
-                            "approval": target_node.get('approval', []),
-                            "context": target_node.get('context', '')
+                            "approval": target_node.get('approval', [])
+                            # Add any other relevant fields from the node structure if needed
                         }
                         # Add a marker indicating resolution
                         node_data['resolved_from_alias'] = target_id
@@ -967,7 +955,6 @@ class DialogSimulator:
                             "link": node.get('link', ''), # This is the target_id
                             "is_end": node.get('is_end', False),
                             "approval": node.get('approval', []),
-                            "context": node.get('context', ''),
                             "error": f"ALIAS_TARGET_NOT_FOUND ({target_id})" if target_id else "ALIAS_TARGET_MISSING"
                         }
                         traversal.append(node_data)
@@ -984,8 +971,7 @@ class DialogSimulator:
                         "goto": node.get('goto', ''),
                         "link": node.get('link', ''),
                         "is_end": node.get('is_end', False),
-                        "approval": node.get('approval', []),
-                        "context": node.get('context', '')
+                        "approval": node.get('approval', [])
                     }
                     traversal.append(node_data)
             
@@ -1024,85 +1010,6 @@ class DialogSimulator:
         print(f"{Fore.GREEN}Approval history exported successfully to {output_file}{Style.RESET_ALL}")
         return output_file
 
-    def export_paths_to_dict(self, all_paths, output_file='dialog_dict.py'):
-        """Export all simulated dialog paths to a Python dictionary
-        
-        This creates a Python file containing a dictionary where:
-        - Keys are "path_1", "path_2", etc.
-        - Values are strings with the full dialog text for each path
-        
-        Args:
-            all_paths (list): List of node paths to export
-            output_file (str): Output Python file path
-            
-        Returns:
-            str: Path to the output file
-        """
-        print(f"{Fore.GREEN}Exporting {len(all_paths)} dialog paths to Python dictionary in {output_file}...{Style.RESET_ALL}")
-        
-        # Create the dictionary structure
-        dialog_dict = {}
-        
-        for i, path in enumerate(all_paths, 1):
-            path_key = f"path_{i}"
-            dialog_text = []
-            
-            # Process each node in the path with custom formatting
-            for node_id in path:
-                if node_id in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]:
-                    dialog_text.append(f"[{node_id}]")
-                    continue
-                    
-                node = self._get_node(node_id)
-                if not node:
-                    continue
-                    
-                speaker = node.get('speaker', 'Unknown')
-                text = node.get('text', '')
-                context = node.get('context', '')
-                approvals = node.get('approval', [])
-                
-                # Skip nodes without text
-                if not text:
-                    continue
-                
-                # Format the line according to requirements
-                line = ""
-                
-                # Handle speaker/text part based on node type
-                if node.get('node_type') == 'tagcinematic':
-                    line = f"[description] {text}"
-                else:
-                    line = f"{speaker}: {text}"
-                
-                # Add context if present
-                if context:
-                    line += f" || [context] {context}"
-                
-                # Add approval changes if present
-                if approvals:
-                    line += f" || [approval] {', '.join(approvals)}"
-                
-                dialog_text.append(line)
-            
-            # Join all lines with newlines to create a single string for this path
-            dialog_dict[path_key] = "\n".join(dialog_text)
-        
-        # Write the dictionary to a Python file
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write("# Generated dialog paths dictionary\n\n")
-            f.write("dialog_paths = {\n")
-            
-            for key, value in dialog_dict.items():
-                # Format the multiline string properly for Python
-                formatted_value = value.replace("'", "\\'")  # Escape single quotes
-                f.write(f"    '{key}': '''\n{formatted_value}\n''',\n\n")
-            
-            f.write("}\n")
-        
-        print(f"{Fore.GREEN}Dialog paths dictionary exported successfully to {output_file}{Style.RESET_ALL}")
-        return output_file
-
 def main():
     print(f"{Fore.CYAN}Baldur's Gate 3 Dialog Simulator{Style.RESET_ALL}")
     print("This tool allows you to explore the dialog trees from the game.")
@@ -1130,7 +1037,6 @@ def main():
         print("4. Reset state")
         print("5. View companion approval history")
         print("6. Export approval history to JSON")
-        print("7. Export paths to Python dictionary")
         print("0. Exit")
         
         try:
@@ -1156,7 +1062,6 @@ def main():
                     # Ask about export options
                     export_txt = input(f"\n{Fore.BLUE}Export dialog paths to text file? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
                     export_json = input(f"\n{Fore.BLUE}Export traversal data to JSON file? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
-                    export_dict = input(f"\n{Fore.BLUE}Export paths to Python dictionary? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
                     
                     # Ask about verbose mode
                     verbose = input(f"\n{Fore.BLUE}Enable verbose logging during simulation? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
@@ -1164,44 +1069,38 @@ def main():
                     if sim_choice == 1:
                         # Quick simulation with limited depth
                         print("\nRunning quick simulation (max depth 5)...")
-                        _, txt_file, json_file, dict_file = simulator.simulate_all_paths(
+                        _, txt_file, json_file = simulator.simulate_all_paths(
                             max_depth=5, 
                             test_mode=test_mode,
                             export_txt=export_txt,
                             export_json=export_json,
-                            export_dict=export_dict,
                             verbose=verbose
                         )
                         
-                        if txt_file or json_file or dict_file:
+                        if txt_file or json_file:
                             print(f"{Fore.GREEN}Export completed:{Style.RESET_ALL}")
                             if txt_file:
                                 print(f"- Text file: {txt_file}")
                             if json_file:
                                 print(f"- JSON file: {json_file}")
-                            if dict_file:
-                                print(f"- Dictionary file: {dict_file}")
                                 
                     elif sim_choice == 2:
                         # Full simulation with high max depth to ensure all paths are found
                         print("\nRunning full simulation (this may take a while)...")
-                        _, txt_file, json_file, dict_file = simulator.simulate_all_paths(
+                        _, txt_file, json_file = simulator.simulate_all_paths(
                             max_depth=50, 
                             test_mode=test_mode,
                             export_txt=export_txt,
                             export_json=export_json,
-                            export_dict=export_dict,
                             verbose=verbose
                         )
                         
-                        if txt_file or json_file or dict_file:
+                        if txt_file or json_file:
                             print(f"{Fore.GREEN}Export completed:{Style.RESET_ALL}")
                             if txt_file:
                                 print(f"- Text file: {txt_file}")
                             if json_file:
                                 print(f"- JSON file: {json_file}")
-                            if dict_file:
-                                print(f"- Dictionary file: {dict_file}")
                                 
                     elif sim_choice == 3:
                         # Custom depth simulation
@@ -1215,24 +1114,21 @@ def main():
                         
                         print_detailed = input("Print all paths? (y/n, default n): ").lower() == 'y'
                         
-                        _, txt_file, json_file, dict_file = simulator.simulate_all_paths(
+                        _, txt_file, json_file = simulator.simulate_all_paths(
                             max_depth=depth, 
                             print_paths=print_detailed, 
                             test_mode=test_mode,
                             export_txt=export_txt,
                             export_json=export_json,
-                            export_dict=export_dict,
                             verbose=verbose
                         )
                         
-                        if txt_file or json_file or dict_file:
+                        if txt_file or json_file:
                             print(f"{Fore.GREEN}Export completed:{Style.RESET_ALL}")
                             if txt_file:
                                 print(f"- Text file: {txt_file}")
                             if json_file:
                                 print(f"- JSON file: {json_file}")
-                            if dict_file:
-                                print(f"- Dictionary file: {dict_file}")
                                 
                     else:
                         print(f"{Fore.RED}Invalid choice. Returning to main menu.{Style.RESET_ALL}")
@@ -1296,84 +1192,6 @@ def main():
                     print(f"{Fore.GREEN}Approval history exported to {output_file}{Style.RESET_ALL}")
                 else:
                     print(f"{Fore.YELLOW}No approval changes to export. Try exploring some dialogs first.{Style.RESET_ALL}")
-            elif choice == 7:
-                # Export paths to Python dictionary
-                print("\nSimulation Options:")
-                print(f"{Fore.YELLOW}Note: We need to simulate all paths before exporting to dictionary{Style.RESET_ALL}")
-                print("1. Quick simulation (max depth 5)")
-                print("2. Full simulation (unlimited depth)")
-                print("3. Custom depth simulation")
-                
-                try:
-                    sim_choice = int(input("\nSelect simulation type: "))
-                    
-                    # Ask if test mode should be enabled
-                    test_mode = input(f"\n{Fore.YELLOW}Enable test mode to ignore flag requirements? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
-                    
-                    # Customize the output filename
-                    filename = input(f"\nEnter filename for export (default: dialog_dict.py): ")
-                    if not filename:
-                        filename = "dialog_dict.py"
-                    elif not filename.endswith(".py"):
-                        filename += ".py"
-                    if not filename.startswith("output_json/"):
-                        filename = "output_json/" + filename
-                    if sim_choice == 1:
-                        # Quick simulation with limited depth
-                        print("\nRunning quick simulation (max depth 5)...")
-                        all_paths, _, _, _ = simulator.simulate_all_paths(
-                            max_depth=5, 
-                            test_mode=test_mode,
-                            export_txt=False,
-                            export_json=False,
-                            export_dict=False,
-                            verbose=False
-                        )
-                        
-                    elif sim_choice == 2:
-                        # Full simulation with high max depth to ensure all paths are found
-                        print("\nRunning full simulation (this may take a while)...")
-                        all_paths, _, _, _ = simulator.simulate_all_paths(
-                            max_depth=50, 
-                            test_mode=test_mode,
-                            export_txt=False,
-                            export_json=False,
-                            export_dict=False,
-                            verbose=False
-                        )
-                        
-                    elif sim_choice == 3:
-                        # Custom depth simulation
-                        depth = 10  # Default
-                        try:
-                            depth_input = input("Maximum dialog depth to simulate (default 10): ")
-                            if depth_input.strip():
-                                depth = int(depth_input)
-                        except ValueError:
-                            print(f"{Fore.YELLOW}Using default depth of 10.{Style.RESET_ALL}")
-                        
-                        all_paths, _, _, _ = simulator.simulate_all_paths(
-                            max_depth=depth, 
-                            print_paths=False, 
-                            test_mode=test_mode,
-                            export_txt=False,
-                            export_json=False,
-                            export_dict=False,
-                            verbose=False
-                        )
-                    else:
-                        print(f"{Fore.RED}Invalid choice. Returning to main menu.{Style.RESET_ALL}")
-                        continue
-                    
-                    # Export paths to Python dictionary
-                    if all_paths:
-                        output_file = simulator.export_paths_to_dict(all_paths, filename)
-                        print(f"{Fore.GREEN}Paths exported to {output_file}{Style.RESET_ALL}")
-                    else:
-                        print(f"{Fore.YELLOW}No paths were generated. Cannot export.{Style.RESET_ALL}")
-                        
-                except ValueError:
-                    print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
             else:
                 print(f"{Fore.RED}Invalid choice. Try again.{Style.RESET_ALL}")
         except ValueError:
