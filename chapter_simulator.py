@@ -236,7 +236,6 @@ class ChapterSimulator:
 
                     # Update chapter flags for the next scenario in the sequence
                     current_chapter_flags = scenario_final_flags # This now uses the returned flags
-                    import pdb; pdb.set_trace()
                     print(f"{Fore.BLUE}    Updated chapter flags after {scenario_id}: {len(current_chapter_flags)}{Style.RESET_ALL}") # {current_chapter_flags}
 
                 except Exception as e:

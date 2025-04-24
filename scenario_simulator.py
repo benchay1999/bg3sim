@@ -421,7 +421,7 @@ class ScenarioSimulator:
         paths, _, _, _ = simulator.simulate_all_paths(
             max_depth=20,
             print_paths=False,
-            test_mode=False,  # True: Ignore flag requirements for simulation
+            test_mode=True,  # True: Ignore flag requirements for simulation
             verbose=False
         )
         
