@@ -38,7 +38,57 @@
       "FOR_PriestOfTheConqueringGod_AD_OwlbearDead.json",
       "FOR_PriestOfTheConqueringGod_Cultist002_InCave.json",
       "FOR_PriestOfTheConqueringGod_Cultist001_InCave.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Reviewing the sessions shows several chains and branches in the cult-related events. First, the 'AD_AtCaveEntrance' session is the approach where cult members have located the owlbear\u2019s nest. Once at the cave, the game presents a branch: you encounter either Brynna (Cultist002_InCave) or Andrick (Cultist001_InCave); these two are alternatives, never occurring together. In the cave encounter with a cultist, there is then a branching outcome regarding the owlbear. One branch is that the player spares the wild creature, which leads to 'AD_OwlbearCubResolution' \u2013 the cult novices react as if you are their superior. The other branch is that the cultist (or the situation) causes the owlbear to be killed, which then triggers 'AD_OwlbearDead' where the cultists celebrate their leader\u2019s action. In the Brynna branch (Cultist002_InCave), there is an additional possibility: if Brynna is killed in the encounter, a subsequent dialogue ('Cultist002_Dead') is triggered when the player uses a temporary resurrection spell to question her. Thus, the ordering constraints are as follows: 1) The cave entrance session must occur before the in\u2010cave dialogues; 2) In the in\u2010cave branch, encountering either Brynna or Andrick is mutually exclusive; 3) In the Brynna branch, her death leads to 'Cultist002_Dead'; and 4) Whether you spare the owlbear or allow its death leads to mutually exclusive outcomes ('AD_OwlbearCubResolution' versus 'AD_OwlbearDead'). Note that the standalone 'Cultists' session (the encounter with the injured True Soul and his novices) does not appear to be connected to these events and is therefore not included.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_AtCaveEntrance"
+          ],
+          "successor": "Cultist002_InCave"
+        },
+        {
+          "predecessor": [
+            "AD_AtCaveEntrance"
+          ],
+          "successor": "Cultist001_InCave"
+        },
+        {
+          "predecessor": [
+            "Cultist002_InCave"
+          ],
+          "successor": "Cultist002_Dead",
+          "condition": "if Brynna dies during the owlbear encounter"
+        },
+        {
+          "predecessor": [
+            "Cultist002_InCave",
+            "Cultist001_InCave"
+          ],
+          "successor": "AD_OwlbearCubResolution",
+          "condition": "if the player spares the wild creature"
+        },
+        {
+          "predecessor": [
+            "Cultist002_InCave",
+            "Cultist001_InCave"
+          ],
+          "successor": "AD_OwlbearDead",
+          "condition": "if the owlbear is killed (or the cultist kills it)"
+        }
+      ],
+      "exclusive": [
+        [
+          "Cultist002_InCave",
+          "Cultist001_InCave"
+        ],
+        [
+          "AD_OwlbearCubResolution",
+          "AD_OwlbearDead"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "Cultist002_Dead_5": {

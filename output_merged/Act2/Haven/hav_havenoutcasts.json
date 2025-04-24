@@ -63,7 +63,44 @@
       "HAV_HavenOutcasts_AD_Combat_BarricadeYeller_Ranger.json",
       "HAV_HavenOutcasts_AD_Combat_EntranceGuards_Halfling_Melee.json",
       "HAV_HavenOutcasts_AD_Combat_DockGuard_Melee.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "A careful review of the session data reveals that most sessions are combat dialogs triggered during a turn. However, a few sessions include an extra condition\u2014in their 'how_to_trigger' string\u2014they are only activated when S_Player_Jaheira is dead. This extra condition appears in three sessions: 'AD_Combat_DockGuard_Melee_JaheiraDied', 'AD_Combat_EntranceGuards_Halfling_Melee_JaheiraDied', and 'AD_Combat_BarricadeGuards_Melee_Dwarf_JaheiraDied'. Because of their 'JaheiraDied' requirement, they are logically tied to the moment after the player character Jaheira dies. In contrast, their counterparts without the 'JaheiraDied' suffix are triggered in the normal course when Jaheira is still alive. Thus, within any single playthrough the two versions of a given encounter are mutually exclusive\u2014they cannot both occur because the condition of Jaheira\u2019s life status is binary. In addition, the sessions that require Jaheira\u2019s death must occur only after the event where Jaheira dies (even though the death event itself is not represented as a session here, it serves as a prerequisite for these dialogs). No ordering constraints are evident among the other sessions, as they are simply triggered during a combat turn without further causal dependencies. Therefore, the only ordering constraints to note are the ones where the Jaheira-died condition must occur after Jaheira\u2019s death, and the mutually exclusive pairs between the normal and _JaheiraDied versions.",
+      "order": [
+        {
+          "predecessor": [
+            "S_Player_Jaheira death event"
+          ],
+          "successor": "AD_Combat_DockGuard_Melee_JaheiraDied"
+        },
+        {
+          "predecessor": [
+            "S_Player_Jaheira death event"
+          ],
+          "successor": "AD_Combat_EntranceGuards_Halfling_Melee_JaheiraDied"
+        },
+        {
+          "predecessor": [
+            "S_Player_Jaheira death event"
+          ],
+          "successor": "AD_Combat_BarricadeGuards_Melee_Dwarf_JaheiraDied"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_Combat_DockGuard_Melee",
+          "AD_Combat_DockGuard_Melee_JaheiraDied"
+        ],
+        [
+          "AD_Combat_EntranceGuards_Halfling_Melee",
+          "AD_Combat_EntranceGuards_Halfling_Melee_JaheiraDied"
+        ],
+        [
+          "AD_Combat_BarricadeGuards_Melee_Dwarf",
+          "AD_Combat_BarricadeGuards_Melee_Dwarf_JaheiraDied"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_Combat_FountainGuards_Melee_2_0": {

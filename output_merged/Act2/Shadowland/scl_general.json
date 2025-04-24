@@ -23,7 +23,36 @@
       "SCL_General_AD_MountainPassSignpost.json",
       "SCL_General_PAD_HalsinBridge.json",
       "SCL_General_VB_RoadToPlains.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "All provided sessions occur in or around the Shadow Cursed Lands. Two of the sessions (AD_Signpost and AD_MountainPassSignpost) are both signposts in the area but give slightly different navigational hints \u2013 one mentions an inn to the north along with Moonrise towers to the west, while the other only mentions Moonrise ahead when following the road. This suggests they come from exploring divergent pathways through the same region and are therefore mutually exclusive: if the player takes one road they might not encounter the other. In addition, the two sessions that represent leaving the Shadow Cursed Lands \u2013 PAD_HalsinBridge and VB_RoadToPlains \u2013 are triggered by moving out of SCL via different routes: PAD_HalsinBridge requires you to cross a bridge from SCL into town with Halsin as a companion, while VB_RoadToPlains is encountered when you head toward an exit that leads to the Plains. This implies an ordering constraint in that the signpost sessions (which occur within or right upon entering the cursed lands) come before any \u201cexit\u201d session, and also suggests that the two exit events are mutually exclusive, since the player chooses one route over the other. Therefore, we establish the following ordering rules: both signpost sessions must precede any exit event (i.e. PAD_HalsinBridge and VB_RoadToPlains) because they inform the player\u2019s navigation within SCL. Finally, we add exclusivity rules: the signpost sessions are mutually exclusive (the player only follows one path and sees one signpost) and the two exit sessions are mutually exclusive as the player chooses one exit route over the other.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Signpost",
+            "AD_MountainPassSignpost"
+          ],
+          "successor": "PAD_HalsinBridge"
+        },
+        {
+          "predecessor": [
+            "AD_Signpost",
+            "AD_MountainPassSignpost"
+          ],
+          "successor": "VB_RoadToPlains"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_Signpost",
+          "AD_MountainPassSignpost"
+        ],
+        [
+          "PAD_HalsinBridge",
+          "VB_RoadToPlains"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_Signpost_0": {

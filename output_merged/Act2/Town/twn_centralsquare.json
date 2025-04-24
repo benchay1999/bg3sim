@@ -58,7 +58,55 @@
       "TWN_CentralSquare_Plaque_002_AD.json",
       "TWN_CentralSquare_PlaqueOfIntelligence.json",
       "TWN_CentralSquare_Plaque_003_AD.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "The analysis of the sessions revealed that certain events trigger others in a logical sequence. First, when the player visits the central square, they encounter the plaques. An initial session (PAD_PlaqueFirstUse) is triggered when any plaque at the central square is clicked for the first time. To unlock the secret entrance to the sanctuary below, the three plaques (Plaque_002_AD, Plaque_003_AD, Plaque_001_AD) must be activated in the correct sequence (2-3-1). Therefore, PAD_PlaqueFirstUse should occur before the first plaque press (Plaque_002_AD), and then Plaque_002_AD must be pressed before Plaque_003_AD, which in turn should be pressed before Plaque_001_AD. Successfully activating the plaques unlocks the secret entrance, which is confirmed by the session PAD_EnteredSanctuary when the player enters the sanctuary beneath the Central Square. Within the sanctuary, interacting with the three tapestries (activating them) causes the SharAltar to appear, thus locking the door. As a result, if the player subsequently attempts to exit the room before dealing with the guardians, PAD_ExitLocked is triggered; hence, SharAltar must precede PAD_ExitLocked. Moreover, there are multiple sessions related to clicking on a statue in the secret room (PlaqueOfCharisma, PlaqueOfWisdom, and PlaqueOfIntelligence) that, although they share almost identical mechanics (triggered by the statue and involving a saving throw), represent different dogmas (or attribute themes). Logically, the player would only experience one of these based on their character or choices, making them mutually exclusive. Other sessions (like AD_Justiciar) do not show any direct ordering or exclusivity constraints based on the provided information.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_PlaqueFirstUse"
+          ],
+          "successor": "Plaque_002_AD"
+        },
+        {
+          "predecessor": [
+            "Plaque_002_AD"
+          ],
+          "successor": "Plaque_003_AD"
+        },
+        {
+          "predecessor": [
+            "Plaque_003_AD"
+          ],
+          "successor": "Plaque_001_AD"
+        },
+        {
+          "predecessor": [
+            "Plaque_001_AD"
+          ],
+          "successor": "PAD_EnteredSanctuary"
+        },
+        {
+          "predecessor": [
+            "PAD_EnteredSanctuary"
+          ],
+          "successor": "SharAltar"
+        },
+        {
+          "predecessor": [
+            "SharAltar"
+          ],
+          "successor": "PAD_ExitLocked"
+        }
+      ],
+      "exclusive": [
+        [
+          "PlaqueOfCharisma",
+          "PlaqueOfWisdom",
+          "PlaqueOfIntelligence"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PlaqueOfCharisma_2": {

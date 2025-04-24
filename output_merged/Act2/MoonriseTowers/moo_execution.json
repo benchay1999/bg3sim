@@ -78,7 +78,32 @@
       "MOO_Execution_AD_GoblinsInCombat.json",
       "MOO_Execution_AD_DrennPlea.json",
       "MOO_Execution_AD_FezzerkPlea.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sessions are clearly part of the Moonrise Towers execution event. First, there is an unnamed session (whose key is the empty string) that triggers as soon as the player arrives in Moonrise Towers and witnesses the setup of the execution scene. Once in the execution scene, Ketheric delivers his own dialogue (not represented as a separate session here) and then several interjection sessions occur\u2014in particular, AD_MintharaPlea, AD_DarraPlea, AD_SazzaPlea, AD_DrennPlea, and AD_FezzerkPlea. These sessions are described as the pleas played \u201cafter Ketheric finishes his own AD\u201d and therefore logically precede the post\u2010execution dialogue. After the execution scene wraps up in its \u201cpeaceful\u201d branch, the session DaisyAD_PostExecution occurs to prompt further investigation. However, there is an alternate branch: if during the execution scene the player attacks the goblins or otherwise disrupts the proceedings, then AD_GoblinsInCombat (where the goblins are attacked) and CombatInterruption (where Ketheric leaves after delegating Z'rell) are triggered. This divergent branch means that DaisyAD_PostExecution does not occur when the violent interruption branch is taken. Thus, we have an ordering constraint\u2014the pleas must occur before DaisyAD_PostExecution\u2014and a mutual exclusivity constraint between the post\u2010execution session and the violence\u2010triggered sessions (AD_GoblinsInCombat and CombatInterruption). Note that although the unnamed session (empty key) is the kickoff for the overall event, the key ordering constraint we list here is the one that ensures the interjections (the AD_*Plea sessions) come before DaisyAD_PostExecution.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_MintharaPlea",
+            "AD_DarraPlea",
+            "AD_SazzaPlea",
+            "AD_DrennPlea",
+            "AD_FezzerkPlea"
+          ],
+          "successor": "DaisyAD_PostExecution"
+        }
+      ],
+      "exclusive": [
+        [
+          "DaisyAD_PostExecution",
+          "AD_GoblinsInCombat"
+        ],
+        [
+          "DaisyAD_PostExecution",
+          "CombatInterruption"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_MintharaPlea_0": {

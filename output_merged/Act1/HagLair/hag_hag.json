@@ -78,7 +78,36 @@
       "HAG_Hag_MaskedVictim3.json",
       "HAG_Hag_AD_PutOnMask.json",
       "HAG_Hag_MaskedVictim3_AD_Resist.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "After analyzing the session data, several ordering and mutual exclusiveness relationships can be inferred. First, some sessions are clearly connected by cause\u2010and\u2010effect. For example, when the player interacts with the hag\u2019s mask, a two\u2010step sequence seems to occur: the player initially puts on the mask (triggering AD_PutOnMask) and then, on subsequent turns, experiences the effects of wearing it (AD_WearMask). Therefore, AD_PutOnMask should come before AD_WearMask. Similarly, if the player fails the wisdom save while wearing the mask, they become controlled (AD_ControlledByMask) and later may break free from this control (PAD_FreedFromControl); hence AD_ControlledByMask must come before PAD_FreedFromControl. In another branch, the session MaskedVictim1 describes a victim of the hag who is initially under the mask\u2019s control but regains her free will once the hag is killed. Because the actual hag encounter begins in the Lair session and would culminate in the hag\u2019s death, the Lair session must occur before the narrative of MaskedVictim1 regaining her senses. In addition, the data shows two possible dialogue outcomes for MaskedVictim1 when reacting to the influence of the mask: one where she resists (MaskedVictim1_AD_Resist) and one where she fails to resist (MaskedVictim1_AD_FailResist). Since both represent mutually exclusive outcomes for the same victim, they cannot appear in the same storyline path. Other sessions (such as MaskedVictim2, MaskedVictim3, MaskedVictim4 and their associated resist dialogues, as well as HagLair_Victim_003) do not come with explicit ordering or exclusiveness constraints based on the provided synopsis and thus are not included.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_PutOnMask"
+          ],
+          "successor": "AD_WearMask"
+        },
+        {
+          "predecessor": [
+            "AD_ControlledByMask"
+          ],
+          "successor": "PAD_FreedFromControl"
+        },
+        {
+          "predecessor": [
+            "Lair"
+          ],
+          "successor": "MaskedVictim1"
+        }
+      ],
+      "exclusive": [
+        [
+          "MaskedVictim1_AD_Resist",
+          "MaskedVictim1_AD_FailResist"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "MaskedVictim1_9": {

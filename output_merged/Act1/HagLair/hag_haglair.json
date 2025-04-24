@@ -213,7 +213,54 @@
       "HAG_HagLair_VB_EnteredGallery.json",
       "HAG_HagLair_Victim_003.json",
       "HAG_HagLair_AD_HagAttacksCage.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "After reviewing the session data we can identify a few sequences where one dialogue logically follows another or situations where two sessions would be mutually exclusive. For example, the exploration sessions start with PAD_Explore1 \u2013 when the player first wanders into the hag\u2019s lair \u2013 and then move deeper into the lair (or the workshop) via PAD_Explore2 or when combat begins in PAD_AtEntrance. In combat the hag creates doubles; first AD_SpawnDoublesPhase1 triggers and then later during the fight the player may either attack a double (AD_DoubleDied) or deduce which illusion is real (AD_DoublesIllusionRevealed), so these latter events should occur after the doubles are spawned. In another chain, once the player picks up a mask (PutOnMask) these masked events continue \u2013 if the player fails their wisdom save then they enter into the ControlledByMask state. Another ordering is seen with the prescient victim: the dialogue in Victim_003 naturally comes before the follow\u2010up scene Victim_003_PAD_Mindflayer, which happens after the player sees the transformation into a mindflayer in a vision. There is also a pair of sessions concerning the door when entering the gallery: a session termed \u201cEntranceDouble\u201d and a fallback dialogue \u201cEntranceDouble_StatusFallback\u201d that is set for when the player cannot speak. These two describe alternative events (one will occur, not both) and are thus mutually exclusive. Additional ordering is inferred as when the player first enters via PAD_Explore1, it is logical that the combat trigger PAD_AtEntrance happens subsequently. This list is not exhaustive of all sessions, but it includes the clear ordering and exclusivity constraints that exist.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_Explore1"
+          ],
+          "successor": "PAD_AtEntrance"
+        },
+        {
+          "predecessor": [
+            "PAD_Explore1"
+          ],
+          "successor": "PAD_Explore2"
+        },
+        {
+          "predecessor": [
+            "AD_SpawnDoublesPhase1"
+          ],
+          "successor": "AD_DoublesIllusionRevealed"
+        },
+        {
+          "predecessor": [
+            "AD_SpawnDoublesPhase1"
+          ],
+          "successor": "AD_DoubleDied"
+        },
+        {
+          "predecessor": [
+            "PutOnMask"
+          ],
+          "successor": "ControlledByMask"
+        },
+        {
+          "predecessor": [
+            "Victim_003"
+          ],
+          "successor": "Victim_003_PAD_Mindflayer"
+        }
+      ],
+      "exclusive": [
+        [
+          "EntranceDouble",
+          "EntranceDouble_StatusFallback"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_HagCackles_0": {

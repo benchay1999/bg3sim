@@ -33,7 +33,36 @@
       "PLA_KarlachRecruitmentTollhouse_PAD_CorpseSmell.json",
       "PLA_KarlachRecruitmentTollhouse_AD_RefugeeGreeting.json",
       "PLA_KarlachRecruitmentTollhouse_AD_RefugeeAlarm.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "After a close look at the descriptions, we can see that some sessions are clearly tied by cause\u2010and\u2010effect or situational triggers. The 'AD_Refugees' scene happens before the player enters the tollhouse, and its dialogue is interrupted if the player enters early. Entering the tollhouse then triggers either a warm greeting (AD_RefugeeGreeting) or, if the player is hostile, an alarm (AD_RefugeeAlarm). Therefore, both AD_RefugeeGreeting and AD_RefugeeAlarm are meant to follow AD_Refugees. Moreover, because these two outcomes are context\u2010dependent (friendly or alarmed), they cannot both occur in the same play\u2010through -- they are mutually exclusive. In addition, once the player is welcomed through AD_RefugeeGreeting, if they continue inside the tollhouse (descending into the cellar), the PAD_CorpseSmell dialogue is triggered. Other sessions (like PAD_FoundKey and PAD_GnollsDead) are triggered by independent events and lack ordering constraints relative to the tollhouse/undergrowth events. Thus, the ordering constraints we can extract are: (1) AD_Refugees before AD_RefugeeGreeting; (2) AD_Refugees before AD_RefugeeAlarm; and (3) AD_RefugeeGreeting must come before PAD_CorpseSmell. Also, AD_RefugeeGreeting and AD_RefugeeAlarm are mutually exclusive.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Refugees"
+          ],
+          "successor": "AD_RefugeeGreeting"
+        },
+        {
+          "predecessor": [
+            "AD_Refugees"
+          ],
+          "successor": "AD_RefugeeAlarm"
+        },
+        {
+          "predecessor": [
+            "AD_RefugeeGreeting"
+          ],
+          "successor": "PAD_CorpseSmell"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_RefugeeGreeting",
+          "AD_RefugeeAlarm"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_FoundKey_0": {

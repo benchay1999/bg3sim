@@ -58,7 +58,48 @@
       "SCL_OliverShadow_AD_FriendsSummoned.json",
       "SCL_OliverShadow_AD_Dome75PercentHP.json",
       "SCL_OliverShadow_AD_SummoningPlush.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sessions occur as parts of a larger puzzle/fight sequence and thus must follow one another based on in\u2010game triggers. First, during the fight at the plaza in Shadow Cursed Town the nightdome is attacked. In that fight the dome\u2019s health thresholds trigger in order: once the dome\u2019s HP drops below 75%, then below 50%, and finally below 25%. Hence the dialogue sessions AD_Dome75PercentHP, AD_Dome50PercentHP and AD_Dome25PercentHP should occur in that order. Next, during this fight Oliver may summon his Plush (AD_SummoningPlush); if the player then kills it the dialogue AD_PlushDied is played. Because a plush that is summoned cannot both be alive (for the summoning dialogue) and dead (for the death dialogue) in the same run, these two sessions are mutually exclusive, and if the Plush is summoned (thus triggering AD_SummoningPlush) then later killing it leads to AD_PlushDied. Also, when Oliver is chased to the Town Center the AD_StartOfFight is triggered; after that either the fight continues (with, for example, further defenses such as AD_FriendsSummoned) or it transitions into a dialogue sequence where the player persuades Oliver to rejoin Thaniel (the Acceptance session). Thus AD_StartOfFight should precede Acceptance. In a separate branch of Oliver\u2019s interactions, there is a hide-and-seek episode. The first time Oliver hides, AD_Hiding occurs and afterward \u2013 once the player has played a couple of rounds \u2013 AD_AfterHideAndSeek is triggered. This implies AD_Hiding happens before AD_AfterHideAndSeek. Sessions that are merely environmental comments such as PAD_FlowersAtHouse have no direct ordering with these events. Similarly, AD_FriendsSummoned is part of the fight sequence but its exact placement is less clearly defined; so it is not enforced in a strict order here, though it is naturally assumed to occur during the fight sequence after the fight begins (after AD_StartOfFight).",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Dome75PercentHP"
+          ],
+          "successor": "AD_Dome50PercentHP"
+        },
+        {
+          "predecessor": [
+            "AD_Dome50PercentHP"
+          ],
+          "successor": "AD_Dome25PercentHP"
+        },
+        {
+          "predecessor": [
+            "AD_SummoningPlush"
+          ],
+          "successor": "AD_PlushDied"
+        },
+        {
+          "predecessor": [
+            "AD_StartOfFight"
+          ],
+          "successor": "Acceptance"
+        },
+        {
+          "predecessor": [
+            "AD_Hiding"
+          ],
+          "successor": "AD_AfterHideAndSeek"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_SummoningPlush",
+          "AD_PlushDied"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_FlowersAtHouse_0": {

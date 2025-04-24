@@ -33,7 +33,51 @@
       "FOR_SeluneStash_PAD_NoticeStashSeal.json",
       "FOR_SeluneStash_PAD_OpenStashWithPrayer.json",
       "FOR_SeluneStash_PAD_OpenStashAsSelunite.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "First, the shrine is noted (PAD_NoticeShrine) and then the player can pick up the prayer sheet (PAD_PickupPrayerSheet), implying that noticing the shrine is a precursor to interacting further with its elements. The player then is likely to evaluate the chest: an arcana check reveals the magical seal on the chest (PAD_NoticeStashSeal), which logically must come before any attempt to open the chest. Once the seal is noticed, the player can either attempt to open the chest by reciting the prayer (successfully unlocking it) or open it improperly. If the player uses the prayer properly, the outcome splits: if they are a follower of Sel\u00fbne (or have a Sel\u00fbne affiliation), the session PAD_OpenStashAsSelunite is triggered; otherwise, PAD_OpenStashWithPrayer is triggered. These two sessions are mutually exclusive since they represent alternative outcomes based on the protagonist\u2019s religious alignment. On the other hand, if the chest is attempted to be opened without using the prayer (or without having picked up the prayer sheet), the trap is triggered (PAD_TriggeredTrap), which acts as a consequence of neglecting the proper procedure. Thus, the ordering constraints are: notice shrine comes first, followed by picking up the prayer sheet, and then noticing the seal; after noticing the seal, the outcomes (successful opening using prayer or triggering the trap) can occur, with the successful openings further split into two mutually exclusive paths.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_NoticeShrine"
+          ],
+          "successor": "PAD_PickupPrayerSheet"
+        },
+        {
+          "predecessor": [
+            "PAD_NoticeShrine",
+            "PAD_PickupPrayerSheet"
+          ],
+          "successor": "PAD_NoticeStashSeal"
+        },
+        {
+          "predecessor": [
+            "PAD_PickupPrayerSheet",
+            "PAD_NoticeStashSeal"
+          ],
+          "successor": "PAD_OpenStashWithPrayer"
+        },
+        {
+          "predecessor": [
+            "PAD_PickupPrayerSheet",
+            "PAD_NoticeStashSeal"
+          ],
+          "successor": "PAD_OpenStashAsSelunite"
+        },
+        {
+          "predecessor": [
+            "PAD_NoticeStashSeal"
+          ],
+          "successor": "PAD_TriggeredTrap"
+        }
+      ],
+      "exclusive": [
+        [
+          "PAD_OpenStashWithPrayer",
+          "PAD_OpenStashAsSelunite"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_NoticeShrine_0": {

@@ -53,7 +53,68 @@
       "DEN_TieflingBard_AD_ComposingSong.json",
       "DEN_TieflingBard_AD_StartingOver.json",
       "DEN_TieflingBard_AD_FullSong.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "The conversation with Alfira (the 'Bard' session) is the root from which several mutually exclusive narrative branches unfold. One branch focuses on helping Alfira compose her song. In that branch, the player first enters AD_ComposingSong (where Alfira struggles with the lyrics and melody) and\u2014if successful\u2014progresses to the final performance in AD_FullSong. (Optionally, if the composition attempt fails, there is an intermediate AD_StartingOver session that forces the player to try again; however, it remains within the composing branch.) Another branch occurs when the player persuades Alfira to give up music entirely, triggering AD_QuitComposing. A different set of branches opens if the player interferes with the instrument. The player may either steal the instrument (triggering AD_InstrumentStolen) or break it (triggering AD_InstrumentBroken), and either outcome leads to Alfira becoming dejected (AD_Dejected). Because an instrument cannot be both stolen and broken in the same playthrough, those two events are mutually exclusive. Similarly, the composing branch (leading to AD_ComposingSong and later AD_FullSong) and the quitting branch (AD_QuitComposing) represent different narrative outcomes that cannot both occur. (Also, AD_LookingForInstrument seems to suggest an early state where Alfira is looking for her instrument, and it would only apply in situations where the instrument is missing rather than tampered with. It is therefore not combined with the instrument-stealing or instrument-breaking branches.)",
+      "order": [
+        {
+          "predecessor": [
+            "Bard"
+          ],
+          "successor": "AD_ComposingSong"
+        },
+        {
+          "predecessor": [
+            "AD_ComposingSong"
+          ],
+          "successor": "AD_FullSong"
+        },
+        {
+          "predecessor": [
+            "Bard"
+          ],
+          "successor": "AD_QuitComposing"
+        },
+        {
+          "predecessor": [
+            "Bard"
+          ],
+          "successor": "AD_InstrumentStolen"
+        },
+        {
+          "predecessor": [
+            "AD_InstrumentStolen"
+          ],
+          "successor": "AD_Dejected"
+        },
+        {
+          "predecessor": [
+            "Bard"
+          ],
+          "successor": "AD_InstrumentBroken"
+        },
+        {
+          "predecessor": [
+            "AD_InstrumentBroken"
+          ],
+          "successor": "AD_Dejected"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_InstrumentStolen",
+          "AD_InstrumentBroken"
+        ],
+        [
+          "AD_ComposingSong",
+          "AD_QuitComposing"
+        ],
+        [
+          "AD_FullSong",
+          "AD_QuitComposing"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_LookingForInstrument_0": {

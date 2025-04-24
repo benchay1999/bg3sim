@@ -198,7 +198,60 @@
       "MOO_Assault_AD_JaheiraMoveForward.json",
       "MOO_Assault_PAD_PrisonSkeletonWarning.json",
       "MOO_Assault_AssaultHarper_004.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "After inspecting the session details and their trigger conditions, several clear ordering and exclusivity relationships emerge. First, in the boss\u2010fight sequence on the rooftop, the player first meets Ketheric on the roof (BossFightIntro), then when his health is low a cinematic occurs (FirstKethericInterruption) and, during the fight, Ketheric is teleported away (KethericLeaving). Once these events have occurred the post\u2010combat PAD is triggered (PAD_AfterKethericCombat). In addition, before reaching the rooftop the player wins a fight near the door (PAD_ReadyToMeetKetheric), which must come before initiating the boss fight sequence. Separately, Z'rell\u2019s dialogue is split into two parts \u2013 a callout when she is waiting in the tower (AD_ZrellCallout) and a combat dialogue when the fight with her actually starts (AD_ZrellCombat) \u2013 so the \u201ccallout\u201d must come before the combat. In another branch, if the player has Jaheira as a follower then her dialogue for trying to leave the area (AD_JaheiraFollowerLeave) should only occur after her initial arrival/greeting (Jaheira). Finally, there is an alternate method described by the \u201cTentaclelessJump\u201d session that appears to be an alternative way to reach the roof; therefore, if the player takes that teleport path, they will skip the rooftop boss fight sequence (BossFightIntro). This makes TentaclelessJump and BossFightIntro mutually exclusive. An additional mutually exclusive case is found with Z'rell: depending on circumstances, if Jaheira or Florrick are present, AD_ZrellTaunt is used; otherwise AD_ZrellCallout is triggered. Thus AD_ZrellTaunt and AD_ZrellCallout cannot both play in the same path.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_ReadyToMeetKetheric"
+          ],
+          "successor": "BossFightIntro"
+        },
+        {
+          "predecessor": [
+            "BossFightIntro"
+          ],
+          "successor": "FirstKethericInterruption"
+        },
+        {
+          "predecessor": [
+            "BossFightIntro"
+          ],
+          "successor": "KethericLeaving"
+        },
+        {
+          "predecessor": [
+            "BossFightIntro",
+            "KethericLeaving",
+            "FirstKethericInterruption"
+          ],
+          "successor": "PAD_AfterKethericCombat"
+        },
+        {
+          "predecessor": [
+            "AD_ZrellCallout"
+          ],
+          "successor": "AD_ZrellCombat"
+        },
+        {
+          "predecessor": [
+            "Jaheira"
+          ],
+          "successor": "AD_JaheiraFollowerLeave"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_ZrellCallout",
+          "AD_ZrellTaunt"
+        ],
+        [
+          "TentaclelessJump",
+          "BossFightIntro"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_GuardJumper_0": {

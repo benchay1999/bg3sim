@@ -43,7 +43,36 @@
       "HAV_Jaheira_MeetsHalsin.json",
       "HAV_Jaheira.json",
       "HAV_Jaheira_AD_PlayersAttackJaheira.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Looking at the session synopses and trigger hints, we notice a few points. First, the AD_Attention session is clearly meant to be triggered at the initial approach to Haven \u2013 it is the call that gets the player\u2019s attention \u2013 and from its trigger instructions it happens before the later, more general or consequence\u2010style dialogs. In particular, the default Jaheira dialog (with the empty key) is triggered only after resolving the Haven tadpole checkpoint (i.e. after the initial encounter), so we can say that AD_Attention should precede the default dialog. In some cases, if the player hesitates or if time passes, another session \u2013 AD_AtCheckpoint (\u201cJaheira is waiting for the return of her scouts. On edge\u201d) \u2013 may be activated later, so it makes sense to have AD_Attention come first and then AD_AtCheckpoint if that branch is reached. In addition, there is an option where the player \u201cattacks\u201d Jaheira at the Haven gates; the AD_PlayersAttackJaheira session is triggered only when the player selects the attack option. Since the initial dialog (AD_Attention) is part of the approach, the attacking branch (AD_PlayersAttackJaheira) can only occur after encountering AD_Attention. Moreover, once the player chooses to attack, the normal conversational track (that would lead to the default Jaheira dialog) will not be available. Hence, AD_PlayersAttackJaheira and the default conversation (the empty key session) are mutually exclusive. The other sessions (AD_DiscussingMarcus, OutOfPosition, AD_CombatTaunts, and MeetsHalsin) do not provide clear cause\u2013effect or branching constraints relative to these particular checkpoint and branch triggers, so they are left aside from ordering or exclusiveness constraints.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Attention"
+          ],
+          "successor": ""
+        },
+        {
+          "predecessor": [
+            "AD_Attention"
+          ],
+          "successor": "AD_AtCheckpoint"
+        },
+        {
+          "predecessor": [
+            "AD_Attention"
+          ],
+          "successor": "AD_PlayersAttackJaheira"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_PlayersAttackJaheira",
+          ""
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_DiscussingMarcus_0": {

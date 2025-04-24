@@ -123,7 +123,10 @@ class DialogSimulator:
         # if setflags has a flag with " = False", remove it from the active flags
         for flag in node_data.get('setflags', []):
             if "= False" in flag:
-                self.active_flags.remove(flag.split('= False')[0].strip())
+                try:
+                    self.active_flags.remove(flag.split('= False')[0].strip())
+                except KeyError:
+                    pass
             else:
                 self.active_flags.add(flag.strip())
     
@@ -1115,12 +1118,12 @@ def main():
     print(f"{Fore.BLUE}Export options: Save dialog paths to text and JSON files{Style.RESET_ALL}")
     
     # Check if dialog_tree.json exists
-    if not os.path.isfile('output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'):
+    if not os.path.isfile('output/Act1/Forest/FOR_BottomlessWell_VB_DiscoverUnderdarkEntrance.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
         print(f"{Fore.RED}Error: dialog_tree.json not found.{Style.RESET_ALL}")
         print("Please run the parser script first to generate the dialog tree.")
         return
     
-    simulator = DialogSimulator('output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json')
+    simulator = DialogSimulator('output/Act1/Forest/FOR_BottomlessWell_VB_DiscoverUnderdarkEntrance.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
     
     while True:
         print("\nSelect mode:")

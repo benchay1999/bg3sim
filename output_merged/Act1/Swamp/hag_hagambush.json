@@ -63,7 +63,70 @@
       "HAG_HagAmbush_Brother_001_AD_Fallback.json",
       "HAG_HagAmbush_Brother_002_AD_BrotherDied.json",
       "HAG_HagAmbush_ThankPlayer.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "1. The narrative begins with the argument (AD_Argument) which kicks off the confrontation between the characters. 2. Once the argument (AD_Argument) takes place, the situation escalates into a full confrontation (Confrontation). This confrontation then branches into two mutually exclusive paths based on the player\u2019s decision: siding with the brothers or siding with Auntie Ethel (the hag). 3. In the brothers\u2019 branch, after the ambush the hag disappears (AD_HagDisappear), leading to the main dialogue (Brothers_Recruitment) in which the brothers are still alive and recruiting the player. 4. In the alternate branch, if the player sides with the hag, the brothers are killed. Their deaths are hinted at by the immediate \u201cbrother died\u201d AD dialogues (Brother_001_AD_BrotherDied and Brother_002_AD_BrotherDied) which then lead to the confirming death sessions (Brother_001_Dead and Brother_002_Dead). 5. Following the killing of the brothers, the hag thanks the player with a dedicated dialogue (AD_HagThankPlayer) and later offers additional commentary (ThankPlayer). 6. Additionally, there are fallback dialogues (Brother_001_AD_Fallback and Brother_002_AD_Fallback) which are triggered when a player attempts to speak to a brother during conditions when the proper dialogue is unavailable (for example, if the other brother is already in dialogue or if waiting for the hag\u2019s cue). These fallback sessions are not meant to occur if that brother is already dead. 7. Therefore, the brothers\u2019 recruitment branch (Brothers_Recruitment) is mutually exclusive with the branch in which the brothers die (which involves AD_HagThankPlayer, ThankPlayer, Brother_001_Dead, and Brother_002_Dead). Similarly, the fallback dialogues cannot coincide with the respective dead dialogue sessions.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Argument"
+          ],
+          "successor": "Confrontation"
+        },
+        {
+          "predecessor": [
+            "AD_HagDisappear"
+          ],
+          "successor": "Brothers_Recruitment"
+        },
+        {
+          "predecessor": [
+            "Brother_001_AD_BrotherDied",
+            "Brother_002_AD_BrotherDied"
+          ],
+          "successor": "Brother_001_Dead"
+        },
+        {
+          "predecessor": [
+            "Brother_001_AD_BrotherDied",
+            "Brother_002_AD_BrotherDied"
+          ],
+          "successor": "Brother_002_Dead"
+        },
+        {
+          "predecessor": [
+            "AD_HagThankPlayer"
+          ],
+          "successor": "ThankPlayer"
+        }
+      ],
+      "exclusive": [
+        [
+          "Brothers_Recruitment",
+          "AD_HagThankPlayer"
+        ],
+        [
+          "Brothers_Recruitment",
+          "Brother_001_Dead"
+        ],
+        [
+          "Brothers_Recruitment",
+          "Brother_002_Dead"
+        ],
+        [
+          "Brothers_Recruitment",
+          "ThankPlayer"
+        ],
+        [
+          "Brother_001_AD_Fallback",
+          "Brother_001_Dead"
+        ],
+        [
+          "Brother_002_AD_Fallback",
+          "Brother_002_Dead"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "Brother_002_AD_Fallback_0": {

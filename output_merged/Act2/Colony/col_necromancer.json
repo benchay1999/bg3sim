@@ -53,7 +53,40 @@
       "COL_Necromancer_AD_ZombieErrand.json",
       "COL_Necromancer_AD_Combat_SendZombie.json",
       "COL_Necromancer_DaisyAD_Balthazar.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Reviewing the session details shows several natural relationships. First, in combat during the audience route the necromancer initially sends a zombie to light the candles (AD_Combat_SendZombie). If the player interferes (by killing the zombie) then on the necromancer\u2019s next turn a second zombie is sent (AD_Combat_ResendZombie). Thus, AD_Combat_SendZombie must occur before AD_Combat_ResendZombie. In another branch, during the audience when the players remain inside the cages, the necromancer begins resurrecting nearby NPCs (AD_ReviveZombie) and then later begins his ritual chant (AD_Haruspicy). This implies that AD_ReviveZombie is a necessary predecessor to AD_Haruspicy in that branch. In yet another branch the necromancer is seen sending zombies off on errands and later when one returns we have a follow\u2010up session (AD_ZombieErrandDone), so AD_ZombieErrand should come before AD_ZombieErrandDone. Additionally, there appear to be at least two different ways to encounter Balthazar. One, when a player enters his chamber under conditions described in EnterRoom, and a different encounter described in DaisyAD_Balthazar which triggers on arrival in the colony. Since the same character is being encountered via two dialog routes \u2013 depending on game progress and choices \u2013 these two sessions are mutually exclusive. Finally, note that AD_Combat_ResendZombie and AD_ReviveZombie represent outcomes from two alternative branches of the audience combat (one where the player \u2018forces\u2019 a second zombie by killing the first, and one where the players stay in the cages to witness resurrection). Thus, only one of these can play in a given path, making them mutually exclusive.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Combat_SendZombie"
+          ],
+          "successor": "AD_Combat_ResendZombie"
+        },
+        {
+          "predecessor": [
+            "AD_ZombieErrand"
+          ],
+          "successor": "AD_ZombieErrandDone"
+        },
+        {
+          "predecessor": [
+            "AD_ReviveZombie"
+          ],
+          "successor": "AD_Haruspicy"
+        }
+      ],
+      "exclusive": [
+        [
+          "EnterRoom",
+          "DaisyAD_Balthazar"
+        ],
+        [
+          "AD_Combat_ResendZombie",
+          "AD_ReviveZombie"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_Combat_SteelWatchers_0": {

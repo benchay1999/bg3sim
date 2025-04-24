@@ -18,7 +18,30 @@
       "COL_CleansingChute_PAD.json",
       "COL_CleansingChute_Corpse_Dead.json",
       "COL_CleansingChute_PAD_BloodShower.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "All three sessions are triggered by the player interacting with the corpse chute in the Cleansing Room. The PAD session is the immediate reaction to the corpse dropping \u2013 it plays as soon as the button is pressed and the corpse is released from the chute. Because the corpse\u2019s drop is needed for other follow\u2010up events, any further interactions (such as attempting to speak with the corpse or positioning a character to be hit by blood) must occur after the PAD event. In one branch of the narrative the player may use the corpse with a Speak With Dead spell \u2013 triggering the 'Corpse_Dead' session \u2013 but since the corpse only appears once (and is consumed by that interaction), the 'PAD_BloodShower' session (where a character is splattered with blood and guts when standing under the chute) cannot occur in that same path. Conversely, if the player deliberately stands under the chute, then after the initial corpse drop (and PAD), subsequent button\u2010press interactions yield the blood shower reaction (PAD_BloodShower). Thus, two ordering constraints arise: both 'Corpse_Dead' and 'PAD_BloodShower' require that PAD has already occurred, and the two follow\u2010up sessions are mutually exclusive in a single playthrough.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD"
+          ],
+          "successor": "Corpse_Dead"
+        },
+        {
+          "predecessor": [
+            "PAD"
+          ],
+          "successor": "PAD_BloodShower"
+        }
+      ],
+      "exclusive": [
+        [
+          "Corpse_Dead",
+          "PAD_BloodShower"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_0": {

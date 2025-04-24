@@ -58,7 +58,38 @@
       "COL_Morgue_AD_Us_FollowPlayer.json",
       "COL_Morgue_AD_Butcher_SpotUs.json",
       "COL_Morgue_Us.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several of these dialogue sessions are related to distinct branches of events in the Colony Morgue. First, the combat with Chop (the Colony Butcher) is initiated by attacking him. In that branch, the initial engagement (AD_Butcher_CombatEnter) must occur before the dialogue lines that happen later in combat (AD_Butcher_CombatTurn001 and AD_Butcher_CombatTurn002). If the combat proceeds to its conclusion, Chop\u2019s death will eventually trigger AD_Butcher_Death \u2013 which by definition comes after initiating combat. Separately, there is a branch of events related to interacting with Us \u2013 the intellect devourer locked in the cage. Here, several mutually exclusive outcomes are possible when you interact with or free Us. For example, if you free Us stealthily (using invisibility so that you are not spotted), then AD_Us_FollowPlayer will trigger. If you free Us and get spotted by Chop (or otherwise tip off him), then Butcher_FreedUs will trigger. There is also an option that instead of freeing Us, you attack it, which triggers AD_Us_Attacked; furthermore, a slightly different way of freeing Us (resulting in Chop spotting Us outside of his cage) will trigger AD_Butcher_SpotUs. These outcomes cannot all occur on the same play\u2010through \u2013 they are logical alternatives that represent different choices or failures in your handling of Us. Only the combat-related sessions have a clear sequential dependency, while the Us-related sessions form an exclusive set of alternatives.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Butcher_CombatEnter"
+          ],
+          "successor": "AD_Butcher_CombatTurn001"
+        },
+        {
+          "predecessor": [
+            "AD_Butcher_CombatEnter"
+          ],
+          "successor": "AD_Butcher_CombatTurn002"
+        },
+        {
+          "predecessor": [
+            "AD_Butcher_CombatEnter"
+          ],
+          "successor": "AD_Butcher_Death"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_Us_Attacked",
+          "Butcher_FreedUs",
+          "AD_Us_FollowPlayer",
+          "AD_Butcher_SpotUs"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_Minthara_EnteredRoom_0": {

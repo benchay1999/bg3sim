@@ -353,7 +353,91 @@
       "SCL_Drider_Caravan_AD_GoblinMelee_001.json",
       "SCL_Drider_HarperScout_AfterAmbush.json",
       "SCL_Drider_Caravan_GoblinMelee_001_AD_AtCheckpoint.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sessions in the provided data represent events that take place in a cause\u2010and\u2010effect sequence \u2013 for example, the caravan escort starting (CaravanStart) leads to an ambush (CaravanAmbushed) and then to combat (AD_CombatStarts) where crucial moments like the drider dropping its lantern (Harper_Melee_000_AD_DriderDropsLantern) and then a Harper taking it (Harper_Melee_000_AD_TakesMoonlantern) occur. In addition, several sessions occur in the moments preceding the ambush \u2013 for example, the Harpers preparing for the ambush (AD_AllHarpersWaitingAtAmbush, AD_HarpersReachAmbushHouse, AD_BeforeAmbush, AD_HarpersPreparingBeforeAmbush) must happen before the ambush dialogue or combat starts. Similarly, after the ambush, sessions such as PAD_TakeLanternAfterAmbush or the various post\u2010ambush Harper dialogues (HarperRanger_001_AfterAmbush, HarperScout_AfterAmbush, HarperCaster_000_AfterAmbush) are triggered only once the ambush has been resolved. There are also clearly diverging \u201cpaths\u201d \u2013 for example, one branch shows the player on the drider\u2019s side (Harper_Melee_000_AD_PlayerTookLantern) while another shows the player with the Harpers (PAD_TakeLanternAfterAmbush). These outcomes are mutually exclusive. Similarly, there are two versions of some ambush-related (or waiting) ADs (for example, AD_AllHarpersWaitingAtAmbush versus AD_HarperWaitingAtAmbush, or harvester of the lantern \u2013 Harper_Melee_000_AD_TakesMoonlantern versus AD_HarperTakesMoonlantern) that cannot both be active in the same playthrough. Based on these observations, the ordering constraints and mutual exclusiveness rules below have been derived.",
+      "order": [
+        {
+          "predecessor": [
+            "CaravanStart"
+          ],
+          "successor": "CaravanAmbushed"
+        },
+        {
+          "predecessor": [
+            "AD_AllHarpersWaitingAtAmbush",
+            "AD_HarpersReachAmbushHouse",
+            "AD_BeforeAmbush",
+            "AD_HarpersPreparingBeforeAmbush"
+          ],
+          "successor": "CaravanAmbushed"
+        },
+        {
+          "predecessor": [
+            "CaravanAmbushed"
+          ],
+          "successor": "AD_CombatStarts"
+        },
+        {
+          "predecessor": [
+            "AD_CombatStarts"
+          ],
+          "successor": "Harper_Melee_000_AD_DriderDropsLantern"
+        },
+        {
+          "predecessor": [
+            "Harper_Melee_000_AD_DriderDropsLantern"
+          ],
+          "successor": "Harper_Melee_000_AD_TakesMoonlantern"
+        },
+        {
+          "predecessor": [
+            "CaravanAmbushed"
+          ],
+          "successor": "PAD_TakeLanternAfterAmbush"
+        },
+        {
+          "predecessor": [
+            "CaravanAmbushed"
+          ],
+          "successor": "HarperRanger_001_AfterAmbush"
+        },
+        {
+          "predecessor": [
+            "CaravanAmbushed"
+          ],
+          "successor": "HarperScout_AfterAmbush"
+        },
+        {
+          "predecessor": [
+            "CaravanAmbushed"
+          ],
+          "successor": "HarperCaster_000_AfterAmbush"
+        }
+      ],
+      "exclusive": [
+        [
+          "Harper_Melee_000_AD_PlayerTookLantern",
+          "PAD_TakeLanternAfterAmbush"
+        ],
+        [
+          "Harper_Melee_000_AD_PlayerTookLantern",
+          "HarperRanger_001_AfterAmbush"
+        ],
+        [
+          "CaravanAmbushed",
+          "PlayersAmbush"
+        ],
+        [
+          "AD_AllHarpersWaitingAtAmbush",
+          "AD_HarperWaitingAtAmbush"
+        ],
+        [
+          "Harper_Melee_000_AD_TakesMoonlantern",
+          "AD_HarperTakesMoonlantern"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "Harper_Melee_000_AD_DriderDies_0": {

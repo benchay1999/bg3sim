@@ -73,7 +73,81 @@
       "PLA_StuckHalfElf_AD_FoundWife.json",
       "PLA_StuckHalfElf_AD_ToWife.json",
       "PLA_StuckHalfElf_TryJoinParty.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Examining the provided session data reveals a branching rescue and aftermath of Benryn\u2019s plight. Initially, the player encounters Benryn trapped beneath a beam in a burning building \u2013 represented by the session 'AD'. From there the player may attempt to rescue him. A successful rescue shows up in sessions like 'Freed' (or its alternate trigger 'TryJoinParty'), which then leads to the dialogue 'AD_Freed' immediately after freeing him inside the burning building. Once the party safely exits the building the sequence continues with 'AD_Rescued' (the shocked reaction in the courtyard) and then 'AD_Escaping' (the dialogue that plays as Benryn leaves the party outside). Once free, Benryn embarks on a search for his wife. This searching phase is indicated by 'AD_Searching'. At this point two distinct branches arise: one in which the player finds her body \u2013 triggering a visual prompt ('PAD_FoundWife') followed by the dialogue 'AD_FoundWife', and an alternate branch (if the corpse has been moved) that triggers 'AD_ToWife'. In parallel, there is a possibility of failure when trying to lift the debris \u2013 for which the session 'PAD_TooHeavy' is used. Thus, if the rescue fails (i.e. 'PAD_TooHeavy' occurs) then the rescue dialogues like 'Freed' or 'TryJoinParty' and their sequels cannot occur. Similarly, the two wife-related branches (AD_ToWife versus the PAD_FoundWife/AD_FoundWife chain) are mutually exclusive. Based on these causal and alternative event sequences, the following ordering and exclusiveness rules can be deduced.",
+      "order": [
+        {
+          "predecessor": [
+            "AD"
+          ],
+          "successor": "Freed"
+        },
+        {
+          "predecessor": [
+            "AD"
+          ],
+          "successor": "TryJoinParty"
+        },
+        {
+          "predecessor": [
+            "Freed",
+            "TryJoinParty"
+          ],
+          "successor": "AD_Freed"
+        },
+        {
+          "predecessor": [
+            "AD_Freed"
+          ],
+          "successor": "AD_Rescued"
+        },
+        {
+          "predecessor": [
+            "AD_Rescued"
+          ],
+          "successor": "AD_Escaping"
+        },
+        {
+          "predecessor": [
+            "AD_Escaping"
+          ],
+          "successor": "AD_Searching"
+        },
+        {
+          "predecessor": [
+            "AD_Searching"
+          ],
+          "successor": "PAD_FoundWife"
+        },
+        {
+          "predecessor": [
+            "PAD_FoundWife"
+          ],
+          "successor": "AD_FoundWife"
+        },
+        {
+          "predecessor": [
+            "AD_Searching"
+          ],
+          "successor": "AD_ToWife"
+        }
+      ],
+      "exclusive": [
+        [
+          "PAD_TooHeavy",
+          "Freed"
+        ],
+        [
+          "PAD_TooHeavy",
+          "TryJoinParty"
+        ],
+        [
+          "AD_ToWife",
+          "PAD_FoundWife"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "Freed_15": {

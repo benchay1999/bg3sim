@@ -63,7 +63,59 @@
       "HAG_Hagspawn_PAD_AfterResurrection.json",
       "HAG_Hagspawn_AD_HagSurrogateMotherStartScene.json",
       "HAG_Hagspawn_AD_HusbandGrave.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Analyzing the session data, several cause\u2010and\u2010effect relationships and branching outcomes become apparent. First, the teahouse conversation between the hag and Mayrina is introduced by the AD_HagSurrogateMotherStartScene, which occurs before the main StartScene. Regarding the resurrection of Mayrina\u2019s husband, the ResurrectHusband session initiates the event. Depending on circumstances, this branch leads either to a controlled resurrection (with Mayrina present) or to an out-of\u2010control event when Mayrina is absent. These two outcomes have been captured in the sessions Husband (when Mayrina is present) and HusbandResurrected (when she is not), and because they represent alternative branches the two are mutually exclusive. In addition, if the player uses the wand to resurrect him, a cursed outcome occurs that is reflected in PAD_AfterResurrection \u2013 hence it should follow ResurrectHusband. Later, as a consequence of the husband\u2019s fate, AD_HusbandGrave is triggered once either Husband or HusbandResurrected has occurred, and then SurrogateMother_AD_CorpseDugUp is fired when Mayrina visits the grave. Finally, Mayrina\u2019s dialogues are differentiated by her survival: the normal SurrogateMother and the alternative SurrogateMother_Dead (triggered if she dies) cannot both occur. Other sessions (like PAD_FireplaceIllusion or SurrogateMother_AD_HagOccupied) do not present clear ordering or exclusivity constraints. These observations have been encoded as ordering rules and mutual exclusion rules below.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_HagSurrogateMotherStartScene"
+          ],
+          "successor": "StartScene"
+        },
+        {
+          "predecessor": [
+            "ResurrectHusband"
+          ],
+          "successor": "PAD_AfterResurrection"
+        },
+        {
+          "predecessor": [
+            "ResurrectHusband"
+          ],
+          "successor": "Husband"
+        },
+        {
+          "predecessor": [
+            "ResurrectHusband"
+          ],
+          "successor": "HusbandResurrected"
+        },
+        {
+          "predecessor": [
+            "Husband",
+            "HusbandResurrected"
+          ],
+          "successor": "AD_HusbandGrave"
+        },
+        {
+          "predecessor": [
+            "AD_HusbandGrave"
+          ],
+          "successor": "SurrogateMother_AD_CorpseDugUp"
+        }
+      ],
+      "exclusive": [
+        [
+          "Husband",
+          "HusbandResurrected"
+        ],
+        [
+          "SurrogateMother",
+          "SurrogateMother_Dead"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "ResurrectHusband_7": {

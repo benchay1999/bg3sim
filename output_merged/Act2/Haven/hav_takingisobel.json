@@ -88,7 +88,61 @@
       "HAV_TakingIsobel_AD_SpyRemindsKO.json",
       "HAV_TakingIsobel_FollowUpSaved.json",
       "HAV_TakingIsobel_AD_CombatBetrayalReveal.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sequences in the Baldur\u2019s Gate 3 kidnapping arc imply a logical order. For example, Isobel first gives a briefing (in BriefInRoom) and is then interrupted by the spy\u2019s kidnapping attempt (SpyCapture) \u2013 thus BriefInRoom must precede SpyCapture. That kidnapping event then branch\u2010off into alternative outcomes: if the player helps save Isobel, FollowUpSaved (possibly preceded by AD_FollowUp after the ghoul attack) will occur, but if the player sides with Marcus the spy then AD_SpyRemindsKO (which is a reminder not to kill Isobel during combat) plays. Since these are mutually exclusive endings to the kidnapping sequence, FollowUpSaved and AD_SpyRemindsKO cannot both appear in the same playthrough. In addition, there are several \u201cfallback\u201d or \u201cearly\u201d spy dialogues \u2013 AD_BeforeFlamingSpy (triggered if the player clicks Isobel too early), AD_SpyWaiting, AD_SpyAtEntrance, and the standard FlamingSpy dialogue \u2013 which are alternative branches depending on situational triggers. Thus, only one of them should appear in a given playthrough. Also, if the player goes to the roof the investigation of discarded Flaming Fist armour (PAD_SpyTransformationClue) should occur before the player then hears a reaction to the transformation remnants (AD_ReactingToRoofNoise). Finally, if Marcus (the spy) is killed then FlamingSpy_Dead will be triggered, and that outcome cannot coexist with sequences where Marcus is alive (i.e. where his kidnapping efforts or fallback dialogues take place).",
+      "order": [
+        {
+          "predecessor": [
+            "BriefInRoom"
+          ],
+          "successor": "SpyCapture"
+        },
+        {
+          "predecessor": [
+            "SpyCapture"
+          ],
+          "successor": "FollowUpSaved"
+        },
+        {
+          "predecessor": [
+            "SpyCapture"
+          ],
+          "successor": "AD_SpyRemindsKO"
+        },
+        {
+          "predecessor": [
+            "AD_FollowUp"
+          ],
+          "successor": "FollowUpSaved"
+        },
+        {
+          "predecessor": [
+            "PAD_SpyTransformationClue"
+          ],
+          "successor": "AD_ReactingToRoofNoise"
+        }
+      ],
+      "exclusive": [
+        [
+          "FollowUpSaved",
+          "AD_SpyRemindsKO"
+        ],
+        [
+          "AD_BeforeFlamingSpy",
+          "AD_SpyWaiting",
+          "AD_SpyAtEntrance",
+          "FlamingSpy"
+        ],
+        [
+          "FlamingSpy_Dead",
+          "SpyCapture",
+          "FlamingSpy",
+          "AD_SpyWaiting",
+          "AD_SpyAtEntrance"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "FlamingSpy_20": {

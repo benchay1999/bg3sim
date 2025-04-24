@@ -163,7 +163,75 @@
       "MOO_Jailbreak_GnomePrisoner_001.json",
       "MOO_Jailbreak_AD_GoToTieflings.json",
       "MOO_Jailbreak_Lover.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "We analyzed each session\u2019s synopsis and its trigger conditions to identify cause\u2013effect relationships and branching that preclude co\u2010occurrence. For example, the dialogue where the gnomes talk in jail (AD_GnomesInJail) must occur before the warden inspects their cell (AD_WardenInspection). Similarly, the event where Wulbren is given an acceptable tool (AD_ToolAccepted) logically occurs before both the tieflings start waiting for a gnome-led rescue (AD_WaitingForGnomes) and before the warden chases the escaping prisoners (AD_WardenChase), which in turn leads to her combat dialogue (AD_WardenInCombat) and then her noticing an empty cell (AD_WardenSpottedMissingPrisoners). Also, the character-based escape lines are ordered: for instance, ProdigyBrother\u2019s presence must come before his own additional solo ADs (AD_ProdigyBrother) and similarly for ProdigySister leading to AD_ProdigySister. In addition, Wulbren\u2019s main dialogue (Wulbren) is a prerequisite for his line when he is on his way to free the tieflings (AD_GoToTieflings). Furthermore, some sessions represent alternative branches: if the player provides an acceptable tool, AD_ToolAccepted fires \u2013 if not, AD_ToolRefused triggers instead. Also, regarding the tiefling escape narrative, depending on circumstances only one of the main dialogues will be used \u2013 ProdigySister, FlirtyTiefling, or Lover \u2013 and similarly regarding the boat escape if players use the boat correctly (Boat) then a different dialogue occurs than if they try to use it prematurely (PAD_CheckingOutBoat). These observations define our ordering constraints and mutual exclusivity rules.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_GnomesInJail"
+          ],
+          "successor": "AD_WardenInspection"
+        },
+        {
+          "predecessor": [
+            "AD_ToolAccepted"
+          ],
+          "successor": "AD_WaitingForGnomes"
+        },
+        {
+          "predecessor": [
+            "AD_ToolAccepted"
+          ],
+          "successor": "AD_WardenChase"
+        },
+        {
+          "predecessor": [
+            "AD_WardenChase"
+          ],
+          "successor": "AD_WardenInCombat"
+        },
+        {
+          "predecessor": [
+            "AD_WardenInCombat"
+          ],
+          "successor": "AD_WardenSpottedMissingPrisoners"
+        },
+        {
+          "predecessor": [
+            "ProdigyBrother"
+          ],
+          "successor": "AD_ProdigyBrother"
+        },
+        {
+          "predecessor": [
+            "ProdigySister"
+          ],
+          "successor": "AD_ProdigySister"
+        },
+        {
+          "predecessor": [
+            "Wulbren"
+          ],
+          "successor": "AD_GoToTieflings"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_ToolAccepted",
+          "AD_ToolRefused"
+        ],
+        [
+          "ProdigySister",
+          "FlirtyTiefling",
+          "Lover"
+        ],
+        [
+          "Boat",
+          "PAD_CheckingOutBoat"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_ApproachingPrisoners_0": {

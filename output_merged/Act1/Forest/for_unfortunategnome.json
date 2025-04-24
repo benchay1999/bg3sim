@@ -58,7 +58,62 @@
       "FOR_UnfortunateGnome.json",
       "FOR_UnfortunateGnome_SpeedUp.json",
       "FOR_UnfortunateGnome_Dead.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sessions form parts of two alternative branches relating to the windmill\u2019s changing speed and the subsequent fate of the captive gnome, Barcus. One branch deals with the windmill slowing down and allowing the player to try to free Barcus, while the other branch involves the windmill speeding up, causing an immediate panic reaction. In the slowing branch, Barcus first calls for help (AD_WaitingForRelease) while still tied to a rotating windmill. The player then intervenes, which is sensed as a change in windmill speed (SlowDown). Once the windmill slows or stops, Barcus can be clicked to trigger his annoyed dialogue (AD). At that point the player must act \u2013 either attempting to free him by cutting his bindings (TiedUp) which can result in either a successful freeing (AD_UnfortunateGnomeFreed) or a failure (AD_UnfortunateGnomePikeFail). These two outcomes are mutually exclusive. In a different branch the windmill speeds up (SpeedUp) upon a brake being released; as a consequence, someone on the windmill (presumably the captive) reacts in panic (AD_RotatingFasterReaction). Moreover, because the windmill either slows or speeds up, the two sessions (SlowDown and SpeedUp) do not coexist in the same narrative path. Finally, the gnome\u2019s eventual death (Dead) is an alternate outcome to being freed, so if the freeing dialogue (AD_UnfortunateGnomeFreed) occurs then the 'Dead' session should not occur. Only sessions with clear ordering or exclusiveness constraints have been included.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_WaitingForRelease"
+          ],
+          "successor": "SlowDown"
+        },
+        {
+          "predecessor": [
+            "SlowDown"
+          ],
+          "successor": "AD"
+        },
+        {
+          "predecessor": [
+            "AD"
+          ],
+          "successor": "TiedUp"
+        },
+        {
+          "predecessor": [
+            "TiedUp"
+          ],
+          "successor": "AD_UnfortunateGnomeFreed"
+        },
+        {
+          "predecessor": [
+            "TiedUp"
+          ],
+          "successor": "AD_UnfortunateGnomePikeFail"
+        },
+        {
+          "predecessor": [
+            "SpeedUp"
+          ],
+          "successor": "AD_RotatingFasterReaction"
+        }
+      ],
+      "exclusive": [
+        [
+          "SlowDown",
+          "SpeedUp"
+        ],
+        [
+          "AD_UnfortunateGnomeFreed",
+          "AD_UnfortunateGnomePikeFail"
+        ],
+        [
+          "AD_UnfortunateGnomeFreed",
+          "Dead"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "SlowDown_5": {

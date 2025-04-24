@@ -108,7 +108,39 @@
       "GOB_Checkpoint_Trespassing.json",
       "GOB_Checkpoint_AlarmVandalize_003.json",
       "GOB_Checkpoint_AlarmVandalize_002.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Some sessions clearly depend on other events, while others represent mutually exclusive variants of the same triggering event. For example, the 'ThreeWayDialogWithCapturedGoblin' session is triggered when the captured goblin (released earlier at Halsin\u2019s den) meets with the main guard at the checkpoint. Its synopsis explains that once this conversation occurs, the original, normal dialog of the main guard (represented by 'Guard001') resumes. In effect, the conversational branch with the captured goblin happens first and its resolution then gives way to the normal guard dialogue. This implies an ordering constraint: 'ThreeWayDialogWithCapturedGoblin' must occur before 'Guard001' resumes its normal presence (or dialogue state).\n\nA similar situation exists with the alarm drum scenarios. There are several sessions with names beginning with 'AlarmVandalize_' (001 through 005) as well as 'AlarmUsedReaction'. Their synopses all mention that the player has used the alarm drum and that, based on performance or identity, the reaction of the goblins varies. They are different variants of a single alarm trigger: only one of these responses should happen in a given play-through. In addition, there is an 'AlarmSystem' session whose synopsis explains that if the alarm is activated (by using the drum), then the first half of the camp becomes hostile. Logically, the specific reaction variant (one of the alarm vandalize or reaction sessions) happens before the broader consequence\u2014the alarm system dialogue\u2014kicks in. Thus, an ordering exists where any one of the alarm trigger sessions should precede the 'AlarmSystem' dialogue. Moreover, because they represent alternate outcomes of using the drum, they are mutually exclusive: triggering one alarm reaction means the others do not occur in the same playthrough.\n\nNo other sessions in the list have clear cause\u2013effect or exclusive relationships based on the available information.",
+      "order": [
+        {
+          "predecessor": [
+            "ThreeWayDialogWithCapturedGoblin"
+          ],
+          "successor": "Guard001"
+        },
+        {
+          "predecessor": [
+            "AlarmVandalize_001",
+            "AlarmVandalize_002",
+            "AlarmVandalize_003",
+            "AlarmVandalize_004",
+            "AlarmVandalize_005",
+            "AlarmUsedReaction"
+          ],
+          "successor": "AlarmSystem"
+        }
+      ],
+      "exclusive": [
+        [
+          "AlarmVandalize_001",
+          "AlarmVandalize_002",
+          "AlarmVandalize_003",
+          "AlarmVandalize_004",
+          "AlarmVandalize_005",
+          "AlarmUsedReaction"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AlarmVandalize_001_2": {

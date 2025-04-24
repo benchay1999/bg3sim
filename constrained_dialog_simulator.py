@@ -20,9 +20,11 @@ class MultiFileConstrainedDialogSimulator:
         self.constraints = self._define_constraints()  # Load constraints
         self._validate_constraints()
         self.source_files = self._get_source_files()  # Get source file order
+        self.sequence_to_source_file = self._map_sequences_to_source_files()  # Map sequences to source files
 
         print(f"Initialized with file: {json_file_path}")
         print(f"Loaded {len(self.all_nodes)} nodes.")
+        print(f"Source files to cover: {', '.join(self.source_files)}")
 
     def _load_dialog_file(self):
         """
@@ -50,6 +52,26 @@ class MultiFileConstrainedDialogSimulator:
         """
         metadata = self.dialog_tree.get("metadata", {})
         return metadata.get("source_files", [])
+
+    def _map_sequences_to_source_files(self):
+        """
+        Maps sequence IDs to their source files based on metadata.
+
+        Returns:
+            dict: Dictionary mapping sequence IDs to their source files.
+        """
+        sequence_to_file = {}
+        for seq_id, metadata in self.sequence_metadata.items():
+            if 'source_file' in metadata:
+                sequence_to_file[seq_id] = metadata['source_file']
+        
+        # Log sequences without source file information
+        missing_source = set(self.sequence_metadata.keys()) - set(sequence_to_file.keys())
+        if missing_source:
+            print(f"{Fore.YELLOW}Warning: The following sequences are missing source file information: "
+                  f"{', '.join(missing_source)}{Style.RESET_ALL}")
+        
+        return sequence_to_file
 
     def _find_root_nodes(self):
         """
@@ -190,7 +212,7 @@ class MultiFileConstrainedDialogSimulator:
 
         return False
 
-    def _simulate_paths_recursive(self, node_id, current_path, visited_sequences, depth, max_depth, verbose=False):
+    def _simulate_paths_recursive(self, node_id, current_path, visited_sequences, covered_files, depth, max_depth, verbose=False):
         """
         Recursively simulates all possible dialog paths from a given node, respecting constraints.
 
@@ -198,28 +220,29 @@ class MultiFileConstrainedDialogSimulator:
             node_id (str): The ID of the current node.
             current_path (list): The list of node IDs representing the current path.
             visited_sequences (set): The set of sequence IDs that have been visited in the current path.
+            covered_files (set): The set of source files that have been covered in the current path.
             depth (int): The current depth of recursion.
             max_depth (int): The maximum depth to explore.
             verbose (bool): If True, prints detailed logs.
 
         Returns:
-            list: A list of valid dialog paths.
+            list: A list of valid dialog paths, with metadata about covered files.
         """
         # --- Cycle and Depth Check ---
         if node_id in current_path:
             if verbose:
                 print(f"{Fore.RED}Cycle detected at node {node_id}. Stopping branch.{Style.RESET_ALL}")
-            return [current_path + [node_id] + ["CYCLE_DETECTED"]]
+            return [{"path": current_path + [node_id] + ["CYCLE_DETECTED"], "covered_files": covered_files}]
         if depth >= max_depth:
             if verbose:
                 print(f"{Fore.RED}Max depth reached at node {node_id}. Stopping branch.{Style.RESET_ALL}")
-            return [current_path + [node_id] + ["MAX_DEPTH_REACHED"]]
+            return [{"path": current_path + [node_id] + ["MAX_DEPTH_REACHED"], "covered_files": covered_files}]
 
         node = self.all_nodes.get(node_id)
         if not node:
             if verbose:
                 print(f"{Fore.RED}Node {node_id} not found. Stopping branch.{Style.RESET_ALL}")
-            return [current_path + [node_id] + ["NODE_NOT_FOUND"]]
+            return [{"path": current_path + [node_id] + ["NODE_NOT_FOUND"], "covered_files": covered_files}]
 
         sequence_id = self._get_sequence_id_from_node_id(node_id)
 
@@ -229,9 +252,20 @@ class MultiFileConstrainedDialogSimulator:
                not self._check_exclusive_constraints(sequence_id, visited_sequences, verbose):
                 return []  # Prune the path if constraints are violated
 
+        # --- Track Visited Sequences and Covered Files ---
         new_visited_sequences = visited_sequences.copy()
+        new_covered_files = covered_files.copy()
+        
         if sequence_id:
             new_visited_sequences.add(sequence_id)
+            # Add source file if this sequence is linked to one
+            if sequence_id in self.sequence_to_source_file:
+                source_file = self.sequence_to_source_file[sequence_id]
+                if source_file in self.source_files:  # Only track files that are in our source_files list
+                    new_covered_files.add(source_file)
+                    if verbose and source_file not in covered_files:
+                        print(f"{Fore.GREEN}New source file covered: {source_file} "
+                              f"via sequence {sequence_id} at node {node_id}{Style.RESET_ALL}")
 
         current_path = current_path + [node_id]
 
@@ -241,41 +275,69 @@ class MultiFileConstrainedDialogSimulator:
             goto_id = node.get('goto')
             if verbose:
                 print(f"{Fore.MAGENTA}Following jump from {node_id} to {goto_id}{Style.RESET_ALL}")
-            return self._simulate_paths_recursive(goto_id, current_path, new_visited_sequences, depth, max_depth, verbose)
+            return self._simulate_paths_recursive(goto_id, current_path, new_visited_sequences, 
+                                                 new_covered_files, depth, max_depth, verbose)
 
         if not node.get('children') and node.get('goto'):
             goto_id = node.get('goto')
             if verbose:
                 print(f"{Fore.MAGENTA}Following goto from {node_id} to {goto_id}{Style.RESET_ALL}")
-            return self._simulate_paths_recursive(goto_id, current_path, new_visited_sequences, depth + 1, max_depth, verbose)
+            return self._simulate_paths_recursive(goto_id, current_path, new_visited_sequences, 
+                                                 new_covered_files, depth + 1, max_depth, verbose)
 
         if not node.get('children') and not node.get('goto') and node.get('link'):
             link_id = node.get('link')
             if verbose:
                 print(f"{Fore.MAGENTA}Following link from {node_id} to {link_id}{Style.RESET_ALL}")
-            return self._simulate_paths_recursive(link_id, current_path, new_visited_sequences, depth + 1, max_depth, verbose)
+            return self._simulate_paths_recursive(link_id, current_path, new_visited_sequences, 
+                                                 new_covered_files, depth + 1, max_depth, verbose)
 
         # --- Check if Leaf Node ---
         if self._is_leaf_node(node_id):
             if verbose:
                 print(f"{Fore.GREEN}Reached leaf node: {node_id}. Path: {' -> '.join(current_path)}{Style.RESET_ALL}")
-            return [current_path]
+                print(f"{Fore.GREEN}Files covered: {new_covered_files}{Style.RESET_ALL}")
+            return [{"path": current_path, "covered_files": new_covered_files}]
 
         # --- Explore Children ---
         options = node.get('children', {})
         if not options:
             if verbose:
                 print(f"{Fore.YELLOW}Node {node_id} has no children. Ending path.{Style.RESET_ALL}")
-            return [current_path]
+            return [{"path": current_path, "covered_files": new_covered_files}]
 
         all_child_paths = []
         for child_id in options.keys():
-            child_paths = self._simulate_paths_recursive(child_id, current_path, new_visited_sequences, depth + 1, max_depth, verbose)
+            child_paths = self._simulate_paths_recursive(child_id, current_path, new_visited_sequences, 
+                                                         new_covered_files, depth + 1, max_depth, verbose)
             all_child_paths.extend(child_paths)
 
         return all_child_paths
 
-    def simulate_all_paths(self, max_depth=20, export_txt=False, verbose=False):
+    def _filter_complete_coverage_paths(self, paths, verbose=False):
+        """
+        Filter paths to only include those that cover all source files.
+        
+        Args:
+            paths (list): List of path dictionaries with 'path' and 'covered_files' keys.
+            verbose (bool): If True, prints detailed logs.
+            
+        Returns:
+            list: List of paths that cover all source files.
+        """
+        all_source_files = set(self.source_files)
+        complete_coverage_paths = []
+        
+        for path_info in paths:
+            if all_source_files.issubset(path_info["covered_files"]):
+                complete_coverage_paths.append(path_info)
+                if verbose:
+                    print(f"{Fore.GREEN}Found complete coverage path: "
+                          f"{' -> '.join(path_info['path'][:5])}... {Style.RESET_ALL}")
+        
+        return complete_coverage_paths
+
+    def simulate_all_paths(self, max_depth=20, export_txt=False, verbose=False, complete_coverage_only=True):
         """
         Simulates all valid dialog paths from root nodes, respecting constraints.
 
@@ -283,6 +345,7 @@ class MultiFileConstrainedDialogSimulator:
             max_depth (int): The maximum depth to explore in the dialog tree.
             export_txt (bool): If True, exports the valid paths to a text file.
             verbose (bool): If True, prints detailed logs.
+            complete_coverage_only (bool): If True, only return paths that cover all source files.
 
         Returns:
             list: A list of valid dialog paths.
@@ -291,8 +354,10 @@ class MultiFileConstrainedDialogSimulator:
         print(f"\n{Fore.WHITE}===== CONSTRAINED DIALOG SIMULATION =====")
         print(f"File: {self.json_file_path}")
         print(f"Constraints: {self.constraints}")
+        print(f"Source Files to Cover: {', '.join(self.source_files)}")
         print(f"Max Depth: {max_depth}")
-        print(f"Verbose Logging: {'ON' if verbose else 'OFF'}{Style.RESET_ALL}")
+        print(f"Verbose Logging: {'ON' if verbose else 'OFF'}")
+        print(f"Complete Coverage Only: {'ON' if complete_coverage_only else 'OFF'}{Style.RESET_ALL}")
 
         all_valid_paths = []
         total_simulated = 0
@@ -303,10 +368,19 @@ class MultiFileConstrainedDialogSimulator:
                   f"(Sequence: {root_sequence_id if root_sequence_id else 'None'}){Style.RESET_ALL}")
 
             initial_visited = {root_sequence_id} if root_sequence_id else set()
+            initial_covered_files = set()
+            
+            # Add the source file of the root sequence if applicable
+            if root_sequence_id and root_sequence_id in self.sequence_to_source_file:
+                source_file = self.sequence_to_source_file[root_sequence_id]
+                if source_file in self.source_files:
+                    initial_covered_files.add(source_file)
+            
             paths_from_root = self._simulate_paths_recursive(
                 node_id=root_id,
                 current_path=[],
                 visited_sequences=initial_visited,
+                covered_files=initial_covered_files,
                 depth=0,
                 max_depth=max_depth,
                 verbose=verbose
@@ -318,9 +392,16 @@ class MultiFileConstrainedDialogSimulator:
 
             print(f"  Found {len(valid_paths_from_root)} valid paths from root {root_id}.")
 
+        # Filter for complete coverage if requested
+        if complete_coverage_only and self.source_files:
+            print(f"\n{Fore.CYAN}Filtering for paths with complete source file coverage...{Style.RESET_ALL}")
+            complete_paths = self._filter_complete_coverage_paths(all_valid_paths, verbose)
+            print(f"  Found {len(complete_paths)} paths with complete coverage.")
+            all_valid_paths = complete_paths
+        
         print(f"\n{Fore.GREEN}Simulation Complete.{Style.RESET_ALL}")
-        print(f"Total valid paths found across all roots: {len(all_valid_paths)}")
-        print(f"(Total paths explored before pruning/errors: {total_simulated})")
+        print(f"Total valid paths found: {len(all_valid_paths)}")
+        print(f"(Total paths explored before filtering: {total_simulated})")
 
         txt_file = None
         if export_txt and all_valid_paths:
@@ -333,7 +414,7 @@ class MultiFileConstrainedDialogSimulator:
         Exports the valid simulated paths to a text file.
 
         Args:
-            paths (list): The list of valid dialog paths.
+            paths (list): The list of valid dialog paths (with coverage info).
             output_file (str, optional): The name of the output text file. Defaults to None.
 
         Returns:
@@ -348,9 +429,13 @@ class MultiFileConstrainedDialogSimulator:
             f.write(f"Constrained Dialog Paths Simulation\n")
             f.write(f"Source File: {self.json_file_path}\n")
             f.write(f"Total Valid Paths: {len(paths)}\n")
+            f.write(f"Required Source Files: {', '.join(self.source_files)}\n")
             f.write(f"Constraints Applied: {json.dumps(self.constraints)}\n\n")
 
-            for i, path in enumerate(paths, 1):
+            for i, path_info in enumerate(paths, 1):
+                path = path_info["path"]
+                covered_files = path_info["covered_files"]
+                
                 f.write(f"Path {i}: {' -> '.join(path)}\n")
                 f.write("  Details:\n")
                 visited_seqs_in_path = set()
@@ -367,7 +452,8 @@ class MultiFileConstrainedDialogSimulator:
                                 f": {speaker} - {text[:80]}{'...' if len(text) > 80 else ''}\n")
                     else:
                         f.write(f"    - {node_id}\n")
-                f.write(f"  Visited Sequences: {sorted(list(visited_seqs_in_path))}\n\n")
+                f.write(f"  Visited Sequences: {sorted(list(visited_seqs_in_path))}\n")
+                f.write(f"  Covered Source Files: {sorted(list(covered_files))}\n\n")
 
         print(f"{Fore.GREEN}Paths exported successfully to {output_file}{Style.RESET_ALL}")
         return output_file
@@ -411,21 +497,26 @@ class MultiFileConstrainedDialogSimulator:
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    json_file_path = "output_merged/Act1/Chapel/cha_crypt.json"  # Entry point JSON file
+    json_file_path = "output_merged/Act2/MoonriseTowers/moo_jailbreak.json"  # Entry point JSON file
     max_depth = 25
     verbose = True
     export = True
+    complete_coverage_only = True  # Only return paths that cover all source files
 
     simulator = MultiFileConstrainedDialogSimulator(json_file_path)
     valid_paths, output_txt_file = simulator.simulate_all_paths(
         max_depth=max_depth,
         export_txt=export,
-        verbose=verbose
+        verbose=verbose,
+        complete_coverage_only=complete_coverage_only
     )
 
     if valid_paths:
         print("\n--- First 10 Valid Paths ---")
-        for i, path in enumerate(valid_paths[:10]):
-            print(f"{i + 1}: {' -> '.join(path)}")
+        print("Each path covers all source files:")
+        for i, path_info in enumerate(valid_paths[:10]):
+            path = path_info["path"]
+            covered_files = path_info["covered_files"]
+            print(f"{i + 1}: {' -> '.join(path[:5])}... (Covers {len(covered_files)} files)")
         if len(valid_paths) > 10:
             print("...")

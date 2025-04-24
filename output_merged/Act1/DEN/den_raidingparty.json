@@ -133,7 +133,102 @@
       "DEN_RaidingParty_VB_ApproachingGate.json",
       "DEN_RaidingParty_AD_Adventurer1AtGate.json",
       "DEN_RaidingParty_AD_WyllWantsOut.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sessions in the input depend on previous events in the story. For example, during the goblin raid, Wyll\u2019s battle cry (AD_WyllWantsOut) and the appearance of the goblin captain (AD_GoblinCaptain) occur early in combat. Once the raiders are defeated, we enter the aftermath \u2013 the defeated raiders are alluded to in PAD_RaidersDefeated. Shortly afterward, the surviving leaders argue (AD_LeadersArgue) and Zevlor opens the gate to the Den (OpenGate). This then prompts the adventurer leader to rant (AD_AdventurerLeaderRant) and then deliver a further line just before confronting the tiefling leader (AD_AdventurerLeaderToConfrontation). The ensuing Confrontation between the tiefling and adventurer leaders leads to a resolution dialogue (PAD_ConfrontationResolved). At this point narrative branches occur: if everyone survives the confrontation, a peaceful VB is played (VB_PeacefulResolution), while if one leader is knocked out, an alternate dialogue is triggered (AdventurerAfterKO) with additional knock\u2010out wake\u2013up scenes (AD_AdventurerWakesUp or AD_TieflingWakesUp) depending on which leader is incapacitated. In another combat-related exchange, Wyll\u2019s aggressive charge (AD_WyllCharge) is followed by the tiefling leader spotting him (AD_TieflingLeaderSpotsWyll). Also, if instead of a direct resolution the adventurer leader flees, VB_AdventurerLeaderLeaves is played \u2013 an outcome that cannot happen together with the peaceful resolution or the knockout branch. Thus, we have a series of ordering rules linking early combat (goblins) to later confrontations at the gate and inside the Den, and mutually exclusive resolution paths after the confrontation.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_WyllWantsOut",
+            "AD_GoblinCaptain"
+          ],
+          "successor": "PAD_RaidersDefeated"
+        },
+        {
+          "predecessor": [
+            "PAD_RaidersDefeated"
+          ],
+          "successor": "AD_LeadersArgue"
+        },
+        {
+          "predecessor": [
+            "PAD_RaidersDefeated"
+          ],
+          "successor": "OpenGate"
+        },
+        {
+          "predecessor": [
+            "OpenGate"
+          ],
+          "successor": "AD_AdventurerLeaderRant"
+        },
+        {
+          "predecessor": [
+            "AD_AdventurerLeaderRant"
+          ],
+          "successor": "AD_AdventurerLeaderToConfrontation"
+        },
+        {
+          "predecessor": [
+            "AD_AdventurerLeaderToConfrontation"
+          ],
+          "successor": "Confrontation"
+        },
+        {
+          "predecessor": [
+            "Confrontation"
+          ],
+          "successor": "PAD_ConfrontationResolved"
+        },
+        {
+          "predecessor": [
+            "AD_WyllCharge"
+          ],
+          "successor": "AD_TieflingLeaderSpotsWyll"
+        },
+        {
+          "predecessor": [
+            "PAD_ConfrontationResolved"
+          ],
+          "successor": "VB_PeacefulResolution"
+        },
+        {
+          "predecessor": [
+            "PAD_ConfrontationResolved"
+          ],
+          "successor": "AdventurerAfterKO"
+        },
+        {
+          "predecessor": [
+            "AdventurerAfterKO"
+          ],
+          "successor": "AD_AdventurerWakesUp"
+        },
+        {
+          "predecessor": [
+            "AdventurerAfterKO"
+          ],
+          "successor": "AD_TieflingWakesUp"
+        },
+        {
+          "predecessor": [
+            "PAD_ConfrontationResolved"
+          ],
+          "successor": "VB_AdventurerLeaderLeaves"
+        }
+      ],
+      "exclusive": [
+        [
+          "VB_PeacefulResolution",
+          "AdventurerAfterKO",
+          "VB_AdventurerLeaderLeaves"
+        ],
+        [
+          "AD_AdventurerWakesUp",
+          "AD_TieflingWakesUp"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_Adventurer2AtGate_0": {

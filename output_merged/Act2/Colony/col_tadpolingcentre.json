@@ -128,7 +128,82 @@
       "COL_TadpolingCentre_AD_MemoryImprint_001_Mindflayer.json",
       "COL_TadpolingCentre_AD_MemoryImprint_010_Empty_Ravengard.json",
       "COL_TadpolingCentre_DarkUrgePod.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "The sessions that involve freeing characters or triggering combat all stem from the interaction with the mind flayer device controlling the pods (the 'Pods' session). In other words, when a player interacts with the Pods and selects to release (or purge) the occupants, several follow\u2010up sessions are triggered. For example, the post\u2010combat dialogues with Yeva, Zevlor, and the Manip (PostCombat_Yeva, PostCombat_Zevlor, PostCombat_Manip) as well as the combat-related ADs (AD_Mindflayers_EnterCombat, AD_Zevlor_Combat, and AD_Manip_ColonyComment) all depend on that initial interaction with the device. In addition, Zevlor has an in-pod dialogue (AD_Zevlor_Pod) that will play only if he is still inside the pod (i.e. before he is freed); if the player instead frees him, then his in-pod dialogue is skipped in favor of the freed/first combat dialogue. Furthermore, if Zevlor dies (Zevlor_Dead), none of his free/combat-related dialogues (or the in-pod repeated dialogue) can occur. Finally, there is a DaisyAD_PodsComment session that is triggered when the pods have not been tampered with (i.e. when the player has not gone through the device\u2019s release/purge route). This makes DaisyAD_PodsComment mutually exclusive with any sessions that result from an active decision on the Pods device. These observations lead us to define the following ordering and exclusiveness rules.",
+      "order": [
+        {
+          "predecessor": [
+            "Pods"
+          ],
+          "successor": "PostCombat_Yeva"
+        },
+        {
+          "predecessor": [
+            "Pods"
+          ],
+          "successor": "PostCombat_Zevlor"
+        },
+        {
+          "predecessor": [
+            "Pods"
+          ],
+          "successor": "PostCombat_Manip"
+        },
+        {
+          "predecessor": [
+            "Pods"
+          ],
+          "successor": "AD_Mindflayers_EnterCombat"
+        },
+        {
+          "predecessor": [
+            "Pods"
+          ],
+          "successor": "AD_Zevlor_Combat"
+        },
+        {
+          "predecessor": [
+            "Pods"
+          ],
+          "successor": "AD_Manip_ColonyComment"
+        },
+        {
+          "predecessor": [
+            "AD_Zevlor_Pod"
+          ],
+          "successor": "PostCombat_Zevlor"
+        },
+        {
+          "predecessor": [
+            "AD_Zevlor_Pod"
+          ],
+          "successor": "AD_Zevlor_Combat"
+        }
+      ],
+      "exclusive": [
+        [
+          "Zevlor_Dead",
+          "PostCombat_Zevlor",
+          "AD_Zevlor_Combat",
+          "AD_Zevlor_Pod"
+        ],
+        [
+          "AD_Zevlor_Pod",
+          "PostCombat_Zevlor",
+          "AD_Zevlor_Combat"
+        ],
+        [
+          "DaisyAD_PodsComment",
+          "PostCombat_Yeva",
+          "PostCombat_Zevlor",
+          "PostCombat_Manip",
+          "AD_Mindflayers_EnterCombat",
+          "AD_Zevlor_Combat",
+          "AD_Manip_ColonyComment"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_MemoryImprint_003_Mindflayer_0": {

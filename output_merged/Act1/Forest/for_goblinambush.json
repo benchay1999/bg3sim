@@ -38,7 +38,36 @@
       "FOR_GoblinAmbush_Warning.json",
       "FOR_GoblinAmbush_AD_StartedCombat.json",
       "FOR_GoblinAmbush_PatrollingGoblin.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Analyzing the synopses and trigger conditions reveals several relationships. First, when entering the abandoned village, if the player passes a Perception check, the PAD_SpottedAmbush session is triggered to indicate that goblins are seen sneaking around, and then the main village dialogue (represented by the session with an empty string as its name) starts while the goblins are still in the process of getting into position for an ambush. In the alternative branch (failed Perception check) the same unnamed dialogue is reached but with the ambush already in place; therefore, when PAD_SpottedAmbush is present it must occur before the unnamed dialogue session. Next, within the unnamed village dialogue, if the player fails to talk their way out then combat ensues, thus leading to the AD_StartedCombat session. A similar ordering is found at the village entrance: the CheckpointGuards session (where a goblin is standing guard at the entrance and renaming the town) is later supplemented by a backup dialogue, CheckpointGuardsWarning, which acts as a further alert from a backup guard. Finally, there are two sessions concerning encounters with goblins in the village \u2013 Warning (a goblin warrior eager for a fight) and PatrollingGoblin (a nonchalant goblin on routine patrol). Their roles appear to be alternative encounter styles in the abandoned village: one represents a stationary, confrontational guard while the other represents a patrolling, less interactive character. As such, they should be mutually exclusive: a given playthrough would likely feature one or the other, not both.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_SpottedAmbush"
+          ],
+          "successor": ""
+        },
+        {
+          "predecessor": [
+            ""
+          ],
+          "successor": "AD_StartedCombat"
+        },
+        {
+          "predecessor": [
+            "CheckpointGuards"
+          ],
+          "successor": "CheckpointGuardsWarning"
+        }
+      ],
+      "exclusive": [
+        [
+          "Warning",
+          "PatrollingGoblin"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "CheckpointGuards_18": {

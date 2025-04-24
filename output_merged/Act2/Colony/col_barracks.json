@@ -83,7 +83,77 @@
       "COL_Barracks_AD_SkullLasher_003_Combat.json",
       "COL_Barracks_AD_Blessing.json",
       "COL_Barracks_MistressOfSouls.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Many of the sessions in the input are triggered by a ceremonial event in the Colony Barracks \u2013 namely, the blessing performed by Krustine, Mistress of Souls. This blessing (AD_Blessing) must complete before most of the non\u2010combat default dialogues occur (such as the dialogues with the Skull Lashers \u2013 SkullLasher_001, SkullLasher_002, SkullLasher_003 \u2013 as well as Krustine\u2019s own dialogue in MistressOfSouls, the follow\u2010up AD where she sends the Skull Lashers on their way (AD_MistressOfSouls_GoForth), and even later repeated behavior ADs like AD_SkullLasher_001_Prayer and AD_SkullLasher_002_AttackDummy, plus the special Dark Urge recognition session, MistressOfSouls_RecognizeDarkUrge). In effect, AD_Blessing is a common predecessor for these \u201cpost-blessing\u201d dialogues. In contrast, if the player interrupts the blessing ceremony then a different reaction (MistressOfSouls_InterruptBlessing) is triggered; logically, one cannot both complete and interrupt the blessing ceremony, making AD_Blessing and MistressOfSouls_InterruptBlessing mutually exclusive. Similarly, there is a branch based on player behaviour: if the player attacked Ketheric on Moonrise Roof before coming to the Colony, they trigger the high\u2010alert dialogue (MistressOfSouls_HighAlert). In that \u201chigh\u2010alert\u201d branch all the friendly/post-blessing dialogues are replaced because the Myrkulites become hostile. Finally, there are several combat AD sessions (AD_MistressOfSouls_Combat, AD_SkullLasher_001_Combat, AD_SkullLasher_002_Combat, AD_SkullLasher_003_Combat) that occur in combat and are independent of the blessing ceremony flow, so they have no ordering constraints with the blessing chain. Based on these observations we can set up ordering rules where AD_Blessing must precede the default dialogues (and their subsequent events), and exclusivity rules for the interrupt branch (MistressOfSouls_InterruptBlessing) versus the normal blessing flow and for the high\u2010alert branch (MistressOfSouls_HighAlert) versus the normal dialogues.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "SkullLasher_001"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "SkullLasher_002"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "SkullLasher_003"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "MistressOfSouls"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "AD_MistressOfSouls_GoForth"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "AD_SkullLasher_001_Prayer"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "AD_SkullLasher_002_AttackDummy"
+        },
+        {
+          "predecessor": [
+            "AD_Blessing"
+          ],
+          "successor": "MistressOfSouls_RecognizeDarkUrge"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_Blessing",
+          "MistressOfSouls_InterruptBlessing"
+        ],
+        [
+          "MistressOfSouls_HighAlert",
+          "SkullLasher_001",
+          "SkullLasher_002",
+          "SkullLasher_003",
+          "MistressOfSouls",
+          "AD_MistressOfSouls_GoForth",
+          "MistressOfSouls_RecognizeDarkUrge",
+          "AD_SkullLasher_001_Prayer",
+          "AD_SkullLasher_002_AttackDummy"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_MistressOfSouls_Combat_0": {

@@ -218,7 +218,6 @@ def extract_speaker(element):
         node_id = node_id_span.text.strip().replace('.', '')
     
     # Special case for node 92 which has a known issue
-
     
     # First, find the main div that is a direct child of the element
     main_div = element.find('div', recursive=False)
@@ -239,7 +238,12 @@ def extract_speaker(element):
     if npc:
         return npc.text.strip()
     
-    # Check for first-level nested div.npc
+    # Check for direct npcgroup span
+    npcgroup = main_div.find('span', class_='npcgroup', recursive=False)
+    if npcgroup:
+        return npcgroup.text.strip()
+    
+    # Check for first-level nested div.npc or div.npcgroup
     # First look for the inline-block container
     speaker_container = main_div.find('div', style='display:inline-block;', recursive=False)
     if speaker_container:
@@ -247,22 +251,29 @@ def extract_speaker(element):
         nested_npc = speaker_container.find('div', class_='npc')
         if nested_npc:
             return nested_npc.text.strip()
+        
+        # Look for an npcgroup div inside this container
+        nested_npcgroup = speaker_container.find('div', class_='npcgroup')
+        if nested_npcgroup:
+            return nested_npcgroup.text.strip()
     
-    # As a last resort, look for any div.npc directly within main_div
+    # As a last resort, look for any div.npc or div.npcgroup directly within main_div
     # but avoid going into child <ul> elements
     all_children = [c for c in main_div.children if c.name and c.name != 'ul']
     for child in all_children:
-        if child.name == 'div' and 'npc' in child.get('class', []):
+        if child.name == 'div' and ('npc' in child.get('class', []) or 'npcgroup' in child.get('class', [])):
             return child.text.strip()
-        # Check one level deeper for a div.npc
+        # Check one level deeper for a div.npc or div.npcgroup
         if hasattr(child, 'find'):
             npc_div = child.find('div', class_='npc')
             if npc_div:
                 return npc_div.text.strip()
-    
+            npcgroup_div = child.find('div', class_='npcgroup')
+            if npcgroup_div:
+                return npcgroup_div.text.strip()
     
     return ""
-
+    
 def extract_text(element):
     """Extract dialogue text from a node"""
     # Find the main div first (direct child of li)

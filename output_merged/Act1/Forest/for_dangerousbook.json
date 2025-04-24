@@ -23,7 +23,34 @@
       "FOR_DangerousBook_Tome.json",
       "FOR_DangerousBook_VB_BookDestroyed.json",
       "FOR_DangerousBook_PAD_PlayerTriedToTakeTome.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "The sequence starts when the player finds the book (PAD_FindBook). After picking it up, the player can trigger the reading event (Tome), which binds the book to whoever reads it. Once the book is bound (typically to a companion such as Astarion or Gale), if the player tries to remove it from the companion's inventory, PAD_PlayerTriedToTakeTome is triggered. Alternatively, if the player destroys the book (through actions like dropping and blasting it with radiant damage), the VB_BookDestroyed session is played. Thus, the act of destroying the book is mutually exclusive with reading it (Tome) or attempting to take it from a companion (PAD_PlayerTriedToTakeTome), since once the book is destroyed, neither reading nor theft is possible.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_FindBook"
+          ],
+          "successor": "Tome"
+        },
+        {
+          "predecessor": [
+            "Tome"
+          ],
+          "successor": "PAD_PlayerTriedToTakeTome"
+        }
+      ],
+      "exclusive": [
+        [
+          "Tome",
+          "VB_BookDestroyed"
+        ],
+        [
+          "PAD_PlayerTriedToTakeTome",
+          "VB_BookDestroyed"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_FindBook_0": {

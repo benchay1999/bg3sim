@@ -23,7 +23,30 @@
       "SCL_Pixie_PAD_ReactionToPixie.json",
       "SCL_Pixie_InsideLantern.json",
       "SCL_Pixie_AD_ScreamingInsideLantern.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Reviewing the session descriptions reveals two clear ordering constraints. First, the session 'AD_AsksForHelp' is described as an encounter with the pixie inside the Moonlantern before the player has actually picked up the lantern. Since the 'InsideLantern' session occurs when the player already has the magical lantern (and thus encounters the trapped pixie), 'AD_AsksForHelp' must happen before 'InsideLantern'. Second, the 'PAD_ReactionToPixie' session is triggered at the end of the SCL_Pixie_InsideLantern dialog and it refers to the pixie having been angered in the previous scene \u2013 the anger being shown in the 'AD_ScreamingInsideLantern' session (which is started when the player chooses not to release the pixie). Thus, 'AD_ScreamingInsideLantern' must happen before 'PAD_ReactionToPixie'.\n\nThere is also an implied mutual exclusivity: the branch where the player declines to help the pixie (triggering 'AD_ScreamingInsideLantern' and then 'PAD_ReactionToPixie') is logically mutually exclusive with an alternative branch where the player might choose to release the pixie (which would not lead to the pixie anger and ensuing reactions). However, since the session for a successful release is not included in the provided data, we will only note that the not-releasing branch (captured by 'AD_ScreamingInsideLantern' and its consequent 'PAD_ReactionToPixie') is exclusive with the not-present release branch.\n\nOnly sessions with explicit ordering or exclusiveness constraints are included in the output.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_AsksForHelp"
+          ],
+          "successor": "InsideLantern"
+        },
+        {
+          "predecessor": [
+            "AD_ScreamingInsideLantern"
+          ],
+          "successor": "PAD_ReactionToPixie"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_ScreamingInsideLantern",
+          "SuccessfulPixieReleaseBranch"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_AsksForHelp_0": {
