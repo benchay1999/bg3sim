@@ -56,6 +56,18 @@ class DialogSimulator:
         self.default_flags = ["ORI_INCLUSION_GALE", "ORI_INCLUSION_ASTARION", "ORI_INCLUSION_LAEZEL", "ORI_INCLUSION_SHADOWHEART", "ORI_INCLUSION_WYLL", "ORI_INCLUSION_KARLACH", "ORI_INCLUSION_HALSIN", "ORI_INCLUSION_MINTHARA", "ORI_INCLUSION_MINSC", "ORI_INCLUSION_RANDOM"]
         self.active_flags = set(self.default_flags)
     
+    def set_initial_flags(self, flags):
+        """Set the initial active flags for the simulator."""
+        # Ensure flags is a set
+        if isinstance(flags, set):
+            self.active_flags = flags.copy() # Work with a copy
+        elif isinstance(flags, (list, tuple)):
+            self.active_flags = set(flags)
+        else:
+            print(f"{Fore.YELLOW}Warning: Invalid type for initial flags. Expected set, list, or tuple. Using defaults.{Style.RESET_ALL}")
+            self.active_flags = set(self.default_flags) # Fallback
+        # print(f"{Fore.BLUE}Initial flags set: {len(self.active_flags)}{Style.RESET_ALL}") # Optional debug
+    
     def _is_child_node(self, node_id):
         """Check if a node is a child node of any other node"""
         for other_id, other_data in self.all_nodes.items():
@@ -1105,6 +1117,92 @@ class DialogSimulator:
         
         print(f"{Fore.GREEN}Dialog paths dictionary exported successfully to {output_file}{Style.RESET_ALL}")
         return output_file
+
+    def execute_path(self, path, initial_flags=None):
+        """
+        Executes a specific dialog path, applying setflags and approvals.
+        Does NOT check flags during traversal, assumes path validity.
+        Resets and uses provided initial flags.
+
+        Args:
+            path (list): List of node IDs representing the path to execute.
+            initial_flags (set, optional): Flags to start with. If None, uses defaults.
+
+        Returns:
+            tuple: (list_of_node_data, final_flags_set)
+                   - list_of_node_data: Detailed data for each node visited.
+                   - final_flags_set: The set of active flags after traversing the path.
+        """
+        if not path:
+            return [], initial_flags if initial_flags else set(self.default_flags)
+
+        # Reset state but keep initial flags
+        self.reset_state() # Resets approvals and visited nodes
+        if initial_flags is not None:
+             self.set_initial_flags(initial_flags)
+        else:
+             self.active_flags = set(self.default_flags) # Ensure defaults if none provided
+
+        # print(f"{Fore.CYAN}Executing path: {path} with initial flags: {self.active_flags}{Style.RESET_ALL}")
+
+        traversed_nodes_data = []
+        current_active_flags = self.active_flags.copy() # Work with a copy locally
+
+        for node_id in path:
+            if node_id in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]:
+                traversed_nodes_data.append({
+                    "id": node_id,
+                    "special_marker": True
+                })
+                continue
+
+            # Get node data directly, do not follow jumps/links here as path is pre-determined
+            # However, the path provided SHOULD already have jumps/links resolved if needed.
+            node_data = self._get_node(node_id)
+
+            if not node_data:
+                print(f"{Fore.RED}Node {node_id} not found during path execution. Skipping.{Style.RESET_ALL}")
+                traversed_nodes_data.append({
+                    "id": node_id,
+                    "error": "NODE_DATA_NOT_FOUND",
+                    "special_marker": True
+                })
+                continue
+
+            # Process approvals (affects internal simulator state)
+            self._process_approvals(node_data) # Uses self.companion_approvals etc.
+
+            # Process setflags (affects the flags being tracked for return)
+            # Logic copied and adapted from self._process_setflags
+            for flag in node_data.get('setflags', []):
+                if "= False" in flag:
+                    flag_to_remove = flag.split('= False')[0].strip()
+                    if flag_to_remove in current_active_flags:
+                        current_active_flags.remove(flag_to_remove)
+                else:
+                    current_active_flags.add(flag.strip())
+
+            # Store node data for the result
+            # (Using the same structure as explore_dialog_from_node for consistency)
+            traversed_nodes_data.append({
+                "id": node_id,
+                "speaker": node_data.get('speaker', 'Unknown'),
+                "text": node_data.get('text', ''),
+                "node_type": node_data.get('node_type', 'normal'),
+                "checkflags": node_data.get('checkflags', []), # Include for info
+                "setflags": node_data.get('setflags', []),   # Include for info
+                "goto": node_data.get('goto', ''),
+                "link": node_data.get('link', ''),
+                "is_end": node_data.get('is_end', False),
+                "approval": node_data.get('approval', []),
+                "context": node_data.get('context', '')
+            })
+
+            # Update the main simulator flags (might be useful if called interactively, but primary return is separate)
+            self.active_flags = current_active_flags.copy()
+
+        # print(f"{Fore.GREEN}Path execution finished. Final flags: {current_active_flags}{Style.RESET_ALL}")
+        return traversed_nodes_data, current_active_flags
 
 def main():
     print(f"{Fore.CYAN}Baldur's Gate 3 Dialog Simulator{Style.RESET_ALL}")

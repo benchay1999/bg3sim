@@ -51,6 +51,8 @@ class ScenarioSimulator:
         self.traversal_sequence = []  # Sequence of session IDs
         self.traversal_paths = []     # Actual node paths for each session
         self.traversal_nodes = []     # Detailed node data from traversals
+        self.traversal_approval_nodes = [] # List of approval nodes in the scenario
+        self.flags = []
         
     def _flatten_dialog_nodes(self, nodes_dict):
         """
@@ -891,6 +893,124 @@ class ScenarioSimulator:
         else:
             print(f"{Fore.GREEN}Found {len(sessions_with_approval)} sessions with approval effects out of {len(self.session_ids)} total sessions{Style.RESET_ALL}")
         return sessions_with_approval
+
+    def execute_session_path(self, session_id, path, initial_flags):
+        """
+        Execute a specific dialog path for a session, starting with given flags,
+        and return the resulting node data and final flags.
+
+        Args:
+            session_id (str): The session ID.
+            path (list): A list of node IDs representing the path to traverse.
+            initial_flags (set): The set of flags active before starting this session path.
+
+        Returns:
+            tuple: (list_of_node_data, final_flags_set)
+                   - list_of_node_data: Detailed data for each node visited.
+                   - final_flags_set: The set of active flags after traversing the path.
+        """
+        if not path:
+            return [], initial_flags # Return empty data and initial flags if path is empty
+
+        simulator = self.session_simulators.get(session_id)
+        if not simulator:
+            print(f"{Fore.RED}No simulator found for session {session_id} during path execution.{Style.RESET_ALL}")
+            # Return initial flags as no changes could be made
+            return [], initial_flags
+
+        # print(f"{Fore.CYAN}Executing path for session {session_id} ({len(path)} nodes) with initial flags...{Style.RESET_ALL}")
+
+        # Use the new execute_path method of DialogSimulator
+        # It handles resetting state and setting initial flags internally
+        node_data, final_flags = simulator.execute_path(path, initial_flags)
+
+        # Print summary (optional)
+        meaningful_nodes = [n for n in node_data if isinstance(n, dict) and n.get('text')]
+        # print(f"{Fore.GREEN}Executed path for session {session_id}. {len(node_data)} nodes visited ({len(meaningful_nodes)} with dialog). Final flags count: {len(final_flags)}{Style.RESET_ALL}")
+
+        return node_data, final_flags
+
+    def simulate_single_traversal(self, initial_flags, min_utterances=3, prioritize_approval=True, include_all_sessions=True):
+        """
+        Simulates a single traversal through the scenario, respecting constraints,
+        starting with initial flags, and returning the traversal data and final flags.
+
+        Args:
+            initial_flags (set): The set of flags active before starting this scenario.
+            min_utterances (int): Minimum utterances per session.
+            prioritize_approval (bool): Prioritize sessions/paths with approval effects.
+            include_all_sessions (bool): Attempt to include all possible sessions.
+
+        Returns:
+            tuple: (traversal_data, final_flags_set)
+                   - traversal_data: Dictionary containing the session sequence and node data for the run.
+                                     Returns None if no valid traversal could be made.
+                   - final_flags_set: The set of active flags after the scenario traversal.
+        """
+        print(f"\n{Fore.WHITE}===== SIMULATING SINGLE SCENARIO TRAVERSAL ====={Style.RESET_ALL}")
+        print(f"Scenario: {self.scenario_name}")
+        # print(f"Initial flags received: {initial_flags}") # Optional debug
+
+        # Ensure all sessions are simulated to get path options (does this only once)
+        for session_id in self.session_ids:
+            self._simulate_session(session_id)
+
+        # Generate valid session sequences based on constraints and priorities
+        valid_sequences = self._generate_valid_sequences(
+            prioritize_approval=prioritize_approval,
+            include_all_sessions=include_all_sessions
+        )
+
+        # Fallback if no sequences found with prioritization enabled
+        if not valid_sequences and prioritize_approval:
+            print(f"{Fore.YELLOW}No valid sequences found prioritizing approval. Retrying without...{Style.RESET_ALL}")
+            valid_sequences = self._generate_valid_sequences(prioritize_approval=False, include_all_sessions=include_all_sessions)
+
+        if not valid_sequences:
+            print(f"{Fore.RED}No valid session sequences found for scenario {self.scenario_name}! Check constraints.{Style.RESET_ALL}")
+            return None, initial_flags # Return None for data, initial flags unchanged
+
+        # Choose one valid sequence (e.g., the first/best one or random)
+        sequence = random.choice(valid_sequences)
+        print(f"{Fore.CYAN}Using session sequence: {sequence}{Style.RESET_ALL}")
+
+        # Initialize traversal data structure for this single run
+        traversal_data = {
+            "scenario_name": self.scenario_name,
+            "session_sequence": sequence,
+            "paths": {}, # Store chosen path for each session
+            "node_data": {} # Store node data from execution
+        }
+
+        # Initialize flags for this specific scenario run, starting with the input
+        current_scenario_flags = initial_flags.copy()
+
+        # Execute the chosen sequence session by session
+        for session_id in sequence:
+            # Choose a path for this session
+            path = self._choose_random_path(session_id, min_utterances=min_utterances, prioritize_approval=prioritize_approval)
+            if not path:
+                 print(f"{Fore.YELLOW}Could not find a suitable path for session {session_id}. Skipping session, flags not updated.{Style.RESET_ALL}")
+                 traversal_data["paths"][session_id] = []
+                 traversal_data["node_data"][session_id] = [] # Indicate skipped session
+                 continue # Move to the next session
+
+            traversal_data["paths"][session_id] = path
+
+            # Execute the chosen path with the current flags
+            # print(f"Executing session {session_id} with flags: {current_scenario_flags}")
+            session_node_data, session_final_flags = self.execute_session_path(session_id, path, current_scenario_flags)
+
+            # Store the resulting node data
+            traversal_data["node_data"][session_id] = session_node_data
+
+            # Update the flags for the next session
+            current_scenario_flags = session_final_flags
+            # print(f"Session {session_id} finished. Updated flags: {current_scenario_flags}")
+
+
+        print(f"{Fore.GREEN}Single scenario traversal complete for {self.scenario_name}. Final flag count: {len(current_scenario_flags)}{Style.RESET_ALL}")
+        return traversal_data, current_scenario_flags
 
 def main():
     print(f"{Fore.CYAN}Baldur's Gate 3 Scenario Simulator{Style.RESET_ALL}")
