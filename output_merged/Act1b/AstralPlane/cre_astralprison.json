@@ -63,7 +63,48 @@
       "CRE_AstralPrison_Wisp01.json",
       "CRE_AstralPrison_AD_ReadyCheckFailed.json",
       "CRE_AstralPrison_Entering.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Analyzing the session synopses and their trigger information, we can detect a few key relationships. First, the party is teleported to the Astral Prism when the 'Entering' dialog is triggered, and afterward the player encounters the cave entrance where a disembodied Daisy speaks (DaisyCaveEntrance). After having that conversation inside the cave, when the avatar comes back, PAD_ComingOutOfCave plays as the companions react. This gives us one clear chain: Entering \u2192 DaisyCaveEntrance \u2192 PAD_ComingOutOfCave. In another branch of the flow, once in the Astral area the player encounters a wisp that they must follow to reach a final destination where they meet Daisy in person (the 'Daisy' session). Notably, there are two wisp sessions at the same final destination location (Wisp03 and Wisp04) which are used as the guidance trigger. Thus, encountering either one should precede the Daisy meeting. Alternately, if the player kills the wisp (by triggering the session DaisyAD_WispDead, which reacts to the wisp\u2019s death), then that branch is taken. Therefore, the sessions \u2018Daisy\u2019 and \u2018DaisyAD_WispDead\u2019 are mutually exclusive \u2013 if one occurs, the other does not. Finally, note that there are two sessions (Wisp01 and Wisp02) triggered from the same coordinates in the Astral Prison. Although both are simple one\u2010liners, the fact they share the same trigger criteria makes it likely that they are alternative (i.e. mutually exclusive) responses once the player reaches that location. Other sessions like PAD_MemoryFragmentPerception01, DaisyAD_AvatarDies, and AD_ReadyCheckFailed are triggered under special conditions (witnessing a strange memory fragment, dying in the Astral Prison, or canceling a ready check) but no explicit ordering relative to the others is implied, so they are not included here.",
+      "order": [
+        {
+          "predecessor": [
+            "Entering"
+          ],
+          "successor": "DaisyCaveEntrance"
+        },
+        {
+          "predecessor": [
+            "DaisyCaveEntrance"
+          ],
+          "successor": "PAD_ComingOutOfCave"
+        },
+        {
+          "predecessor": [
+            "Wisp03",
+            "Wisp04"
+          ],
+          "successor": "Daisy"
+        },
+        {
+          "predecessor": [
+            "Wisp03",
+            "Wisp04"
+          ],
+          "successor": "DaisyAD_WispDead"
+        }
+      ],
+      "exclusive": [
+        [
+          "Daisy",
+          "DaisyAD_WispDead"
+        ],
+        [
+          "Wisp01",
+          "Wisp02"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "Wisp04_0": {

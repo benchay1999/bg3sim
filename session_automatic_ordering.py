@@ -3,7 +3,7 @@ import langchain_openai
 import langchain_core
 from langchain_core.output_parsers import JsonOutputParser
 from tqdm import tqdm
-root_dir = "output_merged/Act1"
+root_dir = "output_merged/Act1b"
 
 for merged_session_folder_path in tqdm(os.listdir(root_dir)):
     merged_session_folder = f"{root_dir}/{merged_session_folder_path}"
@@ -20,7 +20,7 @@ for merged_session_folder_path in tqdm(os.listdir(root_dir)):
         dialogue = merged_session["dialogue"]
         individual_metadata = metadata["individual_metadata"]
 
-        chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key="")
+        chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key="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")
 
         chain = chat | JsonOutputParser()
         prompt_path = "automatic_ordering.txt"

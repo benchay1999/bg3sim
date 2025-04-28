@@ -38,7 +38,66 @@
       "CRE_StatuePuzzle_PAD_HitWeakly.json",
       "CRE_StatuePuzzle_AD_West.json",
       "CRE_StatuePuzzle_PAD_SpottingStatuesPerceptionCheck.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "The puzzle center around a set of statues: first the player notices the statues (PAD_SpottingStatuesPerceptionCheck) and then obtains clues by reading the inscriptions on the statues (AD_East and AD_West). These inscriptions are used as hints for how to rotate the statues correctly. When the player attempts to move the statues, there are two branches: one where the attempt is unsuccessful (triggering failure dialogues such as PAD_AthleticsCheckFailed, PAD_HitWeakly, or AD_StuckStatue) and another branch where the correct solution is applied, eventually triggering the door to open (PAD_DoorOpened). Since the failure outcomes and the door-opening (successful) outcome are logically divergent\u2014they reflect different branches of progress\u2014they are mutually exclusive in a single playthrough. Also, the inscriptions serve as prerequisites for any direct interaction (whether failure or success), while the spotting event is an early observation that leads the player to interact with the statues. This analysis produces the following ordering and exclusiveness rules.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_SpottingStatuesPerceptionCheck"
+          ],
+          "successor": "AD_East"
+        },
+        {
+          "predecessor": [
+            "PAD_SpottingStatuesPerceptionCheck"
+          ],
+          "successor": "AD_West"
+        },
+        {
+          "predecessor": [
+            "AD_East",
+            "AD_West"
+          ],
+          "successor": "PAD_DoorOpened"
+        },
+        {
+          "predecessor": [
+            "AD_East",
+            "AD_West"
+          ],
+          "successor": "PAD_AthleticsCheckFailed"
+        },
+        {
+          "predecessor": [
+            "AD_East",
+            "AD_West"
+          ],
+          "successor": "PAD_HitWeakly"
+        },
+        {
+          "predecessor": [
+            "AD_East",
+            "AD_West"
+          ],
+          "successor": "AD_StuckStatue"
+        }
+      ],
+      "exclusive": [
+        [
+          "PAD_DoorOpened",
+          "PAD_AthleticsCheckFailed"
+        ],
+        [
+          "PAD_DoorOpened",
+          "PAD_HitWeakly"
+        ],
+        [
+          "PAD_DoorOpened",
+          "AD_StuckStatue"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_DoorOpened_0": {

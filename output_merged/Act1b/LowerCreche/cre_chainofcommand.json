@@ -83,7 +83,74 @@
       "CRE_ChainOfCommand_AD_LaezelGoesToPlanecaster.json",
       "CRE_ChainOfCommand_SWD_Templar.json",
       "CRE_ChainOfCommand_AD_TemplarCombatSecondLine.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several sessions are clearly part of branching encounter sequences and combat turn sequences. For example, the Inquisitor\u2019s combat ADs come in a series: the greeting (AD_TemplarGreeting) happens prior to the onset of combat, then the combat ADs occur in order\u2014first turn (AD_TemplarCombatFirstLine), then on subsequent turns (AD_TemplarCombatSecondLine and AD_TemplarCombatThirdLine). Separately, when talking with the inquisitor in the security office, the session named 'Templar' (in which the inquisitor demands the artefact) is encountered. In that branch the player may either engage in dialogue leading to Vlaakith\u2019s appearance or choose to kill the inquisitor (triggering DaisyAD_KilledInquisitor) \u2013 these two outcomes are mutually exclusive. In the dialogue branch the follow\u2010up is the appearance of Vlaakith (session \u2018Vlaakith\u2019), while in the kill branch that same Vlaakith dialog is triggered after the inquisitor is killed. Also, if after a chain-of-command sequence involving the planecaster the player follows Lae\u2019zel\u2019s orders to use the artefact correctly, the session AD_LaezelGoesToPlanecaster occurs; however, if the player instead incites Lae\u2019zel by leaving the security office or attacking the inquisitor, then AD_LaezelTurnsHostile is triggered \u2013 these two sessions form mutually exclusive outcomes. In addition, one branch of the combat sequence involves a side effect: during combat, after greeting (AD_TemplarGreeting), if combat ensues then AD_TemplarCombatMindstealLine is one of the actions the inquisitor takes \u2013 though its ordering relative to the first combat line is not as strictly defined as the sequential numbering of the other combat ADs, so we are not including it in the explicit order list. Finally, if the player ends up killing the inquisitor (the DaisyAD_KilledInquisitor branch) then an additional SWD_Templar session occurs upon killing the inquisitor, which is mutually exclusive with the dialogue branch where the inquisitor remains alive. Also, after initiating the astral plane entry by clicking the planecaster (DaisyAD_UsePlanecaster), if the templar is still live then TemplarStartsFight is triggered. These relationships yield the ordering and exclusiveness constraints below.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_TemplarGreeting"
+          ],
+          "successor": "AD_TemplarCombatFirstLine"
+        },
+        {
+          "predecessor": [
+            "AD_TemplarCombatFirstLine"
+          ],
+          "successor": "AD_TemplarCombatSecondLine"
+        },
+        {
+          "predecessor": [
+            "AD_TemplarCombatSecondLine"
+          ],
+          "successor": "AD_TemplarCombatThirdLine"
+        },
+        {
+          "predecessor": [
+            "AD_TemplarGreeting"
+          ],
+          "successor": "Templar"
+        },
+        {
+          "predecessor": [
+            "Templar"
+          ],
+          "successor": "Vlaakith"
+        },
+        {
+          "predecessor": [
+            "DaisyAD_KilledInquisitor"
+          ],
+          "successor": "Vlaakith"
+        },
+        {
+          "predecessor": [
+            "DaisyAD_UsePlanecaster"
+          ],
+          "successor": "TemplarStartsFight"
+        },
+        {
+          "predecessor": [
+            "Templar"
+          ],
+          "successor": "SWD_Templar"
+        }
+      ],
+      "exclusive": [
+        [
+          "AD_LaezelTurnsHostile",
+          "AD_LaezelGoesToPlanecaster"
+        ],
+        [
+          "Templar",
+          "DaisyAD_KilledInquisitor"
+        ],
+        [
+          "Templar",
+          "SWD_Templar"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_TemplarTurnsCreacheHostile_0": {

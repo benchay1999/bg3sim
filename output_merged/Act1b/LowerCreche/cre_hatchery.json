@@ -58,7 +58,42 @@
       "CRE_Hatchery_Guard.json",
       "CRE_Hatchery_AD_CaretakerEnterCombat.json",
       "CRE_Hatchery_PAD_EnteredGas.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "After reviewing the synopsis and trigger descriptions, several ordering and exclusiveness relationships become apparent. First, some sessions trigger immediately upon entering the hatchery. For instance, PAD_EnteredGas plays as soon as the player steps in and should occur before other interactions such as the environment comments triggered later in deep\u2013hatchery (PAD_HatcheryComment). When the player interacts with or even approaches the egg without the proper permission, two sequences can occur: one branch is where the player simply inspects the egg (Egg) and then, if the caretaker notices or if the player repeats the interaction improperly, the caretaker issues a warning (TouchWarning). Repeated or provocative egg interactions further escalate the situation into combat: the initial combat voice bark (AD_CaretakerCombat) and then the subsequent combat trigger as soon as the fight actually begins (AD_CaretakerEnterCombat). In addition, there is a mutual exclusiveness relationship surrounding the egg interactions. If the player speaks with the caretaker (the 'Caretaker' session), they may obtain permission to inspect or interact with the egg. In that case the warnings for approaching or touching the egg (NearEggWarning) are not triggered. This means that the caretaker session and the near egg warning session should not both appear in the same playthrough path. Other sessions such as AD_CaretakerChatter, AD_TeletrapTriggered, and Guard are more ambient or situational and do not have strict ordering or exclusiveness constraints with the ones focused on egg interaction and combat escalation. Therefore, the ordering rules that are identified are:\n1. PAD_EnteredGas must trigger before PAD_HatcheryComment (since the former happens immediately on entry and the latter when entering deeper).\n2. Egg must come before TouchWarning, because the warning is a consequence of interacting with the egg without permission or proper caution.\n3. TouchWarning must come before AD_CaretakerCombat, since the warning escalation leads to the combat dialogue.\n4. AD_CaretakerCombat must come before AD_CaretakerEnterCombat, as the combat-related voice lines progress from the initial bark to the engagement phase.\nIn terms of exclusiveness, the caretaker conversation (Caretaker) provides permission for interacting with the egg which prevents the triggering of the NearEggWarning session. Thus, both sessions should not occur during the same journey.\n\nThe following JSON reflects these ordering and exclusivity constraints.",
+      "order": [
+        {
+          "predecessor": [
+            "PAD_EnteredGas"
+          ],
+          "successor": "PAD_HatcheryComment"
+        },
+        {
+          "predecessor": [
+            "Egg"
+          ],
+          "successor": "TouchWarning"
+        },
+        {
+          "predecessor": [
+            "TouchWarning"
+          ],
+          "successor": "AD_CaretakerCombat"
+        },
+        {
+          "predecessor": [
+            "AD_CaretakerCombat"
+          ],
+          "successor": "AD_CaretakerEnterCombat"
+        }
+      ],
+      "exclusive": [
+        [
+          "Caretaker",
+          "NearEggWarning"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_CaretakerChatter_0": {

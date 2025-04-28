@@ -28,7 +28,49 @@
       "CRE_ChainOfCommand_CultistsCapture.json",
       "CRE_ChainOfCommand_AD_EscortingCultistsChatter.json",
       "CRE_ChainOfCommand_Cultist03_Dead.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Analyzing the sessions reveals that the core event is the 'CultistsCapture' scene, which shows the guards taking cultists into the monastery and one cultist dying. After a normal (non\u2010interrupted) capture, the player can trigger additional content. Approaching the dead cultist after this event triggers 'PAD_NearDeadBody', which sets up the context for using the SpeakWithDead ability on that corpse to trigger 'Cultist03_Dead'. In parallel, while escorting the captured cultists, the 'AD_EscortingCultistsChatter' event occurs if the player remains unseen. However, if the player interrupts the CultistsCapture scene (for example, by being spotted at the wrong moment), then the dialogue 'AD_CultistsSceneInterrupted' is triggered instead. This version is an alternate branch that means the normal capture and its consequential dialogues (PAD_NearDeadBody, AD_EscortingCultistsChatter, and Cultist03_Dead) will not occur. Thus, 'AD_CultistsSceneInterrupted' is mutually exclusive with the normal capture branch and its subsequent sessions.",
+      "order": [
+        {
+          "predecessor": [
+            "CultistsCapture"
+          ],
+          "successor": "PAD_NearDeadBody"
+        },
+        {
+          "predecessor": [
+            "CultistsCapture"
+          ],
+          "successor": "AD_EscortingCultistsChatter"
+        },
+        {
+          "predecessor": [
+            "CultistsCapture",
+            "PAD_NearDeadBody"
+          ],
+          "successor": "Cultist03_Dead"
+        }
+      ],
+      "exclusive": [
+        [
+          "CultistsCapture",
+          "AD_CultistsSceneInterrupted"
+        ],
+        [
+          "PAD_NearDeadBody",
+          "AD_CultistsSceneInterrupted"
+        ],
+        [
+          "AD_EscortingCultistsChatter",
+          "AD_CultistsSceneInterrupted"
+        ],
+        [
+          "Cultist03_Dead",
+          "AD_CultistsSceneInterrupted"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "AD_CultistsSceneInterrupted_0": {

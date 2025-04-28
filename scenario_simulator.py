@@ -193,7 +193,33 @@ class ScenarioSimulator:
         
         # Now we have groups of exclusive sessions
         # We'll generate all possible combinations by picking at most one session from each group
-        choice_groups = list(excl_groups.values())
+        choice_groups_original = list(excl_groups.values())
+
+        # Identify predecessor and successor sessions
+        all_preds = {pred for pred, _ in self.ordering}
+        all_succs = {succ for _, succ in self.ordering}
+        terminal_succs = all_succs - all_preds # Successors that are never predecessors
+
+        # Separate groups based on whether they contain successors, and specifically terminal successors
+        non_successor_groups = []
+        intermediate_successor_groups = []
+        terminal_successor_groups = []
+
+        for group in choice_groups_original:
+            contains_terminal = any(s in terminal_succs for s in group)
+            contains_intermediate = any(s in all_succs and s not in terminal_succs for s in group)
+
+            if contains_terminal:
+                terminal_successor_groups.append(group)
+            elif contains_intermediate:
+                intermediate_successor_groups.append(group)
+            else:
+                non_successor_groups.append(group)
+
+        # Recombine with non-successor groups first, then intermediate, then terminal successors last
+        choice_groups = non_successor_groups + intermediate_successor_groups + terminal_successor_groups
+        print(f"Reordered choice groups: {len(non_successor_groups)} non-succ, {len(intermediate_successor_groups)} intermed-succ, {len(terminal_successor_groups)} terminal-succ groups.")
+
         # Generate all possible sequences
         def generate_sequences(current_seq, remaining_groups):
             # Stop if the limit is reached

@@ -63,7 +63,60 @@
       "CRE_GithInfirmary_Doctor.json",
       "CRE_GithInfirmary_DeviceDoctorInterrupt.json",
       "CRE_GithInfirmary_PAD_DoorIsLocked.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "We analyzed each session\u2019s synopsis and trigger conditions to identify cause\u2010and\u2010effect or prerequisite relationships. For example, the 'Doctor' session must occur before many subsequent events \u2013 the doctor then either goes to the device (triggering AD_DoctorGoesToDevice), orders the guards (triggering AD_DoctorAtAmbush) or departs by locking the door (triggering PAD_DoorIsLocked). In addition, once the device is activated the explosion can trigger reactions \u2013 both Laezel\u2019s reaction (AD_LaezelReactionAfterZaithisk) and the doctor\u2019s reaction (AD_DoctorReactsToExplosion) occur only after the device (or its explosion variant) has been used. Likewise, if the doctor goes to the device and the player then ends up in combat with her, the combat downing (AD_CombatDoctor_PlayerDown) must come after her initiating contact with the device. Furthermore, after the ambush triggered by the doctor ordering the guards (AD_DoctorAtAmbush) the Ardents appear (OffstageArdent_SentToCaptain), so that ambush session is a prerequisite for the ardent event. Finally, the session 'DeviceDoctorInterrupt' is a variant branch: it is triggered if the player uses the Zaith'isk before speaking to the doctor. Thus, it is mutually exclusive with the normal 'Doctor' dialogue and the ensuing events (since the player does not then have a chance to trigger the subsequent doctor-related sessions).",
+      "order": [
+        {
+          "predecessor": [
+            "Doctor"
+          ],
+          "successor": "AD_DoctorGoesToDevice"
+        },
+        {
+          "predecessor": [
+            "Doctor"
+          ],
+          "successor": "AD_DoctorAtAmbush"
+        },
+        {
+          "predecessor": [
+            "Doctor"
+          ],
+          "successor": "PAD_DoorIsLocked"
+        },
+        {
+          "predecessor": [
+            "AD_DoctorGoesToDevice"
+          ],
+          "successor": "AD_CombatDoctor_PlayerDown"
+        },
+        {
+          "predecessor": [
+            "Device"
+          ],
+          "successor": "AD_LaezelReactionAfterZaithisk"
+        },
+        {
+          "predecessor": [
+            "Device"
+          ],
+          "successor": "AD_DoctorReactsToExplosion"
+        },
+        {
+          "predecessor": [
+            "AD_DoctorAtAmbush"
+          ],
+          "successor": "OffstageArdent_SentToCaptain"
+        }
+      ],
+      "exclusive": [
+        [
+          "Doctor",
+          "DeviceDoctorInterrupt"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "Device_29": {

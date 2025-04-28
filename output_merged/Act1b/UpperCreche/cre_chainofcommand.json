@@ -93,7 +93,70 @@
       "CRE_ChainOfCommand_CaptainSpeaksToTemplar.json",
       "CRE_ChainOfCommand_AD_CaptainOrdersToCloseDoor.json",
       "CRE_ChainOfCommand_PAD_OnTheWayToTemplar.json"
-    ]
+    ],
+    "automatic_ordering": {
+      "reasoning": "Several dialogs are triggered by earlier actions, and some alternative routes exist. For example, AD_SecondTurn is part of a combat sequence that naturally precedes AD_ThirdTurn. Similarly, when the player overhears CaptainSpeaksToTemplar, this conversation is immediately followed by AD_CaptainOrdersToCloseDoor. In another chain, after the player uses the stolen key by inserting it into the door device, the BarrierDeviceDialog plays; this is then followed by AD_InquisitorAdmitsPlayer and then by PAD_DoorDeviceInteraction when the player interacts with the door communicator again. In the route where the player pickpockets the key from the captain, AD_CaptainRealizesTheft is triggered; once the captain turns hostile, the eventual consequence is that the player must fight her, leading to PAD_DefeatCaptain occurring after AD_CaptainRealizesTheft. In another branch, a conversation with the captain about the artefact leads her to send the player to the Inquisitor (AD_CaptainSendsPlayerToInquisitior). This \u201cfriendly\u201d route is mutually exclusive with the hostile-theft/fight route \u2013 if the player pickpockets the key (or even if they try to leave and get CaptainWarning) then AD_CaptainSendsPlayerToInquisitior will not take place. Finally, after the AD_CultistCapture scene at the monastery, two follow\u2010up guard dialogues (GithGuardMonastery01 and GithGuardMonastery02) can occur. Also, the captain\u2019s dialog \u201cCaptain\u201d is assumed to precede her sending the player off (AD_CaptainSendsPlayerToInquisitior).",
+      "order": [
+        {
+          "predecessor": [
+            "AD_SecondTurn"
+          ],
+          "successor": "AD_ThirdTurn"
+        },
+        {
+          "predecessor": [
+            "CaptainSpeaksToTemplar"
+          ],
+          "successor": "AD_CaptainOrdersToCloseDoor"
+        },
+        {
+          "predecessor": [
+            "BarrierDeviceDialog"
+          ],
+          "successor": "AD_InquisitorAdmitsPlayer"
+        },
+        {
+          "predecessor": [
+            "AD_InquisitorAdmitsPlayer"
+          ],
+          "successor": "PAD_DoorDeviceInteraction"
+        },
+        {
+          "predecessor": [
+            "AD_CultistCapture"
+          ],
+          "successor": "GithGuardMonastery01"
+        },
+        {
+          "predecessor": [
+            "AD_CultistCapture"
+          ],
+          "successor": "GithGuardMonastery02"
+        },
+        {
+          "predecessor": [
+            "AD_CaptainRealizesTheft"
+          ],
+          "successor": "PAD_DefeatCaptain"
+        },
+        {
+          "predecessor": [
+            "Captain"
+          ],
+          "successor": "AD_CaptainSendsPlayerToInquisitior"
+        }
+      ],
+      "exclusive": [
+        [
+          "CaptainWarning",
+          "AD_CaptainSendsPlayerToInquisitior"
+        ],
+        [
+          "AD_CaptainRealizesTheft",
+          "AD_CaptainSendsPlayerToInquisitior"
+        ]
+      ]
+    }
   },
   "dialogue": {
     "PAD_DefeatCaptain_0": {
