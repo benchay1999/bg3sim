@@ -15,7 +15,6 @@ class ChapterSimulator:
     Simulates traversals through a chapter file containing multiple scenarios.
     Manages flag state across scenarios and respects constraints between them.
     """
-
     def __init__(self, chapter_directory):
         """Initialize the chapter simulator with the specified chapter directory"""
         print(f"{Fore.WHITE}===== CHAPTER SIMULATOR - INIT ====={Style.RESET_ALL}")
@@ -30,7 +29,6 @@ class ChapterSimulator:
         parent_dir = os.path.dirname(chapter_directory)
         act_name = os.path.basename(parent_dir)
         self.chapter_id = f"{act_name}_{self.title}"
-
         # List all .json files in the directory as scenarios
         try:
             all_files = [f for f in os.listdir(chapter_directory) if f.endswith('.json')]
@@ -42,14 +40,20 @@ class ChapterSimulator:
             print(f"{Fore.RED}Error: No scenario (.json) files found in chapter directory {chapter_directory}{Style.RESET_ALL}")
             sys.exit(1)
 
+        # Store act name for potential use
+        self.act_name = act_name
+
         # No constraints defined by chapter directory structure
         self.metadata = {}
         self.ordering = []
         self.exclusivity = []
+        # Define specific order for Tutorial act
+        if self.act_name == "Tutorial":
+            self.ordering = ['tut_start', 'tut_lab', 'tut_misc', 'tut_lowerdeck', 'tut_helm', 'tut_lab', 'tut_transformchamber', 'tut_upperdeck']
+            print(f"{Fore.BLUE}Detected Tutorial act. Applying specific scenario order.{Style.RESET_ALL}")
 
         self.scenario_ids = sorted([self._get_scenario_id_from_path(sf) for sf in self.scenario_files])
         self.scenario_path_map = {self._get_scenario_id_from_path(sf): sf for sf in self.scenario_files}
-
 
         print(f"Loaded chapter '{self.title}' ({self.chapter_id}) from directory {chapter_directory}")
         print(f"Found {len(self.scenario_files)} scenarios:")
@@ -57,7 +61,7 @@ class ChapterSimulator:
             print(f"  - {scenario_id} ({self.scenario_path_map[scenario_id]})")
         # print(f"Ordering constraints: {self.ordering}") # Removed
         # print(f"Exclusivity constraints: {self.exclusivity}") # Removed
-
+        
         # Chapter-level state
         self.chapter_active_flags = set() # Flags maintained across the chapter
 
@@ -80,19 +84,29 @@ class ChapterSimulator:
 
     def _generate_valid_scenario_sequences(self, include_all_scenarios=True):
         """Generate valid sequences of scenario IDs.
-           Since there are no constraints, any permutation is valid if include_all_scenarios=True.
-           For simplicity, we can just return the sorted list as the single sequence,
-           or generate shuffles if multiple traversals need different orders.
+           Respects self.ordering if defined, otherwise generates permutations.
         """
+        # Check if a specific order is defined
+        if self.ordering:
+            print(f"{Fore.BLUE}Using predefined scenario order: {self.ordering}{Style.RESET_ALL}")
+            # Validate that all ordered scenarios exist
+            missing_scenarios = [sid for sid in self.ordering if sid not in self.scenario_ids]
+            if missing_scenarios:
+                print(f"{Fore.RED}Error: Scenarios defined in ordering are missing from the chapter directory: {missing_scenarios}{Style.RESET_ALL}")
+                # Decide how to handle this: return empty, raise error, or proceed with available?
+                # For now, let's return empty to prevent invalid traversals.
+                return []
+            # Return the predefined order as the only valid sequence
+            return [self.ordering]
+
+        # --- Original logic if no predefined order --- 
         if not include_all_scenarios:
             # This case is less defined now. If not all included, which subset?
             # For now, let's assume include_all_scenarios is usually True for chapters.
             # If needed, could generate subsets, but skipping for now.
-            print(f"{Fore.YELLOW}Warning: include_all_scenarios=False not fully handled for directory-based chapters. Using all scenarios.{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Warning: include_all_scenarios=False not fully handled for directory-based chapters without predefined ordering. Using all scenarios.{Style.RESET_ALL}")
 
-        # The simplest valid sequence is just all scenarios in a defined order.
-        # To allow different orders for multiple traversals, we can return a list containing one shuffled sequence.
-        # If more variation is needed, generate multiple shuffles.
+        # Generate a shuffled sequence of all available scenarios
         shuffled_ids = list(self.scenario_ids)
         random.shuffle(shuffled_ids)
         valid_sequences = [shuffled_ids]
@@ -294,8 +308,12 @@ class ChapterSimulator:
 
                 # Extract and format dialog from the scenario's sessions
                 for session_id in scenario_result.get('session_sequence', []):
-                    f.write(f"----- Session: {session_id} -----\n")
+                    f.write(f"----- Session: {session_id} -----\n")                    
                     node_data_list = scenario_result.get('node_data', {}).get(session_id, [])
+
+                    # Retrieve and write synopsis
+                    synopsis = scenario_result.get('session_synopses', {}).get(session_id, 'Synopsis not found')
+                    f.write(f"Synopsis: {synopsis}\n\n")
 
                     if not node_data_list:
                         f.write("No dialog data available for this session.\n")

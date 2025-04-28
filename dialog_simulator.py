@@ -124,7 +124,8 @@ class DialogSimulator:
                             "node_id": node_id,
                             "value": approval_value,
                             "text": node_data.get('text', ''),
-                            "speaker": node_data.get('speaker', '')
+                            "speaker": node_data.get('speaker', ''),
+                            "context": node_data.get('context', '')
                         })
                 except (ValueError, KeyError):
                     pass
@@ -442,6 +443,8 @@ class DialogSimulator:
             # Also store node data for export
             if current_node:
                 # Create a simplified copy of the node data
+                if current_node['text'] == '':
+                    current_node['text'] = current_node['context']
                 node_data = {
                     "id": current_node_id,
                     "speaker": current_node.get('speaker', 'Unknown'),
@@ -547,7 +550,8 @@ class DialogSimulator:
                     # Add approval changes if present
                     if node_data['approval']:
                         line += f" || [approval] {', '.join(node_data['approval'])}"
-                    
+                    if ": true" in line.lower() or ": false" in line.lower():
+                        continue
                     # Write the formatted line
                     f.write(f"{line}\n")
             
@@ -935,6 +939,8 @@ class DialogSimulator:
 
                     if target_node:
                         # Start with target node data, copying relevant fields
+                        if target_node['text'] == '':
+                            target_node['text'] = target_node['context']
                         node_data = {
                             "id": node_id, # Use the original alias node ID for the path
                             "speaker": target_node.get('speaker', 'Unknown'),
@@ -971,6 +977,8 @@ class DialogSimulator:
 
                     else:
                         # Target node not found or no target_id, append raw alias info with an error
+                        if node['text'] == '':
+                            node['text'] = node['context']
                         node_data = {
                             "id": node_id,
                             "speaker": node.get('speaker', 'Unknown'),
@@ -989,6 +997,8 @@ class DialogSimulator:
 
                 else:
                     # Not an alias node, create data as before
+                    if node['text'] == '':
+                        node['text'] = node['context']
                     node_data = {
                         "id": node_id,
                         "speaker": node.get('speaker', 'Unknown'),
@@ -1184,6 +1194,8 @@ class DialogSimulator:
 
             # Store node data for the result
             # (Using the same structure as explore_dialog_from_node for consistency)
+            if node_data['text'] == '':
+                node_data['text'] = node_data['context']
             traversed_nodes_data.append({
                 "id": node_id,
                 "speaker": node_data.get('speaker', 'Unknown'),
@@ -1216,12 +1228,12 @@ def main():
     print(f"{Fore.BLUE}Export options: Save dialog paths to text and JSON files{Style.RESET_ALL}")
     
     # Check if dialog_tree.json exists
-    if not os.path.isfile('output/Act1/Forest/FOR_BottomlessWell_VB_DiscoverUnderdarkEntrance.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
+    if not os.path.isfile('output/Act1/Chapel/CHA_Crypt_AD_JergalWandering.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
         print(f"{Fore.RED}Error: dialog_tree.json not found.{Style.RESET_ALL}")
         print("Please run the parser script first to generate the dialog tree.")
         return
     
-    simulator = DialogSimulator('output/Act1/Forest/FOR_BottomlessWell_VB_DiscoverUnderdarkEntrance.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
+    simulator = DialogSimulator('output/Act1/Chapel/CHA_Crypt_AD_JergalWandering.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
     
     while True:
         print("\nSelect mode:")

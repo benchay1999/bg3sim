@@ -3,7 +3,7 @@ import langchain_openai
 import langchain_core
 from langchain_core.output_parsers import JsonOutputParser
 from tqdm import tqdm
-root_dir = "output_merged/Act2"
+root_dir = "output_merged/Act1"
 
 for merged_session_folder_path in tqdm(os.listdir(root_dir)):
     merged_session_folder = f"{root_dir}/{merged_session_folder_path}"
