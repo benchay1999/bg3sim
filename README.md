@@ -29,7 +29,7 @@
 - "goto, link": "JUMP to node x가 있는 경우가 있는데, 이때 가야되는 node의 id"
 - "is_end": <leaf node냐 아니냐>
 - "node_type": "무시해도 좋음. 궁금하면 이거에 대한 uninteresting한 정보를 알려줄 수는 있음. 문의는 DM 부탁드립니다 (기도 이모지)"
-- "children": {graph traversal시 가능한 node의 종류}
+- "children": {graph traversal시 가능한 댜음 node의 종류}
 
 
 ## How to run
