@@ -78,7 +78,7 @@ class ActSimulator:
         return os.path.basename(dir_path)
 
     def simulate_act(self, num_traversals=1, export_txt=False, export_json=False,
-                       initial_flags_set=None, export_final_flags_path=None,
+                       initial_flags_set=None, final_flags_export_dir=None,
                        # --- Chapter Simulation Args ---
                        min_utterances_per_session=3,
                        prioritize_approval=True,
@@ -94,7 +94,7 @@ class ActSimulator:
             export_txt (bool): Export each Act traversal to a text file.
             export_json (bool): Export each Act traversal to a JSON file.
             initial_flags_set (set, optional): Initial flags for the Act. Defaults to empty set.
-            export_final_flags_path (str, optional): Path to export the final flags of the last traversal.
+            final_flags_export_dir (str, optional): Directory to export the final flags JSON file for each traversal.
             min_utterances_per_session (int): Passed to ChapterSimulator.
             prioritize_approval (bool): Passed to ChapterSimulator.
             include_all_scenarios (bool): Passed to ChapterSimulator.
@@ -109,7 +109,6 @@ class ActSimulator:
         print(f"Generating {num_traversals} Act traversals for '{self.title}'")
 
         self.act_traversal_results = []
-        last_run_final_flags = initial_flags_set.copy() if initial_flags_set is not None else set()
 
         for i in range(num_traversals):
             # For now, always simulate chapters in fixed (alphabetical) order.
@@ -196,21 +195,28 @@ class ActSimulator:
             # Store the final flags for this Act run
             act_run_data["final_flags"] = sorted(list(current_act_flags)) # Convert set to sorted list for JSON
             self.act_traversal_results.append(act_run_data)
-            last_run_final_flags = current_act_flags # Store the final flags of this run
 
             print(f"\n{Fore.GREEN}Act Traversal {i+1} complete.{Style.RESET_ALL}")
             print(f"Final flag count for this run: {len(current_act_flags)}")
 
-            # Export this specific Act traversal if requested
+            # Export this specific Act traversal's final flags if requested
+            if final_flags_export_dir:
+                try:
+                    os.makedirs(final_flags_export_dir, exist_ok=True) # Ensure directory exists
+                    flags_filename = os.path.join(final_flags_export_dir, f"final_flags_{self.act_id}_run_{i+1}.json")
+                    self._export_final_flags(current_act_flags, flags_filename)
+                except Exception as e:
+                    print(f"{Fore.RED}Error exporting flags for run {i+1}: {e}{Style.RESET_ALL}")
+
+            # Export the full traversal data (dialog, etc.) if requested
             if export_txt:
-                self._export_act_traversal_to_txt(act_run_data, f"act_{self.act_id}_traversal_{i+1}.txt")
+                if not os.path.exists("simulation_results"):
+                    os.makedirs("simulation_results")
+                self._export_act_traversal_to_txt(act_run_data, f"simulation_results/act_{self.act_id}_traversal_{i+1}.txt")
             if export_json:
-                self._export_act_traversal_to_json(act_run_data, f"act_{self.act_id}_traversal_{i+1}.json")
-
-        # After all traversals, export the final flags of the *last* run if requested
-        if export_final_flags_path:
-             self._export_final_flags(last_run_final_flags, export_final_flags_path)
-
+                if not os.path.exists("simulation_results"):
+                    os.makedirs("simulation_results")
+                self._export_act_traversal_to_json(act_run_data, f"simulation_results/act_{self.act_id}_traversal_{i+1}.json")
 
         print(f"\n{Fore.GREEN}Act simulation finished. Generated {len(self.act_traversal_results)} traversals.{Style.RESET_ALL}")
         return self.act_traversal_results
@@ -443,13 +449,13 @@ def main():
 
     # Ask for final flags export path
     export_final_flags_path = None
-    save_flags_choice = input(f"{Fore.BLUE}Save final flags of the *last* traversal to a JSON file? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
+    save_flags_choice = input(f"{Fore.BLUE}Save final flags of *each* traversal to JSON files? (y/n, default: n):{Style.RESET_ALL} ").lower() == 'y'
     if save_flags_choice:
-        default_final_flags_name = f"final_flags_{act_simulator.act_id}.json"
-        final_flags_file_path = input(f"Enter path for final flags JSON file [default: {default_final_flags_name}]: ")
-        if not final_flags_file_path:
-            final_flags_file_path = default_final_flags_name
-        export_final_flags_path = final_flags_file_path
+        default_flags_dir = "simulation_results/flags" # Suggest a directory
+        final_flags_dir_path = input(f"Enter directory for final flags JSON files [default: {default_flags_dir}]: ")
+        if not final_flags_dir_path:
+            final_flags_dir_path = default_flags_dir
+        export_final_flags_path = final_flags_dir_path # Store the directory path
 
 
     # --- Run Simulation ---
@@ -460,7 +466,7 @@ def main():
         export_txt=export_txt,
         export_json=export_json,
         initial_flags_set=initial_flags,
-        export_final_flags_path=export_final_flags_path,
+        final_flags_export_dir=export_final_flags_path, # Pass the directory path
         # Chapter Sim Args
         min_utterances_per_session=min_utterances,
         prioritize_approval=prioritize_approval,
@@ -472,7 +478,7 @@ def main():
 
     print(f"\n{Fore.GREEN}Act simulation run complete. Generated {len(results)} traversals.{Style.RESET_ALL}")
     if export_final_flags_path:
-        print(f"Final flags of the last run exported to: {export_final_flags_path}")
+        print(f"Final flags for each run (if generated) saved in directory: {export_final_flags_path}") # Updated confirmation message
 
 
 if __name__ == "__main__":

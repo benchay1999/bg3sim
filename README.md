@@ -17,7 +17,19 @@
 
 `{act이름}/{chapter이름}`안에 scenario를 시뮬레이션하기 위한 input JSON 파일들이 있음
 1. "metadata": 각 session들의 메타 정보("synopsis"/"how_to_trigger")와 각각의 `output/`폴더에 있는 JSON파일 명("source_files")가 있음. 추가로 order/exclusiveness constraint을 설정한 "automatic_ordering" field가 있음. **이것을 labeling해야함**
-2. 각 session마다 node들이 있음. node의 정보로는 "id": "{session명}_{node ID}", "speaker": 발화자, "text": "발화자의 utterance", "context": "text의 부가 설명. Cinemtic contents의 경우 이것에 대한 text description". "checkflags": [node에 접근하기 위해서 필요한 flags의 list], "setflags": [node에 접근하면 새로 추가되는 flags들의 list], "ruletags": [기타 rule들의 모음. 무시해도 좋음], "approval": [호감도가 변하는 동료들의 이름과 호감도 변화의 list], "rolls": "주사위 게임이라 rolls에 대한 정보가 있는데 무시해도 좋음", "goto, link": "JUMP to node x가 있는 경우가 있는데, 이때 가야되는 node의 id", "is_end": <leaf node냐 아니냐>, "node_type": "무시해도 좋음. 궁금하면 이거에 대한 uninteresting한 정보를 알려줄 수는 있음. 문의는 DM 부탁드립니다 (기도 이모지)", "children": {graph traversal시 가능한 node의 종류}
+2. 각 session마다 node들이 있음. node의 정보로는:
+- "id": "{session명}_{node ID}"
+- "speaker": 발화자, "text": "발화자의 utterance"
+- "context": "text의 부가 설명. Cinemtic contents의 경우 이것에 대한 text description".
+- "checkflags": [node에 접근하기 위해서 필요한 flags의 list]
+- "setflags": [node에 접근하면 새로 추가되는 flags들의 list]
+- "ruletags": [기타 rule들의 모음. 무시해도 좋음]
+- "approval": [호감도가 변하는 동료들의 이름과 호감도 변화의 list]
+- "rolls": "주사위 게임이라 rolls에 대한 정보가 있는데 무시해도 좋음"
+- "goto, link": "JUMP to node x가 있는 경우가 있는데, 이때 가야되는 node의 id"
+- "is_end": <leaf node냐 아니냐>
+- "node_type": "무시해도 좋음. 궁금하면 이거에 대한 uninteresting한 정보를 알려줄 수는 있음. 문의는 DM 부탁드립니다 (기도 이모지)"
+- "children": {graph traversal시 가능한 node의 종류}
 
 
 ## How to run
