@@ -20,7 +20,7 @@ for merged_session_folder_path in tqdm(os.listdir(root_dir)):
         dialogue = merged_session["dialogue"]
         individual_metadata = metadata["individual_metadata"]
 
-        chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key="")
+        chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key=os.getenv("OPENAI_API_KEY"))
 
         chain = chat | JsonOutputParser()
         prompt_path = "automatic_ordering.txt"

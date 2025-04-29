@@ -40,6 +40,3 @@
 
 ## Dependencies
 알아서 필요한거 에러 메시지 보고 pip install하시길 바랍니다.
-
-## Note
-API key가 있는 파일들이 있으니 public으로 바꿀 때는 .env로 빼서 전환하기
