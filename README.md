@@ -21,10 +21,13 @@
 
 
 ## How to run
-- `python act_simulator.py`: Act 전체를 시뮬레이션 하는 것. Tutorial -> Act1 -> Act1b -> Act2의 순서대로 해야하며, 현재는 Act2까지만 시뮬레이션 가능함. 왜 그런지는 DM 문의 부탁드립니다.
+- `python act_simulator.py`: Act 전체를 시뮬레이션 하는 것. Tutorial -> Act1 -> Act1b -> Act2의 순서대로 해야하며, 현재는 Act2까지만 시뮬레이션 가능함. 왜 그런지는 DM 문의 부탁드립니다. 시작할 때 입력하는 initial flags는 `initial_flags.json`을 사용하시면 됩니다.
 - `python chapter_simulator.py`: Chapter simulator
 - `python scenario_simulator.py`: Scenario simulator
 - `python dialog_simulator.py`: Session simulator
 
 ## Dependencies
 알아서 필요한거 에러 메시지 보고 pip install하시길 바랍니다.
+
+## Note
+API key가 있는 파일들이 있으니 public으로 바꿀 때는 .env로 빼서 전환하기
