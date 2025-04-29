@@ -18,7 +18,7 @@ for merged_session_folder_path in tqdm(os.listdir(root_dir)):
     metadata = merged_session["metadata"]
     dialogue = merged_session["dialogue"]
     individual_metadata = metadata["individual_metadata"]
-    chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key="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")
+    chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key="")
 
     chain = chat | JsonOutputParser()
     prompt_path = "automatic_ordering.txt"
