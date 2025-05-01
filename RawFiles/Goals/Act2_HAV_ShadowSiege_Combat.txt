@@ -1,0 +1,591 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_HAV_Siege_PrepareCharactersInZones((TRIGGER)S_HAV_Siege_CinematicIncludeZone_9d4fc4ac-870d-48df-b5b4-05e168238a45);
+DB_HAV_Siege_PrepareCharactersInZones(S_HAV_Haven_SUB_Cellar_eee18cb6-443a-4b8f-ad19-58dff3d731d8);
+
+DB_HAV_Siege_EnemyWaves(1,S_HAV_Siege_W1_Vine_01_a21562c0-d05f-45aa-9fdd-68cbf4be0f90);
+DB_HAV_Siege_EnemyWaves(1,S_HAV_Siege_W1_Vine_02_02cd562f-68d6-4ed1-8adb-09628143fa8b);
+DB_HAV_Siege_EnemyWaves(1,S_HAV_Siege_W1_Vine_03_b18f12e8-e3ca-4c80-93fe-9332907c9e45);
+
+DB_HAV_Siege_EnemyWaves(2,S_HAV_Siege_W2_Vine_01_9c198c23-90af-45d0-8010-a7332ade2404);
+DB_HAV_Siege_EnemyWaves(2,S_HAV_Siege_W2_Vine_02_b9fedea8-e5b0-441e-ba56-f3f1e96170a8);
+DB_HAV_Siege_EnemyWaves(2,S_HAV_Siege_W2_Vine_03_2ea1f4d3-ff20-4cf8-b181-2c0faac8c073);
+DB_HAV_Siege_EnemyWaves(2,S_HAV_Siege_W3_Boss_37223ef4-2293-4a2a-a1e2-88367d241fcf);
+DB_HAV_Siege_EnemyWaves(2,S_HAV_Siege_W3_Boss_02_3588d24b-ead5-4e87-9ff9-3eb508466a16);
+
+// DB_HAV_Siege_SpawnTurn(_WaveNum, _TurnNum)
+DB_HAV_Siege_SpawnAfterTurn(1,2);
+//DB_HAV_Siege_SpawnAfterTurn(2,4); // added dynamically based when wave_1 spawned + 2 rounds
+
+// DB_HAV_Siege_SpawnWhenEnemiesLeft(_WaveNum, _EnemiesAlive)
+DB_HAV_Siege_SpawnWhenEnemiesLeft(1,5);
+DB_HAV_Siege_SpawnWhenEnemiesLeft(2,1);
+
+PROC_DeclareCounter("HAV_Siege_EnemyCount");
+
+/*ADD TO SWARM GROUPS*/
+// Ranged Swarms
+DB_HAV_Siege_Undead_Swarms(S_SCL_Drider_Harper_Ranger_000_ce089a64-1a91-4ab0-ac71-a2712680780d, "HAV_Siege_UndeadSwarm_Discussing_Ranged_01");
+DB_HAV_Siege_Undead_Swarms(S_SCL_Drider_Harper_Ranger_001_71c140fa-0ebd-4f36-8728-6e28a445a6ff, "HAV_Siege_UndeadSwarm_Discussing_Ranged_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_DockGuard_Left_Ranger_3a856945-e4a5-4214-89af-84a2b50789d8, "HAV_Siege_UndeadSwarm_Discussing_Ranged_01");
+
+DB_HAV_Siege_Undead_Swarms(S_HAV_FlamingFist_002_39ace2b4-699d-468c-a664-8a06492d997a, "HAV_Siege_UndeadSwarm_Fist_Ranged_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_FlamingFist_003_128c0f54-fea0-49df-89ca-c2ca8d996a31, "HAV_Siege_UndeadSwarm_Fist_Ranged_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_FlamingFist_005_0e691c0a-562b-43bb-8554-cde1194decd5, "HAV_Siege_UndeadSwarm_Fist_Ranged_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HarperGuard_001_8082f1d4-8942-492e-8d26-1e1ed6bd881f, "HAV_Siege_UndeadSwarm_Fist_Ranged_01");
+
+// Melee Swarms
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_BarricadeGuards_Melee_Dwarf_b1d8b327-1f27-4921-aa2b-dd18a9d67fc8, "HAV_Siege_UndeadSwarm_Entrance_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_BarricadeYeller_Ranger_b612ef5f-3381-4486-8959-84dd399fb1ae, "HAV_Siege_UndeadSwarm_Entrance_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_FountainPatrol_Caster_ff70f59a-7d50-4e69-a768-60a97c6fb57d, "HAV_Siege_UndeadSwarm_Entrance_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_HarperQuartermaster_f769815c-d437-4a45-9ae4-aebd53ec8f7c, "HAV_Siege_UndeadSwarm_Entrance_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_EnteringHaven_Guard_f48078e6-ec51-49a2-a244-9d0a72af5257, "HAV_Siege_UndeadSwarm_Entrance_Melee_01"); //is a ranger - intended
+
+DB_HAV_Siege_Undead_Swarms(S_DEN_Weaponsmith_e2ad06ec-8034-479a-9f69-b86faea6dc79, "HAV_Siege_UndeadSwarm_Oxen_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_SCL_HarperScout_001_25e154f6-d762-4bea-862e-98c48d7ebe3e, "HAV_Siege_UndeadSwarm_Oxen_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_DockGuard_Melee_f1f837ad-8e6a-442d-bba4-46f665c47675, "HAV_Siege_UndeadSwarm_Oxen_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_DockGuard_Left_Melee_bd46130e-1c2c-4888-9e9c-6dd58965ab4f, "HAV_Siege_UndeadSwarm_Oxen_Melee_01");
+
+DB_HAV_Siege_Undead_Swarms(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, "HAV_Siege_UndeadSwarm_Center_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_FountainGuards_Melee_2_271478dd-7efb-4ca7-b40c-593bbea91a85, "HAV_Siege_UndeadSwarm_Center_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_RoofWatcher_Caster_d44b6aee-7737-4961-bb2b-e7920b003107, "HAV_Siege_UndeadSwarm_Center_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_FountainGuards_Melee_1_3e2db417-c434-4f08-ab6a-dd60c8e9f3b5, "HAV_Siege_UndeadSwarm_Center_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_SCL_HarperScout_003_9bebec18-ca66-42e9-abce-8d6a5f9d2a1b, "HAV_Siege_UndeadSwarm_Center_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_SCL_HarperScout_000_c6dfb2aa-809f-4b3e-8b32-968c10184ec3, "HAV_Siege_UndeadSwarm_Center_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_DockGuard_Ranger_a0f9d7cb-d87c-4af8-87fa-d273a8ecba93, "HAV_Siege_UndeadSwarm_Center_Melee_01"); //is a ranger - intended
+
+DB_HAV_Siege_Undead_Swarms(S_SCL_Drider_Harper_Melee_000_b9f6bb1e-f4cd-4bb3-a7f0-80aad9bae8c8, "HAV_Siege_UndeadSwarm_Discussing_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_SCL_Drider_Harper_Caster_000_ef609a8e-08bf-4648-bbb4-380a7f4bc887, "HAV_Siege_UndeadSwarm_Discussing_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_BarricadeRunners_Ranger_572690b6-68f5-4e7b-807b-b9376b658b65, "HAV_Siege_UndeadSwarm_Discussing_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_EntranceGuards_Halfling_Melee_c8bc8f03-c91c-42d4-829c-d16bb1df4a67, "HAV_Siege_UndeadSwarm_Discussing_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HavenOutcasts_EntranceGuards_Caster_HighElf_825714dd-7df9-4cd1-aecb-edf577baa487, "HAV_Siege_UndeadSwarm_Discussing_Melee_01");
+
+DB_HAV_Siege_Undead_Swarms(S_HAV_FlamingFist_001_47058367-9c0c-4756-a467-07b87b28e0d6, "HAV_Siege_UndeadSwarm_Fist_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "HAV_Siege_UndeadSwarm_Fist_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_FlamingFist_006_9629c27e-8e50-4258-8bda-6639af768ba6, "HAV_Siege_UndeadSwarm_Fist_Melee_01");
+DB_HAV_Siege_Undead_Swarms(S_HAV_HarperGuard_002_34a9bfd8-1ca2-4a1c-b72e-2bf1cfc046a4, "HAV_Siege_UndeadSwarm_Fist_Melee_01");
+
+
+/* COMBAT START POSITIONS */
+DB_HAV_Siege_NPC_CombatPos((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(TRIGGER)S_HAV_Siege_Cine_KeyNPCPos_ac7123b7-cf6b-4754-a7a3-9d360f896cff);
+
+/* SPECIAL TREATMENT DURING SIEGE START */
+DB_HAV_Siege_NPCs_Exclude((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+DB_HAV_Siege_NPCs_Exclude(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6);
+DB_HAV_Siege_NPCs_Exclude(S_HAV_TaxiGhoul_3ebef8c7-2733-42aa-9757-84fdeadbe652);
+DB_HAV_Siege_NPCs_Exclude(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211);
+DB_HAV_Siege_NPCs_Exclude(S_HAV_CrawlingClaw_000_d565aab4-ff0a-4308-b7e3-a5e5f154e7ce);
+DB_HAV_Siege_NPCs_Exclude(S_HAV_CrawlingClaw_001_49a87b36-76fc-4232-aad8-dd4d0421ec10);
+DB_HAV_Siege_NPCs_Exclude(S_HAV_CrawlingClaw_002_3a942fe3-a6d1-4792-af82-2fc062280e30);
+
+DB_HAV_Siege_NPCs_Die((CHARACTER)S_GLO_YoungLover_02_dcf597c0-36c5-4c81-957a-6fe9fca50a68);
+DB_HAV_Siege_NPCs_Die(S_HAV_LastLightOx000_7150c268-1a23-4967-82e8-bf69c624a22b);
+DB_HAV_Siege_NPCs_Die(S_HAV_LastLightOx001_b80708e2-bb6e-46a2-b68e-086c53d95cef);
+
+DB_HAV_Siege_NPCs_Teleport((CHARACTER)S_HAV_HavenOutcasts_DockGuard_Melee_f1f837ad-8e6a-442d-bba4-46f665c47675,(TRIGGER)S_HAV_Siege_CombatPos_001_ef267219-10d6-4781-b0be-6944dc7dbaff);
+DB_HAV_Siege_NPCs_Teleport(S_HAV_HavenOutcasts_DockGuard_Left_Melee_bd46130e-1c2c-4888-9e9c-6dd58965ab4f,S_HAV_Siege_CombatPos_002_b0605404-6b2b-4500-a5a9-0ca862c33320);
+DB_HAV_Siege_NPCs_Teleport(S_HAV_HavenOutcasts_DockGuard_Left_Ranger_3a856945-e4a5-4214-89af-84a2b50789d8,S_HAV_Siege_CombatPos_003_cacfb7fa-2aa6-464a-bfc3-711c366c994e);
+DB_HAV_Siege_NPCs_Teleport(S_HAV_HavenOutcasts_RoofWatcher_Caster_d44b6aee-7737-4961-bb2b-e7920b003107,S_HAV_Siege_CombatPos_004_f2603881-83ff-44c4-9566-529b59fce874);
+DB_HAV_Siege_NPCs_Teleport(S_SCL_HarperScout_001_25e154f6-d762-4bea-862e-98c48d7ebe3e,S_HAV_Siege_CombatPos_004_cacfb7fa-2aa6-464a-bfc3-711c366c994e);
+DB_HAV_Siege_NPCs_Teleport(S_SCL_HarperScout_003_9bebec18-ca66-42e9-abce-8d6a5f9d2a1b,S_HAV_Siege_CombatPos_005_f2603881-83ff-44c4-9566-529b59fce874);
+DB_HAV_Siege_NPCs_Teleport(S_HAV_HavenOutcasts_DockGuard_Ranger_a0f9d7cb-d87c-4af8-87fa-d273a8ecba93,S_HAV_Siege_CombatPos_006_a1dc9ed1-f618-461a-b228-90519358f2a9);
+
+DB_HAV_Siege_NPCs_Custom((CHARACTER)S_GLO_DevilishOx_49eb5b4b-c6ed-4d37-8f68-97b1128b7d56);
+DB_HAV_Siege_NPCs_Custom((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_HAV_Siege_NPCs_Custom((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055);
+
+
+DB_HAV_Siege_LowHP((CHARACTER)S_SCL_Drider_Harper_Caster_000_ef609a8e-08bf-4648-bbb4-380a7f4bc887,"Dead",S_HAV_Siege_CombatPos_Dead_000_48b60b96-01b9-45b5-bf7c-7cf8fa270d77);
+DB_HAV_Siege_LowHP((CHARACTER)S_SCL_Drider_Harper_Melee_000_b9f6bb1e-f4cd-4bb3-a7f0-80aad9bae8c8,"Dead",S_HAV_Siege_CombatPos_Dead_001_813a658e-721c-472b-9f3e-ec1062f69513);
+DB_HAV_Siege_LowHP((CHARACTER)S_SCL_Drider_Harper_Ranger_000_ce089a64-1a91-4ab0-ac71-a2712680780d,"LowHP",S_HAV_Siege_CombatPos_LowHP_000_e482bfe7-fb79-4a61-9d56-2867fedf920c);
+DB_HAV_Siege_LowHP((CHARACTER)S_SCL_Drider_Harper_Ranger_001_71c140fa-0ebd-4f36-8728-6e28a445a6ff,"LowHP",S_HAV_Siege_CombatPos_LowHP_001_59b6bc7c-f263-4423-8a69-95c653fcefce);
+DB_HAV_Siege_LowHP((CHARACTER)S_SCL_HarperScout_000_c6dfb2aa-809f-4b3e-8b32-968c10184ec3,"LowHP",S_HAV_Siege_CombatPos_LowHP_002_20966826-c5c0-4a4a-9b53-4adbdffd074f);
+KBSECTION
+//REGION DEBUG
+
+IF
+TextEvent("siege_lowhp")
+AND
+DB_HAV_Siege_LowHP(_Harper,_,_)
+THEN
+ApplyStatus(_Harper,"HAV_SELUNEOINTMENT",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION DEBUG
+
+
+IF
+DB_HAV_Siege_EnemyWaves(_Wave,_Enemy)
+THEN
+//SetCombatGroupID(_Enemy,"8b9709d7-b7b9-47c7-b277-32a6592794d7");
+SetOnStage(_Enemy,0);
+
+
+IF
+DB_PermaDefeated(_NPC)
+AND
+DB_HAV_Siege_NPC_CombatPos((CHARACTER)_NPC)
+THEN
+NOT DB_HAV_Siege_NPC_CombatPos(_NPC);
+
+
+PROC
+PROC_HAV_Siege_FillDBsFromOtherGoals()
+AND
+DB_HAV_TakingIsobel_FlyingGhouls((CHARACTER)_Char)
+THEN
+DB_HAV_Siege_NPCs_Exclude(_Char);
+
+PROC
+PROC_HAV_Siege_FillDBsFromOtherGoals()
+AND
+DB_HAV_EnteringHaven_Claws(_Char)
+THEN
+DB_HAV_Siege_NPCs_Exclude(_Char);
+
+IF
+DB_HAV_TakingIsobel_FlyingGhouls((CHARACTER)_Char)
+THEN
+DB_HAV_Siege_NPCs_Exclude(_Char);
+
+IF
+DB_HAV_EnteringHaven_Claws(_Char)
+THEN
+DB_HAV_Siege_NPCs_Exclude(_Char);
+
+IF
+StatusApplied(_Harper,"HAV_SELUNEOINTMENT",_,_)
+AND
+DB_HAV_Siege_LowHP((CHARACTER)_Harper,_,_)
+THEN
+DB_HAV_Siege_NPCs_Custom(_Harper);
+
+IF
+StatusRemoved(_Harper,"HAV_SELUNEOINTMENT",_,_)
+AND
+DB_HAV_Siege_LowHP((CHARACTER)_Harper,_,_)
+THEN
+NOT DB_HAV_Siege_NPCs_Custom(_Harper);
+
+
+//REGION Siege pre-combat setup
+
+// iterate characters in Haven
+PROC
+PROC_HAV_Siege_PrepareForSiege()
+AND
+DB_HAV_Siege_PrepareCharactersInZones(_Trigger) // don't overlap => no initing twice
+THEN
+TriggerLaunchIterator(_Trigger,"HAV_Siege_PrepareIterateCharacters", "");
+
+PROC
+PROC_HAV_Siege_PrepareForSiege()
+THEN
+SetEntityEvent(S_HAV_SiegeStateObject_c4524ae3-32cd-4c7a-bfb5-b682785c6b88,"HAV_Siege_PrepareIterateCharacters_Finished");
+
+IF
+EntityEvent(_Char,"HAV_Siege_PrepareIterateCharacters")
+AND
+DB_Children((CHARACTER)_Char)
+THEN
+SetOnStage(_Char,0);
+
+IF
+EntityEvent(_Char,"HAV_Siege_PrepareIterateCharacters")
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+NOT DB_HAV_Siege_NPCs_Exclude((CHARACTER)_Char)
+AND
+NOT DB_HAV_Siege_EnemyWaves(_,(CHARACTER)_Char)
+AND
+NOT DB_Children(_Char)
+AND
+IsOnStage(_Char,1)
+AND
+GetTemplate(_Char,_CharTemplate)
+AND
+_CharTemplate != Humans_InvisibleHelper_d5589336-4ca7-4ef7-9f6d-ebfea51001fe
+THEN
+PROC_HAV_Siege_PrepareIterateCharacters(_Char);
+
+// PARTY MEMBERS TO YARD
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_PartyMember)
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+THEN
+PROC_HAV_Siege_PrepareNPCs_TPToYard(_PartyMember);
+
+// SPECIAL TREATMENT: CUSTOM
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_NPC)
+AND
+DB_HAV_Siege_NPCs_Custom(_NPC)
+THEN
+PROC_HAV_Siege_CustomNPCFate(_NPC);
+
+// SPECIAL TREATMENT: DEATH
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_NPC)
+AND
+DB_HAV_Siege_NPCs_Die(_NPC)
+THEN
+Die(_NPC,DEATHTYPE.Necrotic,1);
+
+
+// BLESSED TO YARD
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Custom(_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Die(_NPC)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+DB_HAV_Siege_NPCs(_NPC)
+AND
+HasAppliedStatus(_NPC,"HAV_SELUNEOINTMENT",1)
+THEN
+PROC_HAV_Siege_PrepareNPCs_TPToYard(_NPC);
+
+
+// NON-BLESSED IN LIGHT DIE
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Custom(_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Die(_NPC)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+HasAppliedStatus(_NPC,"HAV_SELUNEOINTMENT",0)
+AND
+QRY_HAV_Siege_IsInsideInn(_NPC)
+THEN
+Die(_NPC,DEATHTYPE.Necrotic,1);
+
+// NON-BLESSED IN DARKNESS TURN INTO UNDEAD
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Custom(_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Die(_NPC)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+HasAppliedStatus(_NPC,"HAV_SELUNEOINTMENT",0)
+AND
+NOT DB_HAV_Siege_IsInsideInn(_NPC)
+THEN
+DB_GLO_DefeatCounter(_NPC,"HAV_Siege");
+PROC_IncreaseCounter("HAV_Siege_EnemyCount");
+SetCombatGroupID(_NPC,"8b9709d7-b7b9-47c7-b277-32a6592794d7");
+SetFaction(_NPC,ACT2_HAV_ShadowCreatures_b0b8d20c-89f8-4433-bd62-5cbcbae2e9bc);
+PROC_HAV_Siege_SetSwarmGroup(_NPC);
+ApplyStatus(_NPC,"SCL_SHADOW_CURSE_UNDEAD_NEW",-1.0,1);
+PROC_HAV_Siege_PrepareTeleportIfHasSpot(_NPC);
+DB_HAV_Siege_NPCTurnedIntoShadows(_NPC);
+
+PROC
+PROC_HAV_Siege_PrepareIterateCharacters((CHARACTER)_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Custom(_NPC)
+AND
+NOT DB_HAV_Siege_NPCs_Die(_NPC)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+HasAppliedStatus(_NPC,"HAV_SELUNEOINTMENT",0)
+AND
+NOT DB_HAV_Siege_IsInsideInn(_NPC)
+AND
+IsTagged(_NPC,(TAG)ACT2_HAV_SIEGE_SHADOWCURSED_PRESERVE_HP_54d84ff5-73f6-4eaf-aa92-0fec99cdace0,0)
+THEN
+ApplyStatus(_NPC,"HAV_SIEGE_HITPOINTS_NERF",-1.0,1);
+
+IF
+FlagSet((FLAG)VISITEDREGION_INT_Main_A_a2e1a618-d211-484e-9389-6b37308b8da1, _,_)
+AND
+DB_HAV_Siege_NPCTurnedIntoShadows(_NPC)
+THEN
+DB_CustomDefeatedState(_NPC, "SCL_Shadowcurse");
+DB_PermanentlyEvil(_NPC);
+
+PROC
+PROC_HAV_Siege_SetSwarmGroup((CHARACTER)_NPC)
+AND
+DB_HAV_Siege_Undead_Swarms(_NPC,_Swarm)
+THEN
+RequestSetSwarmGroup(_NPC,_Swarm);
+
+PROC
+PROC_HAV_Siege_PrepareTeleportIfHasSpot((CHARACTER)_NPC)
+AND
+DB_HAV_Siege_NPCs_Teleport(_NPC,_Position)
+THEN
+TeleportTo(_NPC,_Position);
+
+QRY
+QRY_HAV_Siege_IsInsideInn((CHARACTER)_NPC)
+AND
+IsInTrigger(_NPC,S_HAV_InsideInn_Floor1_69a889f7-2dad-43cf-86e4-e4f2331e54cc,1)
+THEN
+DB_HAV_Siege_IsInsideInn(_NPC);
+
+QRY
+QRY_HAV_Siege_IsInsideInn((CHARACTER)_NPC)
+AND
+IsInTrigger(_NPC,S_HAV_InsideInn_Floor2_01b3e82a-6e82-4c6d-9213-ddd67439826b,1)
+THEN
+DB_HAV_Siege_IsInsideInn(_NPC);
+
+// try to find random valid position in the yard, otherwise just throw onto a predefined trigger
+PROC
+PROC_HAV_Siege_PrepareNPCs_TPToYard((CHARACTER)_Char)
+AND
+NOT QRY_HAV_Siege_PrepareNPCs_TPToPresetPos(_Char)
+AND
+NOT QRY_HAV_Siege_PrepareNPCs_TPToYard(_Char)
+THEN
+TeleportTo(_Char,S_HAV_Siege_Cine_PlayersPos_be08583b-092a-469d-b6fe-d908f99de8bb,"HAV_Siege_PrepareNPCs_TPToYard",0,0,0,1,1);
+
+QRY
+QRY_HAV_Siege_PrepareNPCs_TPToPresetPos((CHARACTER)_Char)
+AND
+DB_HAV_Siege_NPC_CombatPos(_Char,_Trigger)
+THEN
+TeleportTo(_Char,_Trigger,"HAV_Siege_PrepareNPCs_TPToPresetPos",0,0,0,1,1);
+
+QRY
+QRY_HAV_Siege_PrepareNPCs_TPToYard((CHARACTER)_Char)
+AND
+TriggerGetRandomPosition(S_HAV_Siege_TPAfterCinematic_OutsideZone_d4d2d0fe-7644-4056-85a7-4c1a0d654110,_X,_Y,_Z)
+AND
+FindValidPosition(_X,_Y,_Z,5.0,_Char,1,_VX,_VY,_VZ)
+THEN
+DB_HAV_ShadowSiege_Teleported(1);
+TeleportToPosition(_Char,_VX,_VY,_VZ,"HAV_Siege_PrepareNPCs_TPToYard",0,0,0,1,1);
+
+//FindValidPosition Fallback
+QRY
+QRY_HAV_Siege_PrepareNPCs_TPToYard((CHARACTER)_Char)
+AND
+NOT DB_HAV_ShadowSiege_Teleported(1)
+AND
+TriggerGetRandomPosition(S_HAV_Siege_TPAfterCinematic_OutsideZone_d4d2d0fe-7644-4056-85a7-4c1a0d654110,_X,_Y,_Z)
+THEN
+DB_HAV_ShadowSiege_Teleported(1);
+TeleportToPosition(_Char,_X,_Y,_Z,"HAV_Siege_PrepareNPCs_TPToYard",0,0,0,1,1);
+
+IF
+EntityEvent(_Char,"HAV_Siege_PrepareNPCs_TPToPresetPos")
+AND
+DB_HAV_Siege_NPC_CombatPos((CHARACTER)_Char,_Trigger)
+THEN
+NOT DB_HAV_ShadowSiege_Teleported(1);
+LookFromTrigger(_Char,_Trigger,0);
+
+
+//REGION Low hp doomed harpers
+
+PROC
+PROC_HAV_Siege_CustomNPCFate((CHARACTER)_Harper)
+AND
+DB_HAV_Siege_LowHP(_Harper,"Dead",_Trigger)
+THEN
+Die(_Harper,DEATHTYPE.Necrotic,1);
+TeleportTo(_Harper,_Trigger);
+
+PROC
+PROC_HAV_Siege_CustomNPCFate((CHARACTER)_Harper)
+AND
+DB_HAV_Siege_LowHP(_Harper,"LowHP",_Trigger)
+THEN
+SetHitpointsPercentage(_Harper,40.0);
+TeleportTo(_Harper,_Trigger);
+
+//END_REGION Low hp doomed harpers
+
+//END_REGION Siege pre-combat setup
+
+
+//REGION Waves switches
+
+// spawn tentacles right away if there's no shadow zombies
+IF
+EntityEvent(_,"HAV_Siege_PrepareIterateCharacters_Finished")
+AND
+DB_GlobalCounter("HAV_Siege_EnemyCount",_EnemyCount)
+AND
+DB_HAV_Siege_SpawnWhenEnemiesLeft(1,_MinEnemyCount)
+AND
+_EnemyCount < _MinEnemyCount
+THEN
+PROC_HAV_Siege_SpawnWave(1);
+
+IF
+CombatRoundStarted(_CombatID,_Round)
+AND
+DB_HAV_Siege_CombatID(_CombatID)
+AND
+DB_HAV_Siege_SpawnAfterTurn(_Wave,_AfterRound)
+AND
+_Round > _AfterRound
+THEN
+PROC_HAV_Siege_SpawnWave(_Wave);
+
+PROC
+PROC_CounterDecreased("HAV_Siege_EnemyCount",_EnemyCount)
+AND
+DB_HAV_Siege_SpawnWhenEnemiesLeft(_Wave,_LimitCount)
+AND
+_EnemyCount <= _LimitCount
+THEN
+PROC_HAV_Siege_SpawnWave(_Wave);
+
+PROC
+PROC_HAV_Siege_SpawnWave(1)
+AND
+NOT DB_HAV_Siege_EnemyWaveSpawned(1)
+AND
+DB_HAV_Siege_CombatID(_CombatID)
+AND
+DB_CMB_RoundCounter(_CombatID,_Round)
+AND
+IntegerSum(_Round,2,_SpawnAt)
+THEN
+DB_HAV_Siege_SpawnAfterTurn(2,_SpawnAt);
+
+PROC
+PROC_HAV_Siege_SpawnWave((INTEGER)_Wave)
+AND
+NOT DB_HAV_Siege_EnemyWaveSpawned(_Wave)
+AND
+DB_HAV_Siege_EnemyWaves(_Wave,_Enemy)
+THEN
+DB_HAV_Siege_EnemyWaveSpawned(_Wave);
+AppearAt((CHARACTER)_Enemy,_Enemy,1,NULL_00000000-0000-0000-0000-000000000000,"HAV_Siege_EnemySpawned",0); // TODO: place proper animation
+
+IF
+EntityEvent(_Enemy,"HAV_Siege_EnemySpawned")
+THEN
+DB_GLO_DefeatCounter(_Enemy,"HAV_Siege");
+PROC_IncreaseCounter("HAV_Siege_EnemyCount");
+
+IF
+DB_PermaDefeated(_Enemy)
+AND
+DB_GLO_DefeatCounter(_Enemy,"HAV_Siege")
+THEN
+PROC_DecreaseCounter("HAV_Siege_EnemyCount");
+//END_REGION Waves switches
+
+
+//REGION Entering combat
+
+IF
+WentOnStage(_Enemy,1)
+AND
+DB_HAV_Siege_EnemyWaves(_,_Enemy)
+THEN
+DB_GLO_DefeatCounter(_Enemy,"HAV_Siege");
+
+IF
+DB_GLO_DefeatCounter(_Enemy,"HAV_Siege")
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+AND
+NOT DB_PermaDefeated(_PartyMember)
+AND
+IsInTrigger(_PartyMember,S_HAV_Siege_CinematicIncludeZone_9d4fc4ac-870d-48df-b5b4-05e168238a45,1)
+AND
+NOT DB_HiddenCharacters(_PartyMember,_)
+AND
+NOT DB_Is_InCombat(_PartyMember,_)
+THEN
+DB_SCL_ShadowCurse_CursedCharacters(_Enemy);
+SetCombatGroupID(_Enemy, "26d8b49a-3b9f-d511-ad32-bc764d2d7600");
+PROC_EnterCombat(_Enemy, _PartyMember);
+
+IF
+DB_GLO_DefeatCounter(_Enemy,"HAV_Siege")
+AND
+IsInTrigger(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,S_HAV_Siege_CinematicIncludeZone_9d4fc4ac-870d-48df-b5b4-05e168238a45,1)
+AND
+NOT DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_Is_InCombat(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,_)
+THEN
+PROC_EnterCombat(_Enemy,S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+
+IF
+DB_Is_InCombat(_Enemy,_CombatID)
+AND
+DB_GLO_DefeatCounter(_Enemy,"HAV_Siege")
+AND
+DB_Is_InCombat(_Player,_CombatID)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SysClear("DB_HAV_Siege_CombatID",1);
+DB_HAV_Siege_CombatID(_CombatID);
+
+//END_REGION Entering combat
+
+
+//Ends HAV Siege Combat and plays outro just in case there are some lingering enemies outside the combat
+IF
+CombatEnded(_ID)
+AND
+DB_Was_InCombat(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _ID)
+AND
+DB_Was_InCombat(S_HAV_Siege_W3_Boss_37223ef4-2293-4a2a-a1e2-88367d241fcf, _ID)
+AND
+DB_Was_InCombat(S_HAV_Siege_W3_Boss_02_3588d24b-ead5-4e87-9ff9-3eb508466a16, _ID)
+AND
+DB_PermaDefeated(S_HAV_Siege_W3_Boss_37223ef4-2293-4a2a-a1e2-88367d241fcf)
+AND
+DB_PermaDefeated(S_HAV_Siege_W3_Boss_02_3588d24b-ead5-4e87-9ff9-3eb508466a16)
+AND
+QRY_OnlyOnce("HAV_Siege_TryPlayEnd")
+THEN
+SetFlag(HAV_Siege_Event_SiegeEnd_1939fc49-17fd-49f8-9030-8c3d627a05df);
+
+
+
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("HAV_Siege")
+THEN
+SetFlag(HAV_Siege_Event_SiegeEnd_1939fc49-17fd-49f8-9030-8c3d627a05df);
+
+PROC
+PROC_HAV_Siege_CustomNPCFate((CHARACTER)S_GLO_DevilishOx_49eb5b4b-c6ed-4d37-8f68-97b1128b7d56)
+THEN
+SetOnStage(S_GLO_DevilishOx_49eb5b4b-c6ed-4d37-8f68-97b1128b7d56,0);
+SetFlag(HAV_DevilishOx_State_Fled_aa1fff72-16df-4269-abda-61e5120a8623);
+
+
+PROC
+PROC_HAV_Siege_CustomNPCFate((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+DB_State_Current(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "SCL_LiftingTheCurse", "SCL_LiftingTheCurse_State_HalsinAtHaven")
+AND
+NOT DB_PartyMembers(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+PROC_ORI_SetupCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, 1);
+
+PROC
+PROC_HAV_Siege_CustomNPCFate((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+THEN
+SetTag(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9);
+Die(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

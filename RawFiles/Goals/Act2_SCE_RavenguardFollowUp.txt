@@ -1,0 +1,190 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_SCE_RavenguardFollowUp_FlamingFists((CHARACTER)S_SCE_PatrollingFlamingFist_000_9d6bf80c-2e37-430b-b526-93b7390dcf5d);
+DB_SCE_RavenguardFollowUp_FlamingFists((CHARACTER)S_SCE_PatrollingFlamingFist_001_a2eec6e9-08d3-42ec-8850-d5f0c7b95204);
+DB_SCE_RavenguardFollowUp_FlamingFists((CHARACTER)S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90);
+DB_SCE_RavenguardFollowUp_FlamingFists((CHARACTER)S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506);
+DB_SCE_RavenguardFollowUp_FlamingFists((CHARACTER)S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a);
+DB_SCE_RavenguardFollowUp_FlamingFists((CHARACTER)S_SCE_StandingFlamingFist_003_9741b260-2595-402b-a262-7a5391934f14);
+
+DB_SCE_Debrief_Participant((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, S_SCE_AncientFistPos_abe81ba5-2759-4838-b8a4-1985bafb7eed, (DIALOGRESOURCE)SCE_CursedFist_a7ae91cf-7378-90a4-b406-2eba8dfc26ae);
+
+DB_Dialogs((CHARACTER)S_SCE_PatrollingFlamingFist_000_9d6bf80c-2e37-430b-b526-93b7390dcf5d, (DIALOGRESOURCE)SCE_PatrollingFlamingFist_000_2e2e1f77-3558-2c7b-0611-2ae0aa1aa0ef);
+DB_Dialogs((CHARACTER)S_SCE_PatrollingFlamingFist_001_a2eec6e9-08d3-42ec-8850-d5f0c7b95204, (DIALOGRESOURCE)SCE_PatrollingFlamingFist_001_097465d9-2366-787b-4ad1-fc7ffc3bb9c8);
+DB_Dialogs((CHARACTER)S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90, (DIALOGRESOURCE)SCE_StandingFlamingFist_000_32a14396-2606-397a-994f-d59d162c9bd3);
+DB_Dialogs((CHARACTER)S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506, (DIALOGRESOURCE)SCE_StandingFlamingFist_001_7e96065b-df74-7b07-c876-949d752a6e5e);
+DB_Dialogs((CHARACTER)S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a, (DIALOGRESOURCE)SCE_StandingFlamingFist_002_62092445-ea79-bc54-9714-1052843fb3f2);
+DB_Dialogs((CHARACTER)S_SCE_StandingFlamingFist_003_9741b260-2595-402b-a262-7a5391934f14, (DIALOGRESOURCE)SCE_StandingFlamingFist_003_6ca80217-f253-905a-e5bc-bb6344fe0da0);
+
+DB_DoNotFaceDialog(S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90,(DIALOGRESOURCE)SCE_RavenguardFollowUp_AD_MainGateFlamingFists_04ec5aac-4a80-867e-81ba-b1537634989a);
+DB_DoNotFaceDialog(S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506,(DIALOGRESOURCE)SCE_RavenguardFollowUp_AD_MainGateFlamingFists_04ec5aac-4a80-867e-81ba-b1537634989a);
+
+PROC_TriggerRegisterForParty(S_SCE_ArtAndFlamingFist_PartyNearby_Box_429dd3d7-02e1-4ed1-b2c4-6ccbbe40c5fe);
+KBSECTION
+//REGION Init
+IF
+DB_SCE_RavenguardFollowUp_FlamingFists(_FlamingFist)
+THEN
+PROC_SetOnStage(_FlamingFist, 0);
+
+PROC
+PROC_SCE_SetupDebrief()
+AND
+NOT QRY_State_IsBeforeState(S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab, "HAV_Mood", "HAV_Mood_State_Siege")
+AND
+NOT DB_SCE_RavenguardFollowUp_BlockFF(1)
+THEN
+DB_SCE_RavenguardFollowUp_BlockFF(1);
+
+PROC
+PROC_SCE_SetupDebrief()
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_NightsongDeath")
+AND
+NOT DB_SCE_RavenguardFollowUp_BlockFF(1)
+THEN
+DB_SCE_RavenguardFollowUp_BlockFF(1);
+
+PROC
+PROC_SCE_SetupDebrief()
+AND
+DB_GlobalFlag(HAV_HavenOutcasts_State_FlamingFistsInHaven_f8e5cd60-867a-4584-8c50-1ff917357acc)
+AND
+DB_SCE_RavenguardFollowUp_FlamingFists(_FlamingFist)
+AND
+NOT DB_SCE_RavenguardFollowUp_BlockFF(1)
+THEN
+PROC_SetOnStage(_FlamingFist, 1);
+DB_SCE_Debrief_CharactersInEpilogue(_FlamingFist);
+
+//END_REGION
+
+//REGION Art set up
+QRY
+QRY_SCE_Debrief_BlockCharacter(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+DB_SCE_RavenguardFollowUp_BlockFF(1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SCE_Debrief_BlockCharacter((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+NOT DB_GlobalFlag(SCL_AncientFist_ItemReturned_9db703c7-de9a-4f1e-8338-46c0efcbc20f)
+THEN
+Die(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("SCE_CureArtCullagh")
+THEN
+SetFlag(SCL_AncientFist_ItemReturned_9db703c7-de9a-4f1e-8338-46c0efcbc20f, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Behaviours
+
+IF
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90)
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506)
+THEN
+TimerLaunch("SCE_AD_MainGateFlamingFists",15000);
+
+IF
+TimerFinished("SCE_AD_MainGateFlamingFists")
+AND
+IsInTrigger((CHARACTER)S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90,S_SCE_FrontGateFists_Dialog_Box_83912d86-85e8-4b4b-82d6-934558b523f9,1)
+AND
+IsInTrigger((CHARACTER)S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506,S_SCE_FrontGateFists_Dialog_Box_83912d86-85e8-4b4b-82d6-934558b523f9,1)
+AND
+NOT DB_CantTalk(S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90)
+AND
+NOT DB_CantTalk(S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506)
+AND
+QRY_StartDialog(SCE_RavenguardFollowUp_AD_MainGateFlamingFists_04ec5aac-4a80-867e-81ba-b1537634989a,S_SCE_StandingFlamingFist_000_4dac1fd1-221d-477c-be32-8d95f34e5a90,S_SCE_StandingFlamingFist_001_6b13e47a-35e4-4df6-9c7e-236fe960f506)
+THEN
+DB_SCE_MainGateFlamingFists_StartedAD(1);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)SCE_RavenguardFollowUp_AD_MainGateFlamingFists_04ec5aac-4a80-867e-81ba-b1537634989a,_)
+THEN
+TimerLaunch("SCE_AD_MainGateFlamingFists",28000);
+
+IF
+TimerFinished("SCE_AD_MainGateFlamingFists")
+AND
+NOT DB_SCE_MainGateFlamingFists_StartedAD(1)
+THEN
+TimerLaunch("SCE_AD_MainGateFlamingFists",15000);
+
+IF
+TimerFinished("SCE_AD_MainGateFlamingFists")
+AND
+DB_SCE_MainGateFlamingFists_StartedAD(1)
+THEN
+NOT DB_SCE_MainGateFlamingFists_StartedAD(1);
+
+
+
+//Art and Flaming Fist
+IF
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a)
+THEN
+TriggerRegisterForCharacter((TRIGGER)S_SCE_ArtAndFlamingFist_Dialog_Box_aa6d51a8-5758-41d1-a5b6-34962f5b200e,S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055);
+TriggerRegisterForCharacter((TRIGGER)S_SCE_ArtAndFlamingFist_Dialog_Box_aa6d51a8-5758-41d1-a5b6-34962f5b200e,S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a);
+TimerLaunch("SCE_AD_ArtAndFlamingFist",8000);
+
+IF
+TimerFinished("SCE_AD_ArtAndFlamingFist")
+AND
+QRY_AnyCharacterInTrigger(S_SCE_ArtAndFlamingFist_PartyNearby_Box_429dd3d7-02e1-4ed1-b2c4-6ccbbe40c5fe)
+AND
+IsInTrigger((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055,S_SCE_ArtAndFlamingFist_Dialog_Box_aa6d51a8-5758-41d1-a5b6-34962f5b200e,1)
+AND
+IsInTrigger((CHARACTER)S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a,S_SCE_ArtAndFlamingFist_Dialog_Box_aa6d51a8-5758-41d1-a5b6-34962f5b200e,1)
+AND
+NOT DB_CantTalk(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+NOT DB_CantTalk(S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a)
+AND
+QRY_StartDialog(SCE_RavenguardFollowUp_AD_ArtAndFlamingFist_c8a535d8-0115-273a-ee8c-809326a3e33a,S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055,S_SCE_StandingFlamingFist_002_cbb990af-b9b5-4434-a503-3bacf55c042a)
+THEN
+DB_SCE_ArtAndFlamingFist_StartedAD(1);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)SCE_RavenguardFollowUp_AD_ArtAndFlamingFist_c8a535d8-0115-273a-ee8c-809326a3e33a,_)
+THEN
+TimerLaunch("SCE_AD_ArtAndFlamingFist",30000);
+
+IF
+TimerFinished("SCE_AD_ArtAndFlamingFist")
+AND
+NOT DB_SCE_ArtAndFlamingFist_StartedAD(1)
+THEN
+TimerLaunch("SCE_AD_ArtAndFlamingFist",15000);
+
+IF
+TimerFinished("SCE_AD_ArtAndFlamingFist")
+AND
+DB_SCE_ArtAndFlamingFist_StartedAD(1)
+THEN
+NOT DB_SCE_ArtAndFlamingFist_StartedAD(1);
+
+//Cancel timers
+IF
+LevelLoaded("INT_Main_A")
+THEN
+TimerCancel("SCE_AD_MainGateFlamingFists");
+TimerCancel("SCE_AD_ArtAndFlamingFist");
+GoalCompleted;
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

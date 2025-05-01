@@ -1,0 +1,362 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_SteelWatchers_SunflashedFlags(0,(FLAG)GLO_SteelWatchers_Event_SunflashedTick_1_607e33e1-58b7-45bb-9b14-8ab07ffc574d);
+DB_GLO_SteelWatchers_SunflashedFlags(1,(FLAG)GLO_SteelWatchers_Event_SunflashedTick_2_da271ec7-ba9c-4dd3-b634-a0a2b3b89c1b);
+DB_GLO_SteelWatchers_SunflashedFlags(2,(FLAG)GLO_SteelWatchers_Event_SunflashedTick_3_685bfaa4-7cc1-4d84-bc41-855e33199f31);
+DB_GLO_SteelWatchers_SunflashedFlags(3,(FLAG)GLO_SteelWatchers_Event_SunflashedTick_4_6ce60a1e-86e9-4922-8b33-246504e87d8a);
+
+NOT DB_GLO_SteelWatchers_CustomDialog((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+
+KBSECTION
+IF
+DB_GLO_SteelWatchers((CHARACTER)_SteelWatcher)
+THEN
+PROC_CharacterDisableCrime(_SteelWatcher,"DangerousMonsterReaction");
+PROC_CharacterDisableCrime(_SteelWatcher,"DangerousMonsterReactionFallback");
+
+
+IF
+TagSet(_SteelWatcher, (TAG)STEEL_WATCHER_bc09a589-e076-4b2d-8b86-f8cccbb64449)
+AND
+NOT _SteelWatcher == S_END_SteelWatcherAlly_cb20c38a-38f7-46f7-840d-b64b4d363674
+THEN
+DB_GLO_SteelWatchers((CHARACTER)_SteelWatcher);
+
+IF
+TagSet(_SteelWatcher, (TAG)STEEL_WATCHER_bc09a589-e076-4b2d-8b86-f8cccbb64449)
+AND
+NOT DB_GLO_SteelWatchers_CustomDialog((CHARACTER)_SteelWatcher)
+AND
+NOT _SteelWatcher == S_END_SteelWatcherAlly_cb20c38a-38f7-46f7-840d-b64b4d363674
+THEN
+DB_Dialogs(_SteelWatcher, (DIALOGRESOURCE)GLO_SteelWatcher_e1768e5c-37f4-2803-840b-28fd0677cf9e); //TODO: CHECK LATER!
+
+IF
+DB_GLO_SteelWatchers((CHARACTER)_SteelWatcher)
+AND
+DB_GLO_SteelWatchers_CustomDialog((CHARACTER)_SteelWatcher)
+AND
+DB_Dialogs(_SteelWatcher, (DIALOGRESOURCE)GLO_SteelWatcher_e1768e5c-37f4-2803-840b-28fd0677cf9e)
+THEN
+PROC_RemoveDialog(_SteelWatcher);
+
+
+IF
+DB_GlobalFlag(GLO_Foundry_State_ControlCentreDestroyed_456906c5-40a6-429e-8e1c-7120a2ef631b)
+AND
+DB_CurrentLevel(_Level)
+THEN
+PROC_GLO_SteelWatchers_KillAll(_Level);
+
+PROC
+PROC_GLO_SteelWatchers_KillAll((STRING)_Level)
+AND
+NOT DB_GLO_SteelWatchers_Killed(_Level)
+AND
+DB_GLO_SteelWatchers(_SteelWatcher)
+AND
+GetRegion(_SteelWatcher,_Level)
+AND
+NOT _SteelWatcher == S_END_SteelWatcherAlly_cb20c38a-38f7-46f7-840d-b64b4d363674
+THEN
+RemovePassive(_SteelWatcher,"SelfDestruct_SteelWatcher");
+RemoveStatus(_SteelWatcher,"STEELWATCHER_BIPED_SELFDESTRUCT_BEGIN_DEATHWARD",NULL_00000000-0000-0000-0000-000000000000);
+RemoveStatus(_SteelWatcher,"STEELWATCHER_BIPED_SELFDESTRUCT_BEGIN_TECHNICAL",NULL_00000000-0000-0000-0000-000000000000);
+RemoveStatus(_SteelWatcher,"STEELWATCHER_QUADRUPED_SELFDESTRUCT_BEGIN_TECHNICAL",NULL_00000000-0000-0000-0000-000000000000);
+ApplyStatus(_SteelWatcher, "LOW_STEELWATCH_DEACTIVATED", -1.0, 0, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusApplied(_SteelWatcher, "LOW_STEELWATCH_DEACTIVATED", _, _)
+THEN
+Die(_SteelWatcher, DEATHTYPE.DoT, 1);
+
+PROC
+PROC_GLO_SteelWatchers_KillAll((STRING)_Level)
+AND
+NOT DB_GLO_SteelWatchers_Killed(_Level)
+THEN
+DB_GLO_SteelWatchers_Killed(_Level);
+
+
+//REGION Enemy of Absolute Crime
+//If the player gets into a fight with a watcher, remember that fight to apply Enemy of Absolute when it ends.
+//Exceptions: Watchers are more lenient if you have an alliance with gortash, or brain escalation has taken over (Which happens if Gortash dies or leaves to meet in the Undercity)
+IF
+DB_Sees(_SteelWatch, _Player)
+AND
+DB_GLO_SteelWatchers(_SteelWatch)
+AND
+DB_Is_InCombat(_SteelWatch, _CombatID)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_KillDirectorGortash_State_AcceptedAlliance_92e647a6-4625-4a2b-a143-35cba456fe50)
+AND
+NOT DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_KillDirectorGortash_State_AgreedToMeetInUndercity_1375d542-cf0a-49fd-927b-5c6bbce13ce4)
+AND
+QRY_IsEnemy(_SteelWatch, _Player)
+THEN
+DB_GLO_SteelWatch_HuntAfterCombatEnd(_CombatID, _Player);
+
+//If the player is already hunted, remove the hunted status - the hunt will continue when the fight ends. It doesn't make sense for it tick down during combat.
+IF
+DB_GLO_SteelWatch_HuntAfterCombatEnd(_CombatID, _Player)
+THEN
+PROC_GLO_SteelWatch_EnemyOfAbsoluteCrime_EndOnCharacter(_Player);
+
+//If combat ends, register enemy of the Absolute for the players that were in the fight
+IF
+CombatEnded(_CombatID)
+AND
+DB_GLO_SteelWatch_HuntAfterCombatEnd(_CombatID, _Player)
+THEN
+NOT DB_GLO_SteelWatch_HuntAfterCombatEnd(_CombatID, _Player);
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_ForCharacter(_Player);
+
+IF
+SwitchedCombat(_Player, _CombatID, _NewCombatID)
+AND
+DB_GLO_SteelWatch_HuntAfterCombatEnd(_CombatID, (CHARACTER)_Player)
+THEN
+NOT DB_GLO_SteelWatch_HuntAfterCombatEnd(_CombatID, _Player);
+DB_GLO_SteelWatch_HuntAfterCombatEnd(_NewCombatID, _Player);
+
+//The bordercheck applies enemy of the absolute on the whole party
+IF
+DialogEnded((DIALOGRESOURCE)WYR_South_Primary_f03a1685-b148-b70e-b773-b62404525308, _InstanceID)
+AND
+DB_GlobalFlag(GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713)
+THEN
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_Global();
+
+//If characters are removed from the party, the crime goes away from them
+IF
+CharacterLeftParty(_Player)
+AND
+DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_CrimeID)
+THEN
+CharacterStopCrime(_Player, "EnemyOfAbsolute", NULL_00000000-0000-0000-0000-000000000000);
+
+//Register Enemy of the Absolute crime for all players
+PROC
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_Global()
+AND
+DB_Players(_Player)
+AND
+NOT DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_)
+THEN
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_ForCharacter(_Player);
+
+//Register Enemy of the Abolute crime for one player
+PROC
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_ForCharacter((CHARACTER)_Player)
+AND
+NOT DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_)
+AND
+NOT DB_IsArrested(_, _Player)
+THEN
+PROC_CharacterRegisterCrime(_Player, "EnemyOfAbsolute", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 0);
+ApplyStatus(_Player, "LOW_STEELWATCH_ENEMYOFABSOLUTE", 120.0, 0, NULL_00000000-0000-0000-0000-000000000000);
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_Flag();
+
+PROC
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_Flag()
+AND
+NOT DB_GlobalFlag((FLAG)GLO_SteelWatchers_State_WasEnemyAtLeastOnce_4bf8e007-6f77-4633-b127-664e31a16ab8)
+THEN
+PROC_GlobalSetFlagAndCache(GLO_SteelWatchers_State_WasEnemyAtLeastOnce_4bf8e007-6f77-4633-b127-664e31a16ab8);
+
+PROC
+PROC_GLO_SteelWatch_RegisterEnemyOfAbsoluteCrime_Flag()
+AND
+NOT DB_GlobalFlag((FLAG)GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713)
+THEN
+PROC_GlobalSetFlagAndCache(GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713);
+
+IF
+FlagCleared((FLAG)GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_CrimeID)
+THEN
+PROC_GLO_SteelWatch_EnemyOfAbsoluteCrime_EndOnCharacter(_Player);
+
+PROC
+PROC_GLO_SteelWatch_EnemyOfAbsoluteCrime_EndOnCharacter((CHARACTER)_Player)
+THEN
+CharacterStopCrime(_Player, "EnemyOfAbsolute", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+CrimeIsRegistered(_,"EnemyOfAbsolute",_CrimeID,_,_Player,_,_,_)
+THEN
+DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_CrimeID);
+
+IF
+CrimeIsRegistered(_,"EnemyOfAbsolute",_CrimeID,_,_Player,_,_,_)
+AND
+DB_GLO_SteelWatcher_IgnoresCrime(_SW)
+THEN
+DB_GLO_SteelWatcher_IgnoresCrime(_SW,_CrimeID);
+
+IF
+DB_GLO_SteelWatcher_IgnoresCrime(_SW)
+AND
+DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_CrimeID)
+THEN
+DB_GLO_SteelWatcher_IgnoresCrime(_SW,_CrimeID);
+
+IF
+DB_GLO_SteelWatcher_IgnoresCrime(_SW,_CrimeID)
+THEN
+CrimeIgnoreCrime(_CrimeID,_SW);
+
+IF
+DB_GLO_SteelWatcher_IgnoresCrime(_SW,_CrimeID)
+AND
+NOT DB_GLO_SteelWatcher_IgnoresCrime(_SW)
+THEN
+CrimeStopIgnoringCrime(_CrimeID,_SW);
+NOT DB_GLO_SteelWatcher_IgnoresCrime(_SW,_CrimeID);
+
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_CrimeID)
+THEN
+NOT DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_Player,_CrimeID);
+RemoveStatus(_Player, "LOW_STEELWATCH_ENEMYOFABSOLUTE", NULL_00000000-0000-0000-0000-000000000000);
+PROC_GLO_SteelWatch_CheckClearEnemyFlag();
+
+PROC
+PROC_GLO_SteelWatch_CheckClearEnemyFlag()
+AND
+NOT DB_GLO_SteelWatch_EnemyOfAbsoluteCrimeEnabled(_,_)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713);
+
+PROC
+PROC_WYR_KillDirectorGortash_CalmSteelWatch()
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713);
+
+IF
+FlagSet((FLAG)LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a,_,_)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713);
+
+IF
+FlagSet((FLAG)GLO_Gortash_State_PermaDefeated_74dd56ff-7e00-42a6-a0f3-0d122f364769,_,_)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)GLO_SteelWatchers_State_EnemyOfAbsolute_1e72bf66-e983-42e5-bd41-10b03eb9e713);
+
+//The status expiring
+IF
+StatusRemoved(_Player, "LOW_STEELWATCH_ENEMYOFABSOLUTE", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_SteelWatch_EnemyOfAbsoluteCrime_EndOnCharacter(_Player);
+//END_REGION Enemy of Absolute Crime
+
+
+//REGION Sunflashed
+
+IF
+StatusApplied(_SW,"SUNFLASHED",_,_)
+AND
+DB_GLO_SteelWatchers((CHARACTER)_SW)
+AND
+GetStatusTurns(_SW,"SUNFLASHED",_Turns)
+THEN
+DB_GLO_SteelWatcher_Sunflashed(_SW,_Turns);
+PROC_TryStartAD(GLO_SteelWatcher_AD_Sunflashed_36386ea4-6922-cb93-7837-f42fa54c7638,_SW);
+
+IF
+StatusApplied(_SW,"SUNFLASHED_TICK",_,_)
+AND
+DB_GLO_SteelWatcher_Sunflashed((CHARACTER)_SW,_WasTurns)
+AND
+GetStatusCurrentLifetime(_SW,"SUNFLASHED",_Duration)
+AND
+RealToInteger(_Duration,_DurationInt)
+AND
+IntegerSum(_DurationInt,1,_DurationIntPlusOne)
+AND
+IntegerDivide(_DurationIntPlusOne,6,_Turns)
+THEN
+NOT DB_GLO_SteelWatcher_Sunflashed(_SW,_WasTurns);
+DB_GLO_SteelWatcher_Sunflashed(_SW,_Turns);
+PROC_TryStartAD(GLO_SteelWatcher_AD_Sunflashed_36386ea4-6922-cb93-7837-f42fa54c7638,_SW);
+
+IF
+StatusApplied(_SW,"SUNFLASHED_TICK",_,_)
+THEN
+RemoveStatus(_SW,"SUNFLASHED_TICK",_SW);
+
+
+// disable reacting to crimes against Absolute while under SUNFLASHED
+IF
+StatusApplied(_SW,"SUNFLASHED",_,_)
+AND
+DB_GLO_SteelWatchers((CHARACTER)_SW)
+THEN
+DB_GLO_SteelWatcher_IgnoresCrime(_SW);
+DB_DoNotFace(_SW);
+
+IF
+StatusRemoved(_SW,"SUNFLASHED",_,_)
+AND
+DB_GLO_SteelWatcher_IgnoresCrime(_SW)
+THEN
+NOT DB_DoNotFace(_SW);
+NOT DB_GLO_SteelWatcher_IgnoresCrime(_SW);
+
+PROC
+PROC_DialogFlagSetup(GLO_SteelWatcher_AD_Sunflashed_36386ea4-6922-cb93-7837-f42fa54c7638,_SW)
+AND
+DB_GLO_SteelWatcher_Sunflashed((CHARACTER)_SW,_Turns)
+AND
+DB_GLO_SteelWatchers_SunflashedFlags(_Turns,_Flag)
+THEN
+SetFlag(_Flag,_SW,0);
+
+IF
+AutomatedDialogEnded(GLO_SteelWatcher_AD_Sunflashed_36386ea4-6922-cb93-7837-f42fa54c7638,_DialogID)
+AND
+DB_DialogNPCs(_DialogID,_SW,1)
+AND
+DB_GLO_SteelWatchers_SunflashedFlags(_Turns,_Flag)
+THEN
+ClearFlag(_Flag,_SW,_DialogID);
+
+IF
+StatusRemoved(_SW,"SUNFLASHED",_,_)
+AND
+DB_GLO_SteelWatcher_Sunflashed((CHARACTER)_SW,_Turns)
+THEN
+NOT DB_GLO_SteelWatcher_Sunflashed(_SW,_Turns);
+PROC_TryStartAD(GLO_SteelWatcher_AD_Sunflashed_36386ea4-6922-cb93-7837-f42fa54c7638,_SW);
+
+//END_REGION Sunflashed
+
+
+//REGION Watchers can't be bribed
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom("Bribe", _, _Watcher, _, _, _)
+AND
+IsTagged(_Watcher, STEEL_WATCHER_bc09a589-e076-4b2d-8b86-f8cccbb64449, 1)
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom("no");
+
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

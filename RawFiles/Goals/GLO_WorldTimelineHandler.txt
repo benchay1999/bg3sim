@@ -1,0 +1,50 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_GLO_WorldTimelineHelper("Level", (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+//TUT_Avernus_C Timelines
+
+
+//WLD_Main_A Timelines
+
+
+//CRE_Main_A Timelines
+
+
+//SCL_Main_A Timelines
+
+
+//INT_Main_A Timelines
+
+
+//BGO_Main_A Timelines
+
+
+//CTY_Main_A Timleines
+
+
+//END_Main Timelines
+
+KBSECTION
+IF
+LevelGameplayStarted(_Level, _)
+AND
+DB_GLO_WorldTimelineHelper(_Level, _Dialog, _SceneTrigger)
+AND
+NOT DB_GLO_ActiveWorldTimelines(_Dialog, _Level, _)
+AND
+StartWorldTimeline(_Dialog, _SceneTrigger, _, _ID)
+THEN
+DB_GLO_ActiveWorldTimelines(_Dialog, _Level, _ID);
+
+IF
+AutomatedDialogEnded(_Dialog, _ID)
+AND
+DB_GLO_ActiveWorldTimelines(_Dialog, _Level, _ID)
+THEN
+NOT DB_GLO_ActiveWorldTimelines(_Dialog, _Level, _ID);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

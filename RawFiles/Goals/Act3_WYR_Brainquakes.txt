@@ -1,0 +1,283 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_000_b6f883f9-829b-4ac7-89ab-f15db46dd1f3, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_001_30f9a9b5-37ec-444b-8179-7e84386301a7, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_002_9eb00556-40e1-4a8d-b85e-9f3afe0a9179, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_003_86c3063e-e33a-4f33-a167-c3861d238d32, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_004_5206e67c-c743-4482-ad27-8b491e593c19, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_005_c0f4cc11-c47a-41a8-b93f-a436b20831d9, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_006_10e763c6-01ee-4ca5-a17f-86e89bf8c24d, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_007_ee1d6907-3d15-4532-9f9e-3ca18ff67b40, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_008_105105b1-1352-490b-b01c-512de939a262, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_RivingtonEventTrigger_009_3a43a74a-aadb-4b1a-9192-802a66842ab4, 0);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_BridgeEventTrigger_001_661118a6-2274-45f0-969a-a236e7456076, 1);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_BridgeEventTrigger_000_39c175d2-ba9d-49f0-bfd5-c78c793325ac, 1);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_BridgeEventTrigger_002_ae54bde2-4105-4f03-9ec4-d382df7ec4a8, 1);
+DB_WYR_Brainquakes_ChainedEventTriggers((TRIGGER)S_WYR_Brainquakes_NorthEventTrigger_000_b34bf990-5860-4854-aff4-800047fbbe00, 2);
+
+DB_WYR_Brainquakes_ChainedEvents(0,"WYR_Brainquakes_Event_0","Free");
+DB_WYR_Brainquakes_ChainedEvents(1,"WYR_Brainquakes_Event_1","Free");
+DB_WYR_Brainquakes_ChainedEvents(2,"WYR_Brainquakes_Event_2","Free");
+
+DB_GLO_Brainquakes_EventsData(
+	"WYR_Brainquakes_Event_0",
+	(VOICEBARKRESOURCE)WYR_Brainquakes_VB_Event1_4f8c838a-899a-ff2a-75aa-995082c92df2,
+	(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+DB_GLO_Brainquakes_EventsData(
+	"WYR_Brainquakes_Event_1",
+	(VOICEBARKRESOURCE)WYR_Brainquakes_VB_Event2_3226568a-d63d-f630-64ce-436a0873eb19,
+	(DIALOGRESOURCE)WYR_Brainquakes_DaisyAD_Event2_e88157d8-7e29-b3fd-95cd-b24ee702665f);
+DB_GLO_Brainquakes_EventsData(
+	"WYR_Brainquakes_Event_2",
+	(VOICEBARKRESOURCE)WYR_Brainquakes_VB_Event3_6fb2e013-691a-e1d5-b918-c9157cb3e492,
+	(DIALOGRESOURCE)WYR_Brainquakes_DaisyAD_Event3_010a2bc6-be07-355b-d66a-cfe2001fc29f);
+KBSECTION
+//REGION Chained Event: Setup
+IF
+DB_WYR_Brainquakes_ChainedEventTriggers(_Trigger,_)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+//END_REGION
+
+//REGION Chained Event: Entering a brainquake trigger
+IF
+EnteredTrigger(_EnteredPlayer,_Trigger)
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_Trigger,_)
+AND
+NOT DB_WYR_Brainquakes_BlockedEventTrigger(_Trigger)
+AND
+NOT DB_CantAct(_EnteredPlayer)
+AND
+NOT DB_GLO_Brainquakes_RunningEvent_Current(_)
+AND
+NOT DB_WYR_Brainquakes_RunningEvent_Trigger(_,_)
+THEN
+PROC_WYR_Brainquakes_ProcessEnterTrigger(_EnteredPlayer,_Trigger);
+
+PROC
+PROC_WYR_Brainquakes_ProcessEnterTrigger((CHARACTER)_EnteredPlayer,(TRIGGER)_EventTrigger)
+AND
+QRY_GLO_Brainquakes_SelectAvailablePlayersNearby(_EnteredPlayer)
+AND
+QRY_WYR_Brainquakes_SelectChainedEvent(_EventTrigger)
+AND
+DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_EventNum)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_EventNum,_EventName,_)
+AND
+QRY_GLO_Brainquakes_FilterUsersForEvent(_EventName)
+THEN
+DB_WYR_Brainquakes_RunningEvent_Trigger(_EventName, _EventTrigger);
+PROC_GLO_Brainquakes_StartEvent_Internal(_EventName);
+
+PROC
+PROC_WYR_Brainquakes_ProcessEnterTrigger(_,_EventTrigger)
+AND
+NOT DB_GLO_Brainquakes_RunningEvent_Current(_)
+THEN
+PROC_WYR_Brainquakes_BlockChainedEventTrigger(_EventTrigger);
+//END_REGION
+
+//REGION Chained Event: Selecting the best event for the users nearby
+QRY
+QRY_WYR_Brainquakes_SelectChainedEvent(_)
+AND
+DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_EventNum)
+THEN
+NOT DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_EventNum);
+
+// Select the earliest event among the users
+// if one user did't see any events, the earliest will be the very first one
+QRY
+QRY_WYR_Brainquakes_SelectChainedEvent((TRIGGER)_EventTrigger)
+AND
+DB_GLO_Brainquakes_AvailablePlayersNearby(_,_UserProfileID)
+AND
+NOT DB_WYR_Brainquakes_User_LastPlayedChainedEvent(_UserProfileID,_,_)
+AND
+QRY_WYR_Brainquakes_IsChainedEventCanBePlayed(_UserProfileID,_EventTrigger,0)
+THEN
+DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(0);
+
+QRY
+QRY_WYR_Brainquakes_SelectChainedEvent((TRIGGER)_EventTrigger)
+AND
+DB_GLO_Brainquakes_AvailablePlayersNearby(_,_UserProfileID)
+AND
+DB_WYR_Brainquakes_User_LastPlayedChainedEvent(_UserProfileID,(INTEGER)_LastEventNum,(TRIGGER)_LastEventTrigger)
+AND
+IntegerSum(_LastEventNum,1,_NextEventNum)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_NextEventNum,_,_)
+AND
+QRY_WYR_Brainquakes_IsChainedEventCanBePlayed(_UserProfileID,_EventTrigger,_NextEventNum)
+THEN
+DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_NextEventNum);
+
+IF
+DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_NextEventNum)
+AND
+DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_PrevEventNum)
+AND
+_PrevEventNum < _NextEventNum
+THEN
+NOT DB_QRYRTN_WYR_Brainquakes_SelectedChainedEvent(_NextEventNum);
+//END_REGION
+
+//REGION Chained Event: Special checks for if event can be played by this User at this trigger
+// if trigger's default event's num is equal or greater than the one we want to start, always play this event
+QRY
+QRY_WYR_Brainquakes_IsChainedEventCanBePlayed((STRING)_UserProfileID,(TRIGGER)_EventTrigger,(INTEGER)_NextEventNum)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_NextEventNum,_,"Free")
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_EventTrigger,_TriggerEventNum)
+AND
+_TriggerEventNum >= _NextEventNum
+THEN
+DB_NOOP(1);
+
+// if we want to start event of the higher num then the trigger's event, we only allow this under specific conditions
+QRY
+QRY_WYR_Brainquakes_IsChainedEventCanBePlayed((STRING)_UserProfileID,(TRIGGER)_EventTrigger,_NextEventNum)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_NextEventNum,_,"Free")
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_EventTrigger,_TriggerEventNum)
+AND
+IntegerSubtract(_NextEventNum,_TriggerEventNum,1) // 1) num events difference should be not more then 1 (0 we handle in the QRY above)
+AND
+DB_WYR_Brainquakes_User_LastPlayedChainedEvent(_UserProfileID,_,_LastEventTrigger)
+AND
+GetDistanceTo(_EventTrigger,_LastEventTrigger,_Distance)
+AND
+_Distance > 130.0 // 2) distance in between of the current and previous trigger should be large
+THEN
+DB_NOOP(1);
+
+// fixed events can only be played in the trigger with the event name equial to theirs
+QRY
+QRY_WYR_Brainquakes_IsChainedEventCanBePlayed((STRING)_UserProfileID,(TRIGGER)_EventTrigger,(INTEGER)_NextEventNum)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_NextEventNum,_,"Fixed")
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_EventTrigger,_TriggerEventNum)
+AND
+_TriggerEventNum == _NextEventNum
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Event failed to start
+//Blocking the event trigger from triggering the event at the same spot over and over again after the failing to start there
+PROC
+PROC_WYR_Brainquakes_BlockChainedEventTrigger((TRIGGER)_EventTrigger)
+AND
+_EventTrigger != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_EventTrigger,_)
+THEN
+DB_WYR_Brainquakes_BlockedEventTrigger(_EventTrigger);
+
+IF
+DB_WYR_Brainquakes_BlockedEventTrigger(_EventTrigger)
+AND
+DB_WYR_Brainquakes_BlockedEventTrigger(_OldTrigger)
+AND
+_EventTrigger != _OldTrigger
+THEN
+NOT DB_WYR_Brainquakes_BlockedEventTrigger(_OldTrigger);
+
+PROC
+PROC_WYR_Brainquakes_BlockChainedEventTrigger((TRIGGER)_EventTrigger)
+AND
+DB_WYR_Brainquakes_RunningEvent_Trigger(_EventName, _EventTrigger)
+THEN
+NOT DB_WYR_Brainquakes_RunningEvent_Trigger(_EventName, _EventTrigger);
+//END_REGION
+
+//REGION Ending the event
+// Successfully completing the event
+PROC
+PROC_GLO_Brainquakes_RunningEvent_CompleteForUser((STRING)_UserProfileID,(STRING)_EventName)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_,_EventName,_)
+AND
+DB_WYR_Brainquakes_User_LastPlayedChainedEvent(_UserProfileID,_PrevLastEventNum,_EventTrigger)
+THEN
+NOT DB_WYR_Brainquakes_User_LastPlayedChainedEvent(_UserProfileID,_PrevLastEventNum,_EventTrigger);
+
+PROC
+PROC_GLO_Brainquakes_RunningEvent_CompleteForUser((STRING)_UserProfileID,(STRING)_EventName)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_EventNum,_EventName,_)
+AND
+DB_GLO_Brainquakes_RunningEvent_Current(_EventName)
+AND
+DB_WYR_Brainquakes_RunningEvent_Trigger(_EventName,_EventTrigger)
+THEN
+DB_WYR_Brainquakes_User_LastPlayedChainedEvent((STRING)_UserProfileID,(INTEGER)_EventNum,(TRIGGER)_EventTrigger);
+
+// this User is done with the brainquakes
+IF
+DB_GLO_Brainquakes_User_DoneEvent((STRING)_UserProfileID,(STRING)_EventName)
+AND
+NOT DB_WYR_Brainquakes_User_DoneAllChainedEvents(_UserProfileID)
+AND
+DB_WYR_Brainquakes_ChainedEvents(_EventNum,_EventName,_)
+AND
+IntegerSum(_EventNum,1,_EventNumPlusOne)
+AND
+NOT DB_WYR_Brainquakes_ChainedEvents(_EventNum,_,_)
+THEN
+DB_WYR_Brainquakes_User_DoneAllChainedEvents(_UserProfileID);
+
+PROC
+PROC_GLO_Brainquakes_RunningEvent_Stop((STRING)_EventName,(INTEGER)_Code)
+AND
+DB_WYR_Brainquakes_RunningEvent_Trigger(_EventName,_EventTrigger)
+THEN
+PROC_WYR_Brainquakes_BlockChainedEventTrigger(_EventTrigger);
+
+PROC
+PROC_WYR_Brainquakes_UnregisterAllEventTriggers()
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_Trigger,_)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("WYR_Brainquakes_Disable")
+THEN
+PROC_WYR_Brainquakes_UnregisterAllEventTriggers();
+
+IF
+TextEvent("WYR_Brainquakes_Enable")
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_Trigger,_)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+TextEvent("WYR_Brainquakes_TestEvent")
+AND
+GetTextEventParamInteger(1, _EventNumParam)
+AND
+QRY_OnlyOnce_Reset("WYR_Brainquakes_TestEvent_OnlyOnce")
+AND
+GetHostCharacter(_Player)
+AND
+DB_WYR_Brainquakes_ChainedEventTriggers(_Trigger, _EventNumParam)
+AND
+QRY_OnlyOnce("WYR_Brainquakes_TestEvent_OnlyOnce")
+THEN
+PROC_Helper_SafeTeleportTo(_Player, _Trigger);
+
+EXITSECTION
+PROC_WYR_Brainquakes_UnregisterAllEventTriggers();
+ENDEXITSECTION
+ParentTargetEdge "Act3"

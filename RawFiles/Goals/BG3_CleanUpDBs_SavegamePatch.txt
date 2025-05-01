@@ -1,0 +1,101 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_SavegamePatches_SelectedBubble((ITEM)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 2")
+THEN
+PROC_SavegamePatches_CleanUpDBs();
+
+//REGION _Greevers_Little_Helpers
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+THEN
+PROC_DeclareCounter("GLO_LevelNameIndexMap");
+
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+AND
+DB_LevelLoadedOnce(_Level)
+AND
+NOT DB_LevelUnreachable(_Level)
+AND
+QRY_IncreaseCounter("GLO_LevelNameIndexMap")
+AND
+DB_GlobalCounter("GLO_LevelNameIndexMap",_Index)
+THEN
+DB_GLO_LevelNameIndexMap(_Level,_Index);
+
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+THEN
+SysClear("DB_EntityUnreachable",1);
+//END_REGION
+
+//REGION __AAA_FirstGoal
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+AND
+DB_Destroyed(_Item)
+THEN
+NOT DB_CantMove(_Item);
+NOT DB_CantAct(_Item);
+NOT DB_PermaDefeatedOrOffstage(_Item);
+//END_REGION
+
+//REGION _GLOBAL_Effects
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+AND
+DB_LevelUnreachable(_Level)
+AND
+DB_LoopEffect(_Source,_fxHandle,_ID,_Level,_effect, _BoneName,_Scale)
+THEN
+NOT DB_LoopEffect(_Source,_fxHandle,_ID,_Level,_effect, _BoneName,_Scale);
+//REGION _GLOBAL_Effects
+
+//REGION Shadow curse
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+AND
+DB_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_LevelUnreachable("SCL_Main_A")
+THEN
+SysCompleteGoal("Act2_MOO_Assaults");
+PROC_SCL_ShadowCurse_Off();
+//END_REGION
+
+//REGION _GLO_Shared_PartyMembers
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+AND
+DB_LevelUnreachable(_Level)
+THEN
+PROC_GLO_PartyMembers_LevelUnreachable(_Level);
+//END_REGION
+
+//REGION GLO_CombatNPCs_PostEA
+PROC
+PROC_SavegamePatches_CleanUpDBs()
+AND
+NOT DB_CurrentLevel("END_Main")
+AND
+DB_Combat_Wraith_LightStatus(_Entity, _Status, _Causee)
+THEN
+// Register as level object for the current level, so that they can be cleared once the current level
+// (and implicitly assumed: all of the once before it) becomes unreachable
+PROC_CleanUpLocalOnUnreachable(_Entity);
+//END_REGION
+
+PROC
+PROC_ApplySavegamePatches()
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

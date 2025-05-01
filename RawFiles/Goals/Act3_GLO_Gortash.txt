@@ -1,0 +1,46 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Gortash's Gauntlet with the Netherstone
+IF
+TemplateAddedTo(MAG_Gortash_Gloves_f7d87a7a-e5aa-4bc9-ba51-4e2df3e0bae0, _Gloves, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_Gortash_NetherstoneRemoved")
+THEN
+RequestDelete((ITEM)_Gloves);
+TemplateAddTo(MAG_Gortash_Gloves_WithoutNetherstone_6ea2650e-c12b-43d9-873e-f3d426d30d18, _Player, 1, 1);
+ToInventory(S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7, _Player, 1, 1, 1);
+DB_WYR_KillDirectorGortash_CanTransformGortash(1); // only transform during the dialog, we don't want the player to see the transformation in the gameplay
+Transform(S_GLO_BaneDummyForGortashSwD_c2e4f43d-c5e6-4f86-9bfc-2dd3804408f5, GLO_Gortash_Stoneless_ForBaneDummy_238f77bd-45cf-4bc1-8ac8-6fc1201abbcd, (SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)WYR_KillDirectorGortash_NetherbrainMindmeld_673f3fd9-0e41-8d53-153b-72af69991378, (TRIGGER)S_WYR_KillDirectorGortash_OfficeMainRoom_34997f3f-f6a9-4a86-bd6d-6867360539a4, 1);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, (TRIGGER)S_WYR_KillDirectorGortash_OfficeMainRoom_34997f3f-f6a9-4a86-bd6d-6867360539a4, 1);
+
+IF
+DialogStarted(WYR_KillDirectorGortash_NetherbrainMindmeld_673f3fd9-0e41-8d53-153b-72af69991378, _)
+AND
+DB_WYR_KillDirectorGortash_CanTransformGortash(1)
+THEN
+Transform(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, CINE_GLO_Gortash_Dead_8eb69922-1d83-4284-93f9-c568325b6bd6, (SHAPESHIFTRULE)DisguiseKeepName_c7c3381e-b901-416e-a0c4-bc745e1ff54a);
+
+IF
+DialogStarted((DIALOGRESOURCE)GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, _)
+AND
+DB_WYR_KillDirectorGortash_CanTransformGortash(1)
+THEN
+Transform(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, CINE_GLO_Gortash_Dead_8eb69922-1d83-4284-93f9-c568325b6bd6, (SHAPESHIFTRULE)DisguiseKeepName_c7c3381e-b901-416e-a0c4-bc745e1ff54a);
+//END_REGION
+
+//REGION Teleporting Bane for SwD
+IF
+EnteredLevel(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, _, "END_Main")
+THEN
+TeleportTo(S_GLO_BaneDummyForGortashSwD_c2e4f43d-c5e6-4f86-9bfc-2dd3804408f5, S_GLO_Asylum_BanePos_10b37f93-057d-438c-8c73-ceda370b2b8e, "", 0, 0, 0, 0, 1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

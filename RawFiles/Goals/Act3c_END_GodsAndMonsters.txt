@@ -1,0 +1,276 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_END_GodsAndMonsters_SceneSetup("END_GameFinale_TeleportToWithers", (TRIGGER)S_END_GodMonWithersPoint_4017bacc-a1ab-49fd-bee4-1aa3f0326140, (TRIGGER)S_END_MeetingPlayerPoint_afa87cc8-c43a-4610-8b4e-98bf30c90735);
+DB_END_GodsAndMonsters_SceneSetup("END_GameFinale_TeleportToRaphael", (TRIGGER)S_END_GodMonRaphaelPoint_2512ae68-f8ab-448f-ae04-5fc6fa3b6b5e, (TRIGGER)S_END_RaphaelComeuppancePlayerPoint_20c9a3b8-eaff-4f86-9c65-7918c47bd42e);
+
+DB_END_GodsAndMonsters_SceneFades("END_GameFinale_TeleportToWithers", (DIALOGRESOURCE)END_GodsAndMonsters_WithersMeeting_037b2c4f-d8cd-b3bb-1471-a9dee232217d, (CHARACTER)S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805);
+DB_END_GodsAndMonsters_SceneFades("END_GameFinale_TeleportToRaphael", (DIALOGRESOURCE)END_GameFinale_RaphaelCrownUpdate_b7ee667d-d550-7115-37f3-ce900ca80cbd, (CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+
+NOT DB_END_GodsAndMonsters_SelectedFade("", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+DB_GLO_CompoundFlag((FLAG)END_IllithidOptions_State_AcceptedRaphaelDeal_c4d409ef-d70e-9934-edf2-d6bd66201c19, (FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc);
+KBSECTION
+//REGION DEBUG
+
+//Withers Meeting
+IF
+TextEvent("end_startwithersmeeting_karlach")
+AND
+DB_END_GodsAndMonsters_SceneStartPlayer(_Player)
+THEN
+NOT DB_END_GodsAndMonsters_SceneStartPlayer(_Player);
+
+IF
+TextEvent("end_startwithersmeeting_karlach")
+AND
+NOT DB_Avatars(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Add Karlach to your party as an avatar first!");
+
+IF
+TextEvent("end_startwithersmeeting")
+AND
+DB_END_GodsAndMonsters_SceneStartPlayer(_Player)
+THEN
+NOT DB_END_GodsAndMonsters_SceneStartPlayer(_Player);
+
+IF
+TextEvent("end_startwithersmeeting")
+AND
+GetHostCharacter(_Player)
+THEN
+DB_END_GodsAndMonsters_SceneStartPlayer(_Player);
+ClearFlag(END_GameFinale_Event_KarlachChoseDeath_f9900bec-33dc-44db-ac8c-666dd5b8eec1);
+PROC_END_GodsAndMonsters_SceneSetup("END_GodsAndMonsters_WithersSceneFadeTo");
+
+IF
+TextEvent("end_blockcredits")
+THEN
+SetFlag(END_General_Debug_BlockRollingCredits_880f36a8-3d1d-b76e-a6f8-c14696dfaff5);
+//END_REGION
+
+//REGION Final dialogues Removal
+PROC
+PROC_END_GodsAndMonsters_RollCredits("END_GodsAndMonsters_GameFinished")
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+THEN
+PROC_END_GodsAndMonsters_ClearRaphael();
+
+PROC
+PROC_END_GodsAndMonsters_RollCredits("END_GodsAndMonsters_GameFinished")
+AND
+DB_GlobalFlag((FLAG)GLO_Monitor_State_PermaDefeated_92f6d5f6-86af-4339-ad8a-da9d629f0dae)
+THEN
+PROC_END_GodsAndMonsters_ClearRaphael();
+
+PROC
+PROC_END_GodsAndMonsters_RollCredits("END_GodsAndMonsters_GameFinished")
+AND
+DB_GlobalFlag((FLAG)END_BrainBattle_Event_GaleExplodedMidBattle_993173dd-a519-c8aa-67d7-b4fecfd2b5dc)
+THEN
+PROC_END_GodsAndMonsters_ClearRaphael();
+
+PROC
+PROC_END_GodsAndMonsters_RollCredits("END_GodsAndMonsters_GameFinished")
+AND
+DB_GlobalFlag((FLAG)END_BrainBattle_Event_GaleAscendsTheStalkAlone_217731da-1297-09b6-52b0-e9ee8580e70c)
+THEN
+PROC_END_GodsAndMonsters_ClearRaphael();
+
+PROC
+PROC_END_GodsAndMonsters_RollCredits("END_GodsAndMonsters_GameFinished")
+AND
+DB_GlobalFlag((FLAG)END_BrainBattle_Event_EvilFinalDecision_71617aed-6f56-ad38-5657-189de2628cc8)
+THEN
+PROC_END_GodsAndMonsters_ClearRaphael();
+NOT DB_END_GodsAndMonsters_SceneSetup("END_GameFinale_TeleportToWithers", (TRIGGER)S_END_GodMonWithersPoint_4017bacc-a1ab-49fd-bee4-1aa3f0326140, (TRIGGER)S_END_MeetingPlayerPoint_afa87cc8-c43a-4610-8b4e-98bf30c90735);
+NOT DB_END_GodsAndMonsters_SceneFades("END_GameFinale_TeleportToWithers", (DIALOGRESOURCE)END_GodsAndMonsters_WithersMeeting_037b2c4f-d8cd-b3bb-1471-a9dee232217d, (CHARACTER)S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805);
+
+PROC
+PROC_END_GodsAndMonsters_ClearRaphael()
+THEN
+NOT DB_END_GodsAndMonsters_SceneSetup("END_GameFinale_TeleportToRaphael", (TRIGGER)S_END_GodMonRaphaelPoint_2512ae68-f8ab-448f-ae04-5fc6fa3b6b5e, (TRIGGER)S_END_RaphaelComeuppancePlayerPoint_20c9a3b8-eaff-4f86-9c65-7918c47bd42e);
+NOT DB_END_GodsAndMonsters_SceneFades("END_GameFinale_TeleportToRaphael", (DIALOGRESOURCE)END_GameFinale_RaphaelCrownUpdate_b7ee667d-d550-7115-37f3-ce900ca80cbd, (CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+//END_REGION
+
+//REGION Final Dialogues
+PROC
+PROC_END_GodsAndMonsters_RollCredits("END_GodsAndMonsters_GameFinished")
+AND
+NOT DB_IsEditor(1)
+THEN
+PROC_StartMovie("Credits");
+
+IF
+CreditsEnded()
+AND
+NOT DB_IsEditor(1)
+AND
+QRY_OnlyOnce("END_GodsAndMonsters_CreditsClosed")
+THEN
+DB_END_GodsAndMonsters_SceneStarted(1);
+RemoveTransforms((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+RemoveTransforms((CHARACTER)S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805);
+PROC_END_GodsAndMonsters_SelectScene();
+
+PROC
+PROC_END_GodsAndMonsters_PreSceneSetup((STRING)_Scene)
+THEN
+SetOnStage(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, 0);
+SetOnStage(S_GLO_Orpheus_47c90728-af68-4cbc-baaa-6497eebd8d7e, 0);
+
+PROC
+PROC_END_GodsAndMonsters_PreSceneSetup((STRING)_Scene)
+AND
+DB_END_GodsAndMonsters_SceneFades(_Scene, _, _)
+THEN
+PROC_END_GodsAndMonsters_PreSceneSetupDone(_Scene);
+
+PROC
+PROC_END_GodsAndMonsters_PreSceneSetupDone("END_GameFinale_TeleportToWithers")
+AND
+DB_PartyMembers(_Player)
+THEN
+SetVisible(_Player, 0); //So we don't see players standing around in withers room during transition, a temp fix till everything is nested
+
+PROC
+PROC_END_GodsAndMonsters_PreSceneSetupDone("END_GameFinale_TeleportToRaphael")
+AND
+DB_Avatars(_Player)
+THEN
+SetVisible(_Player, 0); 
+
+PROC
+PROC_END_GodsAndMonsters_PreSceneSetupDone((STRING)_Scene)
+AND
+DB_END_GodsAndMonsters_SceneFades(_Scene, _, _)
+THEN
+PROC_END_GodsAndMonsters_SceneSetup(_Scene);
+
+PROC
+PROC_END_GodsAndMonsters_SceneSetup((STRING)_Scene)
+AND
+DB_END_GodsAndMonsters_SceneSetup(_Scene, (TRIGGER)_Trigger, (TRIGGER)_PlayerTrigger)
+AND
+DB_END_GodsAndMonsters_SceneFades(_Scene, (DIALOGRESOURCE)_Dialogue, (CHARACTER)_Char)
+THEN
+SetOnStage(_Char, 1);
+PROC_TeleportPartiesTo(_PlayerTrigger, _Scene);
+PROC_SetAnubisConfig(_Char, "Dummy");
+TeleportTo(_Char, _Trigger);
+PROC_END_GodsAndMonsters_StartScene(_Dialogue, _Char);
+
+PROC
+PROC_END_GodsAndMonsters_StartScene((DIALOGRESOURCE)_Dialogue, (CHARACTER)_Char)
+AND
+DB_END_General_MainDialogAnchor(_Avatar)
+AND
+NOT DB_END_GodsAndMonsters_SceneStarted(1)
+AND
+QRY_StartDialog_Fixed(_Dialogue, _Char, _Avatar)
+THEN
+DB_END_GodsAndMonsters_SceneStarted(1);
+
+PROC
+PROC_END_GodsAndMonsters_StartScene((DIALOGRESOURCE)_Dialogue, (CHARACTER)_Char)
+AND
+NOT DB_END_General_MainDialogAnchor(_)
+AND
+DB_Avatars(_Avatar)	//Don't check against MainDialogAnchor as there could be no avatars left, but the dialog needs to start regardless.
+AND
+NOT DB_END_GodsAndMonsters_SceneStarted(1)
+AND
+QRY_StartDialog_Fixed(_Dialogue, _Char, _Avatar)
+THEN
+DB_END_GodsAndMonsters_SceneStarted(1);
+
+PROC
+PROC_END_GodsAndMonsters_StartScene((DIALOGRESOURCE)_Dialogue, (CHARACTER)_Char)
+AND
+NOT DB_END_General_MainDialogAnchor(_)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Avatars(_Player)
+AND
+NOT DB_END_GodsAndMonsters_SceneStarted(1)
+AND
+QRY_StartDialog_Fixed(_Dialogue, _Char, _Player)
+THEN
+DB_END_GodsAndMonsters_SceneStarted(1);
+
+PROC
+PROC_END_GodsAndMonsters_StartScene((DIALOGRESOURCE)_Dialogue, (CHARACTER)_Char)
+AND
+NOT DB_END_GodsAndMonsters_SceneStarted(1)
+AND
+DB_END_GodsAndMonsters_SceneFades((STRING)_Scene, _Dialogue, _Char)
+AND
+DB_END_GodsAndMonsters_SceneSetup(_Scene, (TRIGGER)_Trigger, _PlayerTrigger)
+THEN
+NOT DB_END_GodsAndMonsters_SceneFades(_Scene, _Dialogue, _Char);
+NOT DB_END_GodsAndMonsters_SceneSetup(_Scene, _Trigger, _PlayerTrigger);
+
+IF
+DialogEnded((DIALOGRESOURCE)_Dialogue, _)
+AND
+NOT DB_GlobalFlag(END_General_Event_FadeScene_21c5d45e-4565-430d-b568-afbf81caec05)
+AND
+DB_END_GodsAndMonsters_SceneFades(_Scene, _Dialogue, (CHARACTER)_Char)
+AND
+DB_END_GodsAndMonsters_SceneSetup(_Scene, (TRIGGER)_Trigger, (TRIGGER)_PlayerTrigger)
+THEN
+NOT DB_END_GodsAndMonsters_SceneFades(_Scene, _Dialogue, _Char);
+NOT DB_END_GodsAndMonsters_SceneSetup(_Scene, _Trigger, _PlayerTrigger);
+PROC_END_GodsAndMonsters_SelectScene();
+
+IF
+FlagSet(END_General_Event_FadeScene_21c5d45e-4565-430d-b568-afbf81caec05, _, _ID)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+DB_END_GodsAndMonsters_SceneFades(_Scene, _Dialogue, (CHARACTER)_Char)
+AND
+DB_END_GodsAndMonsters_SceneSetup(_Scene, (TRIGGER)_Trigger, (TRIGGER)_PlayerTrigger)
+THEN
+NOT DB_END_GodsAndMonsters_SceneFades(_Scene, _Dialogue, _Char);
+NOT DB_END_GodsAndMonsters_SceneSetup(_Scene, _Trigger, _PlayerTrigger);
+PROC_END_GodsAndMonsters_SelectScene();
+
+PROC
+PROC_END_GodsAndMonsters_SelectScene()
+THEN
+NOT DB_END_GodsAndMonsters_SceneStarted(1);
+
+PROC
+PROC_END_GodsAndMonsters_SelectScene()
+AND
+SysFactAtIndex("DB_END_GodsAndMonsters_SceneSetup", 3, 1, "DB_END_GodsAndMonsters_SelectedFade")
+AND
+DB_END_GodsAndMonsters_SelectedFade(_Scene, _TriggerGod, _TriggerPlayer)
+THEN
+NOT DB_END_GodsAndMonsters_SelectedFade(_Scene, _TriggerGod, _TriggerPlayer);
+PROC_END_GodsAndMonsters_PreSceneSetup(_Scene);
+
+IF
+DialogStarted((DIALOGRESOURCE)END_GodsAndMonsters_WithersMeeting_037b2c4f-d8cd-b3bb-1471-a9dee232217d, _)
+THEN
+PROC_TriggerMovieEndFadeIn("Credits");
+
+PROC
+PROC_END_GodsAndMonsters_SelectScene()
+AND
+NOT DB_END_GodsAndMonsters_SceneStarted(1)
+AND
+NOT DB_IsEditor(1)
+THEN
+GameEnd();
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3c"

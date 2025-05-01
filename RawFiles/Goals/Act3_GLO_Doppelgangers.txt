@@ -1,0 +1,91 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+When a player character sees a doppelganger dropping their shapeshifting disguise (status) for the first time
+the player character reacts to that with a PAD GLO_PAD_SawDoppelgangerFirstTime when they can, after that
+flag GLO_Doppelgangers_State_ReactedToFirstTransformation is set to prevent the PAD from triggering again.
+If you want to override the generic PAD with a custom one you can define
+	DB_GLO_Doppelgangers_CustomReactionPAD(_Doppelganger, _CustomPAD) for your doppelgangers;
+	this will also set GLO_Doppelgangers_State_ReactedToFirstTransformation
+If you want to completely block the generic PAD (in case you have an interactive dialog where the transformation is discussed)
+then you need to override
+	QRY_GLO_Doppelgangers_BlockGenericReactionPAD(_Doppelganger) and make it return TRUE
+	this will also set GLO_Doppelgangers_State_ReactedToFirstTransformation
+*/
+NOT DB_GLO_Doppelgangers_CustomReactionPAD((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION First Transformation Reaction
+IF
+StatusRemoved((CHARACTER)_Doppelganger, _DoppelgangerStatus, _, _)
+AND
+NOT DB_GlobalFlag(GLO_Doppelgangers_State_ReactedToFirstTransformation_7c66af09-fe89-43fe-9fac-0e52fb397c59)
+AND
+IsStatusFromGroup(_DoppelgangerStatus, "SG_Doppelganger", 1)
+AND
+QRY_GLO_Doppelgangers_BlockGenericReactionPAD(_Doppelganger)
+THEN
+PROC_GlobalSetFlagAndCache(GLO_Doppelgangers_State_ReactedToFirstTransformation_7c66af09-fe89-43fe-9fac-0e52fb397c59);
+
+IF
+StatusRemoved((CHARACTER)_Doppelganger, _DoppelgangerStatus, _, _)
+AND
+NOT DB_GlobalFlag(GLO_Doppelgangers_State_ReactedToFirstTransformation_7c66af09-fe89-43fe-9fac-0e52fb397c59)
+AND
+IsStatusFromGroup(_DoppelgangerStatus, "SG_Doppelganger", 1)
+AND
+NOT QRY_GLO_Doppelgangers_BlockGenericReactionPAD(_Doppelganger)
+AND
+DB_Players(_Player)
+AND
+CanSee(_Player, _Doppelganger, 1)
+AND
+NOT DB_GLO_Shapeshifters_QueuedReactionPAD(_Player)
+THEN
+DB_GLO_Shapeshifters_QueuedReactionPAD((CHARACTER)_Player, (CHARACTER)_Doppelganger);
+
+QRY
+QRY_GLO_Doppelgangers_BlockGenericReactionPAD((CHARACTER)_Doppelganger)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+DB_GLO_Shapeshifters_QueuedReactionPAD(_Player, _Doppelganger)
+AND
+NOT DB_CantTalk(_Player)
+AND
+NOT DB_GlobalFlag(GLO_Doppelgangers_State_ReactedToFirstTransformation_7c66af09-fe89-43fe-9fac-0e52fb397c59)
+AND
+DB_GLO_Doppelgangers_CustomReactionPAD(_Doppelganger, _CustomPAD)
+THEN
+PROC_GLO_Doppelgangers_PlayFirstTransformationReactionPAD(_CustomPAD, _Player);
+
+IF
+DB_GLO_Shapeshifters_QueuedReactionPAD(_Player, _Doppelganger)
+AND
+NOT DB_CantTalk(_Player)
+AND
+NOT DB_GlobalFlag(GLO_Doppelgangers_State_ReactedToFirstTransformation_7c66af09-fe89-43fe-9fac-0e52fb397c59)
+AND
+NOT DB_GLO_Doppelgangers_CustomReactionPAD(_Doppelganger, _)
+THEN
+PROC_GLO_Doppelgangers_PlayFirstTransformationReactionPAD(GLO_PAD_SawDoppelgangerFirstTime_27acb99f-552f-3f89-c86e-965f5ae5a21f, _Player);
+
+PROC
+PROC_GLO_Doppelgangers_PlayFirstTransformationReactionPAD((DIALOGRESOURCE)_PAD, (CHARACTER)_Player)
+AND
+QRY_StartDialog_Fixed(_PAD, _Player)
+THEN
+PROC_GlobalSetFlagAndCache(GLO_Doppelgangers_State_ReactedToFirstTransformation_7c66af09-fe89-43fe-9fac-0e52fb397c59);
+
+PROC
+PROC_GLO_Doppelgangers_PlayFirstTransformationReactionPAD((DIALOGRESOURCE)_PAD, (CHARACTER)_Player)
+THEN
+NOT DB_GLO_Shapeshifters_QueuedReactionPAD(_Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

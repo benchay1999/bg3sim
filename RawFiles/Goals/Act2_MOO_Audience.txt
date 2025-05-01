@@ -1,0 +1,477 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//By default the players are on the "Audience" path, until this path is closed to them because they free Nighstong (assault state) or turn the Tower hostile (outcast state)
+//Relates closely to the goal: Act2_MOO_Roof
+
+TriggerRegisterForCharacter(S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, (TRIGGER)S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73, 1, 1, 1);
+
+DB_DropMutingStatussesDialog(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f);
+DB_MOO_Audience_SoloDialogs(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, (DIALOGRESOURCE)MOO_Audience_WaitingKetheric_d8086b47-12b5-1804-233e-c92bf419783d);
+//REGION Roof cultist spotted setup
+
+DB_IgnoreMutingStatussesDialog(MOO_Audience_RoofCultist_3999a582-9a75-b590-6877-51d42a5d03f3);
+
+DB_SpotPlayers((CHARACTER)S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_RoofWarning", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_RoofWarning", S_MOO_RoofGreetingBox_b2d35079-ba62-42f9-b54f-8bb13f00be6a);
+ 
+DB_Dialogs((CHARACTER)S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, MOO_Audience_RoofCultist_3999a582-9a75-b590-6877-51d42a5d03f3);
+
+//END_REGION
+
+SetOwner((ITEM)CONT_GEN_Chest_Heavy_A_015_25d7692c-7ba3-4f9e-ba8c-ebd6cf97ca65, (CHARACTER)S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65);
+
+KBSECTION
+//REGION Debug
+//Isobel Tadpoled
+IF
+TextEvent("mooaudience_tadpole")
+THEN
+SetFlag(MOO_Audience_Debug_StartIsobelTadpole_bf0aac63-fa8a-4e82-903b-cda3448f4f5d);
+
+IF
+DB_GlobalFlag(MOO_Audience_Debug_StartIsobelTadpole_bf0aac63-fa8a-4e82-903b-cda3448f4f5d)
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_State_Progress(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel", "HAV_Isobel_State_AtMoonrise");
+PROC_MOO_ZrellBriefing_SetupFlamingSpy();
+SysCompleteGoal("Act2_HAV_TakingIsobel");
+PROC_MOO_Audience_DEBUG_InitState();
+DebugText(_Player, "MOO Audience: Isobel Tadpoled");
+
+//Isobel Dead
+IF
+TextEvent("mooaudience_dead")
+THEN
+SetFlag(MOO_Audience_Debug_StartIsobelDead_7fdb6027-296b-409b-a155-2d142d2a61cc);
+
+IF
+DB_GlobalFlag(MOO_Audience_Debug_StartIsobelDead_7fdb6027-296b-409b-a155-2d142d2a61cc)
+AND
+GetHostCharacter(_Player)
+THEN
+Die(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+PROC_MOO_Audience_DEBUG_InitState();
+DebugText(_Player, "MOO Audience: Isobel Dead");
+
+//Isobel Alive
+IF
+TextEvent("mooaudience_alive")
+THEN
+SetFlag(MOO_Audience_Debug_StartIsobelAlive_73fb1e84-0af9-485c-b784-9af631adc9db);
+
+IF
+DB_GlobalFlag(MOO_Audience_Debug_StartIsobelAlive_73fb1e84-0af9-485c-b784-9af631adc9db)
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_MOO_Audience_DEBUG_InitState();
+DebugText(_Player, "MOO Audience: Isobel Alive");
+
+PROC
+PROC_MOO_Audience_DEBUG_InitState()
+THEN
+PROC_MOO_Execution_ForceResolve();
+SetFlag(MOO_Audience_State_Ready_b53bc2df-d3b9-73a7-c1d2-b47b0ecdc722);
+PROC_Debug_NightsongToMoonrise();
+PROC_ClearStoryMove(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+FlushOsirisQueue(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84);
+TeleportTo(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_RoofPrayPoint_a880e823-08de-41cd-8cff-1a563db7f05e, "MOO_Ketheric_LeaveExecutionToRoof");
+
+//IF
+//TextEvent SHA_NightsongPrison_NightsongToMoonrise
+//executed in (Act2_SHA_NightsongPrison)
+
+//END_REGION
+
+//REGION Ketheric mad (triggers outcast)
+
+IF
+DialogActorLeft(_Dialog, _, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _)
+AND
+DB_GlobalFlag(MOO_Audience_Event_RoofTransgression_e72e1cd0-2ed0-ef98-f47f-35b75aa814cc)
+THEN
+SetFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DialogActorLeft(_Dialog, _, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _)
+AND
+DB_GlobalFlag(MOO_Execution_Event_CombatTransgression_1946f62a-afe1-4843-bdfa-590688f366d6)
+THEN
+SetFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+
+//REGION Reaching roof before given permission.
+
+PROC
+PROC_SpotPlayers_Spotted(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_RoofWarning", _Player)
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Player)
+AND
+NOT DB_CantTalk_IgnoreStatuses(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65)
+AND
+QRY_StartDialog((DIALOGRESOURCE)MOO_Audience_RoofCultist_3999a582-9a75-b590-6877-51d42a5d03f3, S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, _Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", (STRING)_NewState)
+AND
+DB_MOO_RoofAccessStates(_NewState)
+THEN
+PROC_SpotPlayers_StopSpotting(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression");
+
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Outcast")
+THEN
+PROC_SpotPlayers_StopSpotting(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression");
+
+//Get grumpy at the players if they try going onto the roof without permission, but Ketheric will not get Hostile if it's already Audience path
+//Set in MOO_Executioner
+IF
+DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+THEN
+PROC_SpotPlayers_StopSpotting(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_RoofWarning");
+PROC_MOO_Audience_SetupRoofCultist();
+
+//If Zrell is killed for whatever reason when the complete Audience conditions are already met, stop the blocking
+IF
+FlagSet(MOO_Executioner_State_IsDefeated_2b857607-9c26-4d56-a1a9-a63f8ff5bebf, _, _)
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+SetFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a);
+
+//Isobel died and Z'rell is not alive to give permission to the roof
+IF
+FlagSet(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706, _, _)
+AND
+DB_GlobalFlag(MOO_Executioner_State_IsDefeated_2b857607-9c26-4d56-a1a9-a63f8ff5bebf)
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+SetFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a);
+
+IF
+EnteredTrigger(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+THEN
+PROC_MOO_Audience_RoofTransgressionSetup();
+SetCanJoinCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 1);
+SetCanFight(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 1);
+
+PROC
+PROC_MOO_Audience_RoofTransgressionSetup()
+AND
+QRY_State_IsBeforeState(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Audience")
+THEN
+DB_SpotPlayers_IncludeWildshapedPlayers(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression");
+DB_SpotPlayers_TargetIgnoreCantTalk(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression");
+DB_SpotPlayers(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression", S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73);
+DB_SpotPlayers_SpotTrigger_ManualRegistering(S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73);
+
+PROC
+PROC_SpotPlayers_Spotted(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_RoofTransgression", _Player)
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Player)
+AND
+NOT DB_CantTalk_IgnoreStatuses(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f)
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)MOO_Audience_RoofTransgression_72643ac1-4dcc-b11c-0410-815254c03095, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player)
+THEN //muted player fallback
+SetFlag(MOO_Audience_Event_RoofTransgression_e72e1cd0-2ed0-ef98-f47f-35b75aa814cc);
+SetFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Audience_RoofCultist_3999a582-9a75-b590-6877-51d42a5d03f3, _InstanceID)
+AND
+NOT DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+
+IF
+LeftTrigger(_Player, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+NOT DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(_Player, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+THEN
+PROC_SpotPlayers_RestartSpotting(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_RoofWarning");
+//END_REGION 
+
+//REGION To roof - Ketheric (PostExecution)
+IF
+EntityEvent(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Ketheric_LeaveExecutionToRoof")
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_RoofPrayPoint_a880e823-08de-41cd-8cff-1a563db7f05e, "Walk", "MOO_Ketheric_OnRoof");
+//TODO: Need to clean up his movement to the point on the roof so it does not look jank if a player is already on the roof (polish)
+//END_REGION
+
+//REGION To roof - Wine Serving Pilgrim
+IF
+DB_MOO_Audience_SetupOtherChars(1)
+AND
+DB_State_Current(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel", "HAV_Isobel_State_AtMoonrise")
+THEN
+PROC_MOO_Audience_SetupWinePilgrim();
+
+//Is called only if Isobel is captured and tadpoled, as Ketheric is in a celebratory mood
+PROC
+PROC_MOO_Audience_SetupWinePilgrim()
+AND
+NOT DB_PermaDefeated(S_MOO_BazaarStander_003_efcf317a-dc82-4776-80ef-0f463b09fefe)
+THEN
+PROC_DisappearOutOfSightTo((CHARACTER)S_MOO_BazaarStander_003_efcf317a-dc82-4776-80ef-0f463b09fefe, S_MOO_RoofIntermediatePoint_c9586639-f1b5-4b67-998b-a2efe790dd4f, "Run", 1, "MOO_WinePilgrim_ToRoof");
+
+IF
+EntityEvent(S_MOO_BazaarStander_003_efcf317a-dc82-4776-80ef-0f463b09fefe, "MOO_WinePilgrim_ToRoof")
+THEN
+TeleportTo(S_MOO_BazaarStander_003_efcf317a-dc82-4776-80ef-0f463b09fefe, S_MOO_RoofPos_1e79870f-d67e-4cf2-8472-2eb51d96ef7c);
+SetOnStage(S_MOO_BazaarStander_003_efcf317a-dc82-4776-80ef-0f463b09fefe, 1);
+PROC_CharacterMoveTo((CHARACTER)S_MOO_BazaarStander_003_efcf317a-dc82-4776-80ef-0f463b09fefe, S_MOO_WineServingPilgrimPoint_7556aec7-0b8d-4741-92fd-484abc919b39, "Run", "");
+//END_REGION
+
+//REGION Register scene
+
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Audience")
+THEN
+PROC_MOO_Audience_SetUpKethericDialog();
+SetOwner((ITEM)CONT_GEN_Chest_Heavy_A_015_25d7692c-7ba3-4f9e-ba8c-ebd6cf97ca65, (CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+DB_MOO_Audience_SetupOtherChars(1);
+
+//If the player went on the roof, then went back to capture Isobel, Ketheric will speak to the player again
+PROC
+PROC_State_Changed(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel", "HAV_Isobel_State_AtMoonrise")
+AND
+QRY_MOO_Audience_OutroIsActive()
+THEN
+PROC_MOO_Audience_Ended("MOO_Audience_Outro");
+PROC_MOO_Audience_SetUpKethericDialog();
+
+//If the player went to the roof, then killed Isobel, Ketheric will speak to the player again.
+IF
+DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+QRY_MOO_Audience_OutroIsActive()
+THEN
+PROC_MOO_Audience_Ended("MOO_Audience_Outro");
+PROC_MOO_Audience_SetUpKethericDialog();
+
+QRY
+QRY_MOO_Audience_OutroIsActive()
+AND
+DB_GlobalFlag(MOO_Audience_State_SpokeToKetheric_f50b8683-d88c-44f8-aa38-55cab952488f)
+AND
+DB_SceneManager(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Audience_Outro")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_MOO_Audience_SetUpKethericDialog()
+THEN
+DB_Dialogs((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f);
+DB_SpotPlayers((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Ketheric_AudienceSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Ketheric_AudienceSpotting", S_MOO_AudienceSceneSphere_11043bbb-22fe-41b0-917f-dc912fdc512f);
+PROC_MOO_Audience_SetupSceneManager("MOO_Audience_Intro");
+DB_AddCharactersInTriggerToDialog(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73, 1, 1, 1);
+
+PROC
+PROC_MOO_Audience_SetupSceneManager((STRING)_Scene)
+THEN
+DB_SceneTriggerManager(_Scene, (TRIGGER)S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73);
+DB_SceneManager(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Scene);
+
+PROC
+PROC_MOO_Audience_SetupSceneManager((STRING)_Scene)
+AND
+DB_MOO_Roof_Myrkulites(_NPC)
+AND
+NOT DB_Defeated(_NPC)
+THEN
+DB_SceneManager(_NPC, _Scene);
+
+PROC
+PROC_MOO_Audience_SetupSceneManager((STRING)_Scene)
+AND
+DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+THEN
+DB_SceneManager(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _Scene);
+//Isobel are added to the scene in their "To roof" region
+
+//END_REGION
+
+//REGION Arrival - RoofCultist (greeting Player)
+PROC
+PROC_MOO_Audience_SetupRoofCultist()
+THEN
+DB_SpotPlayers(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_Audience_GreetingAD", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_Audience_GreetingAD", S_MOO_RoofGreetingBox_b2d35079-ba62-42f9-b54f-8bb13f00be6a);
+
+PROC
+PROC_SpotPlayers_Spotted(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_Audience_GreetingAD", (CHARACTER)_)
+THEN
+PROC_TryStartAD(MOO_Audience_AD_RoofGreeting_6ddc970a-f661-2964-7954-767349348b52, S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65);
+SetFlag(MOO_Audience_Event_RoofCultistGreeting_7819a3c0-5138-4ff3-9798-7b64da638533);
+
+//END_REGION
+
+//REGION Scene - Climax dialog with Ketheric
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Ketheric_AudienceSpotting", (CHARACTER)_Player)
+AND
+DB_Players(_Player)
+THEN
+NOT DB_MOO_Audience_SetupOtherChars(1);
+PROC_SpotPlayers_StopSpotting(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65, "MOO_Audience_GreetingAD");
+PROC_MOO_Audience_StartAudience(_Player);
+
+PROC
+PROC_MOO_Audience_StartAudience((CHARACTER)_)
+THEN
+PROC_SpotPlayers_StopSpotting(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,"MOO_Ketheric_AudienceSpotting");
+
+IF
+DialogEnded((DIALOGRESOURCE)MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, _)
+AND
+NOT DB_GlobalFlag(MOO_Audience_State_SpokeToKetheric_f50b8683-d88c-44f8-aa38-55cab952488f)
+THEN
+SetFlag(MOO_Audience_State_SpokeToKetheric_f50b8683-d88c-44f8-aa38-55cab952488f);
+
+PROC
+PROC_MOO_Audience_StartAudience((CHARACTER)_Player)
+AND
+QRY_MOO_Audience_CheckReactToSneak(_Player)
+AND
+NOT QRY_StartDialogCustom(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, 0, 0, 1, 1)
+THEN
+PROC_MOO_Audience_Ended("MOO_Audience_Intro");
+
+QRY
+QRY_MOO_Audience_CheckReactToSneak((CHARACTER)_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_MOO_Audience_CheckReactToSneak((CHARACTER)_Player)
+AND
+DB_HiddenCharacters(_Player, _)
+THEN
+SetFlag(MOO_Audience_Event_ApproachedHidden_8b902242-dded-4650-beca-9a1a50c21968);
+
+//END_REGION
+
+//REGION Scene - Interruptions
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_,(CHARACTER)_,"MOO_Audience_Intro",(STRING)_Reason) //TODO: actually testing this and triggering combat instead of unblocking the altar
+AND
+DB_GLO_GenericSceneManager_LeavingReason(_Reason)
+THEN
+PROC_MOO_Audience_Ended("MOO_Audience_Intro");
+
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_,(CHARACTER)_,"MOO_Audience_Intro",(STRING)_Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+THEN
+PROC_State_Progress(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_HostileAudience");
+SetFlag(MOO_Audience_Event_AttackedKetheric_e38a647a-6cea-44a4-86a9-0bf38f5bbc5f);
+PROC_MOO_Audience_Ended("MOO_Audience_Intro");
+
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_,(CHARACTER)_,"MOO_Audience_Outro",(STRING)_Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+THEN
+PROC_State_Progress(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_HostileAudience");
+SetFlag(MOO_Audience_Event_AttackedKetheric_e38a647a-6cea-44a4-86a9-0bf38f5bbc5f);
+PROC_MOO_Audience_Ended("MOO_Audience_Outro");
+
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_HostileAudience")
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, 0);
+//END_REGION
+
+//REGION Scene - ended (-> altar)
+
+IF
+DialogEnded(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f,_)
+THEN
+PROC_MOO_Audience_Ended("MOO_Audience_Intro");
+
+IF
+DialogEnded(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f,_)
+AND
+DB_GlobalFlag(MOO_Audience_Event_AttackedKetheric_e38a647a-6cea-44a4-86a9-0bf38f5bbc5f)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, 0);
+
+IF
+DialogEnded(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f,_)
+AND
+DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+NOT DB_GlobalFlag(MOO_Audience_Event_IsobelTakenToColony_f92c336c-441d-4c09-88fb-59cc761beccd)
+THEN
+SetFlag(MOO_Audience_Event_IsobelResurrected_f5103509-f8ee-4e45-ba28-ecb8303eec6d);
+SetFlag(MOO_Audience_Event_IsobelTakenToColony_f92c336c-441d-4c09-88fb-59cc761beccd);
+PROC_Poof(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211);
+
+PROC
+PROC_MOO_Audience_Ended("MOO_Audience_Intro")
+AND
+QRY_OnlyOnce("MOO_Audience_CloseIntroOnce")
+THEN
+PROC_SceneOver("MOO_Audience_Intro");
+PROC_MOO_Audience_SetupSceneManager("MOO_Audience_Outro");
+ClearFlag(MOO_Audience_Event_ApproachedHidden_8b902242-dded-4650-beca-9a1a50c21968);
+SetFlag(MOO_Audience_State_InvitedToKneel_2a8fb871-7e39-4dcf-b014-754c08435e01);
+PROC_RemoveDialog(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+PROC_MOO_Audience_ChangeToSoloDialog();
+
+PROC
+PROC_MOO_Audience_ChangeToSoloDialog()
+AND
+DB_MOO_Audience_SoloDialogs(_Char, _Dialog)
+THEN
+NOT DB_MOO_Audience_SoloDialogs(_Char, _Dialog);
+DB_Dialogs(_Char, _Dialog);
+
+PROC
+PROC_MOO_Audience_Ended("MOO_Audience_Outro")
+THEN
+PROC_SceneOver("MOO_Audience_Outro");
+ClearFlag(MOO_Audience_Event_ApproachedHidden_8b902242-dded-4650-beca-9a1a50c21968);
+PROC_RemoveDialog(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+
+//END_REGION
+	//---> Altar is handled in Act2_MOO_Roof
+
+
+// MOO State change -> transition to Assault or Nightsong Death
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", (STRING)_NewState)
+AND
+_NewState != "MOO_State_Audience"
+AND
+DB_MOO_RoofAccessStates(_NewState)
+THEN
+GoalCompleted;
+PROC_MOO_Audience_Cancelled(); //Activate Assault or NightsongDeath
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

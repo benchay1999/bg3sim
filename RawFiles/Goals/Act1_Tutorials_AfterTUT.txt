@@ -1,0 +1,626 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_Tutorials_ClassTagsCanPrepareSpell((TAG)WIZARD_6fe3ae27-dc6c-4fc9-9245-710c790c396c);
+DB_GLO_Tutorials_ClassTagsCanPrepareSpell((TAG)CLERIC_1671b4bf-4f47-4bb7-9cb9-80bb1f6009d5);
+DB_GLO_Tutorials_ClassTagsCanPrepareSpell((TAG)PALADIN_6d85ab2d-5c23-498c-a61e-98f05a00177a);
+DB_GLO_Tutorials_ClassTagsCanPrepareSpell((TAG)DRUID_44ac4317-4d38-4d28-80e2-94024c6e42f0);
+
+DB_GLO_Tutorials_ArmorSlots(EQUIPMENTSLOT.Boots);
+DB_GLO_Tutorials_ArmorSlots(EQUIPMENTSLOT.Helmet);
+DB_GLO_Tutorials_ArmorSlots(EQUIPMENTSLOT.Gloves);
+DB_GLO_Tutorials_ArmorSlots(EQUIPMENTSLOT.Breast);
+
+DB_GLO_Tutorials_Jump_Triggers((TRIGGER)S_Tutorials_Jump_01_7a1caa5e-e45f-44ec-abce-c8b6f9988561);
+KBSECTION
+//Tutorials active after TUT level onwards
+//REGION Tutorials
+
+//REGION Party
+//Partyline Tutorial
+IF 
+CharacterJoinedParty(_Char)
+AND
+QRY_GLO_Tutorials_IsCompanion(_Char)
+AND
+DB_GLO_Tutorials_ActiveCompanionCount(_Count)
+AND
+IntegerSum(_Count,1,_Sum)
+THEN
+NOT DB_GLO_Tutorials_ActiveCompanionCount(_Count);
+DB_GLO_Tutorials_ActiveCompanionCount(_Sum);
+PROC_EvaluatePartylineTutorial(_Char);
+
+IF
+CharacterLeftParty(_Char)
+AND
+QRY_GLO_Tutorials_IsCompanion(_Char)
+AND
+DB_GLO_Tutorials_ActiveCompanionCount(_Count)
+AND
+IntegerSubtract(_Count,1,_Result)
+THEN
+NOT DB_GLO_Tutorials_ActiveCompanionCount(_Count);
+DB_GLO_Tutorials_ActiveCompanionCount(_Result);
+
+QRY
+QRY_GLO_Tutorials_IsCompanion((CHARACTER)_Char)
+AND
+NOT DB_PartyFollowers(_Char)
+AND
+NOT DB_Avatars(_Char)
+AND
+NOT DB_DismissedAvatar(_Char)
+AND
+NOT DB_PlayerSummons(_Char)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_EvaluatePartylineTutorial((CHARACTER)_Player)
+AND
+DB_GLO_Tutorials_ActiveCompanionCount(_Count)
+AND
+_Count > 1
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Partyline_f3418e56-981b-4fe7-8f0e-10de5fe83506);
+//END_REGION Party
+
+//REGION Camp and resting
+//End the day Tutorials
+//helpers
+PROC
+PROC_ShowEndTheDayTutorial((CHARACTER)_Player, (UNIFIEDTUTORIAL)_EndTheDayTutorial)
+AND
+DB_GLO_Tutorials_EndTheDayTutorials(_EndTheDayTutorial)
+AND
+QRY_OnlyOncePerUser(_Player, "Tutorials_EndTheDay") //hack around - if 2 versions got triggered the first one was set shown before it had time to show up.
+AND
+DB_GLO_Tutorials_EndTheDayTutorials(_AllEndTheDayTutorials)
+AND
+_EndTheDayTutorial != _AllEndTheDayTutorials
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, _EndTheDayTutorial);
+SetTutorialShown(_Player, _AllEndTheDayTutorials);
+PROC_GLO_Tutorials_TrackedTimerStart(_Player, "Tutorials_EndTheDay_Timer", 2000);
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "Tutorials_EndTheDay_Timer")
+AND
+QRY_OnlyOnce_Reset("Tutorials_EndTheDay")
+THEN
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Player, "Tutorials_EndTheDay_Timer");
+
+IF
+TeleportedToCamp(_Player)
+AND
+DB_GLO_Tutorials_EndTheDayTutorials(_AllEndTheDayTutorials)
+THEN
+SetTutorialShown(_Player, _AllEndTheDayTutorials);
+HideTutorial(_Player, _AllEndTheDayTutorials);
+
+QRY
+QRY_GLO_Tutorials_PlayerOutsideDangerAndCombat((CHARACTER)_Player)
+AND
+NOT DB_Is_InCombat((GUIDSTRING)_Player, _)
+AND
+NOT DB_InDangerZone((CHARACTER)_Player, _)
+THEN
+DB_NOOP(1);
+
+//End the day Tutorials - low health no short rests tutorial
+IF
+HitpointsChanged(_Player, _playerHealthPercentage)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+PROC_EvaluateEndTheDay_LowHealth_Tutorial((CHARACTER)_Player);
+
+PROC
+PROC_EvaluateEndTheDay_LowHealth_Tutorial((CHARACTER)_Player)
+AND
+PartyGetActionResourceValue(_Player, "ShortRestPoint", 0.0)
+AND
+QRY_GLO_Tutorials_PlayerOutsideDangerAndCombat(_Player)
+AND
+GetHitpointsPercentage(_Player, _playerHealthPercentage)
+AND
+_playerHealthPercentage <= 50
+AND
+NOT DB_Is_WildShaped((CHARACTER)_Player) //HP is restored after wild shape ends, therefore ignore WS
+AND
+IsSummon(_Player, 0)
+THEN
+PROC_ShowEndTheDayTutorial(_Player, (UNIFIEDTUTORIAL)End_the_day__low_health_and_no_short_rests__3944e9b3-5090-4fc5-8a4d-a7ac204917ca);
+
+//End the day Tutorials - long rest resource depleted
+IF
+TutorialEvent(_Player, _TutorialEvent)
+AND
+DB_GLO_TutorialEvents_LongRestReplenishables(_TutorialEvent)
+AND
+DB_PartyMembers(_Player)
+AND
+IsSummon(_Player, 0)
+THEN
+DB_GLO_Tutorials_EndTheDay_DepletedLongRestResource((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_LongRestResourceDepleted_Tutorial((CHARACTER)_Player);
+
+PROC
+PROC_EvaluateEndTheDay_LongRestResourceDepleted_Tutorial((CHARACTER)_Player)
+AND
+DB_GLO_Tutorials_EndTheDay_DepletedLongRestResource(_Player)
+AND
+QRY_GLO_Tutorials_PlayerOutsideDangerAndCombat(_Player)
+THEN
+PROC_ShowEndTheDayTutorial(_Player, (UNIFIEDTUTORIAL)End_the_day__depleted_long_rest_resource__388fad02-67dc-4d8f-940c-9821322ec16b);
+NOT DB_GLO_Tutorials_EndTheDay_DepletedLongRestResource(_Player);
+
+//End the day Tutorials - short rest resource depleted
+IF
+TutorialEvent(_Player, _TutorialEvent)
+AND
+DB_GLO_TutorialEvents_ShortRestReplenishables(_TutorialEvent)
+AND
+DB_PartyMembers(_Player)
+AND
+IsSummon(_Player, 0)
+THEN
+DB_GLO_Tutorials_EndTheDay_DepletedShortRestResourceOrSpell((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_ShortRestResourceDepleted_Tutorial((CHARACTER)_Player);
+
+IF 
+CastedSpell(_Player, _Spell, _, _, _)
+AND
+DB_GLO_TutorialEvents_EndTheDayTutorial_ShortRestSpells(_Spell)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+IsSummon(_Player, 0)
+THEN 
+DB_GLO_Tutorials_EndTheDay_DepletedShortRestResourceOrSpell((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_ShortRestResourceDepleted_Tutorial((CHARACTER)_Player);
+
+PROC
+PROC_EvaluateEndTheDay_ShortRestResourceDepleted_Tutorial((CHARACTER)_Player)
+AND
+DB_GLO_Tutorials_EndTheDay_DepletedShortRestResourceOrSpell(_Player)
+AND
+PartyGetActionResourceValue(_Player, "ShortRestPoint", 0.0)
+AND
+QRY_GLO_Tutorials_PlayerOutsideDangerAndCombat(_Player)
+THEN
+PROC_ShowEndTheDayTutorial(_Player, (UNIFIEDTUTORIAL)End_the_day__depleted_short_rest_resource__b931d222-c59c-41a1-9081-dca461606342);
+NOT DB_GLO_Tutorials_EndTheDay_DepletedShortRestResourceOrSpell(_Player);
+
+//End the day Tutorials - delayed re-evaluations
+IF
+CombatEnded(_)
+AND
+DB_PartyMembers(_Player)
+AND
+IsSummon(_Player, 0)
+THEN
+PROC_EvaluateEndTheDay_LowHealth_Tutorial((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_ShortRestResourceDepleted_Tutorial((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_LongRestResourceDepleted_Tutorial((CHARACTER)_Player);
+
+PROC
+PROC_CharacterLeftDangerZone(_Player, _)
+AND
+DB_PartyMembers(_Player)
+AND
+IsSummon(_Player, 0)
+THEN
+PROC_EvaluateEndTheDay_LowHealth_Tutorial((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_ShortRestResourceDepleted_Tutorial((CHARACTER)_Player);
+PROC_EvaluateEndTheDay_LongRestResourceDepleted_Tutorial((CHARACTER)_Player);
+
+
+//Short Rest Tutorial
+IF
+TutorialEvent(_Player, _TutorialEvent)
+AND
+DB_GLO_TutorialEvents_ShortRestReplenishables(_TutorialEvent)
+AND
+NOT DB_InCamp((CHARACTER)_Player)
+THEN
+DB_GLO_Tutorials_ShortRest_ShouldSee((CHARACTER)_Player);
+PROC_EvaluateShortRestTutorial_ReasonSpellOrResource((CHARACTER)_Player);
+
+IF //backup solution for classes who have short rest spells but no resources until very late
+CastedSpell(_Player, _Spell, _, _, _)
+AND
+DB_GLO_TutorialEvents_EndTheDayTutorial_ShortRestSpells(_Spell)
+AND
+DB_PartyMembers((CHARACTER)_Player) //summons survive short rest
+AND
+NOT DB_InCamp((CHARACTER)_Player)
+THEN
+DB_GLO_Tutorials_ShortRest_ShouldSee((CHARACTER)_Player);
+PROC_EvaluateShortRestTutorial_ReasonSpellOrResource((CHARACTER)_Player);
+
+IF
+HitpointsChanged(_Player, _playerHealthPercentage)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+PROC_EvaluateShortRestTutorial_ReasonLowHP((CHARACTER)_Player);
+
+PROC
+PROC_EvaluateShortRestTutorial_ReasonLowHP((CHARACTER)_Player)
+AND
+NOT DB_Is_InCombat(_Player, _)
+AND
+NOT DB_InCamp((CHARACTER)_Player)
+AND
+GetHitpointsPercentage((CHARACTER)_Player, _playerHealthPercentage)
+AND
+_playerHealthPercentage <= 50
+AND
+NOT PartyGetActionResourceValue(_Player, "ShortRestPoint", 0.0)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Short_Rest_8dd94c49-13fe-4319-addd-1ae33df7ee65);
+
+PROC
+PROC_EvaluateShortRestTutorial_ReasonSpellOrResource((CHARACTER)_Player)
+AND
+DB_GLO_Tutorials_ShortRest_ShouldSee(_Player)
+AND
+NOT DB_Is_InCombat((GUIDSTRING)_Player, _)
+AND
+NOT PartyGetActionResourceValue((CHARACTER)_Player, "ShortRestPoint", 0.0)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Short_Rest_8dd94c49-13fe-4319-addd-1ae33df7ee65);
+NOT DB_GLO_Tutorials_ShortRest_ShouldSee(_Player);
+
+IF
+CombatEnded(_)
+AND
+DB_PartyMembers(_Player)
+THEN
+PROC_EvaluateShortRestTutorial_ReasonLowHP((CHARACTER)_Player);
+PROC_EvaluateShortRestTutorial_ReasonSpellOrResource((CHARACTER)_Player);
+
+IF
+ShortRested(_Player)
+THEN
+HideTutorial(_Player, (UNIFIEDTUTORIAL)Short_Rest_8dd94c49-13fe-4319-addd-1ae33df7ee65);
+
+
+// Camp Supplies Tutorial
+IF
+AddedTo(_Item, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_IsExistingItem(_Item, 1)
+AND
+ItemGetSupplyValue((ITEM)_Item, _SupplyValue)
+AND
+_SupplyValue > 0
+AND
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)_Player, "GLO_Tutorials_TemporaryEquipmentTutSuppression", "Finished")
+THEN
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Player, (UNIFIEDTUTORIAL)Camp_Supplies_1b298039-4476-4b52-aaa5-afadb889c154);
+
+
+//Withers Tutorial
+IF
+DB_DialogNPCs(_DlgId, S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805, _)
+AND
+DB_DialogPlayers(_DlgId, _Player, _)
+AND
+DB_InCamp((CHARACTER)_Player)
+THEN
+DB_GLO_Tutorials_WithersDialog(_DlgId, _Player);
+
+IF
+DialogEnded(_, _DlgId)
+AND
+DB_GLO_Tutorials_WithersDialog(_DlgId, _Player)
+THEN
+NOT DB_GLO_Tutorials_WithersDialog(_DlgId, _Player);
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Player, (UNIFIEDTUTORIAL)Withers_97c40dd5-7485-4011-8408-e83752d80de7);
+//END_REGION Camp and resting
+
+//REGION Stealth
+// Remaining Undetected Tutorial
+//handles 2 edge cases. a) player gets SNEAKING for a few frames even when they are immediately detected b) player accidentally spamming sneak/end sneaking action key thus quickly ending sneak mode
+IF
+StatusApplied(_Player, "SNEAKING", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_Is_InCombat((GUIDSTRING)_Player, _)
+THEN 
+PROC_GLO_Tutorials_TrackedTimerStart((GUIDSTRING)_Player, "RemainUndetected_Tutorial_DelayedShowTimer", 3000);
+
+PROC //still undetected? -> show tutorial
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "RemainUndetected_Tutorial_DelayedShowTimer")
+AND
+NOT DB_Is_InCombat(_Player,_)
+AND
+HasActiveStatus(_Player, "SNEAKING", 1)
+THEN
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Player, "RemainUndetected_Tutorial_DelayedShowTimer");
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Player, (UNIFIEDTUTORIAL)Remain_Undetected_b9822611-61cc-4998-bf99-9a90848726a2);
+//END_REGION Stealth
+
+//REGION Crime
+// Crimes Tutorial
+PROC
+PROC_CharacterRegisterCrime_Success(_Perpetrator, _CrimeType, _StoryActionID, _Evidence, _Victim, _CrimeID)
+AND
+_Victim != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_PartyMembers(_Perpetrator)
+AND
+QRY_TUT_TriggerCrimeTutorialForCrimeType(_CrimeType)
+THEN
+PROC_GLO_Tutorials_TrackedTimerStart((GUIDSTRING)_Perpetrator, "CrimesTimerDelay", 2000); // prevents few frames of tutorial pop-up if caught immediately and forced into crime reaction dialog
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Entity, "CrimesTimerDelay")
+THEN
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Entity, "CrimesTimerDelay");
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Entity, (UNIFIEDTUTORIAL)Crimes_a38bbd39-0f05-46a0-bf54-7aab932ca110);
+
+QRY
+QRY_TUT_TriggerCrimeTutorialForCrimeType((STRING)_CrimeType)
+AND
+DB_CrimeAttitudeChange(_Type, _)
+AND
+_Type != "VandaliseNoOwner"
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType, _Type)
+THEN
+DB_NOOP(1);
+
+
+// Prison Tutorial
+PROC
+PROC_CrimeTeleportCharacterToPrison((CHARACTER)_Arrester,(CHARACTER)_Player,(TRIGGER)_PrisonTrigger,(TRIGGER)_PrisonSpawnPoint,(STRING)_FugitiveStatus)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Prison_fba136ef-4e12-4098-9d61-14c64bc4e88b);
+
+
+//Fugitive Tutorial
+IF
+StatusApplied(_Player, _FugitiveStatus, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_PlayerPrison(_, _, _, _FugitiveStatus)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Fugitive_5f7da749-8cfc-4d14-b46e-d4eb0f5d3df3);
+//END_REGION Crime
+
+//REGION Inventory + Items
+//Party Inventory Tutorial
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)Inventory_Opened_e2d0dd0a-5958-454f-9ec3-0bfba58c7153)
+AND
+DB_GLO_Tutorials_ActiveCompanionCount(_Count)
+AND
+_Count > 0
+THEN
+PROC_GLO_Tutorials_TrackedTimerStart(_Player, "GLO_Tutorials_PartyInventoryOverlapPrevention", 1500);
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "GLO_Tutorials_PartyInventoryOverlapPrevention")
+THEN
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Player, "GLO_Tutorials_PartyInventoryOverlapPrevention");
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "GLO_Tutorials_PartyInventoryOverlapPrevention")
+AND
+IsAnyTutorialShowingFor((CHARACTER)_Player, 0)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Party_Inventory_bb14da73-4205-41b8-b911-8a3adc8b1850);
+
+
+//Context Menu (items) Tutorial
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)Inventory_Opened_e2d0dd0a-5958-454f-9ec3-0bfba58c7153)
+AND
+DB_GlobalFlag((FLAG)DEN_RaidingParty_Quest_GoblinRaidOver_98712d90-c46b-20c4-c4df-02c0117e85a5)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Context_Menu__items__31f73f43-06a9-4a4c-9729-0029e6d5264b);
+
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)PartyPanel_Opened_b3c925a4-6317-45f8-99c0-4ca42e3ef36b)
+AND
+DB_GlobalFlag((FLAG)DEN_RaidingParty_Quest_GoblinRaidOver_98712d90-c46b-20c4-c4df-02c0117e85a5)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Context_Menu__items__31f73f43-06a9-4a4c-9729-0029e6d5264b);
+
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)ContextMenu_Opened_59db3193-478a-4d85-af8c-2ab29d8dbf25)
+THEN
+HideTutorial(_Player, (UNIFIEDTUTORIAL)Context_Menu__items__31f73f43-06a9-4a4c-9729-0029e6d5264b);
+SetTutorialShown(_Player, (UNIFIEDTUTORIAL)Context_Menu__items__31f73f43-06a9-4a4c-9729-0029e6d5264b);
+
+
+//Proficiency Tutorials
+IF
+Equipped(_Item, _Player)
+AND
+DB_Players(_Player)
+AND
+IsProficientWith(_Player, (ITEM)_Item, 0)
+AND
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)_Player, "GLO_Tutorials_TemporaryEquipmentTutSuppression", "Finished")
+THEN
+PROC_GLO_Tutorials_ProcessItemProficiencies((CHARACTER)_Player, _Item);
+
+PROC
+PROC_GLO_Tutorials_ProcessItemProficiencies((CHARACTER)_Player, (ITEM)_Item)
+AND
+IsWeapon(_Item, 1)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Weapon_Proficiency_19548521-dbd0-4408-8947-5b9cd8111314);
+
+PROC
+PROC_GLO_Tutorials_ProcessItemProficiencies((CHARACTER)_Player, (ITEM)_Item)
+AND
+GetEquipmentSlotForItem(_Item, _ItemSlot)
+AND
+DB_GLO_Tutorials_ArmorSlots(_ItemSlot)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Armour_Proficiency_e974fec1-52af-41c7-8283-fd9610aedfdb);
+
+PROC
+PROC_GLO_Tutorials_ProcessItemProficiencies((CHARACTER)_Player, (ITEM)_Item)
+AND
+GetEquippedShield(_Player, _Item)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Shield_Proficiency_4ce5ced0-5877-4eec-af81-349991a2c180);
+//END_REGION Inventory + Items
+
+//REGION Combat
+//Shared Initiative Tutorial    
+IF
+ShareInitiative(_Player)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+PROC_GLO_Tutorials_TrackedTimerStart(_Player, "GLO_Tutorials_SharedInitiativeOverlapPrevention", 2000);
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "GLO_Tutorials_SharedInitiativeOverlapPrevention")
+AND
+IsAnyTutorialShowingFor((CHARACTER)_Player, 0)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Shared_Initiative_4ccd84ad-2056-40fb-ab8f-8a93ed6b9187);
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "GLO_Tutorials_SharedInitiativeOverlapPrevention")
+THEN
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Player, "GLO_Tutorials_SharedInitiativeOverlapPrevention");
+//END_REGION Combat
+
+//REGION Misc
+//Surfaces
+IF
+StatusApplied(_Player, "INSURFACE", _, _)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+GetSurfaceGroundAt(_Player, _Surface)
+AND
+DB_GLO_Tutorials_FlammableSurfaces(_Surface)
+THEN
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Player, (UNIFIEDTUTORIAL)Surfaces_abe35b74-6b4a-4d82-818b-98fcaaae313f);
+
+
+// Inspiration Tutorial
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)Inspiration_Gained_f033b6a0-9298-4f86-b17f-c8683892be8a)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Inspiration_b2946b4d-5ded-4c17-8a98-f45a1c36ceb2);
+
+
+//Prepare Spells Tutorial
+PROC
+PROC_LongRest()
+THEN
+PROC_GLO_Tutorials_EvaluatePrepareSpellsTutorial();
+
+IF //Triggers on 2nd shortrest
+ShortRested(_Player)
+AND
+DB_GLO_Tutorials_ShortRestedAtLeastOnceAfterTut(_Player)
+THEN
+PROC_GLO_Tutorials_EvaluatePrepareSpellsTutorial();
+
+IF //Mark first shortrest
+ShortRested(_Player)
+THEN
+DB_GLO_Tutorials_ShortRestedAtLeastOnceAfterTut(_Player);
+
+PROC
+PROC_GLO_Tutorials_EvaluatePrepareSpellsTutorial()
+AND
+DB_Players(_Player)
+AND
+DB_GLO_Tutorials_ClassTagsCanPrepareSpell(_ClassTag)
+AND
+IsTagged(_Player, _ClassTag, 1)
+THEN
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Player, (UNIFIEDTUTORIAL)Prepare_Spells_8bf00f46-c0c6-405c-9749-21a64a45d158);
+
+
+//Trading Tutorial
+PROC
+PROC_StartTrade(_Player, _Trader, _Mode, _, _)
+AND
+NOT DB_Origins(_Trader) //covers some misfires. Gale was particularly problematic
+AND
+NOT DB_PartyMembers(_Trader)
+AND
+_Mode != TRADEMODE.DONATE
+AND
+SpeakerGetDialog(_Player, 0, _, _DlgID)
+THEN
+DB_GLO_Tutorials_TradingDialog((CHARACTER)_Player, _DlgID); //caching for Trader Attitude
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Trading_59b2d8ef-f74e-44b2-aaa3-0a16bd8a17b8);
+
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)TradeMode_Changed_4eff1cb5-03b4-4aec-9774-bf416f43d331)
+THEN
+HideTutorial(_Player, (UNIFIEDTUTORIAL)Trading_59b2d8ef-f74e-44b2-aaa3-0a16bd8a17b8);
+
+//Trader Attitude Tutorial
+IF
+DialogEnded(_, _DlgID)
+AND
+DB_GLO_Tutorials_TradingDialog((CHARACTER)_Player, _DlgID)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Trader_Attitude_fcc5a529-effc-46e6-9cd5-e07f856736f8);
+NOT DB_GLO_Tutorials_TradingDialog((CHARACTER)_Player, _DlgID);
+
+
+//Jump Tutorial
+IF
+CharacterMoveFailedUseJump(_Player)
+AND
+DB_PartyMembers(_Player)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Jump_d332cfa0-ea0c-482f-973f-73c04c8a5d0b);
+
+IF
+DB_GLO_Tutorials_Jump_Triggers(_Trigger)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+IF // entering dark area
+DB_InRegion(_Player, _Trigger)
+AND
+DB_GLO_Tutorials_Jump_Triggers(_Trigger)
+AND
+DB_PartyMembers(_Player)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Jump_d332cfa0-ea0c-482f-973f-73c04c8a5d0b);
+TriggerUnregisterForCharacter(_Trigger, _Player);
+
+IF
+DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+AND
+DB_GLO_Tutorials_Jump_Triggers(_Trigger)
+THEN
+PROC_TriggerUnregisterForParty(_Trigger);
+
+IF
+DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+THEN
+SysClear("DB_GLO_Tutorials_Jump_Triggers", 1);
+//END_REGION Misc
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

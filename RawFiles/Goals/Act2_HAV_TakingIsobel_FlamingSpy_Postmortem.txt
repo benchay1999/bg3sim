@@ -1,0 +1,53 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+// After a long rest, if the spy is defeated and not in Moonrise, he is killed
+PROC
+PROC_LongRest()
+AND
+DB_HAV_FlamingSpy_TryToKill(1)
+AND
+NOT DB_OnlyOnce("HAV_FlamingSpy_PutInGrave")
+THEN
+DB_ExecuteInLevel("HAV_FlamingSpy_CheckPutInGrave","SCL_Main_A");
+
+PROC
+PROC_ExecuteInLevel("HAV_FlamingSpy_CheckPutInGrave","SCL_Main_A")
+AND
+QRY_HAV_IsInHaven(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+AND
+NOT DB_GlobalFlag(HAV_Siege_State_NoProtection_2da0dbf1-88ca-4cab-9c8f-ee8921822958)
+THEN
+PROC_HAV_FlamingSpy_PutInGrave();
+
+PROC
+PROC_HAV_FlamingSpy_PutInGrave() //if not dead -> kill
+AND
+NOT DB_Dead(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+THEN
+Die(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+SetFlag(HAV_TakingIsobel_State_SpyKilledFromScript_a60d5aae-268f-4dce-a719-63c26bb5d99e);
+
+PROC
+PROC_HAV_FlamingSpy_PutInGrave() //if HAV is still protected -> move to grave
+AND
+QRY_OnlyOnce("HAV_FlamingSpy_PutInGrave")
+THEN
+PROC_CorpseCleanup_CreateLootbag(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6);
+CreateSurface(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6,"SurfaceNone",2.0,1.0); //try to remove the blood around his corpse (if it moved then too bad)
+TeleportTo(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, S_HAV_SpyCorpsePoint_3648b2f4-a369-4241-bf47-c4a709073eb5);
+SetOnStage(S_HAV_SpyGrave_PLACEHOLDER_97709367-aaf3-495e-864d-2ca56937308d, 1);
+ //TODO: this is placeholder, eventually he will be put in a real grave
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+AND
+DB_GlobalFlag(HAV_EnteringHaven_Knows_FlamingFistIsSpy_5e5cd42d-0187-8d9d-3823-a105077c7278)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2_HAV_TakingIsobel_FlamingSpy"

@@ -1,0 +1,85 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_LOW_HagDouble_Combat_StateFlags((FLAG)LOW_BlushingMermaid_State_HagCombatPhase_2_b9def2bd-bb1a-49e3-96af-958e853293c5,(TAG)ACT3_LOW_HAG_PHASE2_23736f75-cb7c-4211-8a83-d6100bf09b04);
+DB_LOW_HagDouble_Combat_StateFlags((FLAG)LOW_BlushingMermaid_State_HagCombatPhase_3_a5e3f2dd-5294-4776-826b-60c029cb7590,(TAG)ACT3_LOW_HAG_PHASE3_c7d23663-bfd0-4e62-bd31-4d5c9b4d5e8e);
+DB_LOW_HagDouble_Combat_StateFlags((FLAG)LOW_BlushingMermaid_State_HagCombatPhase_4_593877d7-9b40-4485-a171-0e316c6a7ea1,(TAG)ACT3_LOW_HAG_PHASE4_3c6f95e0-6d5e-4e80-bdc6-9e325e63d022);
+KBSECTION
+PROC
+PROC_GLO_HagDoublePostSpawnSetup((GUIDSTRING)_HagDouble)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+SetTag(_HagDouble,(TAG)ACT3_LOW_HAG_9b91e9ae-0205-476d-a381-17dca1b2cdc7);
+SetTag(_HagDouble,(TAG)IGNORE_COMBAT_LATE_JOIN_PENALTY_6d60bed7-10cc-4b52-8fb7-baa75181cd49);
+ApplyStatus(_HagDouble,"LOW_HAG_MAGICRESISTANCE",-1.0);
+SetCombatGroupID(_HagDouble,"LOW_HagBossFight");
+PROC_LOW_SetHagDoubleCombatState((CHARACTER)_HagDouble);
+
+PROC
+PROC_GLO_HagDoublePostSpawnSetup((GUIDSTRING)_HagDouble)
+AND
+DB_HonorMode_Enabled(1)
+AND
+NOT DB_GLO_HagCounterswapInProgress(1)
+AND
+HasActiveStatus(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d, "LEGENDARYACTION_HAG_COUNTERSWAP", 1)
+THEN
+ApplyStatus(_HagDouble,"LEGENDARYACTION_HAG_COUNTERSWAP_DOUBLE",-1.0);
+
+PROC
+PROC_LOW_SetHagDoubleCombatState((CHARACTER)_HagDouble)
+AND
+DB_LOW_HagDouble_Combat_StateFlags(_Flag,_Tag)
+AND
+DB_LOW_CurrentHagFightState(_Flag)
+THEN
+SetTag(_HagDouble,_Tag);
+
+// In case of hag boss fight state progressing, existing doubles get new spells
+PROC
+PROC_LOW_HagBossFightStateProgressed()
+AND
+DB_HAG_HagLair_Doubles(_HagDouble)
+THEN
+PROC_LOW_SetHagDoubleCombatState((CHARACTER)_HagDouble);
+
+IF
+StatusApplied(_HagDouble,"LOW_HAG_MAGICRESISTANCE",_,_)
+AND
+DB_HAG_HagLair_Doubles(_HagDouble)
+THEN
+ApplyStatus(_HagDouble,"INVISIBILITY",6.0);
+
+//REGION Already existing hag doubles disappear when the hag casts the spell again in Act 3, except Honour Mode
+IF
+UsingSpell(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,_SummonDoubleSpell,_,_,_)
+AND
+NOT DB_HonorMode_Enabled(1)
+AND
+DB_GLO_HagSpawnDoubleSpellSetup(_SummonDoubleSpell,_,_,_,"ClearDoublesOnCast",_)
+AND
+DB_HAG_HagLair_Doubles(_Double)
+THEN
+SetEntityEvent(_Double,"HAG_RemoveDouble");
+//END_REGION
+
+
+//REGION Act 3 Hag Doubles Spawn Points
+IF
+FlagSet((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211,_,_)
+THEN
+SysClear("DB_HAG_HagLair_DoublesSpawnPoints",1);
+PROC_LOW_SetNewHagDoublesSpawnPoints();
+
+PROC
+PROC_LOW_SetNewHagDoublesSpawnPoints()
+AND
+DB_LOW_HagDoublesSpawnPoints(_Trigger)
+THEN
+DB_HAG_HagLair_DoublesSpawnPoints(_Trigger);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "GLO_Hag"

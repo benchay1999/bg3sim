@@ -1,0 +1,1165 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION GUS-298934
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,5,0)
+AND
+DB_CRE_KilledWithLance(_Player)
+AND
+HasActiveStatus(_Player, "DEAD_WILL_O_WISP", 1)
+AND
+DB_InRegion(_Player, S_CAMP_CRE_Area_6de006e5-7944-4555-af07-96de24a8599e)
+THEN
+TeleportTo(_Player, S_CRE_DestructionSafePoint_ac7229e8-c9ca-42d9-b582-9033c1489237,"",0, 0, 0, 1, 1);
+DB_BUGFIX_Marker("GUS-298934");
+
+//END_REGION
+
+//REGION GUS-299174
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,6,0)
+AND
+DB_Players(_Player)
+AND
+HasActiveStatus(_Player, "CRE_GITHINFIRMARY_AWAKENED", 1)
+AND
+DB_CRE_GithInfirmary_FlagToStatus(_Flag, _)
+AND
+GetFlag(_Flag, _Player, 1)
+THEN
+RemoveStatus(_Player, "CRE_GITHINFIRMARY_AWAKENED", NULL_00000000-0000-0000-0000-000000000000);
+DB_BUGFIX_Marker("GUS-299174");
+//END_REGION GUS-299174
+
+//REGION GUS-300504
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,9,0)
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+PROC_SetOnStage(S_CRE_AstralPrison_GlobeOfDomination_e7901694-5e21-4077-9a7b-b8d36b8b53a8, 1);
+DB_BUGFIX_Marker("GUS-300504");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,9,0)
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_Players(_Player)
+AND
+NOT DB_InRegion(_Player, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+PROC_TriggerUnregisterForParty((TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0);
+PROC_SetOnStage(S_CRE_AstralPrison_GlobeOfDomination_e7901694-5e21-4077-9a7b-b8d36b8b53a8, 0);
+DB_BUGFIX_Marker("GUS-300504");
+//END_REGION GUS-300504
+
+//REGION GUS-301058
+//Magehand kids will now not cancel their behaviour and default dialog if you disturb them by talking to them
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,10,0)
+AND 
+NOT DB_CRE_MageHandKids_BlockDisturbance("StartedDialog")
+THEN
+DB_CRE_MageHandKids_BlockDisturbance("StartedDialog");
+DB_BUGFIX_Marker("GUS-301058");
+//END_REGION GUS-301058
+
+//REGION GUS-300667
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,10,0)
+THEN
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)CRE_RooftopEagles_SWA_e77f9642-8977-3ba6-5f71-be62af70a029);
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)CRE_RooftopEagles_SWA_SecondaryEagle_64109849-5c27-28fc-ba42-d6198821b233);
+DB_BUGFIX_Marker("GUS-300667");
+//END_REGION GUS-300667
+
+//REGION 
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,11,0)
+THEN
+DB_TryToFix("GUS-298343");
+
+IF
+DB_TryToFix("GUS-298343")
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+DB_BUGFIX_Marker("GUS-298343");
+TeleportToPosition(S_CAMP_CRE_Elminster_95d018e0-f824-4a86-89fc-8d72e1b5cd38, -388.27, 26.23, -998.811);
+NOT DB_TryToFix("GUS-298343");
+
+//END_REGION
+
+//REGION GUS-301504
+
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,15,0)
+AND
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5, NULL_00000000-0000-0000-0000-000000000000, _Type, 0, _App)
+THEN
+NOT DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5, (FLAG)NULL_00000000-0000-0000-0000-000000000000, _Type, 0, _App);
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5, (FLAG)ORI_Gale_IPRD_Act2End_05706143-82c3-616d-6850-9281f08c9b9f, _Type,0, _App);
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,15,0)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5, NULL_00000000-0000-0000-0000-000000000000, _Type, 0, _App)
+THEN
+NOT DB_RelationshipDialog_Queue((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5, (FLAG)NULL_00000000-0000-0000-0000-000000000000, _Type, 0, _App);
+DB_RelationshipDialog_Queue((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5, (FLAG)ORI_Gale_IPRD_Act2End_05706143-82c3-616d-6850-9281f08c9b9f, _Type, 0, _App);
+
+//END_REGION
+
+//REGION GUS-299173
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_Players(_Player)
+AND
+DB_CRE_GithInfirmary_FlagToStatus(_, _Status)
+AND
+HasActiveStatus(_Player, _Status, 1)
+THEN
+DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status);
+DB_BUGFIX_Marker("GUS-299173");
+
+IF
+DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status)
+AND
+IsTagged(_Player, FULL_CEREMORPH_3797bfc4-8004-4a19-9578-61ce0714cc0b, 1)
+THEN
+RemoveStatus(_Player, _Status);
+NOT DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status);
+//END_REGION GUS-299173
+
+
+//REGION GUS-301515
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,13,0)
+THEN
+PROC_ApplySavegamePatches_GUS_301515();
+DB_BUGFIX_Marker("GUS-301515");
+
+PROC
+PROC_ApplySavegamePatches_GUS_301515()
+THEN
+NOT DB_CampNight_CancelledBy((FLAG)NIGHT_Laezel_VlaakithBetrayal_bdaa7b4d-e60f-477d-a870-197bd3f4f83e, (FLAG)CRE_Lance_Event_Exploded_f7d93dd1-c30e-4ef2-87c0-0cada12f180d);
+
+PROC
+PROC_ApplySavegamePatches_GUS_301515()
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_MetVossInAct2_26563f96-bf5a-4895-b63b-036c7571bbbc)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_BetrayedByVlaakith_175d8487-99dc-4009-9b45-6e9f29708cd7)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_BetrayedByVlaakith_175d8487-99dc-4009-9b45-6e9f29708cd7);
+//END_REGION
+
+//REGION GUS-302766
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_302766_ApplyInCRE(1);
+
+IF
+DB_ApplySavegamePatches_GUS_302766_ApplyInCRE(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+NOT DB_ApplySavegamePatches_GUS_302766_ApplyInCRE(1);
+TriggerRegisterForCharacter((TRIGGER)S_CRE_SecurityOfficeLaezelLeaveArea_7b8493ab-9413-4330-9aa8-24b752a79980, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+DB_Origins_BlockTransferReasons("SpokeToVlaakith_LaezelAtPlanecaster");
+DB_Origins_BlockTransferReasons("TurnedHostileDuringInquisitor");
+DB_BUGFIX_Marker("GUS-302766");
+//END_REGION
+
+//REGION GUS-302739
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+THEN
+DB_SaveGamePatches_GUS302739(1);
+DB_BUGFIX_Marker("GUS-302739");
+
+IF
+DB_SaveGamePatches_GUS302739(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+AND
+DB_Defeated((CHARACTER)S_CRE_GuardianOfFaith_5144e2e8-fbd7-41b3-a6fb-f4cf5759cb95)
+THEN
+PROC_SetOnStage(S_CRE_GuardianOfFaith_5144e2e8-fbd7-41b3-a6fb-f4cf5759cb95, 0);
+
+IF
+DB_SaveGamePatches_GUS302739(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+ClearOwnership(S_CRE_MonkSkeleton_05_1d71b220-420d-45e1-879e-eef6fbb1ff6e);
+ClearOwnership(S_CRE_MonkSkeleton_02_86c760f8-710f-4920-a8cd-9370b335805f);
+ClearOwnership(S_CRE_MonkSkeleton_01_7619a490-0d2f-4dc0-b1ab-e27ccdbadd02);
+ClearOwnership(S_CRE_MonkSkeleton_04_7dec63b6-14f7-457c-ae7e-1e4eda3dcf9d);
+ClearOwnership(S_CRE_MonkSkeleton_03_952cd80d-3fe9-473a-b560-e22d638fd5f4);
+ClearOwnership(S_CRE_Abbot4_Weapon_0698b266-b7f8-4593-9063-f1189082c6e1);
+ClearOwnership(S_CRE_Abbess_6d8721c9-04da-482c-9073-8d806bc60d96);
+//END_REGION GUS-302739
+
+//REGION GUS-303351
+//Adding spotting for the eagles in their nest, for activating instant hostility correctly.
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_SaveGamePatches_GUS303351(1);
+DB_BUGFIX_Marker("GUS-303351");
+
+IF
+DB_SaveGamePatches_GUS303351(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+NOT DB_SaveGamePatches_GUS303351(1);
+DB_SpotPlayers(S_CRE_Eagle1_54cf8690-31e8-452c-8f9d-1cc199581885, "CRE_RooftopEagles_HostilitySpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers(S_CRE_Eagle2_7cb5758d-6521-43f4-936d-b1e4ed91a1e2, "CRE_RooftopEagles_HostilitySpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(S_CRE_Eagle1_54cf8690-31e8-452c-8f9d-1cc199581885, "CRE_RooftopEagles_HostilitySpotting", S_CRE_Eagles_AggroZone_d358e756-50ab-473b-b661-af99bc7401d9);
+DB_SpotPlayers_SpotTrigger(S_CRE_Eagle2_7cb5758d-6521-43f4-936d-b1e4ed91a1e2, "CRE_RooftopEagles_HostilitySpotting", S_CRE_Eagles_AggroZone_d358e756-50ab-473b-b661-af99bc7401d9);
+DB_SpotPlayers_IncludeFollowers(S_CRE_Eagle1_54cf8690-31e8-452c-8f9d-1cc199581885, "CRE_RooftopEagles_HostilitySpotting");
+DB_SpotPlayers_IncludeFollowers(S_CRE_Eagle2_7cb5758d-6521-43f4-936d-b1e4ed91a1e2, "CRE_RooftopEagles_HostilitySpotting");
+DB_SpotPlayers_IncludeSummons(S_CRE_Eagle1_54cf8690-31e8-452c-8f9d-1cc199581885, "CRE_RooftopEagles_HostilitySpotting");
+DB_SpotPlayers_IncludeSummons(S_CRE_Eagle2_7cb5758d-6521-43f4-936d-b1e4ed91a1e2, "CRE_RooftopEagles_HostilitySpotting");
+DB_GlobalFlagReactionAfterDialog(CRE_Eagles_State_Hostile_88ac57fb-1227-4458-851e-0213ca52a500, (DIALOGRESOURCE)CRE_RooftopEagles_SWA_e77f9642-8977-3ba6-5f71-be62af70a029);
+DB_GlobalFlagReactionAfterDialog(CRE_Eagles_State_Hostile_88ac57fb-1227-4458-851e-0213ca52a500, (DIALOGRESOURCE)CRE_RooftopEagles_SWA_SecondaryEagle_64109849-5c27-28fc-ba42-d6198821b233);
+//END_REGION GUS-303351
+
+//REGION GUS-303333
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_SaveGamePatches_GUS303333(1);
+DB_BUGFIX_Marker("GUS-303333");
+
+IF
+DB_SaveGamePatches_GUS303333(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+NOT DB_SaveGamePatches_GUS303333(1);
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_IntelligenceOfficer01_c76d7d19-3d46-44e5-a914-80efc8cac4ea, "CRE_BattleStations_Bridge");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheCaptain_5093da9b-237a-491f-9402-4f9da73c1565, "CRE_BattleStations_Bridge");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CaptainsBeast01_82736dcd-8648-4795-a296-21aa1bcaf096, "CRE_BattleStations_Bridge");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CaptainsBeast02_fcd64862-67ba-4358-9636-09ff9545177a, "CRE_BattleStations_Bridge");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CaptainGuard_ea4643de-cc2c-42f0-949d-4968201ad2c7, "CRE_BattleStations_Bridge");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Teacher_60933e69-c642-46e0-92ee-0e4353fc2adf, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Student01_82f7512c-3b1d-4af7-92cc-3fbe4e4d9c33, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Student02_0d17add0-9e8d-4e6f-82e0-cd14645707d5, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Student03_91223ba2-41d5-4cde-85b2-6b076e462e3b, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Student04_d3eb2b9a-ac8e-40dc-8596-70b05d08496b, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_IntelligenceOfficer02_a17c356a-6e0c-4d2f-bcf6-58195d6c9edf, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CorridorTeenager01_a99624a6-4bff-4d1f-9de5-7b3cd89cc669, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CorridorTeenager02_d6483496-2e6c-4cf2-9402-a06af68d5326, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_PortraitKid_428056fd-37b5-49ff-92b1-d1f84b733b64, "CRE_BattleStations_Classroom");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_MainCheckpointMainGuard_161701af-17b7-4def-b378-5f24e95d667f, "CRE_BattleStations_MainEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_MainCheckpointWarningGuard_a6c0d21e-ce59-4dbb-9f64-1ec80b95c838, "CRE_BattleStations_MainEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheGuard01_5a5c5878-fd9f-41c0-9c8c-b74cea0e3fd9, "CRE_BattleStations_MainEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheGuard02_99439816-fcaa-4167-a20a-8f3dfff4e345, "CRE_BattleStations_MainEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_PatrollingGuard01_d55e65a4-0663-46e5-8213-4ae5dd410e06, "CRE_BattleStations_MainEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_PatrollingGuard02_00135309-731d-4782-bd43-c8b54cacec16, "CRE_BattleStations_MainEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_HiddenCheckpointMainGuard_3bcbf8fb-5a90-4439-bd81-d9113d74f27e, "CRE_BattleStations_SecretEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_HiddenCheckpointWarningGuard_970d10ed-8092-463b-8446-223fe4cf2d68, "CRE_BattleStations_SecretEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Quartermistress_ffb0ec61-5739-4b34-8d27-e61b1f4500ad, "CRE_BattleStations_SecretEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_GithGuardMonastery01_fd348f90-dbc9-41a8-8abc-b6e212e9ff77, "CRE_BattleStations_SecretEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_GithGuardMonastery02_606c0555-d7c3-41a8-9018-14ede3d52e21, "CRE_BattleStations_SecretEntrance");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_InfirmaryAmbushGuard01_2c0b5b3b-5e48-48e6-b10f-08a910ad07f5, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_InfirmaryAmbushGuard02_ecb4222c-22b9-49d6-88ed-62b5cba281fc, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_InfirmaryAmbushGuard04_3efd4f36-05d3-4a30-80e8-59fd14215fd5, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_InfirmaryAmbushGuard03_8f599eca-cf21-42d2-a9f8-56e92aa8624c, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheTeenager01_8a7b36f5-378c-4a71-a593-e00ea01ab6ff, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheTeenager02_c67ff924-036b-4259-8acc-9fc013fe2059, "CRE_BattleStations_Dorm");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_BattleStations_Hatchery");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, "CRE_BattleStations_Hatchery");
+DB_CRE_BattleStations_NewCombatGroups(S_CRE_CrecheGuard06_09a52fd9-ff83-4594-857a-a1ab0b296dc6, "CRE_BattleStations_Hatchery");
+//END_REGION GUS-303333
+
+//REGION GUS-302710
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_TopicalGreetingEndCondition_LeaveTrigger((FLAG)TG_CRE_FoundCreche_d554c042-82dd-41fb-b9c3-1a01616f1393, (TRIGGER)S_CRE_Creche_TopFloor_SUB_01f823fe-7363-4f8a-bea3-31755b318738);
+DB_BUGFIX_Marker("GUS-302710");
+//END_REGION
+
+//REGION GUS-300489
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_ShovelArea(S_CRE_BuriedMound_06_b996fbf6-9620-4b0f-937c-460d0e9b99c4, _) // initialized & not dug out yet
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+AND
+DB_GlobalFlag(CRE_HungryBird_State_RewardGiven_e155685d-9e99-4eff-874a-1f2754a29ac9)
+AND
+DB_Avatars(_Player)
+AND
+NOT DB_BUGFIX_Marker("GUS-300489")
+THEN
+DB_BUGFIX_Marker("GUS-300489");
+DB_GLO_Bugfix_300489_RevealCrecheMound(_Player);
+
+IF
+DB_GLO_Bugfix_300489_RevealCrecheMound(_Player)
+AND
+DB_CurrentLevel("CRE_Main_A")
+AND
+NOT DB_GLO_Bugfix_300489_CrecheMoundRevealed(1)
+THEN
+DB_GLO_Bugfix_300489_CrecheMoundRevealed(1);
+PROC_Shovel_RevealRemoteMound(S_CRE_BuriedMound_06_b996fbf6-9620-4b0f-937c-460d0e9b99c4, (CHARACTER)_Player);
+//END_REGION
+
+//REGION GUS-303841
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_TopicalGreetingEndCondition_LongRest((FLAG)TG_CRE_PostCrecheDestruction_21fe77ff-afc6-4900-9b36-0eb8013c53db);
+DB_TopicalGreetingEndCondition_LongRest((FLAG)TG_CRE_StoppedCrecheDestruction_093ba6ef-a02e-48a9-91e5-8a5e3775db63);
+NOT DB_TopicalGreetingStartCondition_FlagSet((FLAG)TG_CRE_StoppedCrecheDestruction_093ba6ef-a02e-48a9-91e5-8a5e3775db63, (FLAG)CRE_Lance_State_Disarmed_a17b9bbd-43e1-4ba2-8f88-a33ecdb07a96);
+DB_BUGFIX_Marker("GUS-303841");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_TopicalGreeting_Current((FLAG)TG_CRE_StoppedCrecheDestruction_093ba6ef-a02e-48a9-91e5-8a5e3775db63)
+AND
+DB_PermaDefeated(S_CRE_CrecheCaptain_5093da9b-237a-491f-9402-4f9da73c1565)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+DB_BUGFIX_Marker("GUS-303841");
+//END_REGION
+
+//REGION GUS-303983
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_CampNight_Requirement((FLAG)NIGHT_Laezel_PostZaithisk_8b11150d-e948-448e-99d1-104d0164a0df, (FLAG)CRE_GithInfirmary_Knows_DiscoveredZaithisk_27f56752-1bc6-46a1-a167-1bcfa12a5fff)
+THEN
+NOT DB_CampNight_Requirement((FLAG)NIGHT_Laezel_PostZaithisk_8b11150d-e948-448e-99d1-104d0164a0df, (FLAG)CRE_GithInfirmary_Knows_DiscoveredZaithisk_27f56752-1bc6-46a1-a167-1bcfa12a5fff);
+DB_CampNight_Requirement((FLAG)NIGHT_Laezel_PostZaithisk_8b11150d-e948-448e-99d1-104d0164a0df, (FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c);
+DB_BUGFIX_Marker("GUS-303983");
+//END_REGION
+
+//REGION GUS-301694
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_Avatars(_Player)
+AND
+GetFlag(Wyll_InParty2_Event_BookAbduction_7586554f-a33f-444f-107b-86f332f4474b,_Player,1)
+THEN
+DB_ORI_Wyll_RelationshipDialogDone(Wyll_InParty2_Event_BookAbduction_7586554f-a33f-444f-107b-86f332f4474b);
+DB_RelationshipDialogsFinished((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_InParty_6dff0a1f-1a51-725d-6e9a-52b5742ba9e6,Wyll_InParty2_Event_BookAbduction_7586554f-a33f-444f-107b-86f332f4474b);
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_InParty_6dff0a1f-1a51-725d-6e9a-52b5742ba9e6,Wyll_InParty2_Event_BookAbduction_7586554f-a33f-444f-107b-86f332f4474b);
+DB_BUGFIX_Marker("GUS-301694");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_InParty_6dff0a1f-1a51-725d-6e9a-52b5742ba9e6,(FLAG)Wyll_InParty2_Event_BookAbduction_7586554f-a33f-444f-107b-86f332f4474b,_,_,_)
+AND
+DB_GlobalFlag((FLAG)CRE_Knows_DukeAtTowers_e824865c-67e5-ec2d-0778-ccace7ef90cf)
+AND
+DB_GlobalFlag((FLAG)PLA_Desire_Event_HasMet_39ac0b76-1aa6-063e-6f73-73e2292eab12)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_InParty_6dff0a1f-1a51-725d-6e9a-52b5742ba9e6,Wyll_InParty2_Event_BookAbduction_7586554f-a33f-444f-107b-86f332f4474b);
+DB_BUGFIX_Marker("GUS-301694");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_InParty_6dff0a1f-1a51-725d-6e9a-52b5742ba9e6,(FLAG)Wyll_IPRD_Event_NewsOfRavengard_555f802b-8d81-4090-b52d-c5081b94791c,_,_,_)
+AND
+DB_GlobalFlag((FLAG)VISITEDREGION_BGO_Main_A_40f06537-814f-4796-b012-5ffaa648a8d9)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_InParty_6dff0a1f-1a51-725d-6e9a-52b5742ba9e6,(FLAG)Wyll_IPRD_Event_NewsOfRavengard_555f802b-8d81-4090-b52d-c5081b94791c);
+DB_BUGFIX_Marker("GUS-301694");
+//END_REGION
+
+//REGION GUS-304568
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_304568(1);
+
+IF
+DB_ApplySavegamePatches_GUS_304568(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+AND
+NOT DB_GlobalFlag((FLAG)CRE_Lance_State_ExplosionCountdownActive_8b52ae9e-0cf3-46e5-924d-64e11aefa0e3)
+AND
+IsOnStage(S_CRE_Lance_PortalToRoof_98f258c4-92ec-49fa-afbf-76904a21acce, 1)
+THEN
+RemoveStatus(S_CRE_BloodOfLathander_e26f0c19-6185-43a7-b7f7-7155b936c59c, "LEVITATE", NULL_00000000-0000-0000-0000-000000000000);
+PROC_SetOnStage(S_CRE_Lance_PortalToRoof_98f258c4-92ec-49fa-afbf-76904a21acce, 0);
+PROC_SetOnStage(S_CRE_Lance_PortalToRoof_VFX_15ca3ca8-bf8f-4c58-9879-902d451f346a, 0);
+PROC_SetOnStage(S_CRE_Lance_PortalOnRoof_VFX_1307a9e5-f1ee-4e92-b760-581569a67a46, 0);
+PROC_CRE_Lance_TurnOffBeamVFX();
+NOT DB_ApplySavegamePatches_GUS_304568(1);
+DB_BUGFIX_Marker("GUS-304568");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+IsInInventory(S_CRE_BloodOfLathander_e26f0c19-6185-43a7-b7f7-7155b936c59c, 1)
+THEN
+DB_OnlyOnce("CRE_TakingAmulet");
+RemoveStatus(S_CRE_BloodOfLathander_e26f0c19-6185-43a7-b7f7-7155b936c59c, "LEVITATE", NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION GUS-304568
+
+//REGION GUS-302510
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_302510(1);
+DB_BUGFIX_Marker("GUS-302510");
+
+IF
+DB_ApplySavegamePatches_GUS_302510(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+NOT DB_WorldGossip_RegionTrigger((TRIGGER)S_PartyBanterTrigger_Monastery_b9ca3ea6-ca94-4d5b-bc9d-0bcf19a13759, (FLAG)BANTERREGION_CRE_Monastery_4489b5fa-44f8-40a8-a612-c09ecff32f8b);
+PROC_UnregisterWorldGossipTrigger(S_PartyBanterTrigger_Monastery_b9ca3ea6-ca94-4d5b-bc9d-0bcf19a13759);
+NOT DB_ApplySavegamePatches_GUS_302510(1);
+//END_REGION GUS-302510
+
+//REGION GUS-304452
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+AND
+DB_GlobalFlag(CRE_ChainOfCommand_State_SpokeToVlaakith_ee0ba0f7-26a3-4d45-a6fe-c9c1a013f7eb)
+AND
+NOT DB_GlobalFlag(CRE_AstralPrison_State_AstralPrisonWasEntered_2203e87a-6c7b-4aba-b2e8-e22ed96b9762)
+AND
+NOT DB_GlobalFlag(CRE_ChainOfCommand_State_PlanecasterActive_5e5e9cb6-41d8-4a93-942d-3dca4d357561)
+THEN
+DB_ApplySavegamePatches_GUS_304452(1);
+
+IF
+DB_ApplySavegamePatches_GUS_304452(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+SetFlag(CRE_ChainOfCommand_State_PlanecasterActive_5e5e9cb6-41d8-4a93-942d-3dca4d357561);
+PROC_LoopEffect(VFX_Script_CRE_HoloDeck_Planecaster_Activated_01_434a632f-1f52-361f-18dd-0b3ffdd77afa, S_CRE_SecurtiyOfficePlanecaster_9144098a-c9c7-4425-a99d-d7375069e7b7, "CRE_AstralPlanecaster_VFX", "CRE_Main_A", "", 1.0);
+NOT DB_ApplySavegamePatches_GUS_304452(1);
+DB_BUGFIX_Marker("GUS-304452");
+//END_REGION GUS-304452
+
+//REGION GUS-303048
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "PLA_GrandDukeRescue", "Counsellor_AcceptedHelp_Moonrise", 0)
+THEN
+PROC_GLO_GrandDukeRescue_UpdateLearnedAboutMoonrise();
+DB_BUGFIX_Marker("GUS-303048");
+//END_REGION
+
+//REGION GUS-305030
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+AND
+DB_GlobalFlag(CRE_Lance_State_WasActive_9d239e15-4994-49b1-93dc-a89d37e3bff4)
+THEN
+DB_ApplySavegamePatches_GUS_305030(1);
+DB_BUGFIX_Marker("GUS-305030");
+
+IF
+DB_ApplySavegamePatches_GUS_305030(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+PROC_NotifyWhenReadyToMoveOn(S_CRE_MonasteryApproach_Bird_c85a9bab-49d6-476b-a07b-15e920c3cc24, "CRE_Hungrybird_ReadyToLeave");
+NOT DB_ApplySavegamePatches_GUS_305030(1);
+
+PROC
+PROC_ReadyToMoveOn(S_CRE_MonasteryApproach_Bird_c85a9bab-49d6-476b-a07b-15e920c3cc24, "CRE_Hungrybird_ReadyToLeave")
+THEN
+SetFlag(CRE_HungryBird_Event_FlewAway_112d706e-28a1-4829-9a04-d9c3f2bc8c11);
+//END_REGION GUS-305030
+
+//REGION GUS-303434
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+PROC_ApplySavegamePatches_GUS_303434();
+DB_BUGFIX_Marker("GUS-303434");
+
+PROC
+PROC_ApplySavegamePatches()
+THEN
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_Vlaakith_8ca0aac9-c46a-8d02-00ff-c61e6ec77c8d,(TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f, 1);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_Vlaakith_OM_Laezel_AOM_OOM_8a12a3a7-d7bf-4398-8770-ed2d17e257d6, (TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f, 1);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_Vlaakith_OM_Laezel_COM_d2bacdeb-9d4e-af99-8f92-b2e19d1b85aa, (TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f, 1);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_Betrayal_OM_Laezel_COM_37646009-a3de-b772-d063-0d85c053ed88,(TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f, 1);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_TemplarStartsFight_ab5ddb04-eece-e8c0-9b5a-69c8ee8534ac, (TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f, 1);
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)CRE_AstralPrison_Entering_a84e5d45-33be-b325-08cf-41acdb848ce2);
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)CRE_ChainOfCommand_TemplarStartsFight_ab5ddb04-eece-e8c0-9b5a-69c8ee8534ac);
+NOT DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_Templar_5b966f52-b647-b971-e783-437801218856, (TRIGGER)S_CRE_TemplarDialog_MainCinematicIncludeZone_0ffda93f-bbf3-47b0-9fce-ed099c04d45f ,1, 0, 0);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)CRE_ChainOfCommand_Templar_5b966f52-b647-b971-e783-437801218856, (TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f, 1);
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_PermaDefeated(S_CRE_Templar_378ac93e-03a0-40b4-904c-f37989ac7a8c)
+THEN
+DB_GLO_DefeatCounter(S_CRE_Templar_378ac93e-03a0-40b4-904c-f37989ac7a8c, "CRE_ChainOfCommand_InquisitorCombat");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_PermaDefeated(S_CRE_IntelligenceOfficer03_266e49a3-83f8-40aa-baff-5ffe2a1a35db)
+THEN
+DB_GLO_DefeatCounter(S_CRE_IntelligenceOfficer03_266e49a3-83f8-40aa-baff-5ffe2a1a35db, "CRE_ChainOfCommand_InquisitorCombat");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_PermaDefeated(S_CRE_IntelligenceOfficer04_f51854ec-5dbc-4686-bb4a-b2f8b4c5341b)
+THEN
+DB_GLO_DefeatCounter(S_CRE_IntelligenceOfficer04_f51854ec-5dbc-4686-bb4a-b2f8b4c5341b, "CRE_ChainOfCommand_InquisitorCombat");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_PermaDefeated(S_CRE_SecurityOfficer01_64445697-2adc-4784-883e-392bae899892)
+THEN
+DB_GLO_DefeatCounter(S_CRE_SecurityOfficer01_64445697-2adc-4784-883e-392bae899892, "CRE_ChainOfCommand_InquisitorCombat");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_PermaDefeated(S_CRE_SecurityOfficer02_475367c4-aace-4884-af66-16097e2d2119)
+THEN
+DB_GLO_DefeatCounter(S_CRE_SecurityOfficer02_475367c4-aace-4884-af66-16097e2d2119, "CRE_ChainOfCommand_InquisitorCombat");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_GlobalFlag((FLAG)CRE_AstralPrison_State_AstralPrisonWasEntered_2203e87a-6c7b-4aba-b2e8-e22ed96b9762)
+THEN
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)CRE_AstralPrison_Entering_a84e5d45-33be-b325-08cf-41acdb848ce2);
+
+PROC
+PROC_ApplySavegamePatches_GUS_303434()
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_Knows_MetVlaakith_c93015c2-6ae4-4013-b439-433b588f881c)
+THEN
+DB_ApplySavegamePatches_GUS_303434_WaitForCRE(1);
+
+IF
+DB_ApplySavegamePatches_GUS_303434_WaitForCRE(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)S_CRE_VlaakithDialog_LaezelOMArea_9ee53aad-fc64-4ac7-93d6-4f098273bd4f);
+NOT DB_ApplySavegamePatches_GUS_303434_WaitForCRE(1);
+//END_REGION
+
+//REGION GUS-307341
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_307341(1);
+DB_BUGFIX_Marker("GUS-307341");
+
+IF
+DB_CurrentLevel("CRE_Main_A")
+AND
+DB_ApplySavegamePatches_GUS_307341(1)
+AND
+IsOnStage(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, 0)
+AND
+IsInInventoryOf(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, 1)
+AND
+GetPosition(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, _X, _Y, _Z)
+AND
+FindValidPosition(_X, _Y, _Z, 3.0, S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, 0, _ValidX, _ValidY, _ValidZ)
+THEN
+DB_END_TeleportedWeapon(1);
+TeleportToPosition(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, _ValidX, _ValidY, _ValidZ, "", 0, 0, 0, 0, 1);
+PROC_SetOnStage(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, 1);
+
+//FindValidPosition Fallback
+IF
+DB_CurrentLevel("CRE_Main_A")
+AND
+NOT DB_END_TeleportedWeapon(1)
+AND
+DB_ApplySavegamePatches_GUS_307341(1)
+AND
+IsOnStage(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, 0)
+AND
+IsInInventoryOf(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, 1)
+AND
+GetPosition(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, _X, _Y, _Z)
+THEN
+TeleportToPosition(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, _X, _Y, _Z, "", 0, 0, 0, 0, 1);
+PROC_SetOnStage(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, 1);
+
+IF
+DB_CurrentLevel("CRE_Main_A")
+AND
+DB_ApplySavegamePatches_GUS_307341(1)
+THEN
+NOT DB_ApplySavegamePatches_GUS_307341(1);
+NOT DB_END_TeleportedWeapon(1);
+//END_REGION GUS-307341
+
+//REGION GUS-307255
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_307255(1);
+DB_BUGFIX_Marker("GUS-307255");
+
+IF
+DB_CurrentLevel("CRE_Main_A")
+AND
+DB_ApplySavegamePatches_GUS_307255(1)
+THEN
+NOT DB_ApplySavegamePatches_GUS_307255(1);
+DB_ApplySavegamePatches_GUS_307255_CheckFlags(1);
+PROC_TriggerRegisterForPlayers(S_CRE_RoofTopEagles_SawEaglesArea_c818dca8-b452-495d-a9c3-3f508e3afc09);
+DB_InRegionFlag(S_CRE_RoofTopEagles_SawEaglesArea_c818dca8-b452-495d-a9c3-3f508e3afc09, CRE_Eagles_State_PlayerFoundEagles_7b9951c2-7523-4798-a795-bf9080e94fc6);
+DB_DeadOnceFlag(S_CRE_MonasteryApproach_Bird_c85a9bab-49d6-476b-a07b-15e920c3cc24, CRE_HungryBird_State_Dead_14418497-d09c-4db5-8e4b-83ffd14941bd);
+DB_QuestDef_State(CRE_HungryBird_State_QuestAccepted_788e3e27-ca09-4e2d-ba24-edf768905b0b, "CRE_ReclaimTheNest", "AcceptedNestQuest");
+DB_QuestDef_State(CRE_Eagles_State_PlayerFoundEagles_7b9951c2-7523-4798-a795-bf9080e94fc6, "CRE_ReclaimTheNest", "FoundEagleNest");
+DB_QuestDef_State(CRE_Eagles_State_AllDefeated_7028c3aa-86be-43e6-a7ea-86c129c75188, "CRE_ReclaimTheNest", "DefeatedEagles");
+DB_QuestDef_State(CRE_HungryBird_State_RewardGiven_e155685d-9e99-4eff-874a-1f2754a29ac9, "CRE_ReclaimTheNest", "ReportedBack");
+DB_QuestDef_State(CRE_HungryBird_State_Dead_14418497-d09c-4db5-8e4b-83ffd14941bd, "CRE_ReclaimTheNest", "BlueJayDead");
+DB_QuestDef_State(CRE_Lance_State_ExplosionCountdownActive_8b52ae9e-0cf3-46e5-924d-64e11aefa0e3, "CRE_ReclaimTheNest", "BirdsScaredOff");
+TimerLaunch("CRE_ReclaimTheNest_CheckFlagsTime", 3000);
+
+IF
+DB_QuestDef_State(_Flag, "CRE_ReclaimTheNest", _Step)
+AND
+DB_ApplySavegamePatches_GUS_307255_CheckFlags(1)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+QuestUpdate("CRE_ReclaimTheNest", _Step);
+
+IF
+DB_ApplySavegamePatches_GUS_307255_CheckFlags(1)
+AND
+IsOnStage(S_CRE_MonasteryApproach_Bird_c85a9bab-49d6-476b-a07b-15e920c3cc24, 0)
+THEN
+QuestUpdate("CRE_ReclaimTheNest", "BlueJayGone");
+
+IF
+TimerFinished("CRE_ReclaimTheNest_CheckFlagsTime")
+THEN
+NOT DB_ApplySavegamePatches_GUS_307255_CheckFlags(1);
+//END_REGION GUS-307255
+
+//REGION GUS-299708
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_299708(1);
+DB_BUGFIX_Marker("GUS-299708");
+
+IF
+DB_ApplySavegamePatches_GUS_299708(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+PROC_TriggerRegisterForPlayers(S_CRE_Infirmary_InZaithiskRange_c8ed0821-280e-42d4-b775-bbadb2a7dde2);
+//END_REGION GUS-299708
+
+//REGION GUS-299634
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+THEN
+NOT DB_TopicalGreeting((FLAG)TG_CRE_WitnessedZaithiskDestruction_a2298b9f-4a2c-4630-835f-ff5700595103);
+NOT DB_TopicalGreetingEndCondition_LeaveTrigger((FLAG)TG_CRE_WitnessedZaithiskDestruction_a2298b9f-4a2c-4630-835f-ff5700595103, (TRIGGER)S_CRE_GithInfirmary_TGArea_90d3a2b8-ab85-4f52-8c30-808de6d111bd);
+DB_BUGFIX_Marker("GUS-299634");
+//END_REGION GUS-299634
+
+//REGION GUS-288468
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+AND
+NOT DB_PermaDefeated(S_CRE_MageHandGremishka_1358e104-c187-400e-b111-b2cf8581422d)
+THEN
+DB_PermaDefeatedFlag(S_CRE_MageHandGremishka_1358e104-c187-400e-b111-b2cf8581422d, CRE_MageHandGame_State_GremishkaDefeated_54b31861-3330-4a21-b3cd-c5a43b823bbe);
+DB_BUGFIX_Marker("GUS-288468");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+AND
+DB_PermaDefeated(S_CRE_MageHandGremishka_1358e104-c187-400e-b111-b2cf8581422d)
+THEN
+SetFlag(CRE_MageHandGame_State_GremishkaDefeated_54b31861-3330-4a21-b3cd-c5a43b823bbe);
+DB_BUGFIX_Marker("GUS-288468");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_288468(1);
+
+IF
+DB_ApplySavegamePatches_GUS_288468(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+PROC_SetAnubisConfig(S_CRE_MageHandKid01_67c5e825-c850-414f-8279-e1968a321d4f, "CRE_General_MageHandKid01");
+PROC_SetAnubisConfig(S_CRE_MageHandKid02_840d6525-88ba-462a-944c-a74975afa695, "CRE_General_MageHandKid02");
+NOT DB_ApplySavegamePatches_GUS_288468(1);
+//END_REGION GUS-288468
+
+//REGION GUS-295829
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 4", "CRE_Main_A", "GUS-295829");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-295829")
+THEN
+PROC_SetAnubisConfig(S_CRE_CrecheTeenager01_8a7b36f5-378c-4a71-a593-e00ea01ab6ff, "CRE_Infirmary_CrecheTeenager01");
+PROC_SetAnubisConfig(S_CRE_CrecheTeenager02_c67ff924-036b-4259-8acc-9fc013fe2059, "CRE_Infirmary_CrecheTeenager02");
+PROC_SetAnubisConfig(S_CRE_InfirmaryAmbushGuard01_2c0b5b3b-5e48-48e6-b10f-08a910ad07f5, "CRE_InfirmaryAmbushGuard01");
+PROC_SetAnubisConfig(S_CRE_InfirmaryAmbushGuard02_ecb4222c-22b9-49d6-88ed-62b5cba281fc, "CRE_InfrimaryAmbushGuard02");
+PROC_SetAnubisConfig(S_CRE_InfirmaryAmbushGuard03_8f599eca-cf21-42d2-a9f8-56e92aa8624c, "CRE_InfirmaryAmbushGuard03");
+PROC_SetAnubisConfig(S_CRE_InfirmaryAmbushGuard04_3efd4f36-05d3-4a30-80e8-59fd14215fd5, "CRE_InfirmaryAmbushGuard04");
+//END_REGION GUS-295829
+
+//REGION GUS-309172
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 3 Hotfix 3", "CRE_Main_A", "GUS-309172");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-309172")
+THEN
+PROC_TriggerRegisterForParty(S_CRE_BloodOfLathander_RingTopDetection_4eb7b64b-0c51-4842-9349-333e14014753);
+//END_REGION GUS-309172
+
+//REGION GUS-308830
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+AND
+DB_OnlyOnce("CRE_StartVlaakithDialog")
+AND
+NOT DB_GlobalFlag(CRE_ChainOfCommand_State_SpokeToVlaakith_ee0ba0f7-26a3-4d45-a6fe-c9c1a013f7eb)
+THEN
+NOT DB_OnlyOnce("CRE_StartVlaakithDialog");
+//END_REGION GUS-308830
+
+//REGION GUS-307263
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+THEN
+NOT DB_QuestDef_State((FLAG)CRE_BloodOfLathander_Event_DiscoveredCrest_ee0a2118-032a-43e7-bd5d-e4b98552a081, "CRE_BloodOfLathander", "DiscoveredGithCrest");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+QRY_QuestUpdateIsUnlockedForAny("CRE_BloodOfLathander", "DiscoveredGithCrest")
+THEN
+DB_CRE_BloodOfLathander_Journal_CrestStepUnlocked(1);
+//END_REGION GUS-307263
+
+//REGION GUS-294038
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+DB_ApplySavegamePatches_GUS_294038(1);
+DB_BUGFIX_Marker("GUS-294038");
+
+IF
+DB_ApplySavegamePatches_GUS_294038(1)
+AND
+DB_CurrentLevel("CRE_Main_A")
+THEN
+NOT DB_ApplySavegamePatches_GUS_294038(1);
+TriggerRegisterForCharacter((TRIGGER)S_CRE_GithMarkingsAreaSCLSide_67e9624c-91ea-40fb-9f62-f1f5136f14fd, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+//END_REGION GUS-294038
+
+//REGION GUS-305123
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "CRE_Main_A", "GUS-305123");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-305123")
+THEN
+TeleportTo(S_CRE_Monastery_WoodBarricade_e41dc5a9-6bec-4ca1-8644-958de450d86c, S_CRE_MonasteryBarricadePatchedPosition_c2cffacc-8abe-4299-a098-c4a6046e6a0b, "", 0, 0, 0, 0, 1);
+//END_REGION GUS-305123
+
+//REGION GUS-313751
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "CRE_Main_A", "GUS-313751");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-313751")
+THEN
+SetCanJoinCombat(BLD_GEN_Crane_Elevator_E_Cabin_A_000_2df55b3c-a2e7-49bc-8664-a20f6e35fcaf, 0);
+SetCanJoinCombat(S_CRE_ElevatorLever_000_893fcb67-a68d-4471-8dd5-28e66f907ae3, 0);
+SetCanJoinCombat(S_CRE_ElevatorUpLever_000_c4d746c1-22e4-4dfd-9be9-33e40428850a, 0);
+//END_REGION GUS-313751
+
+//REGION GUS-312157
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 5", "CRE_Main_A", "GUS-312157");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-312157")
+AND
+Exists(S_CRE_CaptainBarrierKey_c3270804-062d-4550-8eed-e9bc415cc9f3, 1)
+THEN
+SetStoryItem(S_CRE_CaptainBarrierKey_c3270804-062d-4550-8eed-e9bc415cc9f3, 1);
+//END_REGION GUS-312157
+
+//REGION GUS-314666
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "CRE_Main_A", "GUS-314666");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-314666")
+AND
+Exists(S_CRE_CaptainBarrierKey_c3270804-062d-4550-8eed-e9bc415cc9f3, 0)
+AND
+IsOnStage(S_CRE_LathanderBarrier_CaptainsOffice_00f4e951-5514-43c7-8e45-4b1f77b2dba7, 1)
+THEN
+PROC_CRE_CrecheTraps_PsionicBarriers_Deactivate((ITEM)S_CRE_LathanderBarrier_CaptainsOffice_00f4e951-5514-43c7-8e45-4b1f77b2dba7);
+//END_REGION GUS-314666
+
+//REGION GUS-308630
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+PROC_CheckShouldSavegamePatchInLevel("Release Patch 6", "CRE_Main_A", "GUS-308630");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-308630")
+THEN
+PROC_SetAnubisConfig(S_CRE_CrecheTeenager02_c67ff924-036b-4259-8acc-9fc013fe2059, "CRE_Infirmary_CrecheTeenager02b");
+//END_REGION GUS-308630
+
+//REGION GUS-315523
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_LevelUnreachable("CRE_Main_A")
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "CRE_Main_A", "GUS-315523");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-315523")
+THEN
+Transform(S_CRE_LathanderStatue_Base_Sunrise_88c358f8-1a74-40ed-b050-bfd6b13fa9b6, DEC_GEN_Statue_Base_Pedestal_D_Indicator_A_Interactable_9835d72c-c57b-4c1d-a713-c5ff250fc2fa, (SHAPESHIFTRULE)DisguiseKeepName_c7c3381e-b901-416e-a0c4-bc745e1ff54a);
+Transform(S_CRE_LathanderStatue_Base_Sunset_aaa3809c-fdb2-4cc3-af99-89488ae544e7, DEC_GEN_Statue_Base_Pedestal_D_Indicator_A_Interactable_9835d72c-c57b-4c1d-a713-c5ff250fc2fa, (SHAPESHIFTRULE)DisguiseKeepName_c7c3381e-b901-416e-a0c4-bc745e1ff54a);
+ItemRotateY(S_CRE_LathanderStatue_Base_Sunset_aaa3809c-fdb2-4cc3-af99-89488ae544e7, 180.0, 1000.0);
+ClearOwnership(S_CRE_LathanderStatue_Base_Sunrise_88c358f8-1a74-40ed-b050-bfd6b13fa9b6);
+ClearOwnership(S_CRE_LathanderStatue_Base_Sunset_aaa3809c-fdb2-4cc3-af99-89488ae544e7);
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUS-315523")
+AND
+GetCanInteract(S_CRE_LathanderStatue_Sunset_4bb6dfc7-c5ad-474b-b4b6-a265d82c4cba, 0)
+THEN
+SetCanInteract(S_CRE_LathanderStatue_Base_Sunset_aaa3809c-fdb2-4cc3-af99-89488ae544e7, 0);
+SetCanInteract(S_CRE_LathanderStatue_Base_Sunrise_88c358f8-1a74-40ed-b050-bfd6b13fa9b6, 0);
+//END_REGION GUS-315523
+
+//REGION GUS-297232
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+THEN
+DB_CampNight_SetPosition((FLAG)NIGHT_Laezel_VossCampConfrontation_d6828c76-0e03-4aa1-b980-886fcf49f8a9, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CREMAIN", (TRIGGER)S_CAMP_Laezel_VossConfrontation_StartCombatPos_5fd79b56-40a8-403b-8b66-fc977171da4f);
+DB_BUGFIX_Marker("GUS-297232");
+
+//END_REGION 
+
+//REGION GUSX-9344
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 8")
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 8", "CRE_Main_A", "GUSX-9344");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUSX-9344")
+THEN
+TeleportToPosition(TeleportTrigger_EntryToLowerLevel_4cb68e4d-a925-41fd-95eb-793c0070c024, 1292.0, -20.0, -660.0, "", 0, 0, 0, 0, 0);
+//END_REGION GUSX-9344
+
+//REGION GUS-318309
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+THEN
+DB_PermaDefeatedFlag(S_GLO_Expeditioner_5f4048ba-72ef-43c2-9528-1c9a12f3f82f, CRE_Expeditioner_State_PermaDefeated_1baaf66e-dad2-4187-835e-29d321bc40ef);
+DB_BUGFIX_Marker("GUS-318309");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+DB_PermaDefeated(S_GLO_Expeditioner_5f4048ba-72ef-43c2-9528-1c9a12f3f82f)
+THEN
+SetFlag(CRE_Expeditioner_State_PermaDefeated_1baaf66e-dad2-4187-835e-29d321bc40ef);
+//END_REGION GUS-318309
+
+//REGION GUSX-11479
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel("Release Patch 8", "CRE_Main_A", "GUSX-11479");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUSX-11479")
+AND
+DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_GLO_LevelTraveler(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "CRE_Main_A", "GLO_Halsin_Act1_5")
+THEN
+DB_GLO_LevelTraveler(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "CRE_Main_A", "GLO_Halsin_Act1_5");
+PROC_SetAnubisConfig(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "GLO_Halsin_Act1_5");
+
+//END_REGION GUSX-11479
+
+//REGION GUSX-9144 (CRE)
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel("Release Patch 8", "CRE_Main_A", "GUSX-9144-CRE");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CRE_Main_A", "GUSX-9144-CRE")
+THEN
+// re-using an existing PROC
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_CrecheKid01_81845208-9721-4c58-8546-84f958a85d57, (FACTION)Act1B_CRE_Gith_Kids_5eed46f2-51c3-4392-95b9-6b51be201e6d);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_CrecheKid02_5d33ac06-faa7-48c3-8794-6cff79515ce5, (FACTION)Act1B_CRE_Gith_Kids_5eed46f2-51c3-4392-95b9-6b51be201e6d);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_CrecheKid03_ba10db62-da84-4c7e-8867-0a98be775aa9, (FACTION)Act1B_CRE_Gith_Kids_5eed46f2-51c3-4392-95b9-6b51be201e6d);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_CrecheKid04_139392d5-d068-4445-b5a4-42ef9340b1b7, (FACTION)Act1B_CRE_Gith_Kids_5eed46f2-51c3-4392-95b9-6b51be201e6d);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_MageHandKid01_67c5e825-c850-414f-8279-e1968a321d4f, (FACTION)Act1B_CRE_Gith_MageHandKids_44e3d376-2ee7-45d2-b56f-a076f35329ef);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_MageHandKid02_840d6525-88ba-462a-944c-a74975afa695, (FACTION)Act1B_CRE_Gith_MageHandKids_44e3d376-2ee7-45d2-b56f-a076f35329ef);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_MageHand01_750cd0fb-42ec-4570-adc7-c4508dabadda, (FACTION)Act1B_CRE_Gith_MageHands_798eba5b-0a5d-4639-877f-611885b57b6b);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_MageHand02_80c883bd-8116-4d33-afcb-9032e9421209, (FACTION)Act1B_CRE_Gith_MageHands_798eba5b-0a5d-4639-877f-611885b57b6b);
+PROC_Bugfix_GUSX_9144_WYR_CheckChangeFaction((CHARACTER)S_CRE_MonasteryApproach_Bird_c85a9bab-49d6-476b-a07b-15e920c3cc24, (FACTION)Act1B_CRE_BlueJay_740fb4aa-7700-4100-964d-caf6455c50ea);
+DB_BUGFIX_Marker("GUSX-9144-CRE");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

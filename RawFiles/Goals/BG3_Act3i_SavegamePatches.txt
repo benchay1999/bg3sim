@@ -1,0 +1,205 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION GUS-301141
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,12,0)
+THEN
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1OnDeath_aa12a052-da09-59c7-f0e5-dc409a300ca8, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2OnDeath_3897bbc8-f4ca-7556-3010-5a73bccc96eb, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693);
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3OnDeath_856816af-755e-fbc2-a7e6-40edb77b9e34, (CHARACTER)S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8, (CHARACTER)S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4, NULL_00000000-0000-0000-0000-000000000000);
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4OnDeath_b8d91068-8467-f1c7-11e5-13d551df000f, (CHARACTER)S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, (CHARACTER)S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55, NULL_00000000-0000-0000-0000-000000000000); //Affecting both Group 4 and 5
+DB_BUGFIX_Marker("GUS-301141");
+//END_REGION
+
+//REGION GUS-303345
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+NOT DB_CurrentLevel("IRN_Main_A")
+THEN
+PROC_ApplySavegamePatches_GUS_303345();
+DB_BUGFIX_Marker("GUS-303345");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303345()
+AND
+DB_GlobalFlag((FLAG)IRN_Wyll_Event_MizoraAppearedToKillRavengard_3775e048-e7ec-48c2-a5cb-83acdd8c72dc)
+THEN
+PROC_SetOnStage(S_GLO_Wyll_Cambion_491a7686-3081-405b-983c-289ec8781e0a, 1);
+
+PROC
+PROC_ApplySavegamePatches_GUS_303345()
+AND
+DB_GlobalFlag((FLAG)IRN_Wyll_Event_MizoraAppearedToHelpRavengard_d0f84a78-d508-4194-b4f1-d663dbb10d8e)
+THEN
+PROC_SetOnStage(S_GLO_Wyll_Cambion_491a7686-3081-405b-983c-289ec8781e0a, 1);
+//END_REGION
+
+//REGION GUS-303303
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 4")
+AND
+DB_CurrentLevel("IRN_Main_A")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_LeftWithoutEntering_9530d1e4-8740-423b-a989-d7912a5de9bc)
+THEN
+PROC_ApplySavegamePatches_GUS_303345();
+DB_BUGFIX_Marker("GUS-303303");
+
+PROC
+PROC_ApplySavegamePatches_GUS_303345()
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+_GroupId < 9
+THEN
+AiAddInterestingItem(_Prisoner, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62);
+//END_REGION
+
+//REGION GUS-298596
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_GlobalFlag((FLAG)WYR_KillDirectorGortash_State_OfferedAlliance_03713386-ba9a-46b8-9911-554b89072d88)
+THEN
+QuestUpdate("WYR_GetGortashGem", "DockedIRN");
+QuestUpdate("WYR_GetGortashGem", "DockedIRN_Parent");
+DB_BUGFIX_Marker("GUS-298596-A");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+THEN
+NOT DB_QuestDef_State_ConditionalFlag(
+	(FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9, "WYR_GetGortashGem", "DestroyedIRN",
+	1, WYR_KillDirectorGortash_State_OfferedAlliance_03713386-ba9a-46b8-9911-554b89072d88);
+DB_QuestDef_State_ConditionalFlag(
+	(FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, "WYR_GetGortashGem", "DockedIRN_Parent",
+	1, WYR_KillDirectorGortash_State_OfferedAlliance_03713386-ba9a-46b8-9911-554b89072d88);
+DB_QuestDef_State((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, "WYR_GetGortashGem", "DockedIRN");
+DB_BUGFIX_Marker("GUS-298596-B");
+//END_REGION GUS-298596
+
+//REGION GUS-306795
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+THEN
+PROC_ApplySavegamePatches_GUS_306795();
+
+PROC
+PROC_ApplySavegamePatches_GUS_306795()
+AND
+DB_ActiveLevel("IRN_Main_A")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+THEN
+PROC_SetOnStage(S_GLO_OmeluumConfiscatedItemsBag_edf56d0a-8a8d-4986-bed3-2df35bb10ec4, 0);
+PROC_ApplySavegamePatches_GUS_306795_AddBag();
+
+PROC
+PROC_ApplySavegamePatches_GUS_306795_AddBag()
+AND
+DB_ActiveLevel("IRN_Main_A")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerFree_4c120f58-ad6c-438a-b35b-1bb3d4ed5e87, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 0)
+THEN
+PROC_SetOnStage(S_GLO_OmeluumConfiscatedItemsBag_edf56d0a-8a8d-4986-bed3-2df35bb10ec4, 1);
+IterateInventory(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "IRN_IronThrone_OmeluumInventory", "IRN_IronThrone_OmeluumInventory_Complete");
+DB_BUGFIX_Marker("GUS-306795");
+//END_REGION
+
+//REGION GUS-311357
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+AND
+DB_CurrentLevel("IRN_Main_A")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_State_Current(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "Arrival")
+AND
+DB_OnlyOnce("IRN_IronThrone_ShowTurnBasedTimer")
+THEN
+NOT DB_OnlyOnce("IRN_IronThrone_ShowTurnBasedTimer");
+PROC_ApplySavegamePatches_GUS_311357_StopTimer();
+DB_BUGFIX_Marker("GUS-311357");
+
+PROC
+PROC_ApplySavegamePatches_GUS_311357_StopTimer()
+AND
+DB_Players(_Player)
+THEN
+TurnBasedTimerCancel(_Player, "IRN_DestructionTimer");
+
+//END_REGION
+
+//REGION GUS-314136
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5 Hotfix 5")
+THEN
+PROC_ApplySavegamePatches_GUS_314136_IRN();
+DB_BUGFIX_Marker("GUS-314136_IRN");
+
+//Change to not use level travellers for this since he stays in the persistent level template and doesn't enter IRN_Main_A
+PROC
+PROC_ApplySavegamePatches_GUS_314136_IRN()
+AND
+DB_GLO_LevelTraveler((CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "IRN_Main_A", "IRN_IronThrone_Beastmaster")
+THEN
+NOT DB_GLO_LevelTraveler((CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "IRN_Main_A", "IRN_IronThrone_Beastmaster");
+
+PROC
+PROC_ApplySavegamePatches_GUS_314136_IRN()
+AND
+DB_CurrentLevel("IRN_Main_A")
+AND
+DB_GlobalFlag((FLAG)LOW_BellyOfTheBeast_State_PlayersWentToIronThroneWithBeastmaster_61dd108a-9a51-4edc-b070-3da42574d0d9)
+AND
+NOT DB_PermaDefeated(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1)
+THEN
+PROC_SetAnubisConfig((CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "IRN_IronThrone_Beastmaster");
+
+PROC
+PROC_ApplySavegamePatches_GUS_314136_IRN()
+AND
+DB_CurrentLevel("IRN_Main_A")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+AND
+NOT DB_PermaDefeated(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03)
+THEN
+PROC_SetAnubisConfig((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "IRN_IronThrone_Ravengard");
+RemoveStatus((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "ANIM_COWER", NULL_00000000-0000-0000-0000-000000000000); //Since he might be cowering in his incorrect state, and applying a new config doesn't remove the cower status
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

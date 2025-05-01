@@ -1,0 +1,968 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_TadpolePowers_UnlockedByDefault((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_00_c15c2234-9b19-453e-99cc-00b7358b9fce, "TAD_IllithidPersuasion");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_01_c67231b6-93d5-4bab-888b-c5eeaa60a8df, "Shout_TAD_PsionicOverload");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_02_f8b010f9-9e1b-49bb-92a9-986e91331926, "TAD_PeaceBreaker");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_03_9cde0249-0e85-4d4d-b410-a88b5f073215, "Rush_ForceTunnel");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_04_0a6b3d54-dcb5-4fa3-a47c-bed147936461, "Target_TAD_ConcentratedBlast");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_05_9d789ea8-3982-418d-b0e9-e1fa731c132d, "Target_TAD_TransfuseHealth");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_06_aad197e7-b335-423b-a718-384f1774e5de, "Target_StageFright");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_07_bbc4f0e0-38fd-40da-af69-0660ce53d92a, "TAD_DrainAbility");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_08_488c84ef-24a7-4d56-8343-0eba225eb842, "TAD_LuckOfTheFarRealms");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_09_b2666bd3-eeba-4bea-8395-673ccb9930ed, "TAD_Charm");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_10_08b493da-3bbc-41f9-848d-73b7b9ecfacd, "TAD_Displace");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_11_efc0b8ab-5ab2-4859-b1e7-6aa244d35f70, "Shout_Repulsor");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_12_6cda55d9-75ce-490d-8636-5a16ffd7ccdb, "TAD_CullTheWeak");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_13_814c5204-7803-4a5d-ab3e-4b5f976f37db, "TAD_PsionicBacklash");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_14_38e0fbdf-f3bb-42ae-a6c6-def7a3009eec, "Target_TAD_ShieldOfThralls");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_15_120777be-9221-4e7a-9dbc-295cb36faa0c, "Target_TAD_PerilousStakes");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_16_6661566d-269e-4497-9129-bd793fb5b9e8, "Shout_TAD_DisplacerBeast");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_17_52ef4242-0716-4aeb-9800-0b98f97124a1, "Target_TAD_Imperil");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_18_a7b5acb7-0c12-4aad-9b2d-e9a9f1fd2f71, "TAD_Expertise");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_19_521814d2-8cf2-4da5-9dad-726d2973f4da, "TAD_PsionicDominance");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_20_b99ebe04-463e-427c-bb22-e3d7583c63e3, "Target_TAD_BlackHole");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_21_6c5dce0a-92a6-476a-a527-ff4c68c14a60, "Projectile_TAD_Levitate");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_22_34b507c8-c414-450b-824d-128fd9e57ed7, "Zone_TAD_MindBlast");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_23_2dd0903c-c5ff-454f-94e0-678a66bfa9c1, "Target_TAD_MindSanctuary");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_24_bf2e5c5e-a664-4f71-a017-bc4def71d50d, "TAD_Freecast");
+DB_TadpolePowers_DebugTags((TAG)TADPOLE_25_27ec7196-c8ca-4b56-9b15-105b21c01281, "Target_TAD_AbsorbIntellect");
+
+NOT DB_Tadpole_NonTadpoledDialog((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,""); //Types: "" (default), "Character", "CharacterHostile"
+
+DB_TadpolePowers_TadpolePowerJar_Templates((ITEMROOT)UNI_TadpolePowerJar_1ec327be-3b7f-4502-9586-860e057e09ae);
+DB_TadpolePowers_TadpolePowerJar_Templates((ITEMROOT)UNI_TadpolePowerJar_Absolute_d1f2b294-fdf8-43df-8d11-19743077cb68);
+
+NOT DB_TadpolePowers_GainedHalfIllithidBenefits((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_DaisyAccepted_TopOfStack((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+KBSECTION
+IF
+TadpolePowerAssigned(_Player,_Power)
+AND
+NOT DB_TadpolePowerAssigned(_Player,_)
+THEN
+DB_TadpolePowerAssigned(_Player,_Power);
+SetFlag((FLAG)GLO_Tadpole_State_PartyUsedPowers_688ca26d-3a3d-c5d1-fccd-572c0d6f3e08,NULL_00000000-0000-0000-0000-000000000000,0);
+SetTag(_Player,(TAG)TADPOLE_ASSIGNED_089d4ca5-2cf0-4f54-84d9-1fdea055c93f);
+
+//REGION Tadpole Power Tree
+//Pre Daisy Dream: "*The tadpole is not ready to be used, but nor does it want to part from you.*"
+IF
+TemplateUseStarted(_Character, _Template, _Tadpole)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+NOT DB_GLO_DaisyUnlocked(1)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_Tadpole_PAD_RefusalBeforeDaisy_5b0b0783-aba5-9d5e-b1da-3f8c1e53b389, _Character);
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Character, (UNIFIEDTUTORIAL)Not_Ready_19f3b19a-b51e-46d5-8349-47b907d8c003);
+
+//Post Daisy Dream on blocked companion: "This character doesn't want to do this"
+IF
+TemplateUseStarted(_Character, _Template, _Tadpole)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+NOT DB_GLO_DaisyAccepted(_Character)
+AND
+DB_GLO_DaisyUnlocked(1)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_Tadpole_PAD_Refusal_7796cab2-9587-8ba5-d921-741f6ae10805, _Character);
+
+//Post Daisy Dream on willing player who had the consume dialogue: Add Point
+IF
+TemplateUseStarted(_Character, _Template, _Tadpole)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+DB_GLO_DaisyAccepted(_Character)
+AND
+DB_GLO_Tadpole_HadConsumeDialog(1)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)GLO_Tadpole_Consume_b8af6722-476f-9d04-d36d-484db6e0d56f,_)
+THEN
+PROC_AddTadpolePoint(_Character);
+Die(_Tadpole);
+DB_GLO_TadpoleTreeEnabled(1);
+SetFlag((FLAG)GLO_Tadpole_Event_FirstConsumed_fab5ae97-23b5-4bf2-88ae-0b1bd57523d8,_Character,0);
+
+IF
+FlagSet(GLO_Tadpole_Event_FirstConsumed_fab5ae97-23b5-4bf2-88ae-0b1bd57523d8,_Player,_)
+AND
+NOT DB_GLO_DaisyAccepted_TopOfStack(_)
+THEN
+DB_GLO_DaisyAccepted_TopOfStack((CHARACTER)_Player);
+
+IF
+FlagSet(GLO_Tadpole_Event_FirstConsumed_fab5ae97-23b5-4bf2-88ae-0b1bd57523d8,_Player,_)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+DB_PartOfTheTeam(_Character)
+THEN
+IterateInventoryByTemplate(_Character, _Template, "TAD_ConsumeTadpole", "");
+
+IF
+EntityEvent((ITEM)_Item,"TAD_ConsumeTadpole")
+AND
+DB_GLO_DaisyAccepted_TopOfStack((CHARACTER)_Character)
+AND
+IsDestroyed(_Item,0)
+THEN
+PROC_AddTadpolePoint(_Character);
+Die(_Item);
+
+//Post Daisy Dream on willing player but haven't had the consume dialogue: Consume Dialogue
+IF
+TemplateUseStarted(_Character, _Template, _Tadpole)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+DB_GLO_DaisyAccepted(_Character)
+AND
+NOT DB_GLO_Tadpole_HadConsumeDialog(1)
+AND
+QRY_GLO_DaisyDreams_GetDaisy(_Character)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy((CHARACTER)_Daisy)
+AND
+QRY_SpeakerIsAvailable(_Daisy)
+AND
+QRY_SpeakerIsAvailable(_Character)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_Tadpole_Consume_b8af6722-476f-9d04-d36d-484db6e0d56f,_Daisy,_Character)
+THEN
+DB_GLO_Tadpole_HadConsumeDialog(1);
+DB_Tadpole_That_Triggered_ConsumeDialog(_Tadpole);
+//END_REGION
+
+//REGION Act 1 - True Souls
+IF
+LevelLoaded("WLD_Main_A")
+AND
+QRY_OnlyOnce("PostEA_WLD_TrueSoul_Definitions")
+THEN
+SetTag((CHARACTER)S_FOR_PriestConqueringGod_003_21507c79-dfea-421a-b149-4b5646d3941d,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed);
+
+IF
+TagSet(_Character,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+THEN
+DB_HasIllithidTag((CHARACTER)_Character);
+
+IF
+TagCleared(_Character,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+THEN
+NOT DB_HasIllithidTag((CHARACTER)_Character);
+
+IF
+DB_HasIllithidTag(_NPC)
+AND
+NOT DB_Players(_NPC)
+AND
+NOT DB_Origins(_NPC)
+AND
+DB_DialogNPCs(_ID,_NPC,_)
+AND
+DB_DialogPlayers(_ID,_Player,_)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Tadpole_PartyMetATrueSoul_2aa29ce5-dbf4-dc9d-4e40-1a0288325c24)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_Tadpole_PartyMetATrueSoul_2aa29ce5-dbf4-dc9d-4e40-1a0288325c24);
+
+//END_REGION
+
+//REGION Daisy AD: Tadpole On True Soul Corpse
+//This overwrites the old implementation in GLO_Tadpole to only show an AD
+PROC
+PROC_Tadpole_Create((CHARACTER)_Tadpoled)
+AND
+NOT DB_LevelUnreachable("SCL_Main_A") //INT_Main_A or beyond
+THEN
+PROC_Tadpole_ShowCorpseADToPlayers(_Tadpoled);
+
+PROC
+PROC_Tadpole_ShowCorpseADToPlayers((CHARACTER)_Tadpoled)
+AND
+DB_Sees(_Player, _Tadpoled)
+AND
+DB_Players(_Player)
+AND
+NOT DB_TadPole_TadpoleSpawned(_Tadpoled)
+AND
+NOT QRY_Tadpole_BlockShowCorpseAD((CHARACTER)_Player,(CHARACTER)_Tadpoled)
+AND
+IsTagged(_Player,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,1)
+AND
+GUIDToString(_Tadpoled,_TadpoledString)
+AND
+Concatenate("GLO_TadpoledCorpseSpotted_",_TadpoledString,_OnlyOnce)
+AND
+QRY_OnlyOncePerUser(_Player,_OnlyOnce)
+THEN
+PROC_Tadpole_TadpoleOnCorpseAD(_Player);
+
+QRY
+QRY_Tadpole_BlockShowCorpseAD((CHARACTER)_Player,(CHARACTER)_Tadpoled)
+AND
+DB_DialogPlayers(_,_Player,_)
+THEN
+DB_NOOP(1);
+
+//Daisy Unlocked
+PROC
+PROC_Tadpole_TadpoleOnCorpseAD((CHARACTER)_Player)
+AND
+DB_GLO_DaisyUnlocked(1)
+THEN
+PROC_RemoveDaisyAD(_Player,(DIALOGRESOURCE)GLO_Tadpole_DaisyAD_TadpoleOnTrueSoulCorpse_d7b78e15-931f-62ae-b60c-722f33821dc7);
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)GLO_Tadpole_DaisyAD_TadpoleOnTrueSoulCorpse_d7b78e15-931f-62ae-b60c-722f33821dc7);
+
+//Daisy Locked -> Narrator Version
+PROC
+PROC_Tadpole_TadpoleOnCorpseAD((CHARACTER)_Player)
+AND
+NOT DB_GLO_DaisyUnlocked(1)
+AND
+GetFlag(GLO_DaisyAD_TadpoleSpotted_Played01_9d680206-5b3d-723a-7c73-a745b56f1117,_Player,0)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)GLO_Tadpole_DaisyAD_TadpoleOnTrueSoulCorpse_d7b78e15-931f-62ae-b60c-722f33821dc7);
+
+PROC
+PROC_BlockLootCorpse(_Player, _TrueSoul)
+AND
+DB_TadPole_TadpoleBurstQueued(_TrueSoul)
+AND
+DB_Players(_Player)
+AND
+DB_TadPole_HadTrueSoulCorpseDialogue(_)
+AND
+NOT DB_TadPole_TadpoleSpawned(_TrueSoul)
+THEN
+TemplateAddTo((ITEMROOT)UNI_TadpolePowerJar_1ec327be-3b7f-4502-9586-860e057e09ae,_TrueSoul,1,0);
+DB_TadPole_TadpoleSpawned(_TrueSoul);
+DB_CustomLootCorpseResponse(_Player, _TrueSoul, 1);
+
+PROC
+PROC_BlockLootCorpse(_Player, _TrueSoul)
+AND
+DB_TadPole_TadpoleBurstQueued(_TrueSoul)
+AND
+DB_Players(_Player)
+AND
+NOT DB_TadPole_HadTrueSoulCorpseDialogue(_)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_Tadpole_TrueSoulCorpse_8ceb5646-8c9b-f8f9-cfea-7e6a9f94159e,_TrueSoul,_Player)
+THEN
+DB_TadPole_HadTrueSoulCorpseDialogue(_TrueSoul);
+DB_TadPole_TadpoleSpawned(_TrueSoul);
+DB_CustomLootCorpseResponse(_Player, _TrueSoul, 0);
+
+IF
+DialogRequestFailed((DIALOGRESOURCE)GLO_Tadpole_TrueSoulCorpse_8ceb5646-8c9b-f8f9-cfea-7e6a9f94159e,_)
+AND
+DB_TadPole_HadTrueSoulCorpseDialogue(_TrueSoul)
+THEN
+NOT DB_TadPole_HadTrueSoulCorpseDialogue(_TrueSoul);
+NOT DB_TadPole_TadpoleSpawned(_TrueSoul);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_TrueSoulCorpse_8ceb5646-8c9b-f8f9-cfea-7e6a9f94159e,_Inst)
+AND
+DB_GlobalFlag((FLAG)GLO_Tadpole_Event_TadpoleEscape_9c6f9058-99d6-0261-7c96-b6b974c4861b)
+AND
+DB_TadPole_HadTrueSoulCorpseDialogue(_TrueSoul)
+AND
+CreateAtObject(Tadpole_6426104b-3e00-4ff5-90c7-c25cc27b916f, _TrueSoul, 0, 1, "", 0, (CHARACTER)_Tadpole)
+THEN
+DB_Tadpole_TadpoleCreature(_Tadpole, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_TrueSoulCorpse_8ceb5646-8c9b-f8f9-cfea-7e6a9f94159e,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+AND
+DB_GlobalFlag((FLAG)GLO_Tadpole_Event_HarvestedFromCorpse_d98db044-81f4-45a7-960c-221c01a58d96)
+THEN
+TemplateAddTo((ITEMROOT)UNI_TadpolePowerJar_1ec327be-3b7f-4502-9586-860e057e09ae,_Player,1,1);
+StartVoiceBark((VOICEBARKRESOURCE)FOR_DeathOfATrueSoul_VB_TadpoleLeaves_de2546f7-3463-7594-8bfa-e61e0d7c8d0f, (CHARACTER)_Player);
+
+//END_REGION
+
+//REGION Daisy AD: Tadpole Jar
+
+IF
+TemplateAddedTo(_TadpoleJarRoot,_TadpoleJar,_Inventory,_)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_TadpoleJarRoot)
+AND
+_Inventory != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetEntityEvent(_TadpoleJar,"GLO_TadpoleJar_StopSpotting",1);
+
+//This overwrites the old implementation in GLO_Tadpole to only show an AD
+IF
+DualEntityEvent(_Player,_Jar,"GLO_TadpoleJar_Spotted")
+AND
+NOT DB_LevelUnreachable("SCL_Main_A") //INT_Main_A or beyond
+AND
+DB_Players((CHARACTER)_Player)
+AND
+IsTagged(_Player,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,1)
+THEN
+PROC_Tadpole_TadpoleInJarAD(_Player,(ITEM)_Jar);
+
+//Daisy Unlocked
+PROC
+PROC_Tadpole_TadpoleInJarAD((CHARACTER)_Player,(ITEM)_Jar)
+AND
+DB_GLO_DaisyUnlocked(1)
+THEN
+PROC_RemoveDaisyAD(_Player,(DIALOGRESOURCE)GLO_Tadpole_DaisyAD_TadpoleInJar_32ddb72e-fed0-1e84-7f31-eddf59c388de);
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)GLO_Tadpole_DaisyAD_TadpoleInJar_32ddb72e-fed0-1e84-7f31-eddf59c388de);
+PROC_Tadpole_PingTadpole(_Player,_Jar);
+
+//Daisy Locked -> Narrator Version
+PROC
+PROC_Tadpole_TadpoleInJarAD((CHARACTER)_Player,(ITEM)_Jar)
+AND
+NOT DB_GLO_DaisyUnlocked(1)
+AND
+GetFlag(GLO_DaisyAD_TadpoleSpotted_Played01_9d680206-5b3d-723a-7c73-a745b56f1117,_Player,0)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)GLO_Tadpole_DaisyAD_TadpoleInJar_32ddb72e-fed0-1e84-7f31-eddf59c388de);
+PROC_Tadpole_PingTadpole(_Player,_Jar);
+
+PROC
+PROC_Tadpole_PingTadpole((CHARACTER)_Player,(GUIDSTRING)_Tadpole)
+AND
+NOT DB_Offstage(_Tadpole) //on stage
+AND
+NOT GetInventoryOwner(_Tadpole,_) //not in inventory
+AND
+GetPosition(_Tadpole,_X,_Y,_Z)
+AND
+QRY_GLO_DaisyDreams_GetDaisy(_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy)
+THEN
+RequestPing(_X,_Y,_Z,_Tadpole,_Daisy);
+
+//END_REGION
+
+//REGION Tadpole added to Inventory
+//Companion
+IF
+TemplateAddedTo(_Template,_Tadpole,_Companion,_)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+NOT DB_GLO_Tadpole_HadConsumeDialog(1)
+AND
+DB_GLO_DaisyAccepted((CHARACTER)_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,(CHARACTER)_Avatar)
+AND
+QRY_GLO_DaisyDreams_GetDaisy(_Avatar)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy((CHARACTER)_Daisy)
+AND
+QRY_SpeakerIsAvailable(_Daisy)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_Tadpole_Consume_b8af6722-476f-9d04-d36d-484db6e0d56f,_Daisy,_Avatar)
+THEN
+DB_GLO_Tadpole_HadConsumeDialog(1);
+DB_Tadpole_That_Triggered_ConsumeDialog((ITEM)_Tadpole);
+
+//Avatar or Orphan
+IF
+TemplateAddedTo(_Template,_Tadpole,_Player,_)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+NOT DB_GLO_Tadpole_HadConsumeDialog(1)
+AND
+DB_GLO_DaisyAccepted((CHARACTER)_Player)
+AND
+QRY_GLO_DaisyDreams_GetDaisy(_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy((CHARACTER)_Daisy)
+AND
+QRY_SpeakerIsAvailable(_Daisy)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_Tadpole_Consume_b8af6722-476f-9d04-d36d-484db6e0d56f,_Daisy,_Player)
+THEN
+DB_GLO_Tadpole_HadConsumeDialog(1);
+DB_Tadpole_That_Triggered_ConsumeDialog((ITEM)_Tadpole);
+
+IF
+DialogRequestFailed((DIALOGRESOURCE)GLO_Tadpole_Consume_b8af6722-476f-9d04-d36d-484db6e0d56f,_)
+AND
+DB_Tadpole_That_Triggered_ConsumeDialog((ITEM)_Tadpole)
+THEN
+NOT DB_GLO_Tadpole_HadConsumeDialog(1);
+NOT DB_Tadpole_That_Triggered_ConsumeDialog(_Tadpole);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_Consume_b8af6722-476f-9d04-d36d-484db6e0d56f,_)
+AND
+DB_Tadpole_That_Triggered_ConsumeDialog((ITEM)_Tadpole)
+THEN
+NOT DB_Tadpole_That_Triggered_ConsumeDialog(_Tadpole);
+
+IF
+FlagSet(GLO_Tadpole_Event_FirstConsumed_fab5ae97-23b5-4bf2-88ae-0b1bd57523d8,_Player,_)
+AND
+DB_Tadpole_That_Triggered_ConsumeDialog(_Tadpole)
+THEN
+NOT DB_Tadpole_That_Triggered_ConsumeDialog(_Tadpole);
+PROC_AddTadpolePoint((CHARACTER)_Player);
+Die(_Tadpole);
+DB_GLO_TadpoleTreeEnabled(1);
+
+IF
+TemplateAddedTo(_Template,_Tadpole,_Player,_)
+AND
+DB_TadpolePowers_TadpolePowerJar_Templates(_Template)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GLO_Tadpole_HadConsumeDialog(1)
+AND
+DB_GLO_DaisyUnlocked(1)
+AND
+DB_GLO_TadpoleTreeEnabled(1)
+THEN
+PROC_AddTadpolePoint((CHARACTER)_Player);
+Die((ITEM)_Tadpole);
+
+IF
+DB_GLO_TadpoleTreeEnabled(1)
+THEN
+SetFlag((FLAG)GLO_Tadpole_State_TreeUnlocked_f7691d3d-345b-4984-8eed-6f238a9f84be,NULL_00000000-0000-0000-0000-000000000000,0);
+//END_REGION
+
+//REGION Origin Tadpole Power Acceptance
+//If permission set from Default Dialogue
+IF
+FlagSet((FLAG)GLO_Daisy_State_IndividualAccepted_8d442938-2051-4b53-8e4c-4dccb08f35f8,_Character,_)
+THEN
+DB_GLO_DaisyAccepted((CHARACTER)_Character);  
+ClearTag(_Character,(TAG)TADPOLE_REFUSAL_e7aa40e4-05e4-41c4-a3ee-bc95d934d35c);
+
+IF
+DB_GLO_DaisyUnlocked(1)
+THEN
+SetFlag((FLAG)GLO_Daisy_State_Unlocked_100c65da-7fab-4643-9630-db143451edc9,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Auto Unlock for avatars
+IF
+DB_GLO_DaisyUnlocked(1)
+AND
+DB_Avatars(_Avatar)
+THEN
+DB_GLO_DaisyAccepted(_Avatar);
+
+//Auto Unlock for Astarion & Shadowheart
+IF
+DB_GLO_DaisyUnlocked(1)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+DB_TadpolePowers_UnlockedByDefault(_Companion)
+THEN
+DB_GLO_DaisyAccepted(_Companion);
+
+IF
+DB_GLO_DaisyUnlocked(1)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_DismissedAvatar(_Companion)
+AND
+NOT DB_GLO_DaisyAccepted(_Companion)
+AND
+IsTagged(_Companion,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,1)
+THEN
+SetTag(_Companion,(TAG)TADPOLE_REFUSAL_e7aa40e4-05e4-41c4-a3ee-bc95d934d35c);
+
+IF
+FlagSet((FLAG)GLO_Tadpole_Event_BlockedTadpoleConvinceFailRepeatableApprovalDrain_250e7baf-77e9-c42e-1981-05412a5f8457,_Companion,_Inst)
+AND
+DB_Players((CHARACTER)_Companion)
+AND
+DB_DialogPlayers(_Inst,_Player,2)
+AND
+DB_Avatars((CHARACTER)_Player)
+AND
+ChangeApprovalRating(_Companion,_Player,0,-5,_)
+THEN
+ClearFlag((FLAG)GLO_Tadpole_Event_BlockedTadpoleConvinceFailRepeatableApprovalDrain_250e7baf-77e9-c42e-1981-05412a5f8457,_Companion,0);
+
+IF
+FlagSet((FLAG)GLO_Tadpole_Event_BlockedTadpoleConvinceFailRepeatableApprovalDrain_250e7baf-77e9-c42e-1981-05412a5f8457,_Companion,_Inst)
+AND
+NOT DB_Players((CHARACTER)_Companion)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+AND
+DB_Avatars((CHARACTER)_Player)
+AND
+ChangeApprovalRating(_Companion,_Player,0,-5,_)
+THEN
+ClearFlag((FLAG)GLO_Tadpole_Event_BlockedTadpoleConvinceFailRepeatableApprovalDrain_250e7baf-77e9-c42e-1981-05412a5f8457,_Companion,0);
+//END_REGION
+
+//REGION Tadpole UI State
+IF
+LevelGameplayStarted(_,_)
+THEN
+DB_Tadpole_AllowUIEvents(1);
+
+IF
+Activated(_Player)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_Tadpole_Activated(_Player);
+
+IF
+Deactivated(_Player)
+AND
+DB_Tadpole_Activated((CHARACTER)_Player)
+THEN
+NOT DB_Tadpole_Activated(_Player);
+
+IF
+DB_Players(_Player)
+AND
+IsActive(_Player,1)
+THEN
+DB_Tadpole_Activated(_Player);
+
+IF
+DB_Tadpole_Activated(_Player)
+AND
+NOT DB_Players(_Player)
+THEN
+NOT DB_Tadpole_Activated(_Player);
+
+IF
+TagSet(_Player, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+AND
+DB_Tadpole_Activated((CHARACTER)_Player)
+AND
+DB_Tadpole_AllowUIEvents(1)
+AND
+DB_GLO_TadpoleTreeEnabled(1)
+AND
+DB_GLO_DaisyAccepted(_Player)
+AND
+NOT DB_GLO_TadpoleTreeEnabledForPlayer(_Player)
+THEN
+DB_GLO_TadpoleTreeEnabledForPlayer(_Player);
+SetTadpoleTreeState(_Player,2);
+AddTadpole(_Player,1);
+AddTadpolePower(_Player,"TAD_IllithidPersuasion",1);
+SetTag(_Player, (TAG)TADPOLE_TREE_UNLOCKED_efedb058-d4f5-4ab8-8add-bd5e32cdd9cd);
+
+IF
+DB_Tadpole_AllowUIEvents(1)
+AND
+DB_Tadpole_Activated(_Player)
+AND
+NOT DB_GLO_TadpoleTreeEnabled(1)
+THEN
+SetTadpoleTreeState(_Player,0);
+
+IF
+DB_Tadpole_AllowUIEvents(1)
+AND
+DB_Tadpole_Activated(_Player)
+AND
+DB_GLO_TadpoleTreeEnabled(1)
+AND
+NOT DB_GLO_DaisyAccepted(_Player)
+AND
+IsTagged(_Player, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+THEN
+SetTadpoleTreeState(_Player,1);
+
+IF
+DB_Tadpole_AllowUIEvents(1)
+AND
+DB_Tadpole_Activated(_Player)
+AND
+DB_GLO_TadpoleTreeEnabled(1)
+AND
+IsTagged(_Player, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 0)
+THEN
+SetTadpoleTreeState(_Player,0);
+
+IF
+DB_Tadpole_AllowUIEvents(1)
+AND
+DB_Tadpole_Activated(_Player)
+AND
+DB_GLO_TadpoleTreeEnabled(1)
+AND
+DB_GLO_DaisyAccepted(_Player)
+AND
+IsTagged(_Player, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+NOT DB_GLO_TadpoleTreeEnabledForPlayer(_Player)
+THEN
+DB_GLO_TadpoleTreeEnabledForPlayer(_Player);
+SetTadpoleTreeState(_Player,2);
+AddTadpole(_Player,1);
+AddTadpolePower(_Player,"TAD_IllithidPersuasion",1);
+SetTag(_Player, (TAG)TADPOLE_TREE_UNLOCKED_efedb058-d4f5-4ab8-8add-bd5e32cdd9cd);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("tadui")
+AND
+GetHostCharacter(_Player)
+AND
+GetTextEventParamInteger(1,_State)
+THEN
+SetTadpoleTreeState(_Player,_State);
+//END_REGION
+
+//REGION Astral Tadpole -> Partial Ceremorph
+//Astral acceptance is automatic regular acceptance.
+IF
+FlagSet((FLAG)GLO_Daisy_State_AstralIndividualAccepted_9c5367df-18c8-4450-9156-b818b9b94975,_Player,_)
+THEN
+SetFlag((FLAG)GLO_Daisy_State_IndividualAccepted_8d442938-2051-4b53-8e4c-4dccb08f35f8,_Player,0);
+
+IF
+FlagSet((FLAG)GLO_Daisy_State_AstralIndividualAccepted_9c5367df-18c8-4450-9156-b818b9b94975,_Player,_Inst)
+THEN
+DB_GLO_Tadpole_UseAstralTadpoleAfterDialogue(_Player,_Inst);
+
+IF
+DialogEnded(_IPD,_Inst)
+AND
+DB_GLO_Tadpole_UseAstralTadpoleAfterDialogue(_Player,_Inst)
+THEN
+NOT DB_GLO_Tadpole_UseAstralTadpoleAfterDialogue(_Player,_Inst);
+ObjectTimerLaunch(_Player,"GLO_Tadpole_UseAstralTadpoleAfterDialogue",1500);
+
+IF
+ObjectTimerFinished(_Player,"GLO_Tadpole_UseAstralTadpoleAfterDialogue")
+AND
+NOT DB_GLO_Tadpole_Astral(_)
+AND
+GetItemByTemplateInPartyInventory((ITEMROOT)LOOT_MF_Tadpole_Astral_A_4a82e6f2-839f-434e-addf-b07dd1578194,(CHARACTER)_Player,_AstralTadpole)
+AND
+QRY_ItemInMagicPockets(_Player,_AstralTadpole)
+AND
+QRY_GLO_DaisyDreams_GetEmperor(_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetEmperor((CHARACTER)_Emperor)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166,_Emperor,_Player,1,1,0,1)
+THEN
+DB_GLO_Tadpole_Astral(_AstralTadpole);
+
+IF
+FlagSet((FLAG)INT_EmperorRevealed_State_PartialCeremorph_bc1c1148-0ed1-8586-39b2-5aff43c3b393,_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+IsTagged(_Player,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,1)
+THEN
+DB_GLO_DaisyAccepted(_Player);
+DB_GLO_DaisyUnlocked(1);
+DB_GLO_Tadpole_HadConsumeDialog(1);
+DB_GLO_TadpoleTreeEnabled(1);
+SetFlag((FLAG)GLO_Daisy_State_IndividualAccepted_8d442938-2051-4b53-8e4c-4dccb08f35f8,_Player,0);
+SetFlag((FLAG)GLO_Tadpole_Event_FirstConsumed_fab5ae97-23b5-4bf2-88ae-0b1bd57523d8,_Player,0);
+SetTag(_Player,(TAG)PARTIAL_CEREMORPH_c0cd4ed8-11d1-4fb1-ae3a-3a14e41267c8);
+ApplyStatus(_Player, "TAD_PARTIAL_CEREMORPH", -1.0, 1, _Player);
+
+IF
+StatusApplied(_Player, "TAD_PARTIAL_CEREMORPH", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+AddCustomMaterialOverride(_Player, "398ca8ae-c3c0-47f5-8e45-d9402e198389");
+
+IF
+StatusApplied(_Player, "TAD_PARTIAL_CEREMORPH", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_TadpolePowers_GainedHalfIllithidBenefits(_Player)
+THEN
+DB_TadpolePowers_GainedHalfIllithidBenefits(_Player);
+AddTadpole(_Player,6);
+AddTadpolePower(_Player,"Shout_TAD_PsionicOverload",1);
+AddTadpolePower(_Player,"TAD_PeaceBreaker",1);
+AddTadpolePower(_Player,"Rush_ForceTunnel",1);
+AddTadpolePower(_Player,"Target_TAD_ConcentratedBlast",1);
+AddTadpolePower(_Player,"Target_TAD_TransfuseHealth",1);
+AddTadpolePower(_Player,"Projectile_TAD_Levitate",1);
+
+IF
+StatusRemoved(_Player, "TAD_PARTIAL_CEREMORPH", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+RemoveCustomMaterialOverride(_Player, "398ca8ae-c3c0-47f5-8e45-d9402e198389");
+
+PROC
+PROC_GLO_Tadpole_GiveAstralTadpoleTo((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("GLO_Tadpole_GivenAstralTadpole")
+THEN
+TemplateAddTo((ITEMROOT)LOOT_MF_Tadpole_Astral_A_4a82e6f2-839f-434e-addf-b07dd1578194,_Player,1,1);
+
+IF
+TemplateAddedTo((ITEMROOT)LOOT_MF_Tadpole_Astral_A_4a82e6f2-839f-434e-addf-b07dd1578194,_,_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag((FLAG)GLO_Tadpole_State_ReceivedAstralTadpole_390b8985-7256-42c0-a205-62e5f275d55d,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+DB_GLO_DaisyUnlocked(1)
+AND
+DB_Avatars(_Avatar)
+THEN
+SetFlag((FLAG)GLO_Daisy_State_AstralIndividualAccepted_9c5367df-18c8-4450-9156-b818b9b94975,_Avatar,0);
+
+IF
+TemplateUseStarted(_Player,(ITEMROOT)LOOT_MF_Tadpole_Astral_A_4a82e6f2-839f-434e-addf-b07dd1578194,_AstralTadpole)
+AND
+GetFlag((FLAG)GLO_Daisy_State_AstralIndividualAccepted_9c5367df-18c8-4450-9156-b818b9b94975,_Player,0)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_Tadpole_PAD_Refusal_7796cab2-9587-8ba5-d921-741f6ae10805, _Player);
+
+IF
+TemplateUseStarted(_Player,(ITEMROOT)LOOT_MF_Tadpole_Astral_A_4a82e6f2-839f-434e-addf-b07dd1578194,_AstralTadpole)
+AND
+GetFlag((FLAG)GLO_Daisy_State_AstralIndividualAccepted_9c5367df-18c8-4450-9156-b818b9b94975,_Player,1)
+AND
+DB_GLO_Tadpole_Astral(_AstralTadpole)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+
+IF
+TemplateUseStarted(_Player,(ITEMROOT)LOOT_MF_Tadpole_Astral_A_4a82e6f2-839f-434e-addf-b07dd1578194,_AstralTadpole)
+AND
+NOT DB_GLO_Tadpole_Astral(_AstralTadpole)
+AND
+GetFlag((FLAG)GLO_Daisy_State_AstralIndividualAccepted_9c5367df-18c8-4450-9156-b818b9b94975,_Player,1)
+AND
+QRY_GLO_DaisyDreams_GetEmperor(_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetEmperor((CHARACTER)_Emperor)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166,_Emperor,_Player,1,1,0,1)
+THEN
+DB_GLO_Tadpole_Astral(_AstralTadpole);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166,_Inst)
+AND
+DB_GlobalFlag((FLAG)GLO_Tadpole_Event_AstralTouchedTadpoleDestroyed_7c43d181-2bb0-ed4d-5fed-c19752617955)
+AND
+DB_GLO_Tadpole_Astral(_AstralTadpole)
+THEN
+Die(_AstralTadpole);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166,_Inst)
+AND
+DB_GLO_Tadpole_Astral(_AstralTadpole)
+AND
+DB_GlobalFlag((FLAG)GLO_Tadpole_Event_AstralTouchedTadpoleEaten_249a47a8-7c31-8360-7d93-197a3c6b4057)
+THEN
+Die(_AstralTadpole);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166,_Inst) //Also covers DialogRequestFailed
+AND
+DB_GLO_Tadpole_Astral(_AstralTadpole)
+THEN
+NOT DB_GLO_Tadpole_Astral(_AstralTadpole);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+THEN
+ClearFlag((FLAG)GLO_Tadpole_UseAstralTadpole_State_Incombat_51db1dd2-94c9-425d-8ac1-0a504e2ca3fe,_Player,0);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)GLO_Tadpole_UseAstralTadpole_a995e01c-7374-d37d-0816-08158bbdd166, (GUIDSTRING)_Emperor, (GUIDSTRING)_Player)
+AND
+DB_Is_InCombat(_Player,_)
+THEN
+SetFlag((FLAG)GLO_Tadpole_UseAstralTadpole_State_Incombat_51db1dd2-94c9-425d-8ac1-0a504e2ca3fe,_Player,0);
+//END_REGION
+
+//REGION Tadpole powers on party preset load
+IF
+TadpolePowerAssigned(_Character, _Power)
+AND
+DB_TadpolePowers_DebugTags(_Tag, _Power)
+AND
+IsTagged(_Character, _Tag, 0)
+THEN
+SetTag(_Character, _Tag);
+
+PROC
+PROC_DoDebugSetup((STRING)_Region)
+AND
+DB_Players(_Character)
+AND
+IsTagged(_Character, (TAG)TADPOLE_TREE_UNLOCKED_efedb058-d4f5-4ab8-8add-bd5e32cdd9cd, 1)
+THEN
+DB_GLO_DaisyUnlocked(1);
+DB_GLO_TadpoleTreeEnabled(1);
+DB_GLO_Tadpole_HadConsumeDialog(1);
+
+PROC
+PROC_DoDebugSetup((STRING)_Region)
+AND
+DB_Players(_Character)
+AND
+DB_TadpolePowers_DebugTags(_Tag, _Power)
+AND
+IsTagged(_Character, _Tag, 1)
+THEN
+AddTadpole(_Character,1);
+AddTadpolePower(_Character, _Power, 1);
+//END_REGION Tadpole powers on party preset load
+
+//REGION Non-tadpoled companion dialog fallback
+
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _, _)
+AND
+DB_Tadpole_NonTadpoledDialog(_Dialog,_DialogType)
+AND
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers((GUIDSTRING)_Character,(GUIDSTRING)_Player)
+AND
+IsTagged(_Player,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,0)
+AND
+QRY_StartDialog_Fixed(NGB_NoTadpole_a2d0ce57-3e76-3917-041b-fc13793be32b,_Character,_Player)
+THEN
+PROC_Tadpole_NonTadpoledDialog_SetFlags(_Character,_DialogType);
+NOT DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_Character,_Player);
+
+PROC
+PROC_Tadpole_NonTadpoledDialog_SetFlags((GUIDSTRING)_Speaker,"Character")
+THEN
+DB_Tadpole_NonTadpoledDialog_FlaggedSpeaker(_Speaker,(FLAG)GLO_Tadpole_NoTadpole_Character_4fd98a12-07b6-94ac-25fd-bf4efea2195a);
+
+PROC
+PROC_Tadpole_NonTadpoledDialog_SetFlags((GUIDSTRING)_Speaker,"CharacterHostile")
+THEN
+DB_Tadpole_NonTadpoledDialog_FlaggedSpeaker(_Speaker,(FLAG)GLO_Tadpole_NoTadpole_CharacterHostile_a09e5d6a-b7bb-b205-cb6a-a95ae0107b8b);
+
+IF
+DB_Tadpole_NonTadpoledDialog_FlaggedSpeaker((GUIDSTRING)_Speaker,(FLAG)_Flag)
+THEN
+SetFlag(_Flag,_Speaker);
+
+IF
+DialogEnded(NGB_NoTadpole_a2d0ce57-3e76-3917-041b-fc13793be32b,_DialogId)
+AND
+DB_Tadpole_NonTadpoledDialog_FlaggedSpeaker(_Speaker,_Flag)
+AND
+DB_DialogSpeakers(_DialogId,_Speaker,_)
+THEN
+ClearFlag(_Flag,_Speaker);
+NOT DB_Tadpole_NonTadpoledDialog_FlaggedSpeaker(_Speaker,_Flag);
+
+//Get right speakers
+QRY
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_)
+AND
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_Speaker,_Player)
+THEN
+NOT DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_Speaker,_Player);
+
+QRY
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_Speaker, (GUIDSTRING)_Player, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers((GUIDSTRING)_Speaker,(GUIDSTRING)_Player);
+
+QRY
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_Speaker, (GUIDSTRING)_, (GUIDSTRING)_Player, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_)
+AND
+NOT DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_,_)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers((GUIDSTRING)_Speaker,(GUIDSTRING)_Player);
+
+QRY
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_Speaker, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_Player, (GUIDSTRING)_, (GUIDSTRING)_)
+AND
+NOT DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_,_)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers((GUIDSTRING)_Speaker,(GUIDSTRING)_Player);
+
+QRY
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_Speaker, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_Player, (GUIDSTRING)_)
+AND
+NOT DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_,_)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers((GUIDSTRING)_Speaker,(GUIDSTRING)_Player);
+
+QRY
+QRY_Tadpole_NonTadpoledDialog_GetSpeakers((GUIDSTRING)_Speaker, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_Player)
+AND
+NOT DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers(_,_)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_QRY_RTN_Tadpole_NonTadpoledDialog_Speakers((GUIDSTRING)_Speaker,(GUIDSTRING)_Player);
+
+//END_REGION
+
+//REGION Add tadpole power point
+// use this PROC when you want the player to know about the point being added (through tutorials)
+PROC
+PROC_AddTadpolePoint((CHARACTER)_Character)
+THEN
+AddTadpole(_Character,1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

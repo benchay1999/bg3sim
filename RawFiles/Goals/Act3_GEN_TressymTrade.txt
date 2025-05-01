@@ -1,0 +1,50 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+ClearFlag((FLAG)LOW_TressymTrade_Debug_MoveTressymToLOW_87b6df86-9ca2-fcf5-5f27-80b1d49bd90d);
+KBSECTION
+//REGION Tressym is ready to move to LOW
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag(WYR_Posthouse_State_TressymHasGivenReward_939d0367-8bc7-487f-b8ef-15c5c9fd0faf)
+AND
+DB_WYR_Posthouse_Tressym(_Tressym)
+AND
+_Tressym == S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236
+AND
+QRY_OnlyOnce("GEN_TressymTrade_TressymLeavesForLOW")
+THEN
+PROC_SetOnStage(_Tressym, 0);
+DB_LOW_TressymTrade_InitialSetup(1);
+
+IF
+LevelLoaded("CTY_Main_A")
+AND
+DB_GlobalFlag(WYR_Posthouse_State_TressymHasGivenReward_939d0367-8bc7-487f-b8ef-15c5c9fd0faf)
+AND
+DB_WYR_Posthouse_Tressym(_Tressym)
+AND
+_Tressym == S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236
+AND
+QRY_OnlyOnce("GEN_TressymTrade_TressymLeavesForLOW")
+THEN
+PROC_SetOnStage(_Tressym, 0);
+DB_LOW_TressymTrade_InitialSetup(1);
+//END_REGION
+
+//REGION The player gives a fish to the tressym
+IF
+FlagSet(GLO_TressymTrade_Event_GiveFishToTressym_9e4fc233-6a04-410b-901b-80dba93b570f, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+GetItemByTagInInventory("FISH_ec16c2d2-2943-41cf-9796-0439ef65b2cf", _Player, _Fish)
+THEN
+MagicPocketsDrop(_Player, _Fish);
+PROC_SetOnStage(_Fish,0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

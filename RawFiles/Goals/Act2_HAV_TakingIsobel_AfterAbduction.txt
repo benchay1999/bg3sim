@@ -1,0 +1,67 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//This goal handles Isobel's state if the abduction has happened and she's not defeated.
+PROC_HAV_TakingIsobel_AfterAbductionSetup();
+
+
+// TODO: add logic for replacement
+//DB_HAV_TakingIsobel_Kidnapper((CHARACTER)S_HAV_TaxiGhoul_3ebef8c7-2733-42aa-9757-84fdeadbe652);
+
+DB_HAV_TakingIsobel_AfterAbduction(1);
+KBSECTION
+//This peaceful state is skipped or canceled if Isobel's defeated.
+IF
+DB_HAV_TakingIsobel_AfterAbduction(1)
+AND
+DB_Defeated((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+THEN
+PROC_State_Progress(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel", "HAV_Isobel_State_DefeatedInHaven");
+GoalCompleted;
+
+
+PROC
+PROC_HAV_TakingIsobel_AfterAbductionSetup()
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+NOT DB_CantMove(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+AND
+NOT DB_OnlyOnce("HAV_Isobel_MoonriseAssault")
+THEN
+PROC_HAV_Isobel_MoveToEntrance();
+
+IF
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+NOT DB_CantMove(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+AND
+NOT DB_OnlyOnce("HAV_Isobel_MoonriseAssault")
+THEN
+PROC_HAV_Isobel_MoveToEntrance();
+
+PROC
+PROC_HAV_Isobel_MoveToEntrance()
+THEN
+TeleportTo(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, S_HAV_Isobel_MoonriseAssault_83c8bc1a-d38e-4363-a118-9fd825501bde, "", 0, 0, 0, 0, 1);
+DB_OnlyOnce("HAV_Isobel_MoonriseAssault");
+DB_SpotPlayers((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel_MoonriseAssault", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel_MoonriseAssault", S_HAV_Isobel_MoonriseAssault_SpotBox_240a4fa8-34d0-43a8-9446-6ddfbaf869ef);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel_MoonriseAssault", _Character)
+AND
+QRY_StartDialog((DIALOGRESOURCE)HAV_Isobel_4a5bc7ea-4009-0de3-4ab7-da5bd379979e, S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, _Character)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_HAV_TakingIsobel_AfterAbductionSetup()
+AND
+DB_GlobalFlag(SCE_Debrief_State_Setup_0ebc6b35-0f07-4a73-b6b8-9782ecbcaccf)
+THEN
+GoalCompleted;
+EXITSECTION
+NOT DB_HAV_TakingIsobel_AfterAbduction(1);
+ENDEXITSECTION
+ParentTargetEdge "Act2_HAV_TakingIsobel_FollowUp_Saved"

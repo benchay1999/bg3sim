@@ -1,0 +1,289 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Saving Minsc
+// Minsc's Recruitment takes place after the player knocks him out 
+DB_DontRemoveDialogsOnKnockedOut((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+DB_PreventKnockedOutPermaDefeated((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+SetHasDialog((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, 1);
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702);
+SetTag((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, (TAG)DOWNED_DISABLED_7095912e-fcb9-41dd-aec3-3cf7803e4b22);
+//END_REGION
+
+//REGION Saving Boo
+PROC_SetOnStage(S_GLO_Boo_d49e3b49-a089-4465-b453-28dc79e82bb3, 0);
+DB_GlobalFlagReactionAfterDialog((FLAG)ORI_Minsc_State_SavedFromAbsolute_62e1d5ec-7c7e-70c2-68de-cadc7c7f5f20, (DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702);
+//END_REGION
+
+// Jaheira origin moment with Minsc
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, (TAG)REALLY_JAHEIRA_8457eb5f-036c-4143-b6cf-447a9f555c7a, (DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702);
+
+//Give Jaheira a wide berth for where she can be since the combat is massive
+DB_OriginMoment_MaxDistance(LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, 50.0);
+DB_OriginDialogTrigger(LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, (TRIGGER)S_LOW_MinscHideout_MeetingSceneDialogTrigger_AddChars_fb8bb0b2-af42-4029-98d0-5fb2e195e086);
+
+// Boo prison walls
+DB_LOW_MinscHideout_BooPrisonWall((ITEM)S_LOW_MinscHideout_BooPrisonWall_1e32480a-9446-46d7-9018-76002fce1d7e, "FirstWall");
+DB_LOW_MinscHideout_BooPrisonWall((ITEM)S_LOW_MinscHideout_CorrectBooPrisonCell_b4674779-e4ee-4378-94c1-4013dc4e546b, "CorrectWall");
+DB_LOW_MinscHideout_BooPrisonWall((ITEM)S_LOW_MinscHideout_BooPrisonCell_000_80773f37-6ab0-4283-9a8a-ef4e280c0c82, "DummyWall");
+DB_LOW_MinscHideout_BooPrisonWall((ITEM)S_LOW_MinscHideout_BooPrisonCell_001_d2c95d68-c333-4334-abe0-061cecd3d05a, "DummyWall");
+// Debug stuff
+PROC_LOW_MinscHideout_CheckIfWallsAlreadyDestroyed();
+KBSECTION
+//REGION Saving Minsc 
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, _, _)
+THEN
+DB_NOOP(1);
+
+// Set SaveFromAbsolute dialog on Minsc and try to start it automatically
+IF
+DB_KnockedOut(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Minsc_State_SavedFromAbsolute_62e1d5ec-7c7e-70c2-68de-cadc7c7f5f20)
+AND
+DB_Is_InCombat(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _CombatID)
+THEN
+PROC_Minsc_StoneLordDisabled();
+
+PROC
+PROC_Minsc_StoneLordDisabled()
+THEN
+SetFlag((FLAG)LOW_MinscHideout_State_StoneLordDisabled_1a138353-72eb-4442-80bf-d99baf3daa5d);
+DB_Dialogs(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702);
+PROC_Minsc_QueueSaveFromAbsoluteDialog();
+
+PROC
+PROC_Minsc_QueueSaveFromAbsoluteDialog()
+AND
+NOT DB_Is_InCombat(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _)
+THEN
+PROC_Minsc_StartSaveFromAbsoluteDialog();
+
+PROC
+PROC_Minsc_QueueSaveFromAbsoluteDialog()
+AND
+DB_Is_InCombat(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _CombatID)
+THEN
+DB_Minsc_StartDialogAfterCombat(_CombatID);
+
+IF
+SwitchedCombat(_, _OldCombatID, _NewCombatID)
+AND
+DB_Minsc_StartDialogAfterCombat(_OldCombatID)
+THEN
+NOT DB_Minsc_StartDialogAfterCombat(_OldCombatID);
+DB_Minsc_StartDialogAfterCombat(_NewCombatID);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_Minsc_StartDialogAfterCombat(_CombatID)
+THEN
+NOT DB_Minsc_StartDialogAfterCombat(_CombatID);
+PROC_Minsc_StartSaveFromAbsoluteDialog();
+
+PROC
+PROC_Minsc_StartSaveFromAbsoluteDialog()
+AND
+NOT DB_OnlyOnce("Minsc_StartSaveFromAbsoluteDialog")
+AND
+QRY_ORI_Minsc_SaveDialogJaheiraCheck()
+AND
+QRY_GetBestAvatarForCompanion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Avatar)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Avatar, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+AND
+QRY_StartDialog(LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, NULL_00000000-0000-0000-0000-000000000000, _Avatar)
+AND
+QRY_OnlyOnce("Minsc_StartSaveFromAbsoluteDialog")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ORI_Minsc_SaveDialogJaheiraCheck()
+AND
+DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_Defeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_CantMove(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+IsInTrigger(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_LOW_MinscHideout_MeetingSceneDialogTrigger_AddChars_fb8bb0b2-af42-4029-98d0-5fb2e195e086, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Minsc_StartSaveFromAbsoluteDialog()
+AND
+NOT DB_OnlyOnce("Minsc_StartSaveFromAbsoluteDialog")
+AND
+QRY_GetClosestAvailableCharacterTo(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, 0)
+AND
+DB_ClosestAvailableCharacterTo(_Player, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _Dist)
+AND
+_Dist < 20.0
+AND
+QRY_StartDialog(LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, NULL_00000000-0000-0000-0000-000000000000, _Player)
+AND
+QRY_OnlyOnce("Minsc_StartSaveFromAbsoluteDialog")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Minsc_StartSaveFromAbsoluteDialog()
+AND
+QRY_OnlyOnce("Minsc_StartSaveFromAbsoluteDialog")
+THEN
+PROC_Minsc_SaveFromAbsoluteDialogFallback();
+
+// Jaheira tells the player to go help Minsc in case the dialog has not started yet.
+PROC
+PROC_Minsc_SaveFromAbsoluteDialogFallback()
+AND
+DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+PROC_TryStartAD(LOW_MinscHideout_PAD_Jaheira_MinscKnockedOut_076e98ac-1617-3f94-0276-a28c551aed12, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+// Rearrange speakers for knockout dialog with Minsc if not an OM
+QRY
+QRY_SelectCustomDialog((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, (CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+HasActiveStatus(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, "KNOCKED_OUT", 1)
+AND
+NOT DB_OriginDialog(_, LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702)
+THEN
+DB_SelectedDialog(LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, NULL_00000000-0000-0000-0000-000000000000, _Player);
+
+IF
+FlagSet((FLAG)GLO_KnockedOut_Event_Wake_4095904d-ce99-1d77-7dfd-a77f04005032, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Minsc_State_KnockedOutOnce_036e01e6-181d-404b-8fb2-51f9f93ed666);
+
+PROC
+PROC_KnockedOut_Ended((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+AND
+DB_DontRemoveDialogsOnKnockedOut((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+AND
+DB_GlobalFlag((FLAG)ORI_Minsc_State_KnockedOutOnce_036e01e6-181d-404b-8fb2-51f9f93ed666)
+THEN
+NOT DB_DontRemoveDialogsOnKnockedOut((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+NOT DB_PreventKnockedOutPermaDefeated((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+
+// Set origin moment again when Jaheira talks to Minsc 
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702)
+AND
+GetFlag((FLAG)GLO_KnockedOut_Event_Wake_4095904d-ce99-1d77-7dfd-a77f04005032, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, 0)
+THEN
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702, (TAG)REALLY_JAHEIRA_8457eb5f-036c-4143-b6cf-447a9f555c7a, (DIALOGRESOURCE)LOW_Minsc_SaveFromAbsolute_eeb5d970-975f-5f16-80ba-4aa54cb65702);
+
+// Remove DOWNED_DISABLED tag after Minsc is recruited.
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _)
+THEN
+ClearTag((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, (TAG)DOWNED_DISABLED_7095912e-fcb9-41dd-aec3-3cf7803e4b22);
+
+// TODO: Set up detection to see if the players leave knocked out Minsc behind.
+//END_REGION
+
+//REGION Origin moment with Minsc after Roah returned to Guildhall from Abandoned Cistern
+PROC
+PROC_State_Changed(_, "LOW_Guildhall_State", "LOW_Guildhall_State_DuringCoup")
+AND
+DB_LOW_Guildhall_ZhentRepresentative((CHARACTER)S_GOB_Quartermaster_646936f3-8d8d-484e-9361-cd1ed484c615)
+THEN
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)LOW_Guildhall_Roah_ee1c7cf6-bc94-75ba-1859-ecb079f6f4b0, (TAG)REALLY_MINSC_aeb694fc-83fb-452d-819a-b97ba442dc42, (DIALOGRESOURCE)LOW_Guildhall_Roah_OM_Minsc_COM_OOM_4207f162-c56e-4c6a-7bdc-9c01bec8131b, 20);
+
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)LOW_Guildhall_Roah_OM_Minsc_COM_OOM_4207f162-c56e-4c6a-7bdc-9c01bec8131b, _, _)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Origin moment with Minsc after Boss Friol returned to Guildhall from Abandoned Cistern (alternative for Roah)
+PROC
+PROC_State_Changed(_, "LOW_Guildhall_State", "LOW_Guildhall_State_DuringCoup")
+AND
+DB_LOW_Guildhall_ZhentRepresentative((CHARACTER)S_LOW_Guildhall_Zhent_Leader_b7e51fc3-0788-44f2-add7-1714f2b9b6d9)
+THEN
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)LOW_Guildhall_BossFriol_dedccdbd-357a-e3a2-4a88-57eb758fe89a, (TAG)REALLY_MINSC_aeb694fc-83fb-452d-819a-b97ba442dc42, (DIALOGRESOURCE)LOW_Guildhall_BossFriol_OM_Minsc_COM_OOM_0450ca65-21fe-04d9-b50f-71aef887d00a, 20);
+
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)LOW_Guildhall_BossFriol_OM_Minsc_COM_OOM_0450ca65-21fe-04d9-b50f-71aef887d00a, _, _)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Finding Boo
+IF
+FlagSet((FLAG)ORI_Minsc_State_SavingBoo_c0bb9916-a2e0-416a-9117-1724bc5854c4, _, _)
+AND
+DB_LOW_MinscHideout_BooPrisonWall(_Wall, "FirstWall")
+THEN
+SetCanInteract(_Wall, 1);
+TeleportTo(S_GLO_Boo_d49e3b49-a089-4465-b453-28dc79e82bb3, S_LOW_MinscHideout_BooSpawnPoint_2648ed5c-7c37-4bd4-abdf-8b0da53488ff);
+
+IF
+FlagSet((FLAG)ORI_Minsc_State_ReunitedWithBoo_491635de-7395-5fe4-f8ce-be3288707a80, _, _)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Players((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _Player)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player, "GLO_Companion_Minsc_StartRecruitmentDialog")
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)Minsc_Recruitment_630440f5-b71a-8764-94e8-b62544254cff, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _Player)
+THEN
+PROC_LOW_MinscHideout_SetupMinscForRecruitment();
+
+PROC
+PROC_LOW_MinscHideout_SetupMinscForRecruitment()
+THEN
+DB_Dialogs((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, (DIALOGRESOURCE)Minsc_Recruitment_630440f5-b71a-8764-94e8-b62544254cff);
+
+IF
+DialogStarted((DIALOGRESOURCE)Minsc_Recruitment_630440f5-b71a-8764-94e8-b62544254cff, _)
+THEN
+PROC_SetOnStage(S_GLO_Boo_d49e3b49-a089-4465-b453-28dc79e82bb3, 0);
+
+IF
+AttackedBy((ITEM)_Wall, (CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _, _, _, _, _)
+AND
+DB_LOW_MinscHideout_BooPrisonWall(_Wall, _)
+THEN
+Die(_Wall, DEATHTYPE.Explode, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, 0, 0, 10.0);
+
+IF
+DestroyedBy(_Wall, _, _, _)
+AND
+DB_LOW_MinscHideout_BooPrisonWall(_Wall, "CorrectWall")
+THEN
+SetFlag((FLAG)ORI_Minsc_State_BooSaved_86765e52-75f0-4b7a-a346-c55265ec4af9);
+
+PROC
+PROC_LOW_MinscHideout_CheckIfWallsAlreadyDestroyed()
+AND
+DB_LOW_MinscHideout_BooPrisonWall(_Wall, "CorrectWall")
+AND
+DB_Destroyed(_Wall)
+THEN
+SetFlag((FLAG)ORI_Minsc_State_BooSaved_86765e52-75f0-4b7a-a346-c55265ec4af9);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)ORI_Minsc_State_SavedFromAbsolute_62e1d5ec-7c7e-70c2-68de-cadc7c7f5f20)
+THEN
+PROC_RemoveDialog(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+RemoveHarmfulStatuses(S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+SetFlag((FLAG)ORI_Minsc_State_SavingBoo_c0bb9916-a2e0-416a-9117-1724bc5854c4);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

@@ -1,0 +1,39 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION WRD instead of GD Tadpole Choice
+PROC
+PROC_GlobalFlagReactionAfterDialog(END_IllithidOptions_Event_TadpoleGroupDiscussion_55831e5e-9916-4099-a397-37f5e6967d2e, END_IllithidOptions_Assimilation_f909fcc9-a3dc-b91d-e91c-33f0479c55bb, _ID)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)END_IllithidOptions_WRD_LaezelTadpoleChoice_6b4dd906-1126-8569-4910-359baefcfb31, NULL_00000000-0000-0000-0000-000000000000, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+//END_REGION
+
+//REGION WRD if Emperor is betrayed and leaves
+//If the emperor is forced to escape for any reason before playters get the Supreme Tadpole and Raphael will not appear, Laezel IPRD gets queued up
+PROC
+PROC_END_IllithidOptions_TryRaphaelLastChance()
+AND
+NOT QRY_END_IllithidOptions_RaphaelCanAppear()
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)END_IllithidOptions_WRD_LaezelEmperorBetrayed_935a55b7-31ed-b331-cf91-c4a1780ea6a3, (FLAG)NULL_00000000-0000-0000-0000-000000000000,  S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+//If the players fail to obtain the Supreme Tadpole and then get the hammer from Raphael, Laezel IPRD gets queued up
+PROC
+PROC_GlobalFlagReactionAfterDialog(END_IllithidOptions_State_AcceptedRaphaelDeal_c4d409ef-d70e-9934-edf2-d6bd66201c19)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)END_IllithidOptions_WRD_LaezelEmperorBetrayed_935a55b7-31ed-b331-cf91-c4a1780ea6a3, (FLAG)NULL_00000000-0000-0000-0000-000000000000,  S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+//Dialog no longer relevant once Orpheus is freed
+IF
+FlagSet((FLAG)END_IllithidOptions_State_ExitPortalAvailable_b97872a1-59cc-40cd-8963-e06be614adc0, _, _)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)END_IllithidOptions_WRD_LaezelEmperorBetrayed_935a55b7-31ed-b331-cf91-c4a1780ea6a3, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)END_IllithidOptions_WRD_LaezelTadpoleChoice_6b4dd906-1126-8569-4910-359baefcfb31, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3c"

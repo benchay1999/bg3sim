@@ -1,0 +1,33 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+StatusApplied(_Character, "EPI_EPILOGUE_THIEF_CHECKNEARBYTARGET", _, _)
+THEN
+RealtimeObjectTimerLaunch(_Character, "EPI_Epilogue_Thief_SneakingDelay", 6000);
+SetEntityEvent(S_EPI_TerrifiedThief_85d6a92c-dc66-4f26-b6b7-1feb8301fa4c, "EPI_Thief_CaughtSneaking", 1);
+
+IF
+ObjectTimerFinished(_Character, "EPI_Epilogue_Thief_SneakingDelay")
+THEN
+RemoveStatus(_Character, "EPI_EPILOGUE_THIEF_CHECKNEARBYTARGET");
+
+QRY
+QRY_CRIME_BlockRegisterCrime(S_EPI_TerrifiedThief_85d6a92c-dc66-4f26-b6b7-1feb8301fa4c, "Sneaking", _, _, _) 
+AND
+HasActiveStatus(S_EPI_TerrifiedThief_85d6a92c-dc66-4f26-b6b7-1feb8301fa4c, "EPI_EPILOGUE_THIEF_CHECKNEARBYAURA", 1)
+THEN
+DB_NOOP(1);
+
+IF
+DialogStarted((DIALOGRESOURCE)EPI_Epilogue_Minsc_63303e23-2eaa-a2e3-3ff8-dfda0d5a6fd8, _)
+AND
+DB_EPI_Epilogue_PresentNPC(S_EPI_TerrifiedThief_85d6a92c-dc66-4f26-b6b7-1feb8301fa4c, _, _, _, _)
+THEN
+SetFlag((FLAG)EPI_Minsc_ThiefRoamingBehavioursEnabled_52d12a54-2837-47eb-8c06-b96944fc3775);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3c_EPI"

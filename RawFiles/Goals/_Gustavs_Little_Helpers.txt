@@ -1,0 +1,254 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Level unreachable
+
+DB_LevelUnreachable_LevelBlocksLevel("WLD_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("CRE_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("SCL_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("INT_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("BGO_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("CTY_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","TUT_Avernus_C");
+
+DB_LevelUnreachable_LevelBlocksLevel("INT_Main_A","WLD_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("BGO_Main_A","WLD_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("CTY_Main_A","WLD_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","WLD_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","WLD_Main_A");
+
+DB_LevelUnreachable_LevelBlocksLevel("INT_Main_A","CRE_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("BGO_Main_A","CRE_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("CTY_Main_A","CRE_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","CRE_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","CRE_Main_A");
+
+DB_LevelUnreachable_LevelBlocksLevel("INT_Main_A","SCL_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("BGO_Main_A","SCL_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("CTY_Main_A","SCL_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","SCL_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","SCL_Main_A");
+
+DB_LevelUnreachable_LevelBlocksLevel("BGO_Main_A","INT_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("CTY_Main_A","INT_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","INT_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","INT_Main_A");
+
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","BGO_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","BGO_Main_A");
+
+DB_LevelUnreachable_LevelBlocksLevel("END_Main","CTY_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","CTY_Main_A");
+
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","END_Main");
+
+//END_REGION
+
+//REGION Data management
+
+DB_Harvard_Requirement((ITEM)TOOL_GEN_Tower_Bell_A_003_8e6210b3-fa45-4796-9be1-2d2a1c55f784);
+DB_Harvard_Requirement((ITEM)TOOL_GEN_Tower_Bell_A_000_b0c069c6-7173-49f6-84c2-120ca4ffb39b);
+
+//END_REGION
+KBSECTION
+//REGION Level unreachable
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3,_,_)
+THEN
+PROC_LevelBecameUnreachable("WLD_Main_A");
+PROC_LevelBecameUnreachable("CRE_Main_A");
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "BackAtDocks")
+THEN
+PROC_LevelBecameUnreachable("IRN_Main_A");
+
+//END_REGION
+
+//REGION Data management
+
+IF
+TextEvent("harvard")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_Harvard_Spawn((CHARACTER)_Player);
+
+IF
+TextEvent("harvard_enable")
+AND
+DB_Harvard_Requirement(_Requirement)
+THEN
+NOT DB_Harvard_Requirement(_Requirement);
+
+IF
+TextEvent("harvard_enable")
+THEN
+DB_Dead(S_LOW_Elfsong_HarvardWilloughby_8a69560f-3a7a-4e6e-81df-eb77de816197);
+
+IF
+TextEvent("harvard_enable")
+THEN
+PROC_Harvard_CheckRequirement();
+
+IF
+UseFinished(_Player,CONT_Egg_Owlbear_A_000_8410036e-3b67-451c-9e71-71e8687cf04e,1)
+AND
+NOT DB_Harvard_Summoner(_)
+AND
+NOT DB_PartyFollowers(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+NOT DB_Defeated(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+DB_Players(_Player)
+THEN
+PROC_Harvard_Spawn((CHARACTER)_Player);
+
+IF
+UseFinished(_Character,CONT_Egg_Owlbear_A_000_8410036e-3b67-451c-9e71-71e8687cf04e,1)
+AND
+NOT DB_Harvard_Summoner(_)
+AND
+NOT DB_PartyFollowers(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+NOT DB_Defeated(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+NOT DB_Players(_Character)
+AND
+CharacterGetOwner(_Character,_Player)
+AND
+DB_Players(_Player)
+THEN
+PROC_Harvard_Spawn((CHARACTER)_Player);
+
+IF
+UseFinished(_Owner,CONT_Egg_Owlbear_A_000_8410036e-3b67-451c-9e71-71e8687cf04e,1)
+AND
+NOT DB_Harvard_Summoner(_)
+AND
+DB_PartyFollowers(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+NOT DB_Is_InCombat(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,_)
+THEN
+PROC_RemovePartyFollower(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+PlaySoundResource(CONT_Egg_Owlbear_A_000_8410036e-3b67-451c-9e71-71e8687cf04e,FOR_Sheep_Bleats_d9ee2b18-f0cd-8afa-c9aa-820ac5bcea9d);
+PROC_Poof(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+
+PROC
+PROC_Harvard_Spawn((CHARACTER)_Player)
+AND
+DB_Harvard_Summoner(_Player)
+THEN
+NOT DB_Harvard_Summoner(_Player);
+
+PROC
+PROC_Harvard_Spawn((CHARACTER)_Player)
+THEN
+TeleportTo(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,PointTrigger_003_147f570c-123e-45b3-872e-7e725eed65e7,"Harvard_Spawned",0,0,0,1,0);
+PlaySoundResource(CONT_Egg_Owlbear_A_000_8410036e-3b67-451c-9e71-71e8687cf04e,FOR_Sheep_Bleats_d9ee2b18-f0cd-8afa-c9aa-820ac5bcea9d);
+ApplyStatus(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"FEATHER_FALL",3.0,0,NULL_00000000-0000-0000-0000-000000000000);
+DB_Harvard_Summoner(_Player);
+
+IF
+EntityEvent(_Harvard,"Harvard_Spawned")
+THEN
+PROC_Foop(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+
+IF
+StatusRemoved(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"FEATHER_FALL",_,_)
+AND
+DB_Harvard_Summoner(_Player)
+THEN
+NOT DB_Harvard_Summoner(_Player);
+DB_Camp_BlockCamperPosAdjustment(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+AddPartyFollower(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,_Player);
+
+PROC
+PROC_GLO_PostReassignFollowerHook(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e, (CHARACTER)_OldLeader, (CHARACTER)_NewLeader)
+THEN
+NOT DB_Harvard_Summoner(_OldLeader);
+DB_Harvard_Summoner(_NewLeader);
+
+IF
+Fell(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,_)
+AND
+DB_Harvard_Summoner(_)
+AND
+HasAppliedStatus(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"FEATHER_FALL",1)
+THEN
+RemoveStatus(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"FEATHER_FALL",NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+UseFinished(_Character,_Bell,1)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_Harvard_Requirement((ITEM)_Bell)
+THEN
+NOT DB_Harvard_Requirement(_Bell);
+PROC_Harvard_CheckRequirement();
+
+PROC
+PROC_Harvard_CheckRequirement()
+AND
+NOT DB_Harvard_Requirement(_)
+AND
+DB_Dead(S_LOW_Elfsong_HarvardWilloughby_8a69560f-3a7a-4e6e-81df-eb77de816197)
+AND
+NOT DB_Harvard_Enable(1)
+THEN
+DB_Harvard_Enable(1);
+
+IF
+DB_Harvard_Enable(1)
+AND
+DB_CurrentLevel("BGO_Main_A")
+THEN
+NOT DB_Harvard_Enable(1);
+PROC_Foop(CONT_GEN_Nest_Small_A_000_14b05f3d-6f08-46ad-8ed8-c1d82aed42f0);
+PROC_Foop(CONT_Egg_Owlbear_A_000_8410036e-3b67-451c-9e71-71e8687cf04e);
+
+IF
+EnteredCombat(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,_)
+THEN
+ApplyStatus(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"BURNING_TRIAL",-1.0,0,UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+
+IF
+TurnStarted(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+DB_Is_InCombat(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,_CombatId)
+AND
+DB_CMB_RoundCounter(_CombatId,_CurrentRound)
+AND
+_CurrentRound > 1
+AND
+Random(28,_Random)
+AND
+IntegerSum(_CurrentRound,_Random,_Sum)
+AND
+_Sum >= 30
+THEN
+CreateExplosion(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"Projectile_Fireball",1,UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+Die(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,DEATHTYPE.Disintegrate,UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,1,0,0.0);
+
+IF
+DB_PermaDefeated(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+DB_PartyMembers(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e)
+AND
+DB_ActiveLevel(_)
+THEN
+PROC_RemovePartyFollower(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+
+IF
+LeftCombat(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,_)
+THEN
+RemoveStatus(UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e,"BURNING_TRIAL",UNI_WYR_MysterySpawn_DONOTUSE_000_913781e6-407b-432b-825a-bd2ddee6963e);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

@@ -1,0 +1,738 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Elder Brain ADs
+DB_COL_ElderBrainADs_RelevantTriggers((TRIGGER)S_COL_ElderBrainADs_Upper_Area_Box_9d1b8b96-2a20-406c-b2f0-f1a8851a122a);
+DB_COL_ElderBrainADs_RelevantTriggers((TRIGGER)S_COL_ElderBrainADs_Nearby_Area_Box_41951dee-a34d-4d0a-9895-82e9355058c6);
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_COL_ElderBrainADs_Area_Corridor_Trigger_8ff36d9b-d3f0-426f-9423-8fb6f72fcfd1);
+
+DB_COL_ElderBrainADs_RapidSpeakers((GUIDSTRING)S_COL_ElderBrainADs_RapidSpeaker1_73e3aed3-4188-4fd9-83ea-35599970a579,(DIALOGRESOURCE)COL_ElderBrain_AD_Rapid01_5dd6feba-dfeb-9cb4-8966-64e8712a23ca);
+DB_COL_ElderBrainADs_RapidSpeakers((GUIDSTRING)S_COL_ElderBrainADs_RapidSpeaker2_d9b52ba9-ec8c-47b5-ae93-3d7952745b0c,(DIALOGRESOURCE)COL_ElderBrain_AD_Rapid02_56f7b5bc-a582-6b3c-27dd-cde0363a085d);
+DB_COL_ElderBrainADs_RapidSpeakers((GUIDSTRING)S_COL_ElderBrainADs_RapidSpeaker3_6ba9c33e-b2c7-452b-9673-bb77238a8b47,(DIALOGRESOURCE)COL_ElderBrain_AD_Rapid03_9d663b3d-c1b1-e992-457d-d3cdc18f6c7e);
+DB_COL_ElderBrainADs_RapidSpeakers((GUIDSTRING)S_COL_ElderBrainADs_RapidSpeaker4_5ea4bd09-1720-4d07-9f1a-6b0ea0d574ad,(DIALOGRESOURCE)COL_ElderBrain_AD_Rapid04_11159e37-5a1d-a9e6-6c93-7702d5024ecf);
+DB_COL_ElderBrainADs_RapidSpeakers((GUIDSTRING)S_COL_ElderBrainADs_RapidSpeaker5_b9abe21f-65ec-434f-a772-00a477fd2296,(DIALOGRESOURCE)COL_ElderBrain_AD_Rapid05_b598497c-1842-15b7-35d5-17fdc8b4880d);
+DB_COL_ElderBrainADs_RapidSpeakers((GUIDSTRING)S_COL_ElderBrainADs_RapidSpeaker6_908287b7-4eff-4fbf-a503-789e22fb3a1a,(DIALOGRESOURCE)COL_ElderBrain_AD_Rapid06_726230e8-56a7-1c62-7d78-ed91d841d0bb);
+KBSECTION
+//REGION Goal complete
+
+//ADs stop when Elder Brain departs
+PROC
+PROC_COL_KethericShowdown_ChosenThree_CleanUp()
+AND
+DB_COL_ElderBrainADs_PlayersInArea(_Player,_Trigger)
+THEN
+PROC_COL_ElderBrainADs_RemoveAreaPlayer(_Player,_Trigger);
+
+PROC
+PROC_COL_KethericShowdown_ChosenThree_CleanUp()
+AND
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+PROC
+PROC_COL_KethericShowdown_ChosenThree_CleanUp()
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_COL_ElderBrainADs_Area_Corridor_Trigger_8ff36d9b-d3f0-426f-9423-8fb6f72fcfd1);
+PROC_COL_ElderBrainADs_ClearSelectedPlayer();
+TimerCancel("COL_ElderBrain_Gossip");
+GoalCompleted;
+
+//END_REGION
+
+//REGION Debug
+
+IF
+TextEvent("EBAD_Fast")
+AND
+NOT DB_COL_ElderBrainADs_DEBUG_FastIntervals(1)
+THEN
+DB_COL_ElderBrainADs_DEBUG_FastIntervals(1);
+PROC_COL_ElderBrainADs_StartTimer();
+
+IF
+TextEvent("EBAD_Default")
+AND
+DB_COL_ElderBrainADs_DEBUG_FastIntervals(1)
+THEN
+NOT DB_COL_ElderBrainADs_DEBUG_FastIntervals(1);
+PROC_COL_ElderBrainADs_StartTimer();
+
+IF
+TextEvent("EBAD_Now")
+THEN
+TimerCancel("COL_ElderBrain_Gossip");
+TimerLaunch("COL_ElderBrain_Gossip",500);
+
+IF
+TextEvent("EBAD_RapidMindmeld")
+AND
+NOT DB_GlobalFlag((FLAG)COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d);
+
+IF
+TextEvent("EBAD_RapidMindmeld")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_COL_ElderBrainADs_StartRapidMindmeld((CHARACTER)_Player);
+
+/*PROC
+PROC_COL_ElderBrainADs_StartTimer()
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player,"EB_AD Timer started!");
+
+PROC
+PROC_COL_ElderBrainADs_CancelTimer()
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player,"EB_AD Timer cancelled");
+
+IF
+ObjectTimerFinished(_Player,"COL_ElderBrainADs_Unblock")
+THEN
+DebugText(_Player,"EB_AD Unblocked!");*/
+
+//END_REGION
+
+//REGION Timer logic + AD trigger
+
+//Cue timer
+PROC
+PROC_COL_ElderBrainADs_StartTimer()
+AND
+NOT DB_COL_ElderBrainADs_DEBUG_FastIntervals(1)
+AND
+NOT DB_GlobalFlag((FLAG)COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d)
+AND
+Random(15000,_Rand) //Max interval added to minimum time, 15s (15000)
+AND
+IntegerSum(_Rand,40000,_Duration)//Minimum interval, 40s (40000)
+THEN
+TimerCancel("COL_ElderBrain_Gossip");
+TimerLaunch("COL_ElderBrain_Gossip",_Duration);
+
+//Cue timer
+PROC
+PROC_COL_ElderBrainADs_StartTimer()
+AND
+NOT DB_COL_ElderBrainADs_DEBUG_FastIntervals(1)
+AND
+DB_GlobalFlag((FLAG)COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d)
+AND
+Random(9000,_Rand) //Max interval added to minimum time, 9s (9000)
+AND
+IntegerSum(_Rand,30000,_Duration)//Minimum interval, 30s (30000)
+THEN
+TimerCancel("COL_ElderBrain_Gossip");
+TimerLaunch("COL_ElderBrain_Gossip",_Duration);
+
+PROC
+PROC_COL_ElderBrainADs_StartTimer()
+AND
+DB_COL_ElderBrainADs_DEBUG_FastIntervals(1)
+THEN
+TimerCancel("COL_ElderBrain_Gossip");
+TimerLaunch("COL_ElderBrain_Gossip",10000);
+
+PROC
+PROC_COL_ElderBrainADs_StartTimer()
+AND
+NOT DB_COL_ElderBrainADs_TimerRunning(1)
+THEN
+DB_COL_ElderBrainADs_TimerRunning(1);
+
+//Cancel timer
+PROC
+PROC_COL_ElderBrainADs_CancelTimer()
+AND
+DB_COL_ElderBrainADs_TimerRunning(1)
+THEN
+TimerCancel("COL_ElderBrain_Gossip");
+NOT DB_COL_ElderBrainADs_TimerRunning(1);
+
+//Select random player/flag and play Elder Brain AD
+IF
+TimerFinished("COL_ElderBrain_Gossip")
+AND
+NOT DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_) //checks if no one is in an EB AD right now
+AND
+QRY_COL_ElderBrainADs_SelectRandomPlayer()
+AND
+DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_Player)
+AND
+NOT QRY_COL_ElderBrainADs_RequestRapidMindmeld((CHARACTER)_Player)
+AND
+NOT QRY_StartDialog_Fixed(COL_ElderBrain_AD_Whispers_87348b85-0f88-9611-5084-f5c3cebcd0d7,S_COL_ElderBrainADs_Speaker1_Absolute_2ea4f360-3b90-4286-b183-820f9866d498,S_COL_ElderBrainADs_Speaker2_Illithid_217ad1f3-a1d7-46d1-b169-f8372f54dcf6,_Player)
+THEN
+PROC_COL_ElderBrainADs_ClearSelectedPlayer();
+
+IF
+AutomatedDialogStarted((DIALOGRESOURCE)COL_ElderBrain_AD_Whispers_87348b85-0f88-9611-5084-f5c3cebcd0d7,_)
+AND
+DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_Player)
+THEN
+PROC_LoopEffect((EFFECTRESOURCE)VFX_Script_COL_Elderbrain_Mindmeld_HeadFX_01_b04868d7-93c5-63a4-267e-cc5e9a58c2ae,_Player,"COL_ElderBrainAD_Psionic","SCL_Main_A","Dummy_HeadFX",1.0);
+PROC_COL_ElderBrainADs_TeleportSpeaker(S_COL_ElderBrainADs_Speaker1_Absolute_2ea4f360-3b90-4286-b183-820f9866d498,_Player);
+PROC_COL_ElderBrainADs_TeleportSpeaker(S_COL_ElderBrainADs_Speaker2_Illithid_217ad1f3-a1d7-46d1-b169-f8372f54dcf6,_Player);
+
+QRY
+QRY_COL_ElderBrainADs_RequestRapidMindmeld((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d)
+AND
+DB_InRegion(_Player,S_COL_ElderBrainADs_Area_Corridor_Trigger_8ff36d9b-d3f0-426f-9423-8fb6f72fcfd1)
+THEN
+PROC_COL_ElderBrainADs_StartRapidMindmeld((CHARACTER)_Player);
+
+IF
+TimerFinished("COL_ElderBrain_Gossip")
+THEN
+PROC_COL_ElderBrainADs_StartTimer();
+
+IF
+AutomatedDialogEnded(COL_ElderBrain_AD_Whispers_87348b85-0f88-9611-5084-f5c3cebcd0d7,_)
+THEN
+PROC_COL_ElderBrainADs_ClearSelectedPlayer();
+
+IF
+AutomatedDialogRequestFailed(COL_ElderBrain_AD_Whispers_87348b85-0f88-9611-5084-f5c3cebcd0d7,_)
+THEN
+PROC_COL_ElderBrainADs_ClearSelectedPlayer();
+
+//END_REGION
+
+//REGION Rapid mindmeld
+
+IF
+DB_COL_ElderBrainADs_RapidSpeakers(_Speaker,_)
+THEN
+DB_NOOP(1);
+//prevents DB never checked warning
+
+PROC
+PROC_COL_ElderBrainADs_StartRapidMindmeld((CHARACTER)_Player)
+AND
+NOT DB_COL_ElderBrainADs_RapidMindmeld(_Player)
+THEN
+DB_COL_ElderBrainADs_RapidMindmeld(_Player);
+RealtimeObjectTimerLaunch(_Player,"COL_ElderBrain_RapidAD",50);
+RealtimeObjectTimerLaunch(_Player,"COL_ElderBrain_StopRapidAD",7000);
+//ApplyStatus(_Player,"END_NETHERBRAIN_SLOW",7.0,0,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+ObjectTimerFinished(_Player,"COL_ElderBrain_RapidAD")
+AND
+DB_COL_ElderBrainADs_RapidMindmeld((CHARACTER)_Player)
+THEN
+RealtimeObjectTimerLaunch(_Player,"COL_ElderBrain_RapidAD",1000);
+PROC_COL_ElderBrainADs_RapidMindmeld_DoAD((CHARACTER)_Player);
+
+PROC
+PROC_COL_ElderBrainADs_RapidMindmeld_DoAD((CHARACTER)_)
+AND
+NOT DB_COL_ElderBrainADs_RapidMindmeld_Index(_)
+THEN
+DB_COL_ElderBrainADs_RapidMindmeld_Index(1);
+
+PROC
+PROC_COL_ElderBrainADs_RapidMindmeld_DoAD((CHARACTER)_Player)
+AND
+DB_COL_ElderBrainADs_RapidMindmeld_Index(_Index)
+AND
+SysFactAtIndex("DB_COL_ElderBrainADs_RapidSpeakers",2,_Index,"DB_COL_ElderBrainADs_SelectedSpeaker")
+AND
+DB_COL_ElderBrainADs_SelectedSpeaker((GUIDSTRING)_Speaker,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_COL_ElderBrainADs_TeleportSpeaker(_Speaker,_Player,2.5,-0.5,0.5,1.0);
+PROC_TryStartAD(_Dialog,_Speaker);
+NOT DB_COL_ElderBrainADs_SelectedSpeaker((GUIDSTRING)_Speaker,(DIALOGRESOURCE)_Dialog);
+
+PROC
+PROC_COL_ElderBrainADs_RapidMindmeld_DoAD((CHARACTER)_)
+AND
+DB_COL_ElderBrainADs_RapidMindmeld_Index(_Index)
+AND
+IntegerSum(_Index,1,_IncrIndex)
+AND
+SysCount("DB_COL_ElderBrainADs_RapidSpeakers",2,_Count)
+AND
+IntegerSum(_Count,1,_Modulo)
+AND
+IntegerModulo(_IncrIndex,_Modulo,_NewIndex) //if we only want one cycle of speakers, remove the modulo logic
+THEN 
+NOT DB_COL_ElderBrainADs_RapidMindmeld_Index(_Index);
+DB_COL_ElderBrainADs_RapidMindmeld_Index(_NewIndex);
+
+IF
+ObjectTimerFinished(_Player,"COL_ElderBrain_StopRapidAD")
+AND
+DB_COL_ElderBrainADs_RapidMindmeld((CHARACTER)_Player)
+THEN
+NOT DB_COL_ElderBrainADs_RapidMindmeld((CHARACTER)_Player);
+PROC_COL_ElderBrainADs_ClearSelectedPlayer();
+//RemoveStatus(_Player,"END_NETHERBRAIN_SLOW",NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+ObjectTimerFinished(_Player,"COL_ElderBrain_StopRapidAD")
+AND
+DB_COL_ElderBrainADs_RapidMindmeld_Index(_Index)
+THEN
+NOT DB_COL_ElderBrainADs_RapidMindmeld_Index(_Index);
+
+//END_REGION
+
+//REGION Area checks
+
+IF
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+//Entered relevant trigger (and not in Oubliette)
+IF
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+AND
+DB_InRegion(_Player, _Trigger)
+AND
+NOT DB_InRegion(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+THEN
+PROC_COL_ElderBrainADs_AddAreaPlayer(_Player, _Trigger);
+
+//Left relevant trigger
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _Trigger)
+AND
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+AND
+NOT DB_InRegion(_Player, _Trigger)
+THEN
+PROC_COL_ElderBrainADs_RemoveAreaPlayer(_Player, _Trigger);
+
+//Not in area if entered Oubliette
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _Trigger)
+AND
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+AND
+DB_InRegion(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+THEN
+PROC_COL_ElderBrainADs_RemoveAreaPlayer(_Player, _Trigger);
+
+//Remove player from area trigger
+PROC
+PROC_COL_ElderBrainADs_RemoveAreaPlayer((CHARACTER)_Player,(TRIGGER)_Trigger)
+AND
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _Trigger)
+AND
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+THEN
+NOT DB_COL_ElderBrainADs_PlayersInArea(_Player, _Trigger);
+
+//Cancel timer if last player removed
+PROC
+PROC_COL_ElderBrainADs_RemoveAreaPlayer((CHARACTER)_,(TRIGGER)_)
+AND
+NOT DB_COL_ElderBrainADs_PlayersInArea(_,_)
+THEN
+PROC_COL_ElderBrainADs_CancelTimer();
+
+PROC
+PROC_COL_ElderBrainADs_AddAreaPlayer((CHARACTER)_Player,(TRIGGER)_Trigger)
+AND
+NOT DB_COL_ElderBrainADs_PlayersInArea(_Player,_Trigger)
+AND
+DB_COL_ElderBrainADs_RelevantTriggers(_Trigger)
+THEN
+DB_COL_ElderBrainADs_PlayersInArea(_Player,_Trigger);
+
+IF
+EnteredTrigger(_Player,(TRIGGER)S_COL_ElderBrainADs_Nearby_Area_Box_41951dee-a34d-4d0a-9895-82e9355058c6)
+THEN
+SetFlag(COL_ElderBrainADs_State_InArea_Nearby_02e82c9a-fbb7-38d1-e09c-871b398d6c35, _Player);
+
+IF
+LeftTrigger(_Player,(TRIGGER)S_COL_ElderBrainADs_Nearby_Area_Box_41951dee-a34d-4d0a-9895-82e9355058c6)
+THEN
+ClearFlag(COL_ElderBrainADs_State_InArea_Nearby_02e82c9a-fbb7-38d1-e09c-871b398d6c35, _Player);
+
+//END_REGION
+
+//REGION Blocked checks
+
+//Blocked if in dialog
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+DB_DialogPlayers(_,_Player,_)
+THEN
+DB_COL_ElderBrainADs_Blocked((CHARACTER)_Player);
+
+//Blocked if in combat
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+ DB_Is_InCombat(_Player,_)
+THEN
+DB_COL_ElderBrainADs_Blocked((CHARACTER)_Player);
+
+//Blocked if in puzzle
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+DB_InRegion(_Player, S_COL_Vault_PuzzleBox3_caf88561-fad9-41b6-8963-4c612578695c)
+THEN
+DB_COL_ElderBrainADs_Blocked((CHARACTER)_Player);
+
+//Blocked if near Zevlor pod ADs
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+DB_InRegion(_Player, S_COL_TadpolingCentre_ZevlorAD_BlockElderBrainAD_Box_2767eac5-cefb-413a-987c-53fbe0bad018)
+THEN
+DB_COL_ElderBrainADs_Blocked((CHARACTER)_Player);
+
+//Blocked if in cage
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+DB_COL_NecromancerLab_InCage(_Player,_)
+THEN
+DB_COL_ElderBrainADs_Blocked((CHARACTER)_Player);
+
+//Unblock check timer
+//Necessary because of an Osiris AND NOT bug
+IF
+DB_COL_ElderBrainADs_Blocked(_)
+AND
+NOT DB_COL_ElderBrainADs_CheckUnblockedTimer(1)
+THEN
+TimerCancel("COL_ElderBrainADs_CheckUnblocked");
+TimerLaunch("COL_ElderBrainADs_CheckUnblocked",2000);
+DB_COL_ElderBrainADs_CheckUnblockedTimer(1);
+
+IF
+DB_COL_ElderBrainADs_CheckUnblockedTimer(1)
+AND
+NOT DB_COL_ElderBrainADs_Blocked(_)
+THEN
+TimerCancel("COL_ElderBrainADs_CheckUnblocked");
+NOT DB_COL_ElderBrainADs_CheckUnblockedTimer(1);
+
+IF
+TimerFinished("COL_ElderBrainADs_CheckUnblocked")
+THEN
+TimerLaunch("COL_ElderBrainADs_CheckUnblocked",8000);
+
+//Unblocked if not in dialog or combat or in puzzle or near Zevlor pod or in cage
+IF
+TimerFinished("COL_ElderBrainADs_CheckUnblocked")
+AND
+DB_COL_ElderBrainADs_Blocked(_Player)
+AND
+NOT DB_Is_InCombat(_Player, _)
+AND
+NOT DB_DialogPlayers(_,_Player,_)
+AND
+NOT DB_InRegion(_Player, S_COL_Vault_PuzzleBox3_caf88561-fad9-41b6-8963-4c612578695c)
+AND
+NOT DB_InRegion(_Player, S_COL_TadpolingCentre_ZevlorAD_BlockElderBrainAD_Box_2767eac5-cefb-413a-987c-53fbe0bad018)
+AND
+NOT DB_COL_NecromancerLab_InCage(_Player,_)
+THEN
+ObjectTimerCancel(_Player,"COL_ElderBrainADs_Unblock");
+ObjectTimerLaunch(_Player,"COL_ElderBrainADs_Unblock",6000);
+
+//Remove from blocked if no longer in area
+IF
+DB_COL_ElderBrainADs_Blocked(_Player)
+AND
+NOT DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+THEN
+NOT DB_COL_ElderBrainADs_Blocked(_Player);
+
+//Cancel unblock timer
+IF
+DB_COL_ElderBrainADs_Blocked(_Player)
+THEN
+ObjectTimerCancel(_Player,"COL_ElderBrainADs_Unblock");
+
+IF
+ObjectTimerFinished(_Player,"COL_ElderBrainADs_Unblock")
+AND
+DB_COL_ElderBrainADs_Blocked((CHARACTER)_Player)
+THEN
+NOT DB_COL_ElderBrainADs_Blocked(_Player);
+
+//Cancel timer if no one is available
+IF
+DB_COL_ElderBrainADs_Blocked(_)
+AND
+NOT QRY_COL_ElderBrainADs_AnyoneAvailable()
+THEN
+PROC_COL_ElderBrainADs_CancelTimer();
+
+QRY
+QRY_COL_ElderBrainADs_AnyoneAvailable()
+AND
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+NOT DB_COL_ElderBrainADs_Blocked(_)
+THEN
+DB_NOOP(1);
+
+//Cue timer again if anyone is unblocked
+IF
+DB_COL_ElderBrainADs_PlayersInArea(_Player, _)
+AND
+NOT DB_COL_ElderBrainADs_Blocked(_)
+AND
+NOT DB_COL_ElderBrainADs_TimerRunning(1)
+THEN
+PROC_COL_ElderBrainADs_StartTimer();
+
+//END_REGION
+
+//REGION Select player and set area flag
+
+//Define player options database
+QRY
+QRY_COL_ElderBrainADs_SelectRandomPlayer()
+AND
+DB_COL_ElderBrainADs_PlayersInArea(_Player,_)
+AND
+NOT DB_COL_ElderBrainADs_PlayerOptions(_Player)
+AND
+NOT DB_COL_ElderBrainADs_Blocked(_Player)
+AND
+IsControlled(_Player,1)
+THEN
+DB_COL_ElderBrainADs_PlayerOptions(_Player);
+
+//Select random from options
+QRY
+QRY_COL_ElderBrainADs_SelectRandomPlayer()
+AND
+QRY_GetRandom("DB_COL_ElderBrainADs_PlayerOptions",1,"DB_QRYRTN_COL_ElderBrainADs_RandomSelection")
+AND
+DB_QRYRTN_COL_ElderBrainADs_RandomSelection((CHARACTER)_Player)
+THEN
+PROC_COL_ElderBrainADs_SetSelectedPlayer(_Player);
+NOT DB_QRYRTN_COL_ElderBrainADs_RandomSelection((CHARACTER)_Player);
+
+//Clear player options database after selection
+QRY
+QRY_COL_ElderBrainADs_SelectRandomPlayer()
+AND
+DB_COL_ElderBrainADs_PlayerOptions(_Player)
+THEN
+NOT DB_COL_ElderBrainADs_PlayerOptions(_Player);
+
+//Set selected player
+PROC
+PROC_COL_ElderBrainADs_SetSelectedPlayer((CHARACTER)_)
+THEN
+PROC_COL_ElderBrainADs_ClearSelectedPlayer();
+
+PROC
+PROC_COL_ElderBrainADs_SetSelectedPlayer((CHARACTER)_Player)
+THEN
+DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_Player);
+
+PROC
+PROC_COL_ElderBrainADs_ClearSelectedPlayer()
+AND
+DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_Player)
+THEN
+NOT DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_Player);
+PROC_StopLoopEffect(_Player,"COL_ElderBrainAD_Psionic");
+
+//END_REGION
+
+//REGION Speaker availability
+
+QRY
+QRY_SpeakerIsAvailable(S_COL_ElderBrainADs_Speaker1_Absolute_2ea4f360-3b90-4286-b183-820f9866d498)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable(S_COL_ElderBrainADs_Speaker2_Illithid_217ad1f3-a1d7-46d1-b169-f8372f54dcf6)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInDialogRange(S_COL_ElderBrainADs_Speaker1_Absolute_2ea4f360-3b90-4286-b183-820f9866d498,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInDialogRange(S_COL_ElderBrainADs_Speaker2_Illithid_217ad1f3-a1d7-46d1-b169-f8372f54dcf6,_)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Teleport speakers
+
+IF
+FlagSet(COL_ElderBrainADs_Event_TeleportSpeaker_92c47500-d0e8-3c7f-3319-f35165d0eae3,(GUIDSTRING)_Speaker,_DialogId)
+AND
+DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer(_Player)
+THEN
+PROC_COL_ElderBrainADs_TeleportSpeaker(_Speaker,_Player);
+ClearFlag(COL_ElderBrainADs_Event_TeleportSpeaker_92c47500-d0e8-3c7f-3319-f35165d0eae3,_Speaker,_DialogId);
+
+PROC
+PROC_COL_ElderBrainADs_TeleportSpeaker((GUIDSTRING)_Speaker, (GUIDSTRING)_Player)
+THEN
+PROC_COL_ElderBrainADs_TeleportSpeaker((GUIDSTRING)_Speaker, (GUIDSTRING)_Player, 4.0, 2.0, 1.0, 1.0);
+
+PROC
+PROC_COL_ElderBrainADs_TeleportSpeaker((GUIDSTRING)_Speaker, (GUIDSTRING)_Player, (REAL)_OffsetXZ, (REAL) _OffsetY, (REAL)_RangeXZ, (REAL) _RangeY)
+AND
+Random(100, _RandomX)
+AND
+Random(100, _RandomZ)
+AND
+Random(100, _RandomY)
+AND
+IntegerToReal(_RandomX, _RealX)
+AND
+IntegerToReal(_RandomZ, _RealZ)
+AND
+IntegerToReal(_RandomY, _RealY)
+AND
+RealDivide(_RealX, 100.0, _NormX)
+AND
+RealDivide(_RealZ, 100.0, _NormZ)
+AND
+RealDivide(_RealY, 100.0, _NormY)
+AND
+Random(4,_Direction)
+AND
+QRY_COL_ElderBrainADs_DetermineRandomOffset(_Direction,_NormX,_NormZ,_OffsetXZ,_RangeXZ)
+AND
+DB_QRYRTN_COL_ElderBrainADs_RandomOffset(_DistDirX,_DistDirZ)
+AND
+RealProduct(_NormY, _RangeY, _ScaledY) //Distance range Y
+AND
+RealSum(_ScaledY,_OffsetY,_DistY) //Offset Y
+AND
+GetPosition(_Player, _X, _Y, _Z)
+AND
+RealSum(_X, _DistDirX, _NewX)
+AND
+RealSum(_Z, _DistDirZ, _NewZ)
+AND
+RealSum(_Y, _DistY, _NewY)
+THEN
+TeleportToPosition(_Speaker, _NewX, _NewY, _NewZ, "", 0,0,0,0,0);
+NOT DB_QRYRTN_COL_ElderBrainADs_RandomOffset(_DistDirX,_DistDirZ);
+
+//Clean up
+PROC
+PROC_COL_ElderBrainADs_TeleportSpeaker((GUIDSTRING)_, (GUIDSTRING)_, (REAL)_, (REAL) _, (REAL)_, (REAL) _)
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_Value1)
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_Value2)
+THEN
+NOT DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_Value1);
+NOT DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_Value2);
+
+//Determine random offset according to four directions
+QRY
+QRY_COL_ElderBrainADs_DetermineRandomOffset(0,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_COL_ElderBrainADs_CalcWithOffset(_NormX,_OffsetXZ,_RangeXZ,1.0) //positive offset X
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_X)
+AND
+QRY_COL_ElderBrainADs_CalcWithoutOffset(_NormZ,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 Z
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_Z)
+THEN
+DB_QRYRTN_COL_ElderBrainADs_RandomOffset(_X,_Z);
+
+QRY
+QRY_COL_ElderBrainADs_DetermineRandomOffset(1,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_COL_ElderBrainADs_CalcWithOffset(_NormX,_OffsetXZ,_RangeXZ,-1.0) //negative offset X
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_X)
+AND
+QRY_COL_ElderBrainADs_CalcWithoutOffset(_NormZ,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 Z
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_Z)
+THEN
+DB_QRYRTN_COL_ElderBrainADs_RandomOffset(_X,_Z);
+
+QRY
+QRY_COL_ElderBrainADs_DetermineRandomOffset(2,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_COL_ElderBrainADs_CalcWithoutOffset(_NormX,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 X
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_X)
+AND
+QRY_COL_ElderBrainADs_CalcWithOffset(_NormZ,_OffsetXZ,_RangeXZ,1.0) //positive offset Z
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_Z)
+THEN
+DB_QRYRTN_COL_ElderBrainADs_RandomOffset(_X,_Z);
+
+QRY
+QRY_COL_ElderBrainADs_DetermineRandomOffset(3,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_COL_ElderBrainADs_CalcWithoutOffset(_NormX,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 X
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_X)
+AND
+QRY_COL_ElderBrainADs_CalcWithOffset(_NormZ,_OffsetXZ,_RangeXZ,-1.0) //negative offset Z
+AND
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_Z)
+THEN
+DB_QRYRTN_COL_ElderBrainADs_RandomOffset(_X,_Z);
+
+//Calculations with offset (-/+offset to -/+maxrange)
+QRY
+QRY_COL_ElderBrainADs_CalcWithOffset((REAL)_Random,(REAL)_Offset,(REAL)_Range,(REAL)_Direction)
+AND
+RealProduct(_Random,_Range,_Scaled) //Random varies from 0.0 to 1.0, Scaled varies from 0 to Range
+AND
+RealSum(_Scaled,_Offset,_ScaledOffset) //ScaledOffset varies from Offset to MaxRange(=Offset+Direction)
+AND
+RealProduct(_ScaledOffset,_Direction,_Value) //Value varies from -MaxRange to -Offset and +Offset to +MaxRange
+THEN
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithOffset(_Value);
+
+//Calculations without offset (-maxrange to +maxrange)
+QRY
+QRY_COL_ElderBrainADs_CalcWithoutOffset((REAL)_Random,(REAL)_Offset,(REAL)_Range)
+AND
+RealSum(_Offset,_Range,_MaxRange)
+AND
+RealSubtract(_Random,0.5,_RandomSub) //Random varies from 0.0 to 1.0, RandomSub varies from -0.5 to 0.5
+AND
+RealProduct(_RandomSub,2.0,_RandomNorm) //RandomNorm varies from -1.0 to 1.0
+AND
+RealProduct(_RandomNorm,_MaxRange,_Value) //Value varies from -MaxRange to +MaxRange
+THEN
+DB_QRY_RTN_COL_ElderBrainADS_CalculatedWithoutOffset(_Value);
+
+//END_REGION
+EXITSECTION
+SysClear("DB_COL_ElderBrainADs_RelevantTriggers",1);
+SysClear("DB_COL_ElderBrainADs_PlayersInArea",2);
+SysClear("DB_COL_ElderBrainADs_RapidSpeakers",2);
+SysClear("DB_QRYRTN_COL_ElderBrainADs_SelectedPlayer",1);
+SysClear("DB_COL_ElderBrainADs_Blocked",1);
+SysClear("DB_COL_ElderBrainADs_TimerRunning",1);
+TimerCancel("COL_ElderBrainADs_CheckUnblocked");
+ENDEXITSECTION
+ParentTargetEdge "Act2"

@@ -1,0 +1,285 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForParty((TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da);
+PROC_TriggerRegisterForParty((TRIGGER)S_LOW_DjinniTrap_AntagonistDialogTrigger_d1c4f80d-c18c-4b28-b703-2386bded5963);
+
+TeleportTo(S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,S_LOW_DjinniTrap_Teleport_d94445c6-1fea-4f0c-8172-a034f87fbf3a);
+DB_LOW_DjinniTrapVictim(S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c);
+PROC_Foop(S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_DjinniTrap_State_CombatWithAntagonist_b04d7607-f1c8-41b8-aec3-015a85eefe4e,(DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_DjinniTrap_State_PacifiedAntagonist_562db724-1cf4-4838-9ce9-a5cfc2ef8cfd,(DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_DjinniTrap_State_CombatWithAntagonist_b04d7607-f1c8-41b8-aec3-015a85eefe4e,(DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_Interrupted_7c49c9e9-ee28-5d64-0d82-d3573998330e);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_DjinniTrap_State_PacifiedAntagonist_562db724-1cf4-4838-9ce9-a5cfc2ef8cfd,(DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_Interrupted_7c49c9e9-ee28-5d64-0d82-d3573998330e);
+
+DB_BlockedWaypointZone((TRIGGER)S_LOW_DjinniTrap_BlockedWaypointZone_Trigger_3533eeda-f2da-4bb5-a98d-b9ec34ff3967);
+DB_DangerZone((TRIGGER)S_LOW_DjinniTrap_BlockedWaypointZone_Trigger_3533eeda-f2da-4bb5-a98d-b9ec34ff3967,"LOW_DjinniTrap");
+
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_InsideLamp_abc3b821-e3f3-312d-9d1e-87d16c1ffad8);
+DB_DialogMoneyTransfer(1,(DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37,1000);
+KBSECTION
+//REGION Interaction with the djinni lamp
+PROC
+PROC_BlockMoveOfItem(_Character,(ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e)
+THEN
+DB_CustomMoveItemResponse(_Character, (ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e, 0);
+PROC_LOW_DjinniTrapTeleport(_Character);
+
+PROC
+PROC_BlockPickupOfItem(_Character,(ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e)
+THEN
+DB_CustomPickupItemResponse(_Character, (ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e, 0);
+PROC_LOW_DjinniTrapTeleport(_Character);
+
+PROC
+PROC_BlockUseOfItem(_Character,(ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e)
+THEN
+DB_CustomUseItemResponse(_Character, (ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e, 0);
+PROC_LOW_DjinniTrapTeleport(_Character);
+
+PROC
+PROC_LOW_DjinniTrapTeleport((CHARACTER)_Character)
+AND
+DB_DialogNPCs(_DialogInst,S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,_)
+THEN
+PROC_ForceStopDialog(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e);
+
+PROC
+PROC_LOW_DjinniTrapTeleport((CHARACTER)_Character)
+AND
+DB_LOW_DjinniTrapVictim(_Victim)
+AND
+GetPosition(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,_X,_Y,_Z)
+THEN
+PlayEffect(_Character,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+TeleportTo(_Character,S_LOW_DjinniTrap_Teleport_d94445c6-1fea-4f0c-8172-a034f87fbf3a,"LOW_DjinnitTrap_VictimTeleportedInsideTrap",0,0,0,1,1);
+ScatterAt((ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,_X,_Y,_Z);
+
+IF
+EntityEvent(_Character,"LOW_DjinnitTrap_VictimTeleportedInsideTrap")
+THEN
+PlayEffect(_Character,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+//END_REGION
+
+//REGION Antagonist
+IF
+DB_GlobalFlag((FLAG)LOW_DjinniTrap_State_AntagonistFreed_35e97268-9ebc-4ef3-93d6-c8c545a703f3)
+AND
+QRY_LOW_IsAnyPlayerNearDjinniLamp()
+AND
+NOT QRY_LOW_StartDjinniTrapAntagonistDialog()
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT3_LOW_DjinniTrap_Antagonist_5cbb4f63-038c-4df4-9cb1-1a426796f13b,0);
+
+QRY
+QRY_LOW_IsAnyPlayerNearDjinniLamp()
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player,(TRIGGER)S_LOW_DjinniTrap_AntagonistDialogTrigger_d1c4f80d-c18c-4b28-b703-2386bded5963)
+AND
+NOT DB_LOW_FoundPlayerNearDjinniLamp(1)
+THEN
+DB_LOW_FoundPlayerNearDjinniLamp(1);
+
+IF
+DB_GlobalFlag((FLAG)LOW_DjinniTrap_State_AntagonistFreed_35e97268-9ebc-4ef3-93d6-c8c545a703f3)
+AND
+NOT DB_LOW_FoundPlayerNearDjinniLamp(1)
+THEN
+PROC_Poof(S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+
+QRY
+QRY_LOW_StartDjinniTrapAntagonistDialog()
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player,(TRIGGER)S_LOW_DjinniTrap_AntagonistDialogTrigger_d1c4f80d-c18c-4b28-b703-2386bded5963)
+AND
+QRY_StartDialogCustom((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37,S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,_Player,0,0,0,1)
+THEN
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37,(TRIGGER)S_LOW_DjinniTrap_AntagonistDialogTrigger_d1c4f80d-c18c-4b28-b703-2386bded5963,1,1,1,0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_DjinniTrap_State_CombatWithAntagonist_b04d7607-f1c8-41b8-aec3-015a85eefe4e)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT3_LOW_DjinniTrap_Antagonist_5cbb4f63-038c-4df4-9cb1-1a426796f13b,0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_DjinniTrap_State_PacifiedAntagonist_562db724-1cf4-4838-9ce9-a5cfc2ef8cfd)
+THEN
+PROC_PeacefulResolve((CHARACTER)S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c);
+PROC_Poof(S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+
+// It's a djinni, it can poke gold gold in your pocket out of thin air. More importantly, there is no dialog node for "ah, no gold".
+IF
+FlagSet((FLAG)LOW_DjinniTrap_Event_DjinniGivesGold_7dc5cda1-1dce-4d1a-bc3d-4fb7495e2150,_Player,_)
+AND
+DB_DialogMoneyTransfer(1,(DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37,_GoldAmount)
+THEN
+AddGold(_Player,_GoldAmount);
+//END_REGION
+
+//REGION Djinni trap logic
+// Trapped summons logic
+IF
+DB_InRegion(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+NOT DB_Players(_Character)
+THEN
+PROC_LOW_DjinniTrapNewVictim(_Character);
+
+IF
+DB_InRegion(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_DjinniTrap_State_AntagonistFreed_35e97268-9ebc-4ef3-93d6-c8c545a703f3)
+AND
+NOT DB_Players(_Character)
+THEN
+SetFlag((FLAG)LOW_DjinniTrap_State_FirstVictimIsSummon_ebba8f7e-b7a7-4b45-a9c3-013d8492ee8c);
+
+// The djinni speaks with the first player if possible
+IF
+DB_InRegion(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_DjinniTrap_State_AntagonistFreed_35e97268-9ebc-4ef3-93d6-c8c545a703f3)
+AND
+DB_Players(_Character)
+AND
+NOT DB_LOW_FirstPlayerInDjinniLamp(_Character)
+AND
+NOT QRY_LOW_StartDialogInsideDjinniLamp(_Character)
+THEN
+PROC_LOW_DjinniTrapNewVictim(_Character);
+
+QRY
+QRY_LOW_StartDialogInsideDjinniLamp((CHARACTER)_Player)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_InsideLamp_abc3b821-e3f3-312d-9d1e-87d16c1ffad8,S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,_Player,0,0,0,1)
+THEN
+DB_LOW_FirstPlayerInDjinniLamp(_Player);
+ApplyStatus(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,"LOW_DJINNITRAP_LAMP_NONINTERACTIVE",-1.0);
+
+IF
+DialogEnded((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_InsideLamp_abc3b821-e3f3-312d-9d1e-87d16c1ffad8,_ID)
+AND
+DB_LOW_FirstPlayerInDjinniLamp(_Player)
+THEN
+PROC_LOW_DjinniTrapNewVictim(_Player);
+
+// Trapped players logic after the djinni is free
+IF
+EnteredTrigger(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+DB_GlobalFlag((FLAG)LOW_DjinniTrap_State_AntagonistFreed_35e97268-9ebc-4ef3-93d6-c8c545a703f3)
+AND
+DB_Players(_Character)
+THEN
+PROC_LOW_DjinniTrapNewVictim(_Character);
+
+PROC
+PROC_LOW_DjinniTrapNewVictim((CHARACTER)_NewVictim)
+AND
+DB_LOW_DjinniTrapVictim(_OldVictim)
+THEN
+DB_LOW_DjinniTrapVictim(_NewVictim);
+NOT DB_LOW_DjinniTrapVictim(_OldVictim);
+PlayEffect(_OldVictim,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+TeleportTo(_OldVictim,(ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,"LOW_DjinniTrapVictim_Out",0,0,0,1,1);
+
+IF
+EntityEvent(_Character,"LOW_DjinniTrapVictim_Out")
+THEN
+PlayEffect(_Character,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+
+IF
+EntityEvent(_Character,"LOW_DjinniTrapVictim_Out")
+AND
+_Character == S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c
+THEN
+SetFlag((FLAG)LOW_DjinniTrap_State_AntagonistFreed_35e97268-9ebc-4ef3-93d6-c8c545a703f3);
+RemoveStatus(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,"LOW_DJINNITRAP_LAMP_NONINTERACTIVE");
+
+IF
+EntityEvent(_Character,"LOW_DjinniTrapVictim_Out")
+AND
+NOT DB_Defeated(_Character)
+AND
+DB_Players((CHARACTER)_Character)
+AND
+DB_DialogNPCs(_DialogInst,S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,_)
+AND
+NOT DB_LOW_DjinnitTrapVictim_GotOutMidDialogInst(_DialogInst)
+THEN
+DB_LOW_DjinnitTrapVictim_GotOutMidDialogInst(_DialogInst);
+DB_LOW_DjinniTrap_EscapedPlayer(_Character);
+PROC_ForceStopDialog(S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c);
+
+IF
+DialogEnded((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_0188fd1b-39bb-ffa9-a80b-ea5cc7451d37,_DialogInst)
+AND
+DB_LOW_DjinnitTrapVictim_GotOutMidDialogInst(_DialogInst)
+AND
+NOT QRY_LOW_StartDjinniTrapAntagonistDialog_Interrupted()
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT3_LOW_DjinniTrap_Antagonist_5cbb4f63-038c-4df4-9cb1-1a426796f13b,0);
+
+QRY
+QRY_LOW_StartDjinniTrapAntagonistDialog_Interrupted()
+AND
+DB_LOW_DjinniTrap_EscapedPlayer(_Player)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_Interrupted_7c49c9e9-ee28-5d64-0d82-d3573998330e,S_LOW_DjinniTrap_Antagonist_e84d8eb3-89ab-4b65-b6e1-05b04afc2d1c,_Player,0,0,0,1)
+THEN
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)LOW_DjinniTrap_Antagonist_Interrupted_7c49c9e9-ee28-5d64-0d82-d3573998330e,(TRIGGER)S_LOW_DjinniTrap_AntagonistDialogTrigger_d1c4f80d-c18c-4b28-b703-2386bded5963,1,1,1,0);
+
+IF
+LeftTrigger(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+DB_LOW_DjinniTrapVictim(_Character)
+THEN
+NOT DB_LOW_DjinniTrapVictim(_Character);
+
+IF
+LeftTrigger(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+NOT DB_LOW_DjinniTrapVictim(_)
+THEN
+PROC_Poof(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,(EFFECTRESOURCE)VFX_Script_Djinni_Teleport_7c79ada5-e179-5d0b-0557-29fca6201742);
+
+IF
+LeftTrigger(_Character,(TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+AND
+DB_Players(_Character)
+AND
+NOT QRY_AnyPlayerInTrigger((TRIGGER)S_LOW_DjinniTrap_TrapAreaTrigger_a0f3551a-77fd-4829-bc07-3bd87e8468da)
+THEN
+QuestUpdate("HIDDEN_CTY_Boosters","LOW_DjinniTrap_Escaped");
+
+IF
+DB_Defeated(_Character)
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+DB_LOW_DjinniTrapVictim(_Character)
+THEN
+NOT DB_LOW_DjinniTrapVictim(_Character);
+TeleportTo(_Character,(ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,"LOW_DjinniTrapVictim_Out",0,0,0,1,1);
+//END_REGION
+
+//REGION Djinni lamp is not interactable while InsideLamp dialog is ongoing 
+IF
+StatusApplied(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,"LOW_DJINNITRAP_LAMP_NONINTERACTIVE",_,_)
+THEN
+SetCanInteract((ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,0);
+
+IF
+StatusRemoved(S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,"LOW_DJINNITRAP_LAMP_NONINTERACTIVE",_,_)
+THEN
+SetCanInteract((ITEM)S_LOW_DjinniTrap_Lamp_41743414-bbea-4f42-8c2f-9c9fe3de1d1e,1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

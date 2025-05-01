@@ -1,0 +1,73 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+SetCanInteract((ITEM)S_LOW_HouseOfHope_ClosetDoor_b38ebbed-e087-474b-9647-09688c60b57b,0);
+KBSECTION
+IF
+RollResult("LOW_HouseOfHope_SecretDoorKeyhole",_Player,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,0,1,_)
+THEN
+CreateExplosion(_Player,"Projectile_SHA_EntrancePuzzle_RingPushBack", -1,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595);
+PROC_TryStartAD((DIALOGRESOURCE)LOW_HouseOfHope_AD_InfernalGem_651f91a7-4dc7-d7ac-7a2a-19009141196c,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595);
+
+IF
+UseFinished(_Player,(ITEM)S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,_)
+AND
+DB_OnlyOnce("LOW_HouseOfHope_SecretDoorKeyhole_Transformation")
+THEN
+RequestActiveRoll(_Player,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,"Arcana",(DIFFICULTYCLASS)Act3_Hard_6298329e-255c-4826-9209-e911873b64e7,"LOW_HouseOfHope_SecretDoorKeyhole");
+
+IF
+RollResult("LOW_HouseOfHope_SecretDoorKeyhole",_Player,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,1,1,_)
+AND
+DB_OnlyOnce("LOW_HouseOfHope_SecretDoorKeyhole_Transformation")
+AND
+QRY_OnlyOnce("LOW_HouseOfHope_SecretDoorKeyhole_Unlock")
+THEN
+DebugText(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,"OPEN");
+PlayEffect(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,(EFFECTRESOURCE)VFX_Script_Illusion_Perception_Check_Overlay_01_b8fe40e4-b49b-f7b1-25ba-f5b97341a16d,"",1.0);
+SetCanInteract(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,0);
+TimerLaunch("LOW_HouseOfHope_SecretDoorKeyhole_UnlockTimer",800);
+PROC_CameraShakeAroundObject(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,250,5.0);
+
+IF
+TimerFinished("LOW_HouseOfHope_SecretDoorKeyhole_UnlockTimer")
+THEN
+PROC_ItemUnlockAndOpen((ITEM)S_LOW_HouseOfHope_ClosetDoor_b38ebbed-e087-474b-9647-09688c60b57b);
+SetCanInteract(S_LOW_HouseOfHope_ClosetDoor_b38ebbed-e087-474b-9647-09688c60b57b,1);
+SetOnStage(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,0);
+
+IF
+TimerFinished("LOW_HouseOfHope_SecretDoorKeyhole_UnlockTimer")
+AND
+DB_Players(_Player)
+THEN
+PROC_HideMarker(_Player,"LOW_HouseOfHope_SecretStash");
+
+IF
+UseFinished(_Player,(ITEM)S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,_)
+AND
+NOT DB_OnlyOnce("LOW_HouseOfHope_SecretDoorKeyhole_Transformation")
+THEN
+RequestActiveRoll(_Player,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,"Wisdom",(DIFFICULTYCLASS)Act3_Easy_5028066b-6ea0-4a6a-9e3e-53bee62559a7,"LOW_HouseOfHope_SecretDoorKeyhole");
+
+IF
+RollResult("LOW_HouseOfHope_SecretDoorKeyhole",_Player,S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,1,1,_)
+AND
+QRY_OnlyOnce("LOW_HouseOfHope_SecretDoorKeyhole_Transformation")
+THEN
+DebugText(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,"TRANSFORM");
+Transform(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,QUEST_LOW_HoH_InfernalDiamond_Socket_Glow_e692fe33-f719-459a-90cf-497ccd22e48d,Physical_4acc6277-6dcd-4110-9450-b9379beaedac);
+PlayEffect(S_LOW_HouseOfHope_SecretStashKeyhole_4fa176d6-ca4b-42bc-b4a5-772e130f8595,(EFFECTRESOURCE)VFX_Script_Illusion_Perception_Check_Overlay_01_b8fe40e4-b49b-f7b1-25ba-f5b97341a16d,"",1.0);
+
+IF
+GameBookInterfaceClosed((ITEM)S_LOW_HouseOfHope_Book_ArchivingTreasures_fadeaa2a-71b3-895a-5a05-3097fa0fce50,_Player)
+AND
+NOT DB_OnlyOnce("LOW_HouseOfHope_SecretDoorKeyhole_Unlock")
+AND
+QRY_OnlyOnce("LOW_HouseOfHope_SecretStash_MapMarker")
+THEN
+PROC_ShowMarker(_Player,"LOW_HouseOfHope_SecretStash");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

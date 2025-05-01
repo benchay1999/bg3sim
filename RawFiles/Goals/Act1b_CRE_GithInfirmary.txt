@@ -1,0 +1,552 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRE_GithInfirmary_AmbushGuards((CHARACTER)S_CRE_InfirmaryAmbushGuard01_2c0b5b3b-5e48-48e6-b10f-08a910ad07f5);
+DB_CRE_GithInfirmary_AmbushGuards((CHARACTER)S_CRE_InfirmaryAmbushGuard03_8f599eca-cf21-42d2-a9f8-56e92aa8624c);
+DB_CRE_GithInfirmary_AmbushGuards((CHARACTER)S_CRE_InfirmaryAmbushGuard04_3efd4f36-05d3-4a30-80e8-59fd14215fd5);
+DB_CRE_GithInfirmary_AmbushGuards((CHARACTER)S_CRE_InfirmaryAmbushGuard02_ecb4222c-22b9-49d6-88ed-62b5cba281fc);
+
+DB_CRE_GithInfirmary_AmbushPositions((TRIGGER)S_CRE_AmbushPos01_1d6c8c09-700f-4ace-86fd-094347f8b56f);
+DB_CRE_GithInfirmary_AmbushPositions((TRIGGER)S_CRE_AmbushPos02_016ba33f-2a19-48ba-bb83-e0182ec63349);
+DB_CRE_GithInfirmary_AmbushPositions((TRIGGER)S_CRE_AmbushPos03_323f0099-3f10-4476-9180-9222bdf14d1c);
+DB_CRE_GithInfirmary_AmbushPositions((TRIGGER)S_CRE_AmbushPos04_30904d7c-199a-430f-a71a-63f8ec375319);
+
+DB_Dialogs((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, (DIALOGRESOURCE)CRE_GithInfirmary_Doctor_9d7953d8-4b2c-93a7-25ab-094c0ed931cd);
+
+DB_CustomDialogRange((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, 15); //Added so that the doctor can join as optional speaker if the player interacts with the device while the doctor is at the desk
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd, (DIALOGRESOURCE)CRE_GithInfirmary_Doctor_9d7953d8-4b2c-93a7-25ab-094c0ed931cd);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DoctorTriesToCallGuards_b3ba07b1-b9c4-4919-a7c9-dd28ffe5f83e, (DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DoctorTriesToCallGuards_b3ba07b1-b9c4-4919-a7c9-dd28ffe5f83e, (DIALOGRESOURCE)CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DoctorTriesToCallGuards_b3ba07b1-b9c4-4919-a7c9-dd28ffe5f83e, (DIALOGRESOURCE)CRE_GithInfirmary_Doctor_9d7953d8-4b2c-93a7-25ab-094c0ed931cd);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DeviceExplodedWithDoctorInRoom_8b271ff1-d7d4-488d-bd52-eef67865f61c, (DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DeviceExplodedWithDoctorInRoom_8b271ff1-d7d4-488d-bd52-eef67865f61c, (DIALOGRESOURCE)CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c, (DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c, (DIALOGRESOURCE)CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_LaezelOMDeniedLaezel_417b8cb7-bb75-473a-95ac-0fb613186683, (DIALOGRESOURCE)CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db);
+
+TriggerRegisterForCharacter((TRIGGER)S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904, (CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+
+DB_HasItemEvent((ITEM)S_CRE_InfirmaryDoorKey_01_9d3de6ea-df9e-4eda-ac2d-939bc1149223, CRE_Githinfirmary_State_HasKey01_71cc0ee0-642b-4187-836d-8bb5ac630116);
+DB_HasItemEvent((ITEM)S_CRE_InfirmaryDoorKey_02_1faf4f45-94bd-4464-850b-5865ca351a69, CRE_Githinfirmary_State_HasKey02_7a55c966-f880-415e-b36f-a26daa5490f4);
+//REGION Entered Infirmary Flag
+PROC_TriggerRegisterForPlayers(S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904);
+PROC_TriggerRegisterForPlayers(S_CRE_Infirmary_InZaithiskRange_c8ed0821-280e-42d4-b775-bbadb2a7dde2);
+//END_REGION
+
+//REGION Zaithisk effects
+DB_CRE_GithInfirmary_FlagToStatus((FLAG)CRE_GithInfirmary_Event_DamageBrainINT_75d34f4d-9c2b-4a24-ae37-1f97ed7e3c5f, "CRE_BRAINDAMAGE_INT");
+DB_CRE_GithInfirmary_FlagToStatus((FLAG)CRE_GithInfirmary_Event_DamageBrainWIS_af9dce87-4534-413d-9b54-2e8db6857216, "CRE_BRAINDAMAGE_WIS");
+DB_CRE_GithInfirmary_FlagToStatus((FLAG)CRE_GithInfirmary_Event_DamageBrainCON_bf6318b5-50eb-44b6-80ae-4e451440df6e, "CRE_BRAINDAMAGE_CON");
+//END_REGION
+
+//REGION Zaithisk destruction
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DeviceBroken_a3b2721c-b6c4-4e7a-868c-1af9cb036bd4, (DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d);
+DB_GlobalFlagReactionAfterDialog(CRE_GithInfirmary_State_DeviceBroken_a3b2721c-b6c4-4e7a-868c-1af9cb036bd4, CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db);
+//END_REGION
+KBSECTION
+//REGION Debug commands
+IF
+TextEvent("cre_gotodoctor")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(_Player, S_CRE_DebugPos_Infirmary_833d3cd8-1024-4318-b28e-ac0d7370b069, "", 1, 1, 1, 1, 1);
+
+IF
+TextEvent("cre_doctorambush")
+THEN
+PROC_CRE_GithInfirmary_DoctorAmbush();
+//END_REGION
+
+//REGION Entered Infirmary Flag
+IF
+DB_InRegion(_Player, S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904)
+AND
+DB_Players(_Player)
+THEN
+SetFlag(CRE_GithInfirmary_State_PlayerVisited_6ff86231-2957-4b42-873e-3911adaa5458, _Player, 0);
+TriggerUnregisterForCharacter((TRIGGER)S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904, _Player);
+//END_REGION
+
+//REGION Setup
+
+//END_REGION
+
+//REGION Device logic
+//////////////Dialog trigger///////////
+IF
+UseStarted(_Player, (ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6)
+AND
+QRY_SelectAndStartDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+THEN
+DB_NOOP(1);
+
+//Reset logic for selecting Laezel suitable avatar
+QRY
+QRY_SelectCustomDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+AND
+DB_QRYRTN_CRE_GithInfirmary_StartLaezelOM_Avatar(_Avatar)
+THEN
+NOT DB_QRYRTN_CRE_GithInfirmary_StartLaezelOM_Avatar(_Avatar);
+
+//Originally, the InfirmaryDevice was the MainNPC of the dialog. It was changed to S_CRE_Doctor being the MainNPC as a request by the cinematic team, so that some default camera settings get applied automatically to the doctor
+//Since the Doctor is a conditional NPC that can be passed as NULL if not available, the generic Origin Moment pipeline did not suit this case, so there's a custom logic for triggering the Laezel COM dialog here
+
+//Doctor Interrupt
+QRY
+QRY_SelectCustomDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c)
+AND
+QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_GithInfirmary_DeviceDoctorInterrupt_16add364-2533-f155-c9bc-329979a90703, (ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, _Player)
+THEN
+DB_NOOP(1);
+
+//Base version, with Doctor
+QRY
+QRY_SelectCustomDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+AND
+NOT QRY_CRE_GithInfirmary_StartLaezelOM((CHARACTER)_Player)
+AND
+QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d, S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, (ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+THEN
+DB_NOOP(1);
+
+//Base version, without Doctor
+QRY
+QRY_SelectCustomDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+AND
+NOT QRY_CRE_GithInfirmary_StartLaezelOM((CHARACTER) _Player)
+AND
+NOT QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d, NULL_00000000-0000-0000-0000-000000000000,(ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+THEN
+DB_NOOP(1);
+
+//Laezel version, with Doctor
+QRY
+QRY_SelectCustomDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+AND
+QRY_CRE_GithInfirmary_StartLaezelOM((CHARACTER)_Player)
+AND
+DB_QRYRTN_CRE_GithInfirmary_StartLaezelOM_Avatar(_Avatar)
+AND
+QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Avatar)
+AND
+DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd)
+AND
+NOT DB_OnlyOnce("CRE_GithInfirmary_LaezelOMTriggered")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db, S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768,(ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Avatar)
+THEN
+DB_OnlyOnce("CRE_GithInfirmary_LaezelOMTriggered");
+
+//Laezel version, without Doctor
+QRY
+QRY_SelectCustomDialog(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+AND
+QRY_CRE_GithInfirmary_StartLaezelOM((CHARACTER)_Player)
+AND
+DB_QRYRTN_CRE_GithInfirmary_StartLaezelOM_Avatar(_Avatar)
+AND
+NOT QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Avatar)
+AND
+NOT DB_OnlyOnce("CRE_GithInfirmary_LaezelOMTriggered")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db, NULL_00000000-0000-0000-0000-000000000000,(ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Avatar)
+THEN
+DB_OnlyOnce("CRE_GithInfirmary_LaezelOMTriggered");
+
+//Relaunch Base Dialog if Laezel is refused to use the device and don't end up in combat with her, with Doctor version
+IF
+DialogEnded(CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db, _Id)
+AND
+DB_DialogPlayers(_Id, _Player, 2)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_LaezelOMAllowedLaezel_95f26a55-5b5a-4f81-ab2d-750f7159ff50)
+AND
+GetFlag((FLAG)GLO_Companion_Combat_d8f0c309-193b-eaed-5aaa-812cd137caf2, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c)
+AND
+QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d, S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, (ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+THEN
+DB_NOOP(1);
+
+//Relaunch Base Dialog if Laezel is refused to use the device and don't end up in combat with her, without Doctor version
+IF
+DialogEnded(CRE_GithInfirmary_Device_OM_Laezel_COM_444edbd9-75ee-14c2-0d30-3e2efe7866db, _Id)
+AND
+DB_DialogPlayers(_Id, _Player, 2)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_LaezelOMAllowedLaezel_95f26a55-5b5a-4f81-ab2d-750f7159ff50)
+AND
+GetFlag((FLAG)GLO_Companion_Combat_d8f0c309-193b-eaed-5aaa-812cd137caf2, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c)
+AND
+NOT QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d, NULL_00000000-0000-0000-0000-000000000000,(ITEM)S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, _Player)
+THEN
+DB_NOOP(1);
+
+//Succeed if anyone interacts with device and both Companion Laezel and a suitable Avatar are available
+QRY
+QRY_CRE_GithInfirmary_StartLaezelOM((CHARACTER)_AnyPlayer)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_LaezelOMPLayed_0fae7172-de7f-487e-aa04-088e34315ca4)
+AND
+NOT DB_Avatars(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SameUser(_Avatar, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)_Avatar)
+AND
+DB_InRegion(_Avatar, S_CRE_Infirmary_InZaithiskRange_c8ed0821-280e-42d4-b775-bbadb2a7dde2)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_InRegion(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_CRE_Infirmary_InZaithiskRange_c8ed0821-280e-42d4-b775-bbadb2a7dde2)
+THEN
+DB_QRYRTN_CRE_GithInfirmary_StartLaezelOM_Avatar(_Avatar);
+
+QRY
+QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)_Player)
+AND
+DB_InRegion(_Player, S_CRE_Infirmary_InZaithiskRange_c8ed0821-280e-42d4-b775-bbadb2a7dde2)
+AND
+DB_Sees((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRE_GithInfirmary_DoctorCanJoinDialog((CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)_Player)
+AND
+DB_InRegion(_Player, S_CRE_Infirmary_InZaithiskRange_c8ed0821-280e-42d4-b775-bbadb2a7dde2)
+AND
+DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd) //If the doctor waits at the device, it doesn't matter if she sees you or not when you use it
+THEN
+DB_NOOP(1);
+
+//Checks if a character was successfully acquired for the random inclusion and sets a global flag.
+//This is used in a dialog to display a Question node that is addressed to your companions, only if at least one is present.
+IF
+DialogStarted((DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d, _Id)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c)
+THEN
+DB_CRE_GithInfirmary_DeviceDialogId(_Id);
+
+IF
+FlagSet(ORI_Inclusion_PickedAtRandom_46a601fb-8cb7-46ed-9856-3d4e38c53a02, _Origin, _)
+AND
+DB_CRE_GithInfirmary_DeviceDialogId(_Id)
+AND
+DB_DialogPlayers(_Id, _Origin, _)
+THEN
+SetFlag((FLAG)CRE_GithInfirmary_State_IncludedCompanionsPresentInDialog_8b39c492-210a-46db-ab1e-71bf6559fb9b);
+
+IF
+DialogEnded((DIALOGRESOURCE)CRE_GithInfirmary_Device_14af1f7c-6421-a972-c5c0-24c684d7ad1d, _)
+AND
+DB_CRE_GithInfirmary_DeviceDialogId(_Id)
+THEN
+NOT DB_CRE_GithInfirmary_DeviceDialogId(_Id);
+ClearFlag((FLAG)CRE_GithInfirmary_State_IncludedCompanionsPresentInDialog_8b39c492-210a-46db-ab1e-71bf6559fb9b);
+
+//If Laezel isn't in the party, play this Daisy AD after using the device
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c)
+AND
+DB_Players(_Player)
+AND
+NOT DB_PartyMembers(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+QRY_OnlyOnce("CRE_DaisyZaithiskAD")
+THEN
+PROC_DaisyAD(_Player, (DIALOGRESOURCE)CRE_GithInfirmary_DaisyAD_AfterZaithisk_1080e6db-9164-bb1a-a781-cdefd051087b);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)CRE_GithInfirmary_AD_LaezelReactionAfterZaithisk_3ed60424-6383-96c0-34f5-e26c54fb9e0c, _)
+THEN
+SetFlag((FLAG)CRE_GithInfirmary_State_LaezelReactedToDestruction_7b1fcfa5-ec58-4854-904b-7212f5f57532);
+
+//If Laezel is in the party and she's done talking, play the Daisy AD
+IF
+FlagSet((FLAG)CRE_GithInfirmary_State_LaezelReactedToDestruction_7b1fcfa5-ec58-4854-904b-7212f5f57532, _, _)
+AND
+DB_Players(_Player)
+AND
+DB_PartyMembers(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag(CRE_GithInfirmary_State_PlayerConvincedLaezel_04366026-34be-3506-0c45-506ea601f2fc)
+AND
+QRY_OnlyOnce("CRE_DaisyZaithiskAD")
+THEN
+PROC_DaisyAD(_Player, (DIALOGRESOURCE)CRE_GithInfirmary_DaisyAD_AfterZaithisk_1080e6db-9164-bb1a-a781-cdefd051087b);
+
+IF
+FlagSet((FLAG)CRE_GithInfirmary_Event_CheckOtherPlayersPresentInDialog_27c1e130-1ea8-44d6-9fa5-13fc0eb3da5a, _, _Id) //Flagtype: Global, need ID
+AND
+DB_DialogNumPlayers(_Id, _Count)
+AND
+_Count > 1
+THEN
+SetFlag((FLAG)CRE_GithInfirmary_State_OtherPlayersPresentInDialog_692f79cf-5a1c-4a9f-9760-e5dcb7780027);
+
+IF
+FlagCleared((FLAG)CRE_GithInfirmary_Event_CheckOtherPlayersPresentInDialog_27c1e130-1ea8-44d6-9fa5-13fc0eb3da5a, _, _)
+THEN
+ClearFlag((FLAG)CRE_GithInfirmary_State_OtherPlayersPresentInDialog_692f79cf-5a1c-4a9f-9760-e5dcb7780027);
+
+
+//END_REGION
+
+//REGION Dialog outcomes
+///////////////Doctor positions///////////////
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd, _, _Id)
+AND
+DB_DialogPlayers(_Id, _Player, 1)
+THEN
+PROC_CharacterMoveTo(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, S_CRE_DoctorAtDevicePos_fad426e5-7a91-4d6c-9672-8e6f16911273, "Walk", "CRE_GithInfirmary_DoctorAtDevice"); //ToDo: Move to Anubis in Behaviour pass
+PROC_RemoveDialog((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+DB_Dialogs((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, (DIALOGRESOURCE)CRE_GithInfirmary_AD_DoctorWaitsAtDevice_7cd18e02-2474-4710-c288-0e3ee5e77285);
+PROC_TryStartAD((DIALOGRESOURCE)CRE_GithInfirmary_AD_DoctorGoesToDevice_a2d4863f-72bd-aa7b-1a75-10a42c9d7034, (CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, _Player); //Player is added so the dialog can check if the player is Gith or not
+
+//ToDo: Move to Anubis in Behaviour pass
+IF
+EntityEvent(_Doctor, "CRE_GithInfirmary_DoctorAtDevice")
+THEN
+LookFromTrigger((CHARACTER)_Doctor, (TRIGGER)S_CRE_DoctorAtDevicePos_fad426e5-7a91-4d6c-9672-8e6f16911273, 0);
+
+//Doctor didn't spot the player when they interacted with the device, but reacts to the explosion by calling the guards
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DeviceExplodedWithDoctorInRoom_8b271ff1-d7d4-488d-bd52-eef67865f61c)
+AND
+DB_InRegion((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, (TRIGGER)S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904)
+AND
+NOT DB_Defeated(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768)
+THEN
+PROC_RemoveDialog((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+PROC_TryStartAD((DIALOGRESOURCE)CRE_GithInfirmary_AD_DoctorReactsToExplosion_44e60692-8065-a941-5fd2-dbd91a8e7b1e, S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+PROC_CRE_GithInfirmary_DoctorAmbush();
+
+///////////////Doctor calls guards///////////////
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DoctorTriesToCallGuards_b3ba07b1-b9c4-4919-a7c9-dd28ffe5f83e)
+THEN
+PROC_RemoveDialog((CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+PROC_CRE_GithInfirmary_DoctorAmbush();
+
+//ToDo: Move to Anubis in Behaviour pass
+PROC
+PROC_CRE_GithInfirmary_DoctorAmbush()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)CRE_GithInfirmary_State_DoctorTriesToCallGuards_b3ba07b1-b9c4-4919-a7c9-dd28ffe5f83e);
+
+IF
+EntityEvent(_, "CRE_GithInfirmary_DoctorLocksDoor")
+THEN
+PROC_ItemCloseAndLock((ITEM)S_CRE_InfirmaryDoor_6a8f4d72-dcf4-47c9-abf0-5c6106b727ea, "CRE_UpperCreche_InfirmaryDoor");
+DB_DangerZone(S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904, "CRE_InfirmaryLocked");
+//PROC_CharacterMoveTo((CHARACTER)_Doctor, S_CRE_DoctorAmbushPos_e8715139-d172-4f42-b3a1-36382bc72adc, "Run", "CRE_GithInfirmary_AmbushReady");
+DB_CRE_IgnoreCrimesAgainstInfirmaryDoor(1);
+
+IF
+Unlocked(S_CRE_InfirmaryDoor_6a8f4d72-dcf4-47c9-abf0-5c6106b727ea, _, _)
+AND
+DB_DangerZone(S_CRE_InfirmaryArea_debafa63-a1e0-4f1e-978d-86f3d8f8e904, _String)
+THEN
+PROC_DangerZone_Safe(_String);
+
+IF
+EntityEvent(_, "CRE_GithInfirmary_DoctorLocksDoor")
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)CRE_GithInfirmary_State_CharacterUsedDevice_23fd1f32-7850-466e-a77a-75cd48bdaa21, _Player, 1)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)CRE_GithInfirmary_AD_LaezelReactionAfterZaithisk_3ed60424-6383-96c0-34f5-e26c54fb9e0c, _) //Doesn't play if Laezel is present, as she has more important VBs to trigger
+THEN
+DB_CRE_Infirmary_Ambushing(1);
+StartVoiceBark(CRE_GithInfirmary_VB_DoorIsLocked_36e6e24c-c771-fefa-7bfc-19ba451c2e1f, _Player);
+
+IF
+EntityEvent(_Doctor, "CRE_GithInfirmary_DoctorClosesDoor")
+THEN
+DB_CRE_Infirmary_Ambushing(1);
+Close((ITEM)S_CRE_InfirmaryDoor_6a8f4d72-dcf4-47c9-abf0-5c6106b727ea);
+
+IF
+EntityEvent(_Doctor, "CRE_GithInfirmary_DoctorHostile")
+THEN
+PROC_SetRelationToPlayers((FACTION)Act1B_CRE_Gith_Infirmary_Doctor_2149f69e-d0b6-411f-b90f-8280f1c751e3, 0);
+
+IF
+EntityEvent(_Doctor, "CRE_GithInfirmary_AmbushReady")
+THEN
+PROC_CRE_GithInfirmary_AmbushGuardsArrive();
+PROC_CRE_General_MagehandKidsCancel();
+PROC_SetRelationToPlayers((FACTION)Act1B_CRE_Gith_Infirmary_9aac625d-9738-4e1d-8dfa-d53f50846e08, 0);
+SetFlag(CRE_General_State_KidEscape_88e294b3-111a-4e6b-877a-1cca3fa3fe08, S_CRE_MageHandKid01_67c5e825-c850-414f-8279-e1968a321d4f, 0);
+SetFlag(CRE_General_State_KidEscape_88e294b3-111a-4e6b-877a-1cca3fa3fe08, S_CRE_MageHandKid02_840d6525-88ba-462a-944c-a74975afa695, 0);
+SetCombatGroupID(_Doctor, "2960d970-756b-4930-9384-46730927d15a");
+LookFromTrigger((CHARACTER)_Doctor, S_CRE_DoctorAmbushPos_e8715139-d172-4f42-b3a1-36382bc72adc, 0);
+
+
+
+PROC
+PROC_CRE_GithInfirmary_AmbushGuardsArrive()
+AND
+DB_CRE_GithInfirmary_AmbushGuards(_Guard)
+AND
+DB_CRE_GithInfirmary_AmbushPositions(_Trigger)
+AND
+NOT DB_CRE_GithInfirmary_TriggerUsed(_, _Guard)
+AND
+NOT DB_CRE_GithInfirmary_TriggerUsed(_Trigger, _)
+THEN
+DB_CRE_GithInfirmary_TriggerUsed(_Trigger, _Guard);
+
+IF
+EntityEvent(_Guard, "CRE_GithInfirmary_GuardReachAmbushPos")
+AND
+DB_CRE_GithInfirmary_TriggerUsed(_Trigger, (CHARACTER)_Guard)
+THEN
+LookFromTrigger(_Guard, _Trigger, 0);
+NOT DB_CRE_GithInfirmary_TriggerUsed(_Trigger, _Guard);
+Open((ITEM)S_CRE_InfirmaryDoor_6a8f4d72-dcf4-47c9-abf0-5c6106b727ea);
+CharacterMoveTo(_Guard, (GUIDSTRING)S_Debug_Teleport_CRE_Infirmary_c1b21e49-ef37-4ef1-9c28-c604309c99e8,"Sprint","CRE_GithInfirmary_AmbushCombat");
+
+IF
+EnteredCombat(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, _Id)
+AND
+DB_Is_InCombat(_Player, _Id)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_CRE_Infirmary_Ambushing(1)
+AND
+QRY_OnlyOnce("CRE_GithInfirmary_AmbushCombatDoctorJoins")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)CRE_GithInfirmary_AD_DoctorAtAmbush_cf7bd184-7dc4-840b-6e68-5aee9f4bf809, (CHARACTER)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+NOT DB_CRE_IgnoreCrimesAgainstInfirmaryDoor(1);
+
+IF
+DownedChanged(_Player, 1)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+DB_Is_InCombat(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, _ID)
+THEN
+DB_CombatReact_AD_OnNextTurn((GUIDSTRING)S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768, (DIALOGRESOURCE)CRE_GithInfirmary_AD_CombatDoctor_PlayerDown_f6373904-89f3-1696-1971-add17750675e);
+
+
+//Ignore Crimes against the infirmary door while waiting to ambushing the player
+QRY
+QRY_CRIME_BlockRegisterCrime(_, _, S_CRE_InfirmaryDoor_6a8f4d72-dcf4-47c9-abf0-5c6106b727ea, _Witness, _ID)
+AND
+DB_CRE_IgnoreCrimesAgainstInfirmaryDoor(1)
+THEN
+CrimeIgnoreCrime(_ID, _Witness);
+//END_REGION
+
+//REGION Zaithisk effects
+//Flag is set up to 3 times during the Device or Device_OM_Laezel_COM dialog. Each time it is set it should reduce the INT of the character by 1, which is what these increasing statuses do.
+IF
+FlagSet(_Flag, _Player, _)
+AND
+DB_CRE_GithInfirmary_FlagToStatus(_Flag, _Status)
+THEN
+ApplyStatus(_Player, _Status, -1.0, 1, S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6);
+DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status);
+
+IF
+FlagSet((FLAG)CRE_GithInfirmary_Event_GainNewPower_b47d78c8-5a2e-43ac-a446-222f956a9cbe, _Player, _)
+AND
+GetFlag((FLAG)CRE_GithInfirmary_Event_DamageBrainINT_75d34f4d-9c2b-4a24-ae37-1f97ed7e3c5f, _Player, 0)
+AND
+GetFlag((FLAG)CRE_GithInfirmary_Event_DamageBrainCON_bf6318b5-50eb-44b6-80ae-4e451440df6e, _Player, 0)
+AND
+GetFlag((FLAG)CRE_GithInfirmary_Event_DamageBrainWIS_af9dce87-4534-413d-9b54-2e8db6857216, _Player, 0)
+THEN
+ApplyStatus(_Player, "CRE_GITHINFIRMARY_AWAKENED", -1.0, 1, S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6);
+
+//Remove all Zaithisk statuses when a tadpole is consumed
+IF
+TadpolePowerAssigned(_Player, _)
+AND
+DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status)
+THEN
+RemoveStatus(_Player, _Status);
+NOT DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status);
+
+//Remove all Zaithisk statuses when the player gains half illithid powers
+IF
+DB_TadpolePowers_GainedHalfIllithidBenefits(_Player)
+AND
+DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status)
+THEN
+RemoveStatus(_Player, _Status);
+NOT DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status);
+
+//Remove all Zaithisk statuses when the player becomes a full mindflayer
+IF
+TagSet(_Player,FULL_CEREMORPH_3797bfc4-8004-4a19-9578-61ce0714cc0b)
+AND
+DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status)
+THEN
+RemoveStatus(_Player, _Status);
+NOT DB_CRE_GithInfirmary_CharacterAffectedByZaithiskWithStatus(_Player, _Status);
+//END_REGION
+
+//REGION Zaithisk destruction
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_GithInfirmary_State_DeviceBroken_a3b2721c-b6c4-4e7a-868c-1af9cb036bd4)
+THEN
+Transform(S_CRE_InfirmaryDevice_df843052-358f-487e-a3e2-8dafa0aaf6a6, BLD_GTY_Purifier_A_Destruct_6d6797ec-12bc-4ae2-8b21-368c8c0b936d, (SHAPESHIFTRULE)Physical_4acc6277-6dcd-4110-9450-b9379beaedac);
+//END_REGION
+
+//REGION Peaceful Resolution
+IF
+FlagSet(CRE_GithInfirmary_State_ResolvedPeacefully_ec41c5a1-3552-dd6a-395a-1b3427f55c78, _, _)
+THEN
+PROC_PeacefulResolve(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768);
+
+IF
+FlagSet(CRE_GithInfirmary_State_ResolvedPeacefully_ec41c5a1-3552-dd6a-395a-1b3427f55c78, _, _)
+AND
+DB_CRE_GithInfirmary_AmbushGuards(_Guard)
+THEN
+PROC_PeacefulResolve(_Guard);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1b"

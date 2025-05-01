@@ -1,0 +1,360 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers(S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0);
+PROC_TriggerRegisterForParty(S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_AstralPrison_State_KilledDaisyDuringDialog_f19ad2b1-a8b8-48b8-8f38-f3c83e580f1e, (DIALOGRESOURCE)CRE_AstralPrison_Daisy_985f1c50-b681-ac84-cd24-e2f068141345);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_AstralPrison_Event_DaisyReadyCheck_2e27eaa9-2e15-46a2-af3b-1eb1162e89b6, (DIALOGRESOURCE)CRE_AstralPrison_Daisy_985f1c50-b681-ac84-cd24-e2f068141345);
+
+//REGION Daisy Dialogs
+DB_DialogStarted_IgnoreStopConditions((DIALOGRESOURCE)CRE_AstralPrison_Daisy_985f1c50-b681-ac84-cd24-e2f068141345);
+DB_FlagReactionAfterDialog(CRE_AstralPrison_Event_StartDaisyDialog_799f4004-14e4-4b7c-811b-929618e3f557, (DIALOGRESOURCE)CRE_AstralPrison_DaisyCaveEntrance_0b209c2a-169f-294b-8bbb-9a050f2290ee);
+//END_REGION
+
+//REGION
+SetOnStage(S_CRE_ExitPortal_87ca4464-d8ab-4fd2-b578-678b64666939, 0);
+//END_REGION
+
+//REGION Danger zone
+DB_DangerZone(S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0,"AstralPrism");
+DB_PartyDialogSuppressionZone((TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0);
+//END_REGION
+KBSECTION
+//REGION Debug commands
+IF
+TextEvent("cre_gotoastral")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(_Player, S_Debug_CRE_AstralPlane_08bd2e32-e8b3-4981-8f34-29d443dc1aed, "", 1, 1, 1, 1, 1);
+
+IF
+TextEvent("cre_gotodaisy")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(_Player, S_CRE_DebugPos_DaisyField_cd1e7a98-f217-494e-9620-2a743eb5db98, "", 1, 1, 1, 1, 1);
+//END_REGION
+
+//REGION Daisy Cave
+//removing the artefact while in the astral plane
+IF
+EnteredTrigger(_Player, S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND
+DB_Players(_Player)
+AND
+IsInMagicPockets(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Player, 1)
+THEN
+ClearFlag(GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, _Player, 0);
+
+IF
+EnteredTrigger(_Player, S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND
+DB_Players(_Player)
+THEN
+PROC_SetOnStage(S_CRE_AstralPrison_GlobeOfDomination_e7901694-5e21-4077-9a7b-b8d36b8b53a8, 1);
+
+//If the player interacts with a cave, a special dialog starts that reacts to avatars and companions differently. 
+//Companions are sent away to bring their leader
+//If Avatar is not alone they are also asked if they are the leader of the party - if they say yes, the real Daisy dialog starts
+IF
+UseStarted(_Player, S_CRE_DaisyCaveEntrance_446c526d-d3a0-4b22-b0b7-93713b467ff2)
+AND
+DB_Avatars(_Player)
+AND
+DB_Avatars(_Char)
+AND
+_Char != _Player
+THEN
+SetFlag(CRE_AstralPrison_State_MultipleAvatars_3f7252c0-1e94-4005-b58b-97e2228a3363);
+
+IF
+UseStarted(_Player, S_CRE_DaisyCaveEntrance_446c526d-d3a0-4b22-b0b7-93713b467ff2)
+AND
+DB_PartyMembers(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, _Companion)
+THEN
+SetFlag(CRE_AstralPrison_State_CompanionPresent_4e173d11-1589-4394-acd2-c80b67fe7382);
+
+IF
+UseStarted(_Player, S_CRE_DaisyCaveEntrance_446c526d-d3a0-4b22-b0b7-93713b467ff2)
+AND
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRE_AstralPrison_DaisyCaveEntrance_0b209c2a-169f-294b-8bbb-9a050f2290ee, _Daisy, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_SpeakerIsAvailableForInclusion((DIALOGRESOURCE)CRE_AstralPrison_DaisyCaveEntrance_0b209c2a-169f-294b-8bbb-9a050f2290ee, _, _Companion, _Player)
+AND
+QRY_SpeakerIsAvailable(_Companion, 1)
+AND
+DB_PartyMembers(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_DismissedAvatar(_Companion)
+AND
+DB_Avatars(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)CRE_AstralPrison_DaisyCaveEntrance_0b209c2a-169f-294b-8bbb-9a050f2290ee, _)
+THEN
+ClearFlag(CRE_AstralPrison_State_MultipleAvatars_3f7252c0-1e94-4005-b58b-97e2228a3363);
+ClearFlag(CRE_AstralPrison_State_CompanionPresent_4e173d11-1589-4394-acd2-c80b67fe7382);
+
+PROC
+PROC_FlagReactionAfterDialog(_Player ,(FLAG)CRE_AstralPrison_Event_StartDaisyDialog_799f4004-14e4-4b7c-811b-929618e3f557)
+AND
+NOT DB_CRE_AstralPrison_HadDaisyDialog(_Player)
+THEN
+TeleportTo(_Player, S_CRE_AstralPlane_DaisyDialog_TeleportSpot_3307f6bd-d4ed-4b29-a20c-98655763b9b6, "CRE_AstralPrion_PlayerTeleportedToCave", 0, 0, 0, 1, 1);
+
+IF
+EntityEvent(_Player, "CRE_AstralPrion_PlayerTeleportedToCave")
+AND
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy)
+AND
+QRY_CRE_AstralPrison_StartDaisyDialog((CHARACTER)_Daisy, (CHARACTER)_Player)
+THEN
+DB_CRE_AstralPrison_HadDaisyDialog(_Player);
+
+IF
+DialogStarted(_DaisyDialog, _ID)
+AND
+DB_CRE_AstralPrison_InDaisyDialog(_DaisyDialog, _)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SpeakerIsAvailable(_Avatar)
+THEN
+PROC_DialogAddListeningActor(_ID, _Avatar);
+SetFlag((FLAG)CRE_AstralPrison_State_DaisyDialogInProgress_43ef9bac-d79a-4337-b705-c5993724bc92);
+
+IF
+DialogEnded(_DaisyDialog, _)
+AND
+DB_CRE_AstralPrison_InDaisyDialog(_DaisyDialog, _Avatar)
+THEN
+TeleportTo(_Avatar, S_CRE_AstralPlane_DaisyDialog_ReturnSpot_37841cbe-59cb-441b-8f6b-74b5d0d27397, "CRE_AstralPrism_ReturnedAfterDaisyDialog", 0, 0, 0, 1, 1);
+SetOnStage(S_CRE_ExitPortal_87ca4464-d8ab-4fd2-b578-678b64666939, 1);
+ClearFlag((FLAG)CRE_AstralPrison_State_DaisyDialogInProgress_43ef9bac-d79a-4337-b705-c5993724bc92);
+SetFlag((FLAG)CRE_AstralPrison_State_DaisyDialogDone_040dd254-113c-48b5-aa2e-87ec799e7141);
+SetTag(_Avatar, (TAG)CRE_ASTRALPRISON_SPOKETODAISY_4c0924fc-5a3e-435b-8d1d-cd2e70968e54);
+
+IF
+DB_GlobalFlag(CRE_AstralPrison_State_DaisyDialogDone_040dd254-113c-48b5-aa2e-87ec799e7141)
+AND
+DB_PartyMembers(_Companion)
+AND
+IsTagged(_Companion, (TAG)CRE_ASTRALPRISON_SPOKETODAISY_4c0924fc-5a3e-435b-8d1d-cd2e70968e54, 0)
+AND
+QRY_OnlyOnce("CRE_DaisyDialogDone")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)CRE_AstralPrison_VB_ComingOutOfCave_145a362f-0821-c237-e098-52622b7a9da5, _Companion);
+
+IF
+FlagSet(CRE_AstralPrison_State_DaisyDialogDone_040dd254-113c-48b5-aa2e-87ec799e7141, _, _)
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player, "BLESS", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION [OLD] Daisy Dialog
+QRY
+QRY_CRE_AstralPrison_GetNearbyUserAvatar(_)
+AND
+DB_QRYRTN_CRE_AstralPrison_NearbyUserAvatar(_OldSelection)
+THEN
+NOT DB_QRYRTN_CRE_AstralPrison_NearbyUserAvatar(_OldSelection);
+
+QRY
+QRY_CRE_AstralPrison_GetNearbyUserAvatar((CHARACTER)_Player)
+AND
+QRY_GetClosestAvailableCharacterTo(_Player, 0)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_ClosestAvatar, _Player, _Dist, 1)
+AND
+_Dist < 10.0
+AND
+QRY_SameUser(_ClosestAvatar, _Player)
+THEN
+DB_QRYRTN_CRE_AstralPrison_NearbyUserAvatar(_ClosestAvatar);
+
+QRY
+QRY_CRE_AstralPrison_StartDaisyDialog((CHARACTER)_Daisy, _Player)
+THEN
+PROC_SetOnStage(_Daisy,1);
+SetVisible(_Daisy,0);
+
+QRY
+QRY_CRE_AstralPrison_StartDaisyDialog((CHARACTER)_Daisy, (CHARACTER)_ClosestAvatar)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)CRE_AstralPrison_Daisy_985f1c50-b681-ac84-cd24-e2f068141345, _Daisy, _ClosestAvatar, 0, 0, 0, 0)
+THEN
+DB_CRE_AstralPrison_InDaisyDialog(CRE_AstralPrison_Daisy_985f1c50-b681-ac84-cd24-e2f068141345, _ClosestAvatar);
+
+IF
+DialogEnded((DIALOGRESOURCE)CRE_AstralPrison_Daisy_985f1c50-b681-ac84-cd24-e2f068141345, _Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+AND
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy((CHARACTER)_Daisy)
+THEN
+SetVisible(_Daisy,1);
+TeleportTo(_Daisy,(TRIGGER)S_CAMP_Act1b_DaisyTP_ed390955-547b-40dd-a949-b433de9721be);
+PROC_SetOnStage(_Daisy,0);
+//END_REGION
+
+//REGION Exiting Astral Plane
+IF
+UseStarted(_Player, S_CRE_ExitPortal_87ca4464-d8ab-4fd2-b578-678b64666939)
+THEN
+RealtimeObjectTimerLaunch(_Player, "CRE_AstralPrison_LeaveDelay", 500);
+
+IF
+ObjectTimerFinished(_Player, "CRE_AstralPrison_LeaveDelay")
+THEN
+ReadyCheckGlobal("CRE_AstralPrison_ReturnToCrecheReadyCheck", "CRE_AstralPrison_Leaving_ReadyCheck", 0, (CHARACTER)_Player);
+ClearFlag((FLAG)CRE_AstralPrison_Event_DaisyReadyCheck_2e27eaa9-2e15-46a2-af3b-1eb1162e89b6);
+
+//If the readycheck passes, leave the astral prison
+IF
+ReadyCheckPassed("CRE_AstralPrison_ReturnToCrecheReadyCheck")
+THEN
+PROC_TeleportPartiesTo(S_CRE_AstralPrisonExitPosition_a07eb0c0-3bf4-46ec-8516-0f1ef4654fb4, "CRE_AstralPrison_Returned");
+SetFlag((FLAG)CRE_AstralPrison_Event_LeftAstralPlane_58ec28f6-be1a-4044-8fbf-4229d8482bac);
+SetJoinBlock(JOINBLOCKTYPE.None);
+
+IF
+ReadyCheckFailed("CRE_AstralPrison_ReturnToCrecheReadyCheck")
+AND
+DB_Players(_Player)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)CRE_AstralPrison_AD_ReadyCheckFailed_1e4698fa-122b-0b2f-dfb2-eb0e3e0690a5);
+
+IF
+LeftTrigger(_Player, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTrigger(S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND
+NOT IsInMagicPockets(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Player, 1)
+THEN
+SetFlag(GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, _Player, 0);
+SetOnStage(S_CRE_AstralPrisonEntrance_c8295f70-f69a-4a49-961f-309141d98bc0, 0);
+ClearFlag(CRE_ChainOfCommand_State_PlanecasterActive_5e5e9cb6-41d8-4a93-942d-3dca4d357561, NULL_00000000-0000-0000-0000-000000000000, 0);
+ClearFlag(CRE_AstralPrison_State_BoxUnlocked_07e04b03-e958-461c-bda9-b4131da6884b, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+LeftTrigger(_Player, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND
+DB_Players(_Player)
+THEN
+PROC_SetOnStage(S_CRE_AstralPrison_GlobeOfDomination_e7901694-5e21-4077-9a7b-b8d36b8b53a8, 0);
+
+// TODO: Find a global solution that includes NPCs getting the gravity status also
+IF
+DB_InRegion(_Char, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+ApplyStatus(_Char, "CRE_ASTRALPRISON_GRAVITY", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_InRegion(_Summon, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND 
+DB_PartyMembers(_Summon)
+THEN
+ApplyStatus(_Summon,"CRE_ASTRALPRISON_GRAVITY", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+
+IF
+LeftTrigger(_Char, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+RemoveStatus(_Char, "CRE_ASTRALPRISON_GRAVITY", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+LeftTrigger(_Char, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+TriggerUnregisterForCharacter(S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0, _Char);
+//END_REGION
+
+//REGION Avatar dying in Astral Plane
+//ToDo: Killing the Avatar with a Thunderwave spell and having them then fall into a Chasm breaks this and causes them not to resurrected. Investigate further.
+IF
+HitpointsChanged(_Avatar, _RemainingHP)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+_RemainingHP <= 0.0
+AND
+DB_InRegion(_Avatar, (TRIGGER)S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+AND
+NOT DB_CRE_AstralPrison_ResurrectAvatarQueued(_Avatar)
+AND
+NOT DB_CRE_AstralPrison_AvatarResurrecting(_Avatar)
+THEN
+ObjectTimerLaunch(_Avatar, "CRE_AstralPrison_ReviveAvatar", 2000, 1); //After dying, the avatar respawns again after a few seconds
+
+//When respawning, it respawns on a random position near its current anchor point
+IF
+ObjectTimerFinished((CHARACTER)_Avatar, "CRE_AstralPrison_ReviveAvatar")
+THEN
+DB_CRE_AstralPrison_ResurrectAvatarQueued(_Avatar);
+
+//Added to ensure that the DaisyAD does not try to play when the player is inside the Chasm, as 
+IF
+DB_CRE_AstralPrison_ResurrectAvatarQueued(_Avatar)
+AND
+NOT DB_InRegion((CHARACTER)_Avatar, (TRIGGER)ChasmRegion_AstralPlane_000_35c3fc55-bb04-4e00-a7c1-e700f80d4cd6)
+THEN
+NOT DB_CRE_AstralPrison_ResurrectAvatarQueued(_Avatar);
+DB_CRE_AstralPrison_AvatarResurrecting(_Avatar);
+PROC_CRE_AstralPrison_ResurrectWith1HP(_Avatar);
+
+IF
+HitpointsChanged(_Avatar, _RemainingHP) 
+AND
+DB_CRE_AstralPrison_AvatarResurrecting((CHARACTER)_Avatar)
+AND
+_RemainingHP > 0.0
+AND
+GetReservedUserID((CHARACTER)_Avatar,_UserID)
+AND
+GetUserProfileID(_UserID, _Profile)
+THEN
+ApplyStatus(_Avatar, "CRE_ASTRALPRISON_GRAVITY", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+PROC_DaisyAD((CHARACTER)_Avatar, (DIALOGRESOURCE)CRE_AstralPrison_DaisyAD_AvatarDies_6da881d6-5b26-d132-7234-f11516454bb5);
+NOT DB_DaisyAD_TriggeredOnProfile((DIALOGRESOURCE)CRE_AstralPrison_DaisyAD_AvatarDies_6da881d6-5b26-d132-7234-f11516454bb5,_Profile); //Currently this prevents DaisyADs from playing more than once. Likely intended for normal DaisyADs, but this is a special case
+NOT DB_CRE_AstralPrison_AvatarResurrecting(_Avatar);
+//END_REGION
+
+//REGION Party members in astral prison
+IF
+EnteredTrigger(_Player, S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+SetFlag((FLAG)CRE_AstralPrison_State_InAstralPlane_93315997-599a-4cd6-948d-5853bde21260, _Player);
+
+IF
+LeftTrigger(_Player, S_CRE_AstralPlaneArea_cc0ba8c0-ae50-4f12-8ea4-7db1ff8e62b0)
+THEN
+ClearFlag((FLAG)CRE_AstralPrison_State_InAstralPlane_93315997-599a-4cd6-948d-5853bde21260, _Player);
+//END_REGION Party members in astral prison
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1b"

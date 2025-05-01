@@ -1,0 +1,478 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// DEN - MURALS
+DB_OneShot_VoiceBarkTrigger((TRIGGER)S_DEN_ShadowheartMuralSpot_72a4b7aa-f225-4429-8e16-88accfd0033e, (VOICEBARKRESOURCE)DEN_DarkJusticiar_VB_MuralHint_1c1c191b-cc19-4546-cebd-08b3274a0910, "Global");
+
+// UND - SHAR VISTA
+DB_OneShot_VoiceBarkTrigger((TRIGGER)S_UND_SharTempleVista_77fb985c-36ee-47b6-8d5e-b2304613e13f, (VOICEBARKRESOURCE)UND_DarkJusticiar_VB_SharTempleVista_e44419f4-b158-c634-a18c-ad9fa7d26fb9, "Global");
+
+// FOR - MOONHAVEN OM - Overriding EA moment.
+DB_OnlyOnce("FOR_MoonhavenOM_MomentStarted");
+
+// UND - Idol of Shar
+DB_HasItemEvent((ITEM)S_UND_IdolOfShar_18d2c483-c9eb-49be-a6d1-0d8961c13e87, (FLAG)UND_IdolOfShar_State_HasIdol_f5858c41-cb2a-45c6-8093-8a0545979cc6);
+DB_GiveItemToEvent((ITEM)S_UND_IdolOfShar_18d2c483-c9eb-49be-a6d1-0d8961c13e87, (FLAG)UND_IdolOfShar_Event_GiveIdol_70188c82-5e67-4215-b8cb-e47bd69a8f65);
+
+// GLO - Dark Justiciar Hints
+DB_ORI_Shadowheart_DarkJusticiarHints_Trigger((TRIGGER)S_UND_DarkJusticiarHints_TempleBounds_67d036fb-151e-4198-9a92-bf95a059ab44, (FLAG)ORI_Shadowheart_State_AtTempleVista_a89becc9-6378-420b-b6d0-cfc5a901a67f);
+DB_ORI_Shadowheart_DarkJusticiarHints_Trigger((TRIGGER)S_UND_DarkJusticiarHints_IdolBounds_9581ef83-3e4c-428f-8481-d5420a2a39b3, (FLAG)ORI_Shadowheart_State_AtIdol_75bd8e12-6884-44de-8c30-94b8c090367f);
+DB_ORI_Shadowheart_DarkJusticiarHints_Trigger((TRIGGER)S_DEN_AtShadowheartMuralSpot_c755eb1e-8057-4c08-9e51-63aaf7d5c75d, (FLAG)ORI_Shadowheart_State_AtMural_183a6f1e-90e5-4eb1-9b8d-3d1b5a5931eb);
+
+
+// GLO - Incurable Wound Fallback
+DB_ORI_Shadowheart_IncurableWound_OriginRelations((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (FLAG)ORI_Shadowheart_State_AstarionApproval_f03a4b29-f88f-4d08-ac12-3d023dc081ed);
+DB_ORI_Shadowheart_IncurableWound_OriginRelations((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (FLAG)ORI_Shadowheart_State_GaleApproval_3e31f887-def0-406c-92f4-3931993ff1d4);
+DB_ORI_Shadowheart_IncurableWound_OriginRelations((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (FLAG)ORI_Shadowheart_State_KarlachApproval_499841c5-dc05-4106-b53a-b0448cbcab17);
+DB_ORI_Shadowheart_IncurableWound_OriginRelations((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (FLAG)ORI_Shadowheart_State_LaezelApproval_4e38f042-858c-4de3-a79a-787f24d37701);
+DB_ORI_Shadowheart_IncurableWound_OriginRelations((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, (FLAG)ORI_Shadowheart_State_WyllApproval_a01614a2-66d6-4c88-92bc-5c463cce5353);
+
+DB_ORI_Shadowheart_IncurableWound_Fallback((TRIGGER)S_UND_Underdark_SUB_b379a862-a59f-4e52-9166-23fbe0e8976e);
+DB_ORI_Shadowheart_IncurableWound_Fallback((TRIGGER)S_PLA_Plains_SUB_bcc3efa5-bfe1-4224-9df1-6758cac764cd);
+KBSECTION
+//REGION Wolf Dream
+
+IF
+ApprovalRatingChanged((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player, _Approval)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_WolfDreamShared")
+AND
+_Approval >= 20
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryWolfDreamInvite();
+
+IF
+DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_BecomeJusticiar_c29b8679-3e0b-43f9-8578-2a5d7659180e)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_WolfDreamShared")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryWolfDreamInvite();
+
+IF
+DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_MotherSuperior_2ccd399f-e743-45f6-9fea-12afaa4647f7)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_WolfDreamShared")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryWolfDreamInvite();
+
+IF
+FlagCleared((FLAG)ORI_Shadowheart_State_BlockBackground_f3323dfc-c725-4627-a64f-fb8c6e8e4a74, _, _)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_WolfDreamShared")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryWolfDreamInvite();
+
+PROC
+PROC_CAMP_LeftCamp((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_WolfDreamShared")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryWolfDreamInvite();
+
+PROC
+PROC_ORI_Shadowheart_TryWolfDreamInvite()
+AND
+NOT DB_InCamp((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_BecomeJusticiar_c29b8679-3e0b-43f9-8578-2a5d7659180e)
+AND
+DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_MotherSuperior_2ccd399f-e743-45f6-9fea-12afaa4647f7)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_WolfDreamOffered_82bcb108-7b2f-4a33-959a-a6e1520d0442)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_BlockBackground_f3323dfc-c725-4627-a64f-fb8c6e8e4a74)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_HasSeenWolfDream_f7e48f6a-bc8b-4941-8016-6622956c84f9)
+AND
+DB_Avatars(_Player)
+AND
+GetApprovalRating((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player, _Approval)
+AND
+_Approval >= 20
+AND
+QRY_OnlyOnce("ORI_Shadowheart_WolfDreamShared")
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, ORI_Shadowheart_State_HadWolfDreamInvite_88c4d243-da5d-4cd0-a367-ea99a9852fec,(CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,0 , 20);
+
+IF
+GameBookInterfaceClosed((ITEM)S_FOR_SeluniteRiteScroll_2f8f7ba0-c5a5-4af3-8986-7ea7bf430373, _Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_SeluniteForestRitual_81e3a800-9cfa-45a8-aa58-e78270075de8)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Shadowheart_Knows_SeluniteForestRitual_81e3a800-9cfa-45a8-aa58-e78270075de8);
+StartVoiceBark((VOICEBARKRESOURCE)FOR_Shadowheart_VB_SeluniteRitualScroll_c4c52cf6-f872-b6f0-6beb-52a68f68ae24, _Player);
+
+IF
+AddedTo(S_FOR_SeluniteNecklace_f2c024b5-ef8f-4f26-b39f-7860eca61584, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_SeenNecklaceDesign_04181c6e-d59d-4e48-9f8e-5a812651b52b)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Shadowheart_Knows_SeenNecklaceDesign_04181c6e-d59d-4e48-9f8e-5a812651b52b);
+StartVoiceBark((VOICEBARKRESOURCE)FOR_Shadowheart_VB_SeluniteNecklace_64a0a842-58f7-7eea-d2cb-cc39ff454f37, _Player);
+
+//END_REGION
+
+//REGION FOR_MoonhavenOM
+
+// Shadowheart believes there is a group of Shar worshippers nearby after finding evidence of Ketheric's raid on Moonhaven
+
+// Trigger conditions for the OM
+IF
+AddedTo((ITEM)S_FOR_General_PriestessJournal_e2f45a7e-301e-4148-89eb-354e69134905, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("FOR_MoonhavenOM_FoundJournal")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)FOR_Shadowheart_AD_FoundJournal_a0531d70-10ee-b7f9-976a-6dd6af1ee4ef, _Player);
+
+IF
+GameBookInterfaceClosed(S_FOR_General_PriestessJournal_e2f45a7e-301e-4148-89eb-354e69134905, _Player)
+AND
+DB_InRegion(_Player, S_FOR_VillageArea_9249a10e-b9d1-439b-8584-f5be38e8e6ae)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player)
+AND
+QRY_OnlyOnce("FOR_MoonhavenOM_Started")
+THEN
+SetFlag((FLAG)FOR_Shadowheart_Knows_PriestessJournal_47ee2afe-8230-44e0-ab94-2a0120f52d26, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_StartPartyOriginMoment((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_AOM_OOM_PostEA_e6c44a67-09d6-264b-eb62-73ea86311533, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_AOM_OOM_PostEA_e6c44a67-09d6-264b-eb62-73ea86311533, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_COM_PostEA_3514d8ee-68d0-e350-015c-a6ff5e43c700, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_AOM_OOM_PostEA_e6c44a67-09d6-264b-eb62-73ea86311533);
+
+IF
+EnteredTrigger(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (TRIGGER)S_FOR_ShadowheartOM_FindStatue_8c59dd2a-9c26-4fee-abdd-2e0ce2f1a19b)
+AND
+QRY_OnlyOnce("FOR_MoonhavenOM_Started")
+THEN
+SetFlag((FLAG)FOR_Shadowheart_Knows_DefacedStatue_e8a00479-1d8e-4646-9950-1759375104c5, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_StartPartyOriginMoment((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_AOM_OOM_PostEA_e6c44a67-09d6-264b-eb62-73ea86311533, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_AOM_OOM_PostEA_e6c44a67-09d6-264b-eb62-73ea86311533, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_COM_PostEA_3514d8ee-68d0-e350-015c-a6ff5e43c700, (DIALOGRESOURCE)FOR_Village_OM_ShadowHeart_AOM_OOM_PostEA_e6c44a67-09d6-264b-eb62-73ea86311533);
+
+
+//END_REGION
+
+//REGION FOR - Owlbear Selune Shrine
+
+IF
+DialogEnded((DIALOGRESOURCE)FOR_Owlbear_OM_Shadowheart_COM_6c7d91e2-3a91-3aa3-ca52-b1d44edd804b, _)
+AND
+DB_GlobalFlag(FOR_SeluneStash_State_ConvincedShadowheart_b507bd98-09bc-01b6-50e0-711f4378d8c4)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_ShrineFlare")
+THEN
+PROC_ORI_Shadowheart_IncurableWound_QueueAutomatedFlareUp("FOR_Shadowheart_LootedShrine");
+
+//END_REGION
+
+//REGION Noblestalk Memory
+
+//COMPANION LOGIC
+PROC
+PROC_BlockUseOfItem((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _NobleStalk)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_NobleStalkMemory_d0d87954-6563-4e26-9f2c-4616e3cfeb0e)
+AND
+GetTemplate(_NobleStalk, PUZ_Underdark_Mushroom_Noblestalk_A_48c679c1-b713-4d2f-9bba-1c43ed654404)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+DB_CustomUseItemResponse((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _NobleStalk, 0);
+PROC_ORI_Shadowheart_NobleStalkUse();
+
+PROC
+PROC_ORI_Shadowheart_NobleStalkUse()
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)UND_Shadowheart_PAD_RefuseNobleStalk_4356e118-ec18-2efe-6e81-d53bb41f9886, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+FlagSet((FLAG)ORI_Shadowheart_Event_ConsumeNobleStalk_845ceb56-5d5a-4741-8774-1ba611ced473, _, _)
+AND
+DB_Players(_Player)
+THEN
+IterateInventory(_Player, "ORI_Shadowheart_FindNobleStalk", "");
+
+IF
+EntityEvent(_NobleStalk, "ORI_Shadowheart_FindNobleStalk")
+AND
+GetTemplate(_NobleStalk, PUZ_Underdark_Mushroom_Noblestalk_A_48c679c1-b713-4d2f-9bba-1c43ed654404)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_AteNobleStalk")
+THEN
+Use((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (ITEM)_NobleStalk, 1, 0, "");
+PROC_GlobalClearFlagAndCache((FLAG)ORI_Shadowheart_Event_ConsumeNobleStalk_845ceb56-5d5a-4741-8774-1ba611ced473);
+
+//AVATAR LOGIC
+PROC
+PROC_BlockUseOfItem((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _NobleStalk)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_NobleStalkMemory_d0d87954-6563-4e26-9f2c-4616e3cfeb0e)
+AND
+GetTemplate(_NobleStalk, PUZ_Underdark_Mushroom_Noblestalk_A_48c679c1-b713-4d2f-9bba-1c43ed654404)
+AND
+DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT QRY_SpeakerIsAvailable(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+DB_CustomUseItemResponse((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _NobleStalk, 0);
+PROC_ORI_Shadowheart_NobleStalkUse();
+
+PROC
+PROC_ProcessUseOfItem(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _NobleStalk, _)
+AND
+GetTemplate(_NobleStalk, PUZ_Underdark_Mushroom_Noblestalk_A_48c679c1-b713-4d2f-9bba-1c43ed654404)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_NobleStalkMemory_d0d87954-6563-4e26-9f2c-4616e3cfeb0e)
+AND
+DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)UND_MushroomHunter_ConsumeNobleStalk_OM_Shadowheart_AOM_ddd93da7-0bc6-fd19-e81c-a1997aea20d4, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)UND_Shadowheart_PAD_NobleStalk_1608b8e8-c771-0934-32e7-7574423b2bec, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+DialogEnded((DIALOGRESOURCE)UND_MushroomHunter_ConsumeNobleStalk_OM_Shadowheart_AOM_ddd93da7-0bc6-fd19-e81c-a1997aea20d4, _)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_NobleStalkFlare")
+THEN
+PROC_ORI_Shadowheart_IncurableWound_QueueAutomatedFlareUp("UND_Shadowheart_AteNobleStalk");
+
+IF
+DialogEnded((DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, _)
+AND
+DB_GlobalFlag(ORI_Shadowheart_State_NobleStalkMemory_d0d87954-6563-4e26-9f2c-4616e3cfeb0e)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_NobleStalkFlare")
+THEN
+PROC_ORI_Shadowheart_IncurableWound_QueueAutomatedFlareUp("UND_Shadowheart_AteNobleStalk");
+
+//END_REGION
+
+//REGION Idol of Shar
+
+IF
+AddedTo((ITEM)S_UND_IdolOfShar_18d2c483-c9eb-49be-a6d1-0d8961c13e87, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("UND_Shadowheart_IdolOfShar")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)UND_IdolOfShar_VB_IdolLooted_f5eaafe3-b2e2-1566-851c-95ebe5fef4db, _Player);
+
+IF
+AddedTo((ITEM)S_UND_IdolOfShar_18d2c483-c9eb-49be-a6d1-0d8961c13e87, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_SheHasIdol_1a419d44-74c7-4b20-bb3f-03f9cc7e7459)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Shadowheart_State_SheHasIdol_1a419d44-74c7-4b20-bb3f-03f9cc7e7459);
+
+IF
+RemovedFrom((ITEM)S_UND_IdolOfShar_18d2c483-c9eb-49be-a6d1-0d8961c13e87, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GlobalFlag((FLAG)ORI_Shadowheart_State_SheHasIdol_1a419d44-74c7-4b20-bb3f-03f9cc7e7459)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)ORI_Shadowheart_State_SheHasIdol_1a419d44-74c7-4b20-bb3f-03f9cc7e7459);
+
+//END_REGION
+
+//REGION Incurable Wound Fallback
+
+IF
+DB_GlobalFlag((FLAG)GOB_Orpheus_State_HadVoiceOfAbsoluteEvent_9546407d-19e3-4f26-88af-5970896997d7)
+AND
+DB_Players((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_WoundSuspicion_3ecd2181-fdd0-4314-b0bf-fbe2aafdef87)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_IncurableWound_bf04e5f1-0add-4b21-a3ec-be25a73bfe92)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_DiscussedIncurableWound_ec4be17c-3aff-428b-80c1-6bc2a34c1c9b)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_IncurableWoundFallback_FlareUp")
+AND
+DB_ORI_Shadowheart_IncurableWound_Fallback(_Trigger)
+AND
+DB_InRegion((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Trigger)
+AND
+NOT DB_CantTalk((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_WoundSuspicion_3ecd2181-fdd0-4314-b0bf-fbe2aafdef87)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_IncurableWound_bf04e5f1-0add-4b21-a3ec-be25a73bfe92)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_IncurableWoundFallback_FlareUp")
+THEN
+DB_ORI_Shadowheart_IncurableWoundsFallback_Started(1);
+PROC_ORI_Shadowheart_IncurableWound_QueueAutomatedFlareUp("FOR_Shadowheart_WoundFallback");
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)ORI_Shadowheart_PAD_WoundFlareUp_9b2084a6-1307-0612-486f-a4fd4fbf2d9c, _)
+AND
+DB_ORI_Shadowheart_IncurableWoundsFallback_Started(1)
+THEN
+DB_ORI_Shadowheart_IncurableWoundsFallback_Queued(1);
+
+IF
+DB_ORI_Shadowheart_IncurableWoundsFallback_Queued(1)
+AND
+NOT DB_CantTalk((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_IncurableWoundFallback")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_IncurableWound_OM_Shadowheart_AOM_f9897ff2-576f-eba7-5543-d88f52ddea08, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_IncurableWoundFallback")
+THEN
+NOT DB_ORI_Shadowheart_IncurableWoundsFallback_Queued(1);
+
+IF
+FlagSet((FLAG)ORI_Shadowheart_State_CheckPartyStatus_e36f3296-69d5-4c30-820b-f42371ce276a, _, _)
+AND
+DB_Players(_Player)
+AND
+DB_ORI_Shadowheart_IncurableWound_OriginRelations(_Origin, _Flag)
+AND
+GetApprovalRating(_Player, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Rating)
+AND
+_Rating >= 20
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+
+IF
+FlagSet((FLAG)ORI_Shadowheart_State_CheckPartyStatus_e36f3296-69d5-4c30-820b-f42371ce276a, _, _)
+AND
+DB_PartOfTheTeam(_Char)
+AND
+_Char != S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Shadowheart_State_HasParty_4035a408-d3aa-4f70-8d31-c96e09511767);
+
+//END_REGION
+
+//REGION Dark Justiciar
+
+PROC
+PROC_CAMP_LeftCamp((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_HadJusticiarDream")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryJusticiarShare();
+
+IF
+DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_JusticiarDream_f37f2c1d-89c9-4d09-baff-81046a625267)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_HadJusticiarDream")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryJusticiarShare();
+
+IF
+DB_GlobalFlag((FLAG)ShadowHeart_InParty_Knows_SharWorshipper_634f858d-9b54-0711-e31f-075d304422ab)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_HadJusticiarDream")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryJusticiarShare();
+
+IF
+FlagCleared((FLAG)ORI_Shadowheart_State_BlockBackground_f3323dfc-c725-4627-a64f-fb8c6e8e4a74, _, _)
+AND
+NOT DB_OnlyOnce("ORI_Shadowheart_HadJusticiarDream")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_ORI_Shadowheart_TryJusticiarShare();
+
+PROC
+PROC_ORI_Shadowheart_TryJusticiarShare()
+AND
+DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_JusticiarDream_f37f2c1d-89c9-4d09-baff-81046a625267)
+AND
+DB_GlobalFlag((FLAG)ShadowHeart_InParty_Knows_SharWorshipper_634f858d-9b54-0711-e31f-075d304422ab)
+AND
+NOT DB_InCamp((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_PartyProgress_EnteredSharTemple_d212e499-d006-4043-9dee-8aac504098e5)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_State_BlockBackground_f3323dfc-c725-4627-a64f-fb8c6e8e4a74)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Shadowheart_Knows_BecomeJusticiar_c29b8679-3e0b-43f9-8578-2a5d7659180e)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_HadJusticiarDream")
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, (FLAG)ORI_Shadowheart_State_HadJusticiarDream_a715b8bc-3767-453d-864d-5fa501ba6c8a,(CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 0);
+
+IF
+VoiceBarkEnded((VOICEBARKRESOURCE)DEN_DarkJusticiar_VB_MuralHint_1c1c191b-cc19-4546-cebd-08b3274a0910, _)
+AND
+DB_GlobalFlag((FLAG)ShadowHeart_InParty_Knows_SharWorshipper_634f858d-9b54-0711-e31f-075d304422ab)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+VoiceBarkEnded((VOICEBARKRESOURCE)UND_DarkJusticiar_VB_SharTempleVista_e44419f4-b158-c634-a18c-ad9fa7d26fb9, _)
+AND
+DB_GlobalFlag((FLAG)ShadowHeart_InParty_Knows_SharWorshipper_634f858d-9b54-0711-e31f-075d304422ab)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+
+//END_REGION
+
+//REGION Romance
+
+PROC
+PROC_CampNight_StartMorningMoments()
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)ORI_Shadowheart_State_FirstRomanceHappened_9d075859-2653-4026-85d0-2c3687259f0c, _Player, 1)
+AND
+QRY_OnlyOnce("ORI_Shadowheart_CRD_RomanceHappened")
+THEN
+PROC_CampRelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, ORI_Shadowheart_State_FirstRomanceHappened_9d075859-2653-4026-85d0-2c3687259f0c, 1);
+PROC_Try_CampRelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1); 
+
+IF
+FlagSet((FLAG)ORI_State_PartneredWithShadowheart_3808ae35-ad4e-465b-800b-63d32b77211e, _, _)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, ShadowHeart_InParty_95ca3833-09d0-5772-b16a-c7a5e9208fe5, (FLAG)ORI_Shadowheart_State_FirstRomanceHappened_9d075859-2653-4026-85d0-2c3687259f0c);
+
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

@@ -1,0 +1,291 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Moonlantern dialog
+SetFlag(GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec, NULL_00000000-0000-0000-0000-000000000000);
+DB_GlobalFlagReactionAfterDialog((FLAG)GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651, (DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf);
+DB_GLO_CompoundFlag((FLAG)SCL_Pixie_State_KilledByDarkUrge_1ee1a751-e825-d343-4dba-d885d79175c9, (FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03);
+//END_REGION Moonlantern dialog
+
+DB_GiveItemToEvent((ITEM)S_GLO_PixieBell_8c99b6c7-51b1-4784-9412-d927c4d77fdc, (FLAG)SCL_Pixie_Event_GiveBell_e15438e1-54a5-48ae-833d-8c88e18ba2b8);
+DB_GlobalFlagReactionAfterDialog((FLAG)GLO_Pixie_Event_GivesImmunity_4c29ab8b-9b56-49a8-838c-c83a257976e5, (DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf);
+DB_GlobalFlagReactionAfterDialog((FLAG)GLO_Pixie_Event_GivesImmunity_4c29ab8b-9b56-49a8-838c-c83a257976e5, (DIALOGRESOURCE)SCL_PixieBell_2ac58194-4037-1f53-cf11-2de7e8a914bf);
+
+DB_GLO_PixieBell_Polymorph((FLAG)GLO_PixieBell_Event_TransformsIntoFrog_f5db4756-fb67-9646-b789-9f35933ec316, "SCL_PIXIEBELL_FROG");
+DB_GLO_PixieBell_Polymorph((FLAG)GLO_PixieBell_Event_TransformsIntoBoar_959b8a77-a9e7-6f66-a1f5-24ed5d0de003, "SCL_PIXIEBELL_BOAR"); 
+DB_GLO_PixieBell_Polymorph((FLAG)GLO_PixieBell_Event_TransformsIntoDeepRothe_c0fc0e31-7200-c7c9-0c06-f825885f4ba6, "SCL_PIXIEBELL_DEEPROTHE"); 
+
+DB_GLO_PixieBell_AsylumPos("WLD_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act1_1973406c-188b-4a34-b591-86bdb1ffffe7);
+DB_GLO_PixieBell_AsylumPos("CRE_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act1b_c3c9ee19-4014-4147-b2e1-cc799539b797);
+DB_GLO_PixieBell_AsylumPos("SCL_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act2_b47a15ea-a5c6-40e4-8de1-f1e53a8affc4);
+DB_GLO_PixieBell_AsylumPos("INT_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act2b_53971922-a8ad-410f-9e02-24eee1a5611b);
+DB_GLO_PixieBell_AsylumPos("BGO_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3a_54c3b2c0-ce1d-4870-b939-5fa3923accd0);
+DB_GLO_PixieBell_AsylumPos("CTY_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3b_72cad6e5-e6de-4637-8169-c894e0a04d91);
+DB_GLO_PixieBell_AsylumPos("END_Main", (TRIGGER)S_GLO_PixieAsylumPos_Act3c_9f22d897-b3df-49cb-82e9-3db74617dd26);
+DB_GLO_PixieBell_AsylumPos("IRN_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3i_e4710777-1183-43c6-aa1c-081ac8236869);
+DB_GLO_PixieBell_AsylumPos("EPI_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3c_EPI_42d0fecf-b7eb-4b3e-ad70-a3291bfb2085);
+KBSECTION
+//REGION Bell dialog
+IF
+LevelLoaded(_Level)
+AND
+DB_GLO_PixieBell_AsylumPos(_Level, _Pos)
+THEN
+TeleportTo(S_GLO_Pixie_250b9342-fd7d-4a1d-a320-aa5e0dfbf2d5, _Pos);
+
+IF
+UseFinished(_Player, S_GLO_PixieBell_8c99b6c7-51b1-4784-9412-d927c4d77fdc, 1)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)SCL_PixieBell_2ac58194-4037-1f53-cf11-2de7e8a914bf, S_GLO_PixieBell_8c99b6c7-51b1-4784-9412-d927c4d77fdc, S_GLO_Pixie_250b9342-fd7d-4a1d-a320-aa5e0dfbf2d5, _Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Global dialog handling
+IF
+CastedSpell(_Player, "Shout_GLO_Pixie_InspectMoonlantern", _, _, _)
+THEN
+PROC_GLO_Drider_PixieDialog((CHARACTER)_Player);
+
+PROC
+PROC_GLO_Drider_PixieDialog((CHARACTER)_Player)
+AND
+QRY_OnlyOnce_Reset("GLO_Pixie_CouldNotStartLanternDialog")
+AND
+NOT QRY_GLO_Pixie_TryStartDialog(_Player)
+AND
+QRY_OnlyOnce("GLO_Pixie_CouldNotStartLanternDialog")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_Drider_PixieDialog((CHARACTER)_Player)
+AND
+DB_OnlyOnce("GLO_Pixie_CouldNotStartLanternDialog")
+THEN
+PROC_PlayCantUseItemAD(_Player);
+
+QRY
+QRY_GLO_Pixie_TryStartDialog((CHARACTER)_Player)
+AND
+NOT DB_DialogName(SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, _)
+AND
+NOT DB_CantTalk(_Player)
+AND
+QRY_StartDialog_Fixed(SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, S_GLO_Pixie_250b9342-fd7d-4a1d-a320-aa5e0dfbf2d5, _Player)
+THEN
+SetFlag((FLAG)GLO_Pixie_State_StartedDialog_e9b86886-353a-43aa-8077-c905955b38e5, _Player);
+DB_GLO_Pixie_StartedDialogWith(_Player);
+
+// If USER got the pixie dialog block from triggering again for that user when moving it to another inventory.
+QRY
+QRY_GLO_Pixie_BlockPixieDialog((CHARACTER)_Player)
+AND
+GetFlag((FLAG)GLO_Pixie_State_StartedDialog_e9b86886-353a-43aa-8077-c905955b38e5, _Player, 1)
+THEN
+DB_NOOP(1);
+
+// Pixie is dead: don't start it automatically
+QRY
+QRY_GLO_Pixie_BlockPixieDialog((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+THEN
+DB_NOOP(1);
+
+// Pixie is not inside the lantern
+QRY
+QRY_GLO_Pixie_BlockPixieDialog((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec)
+THEN
+DB_NOOP(1);
+
+// Make her appear as soon as the flag is set.
+IF
+FlagSet(GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651, _, _)
+THEN
+ClearFlag(GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec, NULL_00000000-0000-0000-0000-000000000000);
+PROC_GLO_Pixie_BreakMoonlantern();
+
+IF
+Equipped(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _Char)
+AND
+NOT DB_GLO_Drider_MoonlanternEquippedBy(_Char)
+THEN
+DB_GLO_Drider_MoonlanternEquippedBy(_Char);
+
+IF
+Unequipped(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _Char)
+AND
+DB_GLO_Drider_MoonlanternEquippedBy(_Char)
+THEN
+NOT DB_GLO_Drider_MoonlanternEquippedBy(_Char);
+
+PROC
+PROC_GLO_Pixie_BreakMoonlantern()
+AND
+DB_GLO_Drider_MoonlanternEquippedBy(_Char)
+THEN
+Unequip(_Char, S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4);
+
+PROC
+PROC_GLO_Pixie_BreakMoonlantern()
+THEN
+Transform(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, UNI_GLO_Moonlantern_Broken_2c99f1f1-776b-45dd-a9d7-06e6a8e14b3f, (SHAPESHIFTRULE)Polymorph_a0ddddc8-255f-4014-9f63-d7608eb1c2a0);
+DEV_EnableAnubis(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, ""); // Remove anubis config since it's an item that uses it for applying the aura.
+RemoveStatus(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_MOONSHIELD_AURA");
+
+IF
+DialogEnded(SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Pixie_State_Escaped_c7d6f8c9-8052-4725-abba-446fcbc722e9)
+AND
+QRY_OnlyOnce("SCL_Pixie_ReactionVB")
+THEN
+StartVoiceBark(SCL_Pixie_VB_ReactionToPixie_ebdb6ecf-1c9a-f15a-1b35-246f850cdbfc, (CHARACTER)_Player);
+
+// Clear flags if players drop/throw lantern in case they decide to leave it behind but come back for it.
+IF
+DroppedBy(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _Player)
+AND
+DB_Players(_Player)
+THEN
+PROC_GLO_Pixie_RestartLanternDialog();
+
+IF
+OnThrown(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _, (CHARACTER)_Player, _, _, _, _)
+AND
+DB_Players(_Player)
+THEN
+PROC_GLO_Pixie_RestartLanternDialog();
+
+PROC
+PROC_GLO_Pixie_RestartLanternDialog()
+AND
+DB_GLO_Pixie_StartedDialogWith(_Player)
+THEN
+ClearFlag((FLAG)GLO_Pixie_State_StartedDialog_e9b86886-353a-43aa-8077-c905955b38e5, _Player);
+NOT DB_GLO_Pixie_StartedDialogWith(_Player);
+//END_REGION
+
+//REGION Shield handling
+// If player reach intermezzo and the pixie is still inside and alive, she will escape.
+IF
+LevelGameplayStarted("INT_Main_A", _)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+AND
+DB_GlobalFlag((FLAG)GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec)
+THEN
+SetFlag((FLAG)GLO_Pixie_State_Escaped_c7d6f8c9-8052-4725-abba-446fcbc722e9, NULL_00000000-0000-0000-0000-000000000000);
+ClearFlag((FLAG)GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagCleared(GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec, _, _)
+THEN
+DEV_EnableAnubis(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, ""); // Remove anubis config since it's an item that uses it for applying the aura.
+RemoveStatus(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_MOONSHIELD_AURA");
+
+//END_REGION
+
+//REGION Pixie shield
+// Apply status to players
+PROC
+PROC_GlobalFlagReactionAfterDialog(GLO_Pixie_Event_GivesImmunity_4c29ab8b-9b56-49a8-838c-c83a257976e5)
+THEN
+SetFlag((FLAG)GLO_Pixie_State_ShieldActive_1225b030-2183-4033-8bcd-819be1bb9e61, NULL_00000000-0000-0000-0000-000000000000);
+ClearFlag((FLAG)GLO_Pixie_Event_GivesImmunity_4c29ab8b-9b56-49a8-838c-c83a257976e5, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(GLO_Pixie_Event_GivesImmunity_4c29ab8b-9b56-49a8-838c-c83a257976e5, _Dialog)
+AND
+DB_DialogName(_Dialog, _DialogID)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+ApplyStatus(_Player, "GLO_PIXIESHIELD", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_GlobalFlag((FLAG)GLO_Pixie_State_ShieldActive_1225b030-2183-4033-8bcd-819be1bb9e61)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_Dead(_PartyMember)
+AND
+NOT DB_GLO_PixieBell_HasShield(_PartyMember)
+THEN
+ApplyStatus(_PartyMember, "GLO_PIXIESHIELD", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_GLO_PixieBell_HasShield(_PartyMember)
+AND
+NOT DB_PartyMembers(_PartyMember)
+THEN
+RemoveStatus(_PartyMember, "GLO_PIXIESHIELD");
+
+IF
+StatusApplied((CHARACTER)_PartyMember, "GLO_PIXIESHIELD", _, _)
+THEN
+SetFlag(GLO_Pixie_State_CharacterHasShieldActive_61e67a20-f40c-4e47-8c27-b8b903254c3c, _PartyMember);
+DB_GLO_PixieBell_HasShield(_PartyMember);
+
+IF
+StatusRemoved((CHARACTER)_PartyMember, "GLO_PIXIESHIELD", _, _)
+THEN
+ClearFlag(GLO_Pixie_State_CharacterHasShieldActive_61e67a20-f40c-4e47-8c27-b8b903254c3c, _PartyMember);
+NOT DB_GLO_PixieBell_HasShield(_PartyMember);
+
+// Leaving SCL removes the shield.
+PROC
+PROC_LevelUnloading("SCL_Main_A")
+THEN
+PROC_GLO_Pixie_DisableShield();
+
+// If for some reason players used the bell again and got the shield, remove after a long rest.
+PROC
+PROC_LongRest()
+AND
+NOT DB_CurrentLevel("SCL_Main_A")
+AND
+DB_GlobalFlag((FLAG)GLO_Pixie_State_ShieldActive_1225b030-2183-4033-8bcd-819be1bb9e61)
+THEN
+PROC_GLO_Pixie_DisableShield();
+
+PROC
+PROC_GLO_Pixie_DisableShield()
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)GLO_Pixie_State_ShieldActive_1225b030-2183-4033-8bcd-819be1bb9e61);
+
+PROC
+PROC_GLO_Pixie_DisableShield()
+AND
+DB_GLO_PixieBell_HasShield(_PartyMember)
+THEN
+RemoveStatus(_PartyMember, "GLO_PIXIESHIELD");
+
+//END_REGION Pixie shield
+
+//REGION Polymorphs
+IF
+DB_GLO_PixieBell_Polymorph(_Flag, _)
+THEN
+DB_FlagReactionAfterDialog(_Flag, (DIALOGRESOURCE)SCL_PixieBell_2ac58194-4037-1f53-cf11-2de7e8a914bf);
+
+PROC
+PROC_FlagReactionAfterDialog(_Player, _Flag)
+AND
+DB_GLO_PixieBell_Polymorph(_Flag, _Status)
+THEN
+ClearFlag(_Flag, _Player);
+ApplyStatus(_Player, _Status, 6.0, -1, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

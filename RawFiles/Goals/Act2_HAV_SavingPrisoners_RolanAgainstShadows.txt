@@ -1,0 +1,284 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForParty(S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990);
+DB_TriggerEvents_TriggerSet("HAV_HavenArea", (TRIGGER)S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab);
+DB_TriggerEvents_TriggerSet("HAV_HavenArea", (TRIGGER)S_HAV_Haven_SUB_Cellar_eee18cb6-443a-4b8f-ad19-58dff3d731d8);
+
+DB_SCL_ProdigyLament_Shadows((CHARACTER)S_SCL_ProdigyFight_Shadow_000_2a6ee685-e36f-460f-a593-8aa5ceccbb03);
+DB_SCL_ProdigyLament_Shadows((CHARACTER)S_SCL_ProdigyFight_Shadow_001_acdfb716-78c5-4260-9709-6a7227e2068e);
+
+DB_SCL_ProdigyLament_DeadShadows((CHARACTER)S_SCL_ProdigyFight_DeadRaven_000_6d8bc188-efa6-46b6-ad43-1ebe25792942);
+DB_SCL_ProdigyLament_DeadShadows((CHARACTER)S_SCL_ProdigyFight_DeadRaven_001_c1e67092-9e61-46d4-afcd-03ae5e880528);
+DB_SCL_ProdigyLament_DeadShadows((CHARACTER)S_SCL_ProdigyFight_DeadRaven_002_a7dd158b-0582-4a1a-9c72-80e613a44fbb);
+
+
+DB_GlobalFlagReactionAfterDialog((FLAG)SCL_ProdigyLament_Event_BackToHaven_54c9b573-305c-436e-61c6-543ed7c43e39, (DIALOGRESOURCE)SCL_Prodigy_eeba45e8-8bb2-e3ca-7f8e-3225651491a5);
+DB_GlobalFlagReactionAfterDialog((FLAG)SCL_ProdigyLament_Event_LeavingSCL_41f551e7-13af-41f7-a4d2-0045547975a2, (DIALOGRESOURCE)SCL_Prodigy_eeba45e8-8bb2-e3ca-7f8e-3225651491a5);
+
+DB_SCL_Prodigy_ExtraShadows((TRIGGER)S_SCL_Prodigy_ExtraStone1_cf7f912e-3f57-4110-935c-9a112971a915,(DIALOGRESOURCE)SCL_AD_ShadowMemory25_3ab2f651-a8e1-2913-83c5-ee01115453f1);
+DB_SCL_Prodigy_ExtraShadows((TRIGGER)S_SCL_Prodigy_ExtraStone2_bcc4085d-440e-40b2-a8d9-a994b4574d82,(DIALOGRESOURCE)SCL_AD_ShadowMemory26_63b204de-7700-cca4-bf1c-6b3bb3af4dcd);
+KBSECTION
+//REGION INIT
+IF
+DB_SCL_ProdigyLament_Shadows(_Shadow)
+THEN
+SetOnStage(_Shadow, 0);
+DB_GLO_DefeatCounter(_Shadow, "SCL_ProdigyLament_Shadows");
+AddPreferredAiTargetTag(_Shadow, (TAG)ROLAN_TARGET_8c7bdccd-132c-496a-a34f-75c39e721214);
+
+IF
+DB_SCL_ProdigyLament_DeadShadows(_DeadShadow)
+THEN
+SetOnStage(_DeadShadow, 0);
+
+//END_REGION INIT
+
+//REGION Before combat scene
+// Players leave Haven: let Rolan leave.
+IF
+LeftTrigger(_Player, _Trigger)
+AND
+DB_Players(_Player)
+AND
+DB_TriggerEvents_TriggerSet("HAV_HavenArea", _Trigger)
+AND
+DB_HAV_ProdigyLament_RolanCanLeave(1)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTriggerSet("HAV_HavenArea")
+AND
+QRY_OnlyOnce("HAV_ProdigyLament_RolanLeaves")
+THEN
+PROC_HAV_ProdigyLament_RolanLeaves();
+
+PROC
+PROC_HAV_ProdigyLament_RolanLeaves()
+THEN
+NOT DB_HAV_ProdigyLament_RolanCanLeave(1);
+SetOnStage(S_HAV_ProdigyHologram_0bf4cdfe-ea4f-4683-86f4-815853c56086, 1);
+SetFlag(HAV_ProdigyLament_Event_Intro_95cd5597-af9a-1fac-aada-e857199dae88, NULL_00000000-0000-0000-0000-000000000000, 0);
+ClearFlag(GLO_Prodigy_State_InHaven_fe9b4527-9d66-45db-8e04-490fd51b7be5, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_NotifyWhenReadyToMoveOn(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, "HAV_ProdigyLament_RolanLeaves");
+
+PROC
+PROC_ReadyToMoveOn(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, "HAV_ProdigyLament_RolanLeaves")
+THEN
+SetTag(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9); // To avoid for some reason Rolan becoming cursed
+PROC_DisappearOutOfSightTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyLeaveTowardsMOO_ea8a2f48-9643-49e5-bae8-80a8a4b94b05, "Run", 1, "HAV_ProdigyLament_RolanToFightShadows");
+
+IF
+EntityEvent(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, "HAV_ProdigyLament_RolanToFightShadows")
+THEN
+SetFlag(HAV_TieflingSurvivors_State_ProdigyLeftHaven_7b568bd0-76ee-426e-b7eb-f3ad430f5110, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_SCL_ProdigyLament_ShadowsEncounter();
+
+PROC
+PROC_SCL_ProdigyLament_ShadowsEncounter()
+AND
+DB_OnlyOnce("HAV_ProdigyLament_RolanLeaves")
+AND
+NOT DB_GlobalFlag((FLAG)HAV_ProdigyLament_State_InShadowlands_68d204cb-3017-455e-9d80-c02abbc9f477)
+AND
+NOT DB_Defeated(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTrigger(S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990) // Only appear if no party member is nearby to avoid starting the fight by surprise.
+AND
+QRY_OnlyOnce("SCL_ProdigyLament_SetUpShadowsEncounter")
+THEN
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal();
+
+PROC
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal()
+THEN
+Equip(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyTorch_2ddc5dfe-e222-42a8-b4df-4ca823962e11, 1);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b);
+SetHasDialog(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, 0);
+AppearAt(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyFendingOffShadowsPos_95a79018-5012-4682-802c-cb9fc652f1c6, 0, NULL_00000000-0000-0000-0000-000000000000, "SCL_ProdigyLament_FightingShadows");
+SetFaction(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, (FACTION)Act2_HAV_Tieflings_Rolan_c10978cd-2a88-4c2a-8246-ef4a28635522);
+DB_SceneManager((CHARACTER)S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, "SCL_ProdigyLament_ShadowsEncounter");
+SetFlag((FLAG)HAV_ProdigyLament_State_InShadowlands_68d204cb-3017-455e-9d80-c02abbc9f477, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EntityEvent(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, "SCL_ProdigyLament_FightingShadows")
+THEN
+ClearTag(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9);
+
+PROC
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal()
+AND
+GetCombatGroupID(S_SCL_ProdigyFight_Shadow_000_2a6ee685-e36f-460f-a593-8aa5ceccbb03, _CombatGroupID)
+THEN
+SetCombatGroupID(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, _CombatGroupID);
+
+PROC
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal()
+AND
+DB_SCL_ProdigyLament_Shadows(_Shadow)
+THEN
+DB_SceneManager(_Shadow, "SCL_ProdigyLament_ShadowsEncounter");
+PROC_Foop(_Shadow);
+
+PROC
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal()
+AND
+DB_SCL_ProdigyLament_DeadShadows(_DeadShadow)
+THEN
+SetOnStage(_DeadShadow, 1);
+Die(_DeadShadow, DEATHTYPE.Incinerate, _DeadShadow, 0, 1, 0.0);
+CreateSurface(_DeadShadow,"SurfaceFire",1.0,-1.0,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal()
+AND
+DB_SCL_Prodigy_ExtraShadows(_Trigger,_AD)
+AND
+CreateAtObject(UNI_Quest_ShadowStone_5c6904cc-5bb0-4ed9-a97c-b2df9aa2a9b6,_Trigger,0,0,"",0,_Shadowstone)
+THEN
+CreateSurface(_Trigger,"SurfaceFire",1.0,-1.0,NULL_00000000-0000-0000-0000-000000000000);
+DB_ItemDialog_NarratorAD((ITEM)_Shadowstone,(DIALOGRESOURCE)_AD);
+
+// If the scene is interrupted start the combat. Usually because players get too close to the scene and are seen by the shadows. 
+PROC
+PROC_SceneInterrupted(_, _, "SCL_ProdigyLament_ShadowsEncounter", _)
+THEN
+PROC_SceneOver("SCL_ProdigyLament_ShadowsEncounter");
+
+PROC
+PROC_SceneOver("SCL_ProdigyLament_ShadowsEncounter")
+THEN
+SetHasDialog(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, 1);
+PROC_SetRelationMutual((FACTION)Act2_HAV_Tieflings_Rolan_c10978cd-2a88-4c2a-8246-ef4a28635522, (FACTION)ACT2_SCL_Shadows_db6c0191-8663-7dbd-8706-b99062a7b442, 0); // Start combat!
+DB_Dialogs((CHARACTER)S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, (DIALOGRESOURCE)SCL_Prodigy_eeba45e8-8bb2-e3ca-7f8e-3225651491a5);
+
+//PAD on being near Rolan
+IF
+EnteredTrigger(_Player, S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990)
+AND
+DB_GlobalFlag(HAV_ProdigyLament_State_InShadowlands_68d204cb-3017-455e-9d80-c02abbc9f477)
+AND
+QRY_OnlyOnce("Played_Prodigy_VB_FoundRolan")
+THEN
+StartVoiceBark(SCL_Prodigy_VB_FoundRolan_1732288d-960c-adab-8a35-b39c921cb263, _Player);
+
+//END_REGION Before combat scene
+
+//REGION After combat scene
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("SCL_ProdigyLament_Shadows")
+THEN
+SetFlag(SCL_Prodigy_State_SavedFromShadows_ad212abc-6ab6-9923-6c3f-ebae3d7ba8a7, NULL_00000000-0000-0000-0000-000000000000);
+
+//Trying to auto-start dialog if players are nearby
+IF
+FlagSet(SCL_Prodigy_State_SavedFromShadows_ad212abc-6ab6-9923-6c3f-ebae3d7ba8a7, _, _)
+AND
+GetClosestPlayer(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, _Player, _Dist)
+AND
+_Dist < 15.0
+AND
+QRY_StartDialog((DIALOGRESOURCE)SCL_Prodigy_eeba45e8-8bb2-e3ca-7f8e-3225651491a5, S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+DB_GlobalFlag(SCL_Prodigy_State_SavedFromShadows_ad212abc-6ab6-9923-6c3f-ebae3d7ba8a7)
+AND
+NOT DB_InRegion(_, S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990)
+AND
+QRY_OnlyOnce("SCL_ProdigyLament_RolanReturns")
+THEN
+PROC_TriggerUnregisterForParty(S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990);
+PROC_DisappearOutOfSightTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyReturnTowards_ebc852ba-8655-4f42-98a5-02969399e7c5, "Run", 0, "SCL_ProdigyLament_RolanReturnsToHaven");
+
+IF
+DB_GlobalFlag(SCL_Prodigy_State_SavedFromShadows_ad212abc-6ab6-9923-6c3f-ebae3d7ba8a7)
+AND
+DB_Players(_Player)
+THEN
+ShowMapMarker(_Player, "HAV_SavingPrisonders_ProdigyFendingOffShadows", 0);
+
+IF
+DB_GlobalFlag(GLO_Prodigy_State_Defeated_54df9b47-fe34-3cbc-1a52-e539924c6613)
+AND
+DB_Players(_Player)
+AND
+DB_OnlyOnce("HAV_ProdigyLament_RolanLeaves")
+THEN
+ShowMapMarker(_Player, "HAV_SavingPrisonders_ProdigyFendingOffShadows", 0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(SCL_ProdigyLament_Event_BackToHaven_54c9b573-305c-436e-61c6-543ed7c43e39)
+THEN
+ClearFlag(SCL_ProdigyLament_Event_BackToHaven_54c9b573-305c-436e-61c6-543ed7c43e39, NULL_00000000-0000-0000-0000-000000000000);
+PROC_TriggerUnregisterForParty(S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990);
+PROC_CharacterMoveTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyReturnTowards_ebc852ba-8655-4f42-98a5-02969399e7c5, "Run", "SCL_ProdigyLament_RolanStartsLeaving");
+
+//Alternate, incase Last Light has fallen and the other flag was not triggered
+PROC
+PROC_GlobalFlagReactionAfterDialog(SCL_ProdigyLament_Event_LeavingSCL_41f551e7-13af-41f7-a4d2-0045547975a2)
+THEN
+ClearFlag(SCL_ProdigyLament_Event_BackToHaven_54c9b573-305c-436e-61c6-543ed7c43e39, NULL_00000000-0000-0000-0000-000000000000);
+PROC_TriggerUnregisterForParty(S_SCL_ProdigyShadowsEncounterSpawn_e7b8934e-4b9b-4def-9f71-bf7051786990);
+PROC_CharacterMoveTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyReturnTowards_ebc852ba-8655-4f42-98a5-02969399e7c5, "Run", "SCL_ProdigyLament_RolanStartsLeaving");
+
+
+IF
+EntityEvent(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, "SCL_ProdigyLament_RolanStartsLeaving")
+THEN
+PROC_DisappearOutOfSightTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyFendingOffShadowsPos_95a79018-5012-4682-802c-cb9fc652f1c6, "Run", 1, "SCL_ProdigyLament_RolanReturnsToHaven");
+
+IF
+EntityEvent(_, "SCL_ProdigyLament_RolanReturnsToHaven")
+AND
+IsInInventoryOf(S_SCL_ProdigyTorch_2ddc5dfe-e222-42a8-b4df-4ca823962e11, S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, 1)
+THEN
+RemoveStatus(S_SCL_ProdigyTorch_2ddc5dfe-e222-42a8-b4df-4ca823962e11, "BURNING", NULL_00000000-0000-0000-0000-000000000000);
+Unequip(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_SCL_ProdigyTorch_2ddc5dfe-e222-42a8-b4df-4ca823962e11);
+
+IF
+EntityEvent(_, "SCL_ProdigyLament_RolanReturnsToHaven")
+AND
+NOT DB_GlobalFlag(SCL_ProdigyLament_Event_LeavingSCL_41f551e7-13af-41f7-a4d2-0045547975a2)
+THEN
+ClearFlag((FLAG)HAV_ProdigyLament_State_InShadowlands_68d204cb-3017-455e-9d80-c02abbc9f477, NULL_00000000-0000-0000-0000-000000000000);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b);
+DB_Dialogs((CHARACTER)S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, (DIALOGRESOURCE)HAV_ProdigyLament_Rolan_ce19b6a1-2055-90e7-cc50-a141f424054d);
+PROC_AppearOutOfSightTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_HAV_PrisonerReturnPos_a1ad7248-0e06-4a87-994d-aab8dba88675, S_HAV_PrisonerReturnPos_a1ad7248-0e06-4a87-994d-aab8dba88675, "HAV_ProdigyLament_RolanAppearsAtHaven");
+PROC_CharacterMoveTo(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, S_HAV_ReunionProdigyPos_002_a8ce2fdf-09f5-4413-9154-bbad4edd3f95, "Run", "HAV_ProdigyLament_ReturnedToHaven");
+SetFaction(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b, (FACTION)Act2_HAV_Tieflings_f4ff1850-c9fc-4ee5-80e7-fa6b2a958d39);
+
+IF
+EntityEvent(_, "SCL_ProdigyLament_RolanReturnsToHaven")
+AND
+DB_GlobalFlag(SCL_ProdigyLament_Event_LeavingSCL_41f551e7-13af-41f7-a4d2-0045547975a2)
+THEN
+ClearFlag((FLAG)HAV_ProdigyLament_State_InShadowlands_68d204cb-3017-455e-9d80-c02abbc9f477, NULL_00000000-0000-0000-0000-000000000000);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b);
+
+
+//END_REGION After combat scene
+
+//REGION Debug
+IF
+TextEvent("rolanleaveshaven")
+AND
+QRY_OnlyOnce("HAV_ProdigyLament_RolanLeaves")
+THEN
+DB_HAV_ProdigyLament_RolanCanLeave(1);
+PROC_HAV_ProdigyLament_RolanLeaves();
+
+IF
+TextEvent("rolanFightSetup")
+AND
+QRY_OnlyOnce("HAV_ProdigyLament_RolanLeaves")
+AND
+QRY_OnlyOnce("SCL_ProdigyLament_SetUpShadowsEncounter")
+THEN
+PROC_HAV_ProdigyLament_RolanLeaves();
+PROC_Purge_CancelMovement((CHARACTER)S_GLO_Prodigy_b6a3a9e9-b6eb-4c19-ab3f-4c431178fe1b);
+PROC_SCL_ProdigyLament_ShadowsEncounter_Internal();
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

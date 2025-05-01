@@ -1,0 +1,175 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Tadpole_PartyMemberFlags((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(FLAG)GLO_Tadpole_State_CanUsePartyMember1_5245f9a5-96fe-4a59-872a-2c2745cfc355,(FLAG)GLO_Tadpole_Event_UsedPartyMember1_d778fbc1-647f-d16f-9855-a5e556bdfa3b,"GLO_TadpoleSharing_Generic1_fcd2d3b1-1d21-836d-8617-6d3697a91ec5");
+DB_Tadpole_PartyMemberFlags(NULL_00000000-0000-0000-0000-000000000000,(FLAG)GLO_Tadpole_State_CanUsePartyMember2_22205a3f-3e7e-e815-b8a7-9ea3391f19b2,(FLAG)GLO_Tadpole_Event_UsedPartyMember2_7abb2024-2dd5-f60d-9438-bf85ec9d392f,"GLO_TadpoleSharing_Generic2_74875fb0-a452-6999-3773-69bdff48fe5f");
+DB_Tadpole_PartyMemberFlags(NULL_00000000-0000-0000-0000-000000000000,(FLAG)GLO_Tadpole_State_CanUsePartyMember3_b034c0a6-1939-2607-0751-cde99ec7ae7e,(FLAG)GLO_Tadpole_Event_UsedPartyMember3_334e80e8-44a7-dfc6-e1ff-3ed954fa036e,"GLO_TadpoleSharing_Generic3_9b66e00d-f77f-2d53-4005-49d74e922698");
+KBSECTION
+//REGION Daisy Persuasion Charge Stealing Mechanic
+//If a player joins a dialogue as the main speaker, we check the nearby party members to see if he can borrow a tadpole from them.
+PROC
+PROC_StartDialog_AddExtraSpeakers(_Dialogue,_ID)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialogue,_ID, _Player, 1)
+AND
+DB_Players(_OtherPlayer)
+AND
+_Player != _OtherPlayer
+AND
+QRY_Tadpole_CanUseDaisyPersuasion((CHARACTER)_OtherPlayer)
+AND
+QRY_SpeakerIsInDialogRange((CHARACTER)_Player,_OtherPlayer)
+THEN
+DB_Tadpole_StealPotential(_Player,_OtherPlayer);
+PROC_Tadpole_PrepStealPotential(_Player,_OtherPlayer,_Dialogue,_ID);
+DB_Tadpole_StealPossible(_Player);
+
+
+//Setting the individual Steal Potential flag (Edge-case: OtherPlayer already has flags registered)
+PROC
+PROC_Tadpole_PrepStealPotential((CHARACTER)_Player,(CHARACTER)_OtherPlayer,(DIALOGRESOURCE)_Dialogue,(INTEGER)_ID)
+AND
+DB_Tadpole_PartyMemberFlags(_OtherPlayer,_HasFlag,_StoleFlag,_)
+THEN
+SetFlag(_HasFlag,_Player,0);
+
+//Setting the individual Steal Potential flag (Normal: OtherPlayer does not have flags assigned)
+PROC
+PROC_Tadpole_PrepStealPotential((CHARACTER)_Player,(CHARACTER)_OtherPlayer,(DIALOGRESOURCE)_Dialogue,(INTEGER)_ID)
+AND
+DB_Tadpole_PartyMemberFlags(NULL_00000000-0000-0000-0000-000000000000,_HasFlag,_StoleFlag,_DialogVar)
+AND
+GetDisplayName(_OtherPlayer,_StringHandle)
+AND
+NOT DB_Tadpole_PartyMemberFlags(_OtherPlayer,_,_,_)
+THEN
+DialogSetVariableTranslatedString(_Dialogue,_DialogVar,_StringHandle);
+NOT DB_Tadpole_PartyMemberFlags(NULL_00000000-0000-0000-0000-000000000000,_HasFlag,_StoleFlag,_DialogVar);
+DB_Tadpole_PartyMemberFlags(_OtherPlayer,_HasFlag,_StoleFlag,_DialogVar);
+SetFlag(_HasFlag,_Player,0);
+
+//If a player cant use their tadpole anymore (usually if it's been used), then clear their Steal Potential Flag
+IF
+DB_Tadpole_CanUseDaisyPersuasion_Cached(_OtherPlayer,0)
+AND
+DB_Tadpole_PartyMemberFlags(_OtherPlayer,_HasFlag,_StoleFlag,_DialogVar)
+AND
+DB_Tadpole_StealPotential(_Player,_OtherPlayer)
+THEN
+NOT DB_Tadpole_PartyMemberFlags(_OtherPlayer,_HasFlag,_StoleFlag,_DialogVar);
+DB_Tadpole_PartyMemberFlags(NULL_00000000-0000-0000-0000-000000000000,_HasFlag,_StoleFlag,_DialogVar);
+NOT DB_Tadpole_StealPotential(_Player,_OtherPlayer);
+ClearFlag(_HasFlag,_Player,0);
+
+//Set a combined flag for (at least one companion can be stolen from)
+IF
+DB_Tadpole_StealPossible(_Player)
+THEN
+SetFlag((FLAG)GLO_TadpoleMoment_State_HasEligibleTadpoledCompanions_8a9840c4-9e0a-4cdd-0bb5-ff8f09bde90f, _Player, 0);
+
+//Clear the combined flag if noone left available to steal from.
+IF
+DB_Tadpole_StealPossible(_Player)
+AND
+NOT DB_Tadpole_StealPotential(_Player,_)
+THEN
+NOT DB_Tadpole_StealPossible(_Player);
+ClearFlag((FLAG)GLO_TadpoleMoment_State_HasEligibleTadpoledCompanions_8a9840c4-9e0a-4cdd-0bb5-ff8f09bde90f, _Player, 0);
+
+IF
+FlagSet(_TadpoleStolenFlag,_,_)
+AND
+DB_Tadpole_PartyMemberFlags(_Player,_,_TadpoleStolenFlag,_)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetFlag(GLO_Tadpoled_UsedToday1_36d218ea-3eab-481f-fdaa-4ee185e76c25, _Player, 0);
+//TODO Add Approval Dive 
+//END_REGION
+
+//REGION Query (with Cache System) to know if a player can use Daisy Persuasion
+//If no cached value is found, run the checks
+QRY
+QRY_Tadpole_CanUseDaisyPersuasion((CHARACTER)_Player)
+AND
+NOT DB_Tadpole_CanUseDaisyPersuasion_Cached(_Player,_)
+AND
+QRY_Tadpole_CanUseDaisyPersuasion_InitCache(_Player)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+
+//Cached value exists, return it
+QRY
+QRY_Tadpole_CanUseDaisyPersuasion((CHARACTER)_Player)
+AND
+DB_Tadpole_CanUseDaisyPersuasion_Cached(_Player,1)
+THEN
+DB_NOOP(1);
+
+//Create Cached Value
+QRY
+QRY_Tadpole_CanUseDaisyPersuasion_InitCache((CHARACTER)_Player)
+AND
+IsTagged(_Player, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, _Tagged)
+AND
+GetFlag(GLO_Tadpoled_UsedToday1_36d218ea-3eab-481f-fdaa-4ee185e76c25, _Player, _Flagged)
+AND
+DB_Negate(_Flagged,_NotFlagged)
+AND
+DB_LogicAnd(_Tagged,_NotFlagged,_Result)
+THEN
+DB_Tadpole_CanUseDaisyPersuasion_Cached(_Player,_Result);
+
+//Cache is a singleton
+IF
+DB_Tadpole_CanUseDaisyPersuasion_Cached(_Player,_NewResult)
+AND
+DB_Tadpole_CanUseDaisyPersuasion_Cached(_Player,_OldResult)
+AND
+_OldResult != _NewResult
+THEN
+NOT DB_Tadpole_CanUseDaisyPersuasion_Cached(_Player,_OldResult);
+
+//Catch events that dirty cache
+IF
+FlagSet(GLO_Tadpoled_UsedToday1_36d218ea-3eab-481f-fdaa-4ee185e76c25, _Player, _)
+AND
+DB_Tadpole_CanUseDaisyPersuasion_Cached((CHARACTER)_Player,1)
+AND
+QRY_Tadpole_CanUseDaisyPersuasion_InitCache(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+FlagCleared(GLO_Tadpoled_UsedToday1_36d218ea-3eab-481f-fdaa-4ee185e76c25, _Player, _)
+AND
+DB_Tadpole_CanUseDaisyPersuasion_Cached((CHARACTER)_Player,0)
+AND
+QRY_Tadpole_CanUseDaisyPersuasion_InitCache(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+TagCleared(_Player,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+AND
+DB_Tadpole_CanUseDaisyPersuasion_Cached((CHARACTER)_Player,1)
+AND
+QRY_Tadpole_CanUseDaisyPersuasion_InitCache(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+TagSet(_Player,(TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+AND
+DB_Tadpole_CanUseDaisyPersuasion_Cached((CHARACTER)_Player,0)
+AND
+QRY_Tadpole_CanUseDaisyPersuasion_InitCache(_Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

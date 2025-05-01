@@ -1,0 +1,212 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Warehouse
+DB_LOW_DockWarehouse_Beasts((CHARACTER)S_LOW_DockWorg1_58eb1559-6b4e-43a5-935d-e292a9899af2);
+DB_LOW_DockWarehouse_Beasts((CHARACTER)S_LOW_DockWorg2_dc09e270-40e4-4f37-855e-ffe51b91b8f1);
+DB_LOW_DockWarehouse_Beasts((CHARACTER)S_LOW_DockWorg3_755385cb-bee4-4991-bfb5-a03959c99d1f);
+DB_LOW_DockWarehouse_Beasts((CHARACTER)S_LOW_DockWorg4_2f885f58-85af-42db-ad4d-62a46d68f6af);
+DB_LOW_DockWarehouse_Beasts((CHARACTER)S_LOW_DockWorg5_9f613f8d-8ed7-4042-adcc-e93932c5f24f);
+//END_REGION
+
+//REGION Fishers Wharf
+DB_Dialogs((CHARACTER)S_LOW_FisherBrother_092b641b-7cac-4fc5-81e2-ef9f21186e67, (DIALOGRESOURCE)LOW_DockWarehouse_FisherBrother_e7162a03-ee78-c8cd-e5d2-421b56157b6c);
+DB_Dialogs((CHARACTER)S_LOW_FisherSister_78b65473-f053-4eea-9501-90958df96f82, (DIALOGRESOURCE)LOW_DockWarehouse_FisherSister_617ff488-3236-c922-7807-468469449f97);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_DockWarehouse_Knows_GreyWaversMightKnowMore_e3c23464-a16b-4b53-890c-28451e214290, (DIALOGRESOURCE)LOW_DockWarehouse_FisherBrother_e7162a03-ee78-c8cd-e5d2-421b56157b6c);
+//END_REGION
+
+//REGION Ravengard and Omeluum debug
+DB_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110);
+DB_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110);
+//END_REGION Ravengard and Omeluum debug
+
+//REGION Triggers
+PROC_TriggerRegisterForPlayers(S_LOW_WarehouseInterior_88801975-6707-43ee-8644-3aa6d99c24e2);
+PROC_TriggerRegisterForPlayers(S_LOW_SubmersibleFoundArea_33e66469-ee7c-44e0-ab28-0413cda48d31);
+//END_REGION
+
+//REGION Iron Throne Destroyed
+
+DB_BookFlags(S_LOW_Beastmaster_LetterOfResignation_72d89d37-ed12-481d-b7f0-61a1039dbe58, (FLAG)LOW_DockWareHouse_State_ReadResignationLetter_e55051c0-1b34-444a-8247-12208ef5be27);
+DB_BookFlags(S_LOW_Beastmaster_LetterOfResignation_Ravengard_78e123e6-90da-4368-8b1b-5d626b55b376, (FLAG)LOW_DockWareHouse_State_ReadResignationLetter_WithRavengard_a65a0874-9c21-47af-879d-9cf27474b634);
+PROC_SetOnStage(S_LOW_Beastmaster_LetterOfResignation_72d89d37-ed12-481d-b7f0-61a1039dbe58, 0);
+PROC_SetOnStage(S_LOW_Beastmaster_LetterOfResignation_Ravengard_78e123e6-90da-4368-8b1b-5d626b55b376, 0);
+//END_REGION
+KBSECTION
+//REGION Debug
+IF
+TextEvent("irn_setupdialog")
+AND
+GetHostCharacter(_Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110, _Player)
+THEN
+DB_NOOP(1);
+
+//Debug
+IF
+DialogEnded((DIALOGRESOURCE)DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea, _)
+AND
+DB_GlobalFlag((FLAG)Debug_IRN_DialogSequenceSkipGameplay_94705540-0d6b-4e2b-8beb-bdf0a2ccbdda)
+THEN
+DB_Debug_IRN_DebugDialogSequenceOngoing(1);
+//END_REGION
+
+//REGION Warehouse
+PROC
+PROC_BlockUseOfItem(_Player, (ITEM)S_LOW_DockWarehouse_SubmersiblePlaceholder_d08e1090-58b7-4130-b292-339dcf9933d7)
+AND
+QRY_LOW_DockWarehouse_CanUseSubmersible()
+AND
+NOT DB_LOW_BellyOfTheBeast_BeastmasterBoardingSubmersible(1)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, _Player) //Should trigger regardless of spotting
+AND
+HasActiveStatusWithGroup(_Player, "SG_Invisible", 0) //But not the player is invisible
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)LOW_BellyOfTheBeast_Beastmaster_a952200e-814d-ca21-8c05-1971b5ee86b0, S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, _Player)
+THEN
+SetFlag((FLAG)LOW_BellyOfTheBeast_Event_BeastmasterSawPlayerUsingSubmersible_8a4bde8e-f2b5-4704-9246-7846baf9bef8);
+DB_CustomUseItemResponse(_Player, (ITEM)S_LOW_DockWarehouse_SubmersiblePlaceholder_d08e1090-58b7-4130-b292-339dcf9933d7, 0);
+
+//If Submersible is used, start ready check to teleport players to the Iron Throne level in IRN_Main_A
+IF
+UseFinished(_Player, (ITEM)S_LOW_DockWarehouse_SubmersiblePlaceholder_d08e1090-58b7-4130-b292-339dcf9933d7, 1)
+AND
+QRY_LOW_DockWarehouse_CanUseSubmersible()
+THEN
+ReadyCheckGlobal("LOW_DockWarehouse_ToIronThrone_ReadyCheck", "LOW_DockWarehouse_ToIronThrone_ReadyCheck", 0, (CHARACTER)_Player);
+
+//If Submersible is used, players are teleported to the Iron Throne level in IRN_Main_A
+IF
+UseFinished(_Player, (ITEM)S_LOW_DockWarehouse_SubmersiblePlaceholder_d08e1090-58b7-4130-b292-339dcf9933d7, 1)
+AND
+NOT QRY_LOW_DockWarehouse_CanUseSubmersible()
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)LOW_BellyOfTheBeast_VB_SubmersibleBroken_ac2cc8ca-1b10-3562-9bae-ae51a10aa714, _Player);
+
+QRY
+QRY_LOW_DockWarehouse_CanUseSubmersible()
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9)
+THEN
+DB_NOOP(1);
+
+IF
+ReadyCheckPassed("LOW_DockWarehouse_ToIronThrone_ReadyCheck")
+AND
+NOT DB_Defeated(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1)
+AND
+IsOnStage(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, 1)
+THEN
+PROC_SetOnStage(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, 0);
+
+IF
+ReadyCheckPassed("LOW_DockWarehouse_ToIronThrone_ReadyCheck")
+THEN
+PrepareLevelStartingDialog(1);
+PROC_TeleportPartiesTo((TRIGGER)S_IRN_Debug_StartCountdownPos_66dd9741-ba35-4e0f-bc97-b0e2f0f301c0, "LOW_BellyOfTheBeast_ExitedSubmersible");
+//END_REGION
+
+//REGION Ravengard and Omeluum debug
+//Debug add Ravengard
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110)
+AND
+QRY_OnlyOnce("IRN_Debug_SetupRavengard")
+THEN
+TeleportTo(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, S_IRN_Ravengard_Pos_3d27f038-b773-4abd-bf3f-f569e0d93d28, "", 0, 0, 0, 0, 1);
+DB_IRN_PrisonerGroup(10, (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+DB_Dialogs(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, IRN_IronThrone_Ravengard_5f8aa534-4bfc-cfd1-0c6d-f2c0a40fe96a);
+SetFaction((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (FACTION)ACT3_LOW_IronThrone_Ravengard_d884141d-e554-4ab8-a209-cad8c8fbdad7);
+
+//Debug add Omeluum
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110)
+AND
+QRY_OnlyOnce("IRN_Debug_SetupOmeluum")
+THEN
+TeleportTo(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, S_IRN_Omeluum_Pos_470314b5-cee5-47c4-ac80-9c5d19718886, "", 0, 0, 0, 0, 1);
+DB_IRN_PrisonerGroup(9, (CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+DB_Dialogs((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (DIALOGRESOURCE)IRN_IronThrone_Omeluum_26f2208c-177d-b640-fb5a-0594b84f305a);
+SetFaction((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (FACTION)ACT3_LOW_IronThrone_Omeluum_8f848a43-3e4e-403f-be71-41860b5127cc);
+
+//END_REGION Ravengard and Omeluum debug
+
+//REGION Iron Throne Destroyed
+//If Iron throne is destroyed without visiting it
+IF
+DB_GlobalFlag(IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9)
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+PROC_LOW_Dockwarehouse_MakeIRNInaccessible();
+
+PROC
+PROC_LOW_Dockwarehouse_MakeIRNInaccessible()
+THEN
+PROC_SetOnStage(S_LOW_DockWarehouse_SubmersiblePlaceholder_d08e1090-58b7-4130-b292-339dcf9933d7, 0);
+PROC_SetOnStage(S_LOW_DockSubmersible_bb1db2a5-2b1e-445a-86c3-8c500d911e32, 0);
+PROC_NotifyWhenReadyToMoveOn(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "LOW_DockWareHouse_BeastMasterReadyToLeave");
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_AllIronThronePrisonersDead_4fefe27f-7cd6-44b1-9322-a57b22246271);
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_MajorityIronThronePrisonersDead_6c40a75d-32ae-4402-a54c-062805f7ee7d);
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_AnyIronThronePrisonersDead_5d6c4329-ee56-4084-8220-d627b716ac87);
+UnloadLevelTemplate((LEVELTEMPLATE)LT_PLT_CTY_Submersible_A_000_7b4f3f57-e933-4e0b-8aa6-9d383c69470a);
+LoadLevelTemplate((LEVELTEMPLATE)LT_PLT_CTY_SubmersibleGone_A_000_08dc0546-ef6b-4807-a6c1-c50bf471995b);
+PROC_LOW_IronThrone_TeleportDeadBodiesToShore();
+
+//If the beastmaster is available to leave he runs off (and drops a resignation letter that mentions Ravengard if he is present.
+PROC
+PROC_ReadyToMoveOn(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "LOW_DockWareHouse_BeastMasterReadyToLeave")
+THEN
+PROC_DisappearOutOfSight(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "Run", 1, "");
+PROC_LOW_DockWarehouse_DropBeastmasterResignationLetter();
+
+PROC
+PROC_LOW_DockWarehouse_DropBeastmasterResignationLetter()
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+THEN
+PROC_SetOnStage((ITEM)S_LOW_Beastmaster_LetterOfResignation_Ravengard_78e123e6-90da-4368-8b1b-5d626b55b376, 1);
+DB_LOW_DockWarehouse_UsedResignationLetter((ITEM)S_LOW_Beastmaster_LetterOfResignation_Ravengard_78e123e6-90da-4368-8b1b-5d626b55b376);
+PROC_TriggerRegisterForPlayers(S_LOW_ResignationLetter_PercpetionVFXZone_dd524133-9e54-41cc-87bc-a929c24cbf54);
+
+PROC
+PROC_LOW_DockWarehouse_DropBeastmasterResignationLetter()
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+THEN
+PROC_SetOnStage((ITEM)S_LOW_Beastmaster_LetterOfResignation_72d89d37-ed12-481d-b7f0-61a1039dbe58, 1);
+DB_LOW_DockWarehouse_UsedResignationLetter((ITEM)S_LOW_Beastmaster_LetterOfResignation_72d89d37-ed12-481d-b7f0-61a1039dbe58);
+PROC_TriggerRegisterForPlayers(S_LOW_ResignationLetter_PercpetionVFXZone_dd524133-9e54-41cc-87bc-a929c24cbf54);
+
+IF
+DB_InRegion(_Player, (TRIGGER)S_LOW_ResignationLetter_PercpetionVFXZone_dd524133-9e54-41cc-87bc-a929c24cbf54)
+AND
+DB_LOW_DockWarehouse_UsedResignationLetter(_Letter)
+THEN
+PROC_PlayPerceptionRevealEffect(_Letter, "LOW_DockWarehouse_ResignationLetterPerceptionEffect");
+PROC_TriggerUnregisterForPlayers(S_LOW_ResignationLetter_PercpetionVFXZone_dd524133-9e54-41cc-87bc-a929c24cbf54);
+
+//If Ravengard is in the IRN throne kill him
+PROC
+PROC_LOW_Dockwarehouse_MakeIRNInaccessible()
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+THEN
+Die(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, DEATHTYPE.Psychic, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+SetFlag((FLAG)IRN_Ravengard_State_KilledOffscreenByIRNDestructionBeforeVisiting_c8ac38de-2fe6-4fee-a3d1-a63a8ad6ce79);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

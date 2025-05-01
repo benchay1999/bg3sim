@@ -1,0 +1,165 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+
+This goal controls the safe romance handling. This works through a character flag that gets set on all players
+when they join a dialog. It is not dynamically adjusted once the dialog has started (either because of option changes or reassignments), because that could lead to dialog flow issues (unlikely, but still)
+
+The state is tracked per user for easier debugging
+
+While not critical, the flag is cleared again at the end of dialogs, because we don't want it to linger on characters either.
+
+*/
+
+IterateUsers("GLO_SafeRomance_Check","");
+KBSECTION
+PROC
+PROC_SafeRomance_UpdateState((INTEGER)_UserID,(INTEGER)_)
+AND
+DB_SafeRomance_State(_UserID,_State)
+THEN
+NOT DB_SafeRomance_State(_UserID,_State);
+
+PROC
+PROC_SafeRomance_UpdateState((INTEGER)_UserID,(INTEGER)_State)
+THEN
+DB_SafeRomance_State(_UserID,_State);
+
+//REGION Debug
+IF
+TextEvent("safe_romance")
+AND
+GetTextEventParamString(1,"on")
+AND
+GetHostCharacter(_Char)
+AND
+GetReservedUserID(_Char,_UserID)
+THEN
+PROC_SafeRomance_UpdateState(_UserID,1);
+PROC_SafeRomance_DebugPrintState(_Char,1);
+
+IF
+TextEvent("safe_romance")
+AND
+GetTextEventParamString(1,"off")
+AND
+GetHostCharacter(_Char)
+AND
+GetReservedUserID(_Char,_UserID)
+THEN
+PROC_SafeRomance_UpdateState(_UserID,0);
+PROC_SafeRomance_DebugPrintState(_Char,0);
+
+
+IF
+TextEvent("safe_romance")
+AND
+NOT GetTextEventParamString(1,_)
+AND
+GetHostCharacter(_Char)
+AND
+GetReservedUserID(_Char,_UserID)
+AND
+DB_SafeRomance_State(_UserID,_State)
+THEN
+PROC_SafeRomance_DebugPrintState(_Char,_State);
+
+PROC
+PROC_SafeRomance_DebugPrintState((CHARACTER)_Char,1)
+THEN
+DebugText(_Char,"Safe romance is on.");
+
+PROC
+PROC_SafeRomance_DebugPrintState((CHARACTER)_Char,0)
+THEN
+DebugText(_Char,"Safe romance is off.");
+
+//END_REGION
+
+IF
+SafeRomanceOptionChanged(_UserID,_State)
+THEN
+PROC_SafeRomance_UpdateState(_UserID,_State);
+
+IF
+UserDisconnected(_User,_,_)
+AND
+DB_SafeRomance_State(_UserID,_State)
+THEN
+NOT DB_SafeRomance_State(_UserID,_State);
+
+IF
+UserConnected(_UserID,_,_)
+AND
+UserGetSafeRomanceOption(_UserID,_State)
+THEN
+PROC_SafeRomance_UpdateState(_UserID,_State);
+
+IF
+SavegameLoaded()
+THEN
+SysClear("DB_SafeRomance_State", 2);
+IterateUsers("GLO_SafeRomance_Check","");
+
+IF
+UserEvent(_UserID,"GLO_SafeRomance_Check")
+AND
+UserGetSafeRomanceOption(_UserID,_State)
+THEN
+PROC_SafeRomance_UpdateState(_UserID,_State);
+
+//catch initial players in dialog
+PROC
+PROC_StartDialog_SaveControlledPlayer((DIALOGRESOURCE)_,(GUIDSTRING)_Speaker)
+THEN
+PROC_SafeRomance_SetFlagForSpeaker(_Speaker);
+
+//catch late joiners
+IF
+DialogActorJoined(_Dialog,_,_Actor,_)
+AND
+DialogIsAutomated(_Dialog, 0)	//DB not guaranteed, so check the resource
+THEN
+PROC_SafeRomance_SetFlagForSpeaker(_Actor);
+
+//leaving dialog, so clear it
+IF
+DialogActorLeft(_Dialog,_Inst,_Actor,_)
+AND
+NOT DB_AutomatedDialog(_Inst)
+AND
+DB_Players((CHARACTER)_Actor)
+THEN
+PROC_SafeRomance_SetFlag(_Actor,0);
+
+//edge case - clear it for anyone that leaves the party
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Player)
+THEN
+PROC_SafeRomance_SetFlag(_Player,0);
+
+PROC
+PROC_SafeRomance_SetFlagForSpeaker((GUIDSTRING)_Speaker)
+AND
+DB_Players((CHARACTER)_Speaker)
+AND
+GetReservedUserID(_Speaker,_UserID)
+AND
+DB_SafeRomance_State(_UserID,_State)
+THEN
+PROC_SafeRomance_SetFlag(_Speaker,_State);
+
+PROC
+PROC_SafeRomance_SetFlag((CHARACTER)_Speaker,1)
+THEN
+SetFlag(GLO_SafeRomance_Enabled_f46a2601-92d1-4b86-98b5-0dae4a290ff6,_Speaker);
+
+PROC
+PROC_SafeRomance_SetFlag((CHARACTER)_Speaker,0)
+THEN
+ClearFlag(GLO_SafeRomance_Enabled_f46a2601-92d1-4b86-98b5-0dae4a290ff6,_Speaker);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

@@ -1,0 +1,345 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 5")
+AND
+DB_GlobalFlag(END_General_State_Started_a0fd5f91-e4b3-4d01-84d3-9ff484139e99)
+THEN
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,(FLAG)END_GameFinale_State_PartnershipEndedAstarion_144c7dec-fc84-44e9-851f-d81d9c87c75c);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604,(FLAG)END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323,(FLAG)END_GameFinale_State_PartnershipEndedHalsin_887340d1-4dd3-4b99-81e6-2c942e61b06e);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c,(FLAG)END_GameFinale_State_PartnershipEndedKarlach_f9ec7b63-c6c9-4ca4-b7ff-bdfea27bc780);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(FLAG)END_GameFinale_State_PartnershipEndedLaezel_48bdbcad-da83-44c1-b3fe-5d4b227e8ba0);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,(FLAG)END_GameFinale_State_PartnershipEndedMinthara_421d45a7-3c15-486a-b856-e3ea4a705882);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,(FLAG)END_GameFinale_State_PartnershipEndedShadowheart_b123048b-07de-4b06-884e-a12b54e984e1);
+DB_END_GameFinale_CharacterPartnershipEndedFlags((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(FLAG)END_GameFinale_State_PartnershipEndedWyll_3b60022c-b8a5-445e-b66a-21154f9fd73b);
+
+//REGION EPI_Main_A global DB adds
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 5")
+THEN
+DB_GLO_PixieBell_AsylumPos("EPI_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3c_EPI_42d0fecf-b7eb-4b3e-ad70-a3291bfb2085);
+DB_GLO_MadMonk_AsylumPos("EPI_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3c_EPI_42d0fecf-b7eb-4b3e-ad70-a3291bfb2085);
+DB_Daisy_IdleTeleport("EPI_Main_A", (TRIGGER)S_EPI_DaisyIdlePos_3ba06d3a-2777-4930-bbcc-601965414fc3);
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","TUT_Avernus_C");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","WLD_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","CRE_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","SCL_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","INT_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","BGO_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","CTY_Main_A");
+DB_LevelUnreachable_LevelBlocksLevel("EPI_Main_A","END_Main");
+
+//END_REGION
+
+//REGION GUS-313867
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_EPI_Epilogue_PresentNPC(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, _, _, _, _)
+AND
+NOT DB_GlobalFlag(EPI_Epilogue_Event_PoofSpectralVoiceGale_e498a2ae-8e5a-498f-80d1-c73f9828358e)
+THEN
+SysCompleteGoal("GLO_Origin_Gale_Death");
+SetVisible(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, 1);
+SetDetached(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, 0);
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, "GLO_Gale_DeathVoice");
+DB_BUGFIX_Marker("GUS-313867");
+//END_REGION
+
+//REGION GUS-314872
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_GlobalFlag(END_BrainBattle_Event_KillEmperor_187b621a-5f21-1715-753a-362f290e9eb0)
+AND
+DB_CurrentLevel("EPI_Main_A")
+THEN
+ToInventory(S_EPI_Letter_EmperorPlayerMF_646bc376-97dc-420c-8804-318c29b73e47, S_EPI_ChestOfGearBanishment_fe6caedc-1122-4041-aec7-d8cc1b1fa49e, 1, 0, 0);
+DB_BUGFIX_Marker("GUS-314872");
+//END_REGION
+
+//REGION GUS-314872
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_CurrentLevel("END_Main")
+THEN
+NOT DB_END_General_MakeUnavailableFlag(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, ORI_Gale_State_InElysium_d6c53ee8-ce94-4016-73ee-74d44d309837, 1);
+DB_END_General_MakeUnavailableFlag(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, ORI_Gale_State_InElysium_d6c53ee8-ce94-4016-73ee-74d44d309837, 0);
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_GlobalFlag(ORI_Gale_State_IsGod_ec94f9a4-b032-ce25-f4eb-ecf4ed37d65d)
+AND
+DB_GlobalFlag(ORI_Gale_State_InElysium_d6c53ee8-ce94-4016-73ee-74d44d309837)
+THEN
+ClearFlag(ORI_Gale_State_InElysium_d6c53ee8-ce94-4016-73ee-74d44d309837);
+//END_REGION
+
+//REGION GUS-315371
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("EPI_Main_A")
+AND
+DB_OnlyOnce("EPI_Epilogue_RequestDeleteKeyItemsOnce")
+THEN
+NOT DB_END_General_TadpoleAndStoneTracking(
+    (ITEM)S_END_CrownController_Complete_5424460f-8a64-45d6-863e-55e5425e271e,
+    (FLAG)END_General_State_HasCrownController_de78970a-95c8-4e54-bdf7-28f1da9ca83b,
+    (FLAG)END_General_State_PartyHasCrownController_d526db7f-8ded-4755-84cd-498fd629b11d,
+    (DIALOGRESOURCE)END_General_PAD_DroppedCrownController_720b87f5-6516-f7f5-81f6-538cc8515051,
+    "END_CompleteCrownController");
+DB_BUGFIX_Marker("GUS-315371");
+
+//END_REGION GUS-315371
+
+//REGION GUS-315203
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("EPI_Main_A")
+AND
+DB_END_RealPartOfTheTeam(_Char)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Char)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Char)
+THEN
+SetCanJoinCombat(_Char, 1);
+SetCanFight(_Char, 1);
+SetCombatGroupID(_Char,"");
+DB_BUGFIX_Marker("GUS-315203", _Char);
+
+//END_REGION GUS-315203
+
+//REGION GUS-314026
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6")
+AND
+DB_LevelLoadedOnce("EPI_Main_A")
+AND
+DB_EPI_Epilogue_PresentNPC(_Char,_,_,_,_)
+AND
+GetEquippedItem(_Char, "Melee Main Weapon", _Item)
+AND
+IsTorch(_Item, 1)
+THEN
+DB_BUGFIX_Marker("GUS-314026", _Char);
+Unequip(_Char, _Item);
+
+//END_REGION
+
+//REGION GUS-317286
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 7")
+AND
+DB_CurrentLevel("EPI_Main_A")
+THEN
+PROC_BG3_SavegamePatch_GUS317286();
+
+PROC
+PROC_BG3_SavegamePatch_GUS317286()
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player, "EPI_SCRATCH_BLOCKED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_BUGFIX_Marker("GUS-317286", _Player);
+
+PROC
+PROC_BG3_SavegamePatch_GUS317286()
+AND
+DB_FOR_CourierDog_ActiveSummon(_)
+THEN
+PROC_FOR_CourierDog_KillActiveSummon();
+PROC_Foop(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+SetHasDialog(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901, 1);
+DB_BUGFIX_Marker("GUS-317286-KillSummon");
+//END_REGION GUS-317286
+
+//REGION GUSX-7123
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 7", "EPI_Main_A", "GUSX-7123");
+
+PROC
+PROC_ApplySavegamePatchInLevel("EPI_Main_A", "GUSX-7123")
+AND
+DB_Avatars(_Player)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+AND
+_Y <= -4.0
+THEN
+DB_BUGFIX_Marker("GUSX-7123", _Player);
+TeleportTo(_Player, S_EPI_DEBUG_StartPoint_deaf854a-b1cf-4bd5-a1d9-5013bfe00e55);
+
+PROC
+PROC_ApplySavegamePatchInLevel("EPI_Main_A", "GUSX-7123")
+THEN
+PROC_EPI_Epilogue_RemoveFollowers();
+
+//END_REGION
+
+//REGION GUSX-7123
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 7", "EPI_Main_A", "GUSX-1853");
+
+PROC
+PROC_ApplySavegamePatchInLevel("EPI_Main_A", "GUSX-1853")
+AND
+DB_EPI_Epilogue_PresentNPC(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, _, _, _, _)
+THEN
+DB_BUGFIX_Marker("GUSX-1853");
+ApplyStatus(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, "EPI_SPECTRALVOICEVFX",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+ApplyStatus(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d, "EPI_EPILOGUE_SPECTRAL_GALE",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+
+//REGION GUSX-2204
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 8")
+AND
+DB_CurrentLevel("EPI_Main_A")
+AND
+NOT DB_DropMutingStatussesDialog(EPI_Epilogue_FinalToast_d5e29da5-4c48-8920-91d8-00b72c149771)
+THEN
+DB_DropMutingStatussesDialog(EPI_Epilogue_FinalToast_d5e29da5-4c48-8920-91d8-00b72c149771);
+//END_REGION
+
+//REGION GUSX-7738
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 8")
+AND
+DB_CurrentLevel("EPI_Main_A")
+AND
+DB_EPI_Epilogue_DeadGaleLetterRecipient(_Avatar)
+AND
+DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+DB_GlobalFlag(ORI_Gale_State_VolunteeredToExplode_9b9ccc0d-a4e0-41f9-bc4f-b6e706111fef)
+AND
+DB_ORI_Partnered(_Avatar, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_BUGFIX_Marker("GUSX-7738");
+RemoveEntryFromCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGaleNoPartner");
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGalePartner");
+
+//END_REGION
+
+//REGION GUSX-11684
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 7 Beta Hotfix 3")
+AND
+DB_CurrentLevel("EPI_Main_A")
+AND
+DB_EPI_Epilogue_SetLetter((ITEM)_Letter)
+AND
+DB_ToInventoryAndOnStage(_Letter, _Inventory, _Amount, _ShowNotification, _ClearOriginalOwner)
+AND
+IsOnStage(_Letter, 1)
+THEN
+ToInventory(_Letter, _Inventory, _Amount,_ShowNotification, _ClearOriginalOwner);
+NOT DB_ToInventoryAndOnStage(_Letter, _Inventory, _Amount, _ShowNotification, _ClearOriginalOwner);
+DB_BUGFIX_Marker("GUSX-11684", _Letter);
+
+//END_REGION 
+
+//REGION GUSX-5443
+// Only patch when save is loaded in EPI_Main_A
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 8")
+AND
+DB_LevelLoadedOnce("EPI_Main_A")
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+AND
+DB_GlobalFlag((FLAG)LOW_Guildhall_State_PostCoup_GuildControlled_596f7f8b-2de2-4550-87fd-9535c2a07635)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Minsc_State_PartneredWithNineFingers_ff63b939-82d3-c670-ad59-c7cf6363d234)
+THEN
+NOT DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)ORI_Minsc_State_PartneredWithNineFingers_ff63b939-82d3-c670-ad59-c7cf6363d234, 1,(ITEMROOT)EPI_Camp_Minsc_54c4b72d-0f2d-40be-bab7-c70c5f3adb97);
+NOT DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)ORI_Minsc_State_PartneredWithNineFingers_ff63b939-82d3-c670-ad59-c7cf6363d234, 1,(ITEMROOT)EPI_Camp_Shoes_Minsc_19963131-982a-44b2-afd8-c2edee9e1b3a);
+NOT DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)ORI_Minsc_State_PartneredWithNineFingers_ff63b939-82d3-c670-ad59-c7cf6363d234, 0,(ITEMROOT)EPI_Camp_Prison_ffe2cacb-8073-4e6d-bf81-057da0c5030c);
+NOT DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)ORI_Minsc_State_PartneredWithNineFingers_ff63b939-82d3-c670-ad59-c7cf6363d234, 0,(ITEMROOT)ARM_Camp_Shoes_Minsc_836e13ab-78a6-4ca3-ba8e-adc4c25205f1);
+NOT DB_EPI_Title_FlaggedTitles((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, "EPI_Title_MinscGuild",(FLAG)ORI_Minsc_State_PartneredWithNineFingers_ff63b939-82d3-c670-ad59-c7cf6363d234, 1);
+DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)LOW_Guildhall_State_PostCoup_GuildControlled_596f7f8b-2de2-4550-87fd-9535c2a07635, 1,(ITEMROOT)EPI_Camp_Minsc_54c4b72d-0f2d-40be-bab7-c70c5f3adb97);
+DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)LOW_Guildhall_State_PostCoup_GuildControlled_596f7f8b-2de2-4550-87fd-9535c2a07635, 1,(ITEMROOT)EPI_Camp_Shoes_Minsc_19963131-982a-44b2-afd8-c2edee9e1b3a);
+DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)LOW_Guildhall_State_PostCoup_GuildControlled_596f7f8b-2de2-4550-87fd-9535c2a07635, 0,(ITEMROOT)EPI_Camp_Prison_ffe2cacb-8073-4e6d-bf81-057da0c5030c);
+DB_EPI_Epilogue_PartyEquipment((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)LOW_Guildhall_State_PostCoup_GuildControlled_596f7f8b-2de2-4550-87fd-9535c2a07635, 0,(ITEMROOT)ARM_Camp_Shoes_Minsc_836e13ab-78a6-4ca3-ba8e-adc4c25205f1);
+DB_EPI_Title_FlaggedTitles((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, "EPI_Title_MinscGuild",(FLAG)LOW_Guildhall_State_PostCoup_GuildControlled_596f7f8b-2de2-4550-87fd-9535c2a07635, 1);
+PROC_EPI_Epilogue_TryClearInventory((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+DB_EPI_Epilogue_PresentNPC((CHARACTER)S_EPI_TerrifiedThief_85d6a92c-dc66-4f26-b6b7-1feb8301fa4c, (DIALOGRESOURCE)EPI_Epilogue_TerrifiedThief_84e18005-dd2d-07cc-f766-200bed4a580f,(TRIGGER)S_EPI_StartPointTerrifiedThief_7fe87a2c-b620-47da-862c-99ef33772baf, "EPI_TerrifiedThief",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+PROC_EPI_Epilogue_SetAvailableNPC(S_EPI_TerrifiedThief_85d6a92c-dc66-4f26-b6b7-1feb8301fa4c);
+DB_BUGFIX_Marker("GUSX-5443");
+//END_REGION GUSX-5443
+
+//REGION
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 8")
+AND
+DB_CurrentLevel("EPI_Main_A")
+AND
+DB_GlobalFlag(EPI_Epilogue_State_HalsinPresent_e6847fa6-678a-4b4c-bb3b-4cfa61fbeb40)
+AND
+NOT DB_GlobalFlag(DEN_Lockdown_State_Active_0b54c7d2-b7b1-4d0f-b8e4-0cf1ee32b1eb)
+AND
+NOT DB_PermaDefeated(S_DEN_ZenBear_d4d4bfd2-9639-45bc-a256-2f079e53db29)
+THEN
+DB_EPI_Epilogue_Letters((ITEM)S_EPI_Letter_GroveMissive_f48af361-4d2a-458f-9717-229ab528032c);
+PROC_EPI_Epilogue_SendLetterToInventory(S_EPI_Letter_GroveMissive_f48af361-4d2a-458f-9717-229ab528032c);
+DB_BUGFIX_Marker("GUSX-13312");
+
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

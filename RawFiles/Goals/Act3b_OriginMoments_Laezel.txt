@@ -1,0 +1,259 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Voss Sewers
+PROC_SetOnStage((CHARACTER)S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, 0);
+
+DB_GLO_SetupForAct_Character("CTY_Main_A", (CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f, (DIALOGRESOURCE)LOW_VossSewers_6a70d80c-2c97-445b-4850-e6ac62c3b4bc);
+
+//END_REGION
+
+DB_Act3_ORI_Laezel(1);
+KBSECTION
+//REGION Voss Sewers
+PROC
+PROC_GLO_SetupForAct("CTY_Main_A", S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+THEN
+PROC_GLO_SetupForAct_Place(
+	S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 
+	S_LOW_VossSewersPos_fdc43cdd-7442-4f89-bea9-6a1c8b820670,
+	NULL_00000000-0000-0000-0000-000000000000,
+	LOW_VossSewers_6a70d80c-2c97-445b-4850-e6ac62c3b4bc);
+PROC_SetOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1);
+SetFaction(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (FACTION)ACT3_LOW_VossSewers_030be19c-5505-4491-b0e4-4ed28357426d);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_LOW_SewersVossSpottingArea_a0a2c9b2-a7f1-4c1b-91f4-d26680c9f7de);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "LOW_VossSewers_BeforeGettingHammer", (TRIGGER)S_LOW_SewersVossSpottingArea_a0a2c9b2-a7f1-4c1b-91f4-d26680c9f7de);
+DB_SpotPlayers((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "LOW_VossSewers_BeforeGettingHammer", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_Is_InCombat(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _Id)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _Id)
+AND
+IsEnemy((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _Player, 1)
+AND
+QRY_OnlyOnce("LOW_VossSewers_TurnedHostile")
+THEN
+ClearFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d);
+PROC_SetRelationToPlayers((FACTION)ACT3_LOW_VossSewers_030be19c-5505-4491-b0e4-4ed28357426d, 0);
+PROC_ORI_Laezel_CheckVossAttackedApprovalDrop();
+PROC_TryStartAD((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersAttackedByPlayer_c53e5242-8129-c723-3bcf-1180c71b0b32, S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_Id);
+
+IF
+AutomatedDialogStarted((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersAttackedByPlayer_c53e5242-8129-c723-3bcf-1180c71b0b32, _)
+THEN
+DB_ORI_Laezel_VossSewers_ADOngoing(1);
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersAttackedByPlayer_c53e5242-8129-c723-3bcf-1180c71b0b32, _)
+THEN
+NOT DB_ORI_Laezel_VossSewers_ADOngoing(1);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersAttackedByPlayer_c53e5242-8129-c723-3bcf-1180c71b0b32, _)
+THEN
+NOT DB_ORI_Laezel_VossSewers_ADOngoing(1);
+
+IF
+TurnStarted(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_)
+AND
+DB_ORI_Laezel_VossSewers_ADOngoing(1)
+THEN
+SetEntityEventReal(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "GLO_CombatWait", 10.0);
+
+IF
+TurnStarted(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_)
+THEN
+DB_ORI_Laezel_VossSewers_TurnStarted((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+IF
+TurnStarted(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b)
+AND
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_)
+AND
+DB_ORI_Laezel_VossSewers_ADOngoing(1)
+THEN
+SetEntityEventReal(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "GLO_CombatWait", 10.0);
+
+IF
+TurnStarted(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b)
+AND
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_)
+THEN
+DB_ORI_Laezel_VossSewers_TurnStarted((CHARACTER)S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b);
+
+IF
+DB_ORI_Laezel_VossSewers_TurnStarted((CHARACTER)_Character)
+AND
+NOT DB_ORI_Laezel_VossSewers_ADOngoing(1)
+THEN
+SetEntityEventReal(_Character, "GLO_CombatWait", 0.0);
+UseSpell(_Character, "Shout_GLO_Voss_TeleportOut", _Character);
+PROC_GLO_VossSewers_VossTeleportedOutAfterAttacked_Hook(_Character);
+NOT DB_ORI_Laezel_VossSewers_TurnStarted((CHARACTER)_Character);
+
+IF
+SwitchedCombat(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,_OldId, _NewId)
+AND
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_OldId)
+THEN
+NOT DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_OldId);
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_NewId);
+
+IF
+CombatEnded(_Id)
+AND
+DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_Id)
+THEN
+NOT DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_Id);
+
+PROC
+PROC_GLO_VossSewers_VossTeleportedOutAfterAttacked_Hook((CHARACTER)_Character)
+THEN
+DB_NOOP(1);
+
+IF
+HitpointsChanged((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _HP)
+AND
+DB_CurrentLevel("CTY_Main_A")
+AND
+NOT DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_)
+AND
+_HP <= 0.0
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+IsOnStage(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, 1)
+THEN
+UseSpell(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, "Shout_GLO_Voss_TeleportOut", S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b);
+
+IF
+HitpointsChanged((CHARACTER)S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, _HP)
+AND
+DB_CurrentLevel("CTY_Main_A")
+AND
+NOT DB_ORI_Laezel_VossSewers_CombatWithPlayerStarted(_)
+AND
+_HP <= 0.0
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+IsOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1)
+THEN
+UseSpell(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "Shout_GLO_Voss_TeleportOut", S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+PROC
+PROC_SpotPlayers_Spotted(_Voss, "LOW_VossSewers_BeforeGettingHammer", _)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersBeforeHammer_9d0a5c9b-ee84-7084-1d6d-0bb6a24d9fba, _Voss);
+
+IF
+DB_GlobalFlag((FLAG)ORI_Laezel_State_GotHammerFromHoH_8a8dd999-aa9e-42b2-9c84-e63b5eb6bc5e)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+NOT DB_PermaDefeated(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+QRY_OnlyOnce("LOW_VossSewers_SetupDragonborn")
+THEN
+PROC_LOW_VossSewers_SetupDragonborn();
+PROC_LOW_VossSewers_SetupVoss();
+
+PROC
+PROC_LOW_VossSewers_SetupVoss()
+THEN
+TeleportTo(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, S_LOW_VossSewersPos_fdc43cdd-7442-4f89-bea9-6a1c8b820670);
+PROC_SetOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1);
+SetFaction(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (FACTION)ACT3_LOW_VossSewers_030be19c-5505-4491-b0e4-4ed28357426d);
+PROC_RemoveDialog(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+DB_Dialogs(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, LOW_VossSewers_6a70d80c-2c97-445b-4850-e6ac62c3b4bc);
+
+IF
+LevelGameplayStarted("CTY_Main_A", _)
+AND
+DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+NOT DB_PermaDefeated(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+NOT DB_PermaDefeated(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ShowedVossHammerSewers_3894a4c1-4f3d-0223-bb06-9aa0e817e252)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f)
+AND
+QRY_OnlyOnce("LOW_VossSewers_SetupDragonborn")
+THEN
+PROC_LOW_VossSewers_SetupDragonborn();
+PROC_LOW_VossSewers_SetupVoss();
+
+PROC
+PROC_LOW_VossSewers_SetupDragonborn()
+THEN
+PROC_Foop(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b);
+PROC_SetOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1);
+TeleportTo(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, S_LOW_VossSewersPos_fdc43cdd-7442-4f89-bea9-6a1c8b820670, "", 0, 0, 0, 0, 1);
+SetFlag(ORI_Laezel_State_VossDragonbornPresent_59486e01-0ecd-4c80-96c7-bd1d529f0017);
+DB_Dialogs(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, (DIALOGRESOURCE)LOW_VossDragonborn_b4f33b74-5939-eebd-bc57-61ac866e9b14);
+PROC_SpotPlayers_StopSpotting("LOW_VossSewers_BeforeGettingHammer");
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "LOW_VossSewers_AfterGettingHammer", (TRIGGER)S_LOW_SewersVossSpottingArea_a0a2c9b2-a7f1-4c1b-91f4-d26680c9f7de);
+DB_SpotPlayers((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "LOW_VossSewers_AfterGettingHammer", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+ 
+PROC
+PROC_SpotPlayers_Spotted(_Voss, "LOW_VossSewers_AfterGettingHammer", _)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersAfterGettingHammer_4ae653eb-6bd2-12c7-a455-bbe26a5d70e0, _Voss);
+
+//ToDo: Make them cast a spell to disappear in Anubis
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f, (DIALOGRESOURCE)LOW_VossSewers_6a70d80c-2c97-445b-4850-e6ac62c3b4bc)
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersLeavesForEndgame_b3896ef4-684e-c78c-4ef4-eb80ce552baf, S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+THEN
+PROC_LOW_VossSewers_LeavesForEndgame();
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)LOW_Laezel_AD_VossSewersLeavesForEndgame_b3896ef4-684e-c78c-4ef4-eb80ce552baf, _)
+THEN
+PROC_LOW_VossSewers_LeavesForEndgame();
+
+PROC
+PROC_LOW_VossSewers_LeavesForEndgame()
+THEN
+ClearFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d);
+UseSpell(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "Shout_GLO_Voss_TeleportOut", S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+UseSpell(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, "Shout_GLO_Voss_TeleportOut", S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b);
+TimerLaunch("LOW_VossSewers_DisappearBackupTimer", 6000); //If something happens to the animations and the animationSetOffStage event fails to arrive, set Voss and the dragoborn offstage
+
+IF
+TimerFinished("LOW_VossSewers_DisappearBackupTimer")
+AND
+IsOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1)
+THEN
+PROC_Poof(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+IF
+TimerFinished("LOW_VossSewers_DisappearBackupTimer")
+AND
+IsOnStage(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b, 1)
+THEN
+PROC_Poof(S_LOW_VossDragonborn_7952187b-7636-418f-884c-adfdd33fda8b);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

@@ -1,0 +1,82 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers((TRIGGER)S_INT_WrapUpPos_03b350c5-4ecc-414e-a6b6-1617546b5437);
+KBSECTION
+//REGION Post-intermezzo, pre-Wyrm's Crossing
+IF
+ReadyCheckPassed("INT_EmperorRevealed_ReturnReadyCheck")
+AND
+DB_Players(_Player)
+THEN
+ClearFlag((FLAG)INT_State_InAstralPrison_7144b3fc-b354-4e6b-b392-c20004be4324, _Player);
+SetLongRestAvailable(1);
+
+IF 
+ReadyCheckPassed("INT_EmperorRevealed_ReturnReadyCheck")
+THEN
+NOT DB_PartyDialogSuppressionZone((TRIGGER)S_INT_PartySuppressionZone_AstralPlane_d3f3f7e9-c70a-4322-9e86-716ccc649692);
+NOT DB_PartyDialogSuppressionZone((TRIGGER)S_CAMP_INT_Area_9ef2ce12-074b-456a-9808-19c80dff20ff);
+
+IF 
+ReadyCheckPassed("INT_EmperorRevealed_ReturnReadyCheck")
+AND
+DB_INT_ReadyToLeave(1)
+AND
+QRY_CountHelperReset("INT_CAMP_CRDIndex")
+AND
+DB_InCamp(_Camper)
+AND
+QRY_CountHelper("INT_CAMP_CRDIndex")
+AND
+DB_CountHelper("INT_CAMP_CRDIndex",_Index)
+THEN
+PROC_Try_CampRelationshipDialog(_Camper, _Index); //Only the first camper gets an exclamation mark
+PROC_INT_RespawnOffStageCampCharacters();
+
+PROC
+PROC_INT_RespawnOffStageCampCharacters()
+AND
+DB_InCamp(_Camper)
+AND
+NOT DB_Defeated(_Camper)
+AND
+NOT DB_Players(_Camper)
+THEN
+SetVisible(_Camper, 1);
+
+IF
+DB_InRegion(_Player,(TRIGGER)S_INT_WrapUpPos_03b350c5-4ecc-414e-a6b6-1617546b5437)
+AND
+DB_Players(_Player)
+AND
+DB_INT_ReadyToLeave(1)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTrigger((TRIGGER)S_INT_AstralPlaneArea_37dec4e1-9db0-44a9-bd39-a5f4362d2ab2)
+AND
+QRY_OnlyOnce("INT_EmperorRevealed_WrapUp")
+THEN
+PROC_SetOnStage(S_INT_PortalToAstralPlane_Daisy_a3ee6e1e-78d6-4cd1-aa59-fb59ca27df96,0);
+PROC_SetOnStage(S_INT_PortalToAstralPlane_Emperor_c20431a7-90e8-4610-b9f4-7c14c432c50a,1);
+
+IF
+UseStarted(_TeleportedPlayer, (ITEM)S_INT_PortalToAstralPlane_Emperor_c20431a7-90e8-4610-b9f4-7c14c432c50a)
+AND
+DB_Players(_TeleportedPlayer)
+THEN
+TeleportTo(_TeleportedPlayer, S_INT_AstralPlane_ReturnTeleport_301f9145-4d37-4dbc-80d3-ea43d37209fe, "INT_AstralPlane_Returned");
+
+IF
+EntityEvent(_Player, "INT_AstralPlane_Returned")
+THEN
+RealtimeObjectTimerLaunch(_Player, "INT_AstralPlane_ReturnAnim", 500);
+
+IF
+ObjectTimerFinished(_Player, "INT_AstralPlane_ReturnAnim")
+THEN
+PlayAnimation(_Player, CUST_Exiting_Astral_Plane_01_4043d9a9-8692-469b-9e7d-691ccfba8c3a, "INT_AstralPrism_ReturnAnimFinished");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2b"

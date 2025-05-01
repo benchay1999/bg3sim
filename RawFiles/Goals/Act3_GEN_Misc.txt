@@ -1,0 +1,41 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+
+//REGION Wyrm Rock's waypoint
+IF
+DB_WaypointUnlocked("WAYP_WYR_WyrmRock", _)
+THEN
+DB_WYR_WyrmRock_WaypointWasDiscovered(1);
+
+IF
+FlagSet((FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9, _, _)
+THEN
+PROC_WYR_WyrmRock_CheckBlockWaypoint();
+
+IF
+FlagSet((FLAG)GLO_Foundry_State_ControlCentreDestroyed_456906c5-40a6-429e-8e1c-7120a2ef631b, _, _)
+THEN
+PROC_WYR_WyrmRock_CheckBlockWaypoint();
+
+PROC
+PROC_WYR_WyrmRock_CheckBlockWaypoint()
+AND
+DB_WYR_WyrmRock_WaypointWasDiscovered(1)
+THEN
+PROC_LockWaypointForAll("WAYP_WYR_WyrmRock");
+DB_WYR_WyrmRock_WaypointIsLocked(1);
+
+IF
+FlagSet((FLAG)GLO_Gortash_State_PermaDefeated_74dd56ff-7e00-42a6-a0f3-0d122f364769, _, _)
+AND
+DB_WYR_WyrmRock_WaypointIsLocked(1)
+THEN
+PROC_UnlockWaypointForAll("WAYP_WYR_WyrmRock");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

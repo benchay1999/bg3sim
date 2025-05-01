@@ -1,0 +1,360 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Init Lore Books
+DB_BookFlags((ITEM)S_GLO_OrinsMessages_SteelWatchFought_4587a971-799d-4522-a922-1b9089dadd1f, 			(FLAG)GLO_OrinsMessages_Event_Read_SteelWatchFought_d4500cec-3261-45b1-9bce-460864095379);
+DB_BookFlags((ITEM)S_GLO_OrinsMessages_SteelWatchFoundryDestroyed_289f67f8-baad-4979-90fc-ca6346a1cfe9, (FLAG)GLO_OrinsMessages_Event_Read_SteelWatchFoundryDestroyed_a0bee5d5-de03-4fef-b051-ac3022553d4c);
+DB_BookFlags((ITEM)S_GLO_OrinsMessages_GortashKilled_fe2a63d0-3ed2-4c34-b234-377e34b06959, 				(FLAG)GLO_OrinsMessages_Event_Read_GortashKilled_c450a024-9683-4c3f-a7f1-a958555f2afb);
+DB_BookFlags((ITEM)S_GLO_OrinsMessages_GortashKilled_fe2a63d0-3ed2-4c34-b234-377e34b06959, 				(FLAG)LOW_SerialKiller_State_KnowWordOfPassageFromOrin_fff04b2b-f123-482f-8a45-f639f3052dee);
+//END_REGION
+
+//REGION Message DBs
+DB_GEN_OrinsMessages_List("GEN_OrinsMessages_SteelWatchFought", 			(FLAG)GLO_OrinsMessages_State_SteelWatchFought_3b5949f1-5bce-43d0-9579-1e261f13ae2c,			(ITEM)S_GLO_OrinsMessages_SteelWatchFought_4587a971-799d-4522-a922-1b9089dadd1f);
+DB_GEN_OrinsMessages_List("GEN_OrinsMessages_SteelWatchFoundryDestroyed",	(FLAG)GLO_OrinsMessages_State_SteelWatchFoundryDestroyed_894e276b-fcfd-46d7-8b23-a5ba9a45c595,	(ITEM)S_GLO_OrinsMessages_SteelWatchFoundryDestroyed_289f67f8-baad-4979-90fc-ca6346a1cfe9);
+DB_GEN_OrinsMessages_List("GEN_OrinsMessages_GortashKilled", 				(FLAG)GLO_OrinsMessages_State_GortashKilled_c6e7b755-119e-48cf-8698-67ebf3d09044,				(ITEM)S_GLO_OrinsMessages_GortashKilled_fe2a63d0-3ed2-4c34-b234-377e34b06959);
+DB_GEN_OrinsMessages_List("GEN_OrinsMessages_GortashKilled_NoTribunal", 	(FLAG)GLO_OrinsMessages_State_GortashKilled_c6e7b755-119e-48cf-8698-67ebf3d09044,				(ITEM)S_GLO_OrinsMessages_GortashKilled_NoTribunal_836152c1-2e32-4545-a553-b6571992cc46);
+
+DB_GEN_OrinsMessages_PosList("SLUMS", 	(TRIGGER)S_LOW_OrinsMessages_Slums_362544ef-a2c7-441f-92d3-be6bcaec2aa9);
+DB_GEN_OrinsMessages_PosList("ELFSONG",	(TRIGGER)S_LOW_OrinsMessages_Elfsong_1e7f6479-b736-4cf8-9f4b-a32b296a018c);
+DB_GEN_OrinsMessages_PosList("FARM",	(TRIGGER)S_WYR_OrinsMessages_Farm_c72c5f39-9a06-4e22-9881-f8727f1c5b1e);
+
+DB_GEN_OrinsMessages_HandList("GEN_OrinsMessages_SteelWatchFought",				(ITEM)S_GLO_OrinsMessages_Hand01_83a16395-92d1-4295-af1f-c7ce1dabfb9f);
+DB_GEN_OrinsMessages_HandList("GEN_OrinsMessages_SteelWatchFoundryDestroyed",	(ITEM)S_GLO_OrinsMessages_Hand02_ea7c0034-208f-4f8f-b8af-1aea8d06f881);
+DB_GEN_OrinsMessages_HandList("GEN_OrinsMessages_GortashKilled",				(ITEM)S_GLO_OrinsMessages_Hand03_e2cc0472-77be-48f1-b213-d810cf99ee71);
+DB_GEN_OrinsMessages_HandList("GEN_OrinsMessages_GortashKilled_NoTribunal",		(ITEM)S_GLO_OrinsMessages_Hand03_e2cc0472-77be-48f1-b213-d810cf99ee71);
+//END_REGION
+KBSECTION
+//REGION Orin's Messages - Initial setup after nested dialog - which is after an abduction.
+PROC
+PROC_GEN_OrinsMessages_Setup()
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Orin's Messages - After Fought with SteelWatchers
+IF
+DB_GLO_SteelWatchers(_SteelWatchChar)
+AND
+DB_Was_InCombat(_SteelWatchChar, _CombatID)
+AND
+DB_Players(_Player)
+AND
+DB_Was_InCombat(_Player, _CombatID)
+AND
+NOT DB_Is_InCombat(_Player, _)
+AND
+QRY_OnlyOnce("GEN_OrinsMessages_SteelWatchFought")
+THEN
+DB_GEN_OrinsMessages_SteelWatchFought(_SteelWatchChar);
+PROC_GEN_OrinsMessages_SteelWatchLeftCombat();
+
+PROC
+PROC_GEN_OrinsMessages_SteelWatchLeftCombat()
+AND
+DB_GlobalFlag((FLAG)GLO_OrinsAbduction_State_AbductionOccured_98dda46d-871c-4807-aced-5dc3ff5f4c2d)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Orin_State_BrokeDealToKillGortash_2283f315-5fda-481c-87a1-635d04253759)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_OrinsMessages_State_SteelWatchFought_3b5949f1-5bce-43d0-9579-1e261f13ae2c)
+AND
+NOT DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // if Orin is dead, stop checking for this.
+THEN
+PROC_GEN_OrinsMessages_SetupMessageInCamp("GEN_OrinsMessages_SteelWatchFought");
+//END_REGION
+
+//REGION Orin's Messages - After Steelwatch Foundry is destroyed.
+IF
+DB_GlobalFlag((FLAG)LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a)
+AND
+QRY_OnlyOnce("GEN_OrinsMessages_SteelWatchFoundryDestroyed")
+THEN
+PROC_GEN_OrinsMessages_SteelWatchFoundryDestroyed();
+
+PROC
+PROC_GEN_OrinsMessages_SteelWatchFoundryDestroyed()
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+THEN
+AddEntryToCustomBook("GEN_OrinsMessages_SteelWatchFoundryDestroyed_CustomVersion", "GEN_OrinsMessages_SteelWatchFoundryDestroyed_Prefix_IronThroneDestroyedByPlayers");
+AddEntryToCustomBook("GEN_OrinsMessages_SteelWatchFoundryDestroyed_CustomVersion", "GEN_OrinsMessages_SteelWatchFoundryDestroyed");
+
+PROC
+PROC_GEN_OrinsMessages_SteelWatchFoundryDestroyed()
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+THEN
+AddEntryToCustomBook("GEN_OrinsMessages_SteelWatchFoundryDestroyed_CustomVersion", "GEN_OrinsMessages_SteelWatchFoundryDestroyed_Prefix_IronThroneDestroyedInSteelwatch");
+AddEntryToCustomBook("GEN_OrinsMessages_SteelWatchFoundryDestroyed_CustomVersion", "GEN_OrinsMessages_SteelWatchFoundryDestroyed");
+
+PROC
+PROC_GEN_OrinsMessages_SteelWatchFoundryDestroyed()
+AND
+DB_GlobalFlag((FLAG)GLO_OrinsAbduction_State_AbductionOccured_98dda46d-871c-4807-aced-5dc3ff5f4c2d)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Orin_State_BrokeDealToKillGortash_2283f315-5fda-481c-87a1-635d04253759)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_OrinsMessages_State_SteelWatchFoundryDestroyed_894e276b-fcfd-46d7-8b23-a5ba9a45c595)
+AND
+NOT DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // if Orin is dead, stop checking for this.
+THEN
+PROC_GEN_OrinsMessages_SetupMessageInCamp("GEN_OrinsMessages_SteelWatchFoundryDestroyed");
+
+//Iron Throne variations
+PROC
+PROC_BlockUseOfItem((CHARACTER)_Player, S_GLO_OrinsMessages_SteelWatchFoundryDestroyed_289f67f8-baad-4979-90fc-ca6346a1cfe9)
+THEN
+DB_CustomUseItemResponse(_Player, S_GLO_OrinsMessages_SteelWatchFoundryDestroyed_289f67f8-baad-4979-90fc-ca6346a1cfe9, 0);
+OpenReferencedBookUI(_Player, "GEN_OrinsMessages_SteelWatchFoundryDestroyed_CustomVersion", S_GLO_OrinsMessages_SteelWatchFoundryDestroyed_289f67f8-baad-4979-90fc-ca6346a1cfe9);
+
+//END_REGION
+
+//REGION Orin's Messages - When players have killed Gortash as Orin asked, setup the message Orin sends in camp.
+IF
+DB_GlobalFlag((FLAG)GLO_Gortash_State_PermaDefeated_74dd56ff-7e00-42a6-a0f3-0d122f364769)
+AND
+QRY_OnlyOnce("GEN_OrinsMessages_GortashKilled")
+THEN
+PROC_GEN_OrinsMessages_GortashKilled();
+
+// if Tribunal was cleared.
+PROC
+PROC_GEN_OrinsMessages_GortashKilled()
+AND
+DB_GlobalFlag((FLAG)GLO_OrinsAbduction_State_AbductionOccured_98dda46d-871c-4807-aced-5dc3ff5f4c2d)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Orin_State_BrokeDealToKillGortash_2283f315-5fda-481c-87a1-635d04253759)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_OrinsMessages_State_GortashKilled_c6e7b755-119e-48cf-8698-67ebf3d09044)
+AND
+NOT DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // if Orin is dead, stop checking for this.
+AND
+QRY_GEN_OrinsMessages_MurderTribunalCleared()
+THEN
+PROC_GEN_OrinsMessages_SetupMessageInCamp("GEN_OrinsMessages_GortashKilled_NoTribunal");
+
+// if Tribunal still hasn't been cleared.
+PROC
+PROC_GEN_OrinsMessages_GortashKilled()
+AND
+DB_GlobalFlag((FLAG)GLO_OrinsAbduction_State_AbductionOccured_98dda46d-871c-4807-aced-5dc3ff5f4c2d)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Orin_State_BrokeDealToKillGortash_2283f315-5fda-481c-87a1-635d04253759)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_OrinsMessages_State_GortashKilled_c6e7b755-119e-48cf-8698-67ebf3d09044)
+AND
+NOT DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // if Orin is dead, stop checking for this.
+AND
+NOT QRY_GEN_OrinsMessages_MurderTribunalCleared()
+THEN
+PROC_GEN_OrinsMessages_SetupMessageInCamp("GEN_OrinsMessages_GortashKilled");
+//END_REGION
+
+//REGION Orin's Message - QRY if the Murder Tribunal was already cleared
+QRY
+QRY_GEN_OrinsMessages_MurderTribunalCleared()
+AND
+DB_PartOfTheTeam(_Player)
+AND
+GetFlag((FLAG)LOW_MurderTribunal_Event_GiveBhaalAmulet_51ae9508-df79-2849-21a0-9f9aae78d727, _Player, 1) // Sarevok freely gave the amulet.
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GEN_OrinsMessages_MurderTribunalCleared()
+AND
+DB_GlobalFlag((FLAG)LOW_MurderTribunal_Sarevok_State_Dead_e9d30711-af25-4ba9-813e-cc7c131b17b6) // Sarevok was killed.
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Setup the message in the camp.
+PROC
+PROC_GEN_OrinsMessages_SetupMessageInCamp((STRING)_MessageStr)
+AND
+DB_GEN_OrinsMessages_List(_MessageStr, _MessageFlag, _MessageItem)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_GEN_OrinsMessages_PosList(_ActiveCamp, _MessagePos)
+AND
+DB_GEN_OrinsMessages_HandList(_MessageStr, _MessageHand)
+THEN
+DB_GEN_OrinsMessages_CurrentMessage((STRING)_MessageStr);
+DB_GEN_OrinsMessages_CurrentMessageInCamp((STRING)_ActiveCamp);
+PROC_GlobalSetFlagAndCache((FLAG)_MessageFlag);
+TeleportTo((ITEM)_MessageItem, _MessagePos, "GEN_OrinMessages_Teleported", 0, 0, 0, 0, 1);
+//TeleportTo((ITEM)_MessageHand, _MessagePos, "", 0, 0, 0, 0, 1); // no need to teleport the hand anymore.
+PROC_TriggerRegisterForPlayers(_MessagePos);
+DB_GEN_OrinsMessages_PlayersNotFoundMessage(1);
+
+IF
+EntityEvent(_MessageItem, "GEN_OrinMessages_Teleported")
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_GEN_OrinsMessages_PosList(_ActiveCamp, _MessagePos)
+THEN
+PROC_GEN_OrinsMessages_BloodSurface_Create(_MessagePos);
+
+PROC
+PROC_GEN_OrinsMessages_SetupMessageInCamp("GEN_OrinsMessages_SteelWatchFoundryDestroyed") // make sure the previous steps were skipped
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_OrinsMessages_State_SteelWatchFought_3b5949f1-5bce-43d0-9579-1e261f13ae2c);
+
+PROC
+PROC_GEN_OrinsMessages_SetupMessageInCamp("GEN_OrinsMessages_GortashKilled") // make sure the previous steps were skipped
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_OrinsMessages_State_SteelWatchFought_3b5949f1-5bce-43d0-9579-1e261f13ae2c);
+PROC_GlobalSetFlagAndCache((FLAG)GLO_OrinsMessages_State_SteelWatchFoundryDestroyed_894e276b-fcfd-46d7-8b23-a5ba9a45c595);
+//END_REGION
+
+//REGION If message was setup, and camp was swapped, we need to move the message to new camp, and remove it from the old camp.
+IF
+DB_ActiveCamp(_CurCamp)
+AND
+DB_GEN_OrinsMessages_CurrentMessageInCamp(_OldCamp)
+AND
+_CurCamp != _OldCamp
+AND
+DB_GEN_OrinsMessages_PlayersNotFoundMessage(1)
+THEN
+PROC_GEN_OrinsMessages_MoveMessageToNewCamp(_CurCamp);
+
+PROC
+PROC_GEN_OrinsMessages_MoveMessageToNewCamp((STRING)_CurCamp)
+AND
+DB_GEN_OrinsMessages_CurrentMessage(_MessageStr)
+THEN
+PROC_GEN_OrinsMessages_SetupMessageInCamp(_MessageStr);
+//END_REGION
+
+//REGION On long rest, clear the bloodstains if players had already read the message.
+PROC
+PROC_LongRest()
+AND
+NOT DB_GEN_OrinsMessages_PlayersNotFoundMessage(1) // players hand already found the message
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_GEN_OrinsMessages_PosList(_ActiveCamp, _MessagePos)
+THEN
+PROC_GEN_OrinsMessages_BloodSurface_Clear(_MessagePos);
+
+PROC
+PROC_GEN_OrinsMessages_BloodSurface_Create((TRIGGER)_MessagePos)
+THEN
+CreateSurface(_MessagePos, "SurfaceBlood", 1.0, -1.0);
+
+PROC
+PROC_GEN_OrinsMessages_BloodSurface_Clear((TRIGGER)_MessagePos)
+THEN
+RemoveSurfaceLayer(_MessagePos, "Ground", 1.0);
+//END_REGION
+
+//REGION Entered trigger Handling for when players approach the message to play the PAD
+IF
+EnteredTrigger((CHARACTER)_Player, (TRIGGER)_MessagePos)
+AND
+DB_Players(_Player)
+AND
+IsControlled(_Player, 1) // make sure its the player that's trigger and not an inactive char walking back to camp position.
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_GEN_OrinsMessages_PosList(_ActiveCamp, _MessagePos)
+AND
+DB_GEN_OrinsMessages_PlayersNotFoundMessage(1)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)LOW_BhaalTemple_PAD_FoundOrinsLetter_20e9f5f0-8659-0065-fcfc-bca20d5e05d9, _Player);
+NOT DB_GEN_OrinsMessages_PlayersNotFoundMessage(1);
+
+// if enterting the trigger for the last message, unregister it since we no longer need it.
+IF
+EnteredTrigger((CHARACTER)_Player, (TRIGGER)_MessagePos)
+AND
+DB_Players(_Player)
+AND
+IsControlled(_Player, 1) // make sure its the player that's trigger and not an inactive char walking back to camp position.
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_GEN_OrinsMessages_PosList(_ActiveCamp, _MessagePos)
+AND
+DB_GEN_OrinsMessages_CurrentMessage("GEN_OrinsMessages_GortashKilled")
+THEN
+TriggerUnregisterForPlayers((TRIGGER)_MessagePos);
+//END_REGION
+
+//REGION Singleton DBs
+IF
+DB_GEN_OrinsMessages_SteelWatchFought(_NewState)
+AND
+DB_GEN_OrinsMessages_SteelWatchFought(_OldState)
+AND
+_NewState != _OldState
+THEN
+NOT DB_GEN_OrinsMessages_SteelWatchFought(_OldState);
+
+IF
+DB_GEN_OrinsMessages_CurrentMessage(_NewState)
+AND
+DB_GEN_OrinsMessages_CurrentMessage(_OldState)
+AND
+_NewState != _OldState
+THEN
+NOT DB_GEN_OrinsMessages_CurrentMessage(_OldState);
+
+IF
+DB_GEN_OrinsMessages_CurrentMessageInCamp(_NewState)
+AND
+DB_GEN_OrinsMessages_CurrentMessageInCamp(_OldState)
+AND
+_NewState != _OldState
+THEN
+NOT DB_GEN_OrinsMessages_CurrentMessageInCamp(_OldState);
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("OMSteelWatchFought") // for testing purposes
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OMSteelWatchFought");
+PROC_GEN_OrinsMessages_SteelWatchLeftCombat();
+
+IF
+TextEvent("OMDestroySteelWatchFoundry") // for testing purposes
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OMDestroySteelWatchFoundry");
+PROC_GlobalSetFlagAndCache((FLAG)LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a);
+
+IF
+TextEvent("OMResetMessages") // for testing purposes
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OMResetMessages");
+PROC_GlobalClearFlagAndCache((FLAG)GLO_OrinsMessages_State_SteelWatchFought_3b5949f1-5bce-43d0-9579-1e261f13ae2c);
+PROC_GlobalClearFlagAndCache((FLAG)GLO_OrinsMessages_State_SteelWatchFoundryDestroyed_894e276b-fcfd-46d7-8b23-a5ba9a45c595);
+PROC_GlobalClearFlagAndCache((FLAG)GLO_OrinsMessages_State_GortashKilled_c6e7b755-119e-48cf-8698-67ebf3d09044);
+
+PROC_GlobalClearFlagAndCache((FLAG)LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a);
+PROC_GlobalClearFlagAndCache((FLAG)GLO_Gortash_State_PermaDefeated_74dd56ff-7e00-42a6-a0f3-0d122f364769); 
+
+IF
+TextEvent("OMMoveMessageToCurCamp") // for testing purposes
+AND
+DB_ActiveCamp(_CurCamp)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OMMoveMessageToCurCamp");
+PROC_GEN_OrinsMessages_MoveMessageToNewCamp(_CurCamp);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

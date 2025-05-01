@@ -1,0 +1,624 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604); //Gale gets excluded until he's no longer a risk to the entire world.
+
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (FLAG)ORI_DarkUrge_State_LeastFavouriteAstarion_108faa65-8980-4370-bd42-3eb850db753c);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (FLAG)ORI_DarkUrge_State_LeastFavouriteGale_1d2d52ec-493b-4e8e-85bc-d2a156868078);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, (FLAG)ORI_DarkUrge_State_LeastFavouriteHalsin_ec79e3cf-b5c5-4bed-a035-37cda22b13d5);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (FLAG)ORI_DarkUrge_State_LeastFavouriteJaheira_b8115729-8e87-46d1-b3a4-24821d8fbba7);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (FLAG)ORI_DarkUrge_State_LeastFavouriteKarlach_67e3bac1-f4ec-4e37-a285-144bc61d51df);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (FLAG)ORI_DarkUrge_State_LeastFavouriteLaezel_aca78d93-165e-4f17-aadf-2bf49e2f4737);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (FLAG)ORI_DarkUrge_State_LeastFavouriteMinthara_81a4801f-61f0-485f-8d5d-cf5db375059c);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (FLAG)ORI_DarkUrge_State_LeastFavouriteShadowheart_412d0874-e55b-44c1-9f8d-bc3e97242e4a);
+DB_ORI_DarkUrge_LeastFavouriteFlags((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, (FLAG)ORI_DarkUrge_State_LeastFavouriteWyll_cd4e3012-118c-425d-a223-1bd538b5ac77);
+
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (FLAG)ORI_DarkUrge_State_SparedIsobelWithAstarion_c2c08227-ae06-4f64-82e9-4ae221cdd123);
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (FLAG)ORI_DarkUrge_State_SparedIsobelWithGale_a318c0cd-f261-41c9-88c9-3cddceb477b7);
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (FLAG)ORI_DarkUrge_State_SparedIsobelWithKarlach_40ad195b-2fa2-492d-9fc5-359fb363c65d);
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (FLAG)ORI_DarkUrge_State_SparedIsobelWithLaezel_bcd9eb6c-4537-442b-bc28-d7010b8d96ff);
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (FLAG)ORI_DarkUrge_State_SparedIsobelWithShadowheart_1dad6424-0946-45d5-a523-3428dd17c8e8);
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, (FLAG)ORI_DarkUrge_State_SparedIsobelWithWyll_150efcb9-0b87-4fbf-af6c-44fa3292fab7);
+KBSECTION
+//REGION Keep track of who's the favourite
+
+IF
+ApprovalRatingChangeAttempt(_Character, (CHARACTER)_DarkUrge, _, _, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_)
+AND
+DB_PartOfTheTeam(_Character)
+THEN
+DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+
+IF
+DB_ORI_DarkUrge_FavouriteCharacter((CHARACTER)_Companion)
+AND
+NOT DB_PartOfTheTeam(_Companion)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _NewValue)
+AND
+NOT DB_ApprovalRating_Updating(_Character, (CHARACTER)_DarkUrge)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ApprovalRating_Updating(_Character, (CHARACTER)_DarkUrge)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+FlagCleared(_DatingFlag, _DarkUrge, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_CompanionCanPartner(_, _DatingFlag, _, _, _, _, _)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+FlagSet(_DatingFlag, _DarkUrge, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_CompanionCanPartner(_, _DatingFlag, _, _, _, _, _)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+FlagCleared(_PartneredFlag, _DarkUrge, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_CompanionCanPartner(_, _, _PartneredFlag, _, _, _, _)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+FlagSet(_PartneredFlag, _DarkUrge, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_CompanionCanPartner(_, _, _PartneredFlag, _, _, _, _)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+PROC
+PROC_ORI_DarkUrge_RecheckFavourite()
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _NewValue)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ApprovalRating_Updating(_Character, (CHARACTER)_DarkUrge)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter)
+AND
+_Character != _OtherCharacter
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ORI_Dating((CHARACTER)_DarkUrge, _OtherCharacter)
+AND
+NOT DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+DB_ApprovalRating(_OtherCharacter, (CHARACTER)_DarkUrge, _CurrentValue)
+AND
+_NewValue > _CurrentValue
+AND
+NOT QRY_ORI_DarkUrge_Favourite_IsPhantomApproval((CHARACTER)_Character, (INTEGER)_NewValue)
+AND
+NOT QRY_ORI_DarkUrge_Favourite_IsPhantomApproval((CHARACTER)_OtherCharacter, (INTEGER)_CurrentValue)
+THEN
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter);
+DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+
+
+PROC
+PROC_ORI_DarkUrge_RecheckFavourite()
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+_Character != _OtherCharacter
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ORI_Dating((CHARACTER)_DarkUrge, _OtherCharacter)
+THEN
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter);
+DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+
+
+PROC
+PROC_ORI_DarkUrge_RecheckFavourite()
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _NewValue)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ApprovalRating_Updating(_Character, (CHARACTER)_DarkUrge)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter)
+AND
+_Character != _OtherCharacter
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+DB_ORI_Dating((CHARACTER)_DarkUrge, _OtherCharacter)
+AND
+DB_ApprovalRating(_OtherCharacter, (CHARACTER)_DarkUrge, _CurrentValue)
+AND
+_NewValue > _CurrentValue
+AND
+NOT QRY_ORI_DarkUrge_Favourite_IsPhantomApproval((CHARACTER)_Character, (INTEGER)_NewValue)
+AND
+NOT QRY_ORI_DarkUrge_Favourite_IsPhantomApproval((CHARACTER)_OtherCharacter, (INTEGER)_CurrentValue)
+THEN
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter);
+DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+
+PROC
+PROC_ORI_DarkUrge_RecheckFavourite()
+AND
+DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter)
+AND
+_Character != _OtherCharacter
+THEN
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_OtherCharacter);
+DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+
+
+QRY
+QRY_ORI_DarkUrge_Favourite_IsPhantomApproval((CHARACTER)_Character, (INTEGER)_NewValue)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _NewValue)
+THEN
+DB_NOOP(1);
+
+IF
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_PartOfTheTeam(_Character)
+THEN
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+PROC_ORI_DarkUrge_FindNewDarkUrgeFavouriteCharacter();
+
+PROC
+PROC_ORI_DarkUrge_FindNewDarkUrgeFavouriteCharacter()
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_)
+THEN
+DB_ORI_DarkUrge_FavouriteCharacter(_Character);
+
+PROC
+PROC_ORI_DarkUrge_FindNewDarkUrgeFavouriteCharacter()
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _)
+AND
+QRY_OnlyOnce_Reset("ORI_DarkUrge_NewFavouritePerson")
+AND
+DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+QRY_OnlyOnce("ORI_DarkUrge_NewFavouritePerson")
+THEN
+DB_ORI_DarkUrge_FavouriteCharacter(_Character); //After this DB is filled, the first rule should reevaluate the relations.
+
+PROC
+PROC_ORI_DarkUrge_FindNewDarkUrgeFavouriteCharacter()
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_)
+AND
+QRY_OnlyOnce_Reset("ORI_DarkUrge_NewFavouritePerson")
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _Any)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteExcluded(_Character)
+AND
+QRY_OnlyOnce("ORI_DarkUrge_NewFavouritePerson")
+THEN
+DB_ORI_DarkUrge_FavouriteCharacter(_Character); //After this DB is filled, the first rule should reevaluate the relations.
+
+QRY
+QRY_CRIME_BlockRegisterCrime(_DarkUrge, _, _, _, _Victim, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_DialogSpeakers(_ID, _Victim,_)
+AND
+DB_DialogName(CAMP_DarkUrge_MurderOfAlfira_SD_BloodOnHands_06b3f254-a0ba-d0fb-d8f4-6e2541cb5a2c, _ID)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Set a flag that the character is available.
+
+IF
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_CantTalk(_Character)
+AND
+DB_InCamp(_Character)
+AND
+NOT DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+QRY_SameUser(_Character, (CHARACTER)_DarkUrge)
+THEN
+SetFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+IF
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_CantTalk(_Character)
+AND
+DB_InCamp(_Character)
+AND
+NOT DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+NOT DB_Players(_Character)
+THEN
+SetFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+IF
+CharacterReservedUserIDChanged(_Character, _, _)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_CantTalk(_Character)
+AND
+DB_InCamp(_Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+QRY_SameUser(_Character, (CHARACTER)_DarkUrge)
+THEN
+SetFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+IF
+DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_)
+THEN
+ClearFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+
+IF
+DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+DB_CantTalk(_Character)
+THEN
+ClearFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+IF
+DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_InCamp(_Character)
+THEN
+ClearFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+IF
+DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+DB_Players(_Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT QRY_SameUser(_Character, (CHARACTER)_DarkUrge)
+THEN
+ClearFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+IF
+CharacterReservedUserIDChanged(_Character, _, _)
+AND
+DB_GlobalFlag(GLO_DarkUrge_State_FavouriteExists_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT QRY_SameUser(_Character, (CHARACTER)_DarkUrge)
+THEN
+ClearFlag(GLO_DarkUrge_State_FavouriteAvailable_a1fbabc2-e7d7-4cb1-91ee-a24b744bef1c);
+
+//END_REGION
+
+//REGION Keep track of who's the least favourite
+
+
+IF
+DB_ORI_DarkUrge_LeastFavouriteCharacter((CHARACTER)_Companion)
+AND
+NOT DB_PartOfTheTeam(_Companion)
+THEN
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+IF
+ApprovalRatingChangeAttempt(_Character, (CHARACTER)_DarkUrge, _, _, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_DarkUrge_LeastFavouriteCharacter(_)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+DB_ORI_DarkUrge_LeastFavouriteFlags(_Character, _Flag)
+THEN
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character);
+
+
+PROC
+PROC_ORI_DarkUrge_RecheckFavourite()
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _NewValue)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+DB_ORI_DarkUrge_LeastFavouriteFlags(_Character, _Flag)
+AND
+NOT DB_ApprovalRating_Updating(_Character, (CHARACTER)_DarkUrge)
+AND
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_OtherCharacter)
+AND
+_Character != _OtherCharacter
+AND
+DB_ApprovalRating(_OtherCharacter, (CHARACTER)_DarkUrge, _CurrentValue)
+AND
+_NewValue < _CurrentValue
+AND
+NOT QRY_ORI_DarkUrge_Favourite_IsPhantomApproval(_Character, _NewValue) //Only check the lowest existing ones. Shouldn't ever be more than 2, but Osiris weirdness sometimes leads to this.
+AND
+NOT QRY_ORI_DarkUrge_Favourite_IsPhantomApproval((CHARACTER)_OtherCharacter, (INTEGER)_CurrentValue)
+THEN
+NOT DB_ORI_DarkUrge_LeastFavouriteCharacter(_OtherCharacter);
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character);
+
+QRY
+QRY_ORI_DarkUrge_LeastFavourite_HasHigherApproval((CHARACTER)_Character, (INTEGER)_NewValue)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _NewValue)
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _OtherValue)
+AND
+_OtherValue > _NewValue
+THEN
+DB_NOOP(1);
+
+
+IF
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character)
+AND
+NOT DB_PartOfTheTeam(_Character)
+AND
+NOT DB_Players(_Character)
+THEN
+NOT DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character);
+PROC_ORI_DarkUrge_FindNewDarkUrgeLeastFavouriteCharacter();
+
+PROC
+PROC_ORI_DarkUrge_FindNewDarkUrgeLeastFavouriteCharacter()
+AND
+QRY_OnlyOnce_Reset("ORI_DarkUrge_NewLeastFavouritePerson")
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_ApprovalRating(_Character, (CHARACTER)_DarkUrge, _Any)
+AND
+NOT DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+NOT DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+AND
+NOT DB_ORI_Dating((CHARACTER)_DarkUrge, _Character)
+AND
+DB_PartOfTheTeam(_Character)
+AND
+DB_ORI_DarkUrge_LeastFavouriteFlags(_Character, _)
+AND
+QRY_OnlyOnce("ORI_DarkUrge_NewLeastFavouritePerson")
+THEN
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character); //After this DB is filled, the first rule should reevaluate the relations.
+
+IF
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_ORI_Partnered((CHARACTER)_DarkUrge, _Character)
+THEN
+NOT DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character);
+PROC_ORI_DarkUrge_FindNewDarkUrgeLeastFavouriteCharacter();
+
+IF
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter((CHARACTER)_Character)
+THEN
+NOT DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character);
+PROC_ORI_DarkUrge_FindNewDarkUrgeLeastFavouriteCharacter();
+
+IF
+DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character)
+AND
+DB_ORI_DarkUrge_LeastFavouriteFlags(_Character, _Flag)
+THEN
+SetFlag(_Flag);
+
+IF
+DB_GlobalFlag(_Flag)
+AND
+DB_ORI_DarkUrge_LeastFavouriteFlags(_Character, _Flag)
+AND
+NOT DB_ORI_DarkUrge_LeastFavouriteCharacter(_Character)
+THEN
+ClearFlag(_Flag);
+
+
+//END_REGION
+
+//REGION Kill Actual favourite
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_KillFavouriteCharacter_65863750-e926-1f14-a3da-cda0b6ad1863, _, _ID)
+AND
+_ID != 0
+AND
+DB_DialogSpeakers(_ID, _Character, 2) //This works so long as the flag is set only in CAMP_DarkUrge_SparedIsobel. Generalise if the flag is ever set in other dialogues.
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+DB_DialogDeath((CHARACTER)_Character);
+DB_Camp_QueuedMorningIVB((VOICEBARKRESOURCE)CAMP_GD_SparedIsobel_IVB_AfterMurder_322898bd-dec2-222f-a78b-25ebb4e0fcfc,_DarkUrge);
+PROC_Origins_CompanionLeavePermanently((CHARACTER)_Character, "Killed");
+Die(_Character, DEATHTYPE.Physical, (CHARACTER)_DarkUrge, 0, 1, 0.0);
+PROC_ORI_DarkUrge_DeathRitualCircle(_Character);
+DB_Camp_StayInCampAfterLongRest(1);
+DB_CorpseCleanup_Ignore(_Character);
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_KillFavouriteCharacter_65863750-e926-1f14-a3da-cda0b6ad1863, _, 0)
+AND
+DB_Camp_NightMode(1)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_Camp_QueuedNight((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8)
+THEN
+DB_Camp_QueuedMorningIVB((VOICEBARKRESOURCE)CAMP_GD_SparedIsobel_IVB_AfterMurder_322898bd-dec2-222f-a78b-25ebb4e0fcfc,_DarkUrge);
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_KillFavouriteCharacter_65863750-e926-1f14-a3da-cda0b6ad1863, _, 0)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+PROC_Origins_CompanionLeavePermanently(_Character, "Killed");
+Die(_Character, DEATHTYPE.DoT, (CHARACTER)_DarkUrge, 0, 1, 0.0);
+
+
+IF
+DialogStarted((DIALOGRESOURCE)CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e, _ID)
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+DB_ORI_DarkUrge_FavouriteKillCandidateFlag(_Character, _Flag)
+THEN
+SetFlag(_Flag, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_KillFavouriteCharacter_65863750-e926-1f14-a3da-cda0b6ad1863, _, _ID)
+THEN
+GoalCompleted;
+
+IF
+FlagSet((FLAG)NIGHT_DarkUrge_KilledIsobel_c46aba07-a156-4bcd-a2da-3411651f28c2, _, _ID)
+THEN
+GoalCompleted;
+
+//END_REGION
+
+
+//REGION Gale become eligible once his bomb is disarmed
+
+IF
+FlagSet((FLAG)ORI_Gale_Event_BombDisarmed_3d014e79-5595-9365-87bb-5cbb1f87fe5c, _, _)
+THEN
+NOT DB_ORI_DarkUrge_FavouriteExcluded((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604); 
+PROC_ORI_DarkUrge_RecheckFavourite();
+
+//END_REGION
+EXITSECTION
+SysClear("DB_ORI_DarkUrge_FavouriteExcluded", 1);
+SysClear("DB_ORI_DarkUrge_LeastFavouriteFlags", 2);
+SysClear("DB_ORI_DarkUrge_FavouriteKillCandidateFlag", 2);
+ENDEXITSECTION
+ParentTargetEdge "GLO_DarkUrge_SetupSubgoals"

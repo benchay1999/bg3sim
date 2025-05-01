@@ -1,0 +1,46 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_CompanionSwapDialogue((DIALOGRESOURCE)GLO_CompanionSwap_Camp_002e501b-6f1b-8357-1fde-20b1b4b7c1b9);
+DB_GLO_CompanionSwapDialogue((DIALOGRESOURCE)GLO_CompanionSwap_Hirelings_a22a9d2a-5164-741f-cb59-10551521c41a);
+DB_GLO_CompanionSwapDialogue((DIALOGRESOURCE)GLO_CompanionSwap_Recruitment_f02d36d9-1f59-33ee-b87d-82f4c13c501f);
+
+DB_GLO_CompanionSwapNDs((FLAG)GLO_ND_CompanionSwap_BlockCamp_a4359d7e-e79f-07ac-4285-d0079d0b4e4b);
+DB_GLO_CompanionSwapNDs((FLAG)GLO_ND_CompanionSwap_ForceChoice_6f0ef50d-8fc1-5ccf-cf05-2a35accccdbe);
+DB_GLO_CompanionSwapNDs((FLAG)GLO_ND_CompanionSwap_ReturnToParentDialogBlocked_faae54e3-e356-4b38-a803-d06292da7231);
+KBSECTION
+IF
+NestedDialogPlayed((DIALOGRESOURCE)GLO_CompanionSwap_Camp_002e501b-6f1b-8357-1fde-20b1b4b7c1b9, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+GetFlag((FLAG)GLO_ND_CompanionSwap_ReturnToParentDialogBlocked_faae54e3-e356-4b38-a803-d06292da7231, _Player, 1)
+THEN
+ClearFlag((FLAG)GLO_ND_CompanionSwap_ReturnToParentDialogBlocked_faae54e3-e356-4b38-a803-d06292da7231, _Player);
+
+IF
+NestedDialogPlayed((DIALOGRESOURCE)GLO_CompanionSwap_Camp_002e501b-6f1b-8357-1fde-20b1b4b7c1b9, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+GetFlag((FLAG)GLO_ND_CompanionSwap_SkipIntroNode_025e9246-d6ea-c8e2-a0ba-1cf847b2dba1, _Player, 1)
+THEN
+ClearFlag((FLAG)GLO_ND_CompanionSwap_SkipIntroNode_025e9246-d6ea-c8e2-a0ba-1cf847b2dba1, _Player);
+
+IF
+FlagSet((FLAG)_Flag, _Character, _ID)
+AND
+DB_GLO_CompanionSwapNDs(_Flag)
+THEN
+DB_GLO_CompanionSwap_ClearOnEnd(_Flag, _Character, _ID);
+
+IF
+DialogEnded(_, _ID)
+AND
+DB_GLO_CompanionSwap_ClearOnEnd(_Flag, _Character, _ID)
+THEN
+NOT DB_GLO_CompanionSwap_ClearOnEnd(_Flag, _Character, _ID);
+ClearFlag(_Flag, _Character, _ID, 1);
+EXITSECTION
+
+ENDEXITSECTION

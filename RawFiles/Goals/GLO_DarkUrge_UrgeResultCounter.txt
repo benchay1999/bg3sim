@@ -1,0 +1,85 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_DeclareCounter("ORI_DarkUrge_UrgeIndulge");
+KBSECTION
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_IndulgedUrge_ceb8b4c2-b705-c26c-250d-a1c1c32e7cb5, _Speaker, _ID)
+AND
+DB_ORI_DarkUrge((CHARACTER)_Speaker)
+AND
+QRY_ORI_DarkUrge_UnreactedUrge((INTEGER)_ID)
+THEN
+PROC_IncreaseCounter("ORI_DarkUrge_UrgeIndulge");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_ResistedUrge_1abee43a-02e0-9805-646b-9d321aecba28, _Speaker, _ID)
+AND
+DB_ORI_DarkUrge((CHARACTER)_Speaker)
+AND
+QRY_ORI_DarkUrge_UnreactedUrge((INTEGER)_ID)
+THEN
+PROC_DecreaseCounter("ORI_DarkUrge_UrgeIndulge");
+
+QRY
+QRY_ORI_DarkUrge_UnreactedUrge((INTEGER)_ID)
+AND
+NOT DB_DialogName(_, _ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ORI_DarkUrge_UnreactedUrge((INTEGER)_ID)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+NOT DB_ORI_DarkUrge_ReactedUrges(_Dialog)
+THEN
+DB_ORI_DarkUrge_ReactedUrges(_Dialog);
+
+IF
+DB_ORI_DarkUrge_ReactedUrges(NULL_00000000-0000-0000-0000-000000000000)
+THEN
+NOT DB_ORI_DarkUrge_ReactedUrges(NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CounterIncreased("ORI_DarkUrge_Urges", _Count)
+AND
+DB_ORI_DarkUrge(_Speaker)
+AND
+QuestUpdateIsUnlocked(_Speaker, "ORI_Avatar_DarkUrge", "ButlerAppearance", 1)
+AND
+_Count > 3
+THEN
+QuestUpdate(_Speaker, "ORI_Avatar_DarkUrge", "IndulgedUrges");
+
+PROC
+PROC_CounterDecreased("ORI_DarkUrge_Urges", _Count)
+AND
+DB_ORI_DarkUrge(_Speaker)
+AND
+QuestUpdateIsUnlocked(_Speaker, "ORI_Avatar_DarkUrge", "ButlerAppearance", 1)
+AND
+_Count < -3
+THEN
+QuestUpdate(_Speaker, "ORI_Avatar_DarkUrge", "ResistedUrges");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_IndulgedUrge_ceb8b4c2-b705-c26c-250d-a1c1c32e7cb5, _Speaker, _ID)
+THEN
+ClearFlag((FLAG)ORI_DarkUrge_Event_IndulgedUrge_ceb8b4c2-b705-c26c-250d-a1c1c32e7cb5, _Speaker, _ID);
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_ResistedUrge_1abee43a-02e0-9805-646b-9d321aecba28, _Speaker, _ID)
+THEN
+ClearFlag((FLAG)ORI_DarkUrge_Event_ResistedUrge_1abee43a-02e0-9805-646b-9d321aecba28, _Speaker, _ID);
+
+IF
+QuestUpdateUnlocked(_, "ORI_Avatar_DarkUrge", "IndulgedUrges")
+THEN
+GoalCompleted;
+EXITSECTION
+PROC_RemoveCounter("ORI_DarkUrge_UrgeIndulge");
+SysClear("DB_ORI_DarkUrge_ReactedUrges", 1);
+ENDEXITSECTION
+ParentTargetEdge "GLO_DarkUrge_SetupSubgoals"

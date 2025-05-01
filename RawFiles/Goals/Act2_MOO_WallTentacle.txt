@@ -1,0 +1,211 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_DialogBlockTradeButton(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2);
+DB_DialogBlockAttackButton(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2);
+
+DB_Dialogs(S_MOO_WallTentacle_Ogress_c3b872b8-1937-4255-9d0c-29e490afd033, MOO_WallTentacle_Ogre_bb6cbfa8-fdc6-f374-6726-e2a62a90a2cd);
+DB_Dialogs(S_MOO_GuardRoom_001_3f94bfd0-5a3b-4ce3-8f12-61241b9a6a40, MOO_GuardRoom_Guard01_550790ef-22c8-93ec-1be7-e35225ec5577);
+DB_Dialogs(S_MOO_GuardRoom_002_ba3c32e1-ebc2-441a-b121-d7977452c160, MOO_GuardRoom_Guard02_49268078-f445-e6ea-9775-9b3393d0bc6f);
+
+DB_GlobalFlagReactionAfterDialog(MOO_WallTentacle_Event_ZappedToPrison_7ec4a41b-1145-47c4-8b51-58f51bc22bf9, MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2);
+
+PROC_TriggerRegisterForPlayers(S_MOO_TentacleBox_f1cc19fd-e575-42c2-9587-34c1c1385c58);
+
+DB_MOO_WallTentacle_DialogID(0);
+KBSECTION
+IF
+FlagSet(MOO_KethericShowdown_State_Started_33489af3-23b7-4340-bbf6-19033c9dae03, _, _)
+THEN
+PROC_TriggerUnregisterForPlayers(S_MOO_TentacleBox_f1cc19fd-e575-42c2-9587-34c1c1385c58);
+SetCanInteract((ITEM)S_MOO_TentacleDiscovery_c69677c6-a541-466d-b860-3ade09acfa0d, 1);
+SetFlag(MOO_WallTentacle_State_IsDestroyed_827386f2-35db-53d2-141c-40f4fddf7840,S_MOO_WallTentacle_CrackedWallSpeaker_d229fac1-cae2-4d1f-b797-9c8fdda72327);
+
+//REGION Perception check logic 
+//'Mucus' template pivot is way up in the air using the perception behavior script
+//only triggers the roll if the character actually walk next to the pivot wich doesn't
+//fit the actual desired location
+
+IF
+EnteredTrigger(_Player, S_MOO_TentacleBox_f1cc19fd-e575-42c2-9587-34c1c1385c58)
+AND
+DB_Players(_Player)
+AND
+NOT DB_MOO_WallTentacle_HasRolled(_Player)
+AND
+NOT DB_MOO_WallTentacle_DiscoveredMucus(1)
+THEN
+PROC_TrySkillCheck(_Player, S_MOO_TentacleDiscovery_c69677c6-a541-466d-b860-3ade09acfa0d, "Perception", DC_Legacy_Unsaved_5_8995961c-e165-df92-3fbc-e943ddb138f6, "MOO_WallTentacle_MucusDiscovered");
+DB_MOO_WallTentacle_HasRolled(_Player);
+
+PROC
+PROC_RollResult("MOO_WallTentacle_MucusDiscovered", _Player, _Mucus, 1)
+AND
+NOT DB_MOO_WallTentacle_DiscoveredMucus(1)
+THEN
+DB_MOO_WallTentacle_DiscoveredMucus(1);
+SetFlag(MOO_WallTentacle_Knows_LookInWalls_d2933990-106f-48da-86f6-66d148e9291d);
+SetCanInteract((ITEM)_Mucus, 1);
+PROC_PlayPerceptionRevealEffect(_Mucus, "MOO_HiddenTreasure_Reveal");
+PROC_TriggerUnregisterForPlayers(S_MOO_TentacleBox_f1cc19fd-e575-42c2-9587-34c1c1385c58);
+
+IF
+FlagSet(MOO_WallTentacle_Knows_LookInWalls_d2933990-106f-48da-86f6-66d148e9291d, _, _)
+AND
+NOT DB_MOO_WallTentacle_UsedCrackedWall(1)
+AND
+DB_Players(_Player)
+THEN
+ShowMapMarker((CHARACTER)_Player, "MOO_WallTentacle", 1);
+
+//END_REGION
+
+IF
+UseStarted(_Player, S_MOO_TentacleDiscovery_c69677c6-a541-466d-b860-3ade09acfa0d)
+AND
+QRY_StartDialog_Fixed(MOO_WallTentacle_AD_TentacleShaft_e61e3e03-223c-dc6b-e60d-38a26b115b85, _Player)
+THEN
+DB_NOOP(1);
+
+//Upon failing to remove arm from the crack after interacting with the tentacle
+//Player will suffer an injury - May need to have it's restoration condition looked at
+IF
+FlagSet(MOO_WallTentacle_Event_PlayerInjured_92f8d50e-3372-51c3-4002-e9ea9954b5f2, _Player, _)
+AND
+HasActiveStatus(_Player, "MOO_TENTACLE_HIT", 0)
+THEN
+ApplyStatus(_Player, "MOO_TENTACLE_HIT", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+UseStarted(_Player, S_MOO_WallTentacle_CrackedWall_3a4feef9-50e4-4917-8cc3-f3a616cb1a7d)
+THEN
+DB_CustomUseItemResponse(_Player, S_MOO_WallTentacle_CrackedWall_3a4feef9-50e4-4917-8cc3-f3a616cb1a7d, 0);
+
+PROC
+PROC_BlockUseOfItem(_Player, S_MOO_WallTentacle_CrackedWall_3a4feef9-50e4-4917-8cc3-f3a616cb1a7d)
+AND
+NOT DB_DialogName(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2, _)
+AND
+QRY_StartDialogCustom_Fixed(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2, S_MOO_WallTentacle_CrackedWallSpeaker_d229fac1-cae2-4d1f-b797-9c8fdda72327, S_MOO_AbsoluteVoice_0d5ee5a7-1022-4006-b873-2bb3aa91b4a2, _Player, 0, 0, 1, 0)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_BlockUseOfItem(_Player, S_MOO_WallTentacle_CrackedWall_3a4feef9-50e4-4917-8cc3-f3a616cb1a7d)
+AND
+DB_DialogName(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2, _ID)
+AND
+DB_Players(_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+THEN
+PROC_DialogAddListeningActor(_ID, _Player);
+
+IF
+DialogStarted(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2, _)
+AND
+NOT DB_MOO_WallTentacle_UsedCrackedWall(1)
+THEN
+DB_MOO_WallTentacle_UsedCrackedWall(1);
+PROC_MOO_WallTentacle_ClearMarker();
+
+PROC
+PROC_MOO_WallTentacle_ClearMarker()
+AND
+DB_Players(_Player)
+THEN
+ShowMapMarker((CHARACTER)_Player, "MOO_WallTentacle", 0);
+
+//REGION Absolute's Reaction 
+
+IF
+DialogStarted(MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2, _ID)
+THEN
+PROC_MOO_WallTentacle_UpdateID(_ID);
+
+PROC
+PROC_MOO_WallTentacle_UpdateID((INTEGER)_NewID)
+AND
+DB_MOO_WallTentacle_DialogID(_OldID)
+AND
+_OldID != _NewID
+THEN
+NOT DB_MOO_WallTentacle_DialogID(_OldID);
+DB_MOO_WallTentacle_DialogID(_NewID);
+
+//All player within the tentacle vicinity will be zapped down to the oubliette upon failing to withdraw arm
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_WallTentacle_Event_ZappedToPrison_7ec4a41b-1145-47c4-8b51-58f51bc22bf9)
+AND
+DB_MOO_WallTentacle_DialogID(_ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+THEN
+PlayEffectAtPosition(VFX_Script_Tentacle_Teleport_01_3f4d2a5d-1772-9550-6ea6-05d733d102c0, _X, _Y, _Z);
+TeleportTo(_Player, S_MOO_OublietteAppearPos_da5c04d6-6b54-43ac-b171-4c8157f1c9d4,"MOO_WallTentacle_OublietteArrived",1,1,1,1,1);
+
+IF
+EntityEvent(_Player, "MOO_WallTentacle_OublietteArrived")
+THEN
+PlayEffect(_Player, VFX_Script_Tentacle_Teleport_01_3f4d2a5d-1772-9550-6ea6-05d733d102c0, "", 1.0);
+//END_REGION
+
+//REGION DaisyAD
+IF
+FlagSet(MOO_WallTentacle_Tentacle_EnteredVoid_49d4bd06-580e-1a06-8b7b-a96e17193deb, _, _ID)
+AND
+DB_DialogPlayers(_ID,_Player, _)
+AND
+DB_Avatars((CHARACTER)_Player)
+THEN
+DB_MOO_WallTentacle_PlayerSpeakers(_Player);
+
+IF
+DialogEnded((DIALOGRESOURCE)MOO_WallTentacle_Tentacle_b923613f-2680-f288-9b36-9da0cf0b06b2,_)
+AND
+DB_GlobalFlag(MOO_WallTentacle_Tentacle_EnteredVoid_49d4bd06-580e-1a06-8b7b-a96e17193deb)
+THEN
+TimerLaunch("MOO_WallTentacle_Timeout_DaisyAD",20000);
+
+IF
+TimerFinished("MOO_WallTentacle_Timeout_DaisyAD")
+AND
+DB_MOO_WallTentacle_PlayerSpeakers((CHARACTER)_Player)
+THEN
+NOT DB_MOO_WallTentacle_PlayerSpeakers(_Player);
+
+PROC
+PROC_COL_OnFirstEntry()
+AND
+DB_MOO_WallTentacle_PlayerSpeakers((CHARACTER)_Player)
+THEN
+NOT DB_MOO_WallTentacle_PlayerSpeakers(_Player);
+
+IF
+LeftTrigger(_Player,(TRIGGER)S_MOO_MoonriseTowerNoRoof_SUB_54d40f5d-34e6-42fd-829b-bb2f5facfcda)
+AND
+DB_MOO_WallTentacle_PlayerSpeakers((CHARACTER)_Player)
+THEN
+NOT DB_MOO_WallTentacle_PlayerSpeakers(_Player);
+
+IF
+DB_MOO_WallTentacle_PlayerSpeakers((CHARACTER)_Player)
+AND
+DB_InRegion(_Player,S_MOO_MoonriseTowerNoRoof_SUB_54d40f5d-34e6-42fd-829b-bb2f5facfcda)
+AND
+NOT DB_CantAct(_Player)
+AND
+DB_GlobalFlag(MOO_WallTentacle_Tentacle_EnteredVoid_49d4bd06-580e-1a06-8b7b-a96e17193deb)
+AND
+NOT DB_DaisyAD_Played((CHARACTER)_Player,(DIALOGRESOURCE)MOO_WallTentacle_DaisyAD_FeignSuprise_f8612f93-66c9-be94-d51a-9e96c2cd58e5)
+THEN
+PROC_DaisyAD((CHARACTER)_Player,MOO_WallTentacle_DaisyAD_FeignSuprise_f8612f93-66c9-be94-d51a-9e96c2cd58e5);
+NOT DB_MOO_WallTentacle_PlayerSpeakers(_Player);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

@@ -3,9 +3,21 @@ import sys
 import os
 from colorama import init, Fore, Back, Style
 import random
+import graphviz
+import traceback # For error handling during rendering
 
 # Initialize colorama for colored terminal output
 init()
+
+# Add a check for graphviz import success
+try:
+    import graphviz
+    GRAPHVIZ_AVAILABLE = True
+except ImportError:
+    GRAPHVIZ_AVAILABLE = False
+    print(f"{Fore.YELLOW}Warning: 'graphviz' Python package not found. Visualization features will be disabled.{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Install it with: pip install graphviz{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}You also need to install the Graphviz software: https://graphviz.org/download/{Style.RESET_ALL}")
 
 class DialogSimulator:
     def __init__(self, json_file='output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'):
@@ -1216,6 +1228,180 @@ class DialogSimulator:
         # print(f"{Fore.GREEN}Path execution finished. Final flags: {current_active_flags}{Style.RESET_ALL}")
         return traversed_nodes_data, current_active_flags
 
+    def _add_nodes_to_graph(self, dot, node_id, visited, current_depth, max_depth):
+        """Recursively add nodes and edges to the Graphviz graph."""
+        if node_id in visited or current_depth > max_depth:
+            return
+
+        node = self._get_node(node_id)
+        if not node:
+            # Add a placeholder for missing nodes
+            if node_id not in visited:
+                 dot.node(node_id, label=f"{node_id}\n(Not Found)", shape='box', style='filled', fillcolor='red')
+                 visited.add(node_id)
+            return
+
+        visited.add(node_id)
+
+        # Node styling
+        speaker = node.get('speaker', 'Unknown')
+        text_preview = node.get('text', node.get('context', ''))[:40] # Limit text length
+        if len(node.get('text', node.get('context', ''))) > 40:
+            text_preview += "..."
+        label = f"{node_id}\n{speaker}\n'{text_preview}'" # Use \n for newline in graphviz label
+        shape = 'box'
+        style = 'filled'
+        fillcolor = 'lightgrey'
+        node_color = 'black' # Border color
+
+        if speaker == 'Player':
+            fillcolor = 'lightblue'
+        elif node.get('node_type') == 'jump':
+            shape = 'cds'
+            fillcolor = 'yellow'
+        elif node.get('node_type') == 'tagcinematic':
+            shape = 'note'
+            fillcolor = 'lightgoldenrod'
+        elif node.get('node_type') == 'alias':
+            shape = 'hexagon'
+            fillcolor = 'lightcoral'
+
+
+        if node.get('is_end', False):
+            node_color = 'red' # Red border for end nodes
+            style += ',bold'
+
+        dot.node(node_id, label=label, shape=shape, style=style, fillcolor=fillcolor, color=node_color)
+
+        # Process children
+        children = node.get('children', {})
+        for child_id in children:
+            # Add edge first
+            dot.edge(node_id, child_id, label='child', color='black')
+            # Recurse only if child node exists (avoid infinite loop on bad data)
+            if self._get_node(child_id):
+                 self._add_nodes_to_graph(dot, child_id, visited, current_depth + 1, max_depth)
+            elif child_id not in visited: # Add error node if child doesn't exist and hasn't been added
+                 dot.node(child_id, label=f"{child_id}\n(Child Not Found)", shape='box', style='filled', fillcolor='red')
+                 visited.add(child_id)
+
+
+        # Process goto
+        goto_id = node.get('goto')
+        if goto_id:
+            # Add edge first
+            dot.edge(node_id, goto_id, label='goto', style='dashed', color='blue')
+            # Recurse only if goto node exists
+            if self._get_node(goto_id):
+                self._add_nodes_to_graph(dot, goto_id, visited, current_depth + 1, max_depth)
+            elif goto_id not in visited: # Add error node if goto doesn't exist
+                dot.node(goto_id, label=f"{goto_id}\n(Goto Target Not Found)", shape='box', style='filled', fillcolor='red')
+                visited.add(goto_id)
+
+
+        # Process link
+        link_id = node.get('link')
+        if link_id:
+            # Add edge first
+            dot.edge(node_id, link_id, label='link', style='dotted', color='green')
+            # Recurse only if link node exists
+            if self._get_node(link_id):
+                self._add_nodes_to_graph(dot, link_id, visited, current_depth + 1, max_depth)
+            elif link_id not in visited: # Add error node if link doesn't exist
+                dot.node(link_id, label=f"{link_id}\n(Link Target Not Found)", shape='box', style='filled', fillcolor='red')
+                visited.add(link_id)
+
+    def visualize_structure(self, output_filename='dialog_structure', start_node_id=None, max_depth=10, render_format='pdf'):
+        """
+        Generates a visualization of the dialog tree structure using Graphviz.
+
+        Args:
+            output_filename (str): The base name for the output file (without extension).
+            start_node_id (str, optional): The node ID to start visualization from. If None, visualizes from all root nodes. Defaults to None.
+            max_depth (int): Maximum depth to visualize. Defaults to 10.
+            render_format (str): The output format (e.g., 'pdf', 'png', 'svg'). Defaults to 'pdf'.
+
+        Returns:
+            str: The path to the generated visualization file, or None if generation failed.
+        """
+        if not GRAPHVIZ_AVAILABLE:
+            print(f"{Fore.RED}Graphviz is not available. Cannot generate visualization.{Style.RESET_ALL}")
+            return None
+
+        print(f"\n{Fore.CYAN}Generating dialog structure visualization (max depth: {max_depth}, format: {render_format})...{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Output base filename: {output_filename}{Style.RESET_ALL}")
+
+        # Extract directory from filename if present
+        output_dir = os.path.dirname(output_filename)
+        if output_dir and not os.path.exists(output_dir):
+             try:
+                 os.makedirs(output_dir)
+                 print(f"{Fore.GREEN}Created output directory: {output_dir}{Style.RESET_ALL}")
+             except OSError as e:
+                 print(f"{Fore.RED}Error creating directory {output_dir}: {e}{Style.RESET_ALL}")
+                 return None
+        elif not output_dir:
+            output_dir = '.' # Ensure filename has a directory part for graphviz
+
+        # Graphviz uses filename for the .gv file, needs directory
+        gv_filepath_base = os.path.join(output_dir, os.path.basename(output_filename))
+
+
+        dot = graphviz.Digraph(
+            comment=f'Dialog Structure - {self.metadata.get("synopsis", "Unknown Dialog")}',
+            graph_attr={'rankdir': 'TB', 'splines': 'ortho'}, # Try ortho splines
+            node_attr={'fontsize': '10'},
+            edge_attr={'fontsize': '8'}
+        )
+
+        visited = set()
+
+        try:
+            if start_node_id:
+                if self._get_node(start_node_id):
+                    print(f"Starting visualization from node: {start_node_id}")
+                    self._add_nodes_to_graph(dot, start_node_id, visited, 0, max_depth)
+                else:
+                    print(f"{Fore.RED}Error: Start node ID '{start_node_id}' not found.{Style.RESET_ALL}")
+                    return None
+            else:
+                print(f"Starting visualization from {len(self.root_nodes)} root nodes.")
+                for root_id in self.root_nodes:
+                    self._add_nodes_to_graph(dot, root_id, visited, 0, max_depth)
+
+            # Render the graph
+            # 'cleanup=True' removes the intermediate .gv file
+            rendered_path = dot.render(gv_filepath_base, format=render_format, view=False, cleanup=True)
+
+            print(f"{Fore.GREEN}Visualization successfully generated: {rendered_path}{Style.RESET_ALL}")
+            return rendered_path
+
+        except graphviz.backend.execute.ExecutableNotFound:
+            print(f"{Fore.RED}Error: Graphviz executable not found.{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Please ensure Graphviz is installed and in your system's PATH.{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Download: https://graphviz.org/download/{Style.RESET_ALL}")
+            # Optionally save the .gv source file for manual rendering
+            gv_source_path = gv_filepath_base + '.gv'
+            try:
+                dot.save(gv_source_path)
+                print(f"{Fore.YELLOW}Graphviz source file saved: {gv_source_path}. You can render it manually.{Style.RESET_ALL}")
+            except Exception as e_save:
+                 print(f"{Fore.RED}Failed to save Graphviz source file: {e_save}{Style.RESET_ALL}")
+
+            return None
+        except Exception as e:
+            print(f"{Fore.RED}An error occurred during visualization generation:{Style.RESET_ALL}")
+            print(traceback.format_exc())
+             # Optionally save the .gv source file for debugging
+            gv_source_path = gv_filepath_base + '.gv'
+            try:
+                dot.save(gv_source_path)
+                print(f"{Fore.YELLOW}Graphviz source file saved for debugging: {gv_source_path}{Style.RESET_ALL}")
+            except Exception as e_save:
+                 print(f"{Fore.RED}Failed to save Graphviz source file: {e_save}{Style.RESET_ALL}")
+            return None
+
+
 def main():
     print(f"{Fore.CYAN}Baldur's Gate 3 Dialog Simulator{Style.RESET_ALL}")
     print("This tool allows you to explore the dialog trees from the game.")
@@ -1244,6 +1430,7 @@ def main():
         print("5. View companion approval history")
         print("6. Export approval history to JSON")
         print("7. Export paths to Python dictionary")
+        print(f"8. {Fore.MAGENTA}Visualize Dialog Structure (Graphviz){Style.RESET_ALL}") # New option
         print("0. Exit")
         
         try:
@@ -1487,10 +1674,50 @@ def main():
                         
                 except ValueError:
                     print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
+            elif choice == 8: # New case for visualization
+                if not GRAPHVIZ_AVAILABLE:
+                     print(f"{Fore.RED}Graphviz visualization is not available. Please install 'graphviz' and ensure the Graphviz software is in your PATH.{Style.RESET_ALL}")
+                     continue
+
+                print(f"\n{Fore.MAGENTA}--- Visualize Dialog Structure ---{Style.RESET_ALL}")
+                try:
+                    default_filename = f"visualizations/{simulator.metadata.get('synopsis','dialog').replace(' ', '_')}_structure"
+                    output_filename = input(f"Enter output base filename (e.g., visualizations/my_dialog_viz) [default: {default_filename}]: ")
+                    if not output_filename.strip():
+                        output_filename = default_filename
+
+                    start_node_id_input = input("Enter start node ID (leave blank to start from all roots): ")
+                    start_node_id = start_node_id_input.strip() if start_node_id_input.strip() else None
+
+                    max_depth_input = input("Enter maximum visualization depth [default: 10]: ")
+                    max_depth = int(max_depth_input) if max_depth_input.strip() else 10
+
+                    render_format_input = input("Enter output format (pdf, png, svg, etc.) [default: pdf]: ")
+                    render_format = render_format_input.strip().lower() if render_format_input.strip() else 'pdf'
+
+                    # Call the visualization function
+                    simulator.visualize_structure(
+                        output_filename=output_filename,
+                        start_node_id=start_node_id,
+                        max_depth=max_depth,
+                        render_format=render_format
+                    )
+
+                except ValueError:
+                    print(f"{Fore.RED}Invalid input (e.g., depth must be a number). Please try again.{Style.RESET_ALL}")
+                except Exception as e:
+                     print(f"{Fore.RED}An unexpected error occurred during visualization setup: {e}{Style.RESET_ALL}")
             else:
                 print(f"{Fore.RED}Invalid choice. Try again.{Style.RESET_ALL}")
         except ValueError:
             print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
 
 if __name__ == "__main__":
+    # Add creation of visualization directory if it doesn't exist
+    if not os.path.exists('visualizations'):
+        try:
+            os.makedirs('visualizations')
+            print(f"{Fore.GREEN}Created directory 'visualizations' for graph output.{Style.RESET_ALL}")
+        except OSError as e:
+            print(f"{Fore.RED}Could not create directory 'visualizations': {e}{Style.RESET_ALL}")
     main()

@@ -1,0 +1,61 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Origin moment Jaheira with Nine fingers
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)LOW_Guildhall_NineFingers_ef2cc5d5-b568-918e-a1d9-f95ef3b485eb, (TAG)REALLY_JAHEIRA_8457eb5f-036c-4143-b6cf-447a9f555c7a, (DIALOGRESOURCE)LOW_Guildhall_NineFingers_ef2cc5d5-b568-918e-a1d9-f95ef3b485eb, 10);
+
+//REGION Jaheira TGs
+
+DB_TopicalGreeting((FLAG)TG_ORI_Jaheira_BurnedScroll_fc072676-3f00-48bc-9a52-42355a0e81c3);
+DB_TopicalGreeting((FLAG)TG_ORI_Jaheira_KeptScroll_f9e2fdf2-a014-45d0-9e72-e3feab895301);
+DB_TopicalGreeting((FLAG)TG_ORI_Jaheira_VisitedFamily_f9e7b57a-eb0d-45b4-b7d6-8ebf1f2bb327);
+DB_TopicalGreetingEndCondition_FlagSet((FLAG)TG_ORI_Jaheira_KeptScroll_f9e2fdf2-a014-45d0-9e72-e3feab895301,(FLAG)TG_ORI_Jaheira_BurnedScroll_fc072676-3f00-48bc-9a52-42355a0e81c3);
+
+//END_REGION
+
+DB_GLO_CompoundFlag((FLAG)Jaheira_InParty_ScrollDiscussedAndBurned_1d39818b-cd91-45e7-91de-a3779c413014, (FLAG)ORI_Jaheira_State_Retired_5a034473-9b26-e8f6-28c2-9c012372c5de);
+KBSECTION
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)LOW_Guildhall_NineFingers_ef2cc5d5-b568-918e-a1d9-f95ef3b485eb, _, _)
+THEN
+DB_NOOP(1);
+
+// Origin moment with Jaheira can only happen before heist
+PROC
+PROC_State_Changed(_, "LOW_Guildhall_State", _State)
+AND
+DB_State_Priority(_, "LOW_Guildhall_State", _State, _StatePriority)
+AND
+_StatePriority > 10
+AND
+DB_DoubleOriginMoment((DIALOGRESOURCE)LOW_Guildhall_NineFingers_ef2cc5d5-b568-918e-a1d9-f95ef3b485eb, (TAG)REALLY_JAHEIRA_8457eb5f-036c-4143-b6cf-447a9f555c7a, _, _, _, _, _, _, _, _, _)
+THEN
+PROC_ClearOriginMoment((DIALOGRESOURCE)LOW_Guildhall_NineFingers_ef2cc5d5-b568-918e-a1d9-f95ef3b485eb);
+
+
+// TG Setup
+
+IF
+FlagSet((FLAG)Jaheira_InParty_ScrollDiscussedAndBurned_1d39818b-cd91-45e7-91de-a3779c413014,_,_)
+AND
+QRY_OnlyOnce("TG_LOW_JaheiraBurnedScroll_Set")
+THEN
+PROC_TopicalGreeting_UnlockTopic((FLAG)TG_ORI_Jaheira_BurnedScroll_fc072676-3f00-48bc-9a52-42355a0e81c3);
+
+IF
+FlagSet((FLAG)Jaheira_InParty_ScrollDiscussedAndKept_67af75d4-7077-4fd5-81b4-2a622edb0094,_,_)
+AND
+QRY_OnlyOnce("TG_LOW_JaheiraKeptScroll_Set")
+THEN
+PROC_TopicalGreeting_UnlockTopic((FLAG)TG_ORI_Jaheira_KeptScroll_f9e2fdf2-a014-45d0-9e72-e3feab895301);
+
+IF
+FlagSet((FLAG)LOW_JaheirasHouse_State_JaheiraMetFamily_9486cabf-8113-47f8-a03f-4a9aba46d140,_,_)
+AND
+QRY_OnlyOnce("TG_LOW_JaheiraMetFamily")
+THEN
+PROC_TopicalGreeting_UnlockTopic((FLAG)TG_ORI_Jaheira_VisitedFamily_f9e7b57a-eb0d-45b4-b7d6-8ebf1f2bb327);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

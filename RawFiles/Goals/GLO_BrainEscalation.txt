@@ -1,0 +1,535 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION EMPEROR Post-Combat ADs
+DB_GLO_BrainEscalation_NetherBrainEnemyTemplates(SteelWatcher_Biped_A_27385ea6-d768-47ce-91b8-8d957c0aabd9);
+DB_GLO_BrainEscalation_NetherBrainEnemyTemplates(SteelWatcher_Biped_A_Ranged_70417e3e-9278-4f96-a1d8-5bd90bf5d07a);
+DB_GLO_BrainEscalation_NetherBrainEnemyTemplates(SteelWatcher_Biped_B_ec2820db-afd7-4428-90bd-a0838949cc69);
+DB_GLO_BrainEscalation_NetherBrainEnemyTemplates(SteelWatcher_Biped_B_Ranged_80cb7cbd-41fc-4921-847b-d62f2517ddd9);
+DB_GLO_BrainEscalation_NetherBrainEnemyTemplates(SteelWatcher_Quadruped_A_26fa3fe9-608c-4113-99a6-727781351ea4);
+//END_REGION
+
+//REGION Watch-related gossip
+//Base state
+SetFlag(GLO_SteelWatchers_State_InBaseState_ca1b279a-b266-49ee-8549-5e6bd9bc209b);
+//Friendly to player
+//GLO_SteelWatchers_State_FriendlyToPlayer_83bf5140-be30-44c2-af39-8f3885512643
+//Hostile to player
+//GLO_BrainEscalation_SteelWatchHuntingPlayer_fa13dce6-cc01-4627-a1d1-edd284afc6de
+//Watchers shut down
+//LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a
+//END_REGION
+KBSECTION
+//REGION debug - all of this is very hard to trigger, so I'll just make direct triggers for each
+//Emperor BrainQuake reaction
+IF
+TextEvent("GLO_BrainEscalation_PlayEmperorQuakeReaction")
+AND
+DB_Avatars(_Avatar)
+THEN
+PROC_EmperorAD(_Avatar, (DIALOGRESOURCE)GLO_BrainEscalation_AD_EmperorBrainQuakeReaction_9a81c788-347f-d917-9391-6fb44af99a37);
+
+//Brain dialog for killing Gortash first
+IF
+TextEvent("GLO_BrainEscalation_PlayKilledGortashBrainDialog")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173,_Player, "GLO_BrainEscalation_GortashKilledFirstDialogReady", 0, 0, 0, 0, 1);
+
+//Brain is Antagonist reveal
+IF
+TextEvent("GLO_BrainEscalation_PlayBrainAntagonistDialog")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173,_Player, "GLO_BrainEscalation_NetherBrainHelperSpawned", 0, 0, 0, 0, 1);
+
+//Emperor post-combat AD
+IF
+TextEvent("GLO_BrainEscalation_PlayEmperorCombatEndReact")
+AND
+DB_Avatars(_Avatars)
+THEN
+PROC_EmperorAD(_Avatars, GLO_BrainEscalation_AD_EmperorCombatReaction_5b5723be-b740-f3d5-4904-bbadb59381bd);
+
+//Set UP Steel Watchers for post-gortash dialog
+IF
+TextEvent("GLO_BrainEscalation_SteelWatchPostGortashDialog")
+THEN
+Die(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+
+IF
+DB_GlobalFlag((FLAG)GLO_Debug_KillGortash_1dedf7b0-9e64-41ec-9dc5-60f80f878701)
+THEN
+Die(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+
+//Set up steel watchers for both Goratsh and Orin being dead
+IF
+TextEvent("GLO_BrainEscalation_SteelWatchTurnsHostile")
+THEN
+Die(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+Die(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+//END_REGION
+
+//REGION KILLED ORIN FIRST
+//ORIN KILLED FIRST - wait for player to leave Bhaal temple
+IF
+DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+NOT DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+THEN
+DB_TriggerEvents_AllPlayersLeft((TRIGGER)S_LOW_BhaalTemple_Temple_SUB_3725bdbc-2e19-4c50-9f0b-2fabaf0eafb5, "GLO_BrainEscalation_AllPlayersLeftBhaalTemple");
+
+//Trigger the brainquake on the host character when all players have left the Bhaal temple
+IF
+EntityEvent(_, "GLO_BrainEscalation_AllPlayersLeftBhaalTemple")
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_OnlyOnce("GLO_BrainEscalation_OrinDeadBrainQuake")
+THEN
+PROC_GLO_Brainquakes_StartForcedEvent(_Avatar, "GLO_BrainEscalation_OrinDeadBrainQuake");
+RealtimeObjectTimerLaunch(_Avatar, "GLO_BrainEscalation_OrinDead_BrainquakeResponseTimer", 6500);
+
+//When the brainquake has ended trigger the emperor's AD reaction on all avatars
+IF
+ObjectTimerFinished(_Avatar, "GLO_BrainEscalation_OrinDead_BrainquakeResponseTimer")
+AND
+DB_Avatars(_AllAvatars)
+THEN
+PROC_EmperorAD((CHARACTER)_AllAvatars, (DIALOGRESOURCE)GLO_BrainEscalation_AD_EmperorBrainQuakeReaction_9a81c788-347f-d917-9391-6fb44af99a37);
+//END_REGION
+
+
+//REGION GORTASH Corpse
+//Gortash's corspe should not be owned, or the Watchers will police you looting him
+QRY
+QRY_CorpseLooting_BlockMakeOwned(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION KILLED GORTASH FIRST
+//If Gortash dies before Orin, the brain reacts when you return to LOW
+IF
+DB_CurrentLevel("CTY_Main_A")
+AND
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+DB_Avatars(_Player)
+AND
+QRY_OnlyOnce("S_GLO_BrainEscalation_GortashDead_PlayerSelected")
+THEN
+RealtimeObjectTimerLaunch(_Player, "S_GLO_BrainEscalation_GortashDead_PlayBrainDialog", 2000);
+
+IF
+ObjectTimerFinished(_Player, "S_GLO_BrainEscalation_GortashDead_PlayBrainDialog")
+THEN
+TeleportTo(S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173,_Player, "GLO_BrainEscalation_GortashKilledFirstDialogReady", 0, 0, 0, 0, 1);
+DB_GLO_BrainEscalation_PlayerPresentAtGortashDeath(_Player);
+
+IF
+EntityEvent(_, "GLO_BrainEscalation_GortashKilledFirstDialogReady")
+AND
+DB_GLO_BrainEscalation_PlayerPresentAtGortashDeath(_Player)
+AND
+QRY_OnlyOnce("GLO_BrainEscalation_PlayedGortashKilledFirstDialog")
+THEN
+PROC_NotifyWhenReadyToMoveOn((CHARACTER)_Player, "GLO_BrainEscalation_GortashKilledFirstPlayerReady");
+
+PROC
+PROC_ReadyToMoveOn(_Player, "GLO_BrainEscalation_GortashKilledFirstPlayerReady")
+AND
+QRY_StartDialogCustom((DIALOGRESOURCE)GLO_BrainEscalation_KilledGortashFirst_007e5dec-6c04-26d9-7522-cc60ccb7c68f, S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173, _Player, 0, 0, 0, 0)
+THEN
+DB_NOOP(1);
+
+//make sure all player characters listen in on this dialog
+IF
+DialogStarted(GLO_BrainEscalation_KilledGortashFirst_007e5dec-6c04-26d9-7522-cc60ccb7c68f, _ID)
+AND
+DB_Players(_Player)
+AND
+NOT DB_DialogPlayers(_ID, _Player, _)
+THEN
+PROC_DialogAddListeningActor(_ID, _Player);
+//END_REGION
+
+//REGION BOTH DEAD
+//Start message from the brain when you arrive in LOW - if you killed Gortash second
+IF
+DB_PermaDefeated((CHARACTER)S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+DB_CurrentLevel("BGO_Main_A")
+THEN
+DB_GLO_BrainEscalation_Brainantagonist_WaitToRevealInLOW(1);
+
+IF
+DB_CurrentLevel("CTY_Main_A")
+AND
+DB_GLO_BrainEscalation_Brainantagonist_WaitToRevealInLOW(1)
+AND
+DB_Avatars(_Player)
+AND
+QRY_OnlyOnce("GLO_BrainEcalation_NetherBrainRevealSetUp")
+THEN
+RealtimeObjectTimerLaunch(_Player, "GLO_BrainEcalation_NetherBrainRevealinLOW", 2000);
+
+IF
+ObjectTimerFinished(_Player, "GLO_BrainEcalation_NetherBrainRevealinLOW")
+THEN
+TeleportTo(S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173,_Player, "GLO_BrainEscalation_NetherBrainHelperSpawned", 0, 0, 0, 0, 1);
+
+//Start message from brain when you have left the Bhaal Temple
+IF
+DB_PermaDefeated((CHARACTER)S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+DB_TriggerEvents_AllPlayersLeft((TRIGGER)S_LOW_BhaalTemple_Temple_SUB_3725bdbc-2e19-4c50-9f0b-2fabaf0eafb5, "GLO_BrainEscalation_NetherBrainRevealBhaalTemple");
+
+//Trigger the brainquake on the host character when all players have left the Bhaal temple
+IF
+EntityEvent(_, "GLO_BrainEscalation_NetherBrainRevealBhaalTemple")
+AND
+DB_Avatars(_Player)
+AND
+QRY_OnlyOnce("GLO_BrainEcalation_NetherBrainRevealSetUp")
+THEN
+TeleportTo(S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173,_Player, "GLO_BrainEscalation_NetherBrainHelperSpawned", 0, 0, 0, 0, 1);
+
+//Starting dialog after the helper has been spawned
+
+IF
+EntityEvent(_, "GLO_BrainEscalation_NetherBrainHelperSpawned")
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_OnlyOnce("GLO_BrainEcalation_NetherBrainRevealedAntagonist")
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Avatar, "GLO_BrainEcalation_NetherBrainReveal_AvatarReady");
+
+PROC
+PROC_ReadyToMoveOn(_Avatar, "GLO_BrainEcalation_NetherBrainReveal_AvatarReady")
+AND
+QRY_StartDialogCustom_Fixed(GLO_BrainEscalation_BrainIsAntagonist_676335e0-918a-8b53-de2d-ad834ba33444, S_GLO_BrainEscalation_NetherBrainHelper_fba8e1f5-9516-4f94-836a-a9308a2d0173, _Avatar, 0, 0, 0, 0)
+THEN
+DB_NOOP(1);
+
+//make sure all player characters listen in on this dialog
+IF
+DialogStarted(GLO_BrainEscalation_BrainIsAntagonist_676335e0-918a-8b53-de2d-ad834ba33444, _ID)
+AND
+DB_Players(_Player)
+AND
+NOT DB_DialogPlayers(_ID, _Player, _)
+THEN
+PROC_DialogAddListeningActor(_ID, _Player);
+
+IF
+DB_PermaDefeated((CHARACTER)S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_BrainEscalation_State_NetherBrainReleased_06e31f1d-7e29-47ab-bce6-0f17cdc9c47e);
+
+//brainquake during and after the dialog
+IF
+DialogStarted(GLO_BrainEscalation_BrainIsAntagonist_676335e0-918a-8b53-de2d-ad834ba33444, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+PROC_GLO_Brainquakes_StartForcedEvent((CHARACTER)_Player, "GLO_BrainEscalation_StartBrainquake");
+
+IF
+DialogEnded(GLO_BrainEscalation_BrainIsAntagonist_676335e0-918a-8b53-de2d-ad834ba33444, _)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+PROC_GLO_Brainquakes_StartForcedEvent((CHARACTER)_Player, "GLO_BrainEscalation_EndBrainquake");
+//END_REGION
+
+//REGION GORTASH LEAVES
+//GORTASH LEFT - If you are allied with Gortash, and he leaves Wyrm's rock start the same netherbrain dialog
+IF
+FlagSet(WYR_KillDirectorGortash_State_AgreedToMeetInUndercity_1375d542-cf0a-49fd-927b-5c6bbce13ce4, _, _)
+AND
+DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+THEN
+DB_GLO_BrainEscalation_Brainantagonist_WaitToRevealInLOW(1);
+//END_REGION 
+
+//REGION EMPEROR Post-Combat ADs
+//Catching when an enemy of the correct type enters combat
+IF
+EnteredCombat(_Enemy, _ID)
+AND
+DB_GlobalFlag((FLAG)GLO_BrainEscalation_State_NetherBrainReleased_06e31f1d-7e29-47ab-bce6-0f17cdc9c47e)
+AND
+DB_LOW_MindflayerOutburst_TurnedCivilians((CHARACTER)_Enemy,_,_)
+AND
+NOT DB_GLO_BrainEscalation_EscalationFight(_ID)
+THEN
+DB_GLO_BrainEscalation_EscalationFight(_ID);
+
+IF
+EnteredCombat(_Enemy, _ID)
+AND
+DB_GlobalFlag((FLAG)GLO_BrainEscalation_State_NetherBrainReleased_06e31f1d-7e29-47ab-bce6-0f17cdc9c47e)
+AND
+GetTemplate(_Enemy, _Template)
+AND
+DB_GLO_BrainEscalation_NetherBrainEnemyTemplates(_Template)
+AND
+NOT DB_GLO_BrainEscalation_EscalationFight(_ID)
+THEN
+DB_GLO_BrainEscalation_EscalationFight(_ID);
+
+IF
+SwitchedCombat(_Player, _OldCombatGuid, _NewCombatGuid)
+AND
+DB_GLO_BrainEscalation_EscalationFight(_OldCombatGuid)
+THEN
+NOT DB_GLO_BrainEscalation_EscalationFight(_OldCombatGuid);
+DB_GLO_BrainEscalation_EscalationFight(_NewCombatGuid);
+
+//Trigger EmperorAD on all players leaving an escalation combat
+IF
+CombatEnded(_ID)
+AND
+DB_GLO_BrainEscalation_EscalationFight(_ID)
+AND
+DB_Avatars((CHARACTER)_Player)
+AND
+QRY_GLO_IsOrWasInCombat(_Player, _ID)
+THEN
+PROC_EmperorAD(_Player, GLO_BrainEscalation_AD_EmperorCombatReaction_5b5723be-b740-f3d5-4904-bbadb59381bd);
+PROC_ResetEmperorAD((CHARACTER)_Player, (DIALOGRESOURCE)GLO_BrainEscalation_AD_EmperorCombatReaction_5b5723be-b740-f3d5-4904-bbadb59381bd);
+
+IF
+CombatEnded(_ID)
+AND
+DB_GLO_BrainEscalation_EscalationFight(_ID)
+THEN
+PROC_GLO_BrainEscalationCombatEnded(_ID);
+NOT DB_GLO_BrainEscalation_EscalationFight(_ID);
+//END_REGION
+
+//REGION Steel Watch Reactivity
+//Gortash is killed, the watchers get a new dialog and they become controlled by the brain
+IF
+DB_CurrentLevel("CTY_Main_A")
+AND
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+QRY_OnlyOnce("GLO_GortashDead_WatchersBecomeBrainControlled")
+THEN
+DB_GLO_BrainEscalation_WatchersBrainControlled(1);
+SetFlag(GLO_SteelWatchers_State_FriendlyToPlayer_83bf5140-be30-44c2-af39-8f3885512643);
+ClearFlag(GLO_SteelWatchers_State_InBaseState_ca1b279a-b266-49ee-8549-5e6bd9bc209b);
+
+IF
+DB_GLO_BrainEscalation_WatchersBrainControlled(1)
+AND
+DB_CurrentLevel(_Level)
+THEN
+PROC_GLO_SteelWatchers_SetWatchersBrainControlled(_Level);
+
+PROC
+PROC_GLO_SteelWatchers_SetWatchersBrainControlled((STRING)_Level)
+AND
+NOT DB_GLO_SteelWatchers_BrainControlled(_Level)
+AND
+DB_GLO_SteelWatchers(_SteelWatcher)
+AND
+GetRegion(_SteelWatcher,_Level)
+THEN
+PROC_RemoveDialog(_SteelWatcher);
+DB_Dialogs(_SteelWatcher, (DIALOGRESOURCE)GLO_SteelWatcher_NetherBrainControlled_27ac32e6-bdac-8bda-1d83-061a0c9a3772);
+SetFaction(_SteelWatcher, (FACTION)GLO_SteelWatcher_BrainControlled_f0bb90ec-b609-4864-9716-0ad5d7222689);
+
+// Enabling custom crime reactions for brain-controlled steelwatchers coming from STEEL_WATCHER tag
+IF
+BaseFactionChanged(_SteelWatcher,_,(FACTION)GLO_SteelWatcher_BrainControlled_f0bb90ec-b609-4864-9716-0ad5d7222689)
+AND
+DB_GLO_SteelWatchers(_SteelWatcher)
+THEN
+RemoveStatus(_SteelWatcher,"STEELWATCHER_GUARD_TAG");
+PROC_CharacterDisableAllCrimes(_SteelWatcher);
+PROC_CharacterEnableCrime(_SteelWatcher, "Murder");
+PROC_CharacterEnableCrime(_SteelWatcher, "Assault");
+PROC_CharacterEnableCrime(_SteelWatcher, "Assault_Related");
+
+PROC
+PROC_GLO_SteelWatchers_SetWatchersBrainControlled((STRING)_Level)
+AND
+NOT DB_GLO_SteelWatchers_BrainControlled(_Level)
+THEN
+DB_GLO_SteelWatchers_BrainControlled(_Level);
+
+//When both Gortash and Orin die, watchers become neutral again and lose their dialog, (Will go hostile on sight) Turn on continuous spotting for all steel watchers in the game
+IF
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+THEN
+SetFlag((FLAG)GLO_BrainEscalation_SteelWatchHuntingPlayer_fa13dce6-cc01-4627-a1d1-edd284afc6de);
+ClearFlag((FLAG)GLO_SteelWatchers_State_InBaseState_ca1b279a-b266-49ee-8549-5e6bd9bc209b);
+ClearFlag((FLAG)GLO_SteelWatchers_State_FriendlyToPlayer_83bf5140-be30-44c2-af39-8f3885512643);
+
+IF
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+THEN
+PROC_SetRelationToPlayers((FACTION)GLO_SteelWatcher_BrainControlled_f0bb90ec-b609-4864-9716-0ad5d7222689, 50);
+PROC_GLO_BrainEscalation_ForceUpdateDBSees();
+
+PROC
+PROC_GLO_BrainEscalation_ForceUpdateDBSees()
+AND
+DB_GLO_SteelWatchers(_SteelWatcher)
+AND
+DB_PartOfTheTeam(_PartyMember)
+THEN
+PROC_ForceUpdateDBSees(_SteelWatcher, _PartyMember);
+PROC_ForceUpdateDBSees(_PartyMember, _SteelWatcher);
+
+IF
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_PermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+DB_GLO_SteelWatchers(_SteelWatcher)
+THEN
+PROC_RemoveDialog(_SteelWatcher);
+DB_SpotPlayers(_SteelWatcher, "GLO_BrainEscalation_SteelWatcherHostility", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_Continuous(_SteelWatcher, "GLO_BrainEscalation_SteelWatcherHostility");
+
+//When spotted, make watcher play the Hostility AD, then turn hostile (using temp hostility so this is repeatable if you escape)
+PROC
+PROC_SpotPlayers_Spotted(_SteelWatcher, "GLO_BrainEscalation_SteelWatcherHostility", _Player)
+AND
+NOT DB_GLO_BrainEscalation_WatcherHostility(_SteelWatcher, _)
+THEN
+LookAtEntity((CHARACTER)_SteelWatcher, (GUIDSTRING)_Player, 3.0);
+DB_GLO_BrainEscalation_WatcherHostility(_SteelWatcher, _Player);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_BrainEscalation_AD_SteelWatchersAttack_8dd2b215-aace-d5e3-2570-48c96f5cc95d, _SteelWatcher);
+ObjectTimerLaunch(_SteelWatcher, "GLO_BrainEscalation_BlockSteelWatcherHostility", 6000);
+
+IF
+AutomatedDialogStarted(GLO_BrainEscalation_AD_SteelWatchersAttack_8dd2b215-aace-d5e3-2570-48c96f5cc95d, _ID)
+AND
+DB_GLO_BrainEscalation_WatcherHostility(_SteelWatcher, _Player)
+THEN
+SetRelationTemporaryHostile((CHARACTER)_SteelWatcher, (CHARACTER)_Player);
+
+IF
+AutomatedDialogRequestFailed(GLO_BrainEscalation_AD_SteelWatchersAttack_8dd2b215-aace-d5e3-2570-48c96f5cc95d, _ID)
+AND
+DB_GLO_BrainEscalation_WatcherHostility(_SteelWatcher, _Player)
+THEN
+SetRelationTemporaryHostile((CHARACTER)_SteelWatcher, (CHARACTER)_Player);
+
+IF
+ObjectTimerFinished((CHARACTER)_SteelWatcher, "GLO_BrainEscalation_BlockSteelWatcherHostility")
+AND
+DB_GLO_BrainEscalation_WatcherHostility(_SteelWatcher, _Player)
+THEN
+NOT DB_GLO_BrainEscalation_WatcherHostility(_SteelWatcher, _Player);
+//END_REGION
+
+//REGION HANDLING FOUNDRY AND IRON THRONE
+//If Gortash is defeated, and the Foundry is still not destroyed, the brain will shut it down in whatever stat is currently in.
+IF
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_CurrentLevel("CTY_MAIN_A")
+AND
+NOT DB_GlobalFlag((FLAG)LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_SteelWatchFoundry_State_ShutDownByBrain_07595def-a21f-4edf-ab31-2974fc354d38)
+THEN
+PROC_GLO_BrainEscalation_ShutDownFoundry();
+
+//IF Gortash is defeated and the Iron Throne is still not destroyed, the brain will destroy it
+IF
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_CurrentLevel("CTY_MAIN_A")
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9)
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9);
+
+//Load in destroyed foundry assets, and set new flag for the Foundry being shut down by the brain
+PROC
+PROC_GLO_BrainEscalation_ShutDownFoundry()
+THEN
+PROC_LOW_SteelWatchFoundry_LoadDestroyedFoundry();
+PROC_LOW_SteelWatchFoundry_DeactivateAllSwitches();
+PROC_LOW_SteelWatchFoundry_KillAllBaneites();
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_ShutDownByBrain_07595def-a21f-4edf-ab31-2974fc354d38);
+TriggerRegisterForPlayers(LOW_SteelWatchFoundry_NoticeDestroyedFoundryZone_d7082970-003a-4511-844b-c651b7b896d9);
+
+//If the player is entering the area around the foundry (this trigger is set up by the brain destroying the foundry) notice that the brain has destroyed the foundry
+IF
+DB_InRegion(_Player,LOW_SteelWatchFoundry_NoticeDestroyedFoundryZone_d7082970-003a-4511-844b-c651b7b896d9)
+AND
+NOT DB_GlobalFlag(LOW_SteelWatchFoundry_Knows_FoundryDestroyedByBrain_2274d648-53f4-4107-9256-a5c6332dc283)
+THEN
+SetFlag(LOW_SteelWatchFoundry_Knows_FoundryDestroyedByBrain_2274d648-53f4-4107-9256-a5c6332dc283);
+TriggerUnregisterForPlayers(LOW_SteelWatchFoundry_NoticeDestroyedFoundryZone_d7082970-003a-4511-844b-c651b7b896d9);
+
+//All gondians not yet liberated die
+PROC
+PROC_GLO_BrainEscalation_ShutDownFoundry()
+AND
+DB_LOW_Gondians(_Gondian)
+AND
+NOT GetFlag((FLAG)LOW_SteelWatchFoundry_State_WorkerLiberated_32da4560-217f-41d3-b5bb-526e2665a83d, _Gondian, 1)
+THEN
+Die(_Gondian, DEATHTYPE.Incinerate, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+
+//All liberated gondians run away and disappear
+PROC
+PROC_GLO_BrainEscalation_ShutDownFoundry()
+AND
+DB_LOW_Gondians(_Gondian)
+AND
+GetFlag((FLAG)LOW_SteelWatchFoundry_State_WorkerLiberated_32da4560-217f-41d3-b5bb-526e2665a83d, _Gondian, 1)
+THEN
+PROC_DisappearOutOfSight((CHARACTER)_Gondian, "Run", 1, "");
+//END_REGION
+
+//REGION Watch-related gossip
+IF
+FlagSet(LOW_SteelWatchFoundry_State_Destroyed_cdfffe24-5082-4e41-b7c2-f1fef6da3a8a, _, _)
+THEN
+ClearFlag(GLO_SteelWatchers_State_FriendlyToPlayer_83bf5140-be30-44c2-af39-8f3885512643);
+ClearFlag(GLO_BrainEscalation_SteelWatchHuntingPlayer_fa13dce6-cc01-4627-a1d1-edd284afc6de);
+ClearFlag(GLO_SteelWatchers_State_InBaseState_ca1b279a-b266-49ee-8549-5e6bd9bc209b);
+//END_REGION
+
+//REGION Off-staging One liner that doesn't make sense after this state is entered
+IF
+FlagSet(GLO_BrainEscalation_State_NetherBrainReleased_06e31f1d-7e29-47ab-bce6-0f17cdc9c47e, _, _)
+AND
+IsOnStage(S_LOW_BaldursMouth_Wanderer_03_6fd2d322-cd4f-42b4-8683-894d565a4aa2, 1)
+THEN
+PROC_DisappearOutOfSight(S_LOW_BaldursMouth_Wanderer_03_6fd2d322-cd4f-42b4-8683-894d565a4aa2, "Walk", 0, "S_LOW_BaldursMouth_Wanderer_03_Offstages");
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

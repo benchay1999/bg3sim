@@ -1,0 +1,81 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+Vampire Spawns are immortal till the ritual in Cazador's Palace.
+You can encounter them in Wyrm's Crossing (Flophouse) and Lower City (camp).
+If you attack them they turn into mist and disappear.
+They don't teleport to Cazador's palace immediately, instead they are set off stage.
+They are all teleported to the Palace and fully healed when you enter Cazador's dungeon.
+*/
+KBSECTION
+//REGION Vampire Spawns turns into mist and escapes
+PROC
+PROC_Act3_VampireSpawns_SendToPalace((CHARACTER)_Spawn)
+AND
+GetFlag(LOW_CazadorsPalace_State_SentToPalace_df019be0-deac-4302-a3a6-018fb985c705, _Spawn, 0)
+THEN
+PROC_ForceStopDialog(_Spawn);
+SetFlag(LOW_CazadorsPalace_State_SentToPalace_df019be0-deac-4302-a3a6-018fb985c705, _Spawn);
+DB_Act3_VampireSpawns_Escaping((CHARACTER)_Spawn);
+ApplyStatus(_Spawn, "LOW_CAZADORSPALACE_MIST_FORM_VAMPIRE_SPAWN", 6.0);
+RealtimeObjectTimerLaunch(_Spawn, "GEN_VampireSpawns_MistyEscape_Fallback", 2000);
+
+ // fallback in case the player simply attacked them in the Flophouse
+PROC
+PROC_Act3_VampireSpawns_SendToPalace(S_WYR_VampireSpawns_Dalyria_204a74d2-e6ad-4e9b-a275-f03cb5f3d975)
+THEN
+NOT DB_DoNotFace(S_WYR_VampireSpawns_Dalyria_204a74d2-e6ad-4e9b-a275-f03cb5f3d975);
+
+PROC
+PROC_Act3_VampireSpawns_SendToPalace(S_WYR_VampireSpawns_Petra_6fb6e85e-ccd0-42ef-a37d-1e256a433f3b)
+THEN
+NOT DB_DoNotFace(S_WYR_VampireSpawns_Petra_6fb6e85e-ccd0-42ef-a37d-1e256a433f3b);
+
+IF
+StatusApplied((CHARACTER)_Spawn, "LOW_CAZADORSPALACE_MIST_FORM_VAMPIRE_SPAWN", _, _)
+THEN
+RealtimeObjectTimerLaunch(_Spawn, "GEN_VampireSpawns_MistyEscape", 700);
+ObjectTimerCancel(_Spawn, "GEN_VampireSpawns_MistyEscape_Fallback");
+
+IF
+StatusAttemptFailed((CHARACTER)_Spawn, "LOW_CAZADORSPALACE_MIST_FORM_VAMPIRE_SPAWN", _, _)
+AND
+DB_Act3_VampireSpawns_Escaping(_Spawn)
+THEN
+NOT DB_Act3_VampireSpawns_Escaping(_Spawn);
+PROC_Poof(_Spawn, VFX_Script_VampireSpawn_Disappearing_BodyFX_01_a65c2389-2ab4-1ec4-57b6-84087d529d1e);
+ObjectTimerCancel(_Spawn, "GEN_VampireSpawns_MistyEscape_Fallback");
+
+IF
+ObjectTimerFinished((CHARACTER)_Spawn, "GEN_VampireSpawns_MistyEscape")
+AND
+DB_Act3_VampireSpawns_Escaping(_Spawn)
+THEN
+NOT DB_Act3_VampireSpawns_Escaping(_Spawn);
+PROC_SetOnStage(_Spawn, 0);
+
+IF
+ObjectTimerFinished((CHARACTER)_Spawn, "GEN_VampireSpawns_MistyEscape_Fallback")
+AND
+DB_Act3_VampireSpawns_Escaping(_Spawn)
+THEN
+NOT DB_Act3_VampireSpawns_Escaping(_Spawn);
+PROC_SetOnStage(_Spawn, 0);
+
+PROC
+PROC_Act3_VampireSpawns_CommentOnSpawnEscape((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("Act3_VampireSpawns_CommentOnSpawnEscape")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)WYR_VampireSpawns_VB_SpawnTurnsIntoMist_9f4a2c10-a9e0-a92e-f62d-06e406afe573, _Player);
+
+IF
+FlagSet((FLAG)LOW_CazadorsPalace_State_EnteredDungeon_740ea5cd-7ada-4610-aadb-f52026782700, _, _)
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

@@ -1,0 +1,1091 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Combat against Ketheric on the rooftop (aka Chapel)
+//related goals: 'Act2_MOO_KethericMisc' and 'Act2_MOO_Roof'
+
+//IMPORTANT: this BossFight goal is valid for those states/situations:
+//	- Assault on Moonrise -> this is our main flow
+//	- Audience with the Absolute -> if the player antagonises Ketheric
+//	- Player killed Nightsong
+//	- Outcast -> any edge-case flows leading to hostility
+
+//REGION Combat Counters
+
+//EDGE-CASE: what if some are pushed off the roof and survive? the counter will not be reached for his leaving (which allows the fallback of damaging him to make him leave)
+
+DB_MOO_Assault_KethericLeaveCurrent(0);
+DB_MOO_Assault_KethericLeaveTarget(4);  // <- The number of rounds that will make an invulnrable Ketheric leave
+
+DB_MOO_BossFight_ValidStatesForDialog("MOO_State_Assault");
+DB_MOO_BossFight_ValidStatesForDialog("MOO_State_NightsongDeath");
+//END_REGION
+//REGION Combat stuff
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight",(TRIGGER)S_MOO_NarrativeCombatRoofRegion_9a1c091e-f8da-4ab6-bdf0-e0db176e4ca3);
+DB_GLO_NarrativeCombat_GenericExceptionParticipant("MOO_Assault_KethericRoofFight", S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+DB_GLO_NarrativeCombat_GenericExceptionParticipant("MOO_Assault_KethericRoofFight", S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+DB_MOO_Assault_AttackedKethericLast((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+SetCanJoinCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 1);
+SetCanFight(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 1);
+
+DB_MOO_Assault_NightsongFallTriggers((TRIGGER)S_MOO_NightsongFallTrigger_001_62f5e9f4-2da3-46bd-828f-1de327c76c43);
+DB_MOO_Assault_NightsongFallTriggers((TRIGGER)S_MOO_NightsongFallTrigger_002_813cde53-d109-4d86-8271-2c88023892d3);
+DB_MOO_Assault_NightsongFallTriggers((TRIGGER)S_MOO_NightsongFallTrigger_003_9dfb053a-2353-4b69-ad32-bbb6d74210f3);
+DB_MOO_Assault_NightsongFallTriggers((TRIGGER)S_MOO_NightsongFallTrigger_004_01dd4772-1fad-4ebb-8261-39eaed2a3598);
+
+DB_MOO_BossFight_NightsongReturnTrigger((TRIGGER)S_MOO_NightsongReturnBox_001_ba1e8745-7c23-4b1d-ac82-e4bcf48d1f68);
+DB_MOO_BossFight_NightsongReturnTrigger(S_MOO_NightsongReturnBox_002_6ccedc7c-a8bd-4fa7-bb3e-97d89541a236);
+DB_MOO_BossFight_NightsongReturnTrigger(S_MOO_NightsongReturnBox_003_3ab45021-7fad-4c75-90dd-ed4ff5e8626d);
+DB_MOO_BossFight_NightsongReturnTrigger(S_MOO_NightsongReturnBox_004_71168124-7002-4ec1-b682-faf61d515e32);
+DB_MOO_BossFight_NightsongReturnTrigger(S_MOO_NightsongReturnBox_005_61aa0afe-74bd-4093-843b-b92da11dd0d9);
+DB_MOO_BossFight_NightsongReturnTrigger(S_MOO_NightsongReturnBox_006_fd304d14-2c2d-455d-ac16-b43c06157b5b);
+DB_MOO_BossFight_NightsongReturnTrigger(S_MOO_NightsongReturnBox_007_bd9da12f-9cbd-4fe5-8026-abdc57ef1210);
+
+DB_MOO_Assault_RoofNecromiteSummoners(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+DB_MOO_Assault_RoofNecromiteSummoners(S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65);
+//END_REGION
+
+//REGION Dialog 
+DB_SceneTriggerManager("MOO_Assault_BossFightIntroScene", (TRIGGER)S_MOO_BossFIghtIntroSceneTrigger_69621203-8925-440e-ba5d-b5d23ec7e3a4);
+
+//Intro
+DB_DropMutingStatussesDialog(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6);
+DB_GlobalFlagReactionAfterDialog(MOO_Assault_Event_BossFightDialogStarted_24b45396-35af-443a-f2fb-8671104ceebd, MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, (TRIGGER)S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73, 1, 1, 1);
+
+//Ketheric Leaving
+DB_DropMutingStatussesDialog(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef);
+DB_AddCharactersInTriggerToDialog(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73, 1, 1, 1);
+DB_DialogStarted_IgnoreStopConditions(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef);
+
+//END_REGION
+PROC_TriggerRegisterForParty(S_MOO_HollowTowerPushBackBox_e542f485-e10f-4c94-b473-9e37b1ad1a18);
+PROC_TriggerRegisterForParty(S_MOO_NarrativeCombatRoofRegion_9a1c091e-f8da-4ab6-bdf0-e0db176e4ca3);
+
+PROC_MOO_Assault_BossFightInit();
+KBSECTION
+//REGION Debug
+
+//add debug options here
+IF
+TextEvent("moobossfight_killnecromites")
+AND
+DB_MOO_Roof_Myrkulites(_NPC)
+AND
+NOT DB_Dead(_NPC)
+AND
+GetTemplate(_NPC, Undead_Skeleton_Necromite_460c48a7-cea5-44d5-9e01-b27c0c751a24)
+THEN
+Die(_NPC, DEATHTYPE.DoT, 1);
+
+//END_REGION
+
+//REGION Init
+
+//If during the Assault (and potentially the outcast/broadcast) 
+//		-> prepare a dialog for when the player gets on the roof
+//else, -> straight to combat
+
+PROC
+PROC_MOO_Assault_BossFightInit()
+AND
+NOT QRY_MOO_Assault_CheckPrepareBossFightDialog()
+THEN
+PROC_MOO_Assault_StartBossFight();
+
+QRY
+QRY_MOO_Assault_CheckPrepareBossFightDialog()
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", _State) 
+AND
+DB_MOO_BossFight_ValidStatesForDialog(_State)
+THEN
+DB_MOO_Assault_PrepareBossFightDialog(1);
+DB_MOO_Assault_ReadyPlayersToCombatPosition(1);
+
+PROC
+PROC_MOO_Assault_BossFightInit()
+AND
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_RooftopEnemies")
+THEN
+DB_SceneManager(_Char, "MOO_Assault_BossFightIntroScene");
+
+PROC
+PROC_MOO_Assault_BossFightInit()
+AND
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_RooftopEnemies")
+AND
+_Char != S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f
+THEN
+TriggerRegisterForCharacter(S_MOO_HollowTowerPushBackBox_e542f485-e10f-4c94-b473-9e37b1ad1a18, _Char);
+
+PROC
+PROC_MOO_Assault_BossFightInit()
+AND
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_RooftopEnemies")
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+DB_MOO_AssaultTriggerRegisteredEnemy(_Char); 
+TriggerRegisterForCharacter(_Trigger, _Char);
+
+PROC
+PROC_MOO_Assault_BossFightInit()
+AND
+DB_MOO_AssaultPositions(_Char, _, _Group)
+AND
+_Group != "MOO_Assault_RooftopEnemies"
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char); //To handle any weird cases of other characters in the tower somehow finding their way to the roof, they shouldn't stand around unable to join the combat
+TriggerRegisterForCharacter(_Trigger, _Char);
+
+//In case someone is added to RooftopEnemies after initial registration
+IF
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_RooftopEnemies")
+AND
+NOT DB_MOO_AssaultTriggerRegisteredEnemy(_Char)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+DB_MOO_AssaultTriggerRegisteredEnemy(_Char);
+TriggerRegisterForCharacter(_Trigger, _Char);
+
+IF
+DB_MOO_AssaultTriggerRegisteredEnemy(_Char)
+AND
+NOT DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_RooftopEnemies")
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+NOT DB_MOO_AssaultTriggerRegisteredEnemy(_Char);
+TriggerUnregisterForCharacter(_Trigger, _Char);
+
+IF
+DB_MOO_AssaultPositions(_Char, _, _Group)
+AND
+_Group != "MOO_Assault_RooftopEnemies"
+AND
+NOT DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char);
+TriggerRegisterForCharacter(_Trigger, _Char);
+
+IF
+DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char)
+AND
+NOT DB_MOO_AssaultPositions(_Char, _, _)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+NOT DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char);
+TriggerUnregisterForCharacter(_Trigger, _Char);
+
+//END_REGION
+
+//REGION Dialog - Start
+IF
+UseStarted(_Player,S_MOO_RoofAccessDoor_0eca4cd0-6fa5-421f-80e9-446c2b758606)
+AND
+DB_MOO_Assault_BossFightDialog_PreferPlayer(_Player)
+THEN
+NOT DB_MOO_Assault_BossFightDialog_PreferPlayer(_Player);
+
+IF
+UseStarted(_Player,S_MOO_RoofAccessDoor_0eca4cd0-6fa5-421f-80e9-446c2b758606)
+AND
+DB_Players(_Player)
+AND
+DB_MOO_Assault_PrepareBossFightDialog(1)
+THEN
+DB_MOO_Assault_BossFightDialog_PreferPlayer(_Player);
+
+//This event triggers after the player enters the MOO_Roof_SUB trigger
+//Should be safe to clean up whether the use succeeds or fails
+IF
+UseFinished(_Player,S_MOO_RoofAccessDoor_0eca4cd0-6fa5-421f-80e9-446c2b758606,_)
+AND
+DB_MOO_Assault_BossFightDialog_PreferPlayer(_Player)
+THEN
+NOT DB_MOO_Assault_BossFightDialog_PreferPlayer(_Player);
+
+//Player Start
+IF
+DB_MOO_Assault_PrepareBossFightDialog(1)
+AND
+NOT DB_MOO_Assault_BossFightDialog_PreferPlayer(_)
+AND
+DB_InRegion(_Player, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_Defeated(_Player)
+THEN
+NOT DB_MOO_Assault_PrepareBossFightDialog(1);
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Player);
+
+IF
+DB_MOO_Assault_PrepareBossFightDialog(1)
+AND
+DB_MOO_Assault_BossFightDialog_PreferPlayer(_Player)
+AND
+DB_InRegion(_Player, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+NOT DB_Defeated(_Player)
+THEN
+NOT DB_MOO_Assault_PrepareBossFightDialog(1);
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Player);
+
+//If a player enters the roof while the dialog is still in progress, teleport them to the combat point
+IF
+DB_MOO_Assault_ReadyPlayersToCombatPosition(1)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_InRegion(_Player, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+NOT DB_Defeated(_Player)
+THEN
+TeleportTo(_Player, S_MOO_PlayerAssaultStartPoint_001_dc09693a-8cfa-4db4-b0b3-b3c18efbb1ac);
+
+PROC
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Player)
+AND
+DB_Avatars(_Player)
+AND
+QRY_StartDialogCustom(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_BossFightDialogStarted(1);
+
+PROC
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Player)
+AND
+NOT DB_Avatars(_Player)
+AND
+QRY_GetClosestAvailableCharacterTo(_Player, 0)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_ClosestAvatar, _Player, _Dist, 1)
+AND
+IsInTrigger(_ClosestAvatar, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73, 1)
+AND
+NOT DB_MOO_Assault_BossFightDialogStarted(1)
+AND
+QRY_StartDialogCustom(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _ClosestAvatar, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_BossFightDialogStarted(1);
+
+PROC
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Player)
+AND
+NOT DB_Avatars(_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_MOO_Assault_BossFightDialogStarted(1)
+AND
+QRY_StartDialogCustom(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_BossFightDialogStarted(1);
+
+//If summon, try owner
+PROC
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Summon)
+AND
+DB_PlayerSummons(_Summon)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTrigger(S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+CharacterGetOwner(_Summon, _Player)
+AND
+NOT DB_CantAct(_Player)
+AND
+NOT DB_MOO_Assault_BossFightDialogStarted(1)
+AND
+QRY_StartDialogCustom(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_BossFightDialogStarted(1);
+
+//Get Nearest Available Player
+PROC
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_Char)
+AND
+QRY_MOO_Assault_GetNearestFightDialogPlayer((CHARACTER)_Char)
+AND
+DB_QRYRTN_MOO_Assault_NearestPlayerForFightDialog(_Player, _)
+AND
+NOT DB_MOO_Assault_BossFightDialogStarted(1)
+AND
+QRY_StartDialogCustom(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_BossFightDialogStarted(1);
+
+QRY
+QRY_MOO_Assault_GetNearestFightDialogPlayer((CHARACTER)_Char)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_CantAct(_Player)
+AND
+DB_InRegion(_Player, S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6) //So it wont try to fetch someone on the other side of SCL
+AND
+GetDistanceTo(_Player, _Char, _Dist)
+THEN
+DB_QRYRTN_MOO_Assault_NearestPlayerForFightDialog(_Player, _Dist);
+
+IF
+DB_QRYRTN_MOO_Assault_NearestPlayerForFightDialog(_Player1, _Dist1)
+AND
+DB_QRYRTN_MOO_Assault_NearestPlayerForFightDialog(_Player2, _Dist2)
+AND
+_Player2 != _Player1
+AND
+_Dist2 >= _Dist1
+THEN
+NOT DB_QRYRTN_MOO_Assault_NearestPlayerForFightDialog(_Player2, _Dist2);
+
+PROC
+PROC_MOO_Assault_PrepareBossFightDialog((CHARACTER)_)
+AND
+NOT DB_MOO_Assault_BossFightDialogStarted(1)
+THEN
+PROC_MOO_Assault_BossFightDialogFailed();
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, _InstanceID)
+AND
+NOT DB_Defeated(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID, S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+//END_REGION
+//REGION Combat - Starts
+//Triggers
+PROC
+PROC_MOO_Assault_BossFightDialogFailed()
+THEN
+PROC_MOO_Assault_StartBossFight();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_Assault_Event_BossFightDialogStarted_24b45396-35af-443a-f2fb-8671104ceebd)
+AND
+QRY_OnlyOnce("MOO_Assault_StartBossFightOnce")
+THEN
+PROC_MOO_Assault_StartBossFight();
+
+IF
+DialogEnded(MOO_Assault_BossFightIntro_9ab0d397-8e37-2037-a10b-bd082bdae9f6, _)
+AND
+NOT DB_GlobalFlag(MOO_Assault_Event_BossFightDialogStarted_24b45396-35af-443a-f2fb-8671104ceebd)
+AND
+QRY_OnlyOnce("MOO_Assault_StartBossFightOnce")
+THEN
+SetFlag(MOO_Assault_Event_BossFightDialogStarted_24b45396-35af-443a-f2fb-8671104ceebd);
+PROC_MOO_Assault_StartBossFight();
+
+PROC
+PROC_MOO_Assault_StartBossFight()
+THEN
+PROC_SceneOver("MOO_Assault_BossFightIntroScene");
+
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+NOT DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6)
+THEN
+PROC_GLO_NarrativeCombat_StartCombat("MOO_Assault_KethericRoofFight");
+
+PROC
+PROC_GLO_NarrativeCombat_IDGenerated("MOO_Assault_KethericRoofFight", _)
+THEN
+NOT DB_MOO_Assault_ReadyPlayersToCombatPosition(1);
+SetFlag(MOO_Assault_State_KethericNarrativeCombatActive_d4b7534c-5bce-48c5-8aa7-5acc62d0c36a);
+
+// Turn hostile
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_RooftopEnemies")
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+GetFaction(_Char, _Faction)
+AND
+_Faction != ACT2_MOO_Assault_Hostile_68597716-e217-4777-a391-026263f291b4
+THEN
+SetFaction(_Char, (FACTION)ACT2_MOO_Assault_Hostile_68597716-e217-4777-a391-026263f291b4);
+
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_RooftopEnemies")
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+AND
+IsInTrigger(_Char, _Trigger, 1) //DB_InRegion is a bit too slow
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("MOO_Assault_KethericRoofFight", _Char);
+
+//In case the flag is not already set, such as dialog being interrupted (and only set if on the Assault path)
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+NOT DB_GlobalFlag(MOO_Assault_Event_NightsongArrivedRoof_d0096e82-3126-4d5d-be07-2b43d1f0ff2a)
+THEN
+SetFlag(MOO_Assault_Event_NightsongArrivedRoof_d0096e82-3126-4d5d-be07-2b43d1f0ff2a);
+
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger ,S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+PROC_GLO_NarrativeCombat_JoinCombat("MOO_Assault_KethericRoofFight", S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+AND
+IsInTrigger(_Player, _Trigger, 1)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("MOO_Assault_KethericRoofFight", _Player);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantJoined("MOO_Assault_KethericRoofFight", _Char)
+THEN
+PROC_MOO_Assault_UpdateEnemyParticipantDB((CHARACTER)_Char);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantLeft("MOO_Assault_KethericRoofFight", _Char)
+AND
+DB_MOO_Assault_RoofNarrativeCombatEnemy(_Char)
+THEN
+NOT DB_MOO_Assault_RoofNarrativeCombatEnemy(_Char);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantLeft("MOO_Assault_KethericRoofFight", _)
+THEN
+PROC_MOO_Assault_CheckForRoofNarrativeCombatEnd();
+
+PROC
+PROC_MOO_Assault_UpdateEnemyParticipantDB((CHARACTER)_Char)
+AND
+NOT DB_PartyMembers(_Char)
+AND
+NOT DB_PlayerSummons(_Char)
+AND
+NOT QRY_MOO_Assault_IsAssaultAlly(_Char)
+THEN
+DB_MOO_Assault_RoofNarrativeCombatEnemy(_Char);
+
+QRY
+QRY_MOO_Assault_IsAssaultAlly((CHARACTER)_Char)
+AND
+DB_MOO_AssaultPositions(_Char, _, _Group)
+AND
+DB_MOO_Assault_AllyGroups(_Group)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_MOO_Assault_IsAssaultAlly((CHARACTER)_Char)
+AND
+_Char == S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_MOO_Assault_CheckForRoofNarrativeCombatEnd()
+AND
+NOT DB_MOO_Assault_RoofNarrativeCombatEnemy(_)
+THEN
+PROC_GLO_NarrativeCombat_EndCombat("MOO_Assault_KethericRoofFight");
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantJoined("MOO_Assault_KethericRoofFight", _Player)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+AND
+DB_MOO_Assault_RoofNarrativeCombatIsPaused(1)
+THEN
+ResumeCombat(_ID);
+NOT DB_MOO_Assault_RoofNarrativeCombatIsPaused(1);
+
+IF
+DB_Combat_DeathBloom_SpawnedNecromite((CHARACTER)_Necromite,_Obj)
+AND
+DB_Combat_DeathBloom(_Obj,_Summoner,_,_)
+AND
+DB_MOO_Assault_RoofNecromiteSummoners(_Summoner)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger, _Necromite);
+PROC_GLO_NarrativeCombat_JoinCombat("MOO_Assault_KethericRoofFight", _Necromite);
+
+//END_REGION
+//REGION Combat - Nightsong
+
+IF
+DB_MOO_Assault_NightsongFallTriggers(_Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger, S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+//Handling Nightsong being knocked off the tower
+IF
+EnteredTrigger(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b ,_Trigger)
+AND
+DB_MOO_Assault_NightsongFallTriggers(_Trigger)
+AND
+NOT DB_MOO_BossFight_NightsongIsReturning(1)
+AND
+QRY_MOO_BossFight_NearestNightsongReturnTrigger()
+AND
+DB_QRYRTN_MOO_BossFight_NearestTrigger((TRIGGER)_ReturnTrigger, _)
+THEN
+DB_MOO_BossFight_NightsongIsReturning(1);
+PROC_MOO_BossFight_ReturnNightsongToRoof(_ReturnTrigger);
+
+PROC
+PROC_MOO_BossFight_ReturnNightsongToRoof((TRIGGER)_)
+AND
+GetHitpoints(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _HP)
+AND
+_HP < 1
+THEN
+SetHitpoints(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, 1);
+
+PROC
+PROC_MOO_BossFight_ReturnNightsongToRoof((TRIGGER)_Trigger)
+AND
+TriggerGetRandomPosition(_Trigger, _X, _Y, _Z)
+AND
+FindValidPosition(_X,_Y,_Z,5.0,S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b,1,_VX,_VY,_VZ)
+AND
+GetPosition(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _NX, _NY, _NZ)
+THEN
+DB_MOO_Assault_NightsongAppeared(1);
+SetVisible(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, 0);
+PlayEffectAtPosition(VFX_Script_Stub_Poof_01_NoSound_de020641-4dbd-855e-9b2f-f008a32d6737, _NX, _NY, _NZ, 1.0);
+AppearAtPosition(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _VX, _VY, _VZ, 1, CUST_NightsongFlightRecovery_348ef802-c475-41e7-a8b3-cb38fbc66669, "MOO_BossFight_NightsongReturnAppeared", 0);
+
+//FindValidPosition Fallback
+PROC
+PROC_MOO_BossFight_ReturnNightsongToRoof((TRIGGER)_Trigger)
+AND
+NOT DB_MOO_Assault_NightsongAppeared(1)
+AND
+TriggerGetRandomPosition(_Trigger, _X, _Y, _Z)
+AND
+GetPosition(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _NX, _NY, _NZ)
+THEN
+DB_MOO_Assault_NightsongAppeared(1);
+SetVisible(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, 0);
+PlayEffectAtPosition(VFX_Script_Stub_Poof_01_NoSound_de020641-4dbd-855e-9b2f-f008a32d6737, _NX, _NY, _NZ, 1.0);
+AppearAtPosition(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _X, _Y, _Z, 1, CUST_NightsongFlightRecovery_348ef802-c475-41e7-a8b3-cb38fbc66669, "MOO_BossFight_NightsongReturnAppeared", 0);
+
+IF
+EntityEvent(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "MOO_BossFight_NightsongReturnAppeared")
+THEN
+NOT DB_MOO_Assault_NightsongAppeared(1);
+PROC_MOO_BossFight_NightsongReturnedToRoof();
+
+PROC
+PROC_MOO_BossFight_NightsongReturnedToRoof()
+AND
+DB_MOO_BossFight_NightsongIsReturning(1)
+THEN
+NOT DB_MOO_BossFight_NightsongIsReturning(1);
+
+QRY
+QRY_MOO_BossFight_NearestNightsongReturnTrigger()
+AND
+QRY_MOO_BossFight_ResetNearestNightsongReturnTrigger()
+AND
+DB_MOO_BossFight_NightsongReturnTrigger(_Point)
+AND
+GetDistanceTo(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _Point, _Dist)
+THEN
+DB_QRYRTN_MOO_BossFight_NearestTrigger(_Point, _Dist);
+
+IF
+DB_QRYRTN_MOO_BossFight_NearestTrigger(_Point1, _Dist1)
+AND
+DB_QRYRTN_MOO_BossFight_NearestTrigger(_Point2, _Dist2)
+AND
+_Point2 != _Point1
+AND
+_Dist2 >= _Dist1
+THEN
+NOT DB_QRYRTN_MOO_BossFight_NearestTrigger(_Point2, _Dist2);
+
+QRY
+QRY_MOO_BossFight_ResetNearestNightsongReturnTrigger()
+THEN
+SysClear("DB_QRYRTN_MOO_BossFight_NearestTrigger", 2);
+
+IF
+DB_InRegion(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _Region)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Region)
+AND
+NOT DB_PermaDefeated(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+AND
+DB_GlobalFlag(MOO_Assault_State_KethericNarrativeCombatActive_d4b7534c-5bce-48c5-8aa7-5acc62d0c36a)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("MOO_Assault_KethericRoofFight", S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+IF
+DB_Dead((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+HasActiveStatus(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "SHA_SHARSPEAR_MORTALWOUND", 0)
+AND
+GetFaction(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _Faction)
+THEN
+PROC_SetRelationToPlayers(_Faction, 100);
+ApplyStatus(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "GLO_NIGHTSONGRESURRECTION", 6.0, 0, S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+//END_REGION
+//REGION Players Leaving Roof
+PROC
+PROC_GLO_NarrativeCombat_CharacterLeftRegion("MOO_Assault_KethericRoofFight", _Player, _)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+PROC_GLO_NarrativeCombat_LeaveCombat("MOO_Assault_KethericRoofFight", _Player);
+
+PROC
+PROC_GLO_NarrativeCombat_AllPlayersLeftRegion(_Region)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Region)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+AND
+NOT DB_MOO_Assault_RoofNarrativeCombatIsPaused(1)
+THEN
+DB_MOO_Assault_RoofNarrativeCombatIsPaused(1);
+PauseCombat(_ID);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantLeft("MOO_Assault_KethericRoofFight", _Player)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Region)
+AND
+NOT QRY_GLO_NarrativeCombat_AnyLivingPartyMembersInRegion(_Region)
+AND
+NOT DB_MOO_Assault_RoofNarrativeCombatIsPaused(1)
+THEN
+DB_MOO_Assault_RoofNarrativeCombatIsPaused(1);
+PauseCombat(_ID);
+
+PROC
+PROC_GLO_NarrativeCombat_CharacterEnteredRegion(_Char, _Region)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Region)
+AND
+DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("MOO_Assault_KethericRoofFight", _Char);
+
+PROC
+PROC_GLO_NarrativeCombat_CharacterLeftRegion("MOO_Assault_KethericRoofFight", _Char, _)
+AND
+DB_MOO_AssaultTriggerRegisteredMiscCharacters(_Char)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+THEN
+PROC_GLO_NarrativeCombat_LeaveCombat("MOO_Assault_KethericRoofFight", _Char);
+
+//Reset the health of enemies if players long rests
+PROC
+PROC_LongRest()
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+AND
+DB_MOO_Assault_RoofNarrativeCombatEnemy(_Enemy)
+AND
+DB_GLO_NarrativeCombat_Participant("MOO_Assault_KethericRoofFight", _ID, _Enemy)
+THEN
+PROC_CharacterFullRestore((CHARACTER)_Enemy);
+//END_REGION
+//REGION Ketheric Leaving - Conditions
+
+// Ketheric's HP threshold is reached
+IF
+HitpointsChanged(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Percentage)
+AND
+NOT DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6)
+AND
+_Percentage < 40.0
+AND
+QRY_OnlyOnce("MOO_KethericHealthThresholdOnce")
+THEN
+RemoveHarmfulStatuses(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+PROC_MOO_Assault_StartKethericLeaving();
+
+//CombatRoundStarted is currently broken with the NarritiveCombat system, spamming every frame
+IF
+TurnStarted(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f)
+AND
+DB_Is_InCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _ID)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_HostileAudience")
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+THEN
+PROC_MOO_Assault_IncreaseKethericRoundCount();
+
+PROC
+PROC_MOO_Assault_IncreaseKethericRoundCount()
+AND
+DB_MOO_Assault_KethericLeaveCurrent(_Current)
+AND
+IntegerSum(_Current, 1, _New)
+THEN
+NOT DB_MOO_Assault_KethericLeaveCurrent(_Current);
+DB_MOO_Assault_KethericLeaveCurrent(_New);
+
+PROC
+PROC_MOO_Assault_IncreaseKethericRoundCount()
+AND
+DB_MOO_Assault_KethericLeaveCurrent(_Current)
+AND
+DB_MOO_Assault_KethericLeaveTarget(_Target)
+AND
+_Current >= _Target
+THEN
+RemoveHarmfulStatuses(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+PROC_MOO_Assault_StartKethericLeaving();
+
+//Handle freak edge-case of him falling off roof
+PROC
+PROC_GLO_NarrativeCombat_CharacterLeftRegion("MOO_Assault_KethericRoofFight", S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _)
+AND
+NOT DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6)
+THEN
+PROC_GLO_NarrativeCombat_LeaveCombat("MOO_Assault_KethericRoofFight", S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+DB_MOO_Assault_KethericFell(1);
+
+IF
+DB_MOO_Assault_KethericFell(1)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f)
+THEN
+NOT DB_MOO_Assault_KethericFell(1);
+RemoveHarmfulStatuses(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+PROC_MOO_Assault_StartKethericLeaving();
+//END_REGION
+//REGION Ketheric Leaving - Start dialog
+
+//Try prioritizing the player who last attacked Ketheric for this dialog
+IF
+AttackedBy(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, (CHARACTER)_AttackerOwner, _, _, _, _, _)
+AND
+DB_Players(_AttackerOwner)
+AND
+DB_MOO_Assault_AttackedKethericLast(_Previous)
+THEN
+NOT DB_MOO_Assault_AttackedKethericLast(_Previous);
+DB_MOO_Assault_AttackedKethericLast(_AttackerOwner);
+
+//Find valid player and start dialog
+PROC
+PROC_MOO_Assault_StartKethericLeaving()
+AND
+DB_MOO_Assault_AttackedKethericLast(_Player)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_MOO_Assault_CanInitiateKethericLeaving(_Player)
+AND
+QRY_StartDialogCustom_Fixed(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, NULL_00000000-0000-0000-0000-000000000000, _Player, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_KethericLeavingInitiator(_Player);
+
+PROC
+PROC_MOO_Assault_StartKethericLeaving()
+AND
+NOT DB_MOO_Assault_KethericLeavingInitiator(_)
+AND
+DB_Players(_Player)
+AND
+QRY_MOO_Assault_CanInitiateKethericLeaving(_Player)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, NULL_00000000-0000-0000-0000-000000000000, _Player, 38.0, 0, 0, 0, 0)
+THEN
+DB_MOO_Assault_KethericLeavingInitiator(_Player);
+
+QRY
+QRY_MOO_Assault_CanInitiateKethericLeaving((CHARACTER)_Player)
+AND
+DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight", _Trigger)
+AND
+DB_InRegion(_Player, _Trigger)
+AND
+NOT DB_PermaDefeated(_Player)
+THEN
+DB_NOOP(1);
+
+//Add Nightsong to leaving dialog if present
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, _ID)
+AND
+NOT DB_PermaDefeated(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+THEN
+PROC_MOO_BossFight_TryAddNightsongToDialog(_ID);
+
+PROC
+PROC_MOO_BossFight_TryAddNightsongToDialog((INTEGER)_ID)
+AND
+GetHitpoints(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _HP)
+AND
+_HP < 1
+THEN
+SetHitpoints(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, 1);
+
+PROC
+PROC_MOO_BossFight_TryAddNightsongToDialog((INTEGER)_ID)
+AND
+DB_Downed(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+AND
+NOT DB_DialogEnding(_,_ID)
+AND
+QRY_DownedSpeakerIsAvailable((GUIDSTRING)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, 1)
+AND
+DB_DialogRequestCache_DialogInstance(_Dialog,_ID)
+AND
+QRY_PrepForInteractiveDialog_IfInteractive(_Dialog,_ID,S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+THEN
+DialogAddActorAtReservedSlot(_ID,S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b,1,0,1);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_ID,S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+PROC
+PROC_MOO_BossFight_TryAddNightsongToDialog((INTEGER)_ID)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+//Dialog started -> add everyone (DB_AddCharactersInTriggerToDialog in INIT)
+PROC
+PROC_MOO_Assault_StartKethericLeaving()
+AND
+DB_MOO_Roof_Myrkulites(_Char)
+AND
+NOT DB_Defeated(_Char)
+AND
+NOT DB_DialogSpeakers(_, _Char, _)
+AND
+DB_DialogName(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, _Inst)
+THEN
+PROC_DialogAddListeningActor(_Inst, _Char);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, _ID)
+AND
+DB_Avatars(_Avatar)
+AND
+DB_InRegion(_Avatar,S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+NOT DB_DialogPlayers(_ID,_Avatar,_)
+THEN
+PROC_DialogAddSpeakingActor(_ID,_Avatar, 1, 1);
+
+IF
+DialogStarted(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, _)
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+THEN
+PauseCombat(_ID);
+
+//Dialog failed
+PROC
+PROC_MOO_Assault_StartKethericLeaving((GUIDSTRING)_)
+AND
+NOT DB_MOO_Assault_KethericLeavingInitiator(_)
+THEN
+PROC_MOO_Assault_KethericLeavingDialogFailed();
+
+PROC
+PROC_MOO_Assault_StartKethericLeaving()
+AND
+DB_InRegion(_Player, S_MOO_HollowTowerPushBackBox_e542f485-e10f-4c94-b473-9e37b1ad1a18)
+THEN
+TeleportTo(_Player, S_MOO_HollowTowerPushBackPoint_593bcb39-a00c-4b99-8224-e3e4d69bc214);
+
+PROC
+PROC_MOO_Assault_StartKethericLeaving()
+THEN
+UnloadLevelTemplate(LT_PLT_Moo_Tower_A_198721e9-46b7-490b-92f0-187953596539);
+UnloadLevelTemplate(LT_PLT_Moo_Chapel_A_7be4a120-79a2-413f-9ff0-4f45b61e923a);
+
+//END_REGION
+//REGION Ketheric Leaving - End
+
+//Failed to start at all
+PROC
+PROC_MOO_Assault_KethericLeavingDialogFailed()
+THEN
+PROC_MOO_Assault_KethericLeaves();
+
+//Ends (or fails weirdly)
+IF
+DialogEnded(MOO_Assault_FirstKethericInterruption_af3d4480-a770-b93e-ad54-a2e6e55a19ef, _)
+THEN
+PROC_MOO_Assault_KethericLeaves();
+
+//Executing leaving
+PROC
+PROC_MOO_Assault_KethericLeaves()
+THEN
+DB_AutoSaveTrigger(S_MOO_HollowTowerAutoSave_395ffa89-7522-4238-a2ba-a1fd139cd87f);
+ClearFlag(MOO_Assault_State_KethericNarrativeCombatActive_d4b7534c-5bce-48c5-8aa7-5acc62d0c36a);
+SetFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6);
+SetOnStage(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 0);
+SetOnStage(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, 0);
+LoadLevelTemplate(LT_PLT_Moo_Tower_Broken_A_2356dc00-6d00-4138-b2f3-a46335d49fcf);
+LoadLevelTemplate(LT_PLT_Moo_Chapel_Broken_A_a3b01ac3-c6d4-466c-8185-f516b94e859a);
+PROC_GLO_NarrativeCombat_LeaveCombat("MOO_Assault_KethericRoofFight", S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+PROC_GLO_NarrativeCombat_LeaveCombat("MOO_Assault_KethericRoofFight", S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+DB_MOO_Assault_QueueFollowKethericPAD(1);
+
+PROC
+PROC_MOO_Assault_KethericLeaves()
+AND
+NOT DB_PermaDefeated(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+THEN
+RemoveStatusesWithGroup(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b,"SG_RemoveOnRespec",NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_MOO_Assault_KethericLeaves()
+AND
+DB_GLO_NarrativeCombat_ID("MOO_Assault_KethericRoofFight", _ID)
+THEN
+ResumeCombat(_ID);
+
+PROC
+PROC_MOO_Assault_KethericLeaves()
+THEN
+PROC_DangerZone_Safe("MOO_Assault_DangerZone");
+PROC_MusicPlayGeneral("Moonrise_Tower_Assault_finished");
+
+PROC
+PROC_MOO_Assault_KethericLeaves()
+THEN
+TimerLaunch("MOO_Assault_DaisyAD_FollowKetheric",500);
+
+IF
+TimerFinished("MOO_Assault_DaisyAD_FollowKetheric")
+AND
+DB_Avatars(_Player)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)MOO_Assault_DaisyAD_FollowKetheric_87f498ea-27af-efd1-3a74-2888df4ebacb);
+
+//END_REGION
+
+//REGION Combat - Ends
+
+PROC
+PROC_COL_TeleportPartiesToColony(_)
+THEN
+PROC_GLO_NarrativeCombat_EndCombat("MOO_Assault_KethericRoofFight");
+
+PROC
+PROC_GLO_NarrativeCombat_IDDestroyed("MOO_Assault_KethericRoofFight", _)
+THEN
+PROC_TriggerUnregisterForParty(S_MOO_NarrativeCombatRoofRegion_9a1c091e-f8da-4ab6-bdf0-e0db176e4ca3);
+NOT DB_GLO_NarrativeCombat_Region("MOO_Assault_KethericRoofFight",(TRIGGER)S_MOO_NarrativeCombatRoofRegion_9a1c091e-f8da-4ab6-bdf0-e0db176e4ca3);
+NOT DB_GLO_NarrativeCombat_GenericExceptionParticipant("MOO_Assault_KethericRoofFight", S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+NOT DB_GLO_NarrativeCombat_GenericExceptionParticipant("MOO_Assault_KethericRoofFight", S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+NOT DB_MOO_Assault_RoofNarrativeCombatIsPaused(1);
+
+IF
+DB_InRegion(_Player,S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+DB_Players(_Player)
+AND
+DB_MOO_Assault_QueueFollowKethericPAD(1)
+AND
+NOT DB_CantTalk(_Player)
+THEN
+NOT DB_MOO_Assault_QueueFollowKethericPAD(1);
+DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player);
+RealtimeObjectTimerLaunch(_Player,"MOO_Assault_PAD_AfterKethericCombat",5500);
+
+IF
+DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player)
+AND
+DB_CantTalk(_Player)
+THEN
+PROC_MOO_Assault_FollowKethericPAD_Interrupt(_Player);
+
+IF
+DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player)
+AND
+NOT DB_InRegion((CHARACTER)_Player,S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+THEN
+PROC_MOO_Assault_FollowKethericPAD_Interrupt(_Player);
+
+PROC
+PROC_MOO_Assault_FollowKethericPAD_Interrupt((CHARACTER)_Player)
+THEN
+RealtimeObjectTimerCancel(_Player,"MOO_Assault_PAD_AfterKethericCombat");
+NOT DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player);
+DB_MOO_Assault_QueueFollowKethericPAD(1);
+
+IF
+ObjectTimerFinished(_Player,"MOO_Assault_PAD_AfterKethericCombat")
+THEN
+StartVoiceBark(MOO_Assault_VB_AfterKethericCombat_252bb717-d9e4-74a7-520d-816ba9592398, (CHARACTER)_Player);
+NOT DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player);
+
+PROC
+PROC_COL_TeleportPartiesToColony(_)
+AND
+DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player)
+THEN
+RealtimeObjectTimerCancel(_Player,"MOO_Assault_PAD_AfterKethericCombat");
+NOT DB_MOO_Assault_QueueFollowKethericPAD_Player((CHARACTER)_Player);
+
+PROC
+PROC_COL_TeleportPartiesToColony(_)
+AND
+DB_MOO_Assault_QueueFollowKethericPAD(1)
+THEN
+NOT DB_MOO_Assault_QueueFollowKethericPAD(1);
+
+PROC
+PROC_COL_TeleportPartiesToColony(_)
+THEN
+GoalCompleted;
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2_MOO_PreAssault"

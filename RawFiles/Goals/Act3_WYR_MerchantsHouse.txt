@@ -1,0 +1,1817 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Merchant
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, WYR_MerchantsHouse_Merchant_Dead_99670fe2-39ba-fe87-0b99-46ffbe00a75e);
+
+DB_DefeatedStateFlag(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, WYR_MerchantsHouse_Merchant_State_Defeated_6c49ac2a-8e88-0c3d-588a-0fa3a82ae071);
+DB_PermaDefeatedFlag(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c);
+SetCanTrade(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 0);
+AddGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 550);
+DB_CRIME_Guards_NoSummonBy((CHARACTER)S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Conflict", 0);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ChoiceMade", 1000);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Hostility", 2000);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsChasingOut", 2500);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsGone", 3000);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "RefugeesGone", 4000);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantRewarded", 5000);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone", 6000);
+DB_State_Priority(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "RefugeesHoused", 7000);
+
+DB_State_Current(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Conflict");
+
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_Event_DisappearAfterConfession_a05ed7d5-c109-6ff9-2b19-0ace8d409bac,(DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_State_Intimidated_74338e62-6273-1d74-5609-90c9eccdabcc,(DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55);
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_State_Intimidated_74338e62-6273-1d74-5609-90c9eccdabcc,(DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_Event_KnockOut_d268e780-32e4-5673-cc06-73c390875482, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_Event_Die_592fd890-c8a8-0263-3ed1-ea9d087d9a7d, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+
+DB_WYR_MerchantsHouse_LeaveTriggers((TRIGGER)S_WYR_MerchantsHouse_Merchant_HouseLeavePos_91526655-9762-45eb-bf77-b008cd29fb37);
+//END_REGION
+
+//REGION Conflict Scene
+DB_Dialogs(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55);
+DB_DialogMoneyTransfer(1, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, 1000, 4); // Player (speaker 4) paying to the Merchant (default speaker 1)
+DB_DialogMoneyTransfer(2, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, 300, 1, 2); // Merchant (spekaer 1) pays to the Thug Leader (speaker 2)
+
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters((CHARACTER)S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8);
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters(S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055);
+
+DB_WYR_MerchantsHouse_Conflict_MadeChoiceFlags((FLAG)WYR_MerchantsHouse_State_ChasingOutAgreedFree_60765fb3-581e-8de5-1d15-e7916aa9bb75);
+DB_WYR_MerchantsHouse_Conflict_MadeChoiceFlags(WYR_MerchantsHouse_State_ChasingOutAgreedHalfPrice_7705e5c3-cec8-8a8b-c666-c324f107f603);
+DB_WYR_MerchantsHouse_Conflict_MadeChoiceFlags(WYR_MerchantsHouse_Merchant_State_Intimidated_74338e62-6273-1d74-5609-90c9eccdabcc);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Event_ThugsStartChasingOut_af4cbaf1-20ae-4484-ba3a-7b6535674d05, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55);
+
+PROC_WYR_MerchantsHouse_SetupConflictScene();
+
+Open(DOOR_Double_Slim_City_House_I_Frameless_Top_A_004_0e5f574c-252c-448e-9d08-2eeff7b26058);
+//END_REGION
+
+//REGION Hired Thugs
+DB_Dialogs(S_WYR_MerchantsHouse_Thug_001_2c1b28c2-279f-4a85-951b-96d4d5256634,(DIALOGRESOURCE)WYR_MerchantsHouse_Thug_001_2ee07a8c-40d9-32d1-89d2-88e2b34ef184);
+DB_Dialogs(S_WYR_MerchantsHouse_Thug_002_e7fc87a2-2320-43fc-83b3-5c9bc2076efe,(DIALOGRESOURCE)WYR_MerchantsHouse_Thug_002_27ddf983-ea55-2ec6-25d8-dc45053e0a78);
+DB_Dialogs(S_WYR_MerchantsHouse_Thug_003_b66597d0-fb21-4a95-87cd-c42cc2498ed9,(DIALOGRESOURCE)WYR_MerchantsHouse_Thug_003_bd785307-f49f-31de-5685-36be55eb2639);
+DB_Dialogs(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,(DIALOGRESOURCE)WYR_MerchantsHouse_ThugLeader_90cba9e2-0167-34c0-dfc1-99065de4cff7);
+
+DB_WYR_MerchantsHouse_Thugs((CHARACTER)S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8);
+DB_WYR_MerchantsHouse_Thugs((CHARACTER)S_WYR_MerchantsHouse_Thug_001_2c1b28c2-279f-4a85-951b-96d4d5256634);
+DB_WYR_MerchantsHouse_Thugs((CHARACTER)S_WYR_MerchantsHouse_Thug_002_e7fc87a2-2320-43fc-83b3-5c9bc2076efe);
+DB_WYR_MerchantsHouse_Thugs((CHARACTER)S_WYR_MerchantsHouse_Thug_003_b66597d0-fb21-4a95-87cd-c42cc2498ed9);
+
+DB_DialogMoneyTransfer(1, WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208, 500); // Player paying to the Thug Leader
+DB_DialogMoneyTransfer(2, WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208, 1000); // Player paying to the Thug Leader (double price)
+DB_DialogMoneyTransfer(3, WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208, 250); // Player paying to the Thug Leader (half price)
+
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Event_ThugsLeave_d518e87e-3514-1f96-a96a-3ce6b1d0be64, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55);
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Event_ThugsLeave_d518e87e-3514-1f96-a96a-3ce6b1d0be64, WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208);
+
+DB_DeadOnceFlag(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, WYR_MerchantsHouse_ThugLeader_State_Killed_52c51e79-5d48-4b56-b649-d21387abfd3b);
+//END_REGION
+
+//REGION Refugees
+DB_Dialogs(S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055,WYR_MerchantsHouse_RefugeeLeader_2e0bb1ac-8d53-3f4c-f306-f788b29f9f11);
+DB_Dialogs(S_WYR_MerchantsHouse_RefugeeDaughter_a31e1798-ab61-4b2c-9e06-c66c56d2edb5,WYR_MerchantsHouse_RefugeeDaughter_e2dff08d-4a42-c6c3-4ef1-b7dd6ff0be52);
+DB_Dialogs(S_WYR_MerchantsHouse_RefugeeWife_0d9c9a7c-3f15-4b86-990f-2b5dd65b4dc7,WYR_MerchantsHouse_RefugeeWife_4852a8e6-7c6d-230a-1b4a-be90dc499e1b);
+
+DB_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Event_RefugeesLeave_9b71e835-73a7-4c00-8c3d-31f64370f726, WYR_MerchantsHouse_RefugeeLeader_2e0bb1ac-8d53-3f4c-f306-f788b29f9f11);
+
+DB_WYR_MerchantsHouse_Refugees((CHARACTER)S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055);
+DB_WYR_MerchantsHouse_Refugees(S_WYR_MerchantsHouse_RefugeeDaughter_a31e1798-ab61-4b2c-9e06-c66c56d2edb5);
+DB_WYR_MerchantsHouse_Refugees(S_WYR_MerchantsHouse_RefugeeWife_0d9c9a7c-3f15-4b86-990f-2b5dd65b4dc7);
+
+DB_DialogMoneyTransfer(1, WYR_MerchantsHouse_RefugeeLeader_2e0bb1ac-8d53-3f4c-f306-f788b29f9f11, 100); // Player paying to the Refugee to make them leave
+
+DB_Children((CHARACTER)S_WYR_MerchantsHouse_RefugeeDaughter_a31e1798-ab61-4b2c-9e06-c66c56d2edb5);
+
+DB_ForceRemoveKnockedOutCharacterOnLongRest((CHARACTER)S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055);
+//END_REGION
+
+//REGION Animals
+DB_Dialogs(S_WYR_MerchantsHouse_CaravanOx_8678cc96-25e6-42f4-b4fe-0fd40c4a2de2,WYR_MerchantsHouse_CaravanOx_57873ca6-a02e-b208-5967-4f15a3935fa5);
+//END_REGION
+
+//REGION Basement
+DB_OneShot_VoiceBarkTrigger((TRIGGER)Stats_WYR_MerchantHouseBasement_12607cb7-2772-47dc-b470-0434087ededa, WYR_MerchantsHouse_VB_EnteredBasement_f396c9e6-ef9c-cd41-9862-73280b9cd984); 
+DB_BookFlags((ITEM)S_WYR_MerchantsHouse_OrinLetter_de06faf4-6d56-426b-abbc-e64f86de3951, (FLAG)WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3);
+
+DB_WYR_MerchantsHouse_BasementToyRoots(LOOT_GEN_Toy_TeddyBear_Worn_A_3762d9ce-3506-4d2c-8b36-454d9fef979f);
+DB_WYR_MerchantsHouse_BasementToyRoots(UNI_WYR_ExplosiveToy_Broken_1b7e91d0-5de8-46fa-87c0-b3a9d35939e6);
+//END_REGION
+
+//REGION Journal
+DB_QuestDef_State_ConditionalFlag(
+	(FLAG)WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3, "WYR_Donations", "FoundBlackmail_Before",
+	0, WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712);
+DB_QuestDef_State_ConditionalFlag(
+	(FLAG)WYR_RefugeeCamp_State_ManipAgreedInvestigate_ae6869c2-8b25-6b6e-ed00-87ce770cf5fd, "WYR_Donations", "ManipAgreedInvestigate",
+	0, WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712);
+DB_QuestDef_State_ConditionalFlag(
+	(FLAG)WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712, "WYR_Donations", "FoundToys_DoesntKnow",
+	0, WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3);
+DB_QuestDef_State((FLAG)LOW_FireworksHouse_Event_UsedPassword_a1db6ba2-5535-4c96-aa27-b7736625fa6c, "WYR_Donations", "UsedPassword");
+DB_QuestDef_State((FLAG)END_General_State_Started_a0fd5f91-e4b3-4d01-84d3-9ff484139e99, "WYR_Donations", "ReachedEND");
+
+// QuestUpdateToCheck / QuestUpdateToSet / FireworksObjectiveStep
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps("BanitesDefeated_BeforeArfur_DoesntKnow", "KnowsLikesSC_After", 1);
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps("FoundToys_Knows_SC", "KnowsLikesSC", 0);
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps("FoundBlackmail_After_SC", "KnowsLikesSC", 0);
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps("Confront_WentToSC", "KnowsLikesSC", 0);
+
+// Fireworks house quest updates
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("LearnedPassword_ArfurConfessed");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("LearnedPassword");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("ArfurUnreachable");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("UsedPassword");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("LearnedGortashBehind");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("ConfessedNoPassword");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("ConfessedAfterFireworks");
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps("EnteredFireworksFoundBlackmail");
+
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_Dead_99670fe2-39ba-fe87-0b99-46ffbe00a75e);
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+//END_REGION
+
+// Ownership 
+// TODO: rework since there are ownership triggers being set in KB
+DB_ItemOwnerShipTriggers("BGO_Main_A", (TRIGGER)S_WYR_MerchantsHouse_Ownership_167ae202-cb27-4028-86d2-3c5f17fa6da2, (CHARACTER)S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055);
+DB_ItemOwnerShipTriggers("BGO_Main_A", (TRIGGER)S_WYR_MerchantsHouse_Basement_Ownership_c42a93d5-1570-484b-90cd-ae7c7de6a219, (CHARACTER)S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("WYR_MerchantsHouse_Thugs",(FLAG)WYR_MerchantsHouse_State_ThugsDefeated_cc82b4e7-f0f5-4cd3-8fb2-b5de9a3a9aed);
+
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(0);
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1);
+KBSECTION
+//REGION Conflict Scene
+
+PROC
+PROC_LongRestOrLevelUnloading("BGO_Main_A")
+THEN
+PROC_WYR_MerchantsHouse_Progress();
+
+// Scene setup
+PROC
+PROC_WYR_MerchantsHouse_SetupConflictScene()
+AND
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters(_Character)
+THEN
+DB_SceneManager(_Character, "WYR_MerchantsHouse_ConflictScene"); 
+DB_SpotPlayers(_Character, "WYR_MerchantsHouse_ConflictScene", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(_Character, "WYR_MerchantsHouse_ConflictScene", S_WYR_MerchantsHouse_ConflictSpotArea_49dc5ed8-940a-49ec-9919-66e0ea6ac3da);
+
+PROC
+PROC_WYR_MerchantsHouse_SetupConflictScene()
+THEN
+DB_SceneManager(S_WYR_MerchantsHouse_RefugeeDaughter_a31e1798-ab61-4b2c-9e06-c66c56d2edb5, "WYR_MerchantsHouse_ConflictScene");
+DB_SceneManager(S_WYR_MerchantsHouse_RefugeeWife_0d9c9a7c-3f15-4b86-990f-2b5dd65b4dc7, "WYR_MerchantsHouse_ConflictScene"); 
+
+PROC
+PROC_WYR_MerchantsHouse_SetupConflictScene()
+THEN
+DB_SceneTriggerManager("WYR_MerchantsHouse_ConflictScene",(TRIGGER)S_WYR_MerchantsHouse_ConflictSpotArea_49dc5ed8-940a-49ec-9919-66e0ea6ac3da);
+
+IF
+DB_WYR_MerchantsHouse_Conflict_MadeChoiceFlags(_Flag)
+THEN
+DB_GlobalFlagReactionAfterDialog(_Flag, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55);
+
+// Conflict Dialog
+PROC
+PROC_SpotPlayers_Spotted(_, "WYR_MerchantsHouse_ConflictScene", _Player)
+AND
+QRY_StartDialog(
+	WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, 
+	S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,
+	S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055,
+	_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics((CHARACTER)_NPC, _Player)
+AND
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters(_NPC)
+AND
+DB_State_Current(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Conflict")
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+THEN
+DB_SelectedDialog(
+	WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, 
+	S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,
+	S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055,
+	_Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Player)
+AND
+DB_State_Current(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Conflict")
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_MerchantsHouse_Event_ThugLeaderGreeting_2d0fe767-f0fb-d207-3e9f-fa8640e9427e);
+DB_SelectedDialog(
+	WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, 
+	S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,
+	NULL_00000000-0000-0000-0000-000000000000,
+	_Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+AND
+DB_State_Current(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Conflict")
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Event_ThugLeaderGreeting_2d0fe767-f0fb-d207-3e9f-fa8640e9427e);
+DB_SelectedDialog(
+	WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, 
+	S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,
+	NULL_00000000-0000-0000-0000-000000000000,
+	_Player);
+
+IF
+DialogStarted(WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55,_)
+AND
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters(_Character)
+THEN
+PROC_SpotPlayers_StopSpotting(_Character, "WYR_MerchantsHouse_ConflictScene");
+
+// Resolution
+PROC
+PROC_GlobalFlagReactionAfterDialog(_Flag, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, _InstanceID)
+AND
+DB_WYR_MerchantsHouse_Conflict_MadeChoiceFlags(_Flag)
+THEN
+PROC_WYR_MerchantsHouse_Conflict_DialogEndedWithChoice(_InstanceID);
+
+// attacking Arfur or Zenovia
+PROC
+PROC_SceneInterrupted(_Target, _Player, "WYR_MerchantsHouse_ConflictScene", _Interruption)
+AND
+NOT DB_WYR_MerchantsHouse_Refugees((CHARACTER)_Target)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Interruption)
+THEN
+PROC_WYR_MerchantsHouse_EndConflictScene();
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_Event_Hostility_6d08b67a-cb24-8d83-afbb-dff50da31dae);
+
+// attacking the refugee
+PROC
+PROC_SceneInterrupted(_Refugee, _Player, "WYR_MerchantsHouse_ConflictScene", _Interruption)
+AND
+DB_WYR_MerchantsHouse_Refugees((CHARACTER)_Refugee)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Interruption)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Event_ThugsStartChasingOut_af4cbaf1-20ae-4484-ba3a-7b6535674d05)
+THEN
+PROC_WYR_MerchantsHouse_RefugeesRunScared();
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting(_Player);
+
+// rare edge case, if the player brings some monsters who may desturbe the scene
+PROC
+PROC_SceneInterrupted(_Target, _Interrupter, "WYR_MerchantsHouse_ConflictScene", _Interruption)
+AND
+NOT DB_PartyMembers(_Interrupter)
+AND
+NOT DB_WYR_MerchantsHouse_Thugs(_Interrupter)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Interruption)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Event_ThugsStartChasingOut_af4cbaf1-20ae-4484-ba3a-7b6535674d05)
+THEN
+PROC_WYR_MerchantsHouse_RefugeesRunScared();
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting(NULL_00000000-0000-0000-0000-000000000000);
+
+// States: Conflict -> ChoiceMade
+PROC
+PROC_WYR_MerchantsHouse_Conflict_DialogEndedWithChoice(_)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ChoiceMade");
+
+PROC
+PROC_State_Changed(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Conflict", _)
+THEN
+PROC_WYR_MerchantsHouse_EndConflictScene();
+
+PROC
+PROC_WYR_MerchantsHouse_EndConflictScene()
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ConflictSceneEnded_5e51e192-d106-4bbb-9e97-ea77d8594b0b)
+THEN
+PROC_SceneOver("WYR_MerchantsHouse_ConflictScene");
+
+PROC
+PROC_WYR_MerchantsHouse_EndConflictScene()
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ConflictSceneEnded_5e51e192-d106-4bbb-9e97-ea77d8594b0b)
+AND
+DB_WYR_MerchantsHouse_Conflict_SceneCharacters(_Character)
+THEN
+PROC_SpotPlayers_StopSpotting(_Character, "WYR_MerchantsHouse_ConflictScene");
+
+PROC
+PROC_WYR_MerchantsHouse_EndConflictScene()
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ConflictSceneEnded_5e51e192-d106-4bbb-9e97-ea77d8594b0b)
+AND
+NOT DB_PermaDefeated(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+DB_Dialogs(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb);
+
+PROC
+PROC_WYR_MerchantsHouse_EndConflictScene()
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ConflictSceneEnded_5e51e192-d106-4bbb-9e97-ea77d8594b0b);
+
+// Paying to Zenovia - standard flagset doesnt support payment from NPC to NPC
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Event_PayZenovia_829cf31f-e24c-38ec-f361-7cf3745a98cf, _Source, _ID)
+AND
+DB_DialogMoneyTransfer(2, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55, _Amount, _, _TargetIndex) // Merchant (spekaer 1) pays to the Thug Leader (speaker 2)
+AND
+DB_DialogNPCs(_ID, _Target, _TargetIndex)
+AND
+GetGold(_Source, _NPCGold)
+AND
+_Amount <= _NPCGold
+AND
+IntegerSubtract(0,_Amount,_RemoveGold)
+THEN
+AddGoldToMagicPockets((CHARACTER)_Target, _Amount);
+AddGold(_Source, _RemoveGold);
+//END_REGION
+
+//REGION Hired Thugs: States
+IF
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+THEN
+DB_GLO_DefeatCounter(_Thug, "WYR_MerchantsHouse_Thugs");
+
+IF
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+THEN
+DB_CRIME_Guards_NoSummonBy(_Thug);
+
+IF
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+AND
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+THEN
+DB_AssaultFamilyIgnoreFor(_Thug, _Refugee);
+DB_AssaultFamilyIgnoreFor(_Refugee, _Thug);
+DB_MurderIgnoreFor(_Thug, _Refugee);
+DB_MurderIgnoreFor(_Refugee, _Thug);
+
+// Leaving
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Event_ThugsLeave_d518e87e-3514-1f96-a96a-3ce6b1d0be64)
+THEN
+PROC_WYR_MerchantsHouse_ThugsLeave();
+
+PROC
+PROC_WYR_MerchantsHouse_ThugsLeave()
+AND
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+AND
+NOT DB_Defeated(_Thug)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Thug, "WYR_MerchantsHouse_Event_ThugLeave_Notify");
+
+PROC
+PROC_ReadyToMoveOn(_Thug, "WYR_MerchantsHouse_Event_ThugLeave_Notify")
+THEN
+PROC_DisappearOutOfSightTo(_Thug, S_WYR_MerchantsHouse_Merchant_LeavePos_91526655-9762-45eb-bf77-b008cd29fb37, "Walk", 0, "WYR_MerchantsHouse_Event_ThugLeft");
+
+PROC
+PROC_WYR_MerchantsHouse_ThugsLeave()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541);
+
+PROC
+PROC_WYR_MerchantsHouse_ThugsLeaveImmediately()
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+AND
+NOT DB_PermaDefeatedOrOffstage(_Thug)
+THEN
+PROC_CancelDisappearOutOfSight(_Thug);
+PROC_SetOnStage(_Thug, 0);
+
+PROC
+PROC_WYR_MerchantsHouse_ThugsLeaveImmediately()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541);
+
+// peacful resolution
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Event_ThugsLeave_d518e87e-3514-1f96-a96a-3ce6b1d0be64)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+THEN
+PROC_PeacefulResolve(_Thug);
+
+// Hostility
+IF
+FlagSet(WYR_MerchantsHouse_State_ThugsDefeated_cc82b4e7-f0f5-4cd3-8fb2-b5de9a3a9aed,_,_)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541);
+
+// Gone
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541,_,_)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsGone");
+
+// Dead
+IF
+DB_PermaDefeated(_Character)
+AND
+DB_WYR_MerchantsHouse_Thugs((CHARACTER)_Character)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsDefeated_cc82b4e7-f0f5-4cd3-8fb2-b5de9a3a9aed)
+THEN
+PROC_ClearCorpseOwner((CHARACTER)_Character);
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned(_Character)
+AND
+DB_WYR_MerchantsHouse_Thugs(_Character)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsDefeated_cc82b4e7-f0f5-4cd3-8fb2-b5de9a3a9aed)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Hired Thugs: Confrontation
+PROC
+PROC_WYR_MerchantsHouse_Conflict_DialogEndedWithChoice((INTEGER)_DialogID)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Event_ThugsLeave_d518e87e-3514-1f96-a96a-3ce6b1d0be64)
+AND
+NOT DB_Defeated(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+AND
+NOT QRY_IsEnemy(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+THEN
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting((CHARACTER)_Player);
+
+PROC
+PROC_State_Changed(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantRewarded")
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+DB_DialogName((DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb, _DialogID)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+AND
+NOT QRY_IsEnemy(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+THEN
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting((CHARACTER)_Player);
+
+PROC
+PROC_State_Changed(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantRewarded")
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb, _)
+THEN
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting(NULL_00000000-0000-0000-0000-000000000000);
+
+// Knowing the player, trying to start with them
+PROC
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting((CHARACTER)_Player)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_SpotPlayers(_,"WYR_MerchantsHouse_ThugLeader_ConfrontationSpot",_,_)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8)
+THEN
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting_Internal(_Player);
+
+// Don't know the player, finding a closest one
+PROC
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting((CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+AND
+NOT DB_SpotPlayers(_,"WYR_MerchantsHouse_ThugLeader_ConfrontationSpot",_,_)
+AND
+NOT DB_Defeated(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8)
+AND
+QRY_GetClosestAvailableCharacterTo(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, 1)
+AND
+DB_ClosestAvailableCharacterTo(_ClosestPlayer, S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _)
+THEN
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting_Internal(_ClosestPlayer);
+
+PROC
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting_Internal((CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+AND
+QRY_OnlyOnce("WYR_MerchantsHouse_ThugLeader_StartThugsConfrontationSpotting")
+AND
+NOT QRY_StartDialog_Fixed(
+	WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208,
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, 
+	_Player)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8);
+DB_Dialogs(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208);
+DB_SpotPlayers(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, "WYR_MerchantsHouse_ThugLeader_ConfrontationSpot", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_WYR_MerchantsHouse_StartThugsConfrontationSpotting_Internal((CHARACTER)_Player)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+AND
+QRY_OnlyOnce("WYR_MerchantsHouse_ThugLeader_StartThugsConfrontationSpotting")
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8);
+DB_Dialogs(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208);
+DB_SpotPlayers(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, "WYR_MerchantsHouse_ThugLeader_ConfrontationSpot", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SpotPlayers_Spotted(_, "WYR_MerchantsHouse_ThugLeader_ConfrontationSpot", _Player)
+AND
+NOT QRY_StartDialog(
+	WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208,
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, 
+	_Player)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ThugsHostile_98c2a7bc-56b0-46b3-8136-7e4e89cec6c3);
+PROC_SetRelationToPlayers(ACT3_WYR_MerchantsHouse_Thugs_5b97f222-6ea5-487a-9354-8669c8e481fa, 0);
+
+IF
+DialogRequestFailed(WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208,_)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ThugsHostile_98c2a7bc-56b0-46b3-8136-7e4e89cec6c3);
+PROC_SetRelationToPlayers(ACT3_WYR_MerchantsHouse_Thugs_5b97f222-6ea5-487a-9354-8669c8e481fa, 0);
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208,_InstanceID)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Event_ThugsLeave_d518e87e-3514-1f96-a96a-3ce6b1d0be64)
+AND
+DB_DialogPlayers(_InstanceID,_Player,1)
+AND
+NOT QRY_IsEnemy(_Player,S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ThugsHostile_98c2a7bc-56b0-46b3-8136-7e4e89cec6c3);
+PROC_SetRelationToPlayers((FACTION)ACT3_WYR_MerchantsHouse_Thugs_5b97f222-6ea5-487a-9354-8669c8e481fa, 0);
+
+// if the player chases out refugees without suggesting this to the merchant
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+DB_Sees(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, (CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+THEN
+DB_SelectedDialog(
+	WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208, 
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,
+	_Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+THEN
+DB_SelectedDialog(
+	WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208, 
+	S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8,
+	_Player);
+
+// Confrontation flags
+IF
+DB_DialogPlayers(_Instance, _Player, _)
+AND
+DB_DialogName((DIALOGRESOURCE)WYR_MerchantsHouse_ThugLeader_Confrontation_35e9d512-a517-e5ba-f967-779ffe153208, _Instance)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(WYR_MerchantsHouse_Merchant_Knows_ConfrontedThugs_d057e220-d443-48de-b68b-813c18a8a7b2, _Player, 0)
+THEN
+SetFlag(WYR_MerchantsHouse_Merchant_Knows_ConfrontedThugs_d057e220-d443-48de-b68b-813c18a8a7b2, _Player, _Instance);
+
+IF
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_Is_InCombat(S_WYR_MerchantsHouse_ThugLeader_bed33e19-1620-4845-aaa6-52de87f7e2e8, _CombatID)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(WYR_MerchantsHouse_Merchant_Knows_ConfrontedThugs_d057e220-d443-48de-b68b-813c18a8a7b2, _Player, 0)
+THEN
+SetFlag(WYR_MerchantsHouse_Merchant_Knows_ConfrontedThugs_d057e220-d443-48de-b68b-813c18a8a7b2, _Player, 0);
+//END_REGION
+
+//REGION Hired Thugs: chasing out Refugees from the house
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Event_ThugsStartChasingOut_af4cbaf1-20ae-4484-ba3a-7b6535674d05)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsChasingOut");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Event_ThugsStartChasingOut_af4cbaf1-20ae-4484-ba3a-7b6535674d05)
+AND
+QRY_SpeakerIsAvailable(S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055)
+AND
+QRY_OnlyOnce("WYR_MerchantsHouse_AD_RefugeeLeader_ChasedOut_OnlyOnce")
+THEN
+PROC_TryStartAD(WYR_MerchantsHouse_AD_RefugeeLeader_ChasedOut_d50a7ec4-f38e-08b4-e3f1-c058c14b33cd, S_WYR_MerchantsHouse_RefugeeLeader_7ef493d6-4e5f-490a-96dd-e5bb10446055);
+
+PROC
+PROC_State_Changed(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsChasingOut")
+AND
+DB_WYR_MerchantsHouse_Thugs(_Thug)
+AND
+NOT DB_WYR_MerchantsHouse_ThugNonLethal(_Thug)
+THEN
+DB_WYR_MerchantsHouse_ThugNonLethal(_Thug);
+AddPassive(_Thug, "WYR_MerchantsHouse_ThugsNonLethal_Passive");
+
+PROC
+PROC_State_Changed(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsChasingOut")
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f);
+
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8,_,_)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+DB_WYR_MerchantsHouse_ThugNonLethal(_Thug)
+THEN
+RemovePassive(_Thug, "WYR_MerchantsHouse_ThugsNonLethal_Passive");
+
+IF
+EnteredCombat(_Thug, _)
+AND
+DB_WYR_MerchantsHouse_ThugNonLethal((CHARACTER)_Thug)
+THEN
+RemovePassive(_Thug, "WYR_MerchantsHouse_ThugsNonLethal_Passive");
+
+// Leaving after chasing out
+PROC
+PROC_DialogFlagSetup(WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+THEN
+PROC_WYR_MerchantsHouse_ThugsLeave();
+
+IF
+AutomatedDialogEnded(WYR_MerchantsHouse_AD_DoneChasingOut_7d240c62-28b8-4cd9-a166-e44b27015c13,_)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+THEN
+PROC_WYR_MerchantsHouse_ThugsLeave();
+
+PROC
+PROC_LongRestOrLevelUnloading("BGO_Main_A")
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+THEN
+PROC_WYR_MerchantsHouse_ThugsLeaveImmediately();
+
+// If thugs left hostile, they chase out refugees, but stay to protect the toymaker
+PROC
+PROC_WYR_MerchantsHouse_Progress()
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_Event_Hostility_6d08b67a-cb24-8d83-afbb-dff50da31dae)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f);
+PROC_WYR_MerhcantsHouse_ChaseOutImmediately();
+
+// also if thugs already started to chase-out refugees, we fast-forward
+PROC
+PROC_WYR_MerchantsHouse_Progress()
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_Event_Hostility_6d08b67a-cb24-8d83-afbb-dff50da31dae)
+THEN
+PROC_WYR_MerchantsHouse_ThugsLeaveImmediately();
+PROC_WYR_MerhcantsHouse_ChaseOutImmediately();
+//END_REGION
+
+//REGION Refugees
+IF
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+THEN
+DB_AssaultFamilyIgnoreFor(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Refugee);
+DB_AssaultFamilyIgnoreFor(_Refugee, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+DB_MurderIgnoreFor(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Refugee);
+DB_MurderIgnoreFor(_Refugee, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+
+// Chase out immediately
+PROC
+PROC_WYR_MerhcantsHouse_ChaseOutImmediately()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8);
+
+PROC
+PROC_WYR_MerhcantsHouse_ChaseOutImmediately()
+AND
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+AND
+NOT DB_PermaDefeated(_Refugee)
+THEN
+PROC_CancelDisappearOutOfSight(_Refugee);
+PROC_SetOnStage(_Refugee, 0);
+
+PROC
+PROC_WYR_MerhcantsHouse_ChaseOutImmediately()
+AND
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _Speed)
+THEN
+NOT DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _Speed);
+
+// Running away if attacked
+PROC
+PROC_StateSet_Defeated((CHARACTER)_Refugee)
+AND
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Refugees_State_Housed_0481d093-1539-1a06-b3b2-246270b82a12)
+THEN
+PROC_WYR_MerchantsHouse_RefugeesRunScared();
+
+PROC
+PROC_WYR_MerchantsHouse_RefugeesRunScared()
+AND
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, "Walk")
+THEN
+NOT DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, "Walk");
+PROC_CancelDisappearOutOfSight(_Refugee);
+
+PROC
+PROC_WYR_MerchantsHouse_RefugeesRunScared()
+AND
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+AND
+NOT DB_Defeated(_Refugee)
+AND
+NOT DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _)
+THEN
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, "Sprint");
+
+PROC
+PROC_WYR_MerchantsHouse_RefugeesRunScared()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8);
+
+// Leaving if forced
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Event_RefugeesLeave_9b71e835-73a7-4c00-8c3d-31f64370f726)
+THEN
+PROC_WYR_MerchantsHouse_RefugeesWalkChased();
+
+PROC
+PROC_WYR_MerchantsHouse_RefugeesWalkChased()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8);
+
+PROC
+PROC_WYR_MerchantsHouse_RefugeesWalkChased()
+AND
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+AND
+NOT DB_Defeated(_Refugee)
+AND
+NOT DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _)
+THEN
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, "Walk");
+
+// disappearing
+IF
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _Speed)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Refugee, "WYR_MerchantsHouse_Event_RefugeeLeavingNotify");
+
+PROC
+PROC_ReadyToMoveOn(_Refugee, "WYR_MerchantsHouse_Event_RefugeeLeavingNotify")
+AND
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _Speed)
+THEN
+PROC_SetCanFight(_Refugee, 0);
+SetCanJoinCombat(_Refugee, 0);
+PROC_DisappearOutOfSight(_Refugee, _Speed, 0, "WYR_MerchantsHouse_Event_RefugeeLeft");
+
+IF
+EntityEvent((CHARACTER)_Refugee, "WYR_MerchantsHouse_Event_RefugeeLeft")
+AND
+DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _Speed)
+THEN
+NOT DB_WYR_MerchantsHouse_Refugees_AwaitingDisappearing(_Refugee, _Speed);
+
+// State progression
+IF
+FlagSet(WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8,_,_)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "RefugeesGone");
+
+IF
+FlagSet(WYR_MerchantsHouse_Refugees_State_Housed_0481d093-1539-1a06-b3b2-246270b82a12,_,_)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "RefugeesHoused");
+
+IF
+KilledBy(_Refugee,_PartyMember,_,_)
+AND
+DB_WYR_MerchantsHouse_Refugees(_Refugee)
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_State_ChasedOutKilled_24705492-064e-140d-2e4a-afecd6cdb7c9);
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned(_Character)
+AND
+DB_WYR_MerchantsHouse_Refugees(_Character)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Merchant: Base States
+IF
+FlagSet(WYR_MerchantsHouse_Merchant_State_Defeated_6c49ac2a-8e88-0c3d-588a-0fa3a82ae071,_,_)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone");
+
+IF
+FlagSet(WYR_MerchantsHouse_Merchant_State_Thanked_fe05329b-da0e-0d0b-6c18-4f29bc03ddf5,_,_)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantRewarded");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Merchant_Event_Die_592fd890-c8a8-0263-3ed1-ea9d087d9a7d,_,_Instance)
+AND
+DB_DialogPlayers(_Instance,_Player,1)
+THEN
+Die(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977,DEATHTYPE.Physical,(CHARACTER)_Player, 1, 0, 0.0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Merchant_Event_KnockOut_d268e780-32e4-5673-cc06-73c390875482,_,_Instance)
+AND
+DB_DialogPlayers(_Instance,_Player,1)
+THEN
+ApplyStatus(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "KNOCKED_OUT", -1.0, 1, _Player);
+
+// Gone
+PROC
+PROC_State_Changed(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", _, "MerchantGone")
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309);
+
+// Hostility
+IF
+RelationChanged(ACT3_WYR_MerchantsHouse_Merchant_44c05ca4-182c-4728-b143-8c417c7f2310, _TargetFaction, _Relation, _)
+AND
+_Relation < 50
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_Event_Hostility_6d08b67a-cb24-8d83-afbb-dff50da31dae)
+AND
+QRY_IsEnemy(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Player)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Merchant_Event_Hostility_6d08b67a-cb24-8d83-afbb-dff50da31dae);
+
+IF
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_Event_Hostility_6d08b67a-cb24-8d83-afbb-dff50da31dae)
+AND
+NOT DB_InteractiveDialogSpeaker(_, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT3_WYR_MerchantsHouse_Thugs_5b97f222-6ea5-487a-9354-8669c8e481fa, 0);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ThugsHostile_98c2a7bc-56b0-46b3-8136-7e4e89cec6c3);
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "Hostility");
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Merchant: Intimidated and leaves away
+// Leaves to Sharess Caress after being intimidated
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Merchant_State_Intimidated_74338e62-6273-1d74-5609-90c9eccdabcc, WYR_MerchantsHouse_Merchant_Conflict_05e817f3-88b4-9f0f-5548-c78801d51b55)
+AND
+NOT DB_Defeated(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone");
+PROC_NotifyWhenReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantToSharessCaress_Notify");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_MerchantsHouse_Merchant_State_Intimidated_74338e62-6273-1d74-5609-90c9eccdabcc, WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+NOT DB_Defeated(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone");
+PROC_NotifyWhenReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantToSharessCaress_Notify");
+
+PROC
+PROC_ReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantToSharessCaress_Notify")
+THEN
+PROC_DisappearOutOfSightTo(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, S_WYR_MerchantsHouse_Merchant_LeavePos_91526655-9762-45eb-bf77-b008cd29fb37, "Run", 0, "WYR_MerchantsHouse_Event_MerchantToSharessCaress");
+
+// Leaves to Prison
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_Event_ToPrison_fd34ea4a-fb0a-1f11-9bd5-ff66d0901c5f,_,_)
+THEN
+PROC_NotifyWhenReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantToPrison_Notify");
+
+PROC
+PROC_ReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantToPrison_Notify")
+THEN
+PROC_DisappearOutOfSightTo(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, S_WYR_MerchantsHouse_Merchant_LeavePos_91526655-9762-45eb-bf77-b008cd29fb37, "Run", 0, "WYR_MerchantsHouse_Event_MerchantToPrison");
+
+// Disappears forever after confessing about his crimes
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_Event_DisappearAfterConfession_a05ed7d5-c109-6ff9-2b19-0ace8d409bac)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone");
+PROC_NotifyWhenReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantDisappear_Notify");
+
+// disappears if the dialog was interrupted after confession was made
+IF
+DialogEnded((DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb, _)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_Event_DisappearAfterConfession_a05ed7d5-c109-6ff9-2b19-0ace8d409bac)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_Event_Die_592fd890-c8a8-0263-3ed1-ea9d087d9a7d)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_Event_KnockOut_d268e780-32e4-5673-cc06-73c390875482)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone");
+PROC_NotifyWhenReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantDisappear_Notify");
+
+PROC
+PROC_ReadyToMoveOn(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse_MerchantDisappear_Notify")
+AND
+DB_WYR_MerchantsHouse_LeaveTriggers(_LeavePos)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6);
+PROC_DisappearOutOfSightTo(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _LeavePos, "Sprint", 1, "WYR_MerchantsHouse_Event_MerchantLeft");
+
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6, _,_)
+AND
+DB_WYR_MerchantsHouse_LeaveTriggers(_LeavePos)
+THEN
+NOT DB_WYR_MerchantsHouse_LeaveTriggers(_LeavePos);
+DB_WYR_MerchantsHouse_LeaveTriggers(S_WYR_MerchantsHouse_Merchant_SharessLeavePos_9fbc16cd-861f-49bb-b0e0-8fe0ccc44a0f);
+
+PROC
+PROC_StateSet_PermaDefeated(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6);
+
+// Gives all his gold before running away for good
+// TODO: Change to the journal rewards
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_Event_GiveAllGold_e5c7e21e-0c67-423b-a71f-e7ed7cddb611, _Player, _)
+AND
+GetGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _GoldAmount)
+AND
+_GoldAmount > 0
+AND
+IntegerProduct(-1, _GoldAmount, _AntiGoldAmount)
+THEN
+AddGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _AntiGoldAmount);
+AddGold(_Player, _GoldAmount);
+
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_Event_GiveAccessPass_578361b0-57da-d41e-1bd4-8eebb5222440, _Player, _)
+AND
+IsInInventoryOf((ITEM)S_WYR_MerchantsHouse_CoronationAccessPass_b41b4a1c-f740-4798-9a00-170a9db4f034, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 1)
+THEN
+ToInventory(S_WYR_MerchantsHouse_CoronationAccessPass_b41b4a1c-f740-4798-9a00-170a9db4f034, _Player, 1, 1, 1);
+//END_REGION
+
+//REGION Merchant: teleports to Sharess Caress / Prison
+// Destination - To Sharess Caress
+IF
+EntityEvent(_, "WYR_MerchantsHouse_Event_MerchantToSharessCaress")
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_InPrison_e96b73b9-1e15-75f1-e61d-af9b713d6b25)
+AND
+NOT DB_WYR_MerchantsHouse_MerchantDestinationEvent(_,_,_,_)
+THEN
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(
+	(TRIGGER)S_WYR_SharessCaress_MerchantPos_d2547b3d-9525-4b66-9404-7d984704f4ef,
+	(FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6,
+	(TRIGGER)S_WYR_SharessCaress_SUB_07597ced-f3fe-45f8-bab6-13f0064b75bb,
+	(TRIGGER)S_WYR_Rivington_SUB_40c3661e-99a1-4189-aa69-c006e77e3db8);
+
+// Destination - To Prison
+IF
+EntityEvent(_, "WYR_MerchantsHouse_Event_MerchantToPrison")
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_InPrison_e96b73b9-1e15-75f1-e61d-af9b713d6b25)
+AND
+NOT DB_WYR_MerchantsHouse_MerchantDestinationEvent(_,_,_,_)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6);
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(
+	(TRIGGER)S_WYR_WyrmRockPrison_MerchantPos_cb54085d-6f26-4bcb-8907-e3dc32b03970,
+	(FLAG)WYR_MerchantsHouse_Merchant_State_InPrison_e96b73b9-1e15-75f1-e61d-af9b713d6b25,
+	(TRIGGER)S_WYR_Prison_SUB_cd67276d-52e4-44b9-a237-0e2cd45106d8,
+	(TRIGGER)S_WYR_Rivington_SUB_40c3661e-99a1-4189-aa69-c006e77e3db8);
+
+// Moving Merchant to a new destination
+IF
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(_Trigger, _, _SubregionTo, _SubregionFrom)
+THEN
+PROC_WYR_MerchantsHouse_TryMoveMerchantToDestination(_Trigger);
+
+IF
+LeftTrigger(_Player, _SubregionTo)
+AND
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(_Trigger, _, _SubregionTo, _SubregionFrom)
+THEN
+PROC_WYR_MerchantsHouse_TryMoveMerchantToDestination(_Trigger);
+
+PROC
+PROC_WYR_MerchantsHouse_TryMoveMerchantToDestination((TRIGGER)_Trigger)
+AND
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(_Trigger, _, _SubregionTo, _SubregionFrom)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTrigger(_SubregionTo)
+THEN
+PROC_WYR_MerchantsHouse_MoveMerchantToDestination(_Trigger);
+
+PROC
+PROC_WYR_MerchantsHouse_MoveMerchantToDestination((TRIGGER)_Trigger)
+AND
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(_Trigger, _Flag, _SubregionTo, _SubregionFrom)
+THEN
+NOT DB_WYR_MerchantsHouse_MerchantDestinationEvent(_Trigger, _Flag, _SubregionTo, _SubregionFrom);
+PROC_GlobalSetFlagAndCache(_Flag);
+PROC_CancelDisappearOutOfSight(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+TeleportTo(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Trigger);
+SetOnStage(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, 1);
+
+PROC
+PROC_WYR_MerchantsHouse_MoveMerchantToDestination(_)
+THEN
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "MerchantGone");
+
+// killing Arfur
+PROC
+PROC_WYR_MerchantsHouse_MoveMerchantToDestination((TRIGGER)S_WYR_WyrmRockPrison_MerchantPos_cb54085d-6f26-4bcb-8907-e3dc32b03970)
+AND
+GetEquippedWeapon(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Weapon)
+THEN
+Unequip((CHARACTER)S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Weapon);
+RequestDelete(_Weapon);
+
+PROC
+PROC_WYR_MerchantsHouse_MoveMerchantToDestination((TRIGGER)S_WYR_WyrmRockPrison_MerchantPos_cb54085d-6f26-4bcb-8907-e3dc32b03970)
+AND
+GetGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _GoldAmount)
+AND
+IntegerSubtract(0, _GoldAmount, _NegateAmount)
+THEN
+AddGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _NegateAmount);
+
+PROC
+PROC_WYR_MerchantsHouse_MoveMerchantToDestination((TRIGGER)S_WYR_WyrmRockPrison_MerchantPos_cb54085d-6f26-4bcb-8907-e3dc32b03970)
+THEN
+Die(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, DEATHTYPE.Physical, 0);
+//END_REGION
+
+//REGION Merchant: Fast-forwarding when goes to prison
+// housing refugees without talking to him if the player sends the merchant to prison and walks away
+IF
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(S_WYR_WyrmRockPrison_MerchantPos_cb54085d-6f26-4bcb-8907-e3dc32b03970,_,_,_)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Refugees_State_Housed_0481d093-1539-1a06-b3b2-246270b82a12)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_InRegion(_,(TRIGGER)S_WYR_Rivington_SUB_40c3661e-99a1-4189-aa69-c006e77e3db8)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Refugees_State_Housed_0481d093-1539-1a06-b3b2-246270b82a12);
+
+// also housing refugees if Arfur was intimidated
+IF
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_Intimidated_74338e62-6273-1d74-5609-90c9eccdabcc)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Refugees_State_Housed_0481d093-1539-1a06-b3b2-246270b82a12)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_InRegion(_,(TRIGGER)S_WYR_Rivington_SUB_40c3661e-99a1-4189-aa69-c006e77e3db8)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_MerchantsHouse_Refugees_State_Housed_0481d093-1539-1a06-b3b2-246270b82a12);
+
+// thugs also leave if they haven't already
+IF
+DB_WYR_MerchantsHouse_MerchantDestinationEvent(S_WYR_WyrmRockPrison_MerchantPos_cb54085d-6f26-4bcb-8907-e3dc32b03970,_,_,_)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+NOT DB_InRegion(_,(TRIGGER)S_WYR_Rivington_SUB_40c3661e-99a1-4189-aa69-c006e77e3db8)
+THEN
+PROC_WYR_MerchantsHouse_ThugsLeave();
+//END_REGION
+
+//REGION Merchant: returns to his house
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_State_Thanked_fe05329b-da0e-0d0b-6c18-4f29bc03ddf5,_,_)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14);
+
+// if the player chased out refugees but didn't talk to the merchant, and walked away, he moves inside his house
+IF
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_InRegion(_,(TRIGGER)S_WYR_Rivington_SUB_40c3661e-99a1-4189-aa69-c006e77e3db8)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+AND 
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14);
+
+// also returns if refugees was chased out by the thugs
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541,_,_)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+AND 
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14)
+THEN
+TimerLaunch("WYR_MerchantsHouse_Merchant_BackInHouseAfterChasing_Timer", 3000);
+
+IF
+TimerFinished("WYR_MerchantsHouse_Merchant_BackInHouseAfterChasing_Timer")
+AND
+NOT DB_Defeated(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14);
+
+// edge-case: when the player kills everyone but the merchant
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8,_,_)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsGone_eb05b8a4-44a1-4a0a-98aa-f70cea57b541)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_Refugees_8e235664-43aa-304d-1a1f-839214b598d6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+AND 
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14);
+
+// Clear at house if he leaves
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309,_,_)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14)
+THEN
+PROC_GlobalClearFlagAndCache(WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14);
+
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Refugees_State_ChasedOut_9aaac7f5-98b3-4b07-948c-eeb3159bcae8,_,_)
+THEN
+TriggerClearItemsOwner(S_WYR_MerchantsHouse_Ownership_167ae202-cb27-4028-86d2-3c5f17fa6da2); // refugees ownership
+
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14,_,_)
+THEN
+DB_ItemOwnerShipTriggers("BGO_Main_A", S_WYR_MerchantsHouse_Ownership_167ae202-cb27-4028-86d2-3c5f17fa6da2, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+DB_ItemOwnerShipTriggers("BGO_Main_A", S_WYR_MerchantsHouse_UpstairsOwnershipTrigger_021c995f-ec1a-481c-847e-cad8ba7240ff, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+DB_ItemOwnerShipTriggers("BGO_Main_A", S_WYR_MerchantsHouse_WorkshopOwnershipTrigger_8bb58550-e844-45d1-ae98-6cc7ac8e4b13, S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977);
+
+IF
+FlagCleared((FLAG)WYR_MerchantsHouse_Merchant_State_BackInHouse_15afb6fd-c114-408b-bca9-521f32454c14,_,_)
+THEN
+TriggerClearItemsOwner(S_WYR_MerchantsHouse_Ownership_167ae202-cb27-4028-86d2-3c5f17fa6da2);
+TriggerClearItemsOwner(S_WYR_MerchantsHouse_WorkshopOwnershipTrigger_8bb58550-e844-45d1-ae98-6cc7ac8e4b13);
+TriggerClearItemsOwner(S_WYR_MerchantsHouse_UpstairsOwnershipTrigger_021c995f-ec1a-481c-847e-cad8ba7240ff);
+//END_REGION
+
+//REGION Completing the quest
+IF
+FlagSet(WYR_MerchantsHouse_Merchant_Event_DisappearAfterConfession_a05ed7d5-c109-6ff9-2b19-0ace8d409bac,_,_)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_RefugeeCamp_State_BigBarnSolved_9dc06a8d-c8d6-3086-615a-6b77d2cf3fdb);
+
+IF
+FlagSet(WYR_MerchantsHouse_Merchant_State_InPrison_e96b73b9-1e15-75f1-e61d-af9b713d6b25,_,_)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_RefugeeCamp_State_BigBarnSolved_9dc06a8d-c8d6-3086-615a-6b77d2cf3fdb);
+//END_REGION
+
+//REGION Basement
+PROC
+PROC_BookFlags_FlagSet((ITEM)S_WYR_MerchantsHouse_BlackmailLetter_de06faf4-6d56-426b-abbc-e64f86de3951,(FLAG)WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3,(CHARACTER)_Player)
+THEN
+StartVoiceBark(WYR_MerchantsHouse_VB_FoundEvidence_124b15da-d26e-6f33-5532-97379ac0d78e,_Player);
+
+IF
+TemplateAddedTo(_Template, _, _Player, _)
+AND
+DB_WYR_MerchantsHouse_BasementToyRoots(_Template)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_InRegion(_Player, S_WYR_MerchantsHouse_Basement_SUB_61d236cb-269a-41b6-b381-1e4a7582bf23)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player, "WYR_MerchantsHouse_PickedToyVoiceBark")
+THEN
+StartVoiceBark(WYR_MerchantsHouse_VB_PickedBasementToy_fcededb8-0fe7-4dd8-1742-8daf56530f05, _Player);
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("WYR_MerchantsHouse_StealGold")
+AND
+GetHostCharacter(_Player)
+AND
+GetGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, _Gold)
+AND
+_Gold > 0
+AND
+IntegerSubtract(0,_Gold, _MinusGold)
+THEN
+AddGold(_Player, _Gold);
+AddGold(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977,_MinusGold);
+
+IF
+TextEvent("WYR_MerchantsHouse_ChaseOut")
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Knows_Refugees_8e235664-43aa-304d-1a1f-839214b598d6);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ChasingOutSuggested_0b5bffb8-4204-98e5-f27f-429c065c9d37);
+PROC_WYR_MerchantsHouse_RefugeesWalkChased();
+
+IF
+TextEvent("WYR_MerchantsHouse_ThugsChasingOut")
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Knows_Refugees_8e235664-43aa-304d-1a1f-839214b598d6);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_State_ThugsChasedOutRefuges_caec5b7a-b2a9-3cc6-595d-fc1bcf74521f);
+PROC_State_Progress(S_WYR_MerchantsHouse_Merchant_b2a50d09-709a-483c-9818-acebcff2b977, "WYR_MerchantsHouse", "ThugsChasingOut");
+
+IF
+TextEvent("WYR_MerchantsHouse_KnowsBasement")
+THEN
+PROC_WYR_MerchantsHouse_DebugKnowsBasement();
+
+PROC
+PROC_WYR_MerchantsHouse_DebugKnowsBasement()
+THEN
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Knows_Refugees_8e235664-43aa-304d-1a1f-839214b598d6);
+PROC_GlobalSetFlagAndCache(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3);
+//END_REGION
+
+//REGION Journal: Merchant and Big Barn
+IF
+DB_GlobalFlag((FLAG)WYR_RefugeeCamp_Knows_Donations_c0d6097c-eec0-c30d-05c0-a669c53aaa52)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+NOT DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+THEN
+QuestUpdate("WYR_Donations", "LearnedDonations");
+
+// knows Arfur, he is near his house
+IF
+FlagSet(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3,_,_)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundBlackmail_After");
+
+// knows Arfur, he-s in Sharess, player knows that
+IF
+FlagSet(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3,_,_)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundBlackmail_After");
+
+// knows Arfur, he-s in Sharess, player doesn-t knows that
+IF
+FlagSet(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3,_,_)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundBlackmail_After_SC");
+
+// doesnt know Arfur
+IF
+FlagSet(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3,_,_)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundBlackmail_After_DoesntKnow");
+
+// found toys and mail, but doesnt know Arfur
+IF
+FlagSet(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712,_,_)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+NOT DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundToys_DoesntKnow");
+
+// found toys and mail, knows Arfur, he-s reachable
+IF
+FlagSet(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712,_,_)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Merchant_ConflictHasMet_b4d61811-09bf-c6dd-9841-5d77a3164e51)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+THEN
+QuestUpdate("WYR_Donations", "FoundToys_Knows");
+
+// Found toys and mail, knows Arfur and where Arfur is
+IF
+FlagSet(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712,_,_)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundToys_Knows");
+
+// Found toys and mail, knows Arfur, he-s in Sharess Caress, player doesnt know
+IF
+FlagSet(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712,_,_)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "FoundToys_Knows_SC");
+
+// Arfur went to Sharess Caress while player needed to confront him
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6,_,_)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+THEN
+QuestUpdate("WYR_Donations", "Confront_WentToSC");
+
+// Mamzell Sharess Caress hint
+IF
+GameBookInterfaceClosed(S_WYR_MerchantsHouse_LetterToMamzell_24b5fe9a-e5fb-4d61-96d0-ee4af43b4c96, _Player)
+AND
+DB_Players(_Player)
+THEN
+DB_WYR_MerchantsHouse_ReadMamzellLetter(1);
+
+IF
+DB_WYR_MerchantsHouse_ReadMamzellLetter(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(_OnFireworksObjective)
+AND
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps(_FindUpdate, _KnowsInSCUpdate, _OnFireworksObjective)
+AND
+QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", _FindUpdate)
+THEN
+QuestUpdate("WYR_Donations", _KnowsInSCUpdate);
+
+IF
+QuestUpdateUnlocked(_, "WYR_Donations", _FindUpdate)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(_OnFireworksObjective)
+AND
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps(_FindUpdate, _KnowsInSCUpdate, _OnFireworksObjective)
+AND
+DB_WYR_MerchantsHouse_ReadMamzellLetter(1)
+THEN
+QuestUpdate("WYR_Donations", _KnowsInSCUpdate);
+
+// Seeing Arfur in Sharess Caress before defeating the Banites
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d,_,_)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_FindArfurObjectiveSteps(_FindUpdate, _, 0)
+AND
+QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", _FindUpdate)
+THEN
+QuestUpdate("WYR_Donations", "FoundInSC");
+
+// Seeing Arfur in Sharess Caress after defeating the Banites
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d,_,_)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+THEN
+QuestUpdate("WYR_Donations", "FoundInSC_After");
+//END_REGION
+
+//REGION Journal: Arfurs confession
+// Arfur unreachable
+IF
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+NOT DB_GlobalFlag(LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e)
+AND
+NOT DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", "BanitesAttacked")
+THEN
+QuestUpdate("WYR_Donations", "ArfurUnreachable");
+
+// Learning password from Arfur after interrogating him
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb)
+AND
+NOT DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", "BanitesAttacked")
+THEN
+QuestUpdate("WYR_Donations", "LearnedPassword_ArfurConfessed");
+
+// from SwD
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e, (DIALOGRESOURCE)WYR_MerchantsHouse_Merchant_Dead_99670fe2-39ba-fe87-0b99-46ffbe00a75e)
+THEN
+QuestUpdate("WYR_Donations", "LearnedPassword");
+
+// Intimidated Arfur, but didn't get password and directions to the Fireworks House
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_Merchant_Event_DisappearAfterConfession_a05ed7d5-c109-6ff9-2b19-0ace8d409bac)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+NOT DB_GlobalFlag(LOW_FireworksHouse_Knows_GortashBehind_2aece2e5-2a24-4e5b-a67f-670fb4173c76)
+AND
+NOT DB_GlobalFlag(LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e)
+AND
+NOT DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", "BanitesAttacked")
+THEN
+QuestUpdate("WYR_Donations", "ConfessedNoPassword");
+
+// Intimidated Arfur, but since the player had GortashBehind flag set, Arfur didn't reveal the password
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+DB_GlobalFlag(LOW_FireworksHouse_State_EverEnteredBefore_6cbdebba-535e-4b49-b501-2d17e2ad2461)
+AND
+DB_GlobalFlag((FLAG)LOW_FireworksHouse_Knows_GortashBehind_2aece2e5-2a24-4e5b-a67f-670fb4173c76) // this is the flag that allows this flow in the dialog to skip password
+AND
+NOT DB_GlobalFlag(LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e)
+AND
+NOT DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", "BanitesAttacked")
+THEN
+QuestUpdate("WYR_Donations", "ConfessedAfterFireworks");
+
+// variation if the banites are already hostile, but not yet defeated
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+DB_GlobalFlag(LOW_FireworksHouse_State_EverEnteredBefore_6cbdebba-535e-4b49-b501-2d17e2ad2461)
+AND
+NOT DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", "BanitesAttacked")
+THEN
+QuestUpdate("WYR_Donations", "ConfessedAfterFireworks_Defeat");
+//END_REGION
+
+//REGION Journal: Fireworks House
+IF
+QuestUpdateUnlocked(_, "WYR_Donations", _QuestUpdate)
+AND
+DB_WYR_MerchantsHouse_InvestigateObjectiveSteps(_QuestUpdate)
+THEN
+NOT DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(0);
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1);
+
+// We switch to the Fireworks flow if the player left Arfur without resolution and moved to Lower City. Arfur will be dealt with later on.
+IF
+EnteredTrigger(_Player, S_LOW_FireworksHouse_SUB_61e0aab9-16a2-44c7-b063-e789899baa2c)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+NOT DB_GlobalFlag(LOW_FireworksHouse_Knows_Password_dcf4bb90-caf1-079f-d9bb-c51c3463b79e)
+AND
+NOT DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+THEN
+QuestUpdate("WYR_Donations", "EnteredFireworksFoundBlackmail");
+
+// Updates after mind-melding with Avery at the shop
+IF
+DB_GlobalFlag((FLAG)LOW_FireworksHouse_Knows_GortashBehind_2aece2e5-2a24-4e5b-a67f-670fb4173c76)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+NOT DB_LOW_FireworksHouse_BanitesHostile(1)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_Donations", "ReachedTopFloor")
+THEN
+QuestUpdate("WYR_Donations", "LearnedGortashBehind");
+
+// Defeat the banites objective
+// Entered top floor
+IF
+DB_InRegion(_Player, (TRIGGER)S_LOW_FireworksHouse_SecureAreaTrigger_7073ae40-7fce-4999-aaa9-ca71166cf4cd)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+THEN
+QuestUpdate("WYR_Donations", "ReachedTopFloor");
+
+// BanitesAttacked
+IF
+DB_LOW_FireworksHouse_BanitesHostile(1)
+AND
+DB_GlobalFlag(LOW_FireworksHouse_Knows_GortashBehind_2aece2e5-2a24-4e5b-a67f-670fb4173c76)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+THEN
+QuestUpdate("WYR_Donations", "BanitesAttacked");
+
+IF
+DB_LOW_FireworksHouse_BanitesHostile(1)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+DB_InRegion(_Player, (TRIGGER)S_LOW_FireworksHouse_SecureAreaTrigger_7073ae40-7fce-4999-aaa9-ca71166cf4cd)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_GlobalFlag(LOW_FireworksHouse_Knows_GortashBehind_2aece2e5-2a24-4e5b-a67f-670fb4173c76)
+THEN
+QuestUpdate("WYR_Donations", "BanitesAttacked");
+
+// BanitesDefeated (after Arfur confessed)
+IF
+DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+GetFlag((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044, NULL_00000000-0000-0000-0000-000000000000, 1)
+THEN
+QuestUpdate("WYR_Donations", "BanitesDefeated");
+
+IF
+DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+QRY_WYR_MerchantsHouse_Journal_KnowsWhereMerchant()
+THEN
+QuestUpdate("WYR_Donations", "BanitesDefeated_BeforeArfur");
+
+IF
+DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+AND
+DB_WYR_MerchantsHouse_Journal_OnFireworksObjecitve(1)
+AND
+DB_WYR_MerchantsHouse_Journal_PatchReEvaluate(1)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+AND
+NOT QRY_WYR_MerchantsHouse_Journal_KnowsWhereMerchant()
+THEN
+QuestUpdate("WYR_Donations", "BanitesDefeated_BeforeArfur_DoesntKnow");
+
+// Closing quest after defeating Arfur and dealing with Banites
+IF
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_PermaDefeated_9c5cdc84-7fa5-8499-dc3b-63df44288d3c)
+AND
+DB_GlobalFlag(WYR_RefugeeCamp_State_FoundTrappedToys_c132806f-00ab-955d-9338-348663af1712)
+AND
+DB_GlobalFlag(WYR_MerchantsHouse_Knows_SecretInBasement_8f53ab96-0dff-ec9e-d9e8-30620e8733d3)
+AND
+DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+THEN
+QuestUpdate("WYR_Donations", "DealtArfur_AfterFireworks_NoConfession");
+
+// making him confess 
+IF
+FlagSet(WYR_MerchantsHouse_State_MerchantConfessed_b9c702f4-ed9c-4fe5-0250-8bd96d21a044,_,_)
+AND
+DB_LOW_FireworksHouse_BanitesPermaDefeated(1)
+THEN
+QuestUpdate("WYR_Donations", "ArfurConfessed_AfterFireworks");
+
+// Helpers
+QRY
+QRY_WYR_MerchantsHouse_Journal_KnowsWhereMerchant()
+AND
+NOT DB_PermaDefeated(WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_GoneFromHouse_5e40419b-d67c-4bde-8b91-bdace8bad309)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WYR_MerchantsHouse_Journal_KnowsWhereMerchant()
+AND
+NOT DB_PermaDefeated(WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Knows_InSharessCaress_e7b92dab-47c2-f78a-1121-f18f3e6a534d)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WYR_MerchantsHouse_Journal_KnowsWhereMerchant()
+AND
+NOT DB_PermaDefeated(WYR_MerchantsHouse_Merchant_90252ba6-d583-c79d-f60d-211a72e496bb)
+AND
+DB_GlobalFlag((FLAG)WYR_MerchantsHouse_Merchant_State_InSharessCaress_0705f4a6-48c2-afbd-8e4c-a4cf1d2c09e6)
+AND
+DB_WYR_MerchantsHouse_ReadMamzellLetter(1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Hidden Boosters
+IF
+FlagSet((FLAG)WYR_MerchantsHouse_Merchant_Event_GiveReward_0b156e28-688b-98a1-f63f-03c8f79a0ae7, _Player, _)
+THEN
+QuestUpdate((CHARACTER)_Player, "HIDDEN_BGO_Boosters", "WYR_MerchantsHouse_ChasingOut");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

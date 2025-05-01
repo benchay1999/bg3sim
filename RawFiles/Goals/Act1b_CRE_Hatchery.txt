@@ -1,0 +1,402 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, (DIALOGRESOURCE)CRE_Hatchery_Caretaker_727f8bb8-43ce-7be7-015f-f5bada2df6c9);
+DB_Dialogs((CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, (DIALOGRESOURCE)CRE_Hatchery_Guard_3d81138d-7ed9-44b0-fea6-dfcb4c80257a);
+DB_Dialogs((CHARACTER)S_CRE_CrecheGuard06_09a52fd9-ff83-4594-857a-a1ab0b296dc6, (DIALOGRESOURCE)CRE_CrecheGuard06_1ec35ed0-b3f0-4cf2-f6c7-edf7a82127f4);
+
+//Caretaker spotting init
+DB_SpotPlayers((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_Continuous((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery");
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery", (TRIGGER)S_CRE_HatcherySpottingArea_36e17642-92ad-4c4a-8e63-2544370f0e36);
+
+//Guard spotting init
+DB_SpotPlayers((CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, "CRE_Hatchery", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_Continuous((CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, "CRE_Hatchery");
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, "CRE_Hatchery", (TRIGGER)S_CRE_TeleTrapSpotting_1c6dff7a-fd1f-43d1-8b4d-093dba157624);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, "CRE_Hatchery", (TRIGGER)S_CRE_TeleTrapSpotting_02_34e3ed19-02ae-483c-b408-9f1cf2e7108a);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_HatcheryHostile_aa0390d1-0b30-400e-936d-7b5bc21ee03c, (DIALOGRESOURCE)CRE_Hatchery_Caretaker_727f8bb8-43ce-7be7-015f-f5bada2df6c9);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_HatcheryHostile_aa0390d1-0b30-400e-936d-7b5bc21ee03c, (DIALOGRESOURCE)CRE_Hatchery_TouchWarning_b3ac97a4-4a70-5d0d-eb0c-f3fdb49cb893);
+
+DB_GiveTemplateFromNpcToPlayerDialogEvent((ROOT)UNI_CRE_HatcheryBoots_3462aa18-bb93-403c-b28d-9841c147787f, (FLAG)CRE_Hatchery_GivesBoots_e1faea76-a2fd-a691-9755-4ce2cc7131bd, NULL_00000000-0000-0000-0000-000000000000, 1);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c, (DIALOGRESOURCE)CRE_Hatchery_Caretaker_727f8bb8-43ce-7be7-015f-f5bada2df6c9);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_EggTaken_4c9e4678-7e7f-4677-b7ff-164e00b16a1a, (DIALOGRESOURCE)CRE_Hatchery_Egg_d892f1b6-ef55-5582-1f22-4f6288ceadc8);
+DB_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_EggDestroyed_b4b6244e-2c61-479b-95ef-8238dfee3e22, (DIALOGRESOURCE)CRE_Hatchery_Egg_d892f1b6-ef55-5582-1f22-4f6288ceadc8);
+
+//ToDo: Replace with a new Gas Cloud that applies the statuses systemically
+PROC_TriggerRegisterForPlayers((TRIGGER)S_CRE_PlaceholderGasArea_e5f71d56-5104-4e2c-9c0b-08b615ae9ddf);
+
+DB_PartyProgress_Trigger((TRIGGER)S_CRE_EnteredHatcheryArea_2daf0b5d-e260-42e3-8b7a-4284090cd642, (FLAG)CRE_Hatchery_State_EnteredHatchery_6b9f504c-da7f-47ec-a5ef-73034c2e8fd7);
+
+DB_BlockPickupOfGithyankiEgg(1);
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes("CRE_Hatchery_Egg_Vandalise");
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes("CRE_Hatchery_Egg_UseForbiddenItem");
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes("CRE_Hatchery_Egg_Destroy");
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes("CRE_Hatchery_Egg_Steal");
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes("CRE_Hatchery_Egg_MoveForbiddenItem");
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes("SneakMurder");
+
+//Journal
+DB_QuestDef_State((FLAG)CRE_Expeditioner_State_QuestAccepted_7c1d9732-40f6-435d-aa3a-07eada80f542, "CRE_Hatchery", "AcceptedQuestFromEsther");
+
+DB_QuestDef_State((FLAG)CRE_Expeditioner_State_PaidUpfront_4be559ba-ff29-4bbb-9649-79aab38454e0, "CRE_Hatchery", "PaidUpfront");
+
+DB_QuestDef_State((FLAG)CRE_Hatchery_State_EnteredHatchery_6b9f504c-da7f-47ec-a5ef-73034c2e8fd7, "CRE_Hatchery", "ApproachedEgg");
+DB_QuestDef_State((FLAG)CRE_Hatchery_State_EggTaken_4c9e4678-7e7f-4677-b7ff-164e00b16a1a, "CRE_Hatchery", "AcquiredEgg");
+DB_QuestDef_State((FLAG)CRE_Hatchery_State_EggDestroyed_b4b6244e-2c61-479b-95ef-8238dfee3e22, "CRE_Hatchery", "DestroyedEgg");
+DB_QuestDef_State((FLAG)CRE_Hatchery_State_EggKicked_4cd3d2a8-db6e-4f20-b80e-b49ac2066c43, "CRE_Hatchery", "KickedEgg");
+
+DB_QuestDef_PermaDefeatedState("CRE_Hatchery", "LadyEstherDefeated", S_GLO_Expeditioner_5f4048ba-72ef-43c2-9528-1c9a12f3f82f);
+
+SetOwner((ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, (CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224);
+
+//REGION Combat AD
+DB_CombatReact_AD_OnTurn(S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, CRE_Hatchery_AD_CaretakerCombat_3842ac4b-a710-6a12-48ba-57b4d892f584, 1);
+//END_REGION
+KBSECTION
+//REGION Debug commands
+IF
+TextEvent("cre_hatcherycombat")
+THEN
+PROC_CRE_Hatchery_CombatStarts();
+
+//END_REGION
+
+//REGION Voicebarks
+
+IF
+DB_GlobalFlag((FLAG)CRE_Hatchery_State_EnteredHatchery_6b9f504c-da7f-47ec-a5ef-73034c2e8fd7)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("CRE_Hatchery_EnteredHatcheryVB")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)CRE_Hatchery_VB_HatcheryComment_74693886-7199-38f1-bea3-325a6e2d4ddd, _Player);
+
+IF
+StatusApplied((CHARACTER)_Player, "CRE_HATCHERY_ACIDPOOL", _, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("CRE_Hatchery_EnteredHatcheryVB")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)CRE_Hatchery_VB_EnteredGas_04df5f38-cec1-3e48-b1bb-ff974272d6b0, _Player);
+//END_REGION
+
+//REGION Egg interactions
+//ToDo: If the dialog fails to start, the egg will be picked up. Add proper reactivity for that.
+//ToDo: Replace blocking pickup with a custom crime. Might need blocking pickup in addition to that.
+PROC
+PROC_BlockPickupOfItem(_Player,(ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94)
+AND
+DB_BlockPickupOfGithyankiEgg(1)
+AND
+DB_Players(_Player)
+AND
+NOT DB_SpotPlayers_Spotted((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery", _Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRE_Hatchery_Egg_d892f1b6-ef55-5582-1f22-4f6288ceadc8, S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _Player)
+THEN
+DB_CustomPickupItemResponse(_Player,(ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,0);
+
+//Egg dialog cannot start if the players tries to do it while the caretaker is spotting them
+PROC
+PROC_BlockPickupOfItem(_Player,(ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94)
+AND
+DB_BlockPickupOfGithyankiEgg(1)
+AND
+DB_Players(_Player)
+AND
+DB_SpotPlayers_Spotted((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery", _Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRE_Hatchery_TouchWarning_b3ac97a4-4a70-5d0d-eb0c-f3fdb49cb893, S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, _Player)
+THEN
+DB_CustomPickupItemResponse(_Player,(ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,0);
+
+//If the caretaker has not cleared you to take the egg, we register a crime.
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_EggTaken_4c9e4678-7e7f-4677-b7ff-164e00b16a1a, _, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND 
+NOT DB_GlobalFlag((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c)
+THEN
+NOT DB_BlockPickupOfGithyankiEgg(1);
+Pickup((CHARACTER) _Player,(ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, "", 1);
+PROC_CharacterRegisterCrime((CHARACTER)_Player,"Steal",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224,0);
+
+//Replace crime dialog with his new dialog if it's egg-related.
+QRY
+QRY_CrimeGetCustomInterrogationDialog(_, _CrimeID,(CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224,_Player,_,_,_,_)
+AND
+CrimeHasEvidence(_CrimeID,S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,1)
+AND
+CrimeGetType(_CrimeID,_CrimeType)
+AND
+DB_CRE_Hatchery_WhitelistedInterrogationCrimes(_CrimeFamily)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,_CrimeFamily)
+THEN
+DB_CrimeInterrogationDialog((DIALOGRESOURCE)CRE_Hatchery_Caretaker_727f8bb8-43ce-7be7-015f-f5bada2df6c9);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_EggTaken_4c9e4678-7e7f-4677-b7ff-164e00b16a1a, _, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+DB_GlobalFlag((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c)
+THEN
+NOT DB_BlockPickupOfGithyankiEgg(1);
+Pickup((CHARACTER) _Player,(ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, "", 1);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_EggDestroyed_b4b6244e-2c61-479b-95ef-8238dfee3e22, _, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+THEN
+Die(S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, DEATHTYPE.Physical, _Player, 0, 0, 1.0);
+PROC_CharacterRegisterCrime((CHARACTER)_Player,"CRE_Hatchery_Egg_SneakMurder",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224,0);
+
+IF
+DestroyedBy((ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_Hatchery_State_EggDestroyed_b4b6244e-2c61-479b-95ef-8238dfee3e22) //If the egg is destroyed in gameplay, the flag should still be set
+THEN
+SetFlag((FLAG)CRE_Hatchery_State_EggDestroyed_b4b6244e-2c61-479b-95ef-8238dfee3e22);
+
+IF
+MovedBy((ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _)
+AND
+DB_BlockPickupOfGithyankiEgg(1)
+THEN
+NOT DB_BlockPickupOfGithyankiEgg(1);
+
+//END_REGION
+
+//REGION Spotting
+//Spotting is stopped if the caretaker is convinced to let the player have the egg
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery", (CHARACTER)_Player)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)CRE_Hatchery_Egg_d892f1b6-ef55-5582-1f22-4f6288ceadc8, _) //A different dialog plays if the player is spotted while already interacting with the egg
+AND
+NOT DB_CRE_Hatchery_EggDialogInterrupted(_) //Added for the frames between PROC_ForceStopSpecificDialog stopping the egg dialog and the TouchWarning dialog triggering in the rule below
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224)
+AND
+QRY_OnlyOnce("CRE_Hatchery_SpottedNearEgg")
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_Hatchery_NearEggWarning_70418f62-cc9b-3f68-a210-4d2a252c233f, (CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, _Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery", (CHARACTER)_Player)
+AND
+DB_DialogName((DIALOGRESOURCE)CRE_Hatchery_Egg_d892f1b6-ef55-5582-1f22-4f6288ceadc8, _) //If this dialog is ongoing, it gets interrupted
+THEN
+PROC_ForceStopSpecificDialog(_Player, (DIALOGRESOURCE)CRE_Hatchery_Egg_d892f1b6-ef55-5582-1f22-4f6288ceadc8);
+DB_CRE_Hatchery_EggDialogInterrupted(_Player);
+
+IF
+DB_CRE_Hatchery_EggDialogInterrupted(_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+QRY_SpeakerIsAvailable(S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRE_Hatchery_TouchWarning_b3ac97a4-4a70-5d0d-eb0c-f3fdb49cb893, S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, _Player)
+THEN
+DB_OnlyOnce("CRE_Hatchery_SpottedNearEgg"); //Prevents the NearEggWarning from playing in the rule above if this one plays. This one can play more than once.
+//END_REGION
+
+//REGION Guard Spotting
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2, "CRE_Hatchery", (CHARACTER)_Player)
+AND 
+NOT DB_GlobalFlag((FLAG)CRE_Hatchery_HasTriggeredTeleTrap_cf0986aa-da02-e8f0-cc94-a2274da422ff)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)CRE_Hatchery_AD_TeletrapTriggered_e136fcf5-7928-a7d7-a557-ebf32e9b02a8,(CHARACTER)S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)CRE_Hatchery_AD_TeletrapTriggered_e136fcf5-7928-a7d7-a557-ebf32e9b02a8, _ID)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224);
+
+//END_REGION
+
+//REGION Custom Crime implementation to extend the Caretaker's vision.
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,_CrimeType,S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)_Victim, _)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Vandalise")
+AND
+_CrimeType != "CRE_Hatchery_Egg_Vandalise"
+AND
+GetPosition(S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z)
+THEN
+PROC_CharacterRegisterCrimeWithPosition((CHARACTER)_Char, "CRE_Hatchery_Egg_Vandalise",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z,(CHARACTER) _Victim,0);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,_CrimeType,S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)_Victim, _)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"UseForbiddenItem")
+AND
+_CrimeType != "CRE_Hatchery_Egg_UseForbiddenItem"
+AND
+GetPosition(S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z)
+THEN
+PROC_CharacterRegisterCrimeWithPosition((CHARACTER)_Char, "CRE_Hatchery_Egg_UseForbiddenItem",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z,(CHARACTER) _Victim,0);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,_CrimeType,S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)_Victim, _)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"ItemDestroy")
+AND
+_CrimeType != "CRE_Hatchery_Egg_Destroy"
+AND
+GetPosition(S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z)
+THEN
+PROC_CharacterRegisterCrimeWithPosition((CHARACTER)_Char, "CRE_Hatchery_Egg_Destroy",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z,(CHARACTER) _Victim,0);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,_CrimeType,S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)_Victim, _)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Steal")
+AND
+_CrimeType != "CRE_Hatchery_Egg_Steal"
+AND
+GetPosition(S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z)
+THEN
+PROC_CharacterRegisterCrimeWithPosition((CHARACTER)_Char, "CRE_Hatchery_Egg_Steal",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z,(CHARACTER) _Victim,0);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,_CrimeType,S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94,(CHARACTER)_Victim, _)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"MoveForbiddenItem")
+AND
+_CrimeType != "CRE_Hatchery_Egg_MoveForbiddenItem"
+AND
+GetPosition(S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z)
+THEN
+PROC_CharacterRegisterCrimeWithPosition((CHARACTER)_Char, "CRE_Hatchery_Egg_MoveForbiddenItem",S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94, _X, _Y, _Z,(CHARACTER) _Victim,0);
+
+//END_REGION
+
+//REGION Outcomes
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_HatcheryHostile_aa0390d1-0b30-400e-936d-7b5bc21ee03c)
+THEN
+PROC_CRE_Hatchery_CombatStarts();
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)CRE_Hatchery_AD_TeletrapTriggered_e136fcf5-7928-a7d7-a557-ebf32e9b02a8,_ID)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c)
+THEN
+PROC_CRE_Hatchery_CombatStarts();
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)CRE_Hatchery_AD_TeletrapTriggered_e136fcf5-7928-a7d7-a557-ebf32e9b02a8,_ID)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c)
+THEN
+PROC_CRE_Hatchery_CombatStarts();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224,"CRE_Hatchery");
+ClearOwnership((ITEM)S_CRE_GithyankiEgg_999b6dd7-2901-4604-8280-1931a5217a94);
+SetEntityEvent((ITEM)S_CRE_Hatchery_Helper_03baa85d-7b1c-4029-bfa6-55bb6666f0ca,"CRE_HatcheryFriendly",1);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CRE_Hatchery_State_HatcheryFriendly_38d0ed5f-0b92-4a44-8332-ae5736dab58c)
+THEN
+PROC_PeacefulResolve(S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224);
+PROC_PeacefulResolve(S_CRE_CrecheGuard03_245be20a-c140-48b8-bea7-9ff44d9606b2);
+PROC_PeacefulResolve(S_CRE_CrecheGuard06_09a52fd9-ff83-4594-857a-a1ab0b296dc6);
+//END_REGION
+
+//REGION Combat
+PROC
+PROC_CRE_Hatchery_CombatStarts()
+THEN
+PROC_SetRelationToPlayers((FACTION)Act1B_CRE_Gith_Hatchery_fead05db-8b13-4083-8c94-db015a8b61b4, 0);
+
+IF
+EnteredCombat((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, _)
+AND
+QRY_OnlyOnce("CRE_Hatchery_CaretakerFightStarts")
+THEN
+RealtimeObjectTimerLaunch(S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "CRE_Hatchery_CaretakerEntersCombat", 600); //Added since the AD line does not play otherwise, probably due to combat starting at the same time
+
+IF
+ObjectTimerFinished(_Caretaker, "CRE_Hatchery_CaretakerEntersCombat")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)CRE_Hatchery_AD_CaretakerEnterCombat_8dbc944f-2377-754d-4f83-7f6950a1a7d3, _Caretaker);
+
+//END_REGION
+
+//REGION Hatchery Boots
+IF
+TemplateRemovedFrom((ROOT)UNI_CRE_HatcheryBoots_3462aa18-bb93-403c-b28d-9841c147787f, _, S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224)
+THEN
+CharacterGiveEquipmentSet((CHARACTER)S_CRE_Caretaker_c61ac08e-addf-4f0e-8a0a-2fc026ec0224, "EQP_Shortsword_Robe_Gith");
+//END_REGION
+
+//REGION Journal
+//Delivering the gith egg 
+//The player has convinced the expeditioner to pay upfront
+IF
+DB_GlobalFlag((FLAG)CRE_Expeditioner_State_GithyankiEggDelivered_10fc6465-656e-4f7a-a769-19bada4280d6)
+AND
+DB_GlobalFlag((FLAG)CRE_Expeditioner_State_PaidUpfront_4be559ba-ff29-4bbb-9649-79aab38454e0)
+THEN
+QuestUpdate("CRE_Hatchery", "GaveGithyankiEgg_PaidUpfront");
+
+//The player gets paid on delivery
+IF
+DB_GlobalFlag((FLAG)CRE_Expeditioner_State_GithyankiEggDelivered_10fc6465-656e-4f7a-a769-19bada4280d6)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_Expeditioner_State_PaidUpfront_4be559ba-ff29-4bbb-9649-79aab38454e0)
+THEN
+QuestUpdate("CRE_Hatchery", "GaveGithyankiEgg");
+
+//Tricking the expeditioner with the owlbear egg
+//The player has convinced the expeditioner to pay upfront
+IF
+DB_GlobalFlag((FLAG)CRE_Expeditioner_State_OwlbearEggGiven_b186c6ae-2822-79ef-5541-dbf3a2256c9c)
+AND
+DB_GlobalFlag((FLAG)CRE_Expeditioner_State_PaidUpfront_4be559ba-ff29-4bbb-9649-79aab38454e0)
+THEN
+QuestUpdate("CRE_Hatchery", "GaveOwlBearEgg_PaidUpfront");
+
+//Tricking the expeditioner with the owlbear egg
+//The player gets paid on delivery
+IF
+DB_GlobalFlag((FLAG)CRE_Expeditioner_State_OwlbearEggGiven_b186c6ae-2822-79ef-5541-dbf3a2256c9c)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_Expeditioner_State_PaidUpfront_4be559ba-ff29-4bbb-9649-79aab38454e0)
+THEN
+QuestUpdate("CRE_Hatchery", "GaveOwlBearEgg");
+
+//Close quest if player reaches point of no return
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+AND
+NOT DB_QuestIsClosed("CRE_Hatchery")
+THEN
+QuestClose("CRE_Hatchery");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1b"

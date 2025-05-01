@@ -1,0 +1,71 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_RelationshipDialog_WRD_TriggerInCamp((DIALOGRESOURCE)Minthara_InParty_13d72d55-0d47-c280-9e9c-da076d8876d8, (FLAG)ORI_Minthara_IPRD_OrinKilled_810bbd82-7ea4-36f3-a670-cfbad2c6bd93);
+TriggerRegisterForCharacter((TRIGGER)S_ORI_Minthara_OrinApproach_0398595e-1dd0-4d7c-9135-55d8978100b8, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+KBSECTION
+//REGION Trigger WRDs
+IF
+EnteredTrigger((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (TRIGGER)S_ORI_Minthara_OrinApproach_0398595e-1dd0-4d7c-9135-55d8978100b8)
+AND
+DB_Avatars(_Avatar)
+AND
+DB_ORI_Partnered(_Avatar, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+GetApprovalRating((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, _Avatar, _ApprovalRating)
+AND
+_ApprovalRating >= 40
+THEN
+PROC_RelationshipDialog((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)Minthara_InParty_13d72d55-0d47-c280-9e9c-da076d8876d8, (FLAG)ORI_Minthara_IPRD_GiftOfVengeance_a70bf2ee-fac1-6f58-233e-828934fd22fc, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 0);
+
+IF
+FlagSet((FLAG)LOW_BaldursMouth_Event_BoughtPaper_8ae9c432-8eb0-4959-bf42-3962e745853e, _, _)
+AND
+DB_GlobalFlag((FLAG)ORI_Minthara_State_IsInParty_766b8981-eb17-3ec5-5d30-2626509c550f)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)Minthara_InParty_13d72d55-0d47-c280-9e9c-da076d8876d8, (FLAG)ORI_Minthara_IPRD_BaldursMouthPropoganda_7d8709bf-11a6-aca8-dbeb-0f03368ab9e9, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 0);
+
+IF
+FlagSet((FLAG)GLO_Orin_State_PermaDefeated_c716e4d9-e6ed-445c-a710-ee4d91c67298, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BhaalTemple_State_WasAbductedMinthara_d1e51161-8462-4333-8676-74b4d0384054)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)Minthara_InParty_13d72d55-0d47-c280-9e9c-da076d8876d8, (FLAG)ORI_Minthara_IPRD_OrinKilled_810bbd82-7ea4-36f3-a670-cfbad2c6bd93, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 0);
+
+IF
+TeleportedToCamp((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_PartOfTheTeam((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+DB_GlobalFlag((FLAG)LOW_BhaalTemple_State_WasAbductedMinthara_d1e51161-8462-4333-8676-74b4d0384054)
+AND
+DB_GlobalFlag((FLAG)GLO_Orin_State_PermaDefeated_c716e4d9-e6ed-445c-a710-ee4d91c67298)
+AND
+GetFlag((FLAG)ORI_Minthara_HsaMet_OrinDead_5ef57435-1e50-05f0-ddc9-e084331251b2, _Player, 0)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)Minthara_InParty_13d72d55-0d47-c280-9e9c-da076d8876d8, (FLAG)ORI_Minthara_IPRD_OrinKilled_810bbd82-7ea4-36f3-a670-cfbad2c6bd93, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 0);
+//END_REGION
+
+
+//REGION AD Flags
+PROC
+PROC_FlagReactionAfterDialog((DIALOGRESOURCE)LOW_MurderTribunal_Sarevok_BloodBaptism_c109fe2f-290c-ec28-9894-4a86ce153ab1, (FLAG)LOW_BhaalTemple_Knows_TempleIsBhaalTemple_b1525a1c-829e-4c05-bc39-c161e30ac235)
+THEN
+PROC_TryStartAD(LOW_BhaalTemple_Knows_TempleIsBhaalTemple_b1525a1c-829e-4c05-bc39-c161e30ac235, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+
+PROC
+PROC_FlagReactionAfterDialog((DIALOGRESOURCE)LOW_HouseOfGrief_ViconiaMapping_81568711-7b8f-d188-ee16-e9436c7b009f, (FLAG)LOW_HouseOfGrief_Event_OpenSecretDoor_88a7aecb-095e-4a4e-aed4-8a0e6d04bd02)
+THEN
+PROC_TryStartAD(LOW_HouseOfGrief_Event_OpenSecretDoor_88a7aecb-095e-4a4e-aed4-8a0e6d04bd02, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+
+PROC
+PROC_FlagReactionAfterDialog((DIALOGRESOURCE)WYR_South_Primary_f03a1685-b148-b70e-b773-b62404525308, (FLAG)WYR_South_State_AccessGranted_3339af4f-3214-4d10-aaab-3d3511b9ab74)
+THEN
+PROC_TryStartAD(WYR_South_State_AccessGranted_3339af4f-3214-4d10-aaab-3d3511b9ab74, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

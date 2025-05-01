@@ -1,0 +1,114 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//Que relation dialog if the Companion is not a player, i.e. in camp
+
+IF
+FlagSet(_PartnerFlag, _Avatar, _)
+AND
+DB_CompanionCanPartner(_Companion2, _DatingFlag, _PartnerFlag, _, _, _, _)
+AND
+DB_ORI_Dating((CHARACTER)_Avatar, _Companion)
+AND
+NOT DB_ORI_Partnered(_Avatar, _Companion)
+AND
+_Companion != _Companion2
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+AND
+NOT DB_Players(_Companion)
+THEN
+PROC_RelationshipDialog((CHARACTER)_Companion, _Dialog, (FLAG)GLO_IPRD_RomanceConflict_55fcfaed-dfaa-cc31-39bc-c7b163a53c4a, _Companion, 1);
+
+//Que relation dialog if the Companion is controlled by their romancing Avatars
+IF
+FlagSet(_PartnerFlag, _Avatar, _)
+AND
+DB_CompanionCanPartner(_Companion2, _DatingFlag, _PartnerFlag, _, _, _, _)
+AND
+DB_ORI_Dating((CHARACTER)_Avatar, _Companion)
+AND
+NOT DB_ORI_Partnered(_Avatar, _Companion)
+AND
+_Companion != _Companion2
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+AND
+DB_Players(_Companion)
+AND
+QRY_SameUser(_Companion, _Avatar)
+THEN
+PROC_RelationshipDialog((CHARACTER)_Companion, _Dialog, (FLAG)GLO_IPRD_RomanceConflict_55fcfaed-dfaa-cc31-39bc-c7b163a53c4a, _Companion, 1);
+
+IF
+CharacterReservedUserIDChanged(_Companion, _, _)
+AND
+NOT QRY_ORI_Dating_ConflictIPRD((CHARACTER)_Companion)
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)_Companion, _Dialog, (FLAG)GLO_IPRD_RomanceConflict_55fcfaed-dfaa-cc31-39bc-c7b163a53c4a);
+
+QRY
+QRY_ORI_Dating_ConflictIPRD((CHARACTER)_Companion)
+AND
+DB_ORI_Dating(_Avatar, _Companion)
+AND
+NOT DB_ORI_Partnered(_Avatar, _Companion)
+AND
+DB_ORI_Partnered(_Avatar, _Companion2)
+AND
+_Companion != _Companion2
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+AND
+NOT DB_Players(_Companion)
+THEN
+PROC_RelationshipDialog((CHARACTER)_Companion, _Dialog, (FLAG)GLO_IPRD_RomanceConflict_55fcfaed-dfaa-cc31-39bc-c7b163a53c4a, _Companion, 1);
+
+QRY
+QRY_ORI_Dating_ConflictIPRD((CHARACTER)_Companion)
+AND
+DB_ORI_Dating(_Avatar, _Companion)
+AND
+NOT DB_ORI_Partnered(_Avatar, _Companion)
+AND
+DB_ORI_Partnered(_Avatar, _Companion2)
+AND
+_Companion != _Companion2
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+AND
+DB_Players(_Companion)
+AND
+QRY_SameUser(_Companion, _Avatar)
+THEN
+DB_NOOP(1);
+
+IF
+DB_CurrentLevel("BGO_Main_A")
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+AND
+DB_PartOfTheTeam(_Companion)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)_Companion, _Dialog, (FLAG)GLO_IPRD_RomanceConflict_55fcfaed-dfaa-cc31-39bc-c7b163a53c4a);
+
+// Handles ending relationships outside of the IPRD to not block the avatar from their InParty dialog.
+IF
+FlagCleared((FLAG)ORI_State_Dating_a3346d5b-c54b-4c73-bf18-0a2bf90c35da, (CHARACTER)_Companion, _)
+AND
+DB_OriginInPartyDialog(_Companion, _Dialog)
+THEN
+PROC_CancelRelationshipDialog(_Companion, _Dialog, (FLAG)GLO_IPRD_RomanceConflict_55fcfaed-dfaa-cc31-39bc-c7b163a53c4a);
+
+IF
+DB_CurrentLevel("BGO_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

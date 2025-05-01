@@ -1,0 +1,215 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers((TRIGGER)S_CRE_Brewery_OutsideArea_c05675f3-a998-4b4b-85de-54db6275599e);
+
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold2_17f3597d-9416-4c6d-a017-cd2fee9bbbd2);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold3_8608477a-9b58-42af-8618-3d132cefdc9b);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold4_e42ae101-c220-4caa-a794-c894252db44b);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold5_e5796bc5-b166-4c58-b1e9-d588f00b28e6);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold6_021d2e7f-50b5-4b29-b468-fdf2ed347d8b);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold7_96b41bfd-1db4-4a09-a6da-8540474a6c2d);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold8_5995bb68-326f-4e89-8921-cbca363f926f);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold9_c8b8738c-4935-492e-957f-6b4342e03c83);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold10_1089b7f4-6220-412d-801a-a88714230359);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold11_f0a663a3-cb41-4d96-a955-4bc991b04797);
+DB_CRE_Brewery_Kobolds((CHARACTER)S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912);
+
+//DB_CRE_Brewery_KoboldBarrels((ITEM)S_CRE_Brewery_KoboldBarrel01_6d7ea09b-4ec2-4fd6-b5fb-7419c05c5acb);
+//DB_CRE_Brewery_KoboldBarrels((ITEM)S_CRE_Brewery_KoboldBarrel02_0ac46981-6956-4874-9c5d-962ad35c98aa);
+//DB_CRE_Brewery_KoboldBarrels((ITEM)S_CRE_Brewery_KoboldBarrel03_29075208-8e0b-4175-9864-8793cdb55dae);
+//DB_CRE_Brewery_KoboldBarrels((ITEM)S_CRE_Brewery_KoboldBarrel04_fe3d7e90-af6f-45c0-95a5-0de126814b3f);
+
+DB_CRE_KoboldFactions((FACTION)Act1B_CRE_Kobolds_Brewery_0bff51b4-8ced-434a-9061-244eb64f700c);
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_CRE_Brewery_ADActiveZone_7c2caee7-191f-4a42-9cc7-989a795ebe8b);
+DB_TriggerEvents_AllPlayersLeft((TRIGGER)S_CRE_Brewery_ADActiveZone_7c2caee7-191f-4a42-9cc7-989a795ebe8b, "CRE_Brewery_AllPlayersLeftADRange");
+
+Equip((CHARACTER)S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912,(ITEM)S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053);
+
+DB_CRE_Brewery_KoboldBarrels(S_CRE_Brewery_KoboldBarrel04_fe3d7e90-af6f-45c0-95a5-0de126814b3f);
+DB_CRE_Brewery_KoboldBarrels(S_CRE_Brewery_KoboldBarrel01_6d7ea09b-4ec2-4fd6-b5fb-7419c05c5acb);
+DB_CRE_Brewery_KoboldBarrels(S_CRE_Brewery_KoboldBarrel02_0ac46981-6956-4874-9c5d-962ad35c98aa);
+DB_CRE_Brewery_KoboldBarrels(S_CRE_Brewery_KoboldBarrel03_29075208-8e0b-4175-9864-8793cdb55dae);
+
+
+//REGION Combat ADs
+DB_CombatReact_AD_OnTurn(S_CRE_Brewery_Kobold3_8608477a-9b58-42af-8618-3d132cefdc9b, (DIALOGRESOURCE)CRE_Brewery_AD_Combat_Kobold3FirstTurn_86ab0970-d61b-e9e3-f156-718710e5d2af, 1);
+//END_REGION
+KBSECTION
+//REGION Drunk Kobold stumbles out
+IF
+EnteredTrigger(_Player,(TRIGGER)S_CRE_Brewery_OutsideArea_c05675f3-a998-4b4b-85de-54db6275599e)
+AND
+NOT DB_CantMove((CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00)
+AND
+QRY_OnlyOnce("CRE_Brewery_StumbleOut")
+THEN
+SetCanFight(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, 0);
+SetCanJoinCombat(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, 0);
+Open((ITEM)S_CRE_Brewery_Door_2f50441d-c475-4f60-8480-0dbc222ad071);
+CharacterMoveTo((CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00,(TRIGGER)S_CRE_Brewery_OutsideArea_c05675f3-a998-4b4b-85de-54db6275599e,"Walk","CRE_Brewery_StumbleOut");
+PROC_TryStartAD((DIALOGRESOURCE)CRE_Brewery_StumbleKobold_AD_60f97062-8f48-e1b8-308a-1342c0e1c5d6,(CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00);
+
+IF
+EntityEvent((CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00,"CRE_Brewery_StumbleOut")
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, S_CRE_BreweryDrunkKoboldSlipPos_b17ebf44-57aa-43f8-8dd0-9f2c3a0b17d1, "Run", "CRE_Brewery_StumbleSlip");
+
+IF
+EntityEvent(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, "CRE_Brewery_StumbleSlip")
+THEN
+DB_CRE_Brewery_StubmleKoboldGetReady(1);
+ApplyStatus((CHARACTER)S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00,"SLEEPING",-1.0,1);
+
+IF
+StatusApplied(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00,"SLEEPING", _, _)
+AND
+DB_CRE_Brewery_StubmleKoboldGetReady(1)
+THEN
+SetCanJoinCombat(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, 1);
+SetCanFight(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, 1);
+//END_REGION
+
+//REGION Wake up sleeping kobolds
+IF
+EnteredCombat(_Kobold, _)
+AND
+DB_CRE_Brewery_Kobolds((CHARACTER)_Kobold)
+AND
+HasActiveStatus(_Kobold, "SLEEPING", 1)
+THEN
+RemoveStatus(_Kobold, "SLEEPING", NULL_00000000-0000-0000-0000-000000000000);
+ApplyStatus(_Kobold, "SURPRISED", 6.0, 1, _Kobold);
+
+IF
+EnteredCombat(_Kobold, _)
+AND
+DB_CRE_Brewery_Kobolds((CHARACTER)_Kobold)
+THEN
+RemoveStatus(_Kobold, "CRE_BREWERYKOBOLDS_REDUCEDSIGHT", NULL_00000000-0000-0000-0000-000000000000); 
+
+IF
+EnteredCombat(_Kobold, _)
+AND
+DB_CRE_Brewery_Kobolds((CHARACTER)_Kobold)
+AND
+QRY_OnlyOnce("CRE_KoboldWakeupcall")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)CRE_Brewery_KoboldWakeUpCall_1d7960f9-6e6c-05e8-d15e-2cdbd97e3a36 ,_Kobold);
+//Cancelling the stubmlekobold
+SetCanJoinCombat(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, 1);
+SetCanFight(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, 1);
+SetFaction(S_CRE_Brewery_StumbleKobold_5a37b8d6-1c6a-48ea-acee-788e5736cf00, (FACTION)Act1B_CRE_Kobolds_Brewery_0bff51b4-8ced-434a-9061-244eb64f700c);
+//END_REGION
+
+//REGION Kobold Explosion
+IF
+StatusApplied(_Kobold, "CRE_BREWERYKOBOLDS_FIREWINEBELLY_TECHNICAL", _, _)
+THEN
+CreateExplosion(_Kobold,"Projectile_CRE_BreweryKobolds_FirewineBelly_Explosion",-1,_Kobold);
+//END_REGION
+
+//REGION Kobold in a Barrel spawning
+IF
+DB_PermaDefeated(_Barrel)
+AND
+DB_CRE_Brewery_KoboldBarrels(_Barrel)
+AND
+CreateAtObject((CHARACTERROOT)Kobolds_Melee_Drunk_45e31b7d-32ec-4f3d-8067-79061aeec77b,_Barrel,0,1,"",1,_Kobold)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Make barrel kobold hostile to everybody
+//Way to make barrel kobolds aggro everything: If they see someone, become aggressive to their faction (exclude kobold faction).
+IF
+Saw(_Kobold,_Enemy,_)
+AND
+GetFaction(_Kobold,_KoboldFaction)
+AND
+DB_CRE_KoboldFactions(_KoboldFaction)
+AND
+GetFaction(_Enemy,_EnemyFaction)
+AND
+NOT DB_CRE_KoboldFactions(_EnemyFaction)
+THEN 
+PROC_SetRelationMutual((FACTION)Act1B_CRE_Kobolds_Brewery_0bff51b4-8ced-434a-9061-244eb64f700c,_EnemyFaction,0);
+//END_REGION
+
+//REGION Player within earshot to hear ADs
+IF
+DB_InRegion(_Player, (TRIGGER)S_CRE_Brewery_ADActiveZone_7c2caee7-191f-4a42-9cc7-989a795ebe8b)
+AND
+DB_Players(_Player)
+THEN
+SetFlag(CRE_Brewery_Status_PlayersCanHearADs_4363567f-c513-4dcb-916d-7576249da6eb,NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+EntityEvent(_, "CRE_Brewery_AllPlayersLeftADRange")
+THEN
+ClearFlag(CRE_Brewery_Status_PlayersCanHearADs_4363567f-c513-4dcb-916d-7576249da6eb);
+//END_REGION
+
+//REGION Reactivity - creche is destroyed
+IF
+DB_GlobalFlag(ORI_Laezel_State_CrecheExploded_31ee1ed3-b163-4d1a-84f3-d37521900a87)
+AND
+DB_CRE_Brewery_Kobolds((CHARACTER)_Kobold)
+THEN
+Die((CHARACTER)_Kobold, DEATHTYPE.Physical, 0);
+//END_REGION
+
+//REGION Combat ADs
+IF
+DB_Is_InCombat(_Kobold, _ID)
+AND
+DB_CRE_Brewery_Kobolds((CHARACTER)_Kobold)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("CRE_Kobolds_PlayerFirstTurnCombatAD")
+THEN
+DB_CombatReact_AD_OnNextTurn((GUIDSTRING)_Player, (DIALOGRESOURCE)CRE_Brewery_AD_Combat_PlayerFirstTurn_46125e19-3774-377f-9a62-2503cc576b29);
+DB_CRE_KoboldCombat(_ID);
+
+IF
+CombatEnded(_ID)
+AND
+DB_CRE_KoboldCombat(_ID)
+AND
+DB_CombatReact_AD_OnNextTurn(_Player, CRE_Brewery_AD_Combat_PlayerFirstTurn_46125e19-3774-377f-9a62-2503cc576b29)
+THEN
+NOT DB_CombatReact_AD_OnNextTurn((GUIDSTRING)_Player, (DIALOGRESOURCE)CRE_Brewery_AD_Combat_PlayerFirstTurn_46125e19-3774-377f-9a62-2503cc576b29);
+//END_REGION
+
+//REGION When the Kobold carrying the mace goes off stage because of being knocked out, make him drop the mace on the ground
+IF
+WentOnStage(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912 ,0)
+AND
+IsInInventoryOf(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, 1)
+AND
+GetPosition(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, _X, _Y, _Z)
+AND
+FindValidPosition(_X, _Y, _Z, 3.0, S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, 0, _ValidX, _ValidY, _ValidZ)
+THEN
+TeleportToPosition(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, _ValidX, _ValidY, _ValidZ, "", 0, 0, 0, 0, 1);
+PROC_SetOnStage(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, 1);
+
+IF
+WentOnStage(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912 ,0)
+AND
+IsInInventoryOf(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, 1)
+AND
+GetPosition(S_CRE_Brewery_Kobold12_77d44b7f-d078-4b68-8b42-495a1f9e5912, _X, _Y, _Z)
+THEN
+TeleportToPosition(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, _X, _Y, _Z, "", 0, 0, 0, 0, 1);
+PROC_SetOnStage(S_CRE_Abbot1_Weapon_fce42526-f518-4727-91f6-c41c234fa053, 1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1b"

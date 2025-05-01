@@ -1,0 +1,1116 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Execution scene
+
+DB_SceneManager((CHARACTER)S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, "MOO_Execution");
+DB_SceneManager((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Execution");
+DB_SceneManager((CHARACTER)S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf, "MOO_Execution");
+DB_SceneManager((CHARACTER)S_MOO_ExecutionGoblin_003_2c0816da-ad54-4813-94ce-92440223b49c, "MOO_Execution");
+DB_SceneManager((CHARACTER)S_MOO_ExecutionGoblin_004_a27c7eb5-ffd0-4da0-b888-af0809d75823, "MOO_Execution");
+DB_SceneManager((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "MOO_Execution");
+
+DB_MOO_Execution_Speakers((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31);
+
+DB_SceneTriggerManager("MOO_Execution", S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda);
+
+DB_SpotPlayers_SpotTrigger_ManualRegistering(S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda);
+DB_SpotPlayers(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, "MOO_Execution", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Execution", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, "MOO_Execution", S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda);
+DB_SpotPlayers_SpotTrigger(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Execution", S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda);
+
+DB_DialogBlockAttackButton(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901);
+DB_DropMutingStatussesDialog(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901);
+DB_DropMutingStatussesDialog(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c);
+PROC_TriggerRegisterForParty(S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda);
+DB_AddCharactersInTriggerToDialog(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda, 1, 1, 1, 1);
+DB_AddCharactersInTriggerToDialog(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda, 1, 1, 1, 1);
+
+DB_GlobalFlagReactionAfterDialog(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e, MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901);
+//END_REGION
+
+
+//REGION Goblins
+
+DB_MOO_Execution_Goblin((CHARACTER)S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf,(FLAG)MOO_Execution_Goblin1_State_Dead_a7e8446a-ff8f-1316-c4fc-f744a8a08739);
+DB_MOO_Execution_Goblin(S_MOO_ExecutionGoblin_003_2c0816da-ad54-4813-94ce-92440223b49c,(FLAG)MOO_Execution_Goblin3_State_Dead_2076adb4-16ad-5da3-3409-228dd24766ef);
+DB_MOO_Execution_Goblin(S_MOO_ExecutionGoblin_004_a27c7eb5-ffd0-4da0-b888-af0809d75823,(FLAG)MOO_Execution_Goblin4_State_Dead_23af2bbe-af2b-9fd3-15f3-d23461fcf3f7);
+
+DB_MOO_Execution_GoblinDeaths((FLAG)MOO_Execution_Event_GoblinsSuffocate_bd978044-c6dd-8ef2-4bec-3e7da40defc1, DEATHTYPE.DoT);	//TODO: Needs bloodless death type.
+DB_MOO_Execution_GoblinDeaths((FLAG)MOO_Execution_Event_GoblinsKillThemselves_26ffc4b9-58d5-02b2-1e9a-ea32d8935d11, DEATHTYPE.DoT);
+
+DB_GLO_DieFlag(MOO_Execution_Event_KethericKillsGoblin_9dece1d1-4fad-6ea3-9438-09d63a564af0, S_MOO_ExecutionGoblin_003_2c0816da-ad54-4813-94ce-92440223b49c, DEATHTYPE.DoT, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+
+PROC_MOO_Execution_SetupRecurringGoblins();
+
+//END_REGION
+
+
+//REGION Absolutists
+
+SetHasDialog(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, 1);
+
+DB_MOO_Execution_Guard((CHARACTER)S_MOO_ExecutionGuard_001_274886f8-8881-4e6e-97b6-fc038a26abe0, 1, (DIALOGRESOURCE)MOO_Execution_Guard_001_4056bb76-d1d1-fc43-f879-bfe9b9d58339);
+DB_MOO_Execution_Guard((CHARACTER)S_MOO_ExecutionGuard_002_9500dd35-4b5b-4634-bdfd-c6cdd91bd6b5, 0, (DIALOGRESOURCE)MOO_Execution_Guard_002_73a0e03b-c770-85e9-e70e-77b9214d4548);
+DB_MOO_Execution_Guard((CHARACTER)S_MOO_ExecutionGuard_003_a4752cef-326a-49d7-91dd-a9de10d6539b, 0, (DIALOGRESOURCE)MOO_Execution_Guard_003_3bf9bdd8-eb23-ea96-3837-dcf747d88fd1);
+DB_MOO_Execution_Guard((CHARACTER)S_MOO_ExecutionGuard_004_d99bec80-06ca-4d81-95cd-348efd9092fc, 0, (DIALOGRESOURCE)MOO_Execution_Guard_004_386e5505-c344-f5be-bcb8-2817d4c7a1f1);
+DB_MOO_Execution_Guard((CHARACTER)S_MOO_ExecutionGuard_005_9dd4a1bf-79d6-4876-9788-9dcec2e0a06e, 1, (DIALOGRESOURCE)MOO_Execution_Guard_005_442246d8-ca83-13d7-04ab-d57308130a18);
+DB_MOO_Execution_Guard((CHARACTER)S_MOO_ExecutionGuard_006_2b900b58-298d-4e31-80c8-8a3a44a6d13f, 0, (DIALOGRESOURCE)MOO_Execution_Guard_006_18f8ddd4-df24-04c5-8f83-dca199eac428);
+
+//END_REGION
+
+//REGION Hound
+
+TriggerRegisterForCharacter(S_MOO_KethericRoomPoly_d16ef571-5545-4ae4-9c3f-2aae0daea6ea, S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31);
+
+//END_REGION
+
+//REGION Behaviours
+
+DB_MOO_Execution_PleaAD((DIALOGRESOURCE)MOO_Execution_AD_SazzaPlea_3e0a7855-fd33-2a96-1bab-edcda23aac9f,(CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+DB_MOO_Execution_PleaAD((DIALOGRESOURCE)MOO_Execution_AD_DarraPlea_0aad4008-848e-4fa9-5e89-c2ca667b7615,(CHARACTER)S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf);
+DB_MOO_Execution_PleaAD((DIALOGRESOURCE)MOO_Execution_AD_MintharaPlea_4594738d-e871-0b43-b5ca-48886d8a9313,(CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_MOO_Execution_PleaAD((DIALOGRESOURCE)MOO_Execution_AD_DrennPlea_32f01dc2-5631-db42-508f-364725f05fdd,(CHARACTER)S_MOO_ExecutionGoblin_003_2c0816da-ad54-4813-94ce-92440223b49c);
+DB_MOO_Execution_PleaAD((DIALOGRESOURCE)MOO_Execution_AD_FezzerkPlea_24e63a21-1702-acfa-2794-8f8221385605,(CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+
+DB_MOO_Execution_ADSequence(1,"Plea");
+DB_MOO_Execution_ADSequence(2,"Plea");
+DB_MOO_Execution_ADSequence(3,"Plea");
+DB_MOO_Execution_ADSequence(4,"Ketheric");
+DB_MOO_Execution_ADSequence(5,"Plea");
+
+DB_MOO_Execution_GoblinsInCombatAD((CHARACTER)S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf);
+DB_MOO_Execution_GoblinsInCombatAD((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+DB_MOO_Execution_GoblinsInCombatAD((CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+
+//END_REGION
+
+PROC_MOO_Execution_SetupFinished();
+KBSECTION
+//REGION Debug
+
+// Skip Execution
+IF
+TextEvent("executiondone")
+THEN
+PROC_MOO_Execution_DebugResolve();
+
+PROC
+PROC_MOO_Execution_DebugResolve()
+AND
+NOT DB_GlobalFlag(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb)
+THEN
+PROC_GlobalSetFlagAndCache(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb);
+PROC_SpotPlayers_StopSpotting(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, "MOO_Execution");
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Execution");
+PROC_CharacterMoveTo((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_RoofIntermediatePoint_c9586639-f1b5-4b67-998b-a2efe790dd4f, "Walk", "MOO_Ketheric_LeaveExecutionToRoof");
+PROC_CharacterMoveTo((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, S_MOO_ToKethericRoomPos_46490766-70eb-429a-b10c-4048f69469de, "Walk", "MOO_Hound_FrontOfRoom");
+PROC_CharacterMoveTo(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, S_MOO_UpperExecutionerPoint_e59505cd-2e80-4390-b340-10d6049481e3, "Walk", "MOO_Executioner_Upstairs");
+PROC_MOO_Execution_ForceKillGoblins();
+PROC_MOO_Execution_ForceClearSpeakers();
+
+
+// Debug signs
+IF
+FlagSet(Debug_MOO_Execution_AddCapturedGoblin_2303b908-ff64-4b1f-83a1-425d5bf47bcc, _, _)
+THEN
+SetFlag((FLAG)GOB_CapturedGoblin_State_Spared_28a0e5c2-ee4a-3b33-a7cc-467adb5bdb88, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_MOO_Execution_SetupRecurringGoblins();
+
+IF
+FlagSet(Debug_MOO_Execution_AddGnomeGoblin_ef3a2bd0-8007-4c4b-9f0a-6be0ade54b05, _, _)
+THEN
+DB_MOO_GnomeGoblins((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, NULL_00000000-0000-0000-0000-000000000000);
+PROC_MOO_Execution_SetupRecurringGoblins();
+
+//Remove Minthara post-setup
+PROC
+PROC_HAV_TieflingSurvivors_SavedNoRolanSetup()
+THEN
+PROC_MOO_Execution_Debug_RemoveMinthara();
+
+PROC
+PROC_HAV_TieflingSurvivors_SavedAndRolanSetup()
+THEN
+PROC_MOO_Execution_Debug_RemoveMinthara();
+
+PROC
+PROC_MOO_Execution_Debug_RemoveMinthara()
+THEN
+Die(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, DEATHTYPE.DoT, 1);
+SetOnStage(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 0);
+NOT DB_MOO_Execution_Speakers(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+NOT DB_SceneManager(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, "MOO_Execution");
+
+//END_REGION
+
+//TODO: Handle scene interruption
+
+//REGION Setup of character being executed
+
+PROC
+PROC_MOO_Execution_SetupRecurringGoblins()
+AND
+DB_MOO_GnomeGoblins(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _)
+AND
+NOT DB_PermaDefeated(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+THEN
+NOT DB_SceneManager(S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf, "MOO_Execution");
+NOT DB_MOO_Execution_Goblin(S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf, MOO_Execution_Goblin1_State_Dead_a7e8446a-ff8f-1316-c4fc-f744a8a08739);
+DB_MOO_Execution_Goblin(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, MOO_Execution_Goblin1_State_Dead_a7e8446a-ff8f-1316-c4fc-f744a8a08739);
+SetOnStage(S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf, 0);
+SetOnStage(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 1);
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+TeleportTo(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, S_MOO_ExecutionGoblinHome_001_215a2095-8426-4a94-8d4e-4e959d8746cd);
+SetFaction(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, ACT1b_MOO_GroundFloor_Goblins_Executed_47278d81-4542-4208-9224-420c6c9129d8);
+PROC_SetAnubisConfig((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, "MOO_Execution_Goblin1");
+PROC_CharacterFullRestore(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+BlockNewCrimeReactions(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 0);
+PROC_SetCanFight(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 1);
+SetCanJoinCombat(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 1);
+PROC_CharacterFullRestore(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+
+PROC
+PROC_MOO_Execution_SetupRecurringGoblins()
+AND
+DB_GlobalFlag(GOB_CapturedGoblin_State_Spared_28a0e5c2-ee4a-3b33-a7cc-467adb5bdb88)
+AND
+NOT DB_PermaDefeated(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb)
+THEN
+DB_MOO_Execution_BlockOwned(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+DB_MOO_Execution_Goblin(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,MOO_Execution_Goblin2_State_Dead_2d315edc-4b8f-ad87-3e17-37b37329652e);
+DB_SceneManager(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, "MOO_Execution");
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+TeleportTo(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, S_MOO_ExecutionGoblinHome_002_4e0acb2f-be1b-4bae-b67e-baf289bf713e);
+SetOnStage(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, 1);
+SetFaction(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, ACT1b_MOO_GroundFloor_Goblins_Executed_47278d81-4542-4208-9224-420c6c9129d8);
+PROC_SetAnubisConfig((CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, "MOO_Execution_Goblin2");
+PROC_CharacterFullRestore(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+
+IF
+DB_MOO_Execution_Goblin(_Goblin, _DeathFlag)
+THEN
+DB_SceneManager(_Goblin, "MOO_Execution");
+DB_DeadOnceFlag(_Goblin, _DeathFlag);
+DB_MOO_Execution_Speakers(_Goblin);
+
+IF
+DB_InRegion(_Player, S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("MOO_Execution_Minthara")
+THEN
+PROC_MOO_Execution_DrowInit();
+
+//Once Act1 is blocked, send Minthara to Moonrise if available. To handle bypassing Moonrise.
+//Normal flow after Nightsong choice should take over to determine if she will be sent to colony or not
+PROC
+PROC_SCL_General_BlockReturnToAct1()
+AND
+QRY_OnlyOnce("MOO_Execution_Minthara")
+THEN
+PROC_MOO_Execution_DrowInit();
+
+PROC
+PROC_MOO_Execution_DrowInit()
+THEN
+ClearFlag(DEN_AttackOnDen_Event_GoblinPartyInvitation_54e19b21-3fad-6a2e-c89a-9d5cf1b4773f, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_MOO_MintharaFate_Init();
+
+PROC
+PROC_MOO_Execution_DrowInit()
+AND
+NOT DB_PermaDefeated(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+TeleportTo(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, S_MOO_ExecutionerCommanderHome_e117172f-b384-4d1c-82ae-f73b04c6d9eb);
+SetOnStage(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 1);
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_Dialogs(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, MOO_MintharaFate_Drow_deaff457-a97a-fd8f-9c46-517d1488a42a);
+SetFaction(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, GLO_DrowCommander_f984f683-e819-439e-af7c-48906053c20b);
+PROC_GLO_UnequipAllWeapons((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_MOO_Execution_Speakers(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_SceneManager(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, "MOO_Execution");
+DB_MOO_Denizens((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+PROC_CharacterFullRestore((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+PROC_GOB_ClearGoblinFestivitiesFallback();
+
+PROC
+PROC_MOO_Execution_DrowInit()
+AND
+NOT DB_PermaDefeated(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+GetItemByTemplateInPartyInventory((ITEMROOT)GOB_DrowCommander_Mace_4b0131e0-875a-4f3c-8b41-dbf653857d00, _PartyMember, _Xyanyde)
+AND
+IsInMagicPockets(_Xyanyde, _PartyMember, 0)
+AND
+IsInInventoryOf(_Xyanyde, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 0)
+THEN
+ToInventory(_Xyanyde, S_MOO_PrisonChest_3c6a641f-169e-453c-b4ee-234ca670abcc);
+SetOnStage(_Xyanyde, 1);
+
+IF
+TemplateUnequipped((ITEMROOT)GOB_DrowCommander_Mace_4b0131e0-875a-4f3c-8b41-dbf653857d00, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+GetItemByTemplateInInventory((ITEMROOT)GOB_DrowCommander_Mace_4b0131e0-875a-4f3c-8b41-dbf653857d00, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, _Xyanyde)
+THEN
+ToInventory(_Xyanyde, S_MOO_PrisonChest_3c6a641f-169e-453c-b4ee-234ca670abcc);
+SetOnStage(_Xyanyde, 1);
+
+IF
+DB_MOO_Execution_Guard(_Guard, _, _)
+AND
+NOT DB_Is_InCombat(_Guard, _)
+THEN
+SetWeaponUnsheathed(_Guard, 1, 1);//Guards have their weapons out.
+
+IF
+DB_MOO_Execution_Guard(_Guard, _ID, _Dialog)
+THEN
+DB_SceneManager(_Guard, "MOO_Execution");
+DB_Dialogs(_Guard, _Dialog);
+DB_MOO_Execution_Speakers(_Guard);
+
+IF
+WentOnStage((CHARACTER)_Speaker, 0)
+AND
+DB_MOO_Execution_Speakers(_Speaker)
+THEN
+NOT DB_MOO_Execution_Speakers(_Speaker);
+
+PROC
+PROC_MOO_Execution_SetupFinished()
+AND
+DB_MOO_Execution_Goblin(_Character, _)
+THEN
+DB_MOO_Execution_BlockOwned(_Character);
+
+//END_REGION
+
+
+//REGION Starting dialogue
+
+QRY
+QRY_SelectCustomDialog(_Speaker, _Player)
+AND
+DB_SceneManager((CHARACTER)_Speaker, "MOO_Execution")
+THEN
+DB_SelectedDialog(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, S_MOO_Execution_Drow_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, (CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, _Player);
+
+PROC
+PROC_SpotPlayers_Spotted(_, "MOO_Execution", _Player)
+AND
+QRY_SelectAndStartDialog(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogStarted(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+THEN
+PROC_SpotPlayers_StopSpotting(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, "MOO_Execution");
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Execution");
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, (INTEGER)_ID)
+AND
+DB_MOO_Execution_Speakers(_Speaker)
+AND
+IsInTrigger(_Speaker, S_MOO_ExecutionArea_12abecc1-49d4-4253-a435-01d82d00abda, 1)
+AND
+QRY_SpeakerIsAvailable(_Speaker, 1, 1, 0) //Shouldn't be necessary, but to prevent any freak cases of the dialog trying to start on a character that is not actually available
+THEN
+PROC_DialogAddSpeakingActor(_ID, _Speaker);
+
+IF
+DialogStarted(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _ID)
+AND
+DB_MOO_Execution_Speakers(_Speaker)
+THEN
+NOT DB_MOO_Execution_Speakers(_Speaker);
+
+IF
+DialogStarted(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, _ID)
+AND
+DB_MOO_Execution_Speakers(_Speaker)
+THEN
+NOT DB_MOO_Execution_Speakers(_Speaker);
+
+//END_REGION
+
+//REGION Violent interruption handling
+
+IF
+DialogEnded(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+AND
+DB_GlobalFlag(MOO_Execution_Event_Attack_37a6c9f5-f3c6-9dec-e8e7-45dc87b5fd77)
+THEN
+PROC_MOO_Execution_StartFallbackExecutionCombat();
+
+PROC
+PROC_SceneInterrupted(_Target, _Player, "MOO_Execution", _Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+AND
+DB_Players(_Player)
+AND
+NOT DB_DialogName(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+AND
+QRY_OnlyOnce("MOO_Execution_CombatInterrupt")
+THEN
+PROC_MOO_Execution_FallbackCombatInterruptionDialog((CHARACTER)_Target, _Player);
+
+PROC
+PROC_SceneInterrupted(_Target, _Character, "MOO_Execution", _Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+AND
+NOT DB_Players(_Character)
+AND
+NOT DB_DialogName(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+AND
+CharacterGetOwner(_Character, _Player)
+AND
+QRY_OnlyOnce("MOO_Execution_CombatInterrupt")
+THEN
+PROC_MOO_Execution_FallbackCombatInterruptionDialog((CHARACTER)_Target, _Player);
+
+PROC
+PROC_SceneInterrupted(_Target, _Character, "MOO_Execution", _Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+AND
+DB_DialogName(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+QRY_OnlyOnce("MOO_Execution_CombatInterrupt")
+THEN
+DB_MOO_Execution_PlayerInterrupt((CHARACTER)_Target, (CHARACTER)_Player);
+PROC_ForceStopDialog(_Player);
+
+IF
+DialogEnded(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+AND
+DB_MOO_Execution_PlayerInterrupt(_Target, _Player)
+THEN
+NOT DB_MOO_Execution_PlayerInterrupt(_Target, _Player);
+PROC_MOO_Execution_FallbackCombatInterruptionDialog(_Target, _Player);
+
+PROC
+PROC_MOO_Execution_FallbackCombatInterruptionDialog((CHARACTER)_Target, (CHARACTER)_Player)
+AND
+DB_MOO_Execution_Goblin(_Target, _)
+THEN
+SetFlag(MOO_Execution_Event_PlayerAttackedExecutees_92bd723a-f845-4597-b54e-1f679f6bc61e, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_MOO_Execution_FallbackCombatInterruptionDialog(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (CHARACTER)_Player)
+THEN
+SetFlag(MOO_Execution_Event_PlayerAttackedExecutees_92bd723a-f845-4597-b54e-1f679f6bc61e, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_MOO_Execution_FallbackCombatInterruptionDialog((CHARACTER)_Target, (CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(MOO_Execution_Event_KethericLeaves_b8718f8f-6313-dc0e-e20d-7435db4b74c4)
+AND
+NOT QRY_StartDialogCustom(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, 0, 0, 0, 1)
+THEN
+PROC_MOO_Execution_StartFallbackExecutionCombat();
+
+PROC
+PROC_MOO_Execution_FallbackCombatInterruptionDialog((CHARACTER)_Target, (CHARACTER)_Player)
+AND
+DB_GlobalFlag(MOO_Execution_Event_KethericLeaves_b8718f8f-6313-dc0e-e20d-7435db4b74c4)
+AND
+NOT QRY_StartDialogCustom(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, NULL_00000000-0000-0000-0000-000000000000, _Player, 0, 0, 0, 1)
+THEN
+PROC_MOO_Execution_StartFallbackExecutionCombat();
+
+PROC
+PROC_MOO_Execution_FallbackCombatInterruptionDialog((CHARACTER)_Target, (CHARACTER)_Player)
+AND
+DB_GlobalFlag(MOO_Execution_Event_KethericLeaves_b8718f8f-6313-dc0e-e20d-7435db4b74c4)
+AND
+DB_GlobalFlag(MOO_Execution_Event_ExecutionerLeaves_f24e777b-b15a-4f95-8dae-6b4892bf5c90)
+THEN
+PROC_MOO_Execution_StartFallbackExecutionCombat();
+
+IF
+DialogEnded(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, _)
+THEN
+PROC_MOO_Execution_StartFallbackExecutionCombat();
+
+PROC
+PROC_MOO_Execution_StartFallbackExecutionCombat()
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+THEN
+SetFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_MOO_Execution_StartFallbackExecutionCombat()
+AND
+NOT DB_GlobalFlag(MOO_Execution_Event_CombatTransgression_1946f62a-afe1-4843-bdfa-590688f366d6)
+THEN
+SetFlag(MOO_Execution_Event_CombatTransgression_1946f62a-afe1-4843-bdfa-590688f366d6);
+
+PROC
+PROC_MOO_Execution_StartFallbackExecutionCombat()
+AND
+NOT DB_GlobalFlag(MOO_Execution_Event_KethericLeaves_b8718f8f-6313-dc0e-e20d-7435db4b74c4)
+THEN
+SetFlag(MOO_Execution_Event_KethericLeaves_b8718f8f-6313-dc0e-e20d-7435db4b74c4);
+PROC_CharacterMoveTo((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_RoofIntermediatePoint_c9586639-f1b5-4b67-998b-a2efe790dd4f, "Walk", "MOO_Ketheric_LeaveExecutionToRoof");
+
+PROC
+PROC_MOO_Execution_StartFallbackExecutionCombat()
+AND
+QRY_State_IsBeforeState(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, "MOO_MintharaFate", "MOO_MintharaFate_State_Torture")
+THEN
+PROC_SetRelationToPlayers(GLO_DrowCommander_f984f683-e819-439e-af7c-48906053c20b, 100);
+PROC_SetRelationMutual(ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, GLO_DrowCommander_f984f683-e819-439e-af7c-48906053c20b, 0);
+PROC_SetRelationMutual(ACT2_MOO_Execution_ExecutedGoblins_47278d81-4542-4208-9224-420c6c9129d8, GLO_DrowCommander_f984f683-e819-439e-af7c-48906053c20b, 0);
+PROC_SetRelationMutual(ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, (FACTION)ACT2_MOO_Execution_ExecutedGoblins_47278d81-4542-4208-9224-420c6c9129d8, 100);
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_Prisoners_415c10db-9541-4d9b-aaff-5c77f98a1189, 50);
+DB_MOO_Execution_PostCombatFollowThrough(1);
+
+IF
+DialogActorJoined(MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, _, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+THEN
+DB_MOO_Execution_PausedCombat(_ID);
+PauseCombat(_ID);
+
+IF
+DialogEnded((DIALOGRESOURCE)MOO_Execution_CombatInterruption_c4e88a20-f847-edf3-b499-076ea8dc667c, _)
+AND
+DB_MOO_Execution_PausedCombat(_ID)
+THEN
+NOT DB_MOO_Execution_PausedCombat(_ID);
+ResumeCombat(_ID);
+
+PROC
+PROC_SceneOver("MOO_Execution")
+THEN
+PROC_TriggerUnregisterForParty((TRIGGER)S_MOO_Execution_TrespassArea_9d275444-b02b-41e0-9552-4a088078defd);
+
+//In the case of Outcast state, send characters to their respective places once combat ends and they are still alive so they are not awkwardly hanging around the throne room
+IF
+DB_MOO_Execution_PostCombatFollowThrough(1)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Outcast")
+AND
+NOT DB_Is_InCombat(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _)
+AND
+NOT DB_MOO_Execution_PausedCombat(_)
+AND
+NOT DB_Defeated(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31)
+AND
+NOT DB_InRegion(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, S_MOO_KethericRoomPoly_d16ef571-5545-4ae4-9c3f-2aae0daea6ea)
+AND
+NOT DB_MOO_Execution_FollowThroughSettled(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31)
+THEN
+DB_MOO_Execution_FollowThroughSettled(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31);
+PROC_CharacterMoveTo((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, S_MOO_ToKethericRoomPos_46490766-70eb-429a-b10c-4048f69469de, "Walk", "MOO_Hound_FrontOfRoom");
+
+IF
+DB_MOO_Execution_PostCombatFollowThrough(1)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Outcast")
+AND
+NOT DB_MOO_Execution_PausedCombat(_)
+AND
+DB_MOO_Execution_Goblin(_Char, _)
+AND
+NOT DB_Is_InCombat(_Char, _)
+AND
+NOT DB_Defeated(_Char)
+AND
+NOT DB_MOO_Execution_FollowThroughSettled(_Char)
+THEN
+DB_MOO_Execution_FollowThroughSettled(_Char);
+PROC_CharacterMoveTo(_Char, S_MOO_ExecutionFreedPos_e93a70cc-e2cb-4a66-b93c-a07328fa0639, "Walk", "MOO_Execution_Freed");
+
+IF
+DB_MOO_Execution_PostCombatFollowThrough(1)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Outcast")
+AND
+NOT DB_MOO_Execution_PausedCombat(_)
+AND
+NOT DB_Is_InCombat(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _)
+AND
+NOT DB_Defeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+AND
+NOT DB_MOO_Execution_FollowThroughSettled(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+DB_MOO_Execution_FollowThroughSettled(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84);
+PROC_CharacterMoveTo(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, S_MOO_UpperExecutionerPoint_e59505cd-2e80-4390-b340-10d6049481e3, "Walk", "MOO_Executioner_Upstairs");
+
+//END_REGION
+
+//REGION Ketheric leaves the execution
+
+IF
+FlagSet(MOO_Execution_Event_KethericLeave_b8718f8f-6313-dc0e-e20d-7435db4b74c4, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DialogRemoveActorFromDialog(_ID, (CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _)
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_RoofIntermediatePoint_c9586639-f1b5-4b67-998b-a2efe790dd4f, "Walk", "MOO_Ketheric_LeaveExecutionToRoof");
+
+IF
+FlagSet(MOO_Execution_Event_KethericLeave_b8718f8f-6313-dc0e-e20d-7435db4b74c4, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DialogRemoveActorFromDialog(_ID, (CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _)
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, S_MOO_HoundPos_0e6279dc-6914-4dfd-b0b8-4cf19c11e3cd, "Walk", "MOO_Hound_FrontOfRoom");
+
+IF
+EntityEvent(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "MOO_Hound_FrontOfRoom")
+THEN
+DB_MOO_Hound_FrontOfRoom(1);
+PROC_MOO_Hound_CheckDoor();
+
+PROC
+PROC_MOO_Hound_CheckDoor()
+AND
+IsOpened(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c, 0)
+THEN
+Unlock(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c);
+Open(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c);
+
+IF
+DB_MOO_Hound_FrontOfRoom(1)
+AND
+DB_MOO_Hound_KethericDoorOpened(1)
+THEN
+NOT DB_MOO_Hound_FrontOfRoom(1);
+PROC_CharacterMoveTo((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, S_MOO_HoundPos_0e6279dc-6914-4dfd-b0b8-4cf19c11e3cd, "Walk", "MOO_Hound_InRound");
+
+IF
+Opened(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c)
+AND
+DB_MOO_Hound_FrontOfRoom(1)
+THEN
+DB_MOO_Hound_KethericDoorOpened(1);
+
+IF
+Closed(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c)
+THEN
+NOT DB_MOO_Hound_KethericDoorOpened(1);
+
+IF
+EnteredTrigger((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, S_MOO_KethericRoomPoly_d16ef571-5545-4ae4-9c3f-2aae0daea6ea)
+AND
+QRY_OnlyOnce("MOO_KethericHoundInRoomOnce")
+THEN
+DB_Combat_CallingForHelp(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "MOO_KethericHoundHelp", "Shout_CallForHelp");
+DB_SpotPlayers(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,"MOO_UpperFloor_HoundSpot",NULL_00000000-0000-0000-0000-000000000000,MOO_KethericHound_Event_StopSpotting_79fe569f-b375-48a5-aa6a-7e3671cd070b);
+DB_SpotPlayers_SpotTrigger(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,"MOO_UpperFloor_HoundSpot",S_MOO_KethericRoomPoly_d16ef571-5545-4ae4-9c3f-2aae0daea6ea);
+Close(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c);
+Lock(S_MOO_KethericDoor_001_af459c3e-97db-4d22-8d7a-2b03f3d01e2c, "MOO_MasterKey");
+
+//END_REGION
+
+
+//REGION Z'rell leaves the execution
+
+IF
+FlagSet(MOO_Execution_Event_ZrellLeave_f24e777b-b15a-4f95-8dae-6b4892bf5c90, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DialogRemoveActorFromDialog(_ID, S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _)
+THEN
+PROC_CharacterMoveTo(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, S_MOO_ExecutionerChapelPos_dc0c54d2-3064-4f07-bc9a-dd554760bc13, "Walk", "MOO_Executioner_Upstairs");
+
+IF
+FlagSet(MOO_Execution_Event_ExecutionerLeavesAfterDialog_0522fa8c-632b-2f9e-8e22-60617617fae3, NULL_00000000-0000-0000-0000-000000000000, 0)
+THEN
+PROC_CharacterMoveTo(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, S_MOO_UpperExecutionerPoint_e59505cd-2e80-4390-b340-10d6049481e3, "Walk", "MOO_Executioner_Upstairs");
+
+//END_REGION
+
+
+//REGION Goblins are released
+
+IF
+DialogEnded(DIALOGRESOURCEGUID_MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+AND
+DB_GlobalFlag(MOO_Execution_Event_ReleasedGoblins_3cddb715-d7cc-d6ce-e166-bce7f242a240) // flagType: Global
+AND
+DB_MOO_Execution_Goblin(_Goblin, _)
+AND
+GetFaction(_Goblin, _GoblinFaction)
+THEN
+ApplyStatus(_Goblin, "PEACEFUL_RESOLUTION_XP", -1.0);
+PROC_SetRelationToPlayers(_GoblinFaction, 100);
+PROC_CharacterMoveTo(_Goblin, S_MOO_ExecutionFreedPos_e93a70cc-e2cb-4a66-b93c-a07328fa0639, "Walk", "MOO_Execution_Freed");
+
+IF
+EntityEvent((CHARACTER)_Goblin, "MOO_Execution_Freed")
+THEN
+PROC_DisappearOutOfSightTo(_Goblin, S_MOO_ExecutionDisappearPos_35665010-6d0f-467b-993b-ed98976efc92, "Run", 1, "MOO_Execution_LeftMOO");
+
+IF
+WentOnStage(_Goblin, 0)
+AND
+DB_MOO_Execution_BlockOwned(_Goblin)
+THEN
+NOT DB_MOO_Execution_BlockOwned(_Goblin);
+
+//END_REGION
+
+
+//REGION Goblins die
+
+IF
+DB_DialogDeath(_Goblin)
+AND
+DB_MOO_Execution_Goblin((CHARACTER)_Goblin, _DeathFlag)
+THEN
+NOT DB_SceneManager((CHARACTER)_Goblin, "MOO_Execution");
+NOT DB_MOO_Execution_Goblin((CHARACTER)_Goblin, _DeathFlag);
+
+PROC
+PROC_MOO_Execution_SetupRecurringGoblins()
+AND
+DB_MOO_Execution_GoblinDeaths(_Flag, _Type)
+AND
+DB_MOO_Execution_Goblin(_Goblin, _)
+THEN
+DB_GLO_DieFlag(_Flag, _Goblin, _Type, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SceneOver("MOO_Execution")
+AND
+DB_MOO_Execution_Goblin(_Goblin, _)
+AND
+DB_GLO_DieFlag(_Flag, _Goblin, _Type, _Killer)
+THEN
+NOT DB_GLO_DieFlag(_Flag, _Goblin, _Type, _Killer);
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned(_Character)
+AND
+DB_MOO_Execution_BlockOwned(_Character)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+
+//REGION Fight the goblins
+
+IF
+DialogActorLeft(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag(MOO_Execution_Event_FightGoblins_b72d7ea2-16fb-f427-7317-4a7b1afad20b)
+AND
+DB_MOO_Execution_Goblin(_Goblin, _)
+THEN
+LookAtEntity(_Goblin, _Player, 3.0);
+
+IF
+FlagSet(MOO_Execution_Event_FightGoblins_b72d7ea2-16fb-f427-7317-4a7b1afad20b,_,_)
+AND
+DB_MOO_Execution_Goblin(_Goblin,_)
+THEN
+SetFaction(_Goblin,(FACTION)ACT2_MOO_Execution_ExecutedGoblins_Fight_55111034-698f-444b-8ac0-7a882b49653b);
+
+IF
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+DB_Is_InCombat(_Goblin, _ID)
+AND
+DB_MOO_Execution_Goblin((CHARACTER)_Goblin, _)
+AND
+NOT DB_MOO_Execution_PlayersExecutingGoblins((CHARACTER)_Player, _ID)
+AND
+IsEnemy((CHARACTER)_Player, (CHARACTER)_Goblin, 1)
+THEN
+DB_MOO_Execution_PlayersExecutingGoblins((CHARACTER)_Player, _ID);
+SetFlag(MOO_Execution_State_ExecutingGoblins_55edd53f-09c2-4481-b8aa-d6bad11c5fa8, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+LeftCombat(_Player, _ID)
+AND
+DB_MOO_Execution_PlayersExecutingGoblins((CHARACTER)_Player, _ID)
+THEN
+NOT DB_MOO_Execution_PlayersExecutingGoblins((CHARACTER)_Player, _ID);
+
+IF
+DB_GlobalFlag(MOO_Execution_State_ExecutingGoblins_55edd53f-09c2-4481-b8aa-d6bad11c5fa8)
+AND
+NOT DB_MOO_Execution_PlayersExecutingGoblins(_, _)
+THEN
+ClearFlag(MOO_Execution_State_ExecutingGoblins_55edd53f-09c2-4481-b8aa-d6bad11c5fa8);
+
+IF
+TurnStarted(_Character)
+AND
+DB_GlobalFlag(MOO_Execution_State_ExecutingGoblins_55edd53f-09c2-4481-b8aa-d6bad11c5fa8)
+AND
+DB_MOO_Execution_GoblinsInCombatAD((CHARACTER)_Character)
+THEN
+NOT DB_MOO_Execution_GoblinsInCombatAD((CHARACTER)_Character);
+PROC_MOO_Execution_StartGoblinsInCombatAD(_Character);
+
+PROC
+PROC_MOO_Execution_StartGoblinsInCombatAD(S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf)
+THEN
+PROC_TryStartAD(MOO_Execution_AD_GoblinsInCombat_fb32e0c0-317a-ec80-9491-5914b1f15d91,S_MOO_ExecutionGoblin_001_40954403-0a66-4bee-8c62-53a810cedadf,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_MOO_Execution_StartGoblinsInCombatAD(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+THEN
+PROC_TryStartAD(MOO_Execution_AD_GoblinsInCombat_fb32e0c0-317a-ec80-9491-5914b1f15d91,NULL_00000000-0000-0000-0000-000000000000,S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_MOO_Execution_StartGoblinsInCombatAD(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb)
+THEN
+PROC_TryStartAD(MOO_Execution_AD_GoblinsInCombat_fb32e0c0-317a-ec80-9491-5914b1f15d91,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+
+PROC
+PROC_CharacterRegisterCrime_Success(_Char, _CrimeType, _StoryActionID, _Evidence, _Victim, _CrimeID)
+AND
+DB_MOO_Execution_Goblin(_Victim, _)
+AND
+DB_GlobalFlag(MOO_Execution_Event_FightGoblins_b72d7ea2-16fb-f427-7317-4a7b1afad20b)
+THEN
+PROC_MOO_Execution_IgnoreGoblinCrimes(_CrimeID);
+
+PROC
+PROC_MOO_Execution_IgnoreGoblinCrimes((INTEGER)_CrimeID)
+AND
+DB_MOO_Denizens(_Character)
+THEN
+CrimeIgnoreCrime(_CrimeID, _Character);
+
+//END_REGION
+
+//REGION End of execution scene / scene cleanup
+IF
+FlagSet(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb, _, _)
+THEN
+PROC_MOO_Execution_CleanUp();
+
+PROC
+PROC_MOO_Execution_CleanUp()
+THEN
+PROC_SceneOver("MOO_Execution");
+
+PROC
+PROC_MOO_Execution_CleanUp()
+AND
+NOT DB_OnlyOnce("MOO_Execution_ForceResolveOnce")
+AND
+DB_MOO_Execution_Speakers(_Speaker)
+THEN
+NOT DB_MOO_Execution_Speakers(_Speaker);
+
+IF
+DialogEnded(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _ID)
+AND
+DB_GlobalFlag(MOO_Execution_Event_ExecutionerLeaves_f24e777b-b15a-4f95-8dae-6b4892bf5c90)
+THEN
+PROC_MOO_Execution_DaisyAD(_ID);
+SetFlag(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_MOO_Execution_StartFallbackExecutionCombat()
+THEN
+SetFlag(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_MOO_Execution_DaisyAD((INTEGER)_ID)
+AND
+QRY_State_IsBeforeState(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Audience")
+AND
+DB_Avatars(_Avatar)
+AND
+DB_DialogPlayers(_ID,_Avatar, _)
+THEN
+DB_MOO_Execution_DaisyADAvatar(_Avatar);
+
+IF
+DB_MOO_Execution_DaisyADAvatar(_Avatar)
+THEN
+RealtimeObjectTimerLaunch(_Avatar,"MOO_Execution_Timeout_DaisyAD",20000);
+
+IF
+ObjectTimerFinished(_Avatar,"MOO_Execution_Timeout_DaisyAD")
+AND
+DB_MOO_Execution_DaisyADAvatar((CHARACTER)_Avatar)
+THEN
+NOT DB_MOO_Execution_DaisyADAvatar(_Avatar);
+
+PROC
+PROC_COL_OnFirstEntry()
+AND
+DB_MOO_Execution_DaisyADAvatar((CHARACTER)_Avatar)
+THEN
+NOT DB_MOO_Execution_DaisyADAvatar(_Avatar);
+
+IF
+LeftTrigger(_Player,(TRIGGER)S_MOO_MoonriseTowerNoRoof_SUB_54d40f5d-34e6-42fd-829b-bb2f5facfcda)
+AND
+DB_MOO_Execution_DaisyADAvatar((CHARACTER)_Avatar)
+THEN
+NOT DB_MOO_Execution_DaisyADAvatar(_Avatar);
+
+IF
+DB_MOO_Execution_DaisyADAvatar(_Avatar)
+AND
+DB_InRegion(_Player,S_MOO_MoonriseTowerNoRoof_SUB_54d40f5d-34e6-42fd-829b-bb2f5facfcda)
+AND
+NOT DB_CantAct(_Avatar)
+AND
+NOT DB_DaisyAD_Played((CHARACTER)_Avatar,(DIALOGRESOURCE)MOO_Execution_DaisyAD_PostExecution_ce5ed46c-c10b-b2c5-fa35-ca294a14d9ed)
+THEN
+PROC_DaisyAD((CHARACTER)_Avatar, MOO_Execution_DaisyAD_PostExecution_ce5ed46c-c10b-b2c5-fa35-ca294a14d9ed);
+NOT DB_MOO_Execution_DaisyADAvatar(_Avatar);
+
+//Execution guards become available after the scene and while not being Minthara's escort.
+IF
+DB_GlobalFlag(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb)
+AND
+DB_MOO_Execution_Guard(_Guard, _, _)
+AND
+NOT DB_MOO_Execution_EscortGuard(_Guard)
+THEN
+DB_CRIME_Guards_RegionGuard("SCL_Main_A_MOO", "Main Prison", _Guard);
+
+//END_REGION
+
+//REGION Execution state handling
+
+PROC
+PROC_MOO_Execution_ForceResolve()
+AND
+QRY_OnlyOnce("MOO_Execution_ForceResolveOnce")
+THEN
+PROC_MOO_Execution_ForceResolveCleanUp();
+
+PROC
+PROC_MOO_Execution_ForceResolveCleanUp()
+THEN
+PROC_GlobalSetFlagAndCache(MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb);
+PROC_SpotPlayers_StopSpotting(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, "MOO_Execution");
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Execution");
+ClearFlag(MOO_ZrellBriefing_State_AtChapel_34eef078-f459-4d18-a66d-bbd79eba50b6, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_MOO_Execution_ForceKillGoblins();
+PROC_MOO_Execution_ForceClearSpeakers();
+
+PROC
+PROC_MOO_Execution_ForceResolveCleanUp()
+AND
+NOT DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Assault") //Act2_MOO_Assault handles set-up, so MoveTo is not needed. Also stops issues when debugging
+AND
+NOT DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_NightsongDeath") //Act2_MOO_NightsongDeath handles their locations
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_MOO_RoofIntermediatePoint_c9586639-f1b5-4b67-998b-a2efe790dd4f, "Walk", "MOO_Ketheric_LeaveExecutionToRoof");
+PROC_CharacterMoveTo(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, S_MOO_UpperExecutionerPoint_e59505cd-2e80-4390-b340-10d6049481e3, "Walk", "MOO_Executioner_Upstairs");
+
+PROC
+PROC_MOO_Execution_ForceKillGoblins()
+AND
+DB_MOO_Execution_Goblin((CHARACTER)_Goblin, _DeathFlag)
+THEN
+Die(_Goblin, DEATHTYPE.DoT, 1);
+
+PROC
+PROC_MOO_Execution_ForceClearSpeakers()
+AND
+DB_MOO_Execution_Speakers(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+PROC_CharacterMoveTo(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, S_MOO_DrowCommanderJailPos_00251632-a615-402d-b4e1-cf1890b1b481, "Walk", "MOO_Execution_ToJail");
+
+PROC
+PROC_MOO_Execution_ForceClearSpeakers()
+AND
+DB_MOO_Execution_Speakers(_Speaker)
+THEN
+NOT DB_MOO_Execution_Speakers(_Speaker);
+
+//END_REGION
+
+//REGION Behaviours
+
+PROC
+PROC_MOO_Execution_SetupFinished()
+THEN
+PROC_MOO_Execution_DetermineADQueue();
+
+PROC
+PROC_MOO_Execution_DetermineADQueue()
+AND
+DB_MOO_Execution_ADQueue((INTEGER)_Index,(DIALOGRESOURCE)_AD,(CHARACTER)_Speaker)
+THEN
+NOT DB_MOO_Execution_ADQueue(_Index,_AD,_Speaker);
+
+//Add ADs from sequence into queue
+PROC
+PROC_MOO_Execution_DetermineADQueue()
+AND
+DB_MOO_Execution_ADSequence((INTEGER)_Index,(STRING)_Identifier)
+THEN
+PROC_MOO_Execution_QueueAD((STRING)_Identifier);
+
+PROC
+PROC_MOO_Execution_QueueAD("Plea")
+AND
+QRY_OnlyOnce_Reset("MOO_Execution_PleaAD_Selected")
+AND
+DB_MOO_Execution_PleaAD((DIALOGRESOURCE)_AD,(CHARACTER)_Character)
+AND
+NOT DB_CantTalk(_Character)
+AND
+NOT DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Character) //only queue if not already in AD queue
+AND
+QRY_OnlyOnce("MOO_Execution_PleaAD_Selected")
+THEN
+DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Character);
+
+PROC
+PROC_MOO_Execution_QueueAD("Ketheric")
+THEN
+DB_MOO_Execution_ADQueue((DIALOGRESOURCE)SCL_Ketheric_AD_Execution_02cc92fe-a6e9-db14-34d8-1c17b08137e6,(CHARACTER)S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+
+//Launch timer
+PROC
+PROC_MOO_Execution_DetermineADQueue()
+AND
+QRY_MOO_Execution_AnyADInQueue()
+THEN
+TimerCancel("MOO_Execution_ADQueue");
+TimerLaunch("MOO_Execution_ADQueue",8000);
+
+//AD queue
+IF
+TimerFinished("MOO_Execution_ADQueue")
+AND
+QRY_AnyCharacterInTrigger((TRIGGER)S_MOO_MainFloorInterior_SUB_429a55cc-58d2-4469-9577-852131e1fff3)
+AND
+DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker)
+AND
+QRY_OnlyOnce("MOO_Execution_SelectedAD")
+AND
+NOT DB_CantTalk(_Speaker)
+AND
+NOT QRY_MOO_Execution_StartDialog(_AD,_Speaker)
+THEN
+NOT DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker);
+PROC_MOO_Execution_AdvanceADQueue(3000);
+
+//Could not select AD
+IF
+TimerFinished("MOO_Execution_ADQueue")
+AND
+NOT DB_OnlyOnce("MOO_Execution_SelectedAD")
+THEN
+PROC_MOO_Execution_AdvanceADQueue(3000);
+
+//Selected AD but failed to play
+IF
+TimerFinished("MOO_Execution_ADQueue")
+AND
+DB_OnlyOnce("MOO_Execution_SelectedAD")
+AND
+NOT DB_MOO_Execution_PlayingDialog((DIALOGRESOURCE)_)
+AND
+QRY_OnlyOnce_Reset("MOO_Execution_SelectedAD")
+AND
+DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker)
+AND
+QRY_OnlyOnce("MOO_Execution_SelectedAD")
+THEN
+DebugText(_Speaker,"Failed to play AD");
+NOT DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker); //AD failed, remove from queue
+PROC_MOO_Execution_AdvanceADQueue(3000);
+
+IF
+TimerFinished("MOO_Execution_ADQueue")
+AND
+DB_OnlyOnce("MOO_Execution_SelectedAD")
+THEN
+NOT DB_OnlyOnce("MOO_Execution_SelectedAD");
+
+QRY
+QRY_MOO_Execution_StartDialog((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker)
+AND
+QRY_StartDialog(_AD,_Speaker)
+THEN
+DB_MOO_Execution_PlayingDialog(_AD);
+
+IF
+AutomatedDialogEnded(_AD,_)
+AND
+DB_MOO_Execution_PlayingDialog((DIALOGRESOURCE)_AD)
+AND
+DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker)
+THEN
+NOT DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker);
+NOT DB_MOO_Execution_PlayingDialog((DIALOGRESOURCE)_AD);
+PROC_MOO_Execution_AdvanceADQueue_AfterAD(_AD);
+
+PROC
+PROC_MOO_Execution_AdvanceADQueue_AfterAD((DIALOGRESOURCE)_AD)
+AND
+_AD != SCL_Ketheric_AD_Execution_02cc92fe-a6e9-db14-34d8-1c17b08137e6
+THEN
+PROC_MOO_Execution_AdvanceADQueue(13000);
+
+PROC
+PROC_MOO_Execution_AdvanceADQueue_AfterAD((DIALOGRESOURCE)SCL_Ketheric_AD_Execution_02cc92fe-a6e9-db14-34d8-1c17b08137e6)
+THEN
+PROC_MOO_Execution_AdvanceADQueue(22000);
+
+//Advance AD queue
+PROC
+PROC_MOO_Execution_AdvanceADQueue((INTEGER)_Duration)
+AND
+DB_SceneManager(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,"MOO_Execution")
+AND
+QRY_MOO_Execution_AnyADInQueue()
+THEN
+TimerCancel("MOO_Execution_ADQueue");
+TimerLaunch("MOO_Execution_ADQueue",_Duration);
+
+PROC
+PROC_MOO_Execution_AdvanceADQueue((INTEGER)_)
+AND
+NOT DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_,(CHARACTER)_)
+THEN
+PROC_MOO_Execution_DetermineADQueue();
+
+QRY
+QRY_MOO_Execution_AnyADInQueue()
+AND
+DB_MOO_Execution_ADQueue((DIALOGRESOURCE)_,(CHARACTER)_)
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet((FLAG)MOO_Execution_Event_KethericLeaves_b8718f8f-6313-dc0e-e20d-7435db4b74c4,_,_)
+THEN
+TimerCancel("MOO_Execution_ADQueue");
+
+PROC
+PROC_SceneOver("MOO_Execution")
+THEN
+TimerCancel("MOO_Execution_ADQueue");
+
+
+//END_REGION
+EXITSECTION
+NOT DB_GlobalFlagReactionAfterDialog(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e, MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901);
+ENDEXITSECTION
+ParentTargetEdge "Act2"

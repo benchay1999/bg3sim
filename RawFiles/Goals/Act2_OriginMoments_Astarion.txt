@@ -1,0 +1,437 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Force Reveal
+PROC_TriggerRegisterForPlayers((TRIGGER)S_SCL_AstarionForceRevealTrigger_d315831e-0a2c-4f11-b234-bc9b8bf43a97);
+//END_REGION
+
+//REGION Scar Reading
+// CAMP_Astarion_CRD_ScarReading 
+// Prerequisites: We have a high approval with Astarion, we know Cazador was his master. High approval prerequisite is removed after you learn about the scars from Raphael
+// Summary: A shirtless Astarion stretches to touch the scars on his back, trying to 'read' them so he can decipher what they say.
+// first we add SCL camps to the night defined in Act 1
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68,"SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68,"SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68,"MOONRISE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68,"HAVEN");
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68, (FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68, (FLAG)ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5);
+
+// then we need to add a new night with the same dialog, since we now also can show the night with simply high enough approval
+DB_CampNight((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, 5020);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDCAVGRN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDCAVSND");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDDUNABB");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDDUNSHA");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDBAS");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "WLDUND");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "MOONRISE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, "HAVEN");
+DB_CampNight_CRD((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)CAMP_Astarion_CRD_ScarReading_c3b2bc4f-46a5-1b25-f2aa-288dbbf47f43,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_CampNight_Requirement_Approval((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 30);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (FLAG)ORI_Astarion_Knows_Vampireness_43c71ab0-1aca-484a-950d-54106ae46da5, (FLAG)ORI_Astarion_Knows_CazadorMaster_7236c69b-fe20-afdb-a6fa-15c1fb9fb6ae, (FLAG)ASTARIONCOMPANION_9fa6b609-3ba0-43ed-a95b-82304f7b8dac);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (FLAG)NIGHT_Astarion_ScarReading_31c28982-5ef7-416d-8b77-6042545b3e68);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (FLAG)ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5);
+//END_REGION
+
+//REGION Second Nightmare
+DB_CampNight((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87, 6140);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87, (FLAG)ASTARIONAVATAR_250978c0-7289-4746-aa8b-1dffd323832d);
+DB_CampNight_SoloDream((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)CAMP_Astarion_SCO_CazadorNightmare_SecondDream_3665401c-ffba-191f-8ef3-6c14d96e9acb);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87,"SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87,"SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87,"MOONRISE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_CazadorNightmare_SecondDream_c4214d0e-ed58-49ba-9d44-e1ce8366fc87,"HAVEN");
+//END_REGION
+
+//REGION Seeking Raphael
+DB_CAMP_Astarion_RaphaelAtHavenDialogs((DIALOGRESOURCE)HAV_MolsDeal_Raphael_f7a2c41b-2b2c-c91e-faf2-b8f6ccdede44);
+DB_CAMP_Astarion_RaphaelAtHavenDialogs((DIALOGRESOURCE)HAV_MolsDeal_Lanceboard_ThreeWay_3fc20a5a-83a6-e4a9-d9c2-536b0558ec2c);
+
+// Seeking Raphael CRD
+DB_CampNight((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, 5020);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, "MOONRISE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, "HAVEN");
+DB_CampNight_CRD((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_CRD_SeekingRaphael_67b62dea-9081-4762-96eb-b7fc58147f53);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, (FLAG)CURRENTREGION_SCL_Main_A_f76b85b5-b557-4409-98fd-cc7b22f8292b);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, (FLAG)ORI_Astarion_State_RequestedConversationWithRaphael_0f717745-2fbf-465a-8ada-51bb94919378);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, (FLAG)ORI_Astarion_State_RaphaelMetAtHaven_fea65e0a-3c7c-411f-8885-62ab651e5d26);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, (FLAG)ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_SeekingRaphael_fed2dd17-fb0d-46b0-8d75-dca07d5c2d76, (FLAG)ORI_Astarion_State_RaphaelLeftMasoleumEntrance_ee881edf-2d4d-40a2-a6f1-c790a01c9ed5);
+//END_REGION
+
+//REGION Controlling Tadpole CRD
+DB_CampNight((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, 4200);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, "MOONRISE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, "HAVEN");
+DB_CampNight_CRD((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_CRD_ControllingTadpole_5cfdcd74-24dc-43b9-863e-a950c65dd163);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, (FLAG)CURRENTREGION_SCL_Main_A_f76b85b5-b557-4409-98fd-cc7b22f8292b);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, (FLAG)ORI_Astarion_State_ControllingTadpoleCRDCancelled_f9e01891-7a53-44c2-b3c5-f2946cf61005);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_ControllingTadpole_8ff9a2da-fb35-4b1e-9527-8b1b8136e204, (FLAG)MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030);
+//END_REGION
+
+//REGION Promised to help Orthon
+DB_GlobalFlagReactionAfterDialog((FLAG)SHA_Orthon_Event_SearchPersuasionSuccess_115ec894-0132-c67e-9eb6-baa4d44afbcc, (DIALOGRESOURCE)SHA_Orthon_TrespassLair_68842a58-e440-fb14-4f64-21c1783469de);
+//END_REGION
+
+//REGION Orthon's quest is finished
+DB_GlobalFlagReactionAfterDialog((FLAG)SHA_Orthon_Event_ClearGemOwnership_97c1bb82-2c37-1c13-b4ae-dcc7e25aa7f3, (DIALOGRESOURCE)SHA_Orthon_e06c8c4b-4931-391e-1c51-5b8f9b820430);
+//END_REGION
+
+//REGION Raphaels Revelation
+DB_CampNight((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, 5230 /* 6230 for avatar */, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, "HAVEN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, "MOONRISE");
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, (FLAG)ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5, (FLAG)SHA_Orthon_State_DefeatedOnce_8dd589d6-90fc-4a3b-b369-10440bd56520, (FLAG)ASTARIONCOMPANION_9fa6b609-3ba0-43ed-a95b-82304f7b8dac);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, (FLAG)ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5, (FLAG)SHA_Orthon_State_DefeatedOnce_8dd589d6-90fc-4a3b-b369-10440bd56520, (FLAG)ASTARIONAVATAR_250978c0-7289-4746-aa8b-1dffd323832d);
+DB_CampNight_CFM((FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633, (DIALOGRESOURCE)CAMP_Astarion_RaphaelsRevelation_CFM_0e624242-cb5b-9d7a-d1c5-8b7efea10cf6);
+DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)CAMP_Astarion_RaphaelsRevelation_CFM_0e624242-cb5b-9d7a-d1c5-8b7efea10cf6, (GUIDSTRING)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+//END_REGION
+
+//REGION Blood Merchant
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde, (TAG)REALLY_ASTARION_ffd08582-7396-4cac-bcd4-8f9cd0fd8ef3, (DIALOGRESOURCE)MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde,(DIALOGRESOURCE)MOO_InfernalVendor_OM_Astarion_COM_46dcd663-8419-5272-820e-e03997d01b79,(DIALOGRESOURCE)MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde);
+// It's possible to end the COM branch of the dialog with "Leave" option early, so we allow
+// OM triggering again until the COM actually happens
+DB_OriginMoment_DontAutoClearOriginMoment((DIALOGRESOURCE)MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde);
+DB_OriginMoment_DontAutoClearOriginMoment((DIALOGRESOURCE)MOO_InfernalVendor_OM_Astarion_COM_46dcd663-8419-5272-820e-e03997d01b79);
+
+// Friendship Track
+DB_CampNight((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, 4020);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, "MOONRISE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, "HAVEN");
+DB_CampNight_CRD((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_CRD_BloodMerchantAftermath_5db986e5-6859-4d8c-9670-29a05d44088a);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, (FLAG)MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3, (FLAG)ASTARIONCOMPANION_9fa6b609-3ba0-43ed-a95b-82304f7b8dac);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_BloodMerchantAftermath_CRD_901c1b6a-5e8d-4c14-a6f7-888b73a3f406, (FLAG)ORI_Astarion_State_BloodMerchantCRDCancelled_23446ff6-6398-4da1-a0f6-2413bebf7843);
+
+// Romance Track
+DB_CampNight((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, 5230);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, "HAVEN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, "MOONRISE");
+DB_CampNight_RomanceNight((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)CAMP_Astarion_SD_ROM_BloodMerchantAftermath_30d45668-4bcf-d514-5e04-5f843d1b538b, (FLAG)MOO_BloodMerchant_State_RomancePartnerDiscussedBloodWithAstarion_46c269e9-9d1b-49c2-909e-bf30198c7445);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, (FLAG)MOO_BloodMerchant_State_ConvincedAstarionToDrinkBlood_692d8d3b-c442-4615-b8d8-8bbff05fed9c);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, (FLAG)MOO_BloodMerchant_State_SupportedAstarionsDecisionNotToDrinkBlood_89c42491-69f6-43dd-b7ab-c912d11fe2a7);
+DB_CampNight_Requirement_Dating((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, (FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46);
+
+// Fallback version (uses the same dialog)
+DB_CampNight((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, 4200);
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, "SCLMAIN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, "SHARTEMPLE");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, "HAVEN");
+DB_CampNight_Camp((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, "MOONRISE");
+DB_CampNight_RomanceNight((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)CAMP_Astarion_SD_ROM_BloodMerchantAftermath_30d45668-4bcf-d514-5e04-5f843d1b538b, (FLAG)ORI_State_DatingAstarion_ba298c56-26b6-4918-9bd4-616668d369d8);
+DB_CampNight_Requirement((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, (FLAG)GLO_MoonriseTower_EverEnteredBefore_26aeabb0-7644-4897-9bbd-7a95e3e8930f, (FLAG)NIGHT_Astarion_RaphaelsRevelation_3a3b2dca-7e94-47af-b81f-93194944c633);
+DB_CampNight_Requirement_Dating((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+DB_CampNight_Requirement_Approval((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 70);
+DB_CampNight_CancelledBy((FLAG)NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, (FLAG)NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4);
+
+DB_GLO_CompoundFlag(NIGHT_Astarion_Act2RomanceFallback_7c169c4d-c675-483c-8861-c96954ecaa46, ORI_Astarion_State_HadAct2RomanceNight_56890d6d-b019-44f5-8453-e689af158b22);
+DB_GLO_CompoundFlag(NIGHT_Astarion_BloodMerchantAftermath_01e87577-fae7-4b09-9d54-4ce4c7b45fe4, ORI_Astarion_State_HadAct2RomanceNight_56890d6d-b019-44f5-8453-e689af158b22);
+//END_REGION
+
+//REGION Ketheric's speech
+DB_GlobalFlagReactionAfterDialog(MOO_Audience_State_KethericToldToKneelAtAltar_d36fc964-2170-4731-a6aa-29749c33b774, (DIALOGRESOURCE)MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f);
+//END_REGION
+
+//REGION Topical Greeting - Astarion Act 2 
+DB_TopicalGreeting((FLAG)TG_ORI_Astarion_RaphaelScarPromise_0e935b3a-ba4d-48d3-8472-25f25a0c2834);
+DB_TopicalGreetingEndCondition_FlagSet((FLAG)TG_ORI_Astarion_RaphaelScarPromise_0e935b3a-ba4d-48d3-8472-25f25a0c2834, (FLAG)VISITEDREGION_BGO_Main_A_40f06537-814f-4796-b012-5ffaa648a8d9);
+//END_REGION
+KBSECTION
+//REGION Scar reading
+// If Raphael reveals Astarion' scars we remove the approval prerequisite
+IF
+FlagSet((FLAG)ORI_State_Astarion_RaphaelRevealedScarsToParty_80fce4b8-068c-abd5-d46b-f3215c203476, _, _)
+AND
+DB_CampNight_Requirement_Approval((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _ApprovalRating)
+THEN
+NOT DB_CampNight_Requirement_Approval((FLAG)NIGHT_Astarion_ScarReading_Fallback_bd01fc04-00ce-4e32-bbee-aa248728a116, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _ApprovalRating);
+//END_REGION
+
+//REGION Seeking Raphael
+IF
+DialogStarted(_Dialog, _)
+AND
+DB_CAMP_Astarion_RaphaelAtHavenDialogs(_Dialog)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Astarion_State_RaphaelMetAtHaven_fea65e0a-3c7c-411f-8885-62ab651e5d26)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Astarion_State_RaphaelMetAtHaven_fea65e0a-3c7c-411f-8885-62ab651e5d26);
+//END_REGION
+
+//REGION Controlling Tadpole CRD
+IF
+FlagSet((FLAG)GLO_Tadpole_Event_FirstConsumed_fab5ae97-23b5-4bf2-88ae-0b1bd57523d8, _, _)
+THEN
+SetFlag((FLAG)ORI_Astarion_State_ControllingTadpoleCRDCancelled_f9e01891-7a53-44c2-b3c5-f2946cf61005);
+//END_REGION
+
+//REGION Promised to help Orthon IPRD
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)SHA_Orthon_Event_SearchPersuasionSuccess_115ec894-0132-c67e-9eb6-baa4d44afbcc)
+AND
+DB_Players((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+DB_GlobalFlag(ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Orthon_State_ContractEnded_26c35edd-3617-82b3-b4d7-1b7bb6410485)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Orthon_State_DefeatedOnce_8dd589d6-90fc-4a3b-b369-10440bd56520)
+AND
+NOT DB_GlobalFlag((FLAG)Astarion_InParty_Asked_HelpingOrthon_eff79db9-499e-0ed8-98c1-fb74d8a6c9b6)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_IPRD_PromisedToHelpOrthon_db2b737a-0496-4f75-bd3e-7fc1e15245be, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 0);
+//END_REGION
+
+//REGION Orthon's quest is finished
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)SHA_Orthon_Event_ClearGemOwnership_97c1bb82-2c37-1c13-b4ae-dcc7e25aa7f3)
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+DB_GlobalFlag(ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5)
+THEN
+QuestUpdate((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,"ORI_COM_Astarion", "HelpedOrthon");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)SHA_Orthon_Event_ClearGemOwnership_97c1bb82-2c37-1c13-b4ae-dcc7e25aa7f3)
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+DB_Avatars((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+DB_GlobalFlag(ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5)
+THEN
+QuestUpdate((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,"ORI_Avatar_Astarion", "HelpedOrthon");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)SHA_Orthon_Event_ClearGemOwnership_97c1bb82-2c37-1c13-b4ae-dcc7e25aa7f3)
+AND
+DB_Players((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+DB_GlobalFlag(ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5)
+THEN
+DB_RelationshipDialog_AutostartTryOnce((DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_IPRD_OrthonDone_dad89770-bf05-4964-b2de-b5db12781c01);
+PROC_RelationshipDialog((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_IPRD_OrthonDone_dad89770-bf05-4964-b2de-b5db12781c01, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 0);
+//END_REGION
+
+//REGION Blood Merchant
+// MOO_InfernalVendor includes NoOM, AOM, OOM and COM versions of the dialog
+
+// if AOM started, then we consider OM to be done
+// AOM == noOM version basically with minor changes
+IF
+DialogStarted(MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde, _ID)
+AND
+GetFlag((FLAG)AOM_794d7d9a-4e15-849c-7c0d-6e6cdb67cdcb, S_MOO_InfernalVendor_511c9413-25fe-449c-a81d-4b09bc20745a, 1)
+THEN
+PROC_MOO_BloodMerchant_ClearOriginMoment();
+
+// if OOM started and Astarion refused to bite Blood Merchant, then we consider OM to be done
+IF
+FlagSet(MOO_InfernalVendor_State_AstarionOrphanRefusedToBite_73effdcb-2078-4a12-8b4d-e05d9801a141, _, _)
+THEN
+PROC_MOO_BloodMerchant_ClearOriginMoment();
+
+// if COM started & Blood Merchant asked Astarion to bite her, then we consider OM to be done
+IF
+FlagSet(MOO_BloodMerchant_State_BloodMerchantAskedAstarionToBiteHer_75d863c6-03b0-4cbc-9086-82d982d8012e, _, _)
+AND
+GetFlag((FLAG)COM_7075ec1a-70ad-bd25-3111-0a955cf07585, S_MOO_InfernalVendor_511c9413-25fe-449c-a81d-4b09bc20745a, 1)
+THEN
+PROC_MOO_BloodMerchant_ClearOriginMoment();
+
+PROC
+PROC_MOO_BloodMerchant_ClearOriginMoment()
+THEN
+NOT DB_OriginMoment_DontAutoClearOriginMoment((DIALOGRESOURCE)MOO_InfernalVendor_OM_Astarion_COM_46dcd663-8419-5272-820e-e03997d01b79);
+NOT DB_OriginMoment_DontAutoClearOriginMoment((DIALOGRESOURCE)MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde);
+PROC_ClearOriginMoment(MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde);
+SetFlag(MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3);
+
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)MOO_InfernalVendor_ed295125-2ed2-6b75-67e5-3ebd3539ccde, _, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)MOO_InfernalVendor_OM_Astarion_COM_46dcd663-8419-5272-820e-e03997d01b79, _, _)
+THEN
+DB_NOOP(1);
+
+// She flees if attacked, going off stage.
+// if that happens after she asked Astarion to bite, but before he made a final decision we take it
+// as if he refused (which he does by default) and you supported him
+IF
+EntityEvent(_, "MOO_InfernalVendor_Fled")
+AND
+DB_GlobalFlag((FLAG)MOO_BloodMerchant_State_BloodMerchantAskedAstarionToBiteHer_75d863c6-03b0-4cbc-9086-82d982d8012e)
+AND
+NOT DB_GlobalFlag((FLAG)MOO_BloodMerchant_State_SupportedAstarionsDecisionNotToDrinkBlood_89c42491-69f6-43dd-b7ab-c912d11fe2a7)
+AND
+NOT DB_GlobalFlag((FLAG)MOO_BloodMerchant_State_ConvincedAstarionToDrinkBlood_692d8d3b-c442-4615-b8d8-8bbff05fed9c)
+THEN
+SetFlag((FLAG)MOO_BloodMerchant_State_SupportedAstarionsDecisionNotToDrinkBlood_89c42491-69f6-43dd-b7ab-c912d11fe2a7);
+
+IF
+FlagSet((FLAG)MOO_BloodMerchant_Event_GiveLegendaryPotion_690b3c89-709f-4b04-8921-f8587f2efc9b, _Player, _)
+THEN
+TemplateAddTo(CONS_Potion_Blood_Astarion_cc426fc4-a82e-4375-8a77-31f2344b71b4, _Player, 1, 1);
+
+// Blood Merchant OM cancels AfterCelebration night, so we un-queue the invitation
+IF
+FlagSet((FLAG)MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3, _, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Astarion_Romance1_AfterCelebration_State_QueueInvitation_NotSet_b8f1fa95-6005-4e27-9a07-0043222ecdab);
+
+IF
+FlagSet((FLAG)MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3, _, _)
+AND
+DB_ORI_Dating(_, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Astarion_State_BloodMerchantCRDCancelled_23446ff6-6398-4da1-a0f6-2413bebf7843);
+
+IF
+FlagSet((FLAG)MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3, _, _)
+AND
+DB_ORI_Partnered(_, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Astarion_State_BloodMerchantCRDCancelled_23446ff6-6398-4da1-a0f6-2413bebf7843);
+
+IF
+FlagSet((FLAG)ORI_State_DatingAstarion_ba298c56-26b6-4918-9bd4-616668d369d8, _, _)
+AND
+DB_GlobalFlag((FLAG)MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Astarion_State_BloodMerchantCRDCancelled_23446ff6-6398-4da1-a0f6-2413bebf7843);
+
+IF
+FlagSet((FLAG)ORI_State_PartneredWithAstarion_30819c8d-b39d-42e7-acd1-2a8c2c309994, _, _)
+AND
+DB_GlobalFlag((FLAG)MOO_BloodMerchant_State_BloodMerchantOMHappened_450f215e-ab01-4583-b62a-87542873abb3)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)ORI_Astarion_State_BloodMerchantCRDCancelled_23446ff6-6398-4da1-a0f6-2413bebf7843);
+
+IF
+FlagSet((FLAG)MOO_BloodMerchant_State_ConvincedAstarionToDrinkBlood_692d8d3b-c442-4615-b8d8-8bbff05fed9c, _, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 2)
+AND
+GetFlag(ORI_State_DatingAstarion_ba298c56-26b6-4918-9bd4-616668d369d8, _Player, 1)
+THEN
+SetFlag(MOO_BloodMerchant_State_RomancePartnerDiscussedBloodWithAstarion_46c269e9-9d1b-49c2-909e-bf30198c7445, _Player);
+
+IF
+FlagSet((FLAG)MOO_BloodMerchant_State_SupportedAstarionsDecisionNotToDrinkBlood_89c42491-69f6-43dd-b7ab-c912d11fe2a7, _, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 2)
+AND
+GetFlag(ORI_State_DatingAstarion_ba298c56-26b6-4918-9bd4-616668d369d8, _Player, 1)
+THEN
+SetFlag(MOO_BloodMerchant_State_RomancePartnerDiscussedBloodWithAstarion_46c269e9-9d1b-49c2-909e-bf30198c7445, _Player);
+
+// flag MOO_BloodMerchant_State_RomancePartnerDiscussedBloodWithAstarion is only used for the camp night
+// so it's safe to clear it
+IF
+FlagCleared((FLAG)ORI_State_DatingAstarion_ba298c56-26b6-4918-9bd4-616668d369d8, _Player, _)
+AND
+GetFlag((FLAG)MOO_BloodMerchant_State_RomancePartnerDiscussedBloodWithAstarion_46c269e9-9d1b-49c2-909e-bf30198c7445, _Player, 1)
+THEN
+ClearFlag((FLAG)MOO_BloodMerchant_State_RomancePartnerDiscussedBloodWithAstarion_46c269e9-9d1b-49c2-909e-bf30198c7445);
+//END_REGION
+
+//REGION Raphaels Revelation
+IF
+DialogStarted((DIALOGRESOURCE)CAMP_Astarion_RaphaelsRevelation_CFM_0e624242-cb5b-9d7a-d1c5-8b7efea10cf6, _)
+THEN
+SetFlag((FLAG)ORI_Astarion_Knows_RitualsPurpose_d1dc0f8a-b77d-4e40-a501-a66e163b8376, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION PAD after talking to Ketheric
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_Audience_State_KethericToldToKneelAtAltar_d36fc964-2170-4731-a6aa-29749c33b774)
+AND
+DB_Players(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+QRY_IsInRange(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 20.0)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)MOO_Ketheric_PAD_AstarionsComment_db390073-0499-2a8c-c57f-9d0952fec89b, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+//END_REGION
+
+//REGION Topical Greeting - Astarion Act 2 
+
+//TG - 78 - Raphael promised to tell Astarion about scars
+IF
+FlagSet((FLAG)ORI_Astarion_State_GotQuestFromRaphael_21b2c417-9d93-4df3-87b6-027e5d1cd4c5, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_Avatars((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+AND
+DB_Avatars(_Avatar)
+THEN
+SetFlag((FLAG)TG_ORI_Astarion_RaphaelScarPromise_0e935b3a-ba4d-48d3-8472-25f25a0c2834, _Avatar);
+//END_REGION
+
+//REGION Fallback - Raphael tells Astarion to kill Orthon directly
+PROC
+PROC_CampNight_StartMorningMoments()
+AND
+DB_GlobalFlag((FLAG)ORI_Astarion_State_WasToldAboutRaphaelsQuest_922705bf-1754-4e76-8ee8-eeca44a83c26)
+AND
+QRY_ORI_Astarion_RaphaelCanDoPersonalVisit()
+AND
+QRY_OnlyOnce("ORI_Astarion_CRD_RaphaelsPersonalVisit")
+THEN
+DB_ORI_Astarion_RaphaelsVisit(1);
+
+IF
+DB_ORI_Astarion_RaphaelsVisit(1)
+AND
+NOT QRY_ORI_Astarion_RaphaelCanDoPersonalVisit()
+THEN
+NOT DB_ORI_Astarion_RaphaelsVisit(1);
+
+QRY
+QRY_ORI_Astarion_RaphaelCanDoPersonalVisit()
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Orthon_Event_ClearGemOwnership_97c1bb82-2c37-1c13-b4ae-dcc7e25aa7f3)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Orthon_State_ContractEnded_26c35edd-3617-82b3-b4d7-1b7bb6410485)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Orthon_State_DefeatedOnce_8dd589d6-90fc-4a3b-b369-10440bd56520)
+AND
+NOT DB_LevelUnreachable("SCL_Main_A")
+THEN
+DB_NOOP(1);
+
+IF
+DB_ORI_Astarion_RaphaelsVisit(1)
+AND
+NOT DB_CantTalk((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+DB_RelationshipDialog_AutostartTryOnce((DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_CRD_RaphaelsVisit_9053eb4a-571a-426d-a800-f7e5dfec9db2);
+PROC_CampRelationshipDialog(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_InParty_53aba16e-55bb-a0fc-a444-522e237dbe46, (FLAG)ORI_Astarion_CRD_RaphaelsVisit_9053eb4a-571a-426d-a800-f7e5dfec9db2, 0);
+PROC_Try_CampRelationshipDialog(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

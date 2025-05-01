@@ -1,0 +1,147 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_SCE_Debrief_Participant((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, S_SCE_MintharaPoint_b4a3e1a8-c2b2-4b30-bc47-46ca7a89229d, (DIALOGRESOURCE)SCE_Minthara_b9533573-31a6-bcfe-9f91-fa720373e102);
+
+NOT DB_GLO_CharacterCorpseDialog(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,GOB_DrowCommander_Dead_fabcb4f5-d52f-b0c6-5101-566760e060c2);
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)SCE_Minthara_Dead_bad79925-03a8-6283-594e-41ca28fe224e);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("SCE_Minthara_Romance")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag((FLAG)CAMP_GoblinHunt_State_DrowPartner_d60f30bb-0fca-54ec-1028-860021d6de55, _Player);
+
+//END_REGION
+
+//REGION Minthara placement
+QRY
+QRY_SCE_Debrief_BlockCharacter((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Minthara_State_MintharaToCamp_4446c152-0902-4cc2-9990-7cb412a76051)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+QRY_MOO_IsInMOO((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+Die(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, DEATHTYPE.Psychic, 0);
+//END_REGION
+
+//REGION Cease debrief control and set follow-up dialog
+PROC
+PROC_SCE_CharacterInEpilogueHook((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+PROC_SetAnubisConfig((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, "SCE_Minthara");
+
+IF
+FlagCleared((FLAG)SCE_State_AtEpilogue_3541abb5-6aaf-48c7-bf30-5a13b3abc718, (CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, _)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_Dialogs(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)Minthara_InParty_13d72d55-0d47-c280-9e9c-da076d8876d8);
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (DIALOGRESOURCE)SCE_Minthara_Dead_bad79925-03a8-6283-594e-41ca28fe224e);
+
+IF
+DialogStarted((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _ID)
+AND
+GetFlag((FLAG)SCE_State_AtEpilogue_3541abb5-6aaf-48c7-bf30-5a13b3abc718, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 1)
+THEN
+SetFlag((FLAG)ORI_MintharaRecuitment_Event_InvitedToCamp_70385d5f-7a3a-bcd7-aa76-51c3ce5d079b, NULL_00000000-0000-0000-0000-000000000000, _ID);
+
+IF
+DialogEnded((DIALOGRESOURCE)SCE_Minthara_b9533573-31a6-bcfe-9f91-fa720373e102,_Inst)
+AND
+DB_DialogNPCs(_Inst, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 1)
+AND
+DB_PartOfTheTeam(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+QRY_Origins_PlayerForItemsOfLeavingCompanion(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, _Inst)
+AND
+DB_QRYRTN_Origins_PlayerForItemsOfLeavingCompanion(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, _Player)
+AND
+GetFlag((FLAG)GLO_Companion_Leave_363c71f4-8b46-c0c0-4bbb-0e5a85e4652d, S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, 1)
+THEN
+DB_CompanionLeaving(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,_Player);
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, "CompanionLowRelation");
+PROC_ClearOriginLeavingDialogs(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+PROC_DisappearOutOfSight(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,"Run",1,"GLO_CompanionLeaves_LowRelation");
+
+//END_REGION
+
+//REGION AD
+
+PROC
+PROC_SCE_CharacterInEpilogueHook((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+TimerLaunch("SCE_Minthara_DebriefAD_Check",3000);
+
+IF
+TimerFinished("SCE_Minthara_DebriefAD_Check")
+AND
+NOT DB_GlobalFlag(SCE_Debrief_State_JaheiraCurrentlyPresent_766b30ac-7b90-4159-a30f-50fe939ba7d8)
+AND
+NOT DB_GlobalFlag(SCE_Debrief_State_FlorrickCurrentlyPresent_8d0badf4-a26b-46da-bef8-2cf4e1e1f0bb)
+THEN
+PROC_TriggerRegisterForPlayers(S_SCE_Minthara_DebriefAD_Trigger_259ed93c-5444-4256-b6e7-8a0f20ca05a9);
+TimerLaunch("SCE_Minthara_DebriefAD",0);
+
+IF
+FlagCleared(SCE_Debrief_State_MintharaCurrentlyPresent_bcd7dde7-aad5-4dff-b289-3672c8e2591b,_,_)
+THEN
+TimerCancel("SCE_Minthara_DebriefAD");
+
+PROC
+PROC_StateSet_Defeated(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+DB_GlobalFlag(SCE_Debrief_State_MintharaCurrentlyPresent_bcd7dde7-aad5-4dff-b289-3672c8e2591b)
+THEN
+TimerCancel("SCE_Minthara_DebriefAD");
+
+IF
+DialogStarted((DIALOGRESOURCE)SCE_Minthara_b9533573-31a6-bcfe-9f91-fa720373e102,_)
+THEN
+TimerCancel("SCE_Minthara_DebriefAD");
+
+IF
+DialogStarted((DIALOGRESOURCE)SCE_Minthara_b9533573-31a6-bcfe-9f91-fa720373e102,_)
+THEN
+TimerCancel("SCE_Minthara_DebriefAD");
+
+//Just to be safe
+IF
+LevelLoaded("INT_Main_A")
+THEN
+TimerCancel("SCE_Minthara_DebriefAD");
+
+IF
+TimerFinished("SCE_Minthara_DebriefAD")
+AND
+NOT QRY_SCE_Minthara_TryDebriefAD()
+THEN
+TimerLaunch("SCE_Minthara_DebriefAD",2000);
+
+QRY
+QRY_SCE_Minthara_TryDebriefAD()
+AND
+QRY_SCE_Minthara_CanSeePlayer()
+AND
+NOT DB_CantTalk(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)SCE_Minthara_AD_a33640a8-5f68-45da-accf-1dff7dc5f93b,S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+TimerLaunch("SCE_Minthara_DebriefAD",16000);
+
+QRY
+QRY_SCE_Minthara_CanSeePlayer()
+AND
+DB_InRegion(_Player,S_SCE_Minthara_DebriefAD_Trigger_259ed93c-5444-4256-b6e7-8a0f20ca05a9)
+AND
+DB_Sees((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,_Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2_MOO_MintharaFate"

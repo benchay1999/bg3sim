@@ -1,0 +1,110 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_SCL_ShamblingMound_Undead((CHARACTER)S_SCL_BlightCombat2_ShadowCursed_01_291771df-35ef-4a27-866e-8ff7e84c2ecb);
+DB_SCL_ShamblingMound_Undead((CHARACTER)S_SCL_BlightCombat2_ShadowCursed_02_f3caaa60-d094-47f4-9c32-7010910df17c);
+KBSECTION
+//REGION Meazels Garrote behaviour
+// Link Meazel with its target whent GARROTE_TARGET is applied
+IF
+StatusApplied(_Target, "GARROTE_TARGET", _Meazel, _)
+THEN
+DB_Meazels_GarroteLinkedTarget(_Meazel, _Target);
+
+
+// If Meazel starts using Shadow Teleport, start shadow teleport VFX to linked target
+IF
+UsingSpell(_Meazel,"Target_ShadowTeleport_Meazel",_,_,_)
+AND
+DB_Meazels_GarroteLinkedTarget(_Meazel, _Target)
+THEN
+PlayEffect(_Target, (EFFECTRESOURCE)VFX_Enemies_Meazel_ShadowTeleport_Root_01_4e39b69d-866c-3c8c-a298-e425dc4c1c52, "Dummy_Root");
+
+
+// When the Meazel CAST shadow teleport, tp the linked target with it and play the shadow teleport VFX
+IF
+CastSpell(_Meazel,"Target_ShadowTeleport_Meazel",_,_,_)
+AND
+DB_Meazels_GarroteLinkedTarget(_Meazel, _Target)
+THEN
+TeleportTo(_Target, _Meazel, "", 0, 0, 0, 0, 1);
+PlayEffect(_Target, (EFFECTRESOURCE)VFX_Enemies_Meazel_ShadowTeleport_Root_02_b2869ffa-1333-9b27-e9ad-c17d9a7417bc, "Dummy_Root");
+//END_REGION
+
+//REGION Meazel's Garrote breaks
+
+// Break link if target and meazel are at a 5m distance. This is triggered by a meazel losing techical status applied as an aura by a garroted target
+IF
+StatusRemoved(_Meazel,"GARROTE_TECHNICAL",_,_)
+AND
+DB_Meazels_GarroteLinkedTarget(_Meazel, _Target)
+AND
+GetDistanceTo(_Meazel, _Target, _Distance)
+AND
+_Distance >= 5
+THEN
+RemoveStatus(_Meazel,"GARROTE_SOURCE");
+
+
+// If the meazel loses its garrote status, break the link
+IF
+StatusRemoved(_Meazel,"GARROTE_SOURCE",_,_)
+AND
+DB_Meazels_GarroteLinkedTarget(_Meazel, _Target)
+THEN
+RemoveStatus(_Target,"GARROTE_TARGET");
+NOT DB_Meazels_GarroteLinkedTarget(_Meazel, _Target);
+
+
+// If the target loses its garrote status, break the link
+IF
+StatusRemoved(_Target,"GARROTE_TARGET",_,_)
+AND
+DB_Meazels_GarroteLinkedTarget(_Meazel, _Target)
+THEN
+RemoveStatus(_Meazel,"GARROTE_SOURCE");
+NOT DB_Meazels_GarroteLinkedTarget(_Meazel, _Target);
+
+//END_REGION
+
+//REGION Shadow-cursed Mound SCL Undead
+
+// When the Shadow-cursed Mound takes its first turn, raise the SCL Undead
+IF
+TurnStarted((CHARACTER)S_SCL_BlightCombat2_Mound_01_1b294fe0-f1a1-4e81-9d4c-8d86bbda7d2b)
+AND
+DB_SCL_ShamblingMound_Undead(_Undead)
+AND
+GetDistanceTo(_Undead, (CHARACTER)S_SCL_BlightCombat2_Mound_01_1b294fe0-f1a1-4e81-9d4c-8d86bbda7d2b, _Dist)
+AND
+_Dist < 32.0
+THEN
+PROC_SCL_ShamblingMound_TryResurrectCorpse(_Undead);
+
+PROC
+PROC_SCL_ShamblingMound_TryResurrectCorpse((CHARACTER)_Undead)
+AND
+IsFreshCorpse(_Undead, 1)
+THEN
+DB_SCL_ShamblingMound_UndeadToRise(_Undead);
+ApplyStatus(_Undead, "SCL_SHADOW_CURSE_RISING", 3.0, 0, (CHARACTER)S_SCL_BlightCombat2_Mound_01_1b294fe0-f1a1-4e81-9d4c-8d86bbda7d2b);
+
+IF
+Resurrected(_Undead)
+AND
+DB_SCL_ShamblingMound_UndeadToRise(_Undead)
+THEN
+NOT DB_SCL_ShamblingMound_UndeadToRise(_Undead);
+DB_GLO_DefeatCounter(_Undead, "SCL_CombatGroups_BlightCombat2");
+
+PROC
+PROC_SCL_ShamblingMound_TryResurrectCorpse((CHARACTER)_Undead)
+THEN
+NOT DB_SCL_ShamblingMound_Undead(_Undead);
+
+//END_REGION 
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

@@ -1,0 +1,32 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Greater Rapid Rest Potion
+IF
+StatusApplied(_Char, "ALCH_POTION_REST_SLEEP_GREATER_RESTORATION", _, _)
+THEN
+PROC_CharacterFullRestore((CHARACTER)_Char);
+RemoveStatus(_Char, "ALCH_POTION_REST_SLEEP_GREATER_RESTORATION", NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//Unlocking first recipes at the start of the game
+PROC 
+PROC_Tutorial_Start()
+AND
+DB_Avatars(_Player)
+THEN
+UnlockRecipe(_Player,"ALCH_Potion_Healing_RoguesMorsel",0);
+UnlockRecipe(_Player,"ALCH_Grenade_Fire_FireAmber",0);
+UnlockRecipe(_Player,"ALCH_Elixir_Resistance_Fire_DragonEggMushroom",0);
+UnlockRecipe(_Player,"ALCH_Oil_AttackBuff_Daggeroot",0);
+
+IF
+GameBookInterfaceClosed(_Item,_Character)
+THEN
+UnlockRecipes(_Item,_Character);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

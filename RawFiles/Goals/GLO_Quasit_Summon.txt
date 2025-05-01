@@ -1,0 +1,115 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_DialogBlockAttackButton((DIALOGRESOURCE)FOR_ThayanCellar_QuasitSummon_7b661231-3d26-6ab4-2dae-9cbd4d0cc848);
+KBSECTION
+IF
+DB_PlayerSummons(_Quasit)
+AND
+GetTemplate(_Quasit, QUEST_FOR_QuasitSummon_000c1be8-615a-4324-b59d-1f0f5637df36)
+THEN
+DB_GLO_Quasit_Summoned((GUIDSTRING)_Quasit);
+
+IF
+CharacterLeftParty(_Summon)
+AND
+DB_GLO_Quasit_Summoned((GUIDSTRING)_Summon)
+THEN
+NOT DB_GLO_Quasit_Summoned((GUIDSTRING)_Summon);
+
+IF
+DB_GLO_Quasit_Summoned((GUIDSTRING)_Quasit)
+AND
+DB_GLO_Quasit_Name((FLAG)_NameFlag, (STRING)_NameKey)
+AND
+GetFlag(_NameFlag, _Quasit, 0)
+THEN
+SetFlag(_NameFlag, _Quasit);
+SetStoryDisplayName((CHARACTER)_Quasit, _NameKey);
+
+IF
+DB_GLO_Quasit_Summoned((GUIDSTRING)_Quasit)
+AND
+NOT DB_ActiveLevel("WLD_Main_A")
+THEN
+DB_Dialogs(_Quasit, (DIALOGRESOURCE)FOR_ThayanCellar_QuasitSummon_7b661231-3d26-6ab4-2dae-9cbd4d0cc848);
+
+
+//REGION CombatReact
+IF
+DB_GLO_Quasit_Summoned((GUIDSTRING)_Summon)
+THEN
+DB_CombatReact_AD_OnTurn((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnTurn_f1e944c3-4119-be51-4d03-b2c94ebc1595, 1);
+DB_CombatReact_AD_OnTurn((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnTurn_f1e944c3-4119-be51-4d03-b2c94ebc1595, 4);
+DB_CombatReact_AD_OnTurn((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnTurn_f1e944c3-4119-be51-4d03-b2c94ebc1595, 7);
+DB_CombatReact_AD_OnTurn((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnTurn_f1e944c3-4119-be51-4d03-b2c94ebc1595, 10);
+DB_CombatReact_AD_OnDeath((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnDeath_829f601e-ceab-7923-37ee-87194f5ba387);
+DB_CombatReact_AD_OnHPPercentage((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnHitPoints_b1ff4876-8b31-b6c2-3385-937dc695de02, 30);
+DB_CombatReact_AD_OnCast((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnSpell_4b5dd7f6-e01b-0601-c67f-60f496111e0a, "Target_Scare_Quasit_Summon");
+
+IF
+LeftCombat(_Summon, _)
+AND
+GetTemplate(_Summon, QUEST_FOR_QuasitSummon_000c1be8-615a-4324-b59d-1f0f5637df36)
+AND
+NOT DB_PermaDefeated(_Summon)
+AND
+NOT DB_CombatReact_AD_OnCast((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnSpell_4b5dd7f6-e01b-0601-c67f-60f496111e0a, "Target_Scare_Quasit_Summon")
+THEN
+DB_CombatReact_AD_OnCast((GUIDSTRING)_Summon, (DIALOGRESOURCE)GLO_Shovel_AD_CombatOnSpell_4b5dd7f6-e01b-0601-c67f-60f496111e0a, "Target_Scare_Quasit_Summon");
+//END_REGION CombatReact
+
+//REGION Teach Spell
+
+IF
+CastedSpell(_PLayer, "Target_FOR_ThayanCellar_SummonQuasit", _, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Quasit_State_LearnedSpell_d32342d1-1236-42d3-9181-96867a2d354b)
+AND
+HasSpell((CHARACTER)_Player, "Target_FOR_ThayanCellar_SummonQuasit", 1)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_Quasit_State_LearnedSpell_d32342d1-1236-42d3-9181-96867a2d354b);
+
+IF
+LearnedSpell(_Player, "Target_FOR_ThayanCellar_SummonQuasit")
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Quasit_State_LearnedSpell_d32342d1-1236-42d3-9181-96867a2d354b)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_Quasit_State_LearnedSpell_d32342d1-1236-42d3-9181-96867a2d354b);
+
+IF
+FlagSet((FLAG)GLO_Quasit_Event_LearningSpell_7ea75336-74f6-492a-82eb-5d7f144ce736, _Player, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_Quasit_State_LearnedSpell_d32342d1-1236-42d3-9181-96867a2d354b);
+AddSpell((CHARACTER)_Player, "Target_FOR_ThayanCellar_SummonQuasit", 1, 1);
+
+//END_REGION
+
+//REGION Summoned in Cellar
+
+IF
+DB_GLO_Quasit_Summoned((GUIDSTRING)_Summon)
+AND
+CharacterGetOwner((CHARACTER)_Summon, _Player)
+AND
+DB_InRegion(_Player, (TRIGGER)S_FOR_ThayanCellar_DangerZone_5978a2ae-581a-4063-a953-f0713aca5bbe)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_Quasit_State_SummonedFirstInCellar_1ca9d878-354b-49dc-be7e-551962eae306);
+
+
+//END_REGION
+
+//REGION Debug
+
+IF
+TextEvent("shovel_scroll")
+AND
+GetHostCharacter(_Player)
+THEN
+TemplateAddTo((ITEMROOT)QUEST_FOR_SCROLL_SummonQuasit_6b881dce-b87f-4c3c-aa98-7ba4b07c009b, _Player, 1, 1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

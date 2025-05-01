@@ -1,0 +1,414 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//All Act3 levels he can appear in
+DB_GLO_Voss_Act3Levels("BGO_Main_A");
+DB_GLO_Voss_Act3Levels("CTY_Main_A");
+DB_GLO_Voss_Act3Levels("END_Main");
+
+//Defeated/PermaDefeated/Dead flag events
+DB_DefeatedStateFlag(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (FLAG)GLO_GithKnight_State_Defeated_b3e82ce9-c66d-4982-87d0-90eedd90e9fc);
+DB_PermaDefeatedFlag(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (FLAG)GLO_GithKnight_State_PermaDefeated_c354b407-b88d-4920-96a2-80555d6fc0b0);
+DB_DeadOnceFlag(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (FLAG)GLO_GithKnight_State_Dead_5868ef84-9f0d-40ce-8ef7-2b2d628daf94);
+DB_SeenDeadNPCGlobalFlag((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (FLAG)GLO_Voss_Knows_PlayersKnowVossIsDead_db411e5e-c525-4fe1-b532-097bb5c5ee15);
+
+//If Voss is knocked out, instead of being perma defeated, he appears again in Endgame, either as an ally or enemy depending on the Orpheus outcome
+DB_PreventKnockedOutPermaDefeated((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+DB_CharacterBlockedFromSellingTemplate((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (ROOT)MAG_Primeval_Silver_Longsword_20c66f8d-f455-42fc-8e48-543512247e75);
+
+//REGION GLO_HelpVoss Journal
+DB_ORI_Laezel_QuestCurrentPriority("GLO_HelpVoss", 0);
+
+DB_ORI_Laezel_QuestPriorityStepList(1000, "GLO_HelpVoss", "AgreeToVoss");
+DB_ORI_Laezel_QuestPriorityStepList(1100, "GLO_HelpVoss", "TalkedToLaezelAboutOrpheus");
+DB_ORI_Laezel_QuestPriorityStepList(1100, "GLO_HelpVoss", "EnteredBGO");
+DB_ORI_Laezel_QuestPriorityStepList(1100, "GLO_HelpVoss", "LearnedAboutOrphicHammer_FindVossInSC");
+DB_ORI_Laezel_QuestPriorityStepList(1200, "GLO_HelpVoss", "SpeakToRaphael");
+DB_ORI_Laezel_QuestPriorityStepList(1200, "GLO_HelpVoss", "LearnedAboutOrphicHammer_SpeakToRaphael");
+DB_ORI_Laezel_QuestPriorityStepList(1300, "GLO_HelpVoss", "AfterRaphaelNoDeal");
+DB_ORI_Laezel_QuestPriorityStepList(1400, "GLO_HelpVoss", "SpokeToVossInSC");
+DB_ORI_Laezel_QuestPriorityStepList(1400, "GLO_HelpVoss", "EnteredHoH");
+DB_ORI_Laezel_QuestPriorityStepList(1400, "GLO_HelpVoss", "SawHammer");
+DB_ORI_Laezel_QuestPriorityStepList(1400, "GLO_HelpVoss", "HammerForceFieldDisabled");
+DB_ORI_Laezel_QuestPriorityStepList(1500, "GLO_HelpVoss", "GotHammerFromHoH_VossInSewers");
+DB_ORI_Laezel_QuestPriorityStepList(1550, "GLO_HelpVoss", "GotHammerFromHoH_VossInSC");
+DB_ORI_Laezel_QuestPriorityStepList(1600, "GLO_HelpVoss", "AfterRaphaelMadeDeal");
+DB_ORI_Laezel_QuestPriorityStepList(1700, "GLO_HelpVoss", "SpokeToVossInSC_DeceivedThatDidNotMakeDeal");
+DB_ORI_Laezel_QuestPriorityStepList(1800, "GLO_HelpVoss", "GotHammerFromHoH_DidNotMeetVoss");
+
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_RaphaelTango_Event_PlayerLiedToGetSword_84db2013-d9dc-b9d5-5837-73e90ddf4ca8, (DIALOGRESOURCE)WYR_RaphaelTango_Voss_140953a8-5d79-c6d0-d691-52694b875bc2);
+DB_GlobalFlagReactionAfterDialog((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f, (DIALOGRESOURCE)WYR_RaphaelTango_Voss_140953a8-5d79-c6d0-d691-52694b875bc2);
+DB_GlobalFlagReactionAfterDialog((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f, (DIALOGRESOURCE)LOW_VossSewers_6a70d80c-2c97-445b-4850-e6ac62c3b4bc);
+//END_REGION
+KBSECTION
+IF
+DB_GLO_Voss_Act3Levels(_Act3Level)
+THEN
+DB_GLO_SetupForAct_Character(_Act3Level, (CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+//REGION GLO_HelpVoss Journal
+IF
+FlagSet((FLAG)ORI_Laezel_State_AgreedWithVossInAct2_63f1a107-a2af-46ec-ac49-a10d0166ac2e, _, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_AgreedVoss_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "AgreeToVoss");
+
+IF
+DialogEnded((DIALOGRESOURCE)INT_Laezel_WRD_AboutOrpheusAfterIntermezzo_54bd43a1-faf4-0143-8d75-2318ea061fbc, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_TalkedToLaezelAboutOrpheus_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "TalkedToLaezelAboutOrpheus");
+
+PROC
+PROC_GLO_Origins_SetupRecruitment("BGO_Main_A")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_EnteredBGO_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "EnteredBGO");
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_RaphaelTango_ThreeWay_VossScene_3500e60b-d165-934d-e96d-a3c9591f0133, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_SpeakToRaphael_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "SpeakToRaphael");
+
+IF
+FlagSet((FLAG)GLO_Orpheus_Knows_OrphicHammerIsTheKey_980541fb-1483-ea1a-3387-64405eace9a2, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_RaphaelTango_Event_BeganSoloScene_1048973a-9ed0-89e5-ce68-11e03fafc22c)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_HouseOfHope_State_VisitedHouseOfHope_c8889a79-8277-48e9-afa0-e14f6359ea10)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_LearnedAboutOrphicHammer_SpeakToRaphael_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "LearnedAboutOrphicHammer_SpeakToRaphael");
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_RaphaelTango_Raphael_SoloScene_e95ac422-e05d-f119-68fd-e382d71f7c79, _)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+AND
+DB_GlobalFlag((FLAG)GLO_Orpheus_Knows_OrphicHammerIsTheKey_980541fb-1483-ea1a-3387-64405eace9a2)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_AfterRaphaelNoDeal_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "AfterRaphaelNoDeal");
+
+IF
+FlagSet((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d, _, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_SpokeToVossInSC_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "SpokeToVossInSC");
+
+IF
+FlagSet((FLAG)LOW_HouseOfHope_State_VisitedHouseOfHope_c8889a79-8277-48e9-afa0-e14f6359ea10, _, _)
+AND
+DB_GlobalFlag((FLAG)GLO_Orpheus_Knows_OrphicHammerIsTheKey_980541fb-1483-ea1a-3387-64405eace9a2)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_EnteredHoH_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "EnteredHoH");
+
+IF
+FlagSet((FLAG)LOW_HouseOfHope_Event_SawMainTreasures_3a0552ac-db09-4f61-93d6-2c6f3be90d46, _, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_SawHammer_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "SawHammer");
+
+IF
+FlagSet((FLAG)LOW_HouseOfHope_State_TreasureBlockerRemoved_e6b12fcb-de35-47c1-cd3a-427680bbc32c,_,_)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_HammerForceFieldDisabled_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "HammerForceFieldDisabled");
+
+IF
+FlagSet((FLAG)GLO_Monitor_State_HasOrphicHammer_29842214-5482-dc25-fc89-02e474d7d96b, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_GotHammerFromHoH_VossInSewers_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "GotHammerFromHoH_VossInSewers");
+
+IF
+FlagSet((FLAG)GLO_Monitor_State_HasOrphicHammer_29842214-5482-dc25-fc89-02e474d7d96b, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_HelpVoss", "SpeakToRaphael", 1)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_GotHammerFromHoH_VossInSC_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "GotHammerFromHoH_VossInSC");
+
+IF
+FlagSet((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc, _, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_AfterRaphaelMadeDeal_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "AfterRaphaelMadeDeal");
+
+IF
+FlagSet((FLAG)ORI_Laezel_State_VossWaitingForHammerInSewers_47b30289-c885-46a9-ab6e-82b5460c161d, _, _)
+AND
+DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_SpokeToVossInSC_DeceivedThatDidNotMakeDeal_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "SpokeToVossInSC_DeceivedThatDidNotMakeDeal");
+
+IF
+FlagSet((FLAG)GLO_Monitor_State_HasOrphicHammer_29842214-5482-dc25-fc89-02e474d7d96b, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_HelpVoss", "SpeakToRaphael", 0)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_GotHammerFromHoH_DidNotMeetVoss_StepActivated")
+THEN
+PROC_ORI_Laezel_QuestUpdate_RespectPriority((CHARACTER)_Player, "GLO_HelpVoss", "GotHammerFromHoH_DidNotMeetVoss");
+
+IF
+DB_PermaDefeated(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_VossPermaDefeated_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "VossPermaDefeated");
+
+IF
+CastedSpell(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,"Shout_GLO_Voss_TeleportOut",_,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)Act3_Visited_83f7a4a8-0a60-4be3-ab2a-38800f10750b)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_VossGoneFromSewers_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "VossGoneFromSewers");
+
+IF
+CastSpellFailed(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,"Shout_GLO_Voss_TeleportOut",_,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)Act3_Visited_83f7a4a8-0a60-4be3-ab2a-38800f10750b)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_VossGoneFromSewers_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "VossGoneFromSewers");
+
+IF
+FlagSet((FLAG)LOW_HouseOfHope_State_VisitedHouseOfHope_c8889a79-8277-48e9-afa0-e14f6359ea10,_,_)
+AND
+QRY_State_IsBeforeState(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting")
+THEN
+DB_GLO_Voss_VossLeftSCWithoutMeetingPlayer(1);
+
+IF
+DB_InRegion(_Player, S_WYR_SharessCaress_RaphaelRoom_SUB_71f24fd6-33e5-4b1d-8341-e7c9f448731d)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GLO_Voss_VossLeftSCWithoutMeetingPlayer(1)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_VossGoneFromSC_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "VossGoneFromSC");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_RaphaelTango_Event_PlayerLiedToGetSword_84db2013-d9dc-b9d5-5837-73e90ddf4ca8)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(ORI_Laezel_State_TookSilverSword_a1e6810f-08e9-4994-b780-098e1635f60a)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_SpokeToVossInSC_DeceivedThatMadeDeal_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "SpokeToVossInSC_DeceivedThatMadeDeal");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_RaphaelTango_Event_PlayerLiedToGetSword_84db2013-d9dc-b9d5-5837-73e90ddf4ca8)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag(ORI_Laezel_State_TookSilverSword_a1e6810f-08e9-4994-b780-098e1635f60a)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_SpokeToVossInSC_DeceivedThatMadeDeal_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "SpokeToVossInSC_DeceivedThatMadeDeal_AlreadyHasSword");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(ORI_Laezel_State_TookSilverSword_a1e6810f-08e9-4994-b780-098e1635f60a)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_RaphaelTango_Event_PlayerLiedToGetSword_84db2013-d9dc-b9d5-5837-73e90ddf4ca8)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_ShowedHammer_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "ShowedHammer");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)ORI_Laezel_State_ShowedVossTheHammer_5588f6a2-bb8c-4f91-a152-168492b9c09f)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag(ORI_Laezel_State_TookSilverSword_a1e6810f-08e9-4994-b780-098e1635f60a)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_RaphaelTango_Event_PlayerLiedToGetSword_84db2013-d9dc-b9d5-5837-73e90ddf4ca8)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_ShowedHammer_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "ShowedHammer_AlreadyHasSword");
+
+IF
+FlagSet((FLAG)END_General_State_CurrentlyInMorphicPool_06208edf-4c61-44a2-932b-b158d9ddd2f0, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("GLO_HelpVoss_EnteredMorphicPoolWithoutShowingHammer_StepActivated")
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_HelpVoss", "EnteredMorphicPoolWithoutShowingHammer");
+//END_REGION
+
+//REGION Voss Equipment Swap if given Silver Sword
+IF
+FlagSet((FLAG)GLO_Voss_Event_GivesSilverSword_744de93b-5f2e-4316-9f41-ba595501f1c4, _ , _)
+AND
+GetEquippedWeapon((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _VossSword)
+THEN
+Unequip((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _VossSword);
+DB_GLO_Voss_SilverSwordReward(_VossSword);
+
+IF
+Unequipped(_VossSword, (CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+DB_GLO_Voss_SilverSwordReward(_VossSword)
+AND
+GetItemByTemplateInInventory((ITEMROOT)MAG_Primeval_Silver_Longsword_20c66f8d-f455-42fc-8e48-543512247e75, S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _VossWeakerSword)
+AND
+QRY_OnlyOnce("GLO_Voss_SwitchedSwords")
+THEN
+Equip((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,_VossWeakerSword, 0, 0, 0);
+DB_GLO_Voss_VossChangedSwords(1);
+
+
+//END_REGION
+
+//REGION Voss teleport out spell
+IF
+UsingSpell(_Character, "Shout_GLO_Voss_TeleportOut", _, _, _)
+THEN
+RealtimeObjectTimerLaunch(_Character, "Shout_GLO_Voss_TeleportOutAnimationsDelay", 600); //Timer is needed because the VFX for disappearing also makes the character reappear after some time. If we play it too soon, we see the character reappear before they are set off stage.
+
+IF
+ObjectTimerFinished(_Character, "Shout_GLO_Voss_TeleportOutAnimationsDelay")
+AND
+GetPosition(_Character, _X, _Y, _Z)
+THEN
+PlayEffectAtPosition(VFX_Spells_Cast_Intent_Utility_DimensionDoor_Root_01_7a4c033f-4128-31c0-fc04-951f8b7f2242, _X, _Y, _Z, 1.0);
+PlayEffect(_Character, VFX_Spells_Cast_Intent_Utility_DimensionDoor_BodyFX_Textkey_01_f4de2ffb-353f-a215-3311-f729bd8de1d6);
+
+IF
+CastedSpell(_Character,"Shout_GLO_Voss_TeleportOut",_,_,_)
+AND
+_Character != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_SetOnStage(_Character, 0);
+
+IF
+CastSpellFailed(_Character,"Shout_GLO_Voss_TeleportOut",_,_,_)
+AND
+_Character != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_SetOnStage(_Character, 0);
+//END_REGION
+
+//REGION Voss Visuals in Act3
+//Change Voss's appearance once he enters Act3 to his scarred visuals
+PROC
+PROC_GLO_SetupForAct(_Act3Level, S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1)
+AND
+DB_GLO_Voss_Act3Levels(_Act3Level)
+AND
+QRY_OnlyOnce("GLO_Voss_SetupForAct3")
+THEN
+Transform((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (CHARACTERROOT)GLO_GithKnight_Act3_92c4057e-9d55-4530-a535-eac1b58d8629, (SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+PROC_CharacterRemoveEquipmentPermanently((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+CharacterGiveEquipmentSet((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "EQ_GLO_Voss");
+TemplateAddTo((ITEMROOT)MAG_Primeval_Silver_Longsword_20c66f8d-f455-42fc-8e48-543512247e75, S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1, 0);
+SetTag((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (TAG)ACT3_VOSS_835818c1-8cf2-4d0a-85cc-6822f2b27bcf);
+//END_REGION
+
+//REGION Voss dead if not met in Act2
+//If players progress past Act2 without agreeing to work with Voss in his Act2 camp night scene with Laezel, he should die
+PROC
+PROC_LevelLoadedOnce(_VossAct3Level)
+AND
+DB_GLO_Voss_Act3Levels(_VossAct3Level)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_AgreedWithVossInAct2_63f1a107-a2af-46ec-ac49-a10d0166ac2e)
+AND
+NOT DB_PermaDefeated(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+THEN
+Die(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+//END_REGION
+
+//REGION Voss Knocked Out
+//If Voss is Knocked out (temp or perm) he should disappear and appear again in endgame
+//ToDo: Script it
+//END_REGION
+
+//REGION GithChokepoint shielding
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_SceneManager((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "PLA_GithChokepoint")
+THEN
+PROC_SceneOver("PLA_GithChokepoint");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

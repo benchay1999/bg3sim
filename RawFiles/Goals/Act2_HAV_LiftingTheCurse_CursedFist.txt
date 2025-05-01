@@ -1,0 +1,305 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION The Cursed Fist
+//Dialogs
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, (DIALOGRESOURCE)HAV_CursedFist_Dead_CursedFist_64ae5a17-7924-1ac2-0490-7b2d3f40c057);
+DB_PermaDefeatedFlag((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, (FLAG)HAV_CursedFist_State_PermaDefeated_62ac2304-a7a6-4519-b661-37ea993b1f97);
+DB_Dialogs((CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, (DIALOGRESOURCE)HAV_SavingPrisoners_FlamingFist_004_ac5537e8-1c8a-5dfb-bc15-e06c3fbceeae);
+DB_Dialogs((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, (DIALOGRESOURCE)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d);
+PROC_CharacterDisableCrime(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "DangerousMonsterReaction");
+PROC_CharacterDisableCrime(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "DangerousMonsterReactionFallback");
+PROC_CharacterDisableCrime(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "DangerousMonsterReaction_Beast");
+PROC_CharacterDisableCrime(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "DangerousMonsterReactionFallback_Beast");
+PROC_CharacterDisableCrime(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "DangerousMonsterReactionFallback_Beast_Spider");
+
+SetCanTrade((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055,0);
+
+//Setting up checking for quest item
+DB_HasItemEvent((ITEM)S_HAV_AncientFist_ImportantItem_Surgeon_1329c22c-d23a-4d31-96b0-6b734074f1dc,(FLAG)SCL_AncientFist_ItemCollected_e04f808d-6a51-4597-800e-306fdb4f825a);
+
+DB_HasItemEvent((ITEM)S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, (FLAG)SCL_AncientFist_HasWrit_711ee270-1118-45c9-b1ab-a146ee7724c4);
+
+SetOnStage(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, 0);
+
+//Ancient first needs to lay in his bed
+
+//Item Handovers
+DB_GiveItemToEvent((ITEM)S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, (FLAG)SCL_AncientFist_WritHandOver_b683ed96-38c8-449f-a433-257cb53dc476);
+DB_GiveItemToEvent((ITEM)S_HAV_AncientFist_ImportantItem_Surgeon_1329c22c-d23a-4d31-96b0-6b734074f1dc, (FLAG)SCL_AncientFist_FluteHandover_ac2f9c5a-c853-4569-949b-dea5e2c806ea);
+
+SetCanInteract((ITEM)S_HAV_HalsinStool_143f59f3-8af6-42c6-92b3-f751907e462d, 0);
+SetVisible((ITEM)S_HAV_HalsinStool_143f59f3-8af6-42c6-92b3-f751907e462d, 0);
+
+//END_REGION
+KBSECTION
+//REGION Debug
+
+IF
+FlagSet((FLAG)GLO_LiftingTheCurse_Debug_HalsinInHaven_3fe32e7b-9bd1-42c1-82e9-cc0f9c4b1dc2, _, _)
+THEN
+PROC_GLO_LiftingTheCurse_Debug_HalsinSetUp("GLO_LiftingTheCurse_Debug_HalsinInHaven");
+
+PROC
+PROC_GLO_LiftingTheCurse_Debug_HalsinSetUp_State("GLO_LiftingTheCurse_Debug_HalsinInHaven")
+THEN
+SetOnStage(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, 1);
+PROC_GlobalClearFlagAndCache((FLAG)GLO_LiftingTheCurse_Debug_HalsinInHaven_3fe32e7b-9bd1-42c1-82e9-cc0f9c4b1dc2);
+PROC_GlobalClearFlagAndCache((FLAG)HAV_LiftingTheCurse_Event_ShadowsAppear_f1a7ecc6-d211-4454-8f64-a9c4367c364a);
+PROC_GlobalClearFlagAndCache((FLAG)HAV_LiftingTheCurse_Event_PortalAppears_333d9c5e-501a-470d-9708-90b9d9b1ec01);
+DB_Dialogs(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, (DIALOGRESOURCE)HAV_HalsinQuest_Halsin_2b827a2e-2358-d97a-a59a-e52b8be10a46);
+TeleportTo(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, S_HAV_HalsinPoint_80c9ba1b-e997-4c89-9e40-0310ade1b8d5, "", 0, 0, 0, 1, 1);
+PROC_State_Progress(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "SCL_LiftingTheCurse", "SCL_LiftingTheCurse_State_HalsinAtHaven");
+
+PROC
+PROC_HAV_FlamingFists_Init()
+AND
+DB_GlobalFlag(Debug_Act2Setup_State_DesireSaved_9ab00499-75ee-2b2f-74f9-fed1957e3f26)
+THEN
+DB_Inclusion_Object((CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, (FLAG)HAV_CursedFist_FlamingFist004_Inclusion_Start_e205443e-8d06-4cbd-8f8c-947b6c201be2, (FLAG)HAV_CursedFist_FlamingFist004_Inclusion_End_59ecd9f6-dae1-460f-bea7-06dfe82c2433);
+DB_Inclusion_NPCDialog(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373);
+PROC_GlobalSetFlagAndCache((FLAG)HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8);
+
+IF
+FlagSet((FLAG)GLO_LiftingTheCurse_Debug_GiveAllQuestItems_86f0cb68-56ec-4085-ad45-06ef7c61d5b0, _Player, _)
+THEN
+ClearFlag((FLAG)GLO_LiftingTheCurse_Debug_GiveAllQuestItems_86f0cb68-56ec-4085-ad45-06ef7c61d5b0, _Player);
+ToInventory((ITEM)S_HAV_AncientFist_ImportantItem_Surgeon_1329c22c-d23a-4d31-96b0-6b734074f1dc, _Player, 1, 1, 1);
+
+IF
+DB_GlobalFlag((FLAG)HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8)
+AND
+IsOnStage(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, 0)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8);
+
+//END_REGION
+
+//REGION The Cursed Fist
+
+//Remove flag if flaming fist attendant is dead.
+IF
+DB_PermaDefeated((CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373)
+AND
+DB_GlobalFlag((FLAG)HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8);
+
+//Check if the Flaming Fist attendant is there.
+PROC
+PROC_HAV_FlamingFists_Init()
+AND
+NOT DB_PermaDefeated((CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Desire_8b9fa503-7205-4ddd-bdfa-bfaa781d9ea9)
+AND
+DB_GlobalFlag((FLAG)PLA_Desire_State_Freed2_46dbc8ef-61fa-42c4-bc89-4a8f53d53e5b)
+THEN
+DB_Inclusion_Object((CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, (FLAG)HAV_CursedFist_FlamingFist004_Inclusion_Start_e205443e-8d06-4cbd-8f8c-947b6c201be2, (FLAG)HAV_CursedFist_FlamingFist004_Inclusion_End_59ecd9f6-dae1-460f-bea7-06dfe82c2433);
+DB_Inclusion_NPCDialog(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373);
+PROC_GlobalSetFlagAndCache((FLAG)HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8);
+PROC_CharacterDisableCrime(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "DangerousMonsterReaction");
+PROC_CharacterDisableCrime(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "DangerousMonsterReactionFallback");
+PROC_CharacterDisableCrime(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "DangerousMonsterReaction_Beast");
+PROC_CharacterDisableCrime(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "DangerousMonsterReactionFallback_Beast");
+PROC_CharacterDisableCrime(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "DangerousMonsterReactionFallback_Beast_Spider");
+
+
+IF
+FlagSet(HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8, _, _)
+AND
+IsOnStage(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, 1)
+THEN
+PROC_ToInventoryAndOnStage((ITEM)S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, (CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, 1, 0, 1);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics((CHARACTER)S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_AncientFist_AttendingFistDialogSwitch_c7db1580-207c-46c9-8ae0-312e11603328)
+AND
+NOT DB_GlobalFlag((FLAG)HAV_Mood_State_Siege_b509af8b-a331-47ac-8230-3b8c5ef9956b)
+AND
+NOT DB_CantTalk((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+NOT DB_SelectedDialog( (GUIDSTRING)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (GUIDSTRING)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, _Player)
+THEN
+DB_SelectedDialog( (GUIDSTRING)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (GUIDSTRING)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, _Player);
+
+
+//Turn off the Status when the ancient fist gets his item back
+IF
+FlagSet(SCL_AncientFist_ItemReturned_9db703c7-de9a-4f1e-8338-46c0efcbc20f,_,_)
+THEN
+PROC_AncientFist_Heal();
+
+PROC
+PROC_AncientFist_Heal()
+THEN
+RemoveStatus(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "SCL_ANCIENTFIST_CATATONIC");
+SetCanJoinCombat(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, 1);
+SetCanFight(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, 1);
+
+QRY
+QRY_HAV_AncientFist_RollConditions((CHARACTER)_Player)
+AND
+GetFlag(SCL_AncientFist_HasWrit_711ee270-1118-45c9-b1ab-a146ee7724c4, S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, 0)
+AND
+GetFlag((FLAG)HAV_AncientFist_State_AttemptedPerceptionCheck_73868789-75ef-438d-90aa-9a5bdc03d13e, _Player, 0)
+AND
+NOT DB_OnlyOnce("HAV_AncientFist_WritSeen")
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+GetFlag((FLAG)SCL_AncientFist_WritHandOver_b683ed96-38c8-449f-a433-257cb53dc476, _Player, 0) 
+AND
+QRY_HAV_AncientFist_RollConditions((CHARACTER)_Player)
+THEN
+PROC_TrySkillCheck((CHARACTER)_Player, S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, "Perception", (DIFFICULTYCLASS)Act2_Medium_89f0acd4-346f-479d-8b7a-1a3eb5382f6d, "HAV_AncientFist_WritPerception");
+
+PROC
+PROC_RollResult("HAV_AncientFist_WritPerception", _Player, _, _Result)
+AND
+_Result != 2
+THEN
+SetFlag((FLAG)HAV_AncientFist_State_AttemptedPerceptionCheck_73868789-75ef-438d-90aa-9a5bdc03d13e, _Player);
+
+PROC
+PROC_RollResult("HAV_AncientFist_WritPerception", _Player, _, 1)
+AND
+QRY_OnlyOnce("HAV_AncientFist_WritSeen")
+THEN
+SetOnStage(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, 1);
+PROC_TryStartAD((DIALOGRESOURCE)HAV_CursedFist_PAD_SpottedWrit_9b4180ee-5f9f-2617-6f6e-c53eb908966e, _Player);
+PROC_PlayPerceptionRevealEffect(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, "HAV_PlayerSpottedWrit");
+
+
+IF
+DialogEnded((DIALOGRESOURCE)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+GetFlag(HAV_HalsinQuest_Halsin_Event_SearchFistInventoryAdvice_1490d24c-63a6-ed15-9056-d79339f768c2, _Player, 1)
+AND
+GetFlag(SCL_AncientFist_WritHandOver_b683ed96-38c8-449f-a433-257cb53dc476, _Player, 0)
+AND
+IsInInventoryOf(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, 0)
+AND
+IsInInventory(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, 0)
+AND
+NOT DB_OnlyOnce("HAV_AncientFist_WritSeen")
+AND
+QRY_OnlyOnce("HAV_AncientFist_RevealWrit")
+THEN
+SetOnStage(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, 1);
+PROC_TryStartAD((DIALOGRESOURCE)HAV_CursedFist_PAD_SpottedWrit_9b4180ee-5f9f-2617-6f6e-c53eb908966e, _Player);
+PROC_PlayPerceptionRevealEffect(S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, "HAV_PlayerSpottedWrit");
+
+IF
+FlagSet((FLAG)SCL_ShadowCurse_State_CurseLifted_af78af4a-48b2-46a8-be6f-f25dfa579471,_,_)
+AND
+NOT DB_PermaDefeated(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+THEN
+SetCanTrade((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055,1);
+
+//END_REGION
+
+//REGION Flaming Fist reactivity to Killing Art
+
+//Flaming fist leaves if Art is permadefeated
+IF
+FlagSet(HAV_CursedFist_State_PermaDefeated_62ac2304-a7a6-4519-b661-37ea993b1f97, NULL_00000000-0000-0000-0000-000000000000, 0)
+THEN
+PROC_NotifyWhenReadyToMoveOn(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "SCL_LiftingTheCurse_FlamingFistReadyToLeave");
+
+PROC
+PROC_ReadyToMoveOn(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "SCL_LiftingTheCurse_FlamingFistReadyToLeave")
+THEN
+PROC_DisappearOutOfSight(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "Walk", 0, "SCL_LiftingTheCurse_FlamingFistGone");
+
+//Flaming Fist off-stages after long rest if you killed Art but notify failed for some reason
+PROC
+PROC_LongRest()
+AND
+DB_PermaDefeated(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+QRY_OnlyOnce("SCL_LiftingTheCurse_FlamingFistGone")
+THEN
+DB_ExecuteInLevel("SCL_LiftingTheCurse_FlamingFistGone","SCL_Main_A");
+
+PROC
+PROC_ExecuteInLevel("SCL_LiftingTheCurse_FlamingFistGone","SCL_Main_A")
+THEN
+PROC_DisappearOutOfSight(S_HAV_FlamingFist_004_eb083eb6-066c-4693-8fb8-575bc4c71373, "Walk", 0, "SCL_LiftingTheCurse_FlamingFistGone");
+
+//END_REGION
+
+//REGION Halsin-AncientFist dialog
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (INTEGER)_ID)
+AND
+DB_State_Current(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "SCL_LiftingTheCurse", "SCL_LiftingTheCurse_State_HalsinAtHaven")
+AND
+NOT DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinGoToLake_bc4cd1f7-5e60-40e1-a583-aa886fe5b682)
+THEN
+SetFlag((FLAG)HAV_LiftingTheCurse_State_HalsinAvailableForFist_38bd3ada-29d4-4a1d-900b-c58799aad3df, NULL_00000000-0000-0000-0000-000000000000);
+PROC_DialogAddSpeakingActor(_ID, S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Player)
+AND
+DB_State_Current(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "SCL_LiftingTheCurse", "SCL_LiftingTheCurse_State_HalsinAtHaven")
+AND
+NOT DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinGoToLake_bc4cd1f7-5e60-40e1-a583-aa886fe5b682)
+AND
+NOT DB_CantTalk((CHARACTER)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+NOT DB_SelectedDialog( (GUIDSTRING)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (GUIDSTRING)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, _Player)
+THEN
+DB_SelectedDialog( (GUIDSTRING)HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, (GUIDSTRING)S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, _Player);
+
+//Fixes issue with travelling out of SCL while Halsin is at Haven sometimes making him forget where he is
+IF
+DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+DB_CurrentLevel("SCL_Main_A")
+AND
+DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinAtHaven_5bb65571-a6ad-4c34-abd3-b1f407a9cafc)
+AND
+NOT DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinAtLakeside_0bb942dc-420d-45f9-9594-83805760fd29)
+THEN
+DB_Camp_BlockCamperPosAdjustment(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+TeleportTo(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, (TRIGGER)S_HAV_HalsinArrive_7fb8a623-1b7e-4a0c-8d3b-2285adb26290, "GLO_LiftingTheCurse_HalsinArrivesAtHaven", 0, 0, 0, 0, 1);
+
+//END_REGION
+
+//REGION Read Writ
+
+IF
+GameBookInterfaceClosed((ITEM)S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454, _Player)
+AND
+QRY_OnlyOnce("HAV_AncientFist_ReadWrit")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)HAV_CursedFist_PAD_Writ_7c1798ca-40d8-7880-cab1-7163e89690fe, _Player);
+
+//END_REGION
+
+//REGION Killing Art Cullagh if he some how ends up knocked out or otherwise even more in a coma when he is already in a coma
+IF
+DB_PermaDefeated(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+NOT DB_Dead(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+NOT DB_GlobalFlag(SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3)
+THEN
+Die(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 1, 1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

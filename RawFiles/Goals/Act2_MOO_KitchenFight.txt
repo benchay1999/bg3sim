@@ -1,0 +1,350 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, MOO_KitchenFight_GnollMaster_16787e12-fb84-eaf1-b4ba-05b37c2ac56c);
+DB_AD_Dialog(S_MOO_KitchenGnoll_000_2da0be81-dff2-41a6-a15e-ce340c968ea2, MOO_Kitchen_AD_Gnoll00_227d6205-2fc2-476c-f737-af3acde76a1f);
+DB_AD_Dialog(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034, MOO_Kitchen_AD_Gnoll01_12be1010-25f9-36bf-9a53-59384ed87fed);
+DB_AD_Dialog(S_MOO_KitchenGnoll_002_44b05e1f-1e1f-4b81-bfab-ee120bc2f38c, MOO_Kitchen_AD_Gnoll02_2163b9e4-8847-6c48-16e2-e8ca070a4f94);
+
+DB_GlobalFlagReactionAfterDialog(MOO_Kitchen_AttackedTrueSoul_63f37c80-5bf0-47eb-901b-180f4274f105, MOO_KitchenFight_GnollMaster_16787e12-fb84-eaf1-b4ba-05b37c2ac56c);
+DB_GlobalFlagReactionAfterDialog(MOO_Kitchen_State_GnollsAreFree_201c6868-dc18-40fe-9585-987539f17c09, MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9);
+DB_GlobalFlagReactionAfterDialog(MOO_KitchenFight_Event_PlayerFreedGnoll_bc87cc92-9231-7412-92e2-3cb10b9da954, MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9);
+DB_GlobalFlagReactionAfterDialog(MOO_KitchenFight_State_PlayerShownKidness_8b0a1a3f-7749-4a98-b8de-40f33c06ed28, MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9);
+DB_FlagReactionAfterDialog(MOO_KitchenFight_Event_GiveReward_b5bc049f-326c-2888-295a-730a137c5d33, MOO_KitchenFight_GnollMaster_16787e12-fb84-eaf1-b4ba-05b37c2ac56c);
+
+DB_MOO_KitchenFight_Gnolls(S_MOO_KitchenGnoll_000_2da0be81-dff2-41a6-a15e-ce340c968ea2);
+DB_MOO_KitchenFight_Gnolls(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034);
+DB_MOO_KitchenFight_Gnolls(S_MOO_KitchenGnoll_002_44b05e1f-1e1f-4b81-bfab-ee120bc2f38c);
+ApplyStatus(S_MOO_KitchenGnoll_000_2da0be81-dff2-41a6-a15e-ce340c968ea2, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+ApplyStatus(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+ApplyStatus(S_MOO_KitchenGnoll_002_44b05e1f-1e1f-4b81-bfab-ee120bc2f38c, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+DB_MOO_Assault_AlliedGnollPosition((CHARACTER)S_MOO_KitchenGnoll_000_2da0be81-dff2-41a6-a15e-ce340c968ea2, (TRIGGER)S_MOO_AllyGnollPoint_001_7df4c14b-f2be-4e90-91f1-605514a06868);
+DB_MOO_Assault_AlliedGnollPosition(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034, S_MOO_AllyGnollPoint_002_bd08c33b-520b-4118-a4b8-a287ddf55e78);
+DB_MOO_Assault_AlliedGnollPosition(S_MOO_KitchenGnoll_002_44b05e1f-1e1f-4b81-bfab-ee120bc2f38c, S_MOO_AllyGnollPoint_003_e57af942-0306-4501-8560-c1cd434f9cb2);
+
+DB_MOO_KitchenFight_QtrMasterDisrupter(NULL_00000000-0000-0000-0000-000000000000);
+
+DB_DefeatedStateFlag(S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, MOO_KitchenFight_State_GnollMasterDead_7c32a2ce-c812-4adb-b3dd-08d26a3e2367);
+DB_GLO_DieFlag(MOO_KitchenFight_Event_GnollDied_a99aab55-d017-2c12-c618-cf32f57d3c25, S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034, DEATHTYPE.Physical, S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53);
+
+PROC_TriggerRegisterForPlayers(S_MOO_Kitchen_SUB_b50b8553-0064-41d0-8595-266f69e35c33);
+KBSECTION
+//REGION Debug 
+IF
+TextEvent("FightFromTentacle")
+AND
+GetHostCharacter(_Char)
+THEN
+SetFlag(MOO_HiddenWallTentacle_Event_DisruptQtrMaster_9e3ef99a-d2cd-445b-a897-a63c8a9517be, _Char, 0);
+
+IF
+TextEvent("RecruitGnolls") // Use to recruit free the gnolls in order to have them join during the assault
+THEN
+PROC_MOO_KitchenFight_DEBUG_SetGnollFree();
+
+PROC
+PROC_MOO_KitchenFight_DEBUG_SetGnollFree()
+THEN
+SetFlag(MOO_Kitchen_State_GnollsAreFree_201c6868-dc18-40fe-9585-987539f17c09);
+Die(S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53);
+
+PROC
+PROC_MOO_KitchenFight_DEBUG_SetGnollFree()
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+THEN
+SetEntityEvent(_Gnoll, "MOO_GnollsSetFree");
+
+PROC
+PROC_MOO_KitchenFight_DEBUG_SetGnollFree()
+THEN
+PROC_MOO_Assault_SetGnollsAssaultAllies();
+
+//END_REGION
+
+//REGION Gnoll Master dialog Events
+QRY
+QRY_SelectCustomDialog((CHARACTER)S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, _Player)
+AND
+NOT DB_Dialogs(S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, MOO_KitchenFight_MasterGrieving_9a5d4add-312a-bcc9-a92f-6da5ef82bcaa)
+AND
+NOT DB_Defeated(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034)
+AND
+QRY_MOO_KitchenFight_MakeGnollAvailable()
+AND
+QRY_SpeakerIsAvailable(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034)
+THEN
+DB_SelectedDialog(MOO_KitchenFight_GnollMaster_16787e12-fb84-eaf1-b4ba-05b37c2ac56c, S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, _Player, S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)MOO_KitchenFight_GnollMaster_16787e12-fb84-eaf1-b4ba-05b37c2ac56c, (INTEGER)_ID)
+AND
+NOT DB_DialogRequestCache_SpeakerList_Speakers((DIALOGRESOURCE)MOO_KitchenFight_GnollMaster_16787e12-fb84-eaf1-b4ba-05b37c2ac56c, _ID, S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034, _)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034);
+
+//Barnabus's reward given to the player after dialog induced death
+PROC
+PROC_FlagReactionAfterDialog(_Player, MOO_KitchenFight_Event_GiveReward_b5bc049f-326c-2888-295a-730a137c5d33)
+THEN
+TemplateAddTo(DEC_GEN_Corpse_Body_Part_Arm_B_Githyanki_259728c9-471d-41f0-830b-be27dbd14d8e, _Player, 1, 1);
+
+QRY
+QRY_MOO_KitchenFight_MakeGnollAvailable()
+THEN
+PROC_TryStopDialogFor(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034);
+//END_REGION
+
+//REGION Barnabus/Gnoll Death - Upon death GnollMaster will grief over Barnabus loss
+IF
+DB_PermaDefeated(S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53);
+DB_Dialogs(S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, MOO_KitchenFight_MasterGrieving_9a5d4add-312a-bcc9-a92f-6da5ef82bcaa);
+
+IF 
+FlagSet(MOO_KitchenFight_Event_GnollDied_a99aab55-d017-2c12-c618-cf32f57d3c25, _Gnoll, _)
+THEN
+DB_MOO_KitchenFight_DialogInducedDeath(1);
+Die(_Gnoll, DEATHTYPE.Physical, S_MOO_Kitchen_GnollMaster_627dfc1c-56e1-4e56-9920-56e381e72c53, 0, 1);
+
+IF
+DB_MOO_KitchenFight_DialogInducedDeath(_)
+THEN
+DB_NOOP(1);
+
+IF
+KilledBy(_Gnoll, _Player, _, _)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(MOO_KitchenFight_State_PlayerKilledGnoll_d4379c06-52f8-4cb5-ac4c-d0ba8925041c)
+THEN
+SetFlag(MOO_KitchenFight_State_PlayerKilledGnoll_d4379c06-52f8-4cb5-ac4c-d0ba8925041c);
+
+IF
+DB_PermaDefeated(_Gnoll)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+HasActiveStatus(_Gnoll, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", 1)
+THEN
+RemoveStatus(_Gnoll, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Reaction logic after Gnoll Master dies (gnoll attacked through dialog or killed by player through gameplay)
+IF
+FlagSet(MOO_Kitchen_Event_PlayerInterfered_dbc186a1-e94d-81fb-7e1b-9c442c4bc8dd, _Player, _)
+THEN
+DB_MOO_KitchenFight_QtrMasterDisrupter((CHARACTER)_Player);
+
+//This means that they will go hostile to everyone and flee Moonrise outside of being dialog triggered 
+IF
+FlagSet(MOO_KitchenFight_State_GnollMasterDead_7c32a2ce-c812-4adb-b3dd-08d26a3e2367, _, _)
+AND
+NOT DB_GlobalFlag(MOO_Kitchen_State_AttackedTrueSoul_63f37c80-5bf0-47eb-901b-180f4274f105)
+AND
+NOT DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Assault") //Ignore this mechanic for the assault
+THEN
+PROC_MOO_KitchenFight_GnollsFrenzy();
+
+IF
+FlagSet(MOO_KitchenFight_State_GnollMasterDead_7c32a2ce-c812-4adb-b3dd-08d26a3e2367, _, _)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+HasActiveStatus(_Gnoll, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", 1)
+THEN
+RemoveStatus(_Gnoll, "MOO_KITCHENFIGHT_GNOLLCONTROLLED", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_Kitchen_State_AttackedTrueSoul_63f37c80-5bf0-47eb-901b-180f4274f105)
+THEN
+PROC_SetRelationMutual((FACTION)ACT2_MOO_Gnolls_6cf5cd25-4c4f-4072-a3ee-2878dd19e1d7, (FACTION)ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, 50);
+PROC_MOO_KitchenFight_GnollConfrontTimer();
+
+PROC
+PROC_MOO_KitchenFight_GnollConfrontTimer()
+THEN
+TimerLaunch("MOO_Kitchen_GnollConfrontPlayer", 1500);
+
+IF
+TimerFinished("MOO_Kitchen_GnollConfrontPlayer")
+THEN
+PROC_MOO_KitchenFight_TryConfrontDialog();
+
+PROC
+PROC_MOO_KitchenFight_TryConfrontDialog()
+AND
+NOT DB_GlobalFlag(MOO_KitchenFight_State_PlayerKilledGnoll_d4379c06-52f8-4cb5-ac4c-d0ba8925041c)
+AND
+DB_MOO_KitchenFight_QtrMasterDisrupter(_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT QRY_StartDialogCustom(MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9, S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034, _Player, 1, 0, 0, 0)
+THEN 
+DebugText(_Player, "Failed to start dialog");
+PROC_MOO_KitchenFight_GnollsFrenzy();
+
+//If the player killed one of the gnolls before breaking the True Soul's connection, they will go hostile immediately
+PROC
+PROC_MOO_KitchenFight_TryConfrontDialog()
+AND
+DB_GlobalFlag(MOO_KitchenFight_State_PlayerKilledGnoll_d4379c06-52f8-4cb5-ac4c-d0ba8925041c)
+THEN
+PROC_MOO_KitchenFight_GnollsFrenzy();
+
+//Add the other Gnolls into the scene
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9, _ID)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+_Gnoll != S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034
+AND
+NOT DB_PermaDefeated(_Gnoll)
+THEN
+PROC_DialogAddSpeakingActor(_ID, _Gnoll);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_Kitchen_State_GnollsAreFree_201c6868-dc18-40fe-9585-987539f17c09)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+THEN
+SetEntityEvent(_Gnoll, "MOO_GnollsSetFree");
+
+//Gnolls will be hostile to players and the tower if they are freed and the player fails to tame
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_Kitchen_State_GnollsAreFree_201c6868-dc18-40fe-9585-987539f17c09)
+AND
+NOT DB_GlobalFlag(MOO_KitchenFight_Event_PlayerFreedGnoll_bc87cc92-9231-7412-92e2-3cb10b9da954)
+THEN
+PROC_MOO_KitchenFight_GnollsFrenzy();
+
+//Move the gnolls from enemies to allies for the assault
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_KitchenFight_Event_PlayerFreedGnoll_bc87cc92-9231-7412-92e2-3cb10b9da954)
+THEN
+PROC_MOO_Assault_SetGnollsAssaultOffStage();
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_Gnolls_6cf5cd25-4c4f-4072-a3ee-2878dd19e1d7, 100);
+PROC_MOO_NightsongDeath_SetGnollsNeutral();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_KitchenFight_State_PlayerShownKidness_8b0a1a3f-7749-4a98-b8de-40f33c06ed28)
+THEN
+PROC_MOO_Assault_SetGnollsAssaultAllies();
+
+//Remove them from assault
+PROC
+PROC_MOO_KitchenFight_GnollsFrenzy()
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Gnoll,_Point, _Group)
+THEN
+NOT DB_MOO_AssaultPositions(_Gnoll,_Point, _Group); 
+
+PROC
+PROC_MOO_KitchenFight_GnollsFrenzy()
+THEN
+PROC_TryStartAD(MOO_Kitchen_AD_Gnoll001Howl_10dfc847-cbc5-f1f8-348f-b15a95b80f37, S_MOO_KitchenGnoll_001_21db721c-616c-4385-970c-f18bb7477034);
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_Gnolls_6cf5cd25-4c4f-4072-a3ee-2878dd19e1d7, 0);
+PROC_SetRelationMutual((FACTION)ACT2_MOO_Gnolls_6cf5cd25-4c4f-4072-a3ee-2878dd19e1d7, (FACTION)ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, 0);
+//Absolute use different faction during assault
+PROC_SetRelationMutual((FACTION)ACT2_MOO_Gnolls_6cf5cd25-4c4f-4072-a3ee-2878dd19e1d7, (FACTION)ACT2_MOO_Assault_Hostile_68597716-e217-4777-a391-026263f291b4, 0);
+
+PROC
+PROC_MOO_KitchenFight_GnollsFrenzy()
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+NOT DB_PermaDefeated(_Gnoll)
+THEN
+PROC_CharacterMoveTo((CHARACTER)_Gnoll, S_MOO_GnollFrenzyPoint_001_bb672647-71be-453b-b361-346a5b6cbcb0, "Run", "MOO_KitchenFight_FrenzyPoint1");
+
+IF
+EntityEvent(_Gnoll, "MOO_KitchenFight_FrenzyPoint1")
+THEN
+PROC_CharacterMoveTo((CHARACTER)_Gnoll, S_MOO_GnollFrenzyPoint_002_d22dbbf2-5ca7-416b-b51c-a018dd5fafd1, "Run", "MOO_KitchenFight_FrenzyPoint2");
+
+IF
+EntityEvent(_Gnoll, "MOO_KitchenFight_FrenzyPoint2")
+THEN
+PROC_DisappearOutOfSightTo((CHARACTER)_Gnoll,S_MOO_DisappearToTownPoint_fde8de9f-81a5-4b6b-bdb6-2e11a27a1e59,"Run",0,"");
+
+//Event set up in Act2_MOO_Bazaar (There is no pretty way to move them out of the tower from the kitchen, so they will be set off stage when off screen)
+IF
+EntityEvent(_Player, "MOO_AllPlayersLeft")
+AND
+DB_GlobalFlag(MOO_KitchenFight_Event_PlayerFreedGnoll_bc87cc92-9231-7412-92e2-3cb10b9da954)
+AND
+QRY_OnlyOnce("MOO_KitchenFight_GnollsLeftTower")
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+THEN
+SetOnStage(_Gnoll, 0);
+//END_REGION
+
+//REGION Confrontation Dialog Scene Manager
+IF
+DialogStarted(MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9, _ID)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+THEN
+DB_SceneManager((CHARACTER)_Gnoll, "MOO_KitchenFight_Confrontation");
+
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_,(CHARACTER)_,"MOO_KitchenFight_Confrontation",(STRING)_Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+THEN
+PROC_SceneOver("MOO_KitchenFight_Confrontation");
+PROC_MOO_KitchenFight_GnollsFrenzy();
+
+IF
+DialogEnded(MOO_KitchenFight_GnollAttack_542ff608-625d-f855-b9a0-861404b7ddf9, _ID)
+THEN
+PROC_SceneOver("MOO_KitchenFight_Confrontation");
+//END_REGION
+
+//REGION Assault Setup - Will join the assault as allies if player freed gnolls and shown kindness
+PROC
+PROC_MOO_Assault_SetGnollsAssaultAllies()
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Gnoll, _Trigger, _Group)
+AND
+DB_MOO_Assault_AlliedGnollPosition((CHARACTER)_Gnoll, _AlliedTrigger)
+THEN
+NOT DB_MOO_AssaultPositions(_Gnoll, _Trigger, _Group);
+DB_MOO_AssaultPositions(_Gnoll, _AlliedTrigger, "MOO_Assault_GnollAlly");
+
+//If they were freed, but the player wasn't too friendly about it, they will leave and not return
+PROC
+PROC_MOO_Assault_SetGnollsAssaultOffStage()
+AND
+NOT DB_GlobalFlag(MOO_KitchenFight_State_PlayerShownKidness_8b0a1a3f-7749-4a98-b8de-40f33c06ed28)
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Gnoll, _Trigger, _Group)
+THEN
+NOT DB_MOO_AssaultPositions(_Gnoll, _Trigger, _Group);
+DB_MOO_AssaultPositions(_Gnoll, NULL_00000000-0000-0000-0000-000000000000, "");
+
+PROC
+PROC_MOO_NightsongDeath_SetGnollsNeutral()
+AND
+DB_MOO_KitchenFight_Gnolls(_Gnoll)
+THEN
+DB_MOO_NightsongDeath_NeutralCharacters(_Gnoll);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

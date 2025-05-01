@@ -1,0 +1,363 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Dialogs
+DB_Dialogs((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,(DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68);
+
+DB_OneShot_ADTrigger(S_SCL_OliversDiary_ADTrigger_c740604c-37eb-4d9e-a96d-100890013e5b,(DIALOGRESOURCE)SCL_OliversDiary_AD_CreepyNoises_1e5debb1-aea4-511a-36a4-36a971146d2c, (CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+DB_OneShot_ADTrigger(S_SCL_OliversDiary_EarlyAD_ce2b1a4a-801a-49fe-93db-35f6ffcb3deb,(DIALOGRESOURCE)SCL_OliversDiary_AD_CreepyNoises001_f6ddd8d0-ea55-687a-a640-c0a49f276ba2, (ITEM)S_SCL_OliversDiary_DialogHelper_2af0542e-8e2c-4c85-8913-98bf0aee0c07);
+
+DB_SCL_OliversFamily((CHARACTER)S_SCL_OliversDiary_DadShadow_509470bc-6c99-40c6-8d50-9dbf78b71dcf);
+DB_SCL_OliversFamily((CHARACTER)S_SCL_OliversDiary_MomShadow_18e81e1f-c904-4609-8237-b43fe12eeaaa);
+DB_SCL_OliversFamily((CHARACTER)S_SCL_OliversDiary_BetsyShadow_5842b508-82c8-430b-a302-9eddecee9974);
+
+ApplyStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE",-1.0,1,S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+
+DB_SpotPlayers((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliverDiary_InitialDialog",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_CustomRadius((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliverDiary_InitialDialog",8.0);
+
+PROC_CharacterDisableAllCrimes(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a); // TODO: temp, to make sure Oliver doesn't run away from you after he is ressurected
+DB_KeepDialogsOnDeath((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+DB_PreventPermaDefeated(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+DB_NoLowAttitudeDialog((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+
+PROC_TriggerRegisterForPlayers(S_SCL_OliverShadow_FlowerVBTrigger_b7229ee5-233c-4910-b5b8-14e4e8e904c0);
+
+//Autosave
+DB_AutoSaveTrigger((TRIGGER)S_SCL_Autosave_Oliver_7fedee30-9846-4ee1-aa4c-e28e8c713eb8);
+KBSECTION
+//REGION Init
+IF
+DB_SCL_OliversFamily(_Char)
+THEN
+SetOnStage(_Char,0);
+
+IF
+DB_SCL_OliversFamily(_Char)
+THEN
+DB_GLO_DefeatCounter(_Char,"SCL_OliversFamily_DefeatCounter");
+
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated("SCL_OliversFamily_DefeatCounter")
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)SCL_OliversDiary_State_FamilyDefeated_b124c0cf-b12e-4c4b-a980-a79e2d79c15e);
+
+IF
+FlagSet((FLAG)SCL_OliversDiary_State_FamilyHostile_0893b453-2e22-4eef-ba4f-13e8b6cc30b5,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+PROC_SCL_OliversFamily_Appear();
+
+IF
+DialogEnded(SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68, _ID)
+AND
+DB_GlobalFlag((FLAG)SCL_OliversDiary_State_FamilyHostile_0893b453-2e22-4eef-ba4f-13e8b6cc30b5)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_OliversDiary_SecondRound_b361382e-f0a8-f6eb-902a-da4d5044f90e)
+THEN
+PROC_CharacterMoveTo(S_SCL_OliversDiary_BetsyShadow_5842b508-82c8-430b-a302-9eddecee9974, S_SCL_OliversDiary_HideNSeekDetectionTrigger_0291f9f4-e9c6-4ffb-b06c-8b31843cd526, "Walk", "");
+
+//END_REGION
+
+
+//REGION Axe
+//Resetting the axe's gravity if the body or the axe is moved.
+IF
+Moved(S_SCL_OliversDiary_DadsAxe_b7d2149f-dcd4-4244-858c-aaae7af6e9b3)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_AxeGravityReset")
+THEN
+SetGravity(S_SCL_OliversDiary_DadsAxe_b7d2149f-dcd4-4244-858c-aaae7af6e9b3, GRAVITYTYPE.Enabled);
+
+IF
+AddedTo(S_SCL_OliversDiary_DadsAxe_b7d2149f-dcd4-4244-858c-aaae7af6e9b3,_Player,_)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_AxeGravityReset")
+THEN
+SetGravity(S_SCL_OliversDiary_DadsAxe_b7d2149f-dcd4-4244-858c-aaae7af6e9b3, GRAVITYTYPE.Enabled);
+
+// putting the corpse in the inventory
+IF
+AddedTo(S_SCL_DeadGithExplorer_001_228e2f85-358d-4747-8dc0-df7f198f1c68, _, _)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_AxeGravityReset")
+THEN
+SetGravity(S_SCL_OliversDiary_DadsAxe_b7d2149f-dcd4-4244-858c-aaae7af6e9b3, GRAVITYTYPE.Enabled);
+
+// shoving the corpse
+IF
+ForceMoveStarted(_Player, S_SCL_DeadGithExplorer_001_228e2f85-358d-4747-8dc0-df7f198f1c68, _)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_AxeGravityReset")
+THEN
+SetGravity(S_SCL_OliversDiary_DadsAxe_b7d2149f-dcd4-4244-858c-aaae7af6e9b3, GRAVITYTYPE.Enabled);
+//END_REGION
+
+
+//REGION Oliver is invisible at the start
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliverDiary_InitialDialog",_Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,_Player)
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet((FLAG)SCL_OliversDiary_Event_OliverAppears_5a2ef6c0-593f-c2dc-f86b-3d02e8fa70f6,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+RemoveStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE",S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+
+//END_REGION
+
+
+//REGION Hide & Seek
+//Starting the hide & seek game
+IF
+DialogEnded(SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68, _)
+AND
+DB_GlobalFlag(SCL_OliversDiary_StartedHideAndSeek_195eac0d-d53a-4522-854e-c07ce9dd74d9)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_StartedHideAndSeek")
+THEN
+ApplyStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE",-1.0,0,S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+PROC_CharacterMoveTo(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,S_SCL_OliversDiary_HidingSpot_19236b21-e742-48f7-829e-a533e8c34014, "Run", "SCL_OliversDiary_OliverHid");
+
+//Searching for Olvier in hide and seek
+IF
+EntityEvent(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliversDiary_OliverHid")
+THEN
+DB_KnowledgeCheckTrigger_AD("SCL_OliversDiary_HideAndSeekPerception", S_SCL_OliversDiary_HideNSeekDetectionTrigger_0291f9f4-e9c6-4ffb-b06c-8b31843cd526, "Perception", (DIFFICULTYCLASS)DC_Legacy_10_625be976-7a67-4394-97c8-14c69715ae4b, (DIALOGRESOURCE)SCL_OliversDiary_PAD_HideAndSeek_cc620752-64f6-37b7-39d8-a2c6b6de0843,(FLAG)SCL_OliversDiary_FoundOliver_5dbc2a51-c859-4184-bf3b-2eaf7ece51ce);
+
+//Finding Oliver
+PROC
+PROC_GLO_KnowledgeCheckSuccess(_Player, "SCL_OliversDiary_HideAndSeekPerception", S_SCL_OliversDiary_HideNSeekDetectionTrigger_0291f9f4-e9c6-4ffb-b06c-8b31843cd526)
+THEN
+RemoveStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE",S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+PROC_PlayPerceptionRevealEffect((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliversDiary_HideNSeek_Found");
+PROC_CharacterMoveToAndTalk(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, (DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,"SCL_OliversDiary_OliverRunsToPlayer", "Run", 10.0);
+
+//Failing to find Oliver
+PROC
+PROC_GLO_KnowledgeCheckFailure(_Player, "SCL_OliversDiary_HideAndSeekPerception", S_SCL_OliversDiary_HideNSeekDetectionTrigger_0291f9f4-e9c6-4ffb-b06c-8b31843cd526)
+THEN
+RealtimeObjectTimerLaunch(_Player, "SCL_OliversDiary_FoundOliverWait", 3000);
+
+IF
+ObjectTimerFinished(_Player, "SCL_OliversDiary_FoundOliverWait")
+THEN
+RemoveStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE", NULL_00000000-0000-0000-0000-000000000000);
+PROC_CharacterMoveToAndTalk(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, (DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,"SCL_OliversDiary_OliverRunsToPlayer", "Run", 10.0);
+
+//Finding Oliver via damage, turns off normal Perception trigger and counts as finding him, triggers a MoveToAndTalk
+PROC
+PROC_SCL_OliversDiary_FoundOliverWithDamage()
+THEN
+NOT DB_KnowledgeCheckTrigger_AD("SCL_OliversDiary_HideAndSeekPerception", S_SCL_OliversDiary_HideNSeekDetectionTrigger_0291f9f4-e9c6-4ffb-b06c-8b31843cd526, "Perception", (DIFFICULTYCLASS)DC_Legacy_10_625be976-7a67-4394-97c8-14c69715ae4b, (DIALOGRESOURCE)SCL_OliversDiary_PAD_HideAndSeek_cc620752-64f6-37b7-39d8-a2c6b6de0843,(FLAG)SCL_OliversDiary_FoundOliver_5dbc2a51-c859-4184-bf3b-2eaf7ece51ce);
+PROC_GlobalSetFlagAndCache((FLAG)SCL_OliversDiary_FoundOliver_5dbc2a51-c859-4184-bf3b-2eaf7ece51ce);
+RemoveStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE",S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+PROC_PlayPerceptionRevealEffect((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliversDiary_HideNSeek_Found");
+
+IF
+AttackedBy(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _, _Player, _, _, "Attack", _)
+AND
+DB_GlobalFlag(SCL_OliversDiary_StartedHideAndSeek_195eac0d-d53a-4522-854e-c07ce9dd74d9)
+AND
+NOT DB_GlobalFlag(SCL_LiftingTheCurse_State_OliverFledToTown_47018478-a3ef-42cc-8334-1516c6ed40f7)
+THEN
+PROC_SCL_OliversDiary_FoundOliverWithDamage();
+PROC_CharacterMoveToAndTalk(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, (DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,"SCL_OliversDiary_OliverRunsToPlayer", "Run", 10.0);
+
+//Fallback if the MoveToAndTalk fails because of a dangerous surface or other interruption
+IF
+CharacterMoveToAndTalkFailed(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, "SCL_OliversDiary_OliverRunsToPlayer", _)
+THEN
+PROC_CharacterMoveTo(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, S_SCL_OliversDiary_HideAndSeekFallbackPoint_64a407e8-3cc5-487c-8d22-9b5ca09b4d74, "Run", "SCL_OliversDiary_OliverRunsToFallback");
+
+IF
+EntityEvent(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliversDiary_OliverRunsToFallback")
+AND
+GetClosestPlayer(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, _Dist)
+AND
+_Dist < 10.1
+AND
+QRY_OnlyOnce("SCL_OliversDiary_OliverRunsToFallback")
+THEN
+PROC_CharacterMoveToAndTalk(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, (DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,"SCL_OliversDiary_OliverLastTry", "Run", 10.0);
+
+//END_REGION
+
+
+//REGION Hide Hide Seek
+IF
+DialogEnded(SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68, _ID)
+AND
+DB_GlobalFlag((FLAG)SCL_OliversDiary_SecondRound_b361382e-f0a8-f6eb-902a-da4d5044f90e)
+AND
+DB_DialogPlayers(_ID,_Player,_)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_StartedSecondRound")
+THEN
+ApplyStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"INVISIBLE",-1.0,0,NULL_00000000-0000-0000-0000-000000000000);
+SetHasDialog(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,0);
+SetCanSpotSneakers((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,0);
+PROC_CharacterMoveTo(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,S_SCL_OliversDiary_SecondHidingSpot_89500029-9b42-4257-93f1-01ac0d070c47, "Sprint", "SCL_OliversDiary_OliverHid2");
+RealtimeObjectTimerLaunch(_Player, "SCL_OliversDiary_SecondRound_StartDelay", 1200);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "SCL_OliversDiary_SecondRound_StartDelay")
+THEN
+UseSpell(_Player,"Shout_Hide",_Player);
+ForceTurnBasedMode(_Player,1);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "SCL_OliversDiary_SecondRound_StartDelay")
+AND
+DB_Players(_OtherPlayer)
+AND
+_OtherPlayer != _Player
+AND
+QRY_IsInRange(_OtherPlayer,_Player,15.0)
+THEN
+UseSpell(_OtherPlayer,"Shout_Hide",_OtherPlayer);
+
+IF
+ObjectTimerFinished(_Player, "SCL_OliversDiary_SecondRound_StartDelay")
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)SCL_OliversDiary_State_FamilyHostile_0893b453-2e22-4eef-ba4f-13e8b6cc30b5);
+
+IF
+EntityEvent(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliversDiary_OliverHid2")
+THEN
+RemoveStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, "INVISIBLE", S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+PROC_CharacterMoveTo(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,S_SCL_OliversDiary_FinalHidingSpot_8c1f7431-5696-4731-8b38-7d5b676418b0, "Run", "SCL_OliversDiary_OliverHidFinal");
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)SCL_OliversDiary_SecondRound_b361382e-f0a8-f6eb-902a-da4d5044f90e)
+AND
+QRY_OnlyOnce("SCL_OliversDiary_EndedSecondRound")
+THEN
+PROC_SCL_OliversFamily_Poof();
+SetCanSpotSneakers((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68,S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)SCL_OliversDiary_SecondRound_b361382e-f0a8-f6eb-902a-da4d5044f90e)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_OliversDiary_State_FamilyDefeated_b124c0cf-b12e-4c4b-a980-a79e2d79c15e)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_OliversDiary_FoundAgain_6596035e-4583-764f-52fb-c995ec9737bf)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)SCL_OliversDiary_FoundAgain_6596035e-4583-764f-52fb-c995ec9737bf);
+
+IF
+EntityEvent(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,"SCL_OliversDiary_OliverHidFinal")
+THEN
+SetHasDialog(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a,1);
+SteerTo(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, S_SCL_HarpersDuty_OliversHouseMarker_f4dd66c4-ae22-4b6e-854c-19191461f6f5, 0);
+ApplyStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, "SCL_OLIVER_HIDING_TECHNICAL", -1.0, 0, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DialogStarted(SCL_OliversDiary_OliverShadow_7924b3e2-0329-7e1d-616c-6d2df0c43b68, _)
+AND
+HasAppliedStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, "SCL_OLIVER_HIDING_TECHNICAL", 1)
+THEN
+RemoveStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, "SCL_OLIVER_HIDING_TECHNICAL", NULL_00000000-0000-0000-0000-000000000000);
+
+//Fighting Olivers Family rather than doing a second round
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated("SCL_OliversFamily_DefeatCounter")
+AND
+NOT DB_GlobalFlag(SCL_OliversDiary_State_SecondRound_b361382e-f0a8-f6eb-902a-da4d5044f90e)
+THEN
+PROC_TryStartAD(SCL_OliversDiary_AD_OliverDeathScream_32450448-6b4c-786d-db49-6d1820710b0b, S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a); 
+
+IF
+AutomatedDialogEnded(SCL_OliversDiary_AD_OliverDeathScream_32450448-6b4c-786d-db49-6d1820710b0b, _)
+AND
+NOT DB_GlobalFlag(SCL_OliversDiary_State_SecondRound_b361382e-f0a8-f6eb-902a-da4d5044f90e)
+THEN
+PROC_SCL_Oliver_Poof((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+
+//END_REGION
+
+//REGION Voicebark
+IF
+EnteredTrigger(_Player, S_SCL_OliverShadow_FlowerVBTrigger_b7229ee5-233c-4910-b5b8-14e4e8e904c0)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("SCL_Player_Sees_Flowers_At_Olivers_House")
+THEN
+StartVoiceBark(SCL_OliverShadow_VB_FlowersAtHouse_07085b31-64ce-20fd-eb02-81b69cfc9174 , _Player);
+//END_REGION
+
+//REGION Hidden booster reward
+IF
+FlagSet(SCL_OliversDiary_State_LaidToRest_523e7f1c-2e13-428a-b9e9-fe63fa237075, _, _)
+AND
+DB_SCL_OliversFamily(_Char)
+AND
+NOT DB_PermaDefeated(_Char)
+THEN
+ApplyStatus(_Char, "PEACEFUL_RESOLUTION_XP", -1.0, 1, _Char);
+
+//Hidden booster journal reward hand over
+IF
+FlagSet(SCL_OliversDiary_State_LaidToRest_523e7f1c-2e13-428a-b9e9-fe63fa237075, _, _)
+AND
+GetClosestPlayer(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, _Player, _Dist)
+AND
+QRY_OnlyOnce("SCL_WonOliverMiniBooster")
+THEN
+QuestUpdate(_Player, "HIDDEN_SCL_Boosters", "SCL_OliversShadow_WonHideAndSeek");
+//END_REGION
+
+
+PROC
+PROC_SCL_OliversFamily_Appear()
+AND
+DB_SCL_OliversFamily(_Char)
+THEN
+PROC_Foop(_Char);
+
+PROC
+PROC_SCL_OliversFamily_Poof()
+AND
+DB_SCL_OliversFamily(_Char)
+THEN
+PROC_Poof(_Char);
+
+//TODO: Change to check HP Percentage, following with curse intensity increase and quest progress
+PROC
+PROC_StateSet_Defeated(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a)
+THEN
+PROC_SCL_Oliver_Poof((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+
+PROC
+PROC_SCL_Oliver_Poof((CHARACTER)_Oliver)
+AND
+QRY_StartDialogCustom(SCL_OliversDiary_AD_OliverDeathScream_32450448-6b4c-786d-db49-6d1820710b0b,_Oliver,0,0,0,0)
+THEN
+SetFlag((FLAG)SCL_OliversDiary_State_DefeatedAtHouse_e9228f5e-6b63-4d99-be85-6257059dd7fd, NULL_00000000-0000-0000-0000-000000000000);
+PROC_Poof(_Oliver);
+PROC_RemoveOneShotAD(S_SCL_OliversDiary_ADTrigger_c740604c-37eb-4d9e-a96d-100890013e5b);
+PROC_RemoveOneShotAD(S_SCL_OliversDiary_EarlyAD_ce2b1a4a-801a-49fe-93db-35f6ffcb3deb);
+
+IF
+FlagSet((FLAG)SCL_OliversDiary_Event_RestoreAtHouse_29634249-bce8-4332-9683-0860f129184c, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+Resurrect((CHARACTER)S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+ApplyStatus(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, "INVULNERABLE_NOT_SHOWN", -1.0);
+PROC_Foop(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a);
+SetHasDialog(S_SCL_OliversDiary_OliverShadow_4f6e63a1-b143-46b1-ac0e-834494dfdc6a, 1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

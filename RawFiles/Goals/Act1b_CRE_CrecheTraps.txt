@@ -1,0 +1,96 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Trapped corridor psionic barriers
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)S_CRE_LathanderBarrier_Corridor01_a7ab0437-1474-4d3b-9aba-1ce04629ede2, (ITEM)S_CRE_PsionicBarrierPlaceholder_Pipe_Corridor01_On_3884113c-bd80-4c83-a530-f4ebbcf1f27a, (ITEM)S_CRE_PsionicBarrierPlaceholder_Pipe_Corridor01_Off_2a4a6eca-d188-4d36-87e7-147da2a9e325, (ITEM)S_CRE_LathanderBarrier_Corridor01_VFXPos_149dcfdd-1e57-4854-aa83-19cc88196fad);
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)S_CRE_LathanderBarrier_Corridor02_967b8ea7-124c-4aa3-a166-13fac09583ef, (ITEM)S_CRE_PsionicBarrierPlaceholder_Pipe_Corridor02_On_5f8793fd-193d-4cf4-a6ba-b5b964109f01, (ITEM)S_CRE_PsionicBarrierPlaceholder_Pipe_Corridor02_Off_e32a2a87-d323-46d8-82e3-34c450265ffd, (ITEM)S_CRE_LathanderBarrier_Corridor02_VFXPos_dddf1aad-4d4b-4b6a-8ac8-4684e24ba9bd);
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)S_CRE_LathanderBarrier_Corridor03_c2d3eb3d-f3bb-4bc3-8257-25d751325d30, (ITEM)S_CRE_PsionicBarrierPlaceholder_Pipe_Corridor03_On_ace642ff-9034-4350-836d-de064c69329d, (ITEM)S_CRE_PsionicBarrierPlaceholder_Pipe_Corridor03_Off_ad9cb427-d34b-44e6-8206-aa744a45c4b6, (ITEM)S_CRE_LathanderBarrier_Corridor03_VFXPos_dcdbd7fc-3c62-4fd3-a239-25ed6bf4b90f);
+KBSECTION
+//REGION Debug commands
+IF
+TextEvent("Cre_TrapsOff")
+THEN
+SetFlag((FLAG)CRE_ChainOfCommand_State_TrapsDisabled_914065e7-5b71-42e1-9dbe-f2c536eb534c, NULL_00000000-0000-0000-0000-000000000000);
+SetEntityEvent(S_PulseTraps_Helper_DisableEvent_207129c7-91d6-4140-abc2-4b831e25b43b, "CRE_Gauntlet_Disable", 1);
+
+IF
+TextEvent("Cre_TrapsOn")
+AND
+DB_CRE_CrecheTraps_PsionicBarriers(_Barrier, _, _, _)
+THEN
+ClearFlag((FLAG)CRE_ChainOfCommand_State_TrapsDisabled_914065e7-5b71-42e1-9dbe-f2c536eb534c);
+PROC_CRE_CrecheTraps_PsionicBarriers_Activate(_Barrier);
+
+
+//END_REGION
+
+//REGION Pulse Traps
+//Traps are all handled in constellation now
+//END_REGION
+
+//REGION Psionic Barriers
+//Placeholder implementation for initial whitebox
+//ToDo: Replace with a proper trap visual and an item with on/off/broken states for the pipes
+PROC
+PROC_CRE_CrecheTraps_PsionicBarriers_Activate((GUIDSTRING)_Barrier)
+AND
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)_Barrier, _OnPipe, _OffPipe, _VFXPos)
+THEN
+PROC_SetOnStage(_Barrier, 1);
+PROC_SetOnStage(_OnPipe, 1);
+PROC_SetOnStage(_OffPipe, 0);
+PROC_LoopEffect((EFFECTRESOURCE)VFX_Script_ForceFieldBarrier_01_79f97549-116d-d964-5198-c32ad5218334, _VFXPos, "CRE_LathanderBarrier", "CRE_Main_A", "");
+
+PROC
+PROC_CRE_CrecheTraps_PsionicBarriers_Deactivate((GUIDSTRING)_Barrier)
+AND
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)_Barrier, _OnPipe, _OffPipe, _VFXPos)
+THEN
+PROC_SetOnStage(_Barrier, 0);
+PROC_StopLoopEffect(_VFXPos, "CRE_LathanderBarrier");
+
+PROC
+PROC_CRE_CrecheTraps_PsionicBarriers_Break((GUIDSTRING)_Barrier)
+AND
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)_Barrier, _OnPipe, _OffPipe, _VFXPos)
+THEN
+PROC_SetOnStage(_Barrier, 0);
+PROC_StopLoopEffect(_VFXPos, "CRE_LathanderBarrier");
+NOT DB_CRE_CrecheTraps_PsionicBarriers(_Barrier, _OnPipe, _OffPipe, _VFXPos);
+
+IF
+DB_CRE_CrecheTraps_PsionicBarriers(_Barrier, _, _, _)
+THEN
+PROC_CRE_CrecheTraps_PsionicBarriers_Activate(_Barrier);
+
+IF
+DB_Destroyed(_OnPipe)
+AND
+DB_CRE_CrecheTraps_PsionicBarriers(_Barrier, _OnPipe, _OffPipe, _)
+THEN
+PROC_CRE_CrecheTraps_PsionicBarriers_Break(_Barrier);
+
+IF
+DB_GlobalFlag((FLAG)CRE_ChainOfCommand_State_TrapsDisabled_914065e7-5b71-42e1-9dbe-f2c536eb534c)
+AND
+DB_CRE_CrecheTraps_PsionicBarriers(_Barrier, _OnPipe, _OffPipe, _)
+THEN
+PROC_CRE_CrecheTraps_PsionicBarriers_Deactivate(_Barrier);
+QuestUpdate("CRE_BloodOfLathander", "GotThroughTraps");
+
+IF
+UsingSpellOnTarget(_, _Barrier, "Target_DispelMagic", _, _, _)
+AND
+DB_CRE_CrecheTraps_PsionicBarriers((ITEM)_Barrier, _, _, _)
+THEN
+RealtimeObjectTimerLaunch(_Barrier, "CRE_Lance_LathanderBarrierDispelTimer", 1000);
+
+IF
+ObjectTimerFinished(_Barrier, "CRE_Lance_LathanderBarrierDispelTimer")
+THEN
+PROC_CRE_CrecheTraps_PsionicBarriers_Deactivate(_Barrier);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1b"

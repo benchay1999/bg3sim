@@ -1,0 +1,300 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Quest reward for saving the child
+DB_HasItemEvent((ITEM)S_LOW_MissingKidsMotherReward_1f0b2318-ddd4-4a29-859c-026294bf1d1b,(FLAG)LOW_BlushingMermaid_State_HasItem_MissingKidsMotherReward_3f2a43b6-4b40-4f9f-9440-699cf4726557);
+
+DB_DeadOnceFlag((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(FLAG)LOW_BlushingMermaid_State_MissingKidsMother_Dead_357a9292-30cb-4625-aefd-7f27d89c9511);
+DB_PermaDefeatedFlag((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(FLAG)LOW_BlushingMermaid_State_MissingKidsMother_PermaDefeated_b77d4de2-9c85-447c-94d3-776bac904880);
+
+DB_Inclusion_Object((CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c, (FLAG)LOW_BasiliskGate_Vanra_StartInclusion_1fac60c6-5d62-41cd-8e51-4d8d53219c8d, NULL_00000000-0000-0000-0000-000000000000);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)LOW_BlushingMermaid_MissingKidsMother_AtHome_608ad6a4-3e74-2877-7f10-61e35886540a, (CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)LOW_BlushingMermaid_AD_MotherSeesSavedChild_f0a6caec-7502-cfe1-5037-ed84d6f63415, (CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+
+DB_LOW_MissingKidsMother((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_BasiliskGate_Event_MotherDisappearOutOfSight_0fde6381-aae8-42f5-b56d-685721d9da57,LOW_BasiliskGate_MissingKidsMother_Commader_335d54fc-74d5-6054-d101-9a7ad86bc609);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_BasiliskGate_Event_MotherDisappearOutOfSight_0fde6381-aae8-42f5-b56d-685721d9da57,LOW_BlushingMermaid_MissingKidsMother_AtHome_608ad6a4-3e74-2877-7f10-61e35886540a);
+DB_GlobalFlagReactionAfterDialog((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a,LOW_BasiliskGate_MissingKidsMother_Commader_335d54fc-74d5-6054-d101-9a7ad86bc609);
+
+TriggerRegisterForCharacter((TRIGGER)S_LOW_BlushingMermaid_MissingKidsHome_Trigger_4213d003-df74-4c89-b835-0bfa8d324ed4,(CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+
+// Combat NPC Reactivity
+DB_CombatReact_AD_OnNextTurn(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29, (DIALOGRESOURCE)LOW_BasiliskGate_AD_Combat_Commander_000_51f50db3-635a-d087-1f18-8385ea41f281);
+DB_CombatReact_AD_OnNextTurn(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29, (DIALOGRESOURCE)LOW_BasiliskGate_AD_Combat_Commander_001_38c6e3e1-c073-4b7a-db14-676f9ffc83f4);
+DB_CombatReact_AD_OnNextTurn(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29, (DIALOGRESOURCE)LOW_BasiliskGate_AD_Combat_Commander_002_c5807559-3119-20b3-09fb-20087852e0de);
+KBSECTION
+//REGION Initial Setup
+// If hag wasn't defeated in Act I, the kid is at home together with mother
+IF
+DB_LOW_MissingKidsMother(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+THEN
+TeleportTo(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(TRIGGER)S_LOW_MissingKidAndMother_Home_PointTrigger_4ac1e935-0f9f-4b89-bcba-973760d39658,"LOW_MissingKidsMother_TeleportedToHome");
+TeleportTo(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,(TRIGGER)S_LOW_BlushingMermaid_VanraAtHome_PointTrigger_b505d617-e82c-457c-a265-0759bdb3c4b2,"LOW_Vanra_TeleportedToHome");
+DB_Dialogs(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(DIALOGRESOURCE)LOW_BlushingMermaid_MissingKidsMother_AtHome_608ad6a4-3e74-2877-7f10-61e35886540a);
+DB_Dialogs(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,(DIALOGRESOURCE)LOW_BlushingMermaid_Vanra_81cdfc4a-53e6-0a14-a3a2-5c2d647c9dc7);
+DB_Dialogs(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29,(DIALOGRESOURCE)LOW_BasiliskGate_Commander_8aa3f06a-8f3d-da91-1974-7bed5346767a);
+DB_Children(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+PROC_LOW_SetupLoraVanraHomeScene();
+
+// If hag was defeated in Act I, the kid is missing and the mother is in Basilisk Gate
+IF
+DB_LOW_MissingKidsMother(_Character)
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+THEN
+PROC_LOW_DebugRemoveDialogs_MissingKidsMotherNPCs();
+PROC_Children_RemoveNPC((CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+TeleportTo(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(TRIGGER)S_LOW_BasiliskGate_MissingKidsMother_Spot_8858da1b-e3aa-4ce4-b3cc-2c943464ec64);
+TeleportTo(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,(TRIGGER)S_LOW_BlushingMermaid_MissingKid_Spot_a0c4ce02-fd08-482f-af14-0c4fb0283553);
+DB_Dialogs(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29,(DIALOGRESOURCE)LOW_BasiliskGate_MissingKidsMother_Commader_335d54fc-74d5-6054-d101-9a7ad86bc609);
+//END_REGION
+
+//REGION The scene is set when both Lora and Vanra are home. Ensures Lora goes permahostile if players attack Vanra
+PROC
+PROC_LOW_SetupLoraVanraHomeScene()
+THEN
+DB_SceneManager(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,"LOW_LoraVanraHome_Scene");
+DB_SceneManager(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,"LOW_LoraVanraHome_Scene");
+DB_SceneAllowAllDisturbances("LOW_LoraVanraHome_Scene");
+
+PROC
+PROC_SceneInterrupted(_,_Character,"LOW_LoraVanraHome_Scene","Attacked")
+AND
+DB_PartyMembers(_Character)
+THEN
+PROC_LOW_MissingKidsMotherTurnsPermaHostile();
+PROC_SceneOver("LOW_LoraVanraHome_Scene");
+
+PROC
+PROC_StateSet_PermaDefeated(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8)
+AND
+QRY_LOW_ShouldVanraRunAwayOnLoraPermaDefeated()
+THEN
+// Despite the name, AD fits
+PROC_TryStartAD(LOW_BlushingMermaid_AD_VanraSaved_79153be5-ce8d-00b7-791e-cb76eee21741,S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+PROC_DisappearOutOfSight(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,"Run",0,"");
+
+QRY
+QRY_LOW_ShouldVanraRunAwayOnLoraPermaDefeated()
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_LOW_ShouldVanraRunAwayOnLoraPermaDefeated()
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_MotherSawSavedChild_cb5678e1-298c-4c25-b5af-9ee34463d048)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Missing mother at Basilisk Gate
+// Handling edge cases for when either Lora or Commander are not available for their group dialog
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8, _Player)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)LOW_BasiliskGate_Commander_8aa3f06a-8f3d-da91-1974-7bed5346767a, S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29, _Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8, _Player)
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29, _Player)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)LOW_BasiliskGate_MissingKidsMother_CommanderUnavailable_8a531cf0-888e-176b-9362-aef79ffa663a, S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8, _Player);
+//END_REGION
+
+//REGION Handling Commander permadefeated before Lora went home, as it renders their mutual dialog immposible to start. Setting Lora permahostile to cut down on permutations
+PROC
+PROC_StateSet_PermaDefeated(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29)
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a)
+THEN
+PROC_LOW_MissingKidsMotherTurnsPermaHostile();
+//END_REGION
+
+//REGION Missing kid's mother changing location
+// Lora runs away if told that Vanra is dead and will never reappear
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_BasiliskGate_Event_MotherDisappearOutOfSight_0fde6381-aae8-42f5-b56d-685721d9da57)
+THEN
+DB_Dialogs(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29,(DIALOGRESOURCE)LOW_BasiliskGate_Commander_8aa3f06a-8f3d-da91-1974-7bed5346767a);
+PROC_DisappearOutOfSight((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,"Run",0,"LOW_MissingKidsMotherRunsAway");
+PROC_TryStartAD((DIALOGRESOURCE)LOW_BlushingMermaid_AD_MissingKidsMother_RunsAway_6cd7a26f-cc66-ee26-a9bd-e7993ff81cab,S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a)
+THEN
+DB_Dialogs(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29,(DIALOGRESOURCE)LOW_BasiliskGate_Commander_8aa3f06a-8f3d-da91-1974-7bed5346767a);
+PROC_DisappearOutOfSightTo((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,S_LOW_BasiliskGate_MissingKidsMother_Trigger_c43ed12c-bc77-46a1-a274-749ddf66d6d1,"Walk",0,"LOW_MissingKidsMother_WentHome");
+
+IF
+EntityEvent(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,"LOW_MissingKidsMother_WentHome")
+THEN
+PROC_AppearOutOfSightTo(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,S_LOW_MissingKidAndMother_Home_PointTrigger_4ac1e935-0f9f-4b89-bcba-973760d39658,S_LOW_BlushingMermaid_MotherAppearOutOfSight_PointTrigger_c7762f62-1394-435e-a1e8-366ce4f682a5,"LOW_MissingKidsMother_AppearOutOfSight");
+
+IF
+EntityEvent(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8, "LOW_MissingKidsMother_AppearOutOfSight")
+THEN
+PROC_CharacterMoveTo(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,S_LOW_MissingKidAndMother_Home_PointTrigger_4ac1e935-0f9f-4b89-bcba-973760d39658,"Run","");
+PROC_RemoveAllDialogEntriesForSpeaker(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8);
+DB_Dialogs(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(DIALOGRESOURCE)LOW_BlushingMermaid_MissingKidsMother_AtHome_608ad6a4-3e74-2877-7f10-61e35886540a);
+
+// When Vanra is saved and goes home, mother goes home too if she's still at Basilisk Gate
+IF
+FlagSet((FLAG)LOW_BlushingMermaid_Event_VanraWentToMom_895cda4f-6348-45c0-ba2e-bac1a7a1a0b2,_,_)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a)
+THEN
+SetFlag((FLAG)LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a);
+PROC_DisappearOutOfSight((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,"Run",0,"LOW_MissingKidsMother_WentHome");
+
+IF
+FlagSet(LOW_BasiliskGate_State_MissingKidsMother_WentHome_afe097ca-04a3-43f5-82d5-80ac5de0ea4a,_,_)
+THEN
+DB_Dialogs(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29,(DIALOGRESOURCE)LOW_BasiliskGate_Commander_8aa3f06a-8f3d-da91-1974-7bed5346767a);
+//END_REGION
+
+//REGION Vanra returns home when saved
+IF
+EntityEvent(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,"LOW_BlushingMermaid_VanraRunsAway")
+AND
+NOT DB_Defeated((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8)
+THEN
+PROC_AppearOutOfSightTo(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,S_LOW_BlushingMermaid_MissingKid_AppearOutOfSightSpot_576870f0-6bdc-44bb-a4ef-239fe9b103e9,"LOW_BasiliskGate_MissingKid_AppearOutOfSight");
+
+IF
+EntityEvent(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c, "LOW_BasiliskGate_MissingKid_AppearOutOfSight")
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+PROC_CharacterMoveTo(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,S_LOW_BlushingMermaid_VanraAtHome_PointTrigger_b505d617-e82c-457c-a265-0759bdb3c4b2,"Run","");
+DB_Dialogs(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,(DIALOGRESOURCE)LOW_BlushingMermaid_Vanra_81cdfc4a-53e6-0a14-a3a2-5c2d647c9dc7);
+
+IF
+DB_Sees((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,(CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_Event_VanraWentToMom_895cda4f-6348-45c0-ba2e-bac1a7a1a0b2)
+AND
+QRY_OnlyOnce("LOW_MotherSawHagKidnappedChild")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)LOW_BlushingMermaid_AD_MotherSeesSavedChild_f0a6caec-7502-cfe1-5037-ed84d6f63415,S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8);
+
+IF
+EnteredTrigger((CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,(TRIGGER)S_LOW_BlushingMermaid_MissingKidsHome_Trigger_4213d003-df74-4c89-b835-0bfa8d324ed4)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_Event_VanraWentToMom_895cda4f-6348-45c0-ba2e-bac1a7a1a0b2)
+THEN
+TriggerUnregisterForCharacter((TRIGGER)S_LOW_BlushingMermaid_MissingKidsHome_Trigger_4213d003-df74-4c89-b835-0bfa8d324ed4,(CHARACTER)S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BlushingMermaid_State_MotherSawSavedChild_cb5678e1-298c-4c25-b5af-9ee34463d048);
+PROC_LOW_SetupLoraVanraHomeScene();
+
+// Handling case of players talking to Vanra before talking to Lora first when she's saved and back home
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c, _Player)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_Event_VanraWentToMom_895cda4f-6348-45c0-ba2e-bac1a7a1a0b2)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BasiliskGate_State_VisitedMotherAndMissingKid_25f12c0d-9dee-416c-9e41-11965295468a)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8, _Player)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)LOW_BlushingMermaid_MissingKidsMother_AtHome_608ad6a4-3e74-2877-7f10-61e35886540a, S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8, _Player, S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+
+//TODO: Handle mother and daughter factions relations based on whether players hostility towards them
+//END_REGION
+
+//REGION Edge-case when missing kid's mother is defeated and hag-kidnapped kid is saved
+// If Lora was knocked out and disappeared on long rest, Vanra will never reappear after disappearing with LOW_BlushingMermaid_VanraRunsAway
+IF
+EntityEvent(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,"LOW_BlushingMermaid_VanraRunsAway")
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_MissingKidsMother_Dead_357a9292-30cb-4625-aefd-7f27d89c9511)
+THEN
+SetFlag((FLAG)LOW_BasiliskGate_State_OrphanedVanra_5cd5fb31-3c59-49ac-8102-97d43f880bcb);
+
+// In case Lora is dead, Vanra will appear at home on long rest in her orphaned state
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag((FLAG)LOW_BasiliskGate_State_OrphanedVanra_5cd5fb31-3c59-49ac-8102-97d43f880bcb)
+AND
+QRY_OnlyOnce("LOW_OrphanedVanraSetup")
+THEN
+DB_LOW_SetupOrphanedVanraOnLongRest(1);
+
+IF
+DB_LOW_SetupOrphanedVanraOnLongRest(1)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+NOT DB_LOW_SetupOrphanedVanraOnLongRest(1);
+PROC_RemoveAllDialogEntriesForSpeaker(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+TeleportTo(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,S_LOW_BlushingMermaid_VanraAtHome_PointTrigger_b505d617-e82c-457c-a265-0759bdb3c4b2);
+SetOnStage(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,1);
+DB_Dialogs(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,(DIALOGRESOURCE)LOW_BlushingMermaid_Vanra_AtHome_81cdfc4a-53e6-0a14-a3a2-5c2d647c9dc7);
+//END_REGION
+
+//REGION For cutting down on permutations, fighting with Lora leads to her perma-hostility. Simplifies LOW_SaveHaggedChild quest journal as well
+IF
+DB_Is_InCombat(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,_CombatID)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+DB_Is_InCombat(_PartyMember,_CombatID)
+AND
+QRY_IsEnemy(_PartyMember,S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_MissingKidsMother_PermaHostile_8b29049d-1cc3-4d94-a147-b4cb1068237f)
+THEN
+PROC_LOW_MissingKidsMotherTurnsPermaHostile();
+
+PROC
+PROC_LOW_MissingKidsMotherTurnsPermaHostile()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BlushingMermaid_State_MissingKidsMother_PermaHostile_8b29049d-1cc3-4d94-a147-b4cb1068237f);
+PROC_SetRelationToPlayers((FACTION)ACT3_LOW_BlushingMermaid_MissingKidsMother_0ab10e33-545c-4f09-8a6b-db71d33893a8,0);
+//END_REGION
+
+//REGION In case of Lora disappearing after KNOCKED_OUT, players get an extra QN in disguised hag dialog which allows to progress in BM situation
+IF
+WentOnStage(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8,0)
+AND
+DB_KnockedOut((CHARACTER)S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8)
+THEN
+SetFlag((FLAG)LOW_BasiliskGate_State_KnockedOutLoraDisappeared_eade1142-3a15-4bb0-a940-0317c7d24aa6);
+//END_REGION
+
+//REGION Debug
+PROC
+PROC_LOW_DebugRemoveDialogs_MissingKidsMotherNPCs()
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_LOW_BlushingMermaid_MissingKidsMother_58ece4ba-e097-4b3b-ac71-7abe8706d3a8);
+PROC_RemoveAllDialogEntriesForSpeaker(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c);
+PROC_RemoveAllDialogEntriesForSpeaker(S_LOW_BasiliskGate_Commander_915d074c-8f6f-4f5a-ae18-fb333ce6dc29);
+
+// Only possible by debugging
+IF
+FlagSet((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720,_,_)
+AND
+DB_SceneManager(S_LOW_BlushingMermaid_Vanra_bfeac6a6-678e-46da-b873-cf7e4c7a1e4c,"LOW_LoraVanraHome_Scene")
+THEN
+PROC_SceneOver("LOW_LoraVanraHome_Scene");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

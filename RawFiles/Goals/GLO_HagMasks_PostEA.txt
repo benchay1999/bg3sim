@@ -1,0 +1,106 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Act 3 hag masks setup
+PROC
+PROC_HAG_HagMask_SwitchStatusTo((CHARACTER)_Character, "HAG_MASK", (ITEM)_Mask)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+THEN
+// Making sure that _Helper items from Act 1 enter CTY_Main_A
+TeleportTo(_Helper,_Character);
+
+// Reseting freed from mask control ADs so they can play again for extra reactitvity
+IF
+DB_HAG_Hagmasks(S_LOW_BlushingMermaid_HagMask_01_4c1dfe00-dda3-4c8d-bf27-3104373591c5,S_LOW_BlushingMermaid_HagMask_Helper_01_862d8a74-6489-4df2-9541-708137bb2a34)
+AND
+NOT DB_LOW_HagMaskControlLiftedAD_Reset(1)
+AND
+QRY_OncePerUserAndNearbyPlayers_Reset("HAG_MASK_CONTROLLED_Removed")
+THEN
+DB_LOW_HagMaskControlLiftedAD_Reset(1);
+//END_REGION
+
+//REGION Act 3 Hag Masks mind control over players 
+IF
+FlagSet(LOW_BlushingMermaid_State_HagMasksControlWearers_17fe9c38-dcb6-45f4-912d-bb0d11553d91, _, _)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+AND
+GetOwner(_Mask, _Character)
+AND
+DB_Players(_Character)
+AND
+IsEquipped(_Mask, 1)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo(_Character, _Status, _Mask);
+
+QRY
+QRY_GLO_HagMasks_GetStatus((CHARACTER)_Character)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagMasksControlWearers_17fe9c38-dcb6-45f4-912d-bb0d11553d91)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK_HAGDEAD")
+AND
+HasActiveStatus(_Character, "HAG_MASK_CONTROLIMMUNE", 0)
+THEN
+NOT DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK_HAGDEAD");
+DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK");
+
+IF
+FlagCleared((FLAG)LOW_BlushingMermaid_State_HagMasksControlWearers_17fe9c38-dcb6-45f4-912d-bb0d11553d91, _, _)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+GetOwner(_Mask, _Character)
+AND
+IsEquipped(_Mask, 1)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo(_Character, _Status, _Mask);
+//END_REGION
+
+//REGION Act 3 masked victims neutrality towards masked players
+IF
+Equipped(_Mask, _Character)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+AND
+QRY_IsPartyMember(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+THEN
+PROC_Hagmasks_Neutral(_Character);
+
+IF
+BaseFactionChanged(_Character, _, _)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+AND
+DB_Hagmasks_Neutral(_Character, _)
+THEN
+PROC_Hagmasks_ClearNeutral(_Character);
+PROC_Hagmasks_Neutral(_Character);
+
+IF
+Unequipped(_Mask, _Character)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+THEN
+PROC_Hagmasks_ClearNeutral(_Character);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "GLO_Hag"

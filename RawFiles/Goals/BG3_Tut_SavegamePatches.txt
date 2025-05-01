@@ -1,0 +1,454 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION GUS-298035
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,5,0)
+AND
+DB_TUT_Lab_MindflayerFactions((FACTION)_Faction)
+THEN
+NOT DB_TUT_Lab_MindflayerFactions(_Faction);
+DB_BUGFIX_Marker("GUS-298035");
+//END_REGION GUS-298035
+
+//REGION GUS-299963
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,7,0)
+AND
+DB_TUT_TransformChamber_ShadowheartOnGround(1)
+THEN
+SetDoNotFaceFlag((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1);
+DB_BUGFIX_Marker("GUS-299963");
+
+//END_REGION GUS-299963
+
+//REGION NOJIRA - Removed container function of Shadowheart's artefact 
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,8,0)
+AND
+GetOwner(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Owner)
+THEN
+//minimal effort fix, just move them to the owner. Since it's inventory bound we should be good for most of the game. The cases where it's no longer bound, we can handwave.
+MoveAllItemsTo(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Owner,0,0,0,0);
+DB_BUGFIX_Marker("Puzzlebox contents");
+
+//END_REGION
+
+
+//REGION GUS-287854
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_001_88754118-7c80-4eba-9191-02ad5f6c213c, (VOICEBARKRESOURCE)TUT_Lab_VB_SocietyBook_fa218dec-3f89-136d-bf05-64ae5fdfc3fe)
+THEN
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_001_88754118-7c80-4eba-9191-02ad5f6c213c, (VOICEBARKRESOURCE)TUT_Lab_VB_SocietyBook_fa218dec-3f89-136d-bf05-64ae5fdfc3fe);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_002_2e55e20f-2fb4-4a7a-9a0d-78bc61a19ee0, (VOICEBARKRESOURCE)TUT_Lab_VB_HistoryBook_e34ece39-a883-8dc1-8283-79f82267b2b5);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_000_e7f3d57d-3ab1-4189-b79a-b803a66e832b, (VOICEBARKRESOURCE)TUT_Lab_VB_GoblinBook_34bed1ed-5208-f5b2-8d3d-b32f9c03f066);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_003_a0fa26b7-25ef-4e68-b6ed-1fd05c4fdccf, (VOICEBARKRESOURCE)TUT_Lab_VB_IllithidEmpireBook_11f7be24-7cf0-1efc-2938-4b93bf28aea6);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_004_d34c65bb-535f-46cb-99b6-f772d0236852, (VOICEBARKRESOURCE)TUT_Lab_VB_MFBook_93eb6423-315d-5be4-9941-18f0e65623ce);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_005_855d1730-5979-4821-924b-3b2205c752f5, (VOICEBARKRESOURCE)TUT_LAB_VB_NautiloidBook_54522076-f1f2-35c0-2dc0-83a54333a9c9);
+DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_000_e7f3d57d-3ab1-4189-b79a-b803a66e832b,(DIALOGRESOURCE)TUT_Lab_PAD_GoblinBook_e15e9ac1-2f95-0686-0b16-039e9ed50897);
+DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_001_88754118-7c80-4eba-9191-02ad5f6c213c,(DIALOGRESOURCE)TUT_Lab_PAD_SocietyBook_a99b07f3-283f-8f8b-c878-2857c87cfc6e);
+DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_002_2e55e20f-2fb4-4a7a-9a0d-78bc61a19ee0,(DIALOGRESOURCE)TUT_Lab_PAD_HistoryBook_2558266c-a9fb-042d-fcd7-96242fb9f3d3);
+DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_003_a0fa26b7-25ef-4e68-b6ed-1fd05c4fdccf,(DIALOGRESOURCE)TUT_Lab_PAD_IllithidEmpireBook_d952b405-5452-573c-8e3e-1633e9169084);
+DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_004_d34c65bb-535f-46cb-99b6-f772d0236852,(DIALOGRESOURCE)TUT_Lab_PAD_MFBook_9fb50411-34c3-9118-e6b5-2769076c6776);
+DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_005_855d1730-5979-4821-924b-3b2205c752f5,(DIALOGRESOURCE)TUT_Lab_PAD_NautiloidBook_d9790085-2fab-91a8-9e4b-f20d12a7a63a);
+DB_BUGFIX_Marker("GUS-287854");
+
+//END_REGION
+
+
+//REGION GUS-302670
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_Players(_Player)
+AND
+NOT DB_Avatars(_Player)
+THEN
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)_Player, "GLO_Tutorials_TemporaryEquipmentTutSuppression", "Finished");
+DB_BUGFIX_Marker("GUS-302670");
+//END_REGION GUS-302670
+
+//REGION GUS-302683
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+NOT DB_Avatars(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)TUT_TransformChamber_State_FreedShadowheart_c3980ab3-9370-4c2d-9c76-38aff5fe575a, _Player, 1)
+AND
+NOT DB_PermaDefeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+IsOnStage(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+AND
+IsEnemy(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player, 0)
+AND
+NOT QRY_TUT_TransformChamber_RecruitedShadowheart()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)TUT_TransformChamber_State_NotAvatar_286522b0-6dd1-4490-b9b3-c3c4133884b8);
+DB_BUGFIX_Marker("GUS-302683");
+//END_REGION GUS-302683
+
+//REGION GUS-301082
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_TUT_Misc_GuideInclusion(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (TRIGGER)S_TUT_TransformChamber_PanelProximity_7e338e5b-846b-4fb7-b289-8354009dbb7f, "TUT_TransformChamber_ControlPanel", (VOICEBARKRESOURCE)TUT_TransformChamber_VB_ControlPanel_d561cc80-2941-85fd-7580-1cdd1dc8a2e4, (DIALOGRESOURCE)TUT_TransformChamber_AD_LaezelControlPanel_5fd10cae-0d48-e3a0-57cf-7614bd41fc91)
+THEN
+NOT DB_TUT_Misc_GuideInclusion(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (TRIGGER)S_TUT_TransformChamber_PanelProximity_7e338e5b-846b-4fb7-b289-8354009dbb7f, "TUT_TransformChamber_ControlPanel", (VOICEBARKRESOURCE)TUT_TransformChamber_VB_ControlPanel_d561cc80-2941-85fd-7580-1cdd1dc8a2e4, (DIALOGRESOURCE)TUT_TransformChamber_AD_LaezelControlPanel_5fd10cae-0d48-e3a0-57cf-7614bd41fc91);
+DB_TUT_Misc_GuideInclusion(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (TRIGGER)S_TUT_TransformChamber_PanelProximity_7e338e5b-846b-4fb7-b289-8354009dbb7f, "TUT_TransformChamber_ControlPanel", (VOICEBARKRESOURCE)TUT_TransformChamber_VB_ControlPanel_d561cc80-2941-85fd-7580-1cdd1dc8a2e4, (DIALOGRESOURCE)TUT_TransformChamber_PAD_ControlPanel_08dd2903-bb39-7608-7851-90644287d2e5);
+DB_BUGFIX_Marker("GUS-301082");
+//END_REGION GUS-301082
+
+//REGION GUS-304231
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 2")
+AND
+DB_TUT_Misc_TutorialCompanion_OldFaction((CHARACTER)S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558, _Faction)
+AND
+FactionGetParentFaction(_Faction,1,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360)
+THEN
+NOT DB_TUT_Misc_TutorialCompanion_OldFaction((CHARACTER)S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558, _Faction);
+DB_BUGFIX_Marker("GUS-304231");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 2")
+AND
+DB_TUT_Lab_OwnerUs(_)
+AND
+NOT DB_GlobalFlag((FLAG)TUT_LowerDeck_State_GuideAppeared_4d3c156f-b09c-4f18-b031-d5caa8acf184)
+THEN
+SetFlag((FLAG)TUT_LowerDeck_State_UsWaiting_ca04ed16-c1ef-44f5-ae5c-f19e48d88034);
+DB_BUGFIX_Marker("GUS-304231");
+//END_REGION GUS-304231
+
+//REGION GUS-304791
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_CurrentLevel("TUT_Avernus_C")
+AND
+QRY_TUT_TransformChamber_ShadowheartState((FLAG)TUT_TransformChamber_State_FreedShadowheart_c3980ab3-9370-4c2d-9c76-38aff5fe575a)
+AND
+NOT DB_TUT_TransformChamber_ShadowheartOnGround(1)
+THEN
+StopAnimation((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1);
+DB_BUGFIX_Marker("GUS-304791");
+//END_REGION GUS-304791
+
+//REGION GUS-300668
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_GLO_Tutorials_TrackedTimers(_Player, "GLO_Tutorials_Timer_LockedItemTutorial", "Finished")
+THEN
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Player, "GLO_Tutorials_Timer_LockedItemTutorial");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_GLO_Tutorials_LockpickTutorialItem(_Player, _Item)
+THEN
+NOT DB_GLO_Tutorials_LockpickTutorialItem(_Player, _Item);
+DB_BUGFIX_Marker("GUS-300668");
+//END_REGION GUS-300668
+
+//REGION GUS-304443
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+DB_CurrentLevel("TUT_Avernus_C")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+DB_BUGFIX_Marker("GUS-304443");
+PROC_GLO_InfernalBox_RestartShadowheartOwnership();
+SetFlag((FLAG)GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3, NULL_00000000-0000-0000-0000-000000000000);
+SetFlag((FLAG)GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+// Just to be safe
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+DB_CurrentLevel("TUT_Avernus_C")
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+AND
+HasAppliedStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", 0)
+THEN
+DB_BUGFIX_Marker("GUS-304443");
+PROC_GLO_InfernalBox_SetNewOwner((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+//END_REGION GUS-304443
+
+//REGION GUS-303964
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+NOT DB_Dialogs(S_TUT_TransformChamber_Pod_007_1eebfdb5-8814-da8d-2d3e-64b2924f95b0, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)TUT_TransformChamber_PodGirl_02fa0520-60ff-573c-0d96-4782711cbdde)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_TUT_TransformChamber_Pod_007_1eebfdb5-8814-da8d-2d3e-64b2924f95b0);
+DB_BUGFIX_Marker("GUS-303964a");
+//END_REGION
+
+//REGION GUS-292703
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_GlobalFlag(TUT_Helm_State_TutorialEnded_55073953-23b9-448c-bee8-4c44d3d67b6b)
+THEN
+PROC_GUS_292703_Fix();
+
+PROC
+PROC_GUS_292703_Fix()
+THEN
+DB_BUGFIX_Marker("GUS-292703");
+
+PROC
+PROC_GUS_292703_Fix()
+AND
+DB_TUT_Helm_Devils(_NPC)
+AND
+Exists(_NPC, 1)
+THEN
+SetOnStage(_NPC, 1);
+
+PROC
+PROC_GUS_292703_Fix()
+AND
+DB_TUT_Helm_Devils_BackUp(_NPC)
+AND
+Exists(_NPC, 1)
+THEN
+SetOnStage(_NPC, 1);
+
+PROC
+PROC_GUS_292703_Fix()
+AND
+DB_TUT_Helm_Devils_BackUpCambions(_NPC)
+AND
+Exists(_NPC, 1)
+THEN
+SetOnStage(_NPC, 1);
+
+//END_REGION
+
+//REGION GUS-311133
+
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "TUT_Avernus_C", "GUS-311133");
+
+PROC
+PROC_ApplySavegamePatchInLevel("TUT_Avernus_C", "GUS-311133")
+AND
+DB_TUT_Helm_Devils(_Devil)
+AND
+NOT DB_Defeated(_Devil)
+THEN
+DB_TUT_Helm_ActiveMindflayerEnemies(_Devil);
+
+PROC
+PROC_ApplySavegamePatchInLevel("TUT_Avernus_C", "GUS-311133")
+AND
+DB_TUT_Helm_Devils_BackUp(_Devil)
+AND
+IsOnStage(_Devil,1)
+AND
+NOT DB_Defeated(_Devil)
+THEN
+DB_TUT_Helm_ActiveMindflayerEnemies(_Devil);
+
+//END_REGION
+
+//REGION GUS-311133
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "TUT_Avernus_C", "GUS-290667");
+
+PROC
+PROC_ApplySavegamePatchInLevel("TUT_Avernus_C", "GUS-290667")
+AND
+DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_StopLoopEffect(S_TUT_TransformChamber_Pod_007_1eebfdb5-8814-da8d-2d3e-64b2924f95b0, "TUT_TransformChamber_PodEffect");
+//END_REGION
+
+//REGION GUS-312796
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "TUT_Avernus_C", "GUS-312796");
+
+PROC
+PROC_ApplySavegamePatchInLevel("TUT_Avernus_C", "GUS-312796")
+AND
+HasActiveStatus(S_TUT_Lab_IntellectDevourer_40bd6b82-2728-410a-bb8a-a805f98556a1,"TUT_NEWBORN_INTDEV",0)
+THEN
+ApplyStatus(S_TUT_Lab_IntellectDevourer_40bd6b82-2728-410a-bb8a-a805f98556a1,"TUT_NEWBORN_INTDEV",-1.0);
+//END_REGION
+
+//REGION GUS-314510
+PROC
+PROC_ApplySavegamePatches()
+AND
+DB_LevelLoadedOnce("TUT_Avernus_C")
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+THEN
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_000_e7f3d57d-3ab1-4189-b79a-b803a66e832b,(VOICEBARKRESOURCE)TUT_Lab_VB_GoblinBook_34bed1ed-5208-f5b2-8d3d-b32f9c03f066);
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_001_88754118-7c80-4eba-9191-02ad5f6c213c,(VOICEBARKRESOURCE)TUT_Lab_VB_SocietyBook_fa218dec-3f89-136d-bf05-64ae5fdfc3fe);
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_002_2e55e20f-2fb4-4a7a-9a0d-78bc61a19ee0,(VOICEBARKRESOURCE)TUT_Lab_VB_HistoryBook_e34ece39-a883-8dc1-8283-79f82267b2b5);
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_003_a0fa26b7-25ef-4e68-b6ed-1fd05c4fdccf,(VOICEBARKRESOURCE)TUT_Lab_VB_IllithidEmpireBook_11f7be24-7cf0-1efc-2938-4b93bf28aea6);
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_004_d34c65bb-535f-46cb-99b6-f772d0236852,(VOICEBARKRESOURCE)TUT_Lab_VB_MFBook_93eb6423-315d-5be4-9941-18f0e65623ce);
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_005_855d1730-5979-4821-924b-3b2205c752f5,(VOICEBARKRESOURCE)TUT_LAB_VB_NautiloidBook_54522076-f1f2-35c0-2dc0-83a54333a9c9);
+DB_ItemDialog_PlayerVB((ITEM)S_TUT_Start_IllithidTablet_354c1748-237d-42bd-a5b8-6e81c9fa7c01, (VOICEBARKRESOURCE)TUT_Lab_VB_TravelTablet_72f77066-7b1e-f7c0-3d64-ea3d2e7b16f4);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_000_e7f3d57d-3ab1-4189-b79a-b803a66e832b,(DIALOGRESOURCE)TUT_Lab_PAD_GoblinBook_e15e9ac1-2f95-0686-0b16-039e9ed50897);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_001_88754118-7c80-4eba-9191-02ad5f6c213c,(DIALOGRESOURCE)TUT_Lab_PAD_SocietyBook_a99b07f3-283f-8f8b-c878-2857c87cfc6e);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_002_2e55e20f-2fb4-4a7a-9a0d-78bc61a19ee0,(DIALOGRESOURCE)TUT_Lab_PAD_HistoryBook_2558266c-a9fb-042d-fcd7-96242fb9f3d3);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_003_a0fa26b7-25ef-4e68-b6ed-1fd05c4fdccf,(DIALOGRESOURCE)TUT_Lab_PAD_IllithidEmpireBook_d952b405-5452-573c-8e3e-1633e9169084);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_004_d34c65bb-535f-46cb-99b6-f772d0236852,(DIALOGRESOURCE)TUT_Lab_PAD_MFBook_9fb50411-34c3-9118-e6b5-2769076c6776);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Lab_Book_005_855d1730-5979-4821-924b-3b2205c752f5,(DIALOGRESOURCE)TUT_Lab_PAD_NautiloidBook_d9790085-2fab-91a8-9e4b-f20d12a7a63a);
+NOT DB_ItemDialog_NarratorAD((ITEM)S_TUT_Start_IllithidTablet_354c1748-237d-42bd-a5b8-6e81c9fa7c01, (DIALOGRESOURCE)TUT_Start_AD_TravelTablet_dd5adfcd-244c-7232-aba5-b458749188bd);
+DB_BUGFIX_Marker("GUS-314510");
+
+//END_REGION
+
+//REGION GUS-315153
+PROC
+PROC_ApplySavegamePatches()
+AND
+DB_LevelLoadedOnce("TUT_Avernus_C")
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+THEN
+DB_BUGFIX_Marker("GUS-315153");
+NOT DB_Dialogs(S_TUT_TransformChamber_Pod_007_1eebfdb5-8814-da8d-2d3e-64b2924f95b0, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)TUT_TransformChamber_PodGirl_02fa0520-60ff-573c-0d96-4782711cbdde);
+DB_Dialogs((ITEM)S_TUT_TransformChamber_Pod_007_1eebfdb5-8814-da8d-2d3e-64b2924f95b0, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)TUT_TransformChamber_PodGirl_02fa0520-60ff-573c-0d96-4782711cbdde);
+//END_REGION
+
+//REGION GUS-315521
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel("Release Patch 6", "WLD_Main_A", "GUS-315521");
+
+PROC
+PROC_ApplySavegamePatchInLevel("WLD_Main_A", "GUS-315521")
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH")
+AND
+NOT DB_Dead((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_PermaDefeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+ClearFlag(GLO_TUT_State_WasDeadAtTheEndOfTUT_9118ad6e-b6ea-440e-b788-40bf485fec06, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+SetFlag(GLO_Shadowheart_State_BeachRecruitment_14468bb2-c6bf-4aa0-a00e-011ced4823fb, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_PermaDefeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+ClearTag(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, PERMA_DEFEATED_867f3a1e-1e4b-48c2-869e-343415231727);
+ClearTag(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (TAG)PERMA_DEFEATED_OR_OFFSTAGE_b9e63705-637a-4d3b-87ef-a49324cf703f);
+DB_Dialogs(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_Recruitment_Beach_0e3f617e-1e5a-838c-6e3f-5f36d0470699);
+//END_REGION
+
+//REGION GUS-315624
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_CurrentLevel("TUT_Avernus_C")
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)TUT_TransformChamber_State_FreedShadowheart_c3980ab3-9370-4c2d-9c76-38aff5fe575a, _Player,1)
+AND
+HasActiveStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "TUT_SHADOWHEARTINPOD",1)
+THEN
+PROC_TUT_TransformChamber_MoveShadowheart();
+DB_BUGFIX_Marker("GUS-315624");
+
+//END_REGION
+
+//REGION GUS-287854
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_LevelLoadedOnce("TUT_Avernus_C")
+THEN
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_000_e7f3d57d-3ab1-4189-b79a-b803a66e832b,(VOICEBARKRESOURCE)TUT_Lab_VB_GoblinBook_34bed1ed-5208-f5b2-8d3d-b32f9c03f066);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_001_88754118-7c80-4eba-9191-02ad5f6c213c,(VOICEBARKRESOURCE)TUT_Lab_VB_SocietyBook_fa218dec-3f89-136d-bf05-64ae5fdfc3fe);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_002_2e55e20f-2fb4-4a7a-9a0d-78bc61a19ee0,(VOICEBARKRESOURCE)TUT_Lab_VB_HistoryBook_e34ece39-a883-8dc1-8283-79f82267b2b5);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_003_a0fa26b7-25ef-4e68-b6ed-1fd05c4fdccf,(VOICEBARKRESOURCE)TUT_Lab_VB_IllithidEmpireBook_11f7be24-7cf0-1efc-2938-4b93bf28aea6);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_004_d34c65bb-535f-46cb-99b6-f772d0236852,(VOICEBARKRESOURCE)TUT_Lab_VB_MFBook_93eb6423-315d-5be4-9941-18f0e65623ce);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Lab_Book_005_855d1730-5979-4821-924b-3b2205c752f5,(VOICEBARKRESOURCE)TUT_LAB_VB_NautiloidBook_54522076-f1f2-35c0-2dc0-83a54333a9c9);
+NOT DB_ItemDialog_PlayerVB((ITEM)S_TUT_Start_IllithidTablet_354c1748-237d-42bd-a5b8-6e81c9fa7c01, (VOICEBARKRESOURCE)TUT_Lab_VB_TravelTablet_72f77066-7b1e-f7c0-3d64-ea3d2e7b16f4);
+DB_BUGFIX_Marker("GUS-287854");
+//END_REGION
+
+//REGION GUSX-9144-TutorialCeremorph
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 8")
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 8", "TUT_Avernus_C", "GUSX-9144-TutorialCeremorph");
+
+PROC
+PROC_ApplySavegamePatchInLevel("TUT_Avernus_C", "GUSX-9144-TutorialCeremorph")
+THEN
+SetFaction((CHARACTER)S_TUT_Misc_PodMindflayer_14cbbbbb-b10e-444a-ba2d-5960db071fe7, (FACTION)ACT0a_TUT_Ceremorph_4caf954f-4ac7-4835-970b-7547d3cae3f3);
+SetFaction(S_TUT_Misc_PodHuman_92b60869-b880-4f29-8cd3-bb2a8c771af1, (FACTION)ACT0a_TUT_Ceremorph_4caf954f-4ac7-4835-970b-7547d3cae3f3);
+DB_BUGFIX_Marker("GUSX-9144-TutorialCeremorph");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

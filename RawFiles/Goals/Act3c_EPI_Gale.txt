@@ -1,0 +1,340 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GlobalFlagReactionAfterDialog(EPI_Epilogue_Event_PoofSpectralVoiceGale_e498a2ae-8e5a-498f-80d1-c73f9828358e,EPI_Epilogue_SpectralVoiceGale_a4d46b4b-5080-396d-bf58-81711dada9e5);
+
+DB_GiveItemToEvent(S_EPI_DeadGaleLetter_1afa558b-a948-49f1-a685-7ae11c6d1588, (FLAG)EPI_Epilogue_Event_DeadGaleLetterHandoff_3ce9f320-bd88-4ce2-a5a2-e9b7a3661318);
+
+DB_EPI_Epilogue_GalePartneredWithOriginFlags((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,(FLAG)EPI_Epilogue_State_GaleIsPartneredWithAstarion_e2c90810-d0f7-4e0a-bb78-f7645b46a2f2);
+DB_EPI_Epilogue_GalePartneredWithOriginFlags((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c,(FLAG)EPI_Epilogue_State_GaleIsPartneredWithKarlach_6684980e-92bf-49ea-9ed1-a15a7aed238b);
+DB_EPI_Epilogue_GalePartneredWithOriginFlags((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(FLAG)EPI_Epilogue_State_GaleIsPartneredWithLaezel_b20d491d-a30d-4dcf-9e42-817f168ad035);
+DB_EPI_Epilogue_GalePartneredWithOriginFlags((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,(FLAG)EPI_Epilogue_State_GaleIsPartneredWithShadowheart_5f8d96f9-748f-44d8-9708-bcc835ee462f);
+DB_EPI_Epilogue_GalePartneredWithOriginFlags((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(FLAG)EPI_Epilogue_State_GaleIsPartneredWithWyll_6e8be6d5-daeb-4b5d-9677-84414516a1b8);
+
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)EPI_Epilogue_Gale_307db971-b5c4-9e20-cf18-dc1290d31a70, (CHARACTER)S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236);
+
+DB_EPI_Epilogue_DeadGaleLetterApprovalThreshold(30); //Used for some variants of the letter, will use fallback letter if below this approval
+KBSECTION
+PROC
+PROC_GlobalFlagReactionAfterDialog(EPI_Epilogue_Event_PoofSpectralVoiceGale_e498a2ae-8e5a-498f-80d1-c73f9828358e)
+THEN
+PROC_Poof(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d);
+
+IF
+FlagSet(EPI_Epilogue_State_HairlessTara_eadefa3b-c2fa-4cc2-aecf-a67d25299599, _, _)
+THEN
+Transform(S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236,Cat_Tressym_Hairless_adfa04f7-de41-4e06-b89b-2b944d38860b,(SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+
+IF
+FlagSet(EPI_Epilogue_State_PartyGameplayStarted_1ff87c8c-a363-45fb-aeb8-762abc69b99e, _, _)
+AND
+DB_ORI_Partnered(_Avatar, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_EPI_Epilogue_GalePartneredWithOriginFlags(_Avatar, _Flag)
+THEN
+SetFlag(_Flag);
+
+
+//REGION Letter Recipient Selection and Setup
+IF
+FlagSet(EPI_Epilogue_State_PartyGameplayStarted_1ff87c8c-a363-45fb-aeb8-762abc69b99e, _, _)
+AND
+DB_EPI_Epilogue_SetCharacters(S_GLO_Gale_DeathVoice_736c736b-34d8-4dc6-98ac-3f78378ad06d)
+THEN
+PROC_EPI_Epilogue_ReadyDeadGaleFlags();
+PROC_EPI_Epilogue_SelectLetterRecipient();
+
+PROC
+PROC_EPI_Epilogue_ReadyDeadGaleFlags()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Avatar)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Avatar)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 1)
+THEN
+SetFlag(EPI_Epilogue_State_GalePromisedDivinityBeforeDeath_6341edf6-c43f-4117-94bb-4f7ef9950f6f);
+
+PROC
+PROC_EPI_Epilogue_ReadyDeadGaleFlags()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Avatar)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Avatar)
+AND
+GetFlag(END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de, _Avatar, 1)
+THEN
+SetFlag(EPI_Epilogue_State_GaleWasPartneredOnDeath_d98256fb-93bc-4713-adbe-274d0b5d8db7);
+
+PROC
+PROC_EPI_Epilogue_SelectLetterRecipient()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Avatar)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Avatar)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 1)
+THEN
+DB_EPI_Epilogue_DeadGaleLetterRecipient(_Avatar);
+
+PROC
+PROC_EPI_Epilogue_SelectLetterRecipient()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Avatar)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Avatar)
+AND
+GetFlag(END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de, _Avatar, 1) 
+AND
+NOT DB_EPI_Epilogue_DeadGaleLetterRecipient(_)
+THEN
+DB_EPI_Epilogue_DeadGaleLetterRecipient(_Avatar);
+
+PROC
+PROC_EPI_Epilogue_SelectLetterRecipient()
+AND
+NOT DB_EPI_Epilogue_DeadGaleLetterRecipient(_)
+AND
+QRY_EPI_Epilogue_GetHighestGaleApprovalWasPartneredAvatar()
+AND
+DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar, _)
+THEN
+DB_EPI_Epilogue_DeadGaleLetterRecipient(_Avatar);
+
+PROC
+PROC_EPI_Epilogue_SelectLetterRecipient()
+AND
+NOT DB_EPI_Epilogue_DeadGaleLetterRecipient(_)
+AND
+QRY_EPI_Epilogue_GetHighestGaleApprovalAvatar()
+AND
+DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar, _)
+THEN
+DB_EPI_Epilogue_DeadGaleLetterRecipient(_Avatar);
+
+QRY
+QRY_EPI_Epilogue_GetHighestGaleApprovalWasPartneredAvatar()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Avatar)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Avatar)
+AND
+GetFlag(ORI_State_WasPartneredWithGale_60e14eb3-cce6-43c3-b893-b9b687e3d88f, _Avatar, 1)
+AND
+GetApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Rating)
+THEN
+DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar, _Rating);
+
+QRY
+QRY_EPI_Epilogue_GetHighestGaleApprovalAvatar()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_EPI_Epilogue_LockedAvatar(_Avatar)
+AND
+NOT DB_EPI_Epilogue_GhostAvatar(_Avatar)
+AND
+GetApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Rating)
+THEN
+DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar, _Rating);
+
+IF
+DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar1, _Rating1)
+AND
+DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar2, _Rating2)
+AND
+_Avatar1 != _Avatar2
+AND
+_Rating2 <= _Rating1
+THEN
+NOT DB_QRYRTN_EPI_Epilogue_HighestGaleApprovalAvatar(_Avatar2, _Rating2);
+
+IF
+DB_EPI_Epilogue_DeadGaleLetterRecipient(_Avatar)
+THEN
+SetFlag(EPI_Epilogue_State_DeadGaleLetterRecipient_c9d77d6d-1097-41d2-a7f9-ad6c720d7a3e, _Avatar);
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar);
+
+//REGION Gale died claiming crown
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 1)
+AND
+DB_ORI_Partnered(_Avatar, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadGodGaleBMGTrue");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 1)
+AND
+GetFlag(END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de, _Avatar, 1) 
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadGodGaleBMGFalse");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 1)
+AND
+GetApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Rating)
+AND
+DB_EPI_Epilogue_DeadGaleLetterApprovalThreshold(_Threshold)
+AND
+_Rating >= _Threshold
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadGodGaleNoPartner");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+NOT DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 0)
+AND
+GetFlag(END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de, _Avatar, 1) 
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadGodGaleBMGFalse");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+NOT DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+GetFlag(ORI_Gale_State_AcceptedBeMyGodProposal_3d452ca4-14e6-176a-88ad-47d0ef8271d3, _Avatar, 0)
+AND
+GetApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Rating)
+AND
+DB_EPI_Epilogue_DeadGaleLetterApprovalThreshold(_Threshold)
+AND
+_Rating >= _Threshold
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadGodGaleNoPartner");
+//END_REGION
+
+//REGION Gale exploded
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+DB_GlobalFlag(ORI_Gale_State_VolunteeredToExplode_9b9ccc0d-a4e0-41f9-bc4f-b6e706111fef)
+AND
+GetFlag(END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de, _Avatar, 1) 
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGalePartner");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+DB_GlobalFlag(ORI_Gale_State_VolunteeredToExplode_9b9ccc0d-a4e0-41f9-bc4f-b6e706111fef)
+AND
+DB_ORI_Partnered(_Avatar, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGalePartner");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+DB_GlobalFlag(ORI_Gale_State_VolunteeredToExplode_9b9ccc0d-a4e0-41f9-bc4f-b6e706111fef)
+AND
+GetApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Rating)
+AND
+DB_EPI_Epilogue_DeadGaleLetterApprovalThreshold(_Threshold)
+AND
+_Rating >= _Threshold
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGaleNoPartner");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+DB_GlobalFlag(ORI_Gale_State_ConvincedToExplode_4c857d8e-4936-42e5-92b5-386e3f82ab3b)
+AND
+GetFlag(END_GameFinale_State_PartnershipEndedGale_fa62b0f8-c884-4f68-b507-b70b9277b6de, _Avatar, 1) 
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGalePartner");
+
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+DB_GlobalFlag(END_FinalDecisions_Event_GaleExploded_a32e3cb5-9536-3c3e-a4d2-1837ee3b6190)
+AND
+DB_GlobalFlag(ORI_Gale_State_ConvincedToExplode_4c857d8e-4936-42e5-92b5-386e3f82ab3b)
+AND
+GetApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Rating)
+AND
+DB_EPI_Epilogue_DeadGaleLetterApprovalThreshold(_Threshold)
+AND
+_Rating >= _Threshold
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGaleVolunteered");
+//END_REGION
+
+//Fallback Last Will (Last minute detonation, Pursuaded at brain stem, etc)
+PROC
+PROC_EPI_Epilogue_SetSpectralGaleLetter((CHARACTER)_Avatar)
+AND
+NOT DB_EPI_Epilogue_GaleLetterStringSet(1)
+THEN
+DB_EPI_Epilogue_GaleLetterStringSet(1);
+AddEntryToCustomBook("EPI_Epilogue_SpectralGaleLetter", "EPI_DeadExplodeGaleLastWill");
+
+IF
+UseFinished(_Player, S_EPI_DeadGaleLetter_1afa558b-a948-49f1-a685-7ae11c6d1588, _)
+THEN
+OpenCustomBookUI(_Player, "EPI_Epilogue_SpectralGaleLetter");
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3c_EPI"

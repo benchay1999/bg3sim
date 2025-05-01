@@ -1,0 +1,228 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_TopicalGreeting((FLAG)TG_ORI_WyllRecruited_c344917e-ca77-4422-875c-46c3e5333075);
+KBSECTION
+//REGION DEN Recruitment
+
+//--- Debug
+IF
+FlagSet(Debug_BecomeAvatar_34371b8e-a34b-3354-54e7-fcda800d703a, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, _)
+AND
+DB_CurrentLevel("WLD_Main_A")
+THEN
+PROC_DEN_WyllRecruitment_DefineAvatarOM();
+
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+THEN
+PROC_DEN_WyllRecruitment_Init();
+
+// Move Wyll to the Den if he's not a player
+// Don't place him directly there, because otherwise when reloading level + story, or if he's selected
+// as random avatar while loading WLD_Main_A, he will first be in the Den (as a player) and then get
+// teleported out, which triggers all kind of logic (skipping plea at the gates, moving ShadowHeart to
+// the Den, ...)
+PROC
+PROC_DEN_WyllRecruitment_Init()
+AND
+NOT DB_Players((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+SetLevel((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,2);
+TeleportTo(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, (TRIGGER)S_DEN_WyllRaidStartingPos_80f54c8a-12ab-45dd-b0c4-cea9c709df3c);
+DB_DEN_NPC(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "Cave", (DIALOGRESOURCE)DEN_AttackOnDen_Wyll_97b1088e-095b-3382-82b6-c108f9f76013);
+
+
+//--- Wyll companion already met Zevlor
+PROC
+PROC_DEN_WyllRecruitment_Init()
+AND
+NOT DB_Avatars(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+SetFlag(DEN_TieflingLeader_State_InvitedPlayerToBG_83a2267e-8258-2117-eb3c-2c33220a6d21, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+
+
+//--- OM (avatar only) with the kids & Zevlor
+PROC
+PROC_DEN_WyllRecruitment_Init()
+AND
+DB_Avatars(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+PROC_DEN_WyllRecruitment_DefineAvatarOM();
+
+PROC
+PROC_DEN_WyllRecruitment_DefineAvatarOM()
+THEN
+//Kids
+PROC_DefineSingleOriginMoment(DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4, (TAG)REALLY_WYLL_5f40def5-d3ec-4698-a367-01a339888956, (DIALOGRESOURCE)DEN_TrainingKids_OM_Wyll_AOM_de425ace-1e17-decd-4882-cff43fc532f8);
+DB_OriginMoment_ExtraNPCs(DEN_TrainingKids_OM_Wyll_AOM_de425ace-1e17-decd-4882-cff43fc532f8, (CHARACTER)S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f);
+DB_OriginMoment_ExtraNPCs(DEN_TrainingKids_OM_Wyll_AOM_de425ace-1e17-decd-4882-cff43fc532f8, (CHARACTER)S_DEN_Trainee_002_bd7f31a6-98e8-46cd-97be-4347fa45d387);
+DB_OriginMoment_ExtraNPCs(DEN_TrainingKids_OM_Wyll_AOM_de425ace-1e17-decd-4882-cff43fc532f8, (CHARACTER)S_DEN_Trainee_003_71bdc11d-b488-427d-8453-632e91178c7e);
+PROC_DEN_RemoveFromDenNPCs(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+
+IF
+DB_QRY_RTN_OM_FindValidOriginMoment(DEN_TrainingKids_OM_Wyll_AOM_de425ace-1e17-decd-4882-cff43fc532f8,_,_,_,_,_,_)
+AND
+QRY_DEN_TieflingRefugees_MakeKidAvailable(NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DEN_TieflingRefugees_MakeKidAvailable((CHARACTER)_) // Defined in Act1_DEN_TieflingRefugees
+THEN
+DB_NOOP(1);
+
+
+//--- Wyll companion - moved to the tiefling cave; can now be recruited
+IF
+EntityEvent(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "DEN_Wyll_Event_ArrivedAtCave") //gen_anubismoveto: move finished
+THEN
+	//change dialog
+PROC_GLO_Origins_SetRecruitmentDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,Wyll_Recruitment_PostEA_c128e6d5-670d-b220-55c0-503d70694dbc);
+	//training
+SetEntityEvent(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "DEN_Trainer_Event_IsTrainer",1);
+SetFlag((FLAG)DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+SetFlag((FLAG)DEN_Wyll_State_AtDefault_504b6043-033d-4a61-b56d-a5aad9b4bdf7, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+//Conditions for Wyll not being a trainer anymore are checked in Act1_DEN_TieflingRefugees
+
+
+//--- Wyll companion - intro with kid
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)Wyll_Recruitment_PostEA_c128e6d5-670d-b220-55c0-503d70694dbc, _ID)
+AND
+QRY_DEN_TieflingRefugees_MakeKidAvailable(S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f)
+AND
+NOT QRY_DEN_Wyll_KidIsAvailable(_ID)
+THEN
+SetFlag(DEN_Wyll_State_KidMissing_2f8520a5-e816-3baf-3689-fd87730facdb, NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_DEN_Wyll_KidIsAvailable((INTEGER)_ID)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f);
+
+IF
+DialogEnded(Wyll_Recruitment_PostEA_c128e6d5-670d-b220-55c0-503d70694dbc, _)
+AND
+DB_GlobalFlag(DEN_Wyll_State_KidMissing_2f8520a5-e816-3baf-3689-fd87730facdb)
+THEN
+ClearFlag(DEN_Wyll_State_KidMissing_2f8520a5-e816-3baf-3689-fd87730facdb, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Spotting for Karlach
+IF
+DB_GlobalFlag((FLAG)DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7)
+AND
+DB_Avatars((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+THEN
+DB_SpotPlayers((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,"DEN_Wyll_Recruitment_SpotKarlach",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_HasTag((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,"DEN_Wyll_Recruitment_SpotKarlach",(TAG)KARLACH_9aab4bcd-e1f7-4008-8f7b-f1203789ae9b,1);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,"DEN_Wyll_Recruitment_SpotKarlach",S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+THEN
+PROC_DEN_WyllRecruitment_KarlachSpotted(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c);
+
+PROC
+PROC_DEN_WyllRecruitment_KarlachSpotted((CHARACTER)_Character)
+AND
+NOT DB_GlobalFlag((FLAG)DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d)
+AND
+QRY_StartDialog((DIALOGRESOURCE)Wyll_Recruitment_PostEA_c128e6d5-670d-b220-55c0-503d70694dbc,S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,_Character)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DEN_WyllRecruitment_KarlachSpotted((CHARACTER)_Character)
+AND
+DB_GlobalFlag((FLAG)DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d)
+AND
+QRY_StartDialog((DIALOGRESOURCE)Wyll_Recruitment_PostDruidAttack_PostEA_3c61d907-0397-abae-bf10-6ca114d84d0c,S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,_Character)
+THEN
+DB_NOOP(1);
+
+IF
+DialogStarted((DIALOGRESOURCE)Wyll_Recruitment_PostEA_c128e6d5-670d-b220-55c0-503d70694dbc,_)
+THEN
+PROC_SpotPlayers_StopSpotting("DEN_Wyll_Recruitment_SpotKarlach");
+
+IF
+DialogStarted((DIALOGRESOURCE)Wyll_Recruitment_PostDruidAttack_PostEA_3c61d907-0397-abae-bf10-6ca114d84d0c,_)
+THEN
+PROC_SpotPlayers_StopSpotting("DEN_Wyll_Recruitment_SpotKarlach");
+
+//END_REGION
+
+//REGION Wyll TGs
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+QRY_OnlyOnce("TG_ORI_WyllRecruited")
+THEN
+PROC_TopicalGreeting_UnlockTopic((FLAG)TG_ORI_WyllRecruited_c344917e-ca77-4422-875c-46c3e5333075);
+
+//END_REGION
+
+
+//REGION Remove Wyll
+//If Karlach is recruited beforehand - queue a camp night confrontation
+IF
+FlagSet(GLO_Origin_PartOfTheTeam_Karlach_b1e6f12a-600a-4e2e-9871-b08a9fe3a617,_,_)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+SetHasDialog(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,0);
+PROC_DisappearOutOfSight((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "Run", 0, "ORI_Wyll_LeftFromDen");
+PROC_DEN_Wyll_CleanTraining();
+SetFlag((FLAG)Wyll_Recruitment_Event_QueueNight_08a74992-a350-42b8-80d3-2685898281ba);
+
+//If Karlach is defeated (once) while unrecruited - leave for good
+IF
+DB_Defeated((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_GlobalFlag((FLAG)Wyll_Recruitment_Event_QueueNight_08a74992-a350-42b8-80d3-2685898281ba)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+PROC_ORI_Wyll_LeaveDen();
+
+//If reached next act - leave for good
+IF
+DB_LevelLoadedOnce("SCL_Main_A")
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+PROC_ORI_Wyll_LeaveDen();
+ClearFlag((FLAG)Wyll_Recruitment_Event_QueueNight_08a74992-a350-42b8-80d3-2685898281ba);
+
+//If reached next act - leave for good
+IF
+DB_LevelLoadedOnce("CRE_Main_A")
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+PROC_ORI_Wyll_LeaveDen();
+ClearFlag((FLAG)Wyll_Recruitment_Event_QueueNight_08a74992-a350-42b8-80d3-2685898281ba);
+
+PROC
+PROC_ORI_Wyll_LeaveDen()
+THEN
+SetHasDialog(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,0);
+PROC_DisappearOutOfSight((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "Run", 0, "ORI_Wyll_LeftFromDen");
+PROC_DEN_Wyll_CleanTraining();
+PROC_CampNight_ClearCampNight((FLAG)NIGHT_WyllConfrontation_NotRecruited_b35ff12a-ceae-4bf8-94e2-5050576e4d6e);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

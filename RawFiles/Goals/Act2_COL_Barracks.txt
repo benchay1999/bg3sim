@@ -1,0 +1,487 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_DeadOnceFlag((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,COL_Barracks_State_MistressDead_7250b59d-7ac7-44a7-a8d0-a47be8fa1a90);
+
+DB_COL_Barracks_Myrkulites((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,(DIALOGRESOURCE)COL_Barracks_MistressOfSouls_898cb681-7b6e-3607-7ddd-ffc09378dfb3);
+DB_COL_Barracks_Myrkulites(S_COL_Barracks_SkullLasher_001_78fe0419-8d29-4f13-9137-92e36e868456,COL_Barracks_SkullLasher_001_9fa7b2ed-885e-5acd-9c65-30810a55b954);
+DB_COL_Barracks_Myrkulites(S_COL_Barracks_SkullLasher_002_bc8d35c0-d782-4c8e-9e20-baf87f814a31,COL_Barracks_SkullLasher_002_d22238ff-9ae9-675a-4200-c00be09177df);
+DB_COL_Barracks_Myrkulites(S_COL_Barracks_SkullLasher_003_f87898c9-5f13-44a2-b497-2be1c644a9e3,COL_Barracks_SkullLasher_003_540bb033-36a1-0877-0742-2905f5e7effc);
+
+DB_COL_Barracks_Myrkulites_CombatADs((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,(DIALOGRESOURCE)COL_Barracks_AD_MistressOfSouls_Combat_f6dd2391-6141-6a81-6867-ceb59df51d3c);
+DB_COL_Barracks_Myrkulites_CombatADs(S_COL_Barracks_SkullLasher_001_78fe0419-8d29-4f13-9137-92e36e868456,COL_Barracks_AD_SkullLasher_001_Combat_4857d48b-e7a2-5295-c39d-86087522a259);
+DB_COL_Barracks_Myrkulites_CombatADs(S_COL_Barracks_SkullLasher_002_bc8d35c0-d782-4c8e-9e20-baf87f814a31,COL_Barracks_AD_SkullLasher_002_Combat_128da111-cfc9-ead2-0f70-a8356333a18e);
+DB_COL_Barracks_Myrkulites_CombatADs(S_COL_Barracks_SkullLasher_003_f87898c9-5f13-44a2-b497-2be1c644a9e3,COL_Barracks_AD_SkullLasher_003_Combat_d7186d00-d969-fd32-5cc6-f8976566306e);
+
+DB_OneShotPartyTrigger(S_COL_Barracks_Blessing_Box_49b1f2e2-82de-4ab5-aff8-727f5c7cfcb8);
+
+DB_HostileToPlayerGroupCancelFlag(COL_Barracks_State_InterruptConvinced_1b4d300f-90d0-f38a-65fa-ed2ad41d7887,(FACTION)ACT2_COL_Barracks_89156cbe-7256-4da0-9a0a-0bbbb4a42c47);
+DB_HostileToPlayerGroupCancelFlag(COL_Barracks_State_DarkUrgeConvincedMistress_78489548-4744-9cff-e1fc-9d102e2704c4,(FACTION)ACT2_COL_Barracks_89156cbe-7256-4da0-9a0a-0bbbb4a42c47);
+
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("COL_Barracks_SkullLashers",(FLAG)COL_Barracks_State_AllSkullLashersDefeated_dab0ac75-a862-434e-951b-60d1379a0463);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)COL_Barracks_State_InterruptConvinced_1b4d300f-90d0-f38a-65fa-ed2ad41d7887,(DIALOGRESOURCE)COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b);
+DB_GlobalFlagReactionAfterDialog((FLAG)COL_Barracks_State_InterruptConvinced_1b4d300f-90d0-f38a-65fa-ed2ad41d7887,(DIALOGRESOURCE)COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e);
+
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b,
+(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683,COL_Barracks_MistressOfSouls_RecognizeDarkUrge_23028529-ccb6-094d-5401-570d54b432e5);
+PROC_DefineSingleOriginMoment(COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,
+(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683,COL_Barracks_MistressOfSouls_RecognizeDarkUrge_23028529-ccb6-094d-5401-570d54b432e5);
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_898cb681-7b6e-3607-7ddd-ffc09378dfb3,
+(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683,COL_Barracks_MistressOfSouls_RecognizeDarkUrge_23028529-ccb6-094d-5401-570d54b432e5);
+KBSECTION
+//REGION Debug hooks
+
+IF
+TextEvent("barracks_assault")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_COL_TeleportPartiesToColony(0);
+TimerLaunch("COL_Barracks_DEBUG_Teleport",1000);
+
+IF
+TimerFinished("COL_Barracks_DEBUG_Teleport")
+THEN
+PROC_TeleportPartiesTo((TRIGGER)S_COL_DEBUG_Barracks_Point_5ea713a4-d520-42dc-a3c7-32b1ea827f1f,"");
+
+//END_REGION
+
+//REGION Post-Chosen Three cleanup
+
+PROC
+PROC_COL_KethericShowdown_ChosenThree_CleanUp()
+AND
+DB_COL_Barracks_Myrkulites(_Character,(DIALOGRESOURCE)_)
+THEN
+SetOnStage(_Character,0);
+
+PROC
+PROC_COL_KethericShowdown_ChosenThree_CleanUp()
+AND
+NOT DB_GlobalFlag(COL_Barracks_State_BlessingFinished_685c4b44-e9fb-4cdc-a99e-86f7db82d0e9)
+THEN
+PROC_SceneOver("COL_Barracks_Blessing");
+
+//END_REGION
+
+//REGION Ketheric assault hostility
+
+//If Ketheric was attacked on rooftop, go on high alert
+PROC
+PROC_COL_TeleportPartiesToColony(0)
+THEN
+PROC_GlobalSetFlagAndCache(COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d);
+PROC_COL_Barracks_KressaSpotting();
+
+//If not on high alert BUT Dark Urge is in the Colony, still do spotting
+IF
+DB_InRegion(_DarkUrge,(TRIGGER)S_COL_ColonyArea_NoOubliette_e35841eb-e9ae-4c13-8b46-832184d1ec5b)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+PROC_COL_Barracks_KressaSpotting(); //also ensures DB_SpotPlayers_HasTag was defined if not already before
+
+PROC
+PROC_COL_Barracks_KressaSpotting()
+AND
+NOT DB_GlobalFlag(COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d)
+THEN
+DB_SpotPlayers_HasTag(S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,"COL_Barracks_MistressOfSouls",(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683,1);
+
+PROC
+PROC_COL_Barracks_KressaSpotting()
+THEN
+DB_SpotPlayers_Continuous((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,"COL_Barracks_MistressOfSouls");
+DB_SpotPlayers((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,"COL_Barracks_MistressOfSouls",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SpotPlayers_Spotted(_,"COL_Barracks_MistressOfSouls",_Player)
+AND
+QRY_COL_Barracks_CheckDoDialog(_Player)
+AND
+NOT QRY_StartDialog(COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,_Player)
+THEN
+DB_HostileToPlayerGroup((FACTION)ACT2_COL_Barracks_89156cbe-7256-4da0-9a0a-0bbbb4a42c47,S_Player_DarkUrge_c66bc36f-7cb0-41fa-92f0-6d81d7d17ba3);
+
+//Trigger dialog if we should either check for all players or if the dark urge is recognizable
+QRY
+QRY_COL_Barracks_CheckDoDialog((CHARACTER)_)
+AND
+NOT DB_COL_Barracks_OnlySpotDarkUrge(1)
+THEN
+DB_NOOP(1);
+
+//If this gets triggered, the HighAlert dialog will be replaced by RecognizeDarkUrge through the origin moment pipeline
+QRY
+QRY_COL_Barracks_CheckDoDialog((CHARACTER)_DarkUrge)
+AND
+IsTagged(_DarkUrge,(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683,1) //not shapeshifted, recognizable as Dark Urge
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SpotPlayers_Spotted(_,"COL_Barracks_MistressOfSouls",_)
+THEN
+PROC_SceneOver("COL_Barracks_Blessing");
+
+//DARK_URGE tag gets (re)set when the Dark Urge drops shapeshift
+//If the Dark Urge was spotted while disguised,
+//Mistress of Souls can restart spotting them to be able to recognize them
+IF
+TagSet(_Char,(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683)
+AND
+DB_SpotPlayers_Spotted(_Spotter,"COL_Barracks_MistressOfSouls",(CHARACTER)_Char)
+THEN
+PROC_InternSpotPlayers_CleanUp("COL_Barracks_MistressOfSouls");
+
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,_)
+THEN
+PROC_SceneOver("COL_Barracks_Blessing");
+
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,_)
+AND
+NOT DB_ORI_DarkUrge(_)
+THEN
+PROC_SpotPlayers_StopSpotting("COL_Barracks_MistressOfSouls");
+
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,_)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+NOT DB_Players(_DarkUrge)
+THEN
+PROC_SpotPlayers_StopSpotting("COL_Barracks_MistressOfSouls");
+
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,_)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+DB_Players((CHARACTER)_DarkUrge)
+THEN
+DB_COL_Barracks_OnlySpotDarkUrge(1);
+
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b,_)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+DB_Players((CHARACTER)_DarkUrge)
+THEN
+DB_COL_Barracks_OnlySpotDarkUrge(1);
+
+//Mistress of Souls should also stop looking for other party members if they already confronted the Dark Urge instead
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_RecognizeDarkUrge_23028529-ccb6-094d-5401-570d54b432e5,_)
+AND
+NOT DB_COL_Barracks_OnlySpotDarkUrge(1)
+THEN
+PROC_SpotPlayers_StopSpotting("COL_Barracks_MistressOfSouls");
+
+IF
+DialogStarted((DIALOGRESOURCE)COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b,_)
+AND
+NOT DB_COL_Barracks_OnlySpotDarkUrge(1)
+THEN
+PROC_SpotPlayers_StopSpotting("COL_Barracks_MistressOfSouls");
+
+PROC
+PROC_SpotPlayers_StopSpotting(_,"COL_Barracks_MistressOfSouls")
+AND
+DB_COL_Barracks_OnlySpotDarkUrge(1)
+THEN
+NOT DB_COL_Barracks_OnlySpotDarkUrge(1);
+
+//END_REGION
+
+//REGION Start blessing AD
+
+PROC
+PROC_OneShotTriggerEntered((CHARACTER)_,(TRIGGER)S_COL_Barracks_Blessing_Box_49b1f2e2-82de-4ab5-aff8-727f5c7cfcb8)
+AND
+DB_COL_Barracks_Myrkulites(_Character,(DIALOGRESOURCE)_)
+THEN
+DB_SceneManager(_Character,"COL_Barracks_Blessing");
+
+PROC
+PROC_OneShotTriggerEntered((CHARACTER)_,(TRIGGER)S_COL_Barracks_Blessing_Box_49b1f2e2-82de-4ab5-aff8-727f5c7cfcb8)
+AND
+NOT DB_GlobalFlag(COL_Barracks_State_AllSkullLashersDefeated_dab0ac75-a862-434e-951b-60d1379a0463)
+AND
+NOT DB_PermaDefeatedOrOffstage(S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542)
+THEN
+PROC_TryStartAD(COL_Barracks_AD_Blessing_576ac506-710f-0899-4fd2-50dc31d3bb6a,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542);
+DB_TrespassTrigger(S_COL_Barracks_Blessing_Trespass_Box_5d52a3b7-ac04-445f-96ae-75da106f3307,NULL_00000000-0000-0000-0000-000000000000,"COL_Barracks_Trespass",(CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542);
+
+IF
+DB_COL_Barracks_Myrkulites(_Character,(DIALOGRESOURCE)_Dialog)
+THEN
+DB_Dialogs(_Character,COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b);
+
+IF
+DB_COL_Barracks_Myrkulites(_Character,(DIALOGRESOURCE)_)
+AND
+_Character != S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542
+THEN
+DB_GLO_DefeatCounter(_Character,"COL_Barracks_SkullLashers");
+LookAtEntity(_Character,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,3.0);
+
+PROC
+PROC_StateSet_PermaDefeated(_Myrkulite)
+AND
+DB_COL_Barracks_Myrkulites((CHARACTER)_Myrkulite,_)
+AND
+NOT QRY_COL_Barracks_MyrkulitesNotPermaDefeated()
+AND
+DB_COL_Barracks_Myrkulites(_ClearOwner,_)
+THEN
+PROC_ClearCorpseOwner(_ClearOwner);
+
+//In case someone was knocked out and then killed
+QRY
+QRY_CorpseLooting_BlockMakeOwned(_Myrkulite)
+AND
+DB_COL_Barracks_Myrkulites(_Myrkulite,_)
+AND
+NOT QRY_COL_Barracks_MyrkulitesNotPermaDefeated()
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_COL_Barracks_MyrkulitesNotPermaDefeated()
+AND
+DB_COL_Barracks_Myrkulites(_Myrkulite,_)
+AND
+NOT DB_PermaDefeated(_Myrkulite)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Interrupt/finish blessing AD
+
+//Interrupt scene: either trigger hostility or interrogation dialogue
+
+//Interrupt by starting dialogue with characters during blessing scene
+QRY
+QRY_SelectCustomDialog(_Character,_Player)
+AND
+DB_Dialogs(_Character,(DIALOGRESOURCE)COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(COL_Barracks_State_BlessingFinished_685c4b44-e9fb-4cdc-a99e-86f7db82d0e9)
+AND
+NOT QRY_COL_Barracks_SelectInterruptDialog(_Player)
+THEN
+DB_SelectedDialog(COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,_Player);
+
+//Mistress of Souls will recognize Dark Urge
+//Handled through OM pipeline
+
+//Myrkulites on high alert
+QRY
+QRY_COL_Barracks_SelectInterruptDialog((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)COL_Barracks_State_HighAlert_982e34fb-f03d-4d4b-9e8e-e57b7d17d20d)
+AND
+IsTagged(_Player,(TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683,0)
+THEN
+DB_SelectedDialog(COL_Barracks_MistressOfSouls_HighAlert_d6055d07-b999-7617-4e93-34309cb8290e,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,_Player);
+
+PROC
+PROC_SceneInterrupted(_,_Player,"COL_Barracks_Blessing",_Reason)
+AND
+DB_Players(_Player)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+THEN
+DB_HostileToPlayerGroup((FACTION)ACT2_COL_Barracks_89156cbe-7256-4da0-9a0a-0bbbb4a42c47,_Player);
+PROC_ForceStopDialog(COL_Barracks_MistressOfSouls_898cb681-7b6e-3607-7ddd-ffc09378dfb3);
+
+PROC
+PROC_SceneInterrupted(_,_Player,"COL_Barracks_Blessing",_Reason)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+AND
+_Reason != "DisturbanceRegistering"
+AND
+QRY_StartDialog(COL_Barracks_MistressOfSouls_InterruptBlessing_24dcd8ba-1076-cd9c-0a15-b2fe0f12313b,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SceneInterrupted(_,_,"COL_Barracks_Blessing",_)
+THEN
+PROC_SceneOver("COL_Barracks_Blessing");
+
+//Scene over
+IF
+DB_GlobalFlag(COL_Barracks_State_BlessingFinished_685c4b44-e9fb-4cdc-a99e-86f7db82d0e9)
+THEN
+PROC_SceneOver("COL_Barracks_Blessing");
+
+PROC
+PROC_SceneOver("COL_Barracks_Blessing")
+THEN
+PROC_RemoveDBTrespassTrigger(S_COL_Barracks_Blessing_Trespass_Box_5d52a3b7-ac04-445f-96ae-75da106f3307);
+PROC_TriggerUnregisterForParty(S_COL_Barracks_Blessing_Trespass_Box_5d52a3b7-ac04-445f-96ae-75da106f3307);
+
+PROC
+PROC_SceneOver("COL_Barracks_Blessing")
+AND
+NOT DB_GlobalFlag(COL_Barracks_State_BlessingFinished_685c4b44-e9fb-4cdc-a99e-86f7db82d0e9)
+THEN
+SetFlag(COL_Barracks_State_BlessingFinished_685c4b44-e9fb-4cdc-a99e-86f7db82d0e9);
+
+PROC
+PROC_SceneOver("COL_Barracks_Blessing")
+AND
+DB_COL_Barracks_Myrkulites(_Character,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_Character);
+DB_Dialogs(_Character,_Dialog);
+
+QRY
+QRY_CRIME_KeepingAnEyeOut_Block((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,_CrimeId)
+AND
+CrimeGetType(_CrimeId,"COL_Barracks_Trespass")
+THEN
+DB_NOOP(1);
+
+//Peaceful resolution XP
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)COL_Barracks_State_InterruptConvinced_1b4d300f-90d0-f38a-65fa-ed2ad41d7887,_,_DialogId)
+AND
+DB_DialogPlayers(_DialogId,_Player,1)
+AND
+DB_COL_Barracks_Myrkulites(_Character,_)
+THEN
+PROC_PeacefulResolve(_Character);
+
+//END_REGION
+
+//REGION Mistress blessing
+
+IF
+FlagSet(COL_Barracks_Event_MistressBlessesSkullLashers_346bb654-8f80-c2f6-1a42-bc93a0c73c0e,_,_)
+AND
+DB_COL_Barracks_Myrkulites(_Character,(DIALOGRESOURCE)_)
+AND
+_Character != S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542
+THEN
+SetFlag(COL_Barracks_State_CharacterWasBlessed_090e76da-6bc8-0fbd-115c-1f735879525c,_Character);
+
+IF
+FlagSet(COL_Barracks_Event_MistressBlessesSkullLashers_346bb654-8f80-c2f6-1a42-bc93a0c73c0e,_,_)
+THEN
+ClearFlag(COL_Barracks_Event_MistressBlessesSkullLashers_346bb654-8f80-c2f6-1a42-bc93a0c73c0e);
+
+IF
+FlagSet(COL_Barracks_State_CharacterWasBlessed_090e76da-6bc8-0fbd-115c-1f735879525c,_Character,_)
+THEN
+ApplyStatus(_Character,"COL_MYRKULITE_BLESSING",-1.0,0,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542);
+
+//END_REGION
+
+//REGION Barracks Myrkulites combat
+
+IF
+DB_Is_InCombat(_Character,_CombatId)
+AND
+DB_COL_Barracks_Myrkulites((CHARACTER)_Character,_)
+AND
+NOT DB_COL_Barracks_CombatId(_CombatId)
+THEN
+DB_COL_Barracks_CombatId(_CombatId);
+
+IF
+CombatEnded(_CombatId)
+AND
+DB_COL_Barracks_CombatId(_CombatId)
+AND
+DB_COL_Barracks_Myrkulites_CombatADs_DoneThisRound(1)
+THEN
+NOT DB_COL_Barracks_Myrkulites_CombatADs_DoneThisRound(1);
+
+IF
+CombatEnded(_CombatId)
+AND
+DB_COL_Barracks_CombatId(_CombatId)
+THEN
+NOT DB_COL_Barracks_CombatId(_CombatId);
+
+IF
+CombatRoundStarted(_CombatId,_)
+AND
+DB_COL_Barracks_CombatId(_CombatId)
+AND
+DB_COL_Barracks_Myrkulites_CombatADs_DoneThisRound(1)
+AND
+DB_COL_Barracks_Myrkulites_CombatADs(_Character,_)
+AND
+DB_Is_InCombat(_Character,_CombatId)
+THEN
+NOT DB_COL_Barracks_Myrkulites_CombatADs_DoneThisRound(1);
+
+IF
+TurnStarted(_Character)
+AND
+DB_COL_Barracks_Myrkulites_CombatADs((CHARACTER)_Character,_Dialog)
+AND
+NOT DB_COL_Barracks_Myrkulites_CombatADs_DoneThisRound(1)
+AND
+NOT DB_DialogSpeakers(_,_Character,_)
+THEN
+PROC_TryStartAD(_Dialog,_Character);
+NOT DB_COL_Barracks_Myrkulites_CombatADs((CHARACTER)_Character,_Dialog);
+DB_COL_Barracks_Myrkulites_CombatADs_DoneThisRound(1);
+
+IF
+DB_COL_Barracks_Myrkulites(_Character,_)
+AND
+_Character != S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542
+THEN
+DB_GLO_DefeatCounter(_Character,"COL_Barracks_SkullLashers");
+
+//END_REGION
+
+//REGION Dark Urge after Mistress dialogue
+
+PROC
+PROC_COL_Barracks_KressaSpotting()
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+DB_GLO_DefeatCounter(S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,"COL_Barracks_MistressOfSouls_DarkUrge");
+
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated("COL_Barracks_MistressOfSouls_DarkUrge")
+THEN
+DB_DialogDeath((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542);
+DB_COL_Barracks_DarkUrgeSpotMistressCorpse(1);
+
+IF
+DB_COL_Barracks_DarkUrgeSpotMistressCorpse(1)
+AND
+DB_Dead((CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_Sees(_DarkUrge,(CHARACTER)S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542)
+AND
+QRY_StartDialogCustom_Fixed(COL_Barracks_MistressOfSouls_RecognizeDarkUrge_23028529-ccb6-094d-5401-570d54b432e5,S_COL_Barracks_MistressOfSouls_6068a46e-bbe4-4fc6-b955-cd8886fa5542,_DarkUrge,0,0,1,0)
+THEN
+NOT DB_COL_Barracks_DarkUrgeSpotMistressCorpse(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

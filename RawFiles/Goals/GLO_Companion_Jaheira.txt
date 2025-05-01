@@ -1,0 +1,523 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Player Init Block
+//DB_Origins((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_OriginNPCAlignment((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(FACTION)GLO_Jaheira_e7dfda4a-9696-4aa1-9abc-9a350a797ed6);
+DB_OriginCampFlags((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(FLAG)JAHEIRA_8b7fd8c6-4d49-4932-b525-7dda10cf4a1b,(FLAG)JAHEIRAAVATAR_b8cb0de2-c543-4e3f-8270-7fe1c06b7a53,(FLAG)JAHEIRACOMPANION_cb886250-baf1-437e-b9de-ae97824a0e15,(FLAG)JAHEIRAPARTY_eb34cb38-9394-41bc-9ab3-15f5f32f60d3,(FLAG)JAHEIRACAMP_ec198187-5cf8-4c02-831c-3afc919ca2c4);
+DB_OriginInPartyGlobal((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(FLAG)ORI_Jaheira_State_IsInParty_1b86aa78-a2db-4faa-b4a6-c5591c03bac9);
+DB_OriginPartOfTheTeamFlag((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (FLAG)GLO_Origin_PartOfTheTeam_Jaheira_d7d29efe-70bb-47c2-9db3-bc8a10347bc6,(FLAG)GLO_Origin_Avatar_Jaheira_84e74ea2-5d12-4b81-812e-f21972974dde,(FLAG)ORI_Jaheira_ControlledByUser_c7addde5-54b9-4d34-b52d-88d67786d913);
+DB_OriginKickFromPartyFlags((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (FLAG)ORI_Jaheira_Event_KickCompanion_69deb113-8b45-415c-9fa2-77fc3dcf86c6, (FLAG)ORI_Jaheira_State_CanBeKicked_716f221e-07f4-4647-a757-153eace2255a);
+DB_OriginRecruitmentDialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(DIALOGRESOURCE)Jaheira_Recruitment_Moonrise_04443f0f-9c62-d474-a98a-3e13eec31c69);
+
+DB_OriginInPartyDialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (DIALOGRESOURCE)Jaheira_InParty_e97481ba-961c-50a7-c54f-d34d6b75044d);
+DB_OriginWarning1Dialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(DIALOGRESOURCE)Jaheira_Warning1_daf6d50c-05cf-656e-6398-b8e5be1dc053);
+DB_OriginWarning2Dialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(DIALOGRESOURCE)Jaheira_Warning2_9ef55235-3e1d-d4a5-8652-41b613f42ef6);
+DB_OriginLeavingDialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(DIALOGRESOURCE)Jaheira_Leaving_9c96c524-5692-ee30-3ee8-9b1ad4262fb1);
+
+DB_Inclusion_Object((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(FLAG)GLO_Jaheira_Inclusion_Start_45daca8e-51d2-4aa0-b65a-e406e5ab7f7f,(FLAG)GLO_Jaheira_Inclusion_End_78bdb931-e4c1-4ffc-89f2-8595db9df932); //Make new flags?
+
+DB_Debug_CharacterAddFlags((FLAG)Debug_AddJaheira_52dc4aeb-bb06-46bb-9c6c-ff3d3ef21857, (CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (FLAG)Debug_JaheiraIsPlayer_0b906e26-cee7-4505-b246-edf95bda67e4);
+DB_Debug_CharacterRemoveHideFlags((FLAG)Debug_RemoveHideJaheira_d47267d6-86a4-4b2d-92fb-3a8e0b89ee2f, (CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+SetHasDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+DB_FlagReactionAfterDialog((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, (DIALOGRESOURCE)Jaheira_Recruitment_Moonrise_04443f0f-9c62-d474-a98a-3e13eec31c69);
+DB_FlagReactionAfterDialog((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, (DIALOGRESOURCE)HAV_Siege_Outro_9c82a52e-ee30-d74a-8f20-59ad593acb6b);
+DB_FlagReactionAfterDialog((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, (DIALOGRESOURCE)SCE_Jaheira_Debrief_7eb6a35a-656a-78db-57c8-4d5178ef880b);
+
+//END_REGION
+
+//Block Trade options for Jaheira after SCL, 
+SetCanTrade(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0);
+
+
+//REGION Act 3 Progression States
+//For Jaheira's InCamp dialogue
+DB_State_Priority(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_AxeQuestDone", 0);
+DB_State_Priority(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_GuildHallDone", 500);
+DB_State_Priority(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_CountingHouseDone", 1000);
+DB_State_Priority(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_MinscRecruited", 1500);
+
+DB_State_Flags(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_AxeQuestDone", (FLAG)WYR_Axe_State_TalkedRealHarper_8ca9e9f9-24b0-4afc-9275-8510d308d245);
+DB_State_Flags(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_GuildHallDone", (FLAG)LOW_Guildhall_State_AgreedToHuntStoneMan_10c1825f-d6ec-8951-3241-3f29f873baf6);
+DB_State_Flags(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_CountingHouseDone", (FLAG)LOW_CountingHouse_State_RobbersEscaped_16197488-9cc2-48e2-94ae-36225025d4d8);
+DB_State_Flags(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira", "GLO_Jaheira_MinscRecruited", (FLAG)HAV_Mood_State_Unprotected_7ac5d939-2c81-4871-81a5-fd5c6a0adba1);
+//END_REGION
+
+// hacky fix
+// for some reason this tag is set from code (from data) only when Jaheira becomes companion
+// but she surely is REALLY_JAHEIRA even before that
+
+SetTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,REALLY_JAHEIRA_8457eb5f-036c-4143-b6cf-447a9f555c7a);
+
+DB_OriginMayLeaveDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, ORI_Jaheira_AD_AttackedAlly_08e664d6-0d3a-530f-5388-ef694cf16542);
+DB_OriginMayLeaveDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, LOW_AttackedJaheiraAllies_WRD_Jaheira_71b5e275-63ba-eb99-d909-2ae9a9afb3c5);
+DB_OriginMayLeaveDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, Jaheira_Leaving_9c96c524-5692-ee30-3ee8-9b1ad4262fb1);
+DB_OriginMayLeaveDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, CAMP_DarkUrge_CFM_BloodweddingFollowup_2111a7a8-1f57-4e72-f518-acdaaddc0a67);
+
+DB_KilledByPartyEvent(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, ORI_Jaheira_State_KilledByParty_c1ce62f9-f022-c162-f2df-31b661ee273d);
+
+PROC_GLO_DifficultyModes_AddHPBoostedEntity(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+KBSECTION
+//REGION DEBUG
+IF
+TextEvent("jaheira2camp")
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+IF
+TextEvent("Act3_Jaheira_KillJaheira")
+THEN
+CreateSurface(S_LOW_MinscHideout_JaheiraDeathSpawnTrigger_7fdece53-ac65-4dc8-96ea-24df4acb2aec, "SurfaceAcid", 2.0, -1.0);
+Die(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, DEATHTYPE.Acid, S_LOW_CountingHouse_JaheiraClone_4da802f5-3237-40b8-afff-d728016e3047, 0, 1, 0.0);
+
+
+//If you've left Jaheira in the camp until now, she could still be an NPC. From here on out the game treats her as a companion, so set her up as a companion properly. (Note: This also 
+PROC
+PROC_LevelLoadedOnce("CTY_Main_A")
+AND
+DB_PartOfTheTeam(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a) //Might not be necessary? I presume PartOfTheTeam is cleared when this happens, but just incase
+AND
+NOT DB_OnlyOnce("RecruitedFirstTime_Jaheira")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(ORI_LaezelRecruitment_Event_InvitedToCamp_5ac352a5-58c2-a8ed-1957-199d8bc284da, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+RegisterAsCompanion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(CHARACTER)_Player);
+PROC_ORI_SetupCamp(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+ClearTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+
+
+IF
+LevelGameplayStarted("CTY_Main_A", 0)
+AND
+NOT DB_GlobalFlag(GLO_Jaheira_State_HasBeenRecruited_3a6e5580-d551-4cbb-add9-3e97f92fb371)
+AND
+NOT DB_GlobalFlag(GLO_Jaheira_Knows_HarpersAtDanthelon_3d66ab2d-7997-3a14-8fcc-9291a8802c5c)
+AND
+NOT DB_GlobalFlag(Jaheira_InParty_SpokeOfDanthelonAttack_14ca0fbc-65b8-42ef-8ca7-25fc288a9da8)
+AND
+NOT DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_IsEditor(1)
+AND
+QRY_OnlyOnce("GLO_Jaheira_JaheiraFamilyLeaving")
+THEN
+PROC_GlobalSetFlagAndCache(LOW_JaheirasHouse_State_FamilyHasReasonToLeave_a60ebbac-f4a7-4ed8-a565-4a10dbb641e2);
+PROC_LOW_JaheirasHouse_FamilyLeaves();
+PROC_LOW_JaheirasHouse_FightersLeave();
+
+//Once set up as a companion, check if Jaheira now needs to leave
+IF
+LevelGameplayStarted("CTY_Main_A", 0)
+AND
+NOT DB_GlobalFlag(GLO_Jaheira_State_HasBeenRecruited_3a6e5580-d551-4cbb-add9-3e97f92fb371)
+AND
+NOT DB_GlobalFlag(GLO_Jaheira_Knows_HarpersAtDanthelon_3d66ab2d-7997-3a14-8fcc-9291a8802c5c)
+AND
+NOT DB_GlobalFlag(Jaheira_InParty_SpokeOfDanthelonAttack_14ca0fbc-65b8-42ef-8ca7-25fc288a9da8)
+AND
+NOT DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+QRY_OnlyOnce("GLO_Jaheira_JaheiraLeaving")
+THEN
+PROC_LOW_Jaheira_SetUpJaheiraLeaving();
+
+//Updating this to her leaving, to be far clearer in what's going on. This is formed under the idea that she should be automatically set up as a companion on reaching LOW.
+PROC
+PROC_LOW_Jaheira_SetUpJaheiraLeaving()
+AND
+QRY_GetBestAvatarForCompanion((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Avatar)
+THEN
+DB_CompanionLeaving(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,_Avatar);
+PROC_Origins_CompanionLeavePermanently(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "ORI_Gale_AbandonedBombNotDisarmed");
+SetOnStage(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0);
+DB_GLO_Jaheira_LeftOnEnteringCity(1);
+
+PROC
+PROC_LOW_Jaheira_SetUpJaheiraLeaving()
+AND
+DB_CompanionLeavingBackPack((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _Backpack)
+THEN
+PROC_ToInventoryAndOnStage(S_LOW_JaheiraLeavingPouch_3893edd9-c2ac-49eb-87c2-f55ffd59e6bb, _Backpack, -1, 0, 1);
+
+//Once she's permanently left, set her up as dead in the Sewers. 
+PROC
+PROC_LOW_Jaheira_SetUpJaheiraLeaving()
+AND
+DB_GLO_Jaheira_LeftOnEnteringCity(1)
+THEN
+Equip(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_LOW_JaheirasHouse_KhalidsGift_3282593a-e057-4d69-b8bf-da92058dea75, 1, 0, 1);
+TeleportTo(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_LOW_MinscHideout_JaheiraDeathSpawnTrigger_7fdece53-ac65-4dc8-96ea-24df4acb2aec, "S_LOW_Jaheira_JaheiraDiedPursuingMinsc", 0, 0, 0, 0, 1);
+CreateSurface(S_LOW_MinscHideout_JaheiraDeathSpawnTrigger_7fdece53-ac65-4dc8-96ea-24df4acb2aec, "SurfaceAcid", 2.0, -1.0);
+Die(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, DEATHTYPE.Acid, S_LOW_CountingHouse_JaheiraClone_4da802f5-3237-40b8-afff-d728016e3047, 0, 1, 0.0);
+NOT DB_GLO_Jaheira_LeftOnEnteringCity(1);
+
+//Make sure if she comes back, she's on stage
+PROC
+PROC_LOW_Jaheira_SetUpJaheiraLeaving()
+AND
+IsOnStage(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0)
+THEN
+SetOnStage(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+
+//END_REGION
+
+//REGION Recruit & Move To Camp
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(CHARACTER)_Player)
+AND
+QRY_OnlyOnce("RecruitedFirstTime_Jaheira")
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0);
+SetFlag(ORI_Jaheira_HasMet_814ec660-b54f-4c5f-abe5-3acdaca21df7,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_ORI_Jaheira_WildshapeSetup();
+
+PROC
+PROC_ORI_Jaheira_WildshapeSetup()
+AND
+HasSpell((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "Shout_WildShape", 1)
+THEN
+RemoveSpell((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "Shout_WildShape");
+
+// Jaheira makes sure to start with 20 approval for any avatar.
+IF
+DB_LevelLoadedOnce("INT_Main_A")
+AND
+DB_Avatars(_Avatar)
+AND
+DB_Players(_Avatar)
+AND
+DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_ORI_Jaheira_AlreadyInitializedApproval(_Avatar)
+AND
+ChangeApprovalRating(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Avatar, 1, 20, _)
+THEN
+DB_ORI_Jaheira_AlreadyInitializedApproval(_Avatar);
+
+
+IF
+EntityEvent((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,"DebugTeleportedToCamp")
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+//If this flag is set, check if she's already set up at camp. If not, set her up.
+
+PROC
+PROC_FlagReactionAfterDialog(_Jaheira, (FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, _Dialog)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)_Jaheira)
+THEN
+ClearFlag((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, _Jaheira);
+PROC_ORI_SetupCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+//If so, then we just send her there instead.
+
+PROC
+PROC_FlagReactionAfterDialog(_Jaheira, (FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, _Dialog)
+AND
+DB_PartOfTheTeam((CHARACTER)_Jaheira)
+THEN
+ClearFlag((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, _Jaheira);
+PROC_DismissToCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+//END_REGION
+
+//REGION When Minsc is recruited
+IF
+FlagSet(ORI_State_Recruited_e78c0aab-fb48-98e9-3ed9-773a0c39988d, S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _)
+THEN
+PROC_GlobalSetFlagAndCache(Jaheira_InParty_MinscRecruited_f8f3252f-641c-42a2-b420-49d2256aaba2); 
+
+IF
+FlagSet(ORI_Minsc_State_SavedButNotRecruited_8d437b31-7b27-478a-8c76-4cc095006d3f, _, _)
+THEN
+PROC_Origins_ForceLowApprovalLeavingDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+
+//END_REGION
+
+//REGION Jaheira leaves
+PROC
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Reason)
+THEN
+SetFlag((FLAG)ORI_Jaheira_State_LeftPermanently_f463d0a1-87d7-4cff-978f-a1834bfd551c);
+
+//If told to push off at SCE Debrief, she'll leave on ending the next long Rest
+
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag(SCE_Jaheira_Event_ToldToLeave_b6a57c45-6a9b-46a7-8f66-118a032477fb)
+AND
+QRY_OnlyOnce("GLO_Jaheira_LeavingCamp")
+THEN
+PROC_LOW_Jaheira_RemoveJaheiraFromCamp();
+SetOnStage(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0);
+
+PROC
+PROC_LOW_Jaheira_RemoveJaheiraFromCamp()
+THEN
+NOT DB_InCamp(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+NOT DB_PartOfTheTeam(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+NOT DB_ORI_OriginCampData((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,"FARM",(TRIGGER)S_CAMP_Ravengard_e50982fd-0b00-4287-b183-20eddeb3069b);
+NOT DB_ORI_OriginCampData((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,"SLUMS",(TRIGGER)S_CAMP_SLUMS_Ravengard_81249232-3284-4e78-9de8-4c4407914c8e);
+NOT DB_ORI_OriginCampData((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,"ELFSONG",(TRIGGER)S_CAMP_ELFSONG_Ravengard_6cace9b7-a095-44cf-98df-c5a6c7a3e090);
+
+//END_REGION
+
+//REGION Boo Inclusion Logic
+IF
+DB_GlobalFlag(GLO_Origin_PartOfTheTeam_Minsc_3510cd49-7ff6-475c-829b-d4d68a07b085)
+AND
+NOT DB_GlobalFlag(Jaheira_InParty_SpokeOfMinsc_f45a99d8-0026-4b17-a18e-be36a1b8e77a)
+THEN
+DB_GLO_Minsc_BooDialogs((DIALOGRESOURCE)Jaheira_InParty_e97481ba-961c-50a7-c54f-d34d6b75044d);
+
+//Doing this manually as it's set in a Nested Dialog - Would rather catch it for sure
+
+IF
+DialogEnded(Jaheira_InParty_e97481ba-961c-50a7-c54f-d34d6b75044d, _ID)
+AND
+DB_GlobalFlag(Jaheira_InParty_State_BooNotNeeded_41511960-0e15-4874-9bb4-637c0b1a3216)
+THEN
+NOT DB_GLO_Minsc_BooDialogs((DIALOGRESOURCE)Jaheira_InParty_e97481ba-961c-50a7-c54f-d34d6b75044d);
+
+//END_REGION 
+
+//REGION Jaheira leaves party if Minsc leaves/dies
+PROC
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba, _)
+THEN
+PROC_Origins_ForceLowApprovalLeavingDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+IF
+DB_PermaDefeated((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+THEN
+PROC_Origins_ForceLowApprovalLeavingDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+//END_REGION
+
+//REGION Jaheira's reactivity to people she deems under her protection (Harpers/Allies)
+
+//Attack handling if Player attacked directly
+
+IF
+AttackedBy(_Ally, _Player, _, _, _, _, _)
+AND
+DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+IsTagged(_Ally, (TAG)JAHEIRA_ALLY_7c3a81df-17d9-4b46-bde6-652492898b4e, 1)
+AND
+CanSee(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player, 1)
+THEN
+PROC_ChangeApprovalRatingForAllAvatars(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, -15);
+
+
+//END_REGION
+
+//REGION Makes Jaheira resurrectable only once she is recruited
+
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+THEN
+SetTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A")
+AND
+NOT DB_GlobalFlag(GLO_Jaheira_State_HasBeenRecruited_3a6e5580-d551-4cbb-add9-3e97f92fb371)
+THEN
+SetTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+PROC
+PROC_LevelLoadedOnce("CTY_Main_A")
+AND
+NOT DB_GlobalFlag(GLO_Jaheira_State_HasBeenRecruited_3a6e5580-d551-4cbb-add9-3e97f92fb371)
+THEN
+SetTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+IF
+FlagSet(ORI_State_Recruited_e78c0aab-fb48-98e9-3ed9-773a0c39988d, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,_)
+THEN
+ClearTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+//END_REGION
+
+//REGION Jaheira joins camp if valid after SCE
+
+PROC
+PROC_LevelLoadedOnce("INT_Main_A")
+AND
+NOT DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Companion_Leave_363c71f4-8b46-c0c0-4bbb-0e5a85e4652d)
+THEN
+PROC_GLO_Jaheira_ResolveCampSituation();
+
+//Here just incase you left to Intermezzo and didn't speak to Jaheira in SCE - She'll be in camp with you until WYR
+
+PROC
+PROC_GLO_Jaheira_ResolveCampSituation()
+AND
+NOT DB_PartOfTheTeam(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+ClearFlag((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+PROC_ORI_SetupCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+PROC
+PROC_GLO_Jaheira_ResolveCampSituation()
+AND
+DB_PartOfTheTeam(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+ClearFlag((FLAG)ORI_Jaheira_Event_GoToCamp_6f1649cf-ab76-20a9-1c69-3ec573e932ec, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+PROC_DismissToCamp((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+PROC
+PROC_GLO_Jaheira_ResolveCampSituation()
+AND
+DB_GlobalFlag(GLO_Jaheira_State_HasBeenRecruited_3a6e5580-d551-4cbb-add9-3e97f92fb371)
+AND
+IsTagged(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6, 1)
+THEN
+ClearTag(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+//END_REGION
+
+//REGION Make sure that from Intermezzo onwards, Jaheira's ability to trade is blocked
+
+PROC
+PROC_LevelLoadedOnce("INT_Main_A")
+THEN
+SetCanTrade(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0);
+
+//REGION Jaheira Journal Pass
+//Tidying it so that we still point you to Jaheira 
+
+PROC
+PROC_LevelLoadedOnce("CTY_Main_A")
+AND
+QRY_QuestUpdateIsUnlockedForAny("ORI_HighHarper", "TalkToHarper")
+AND 
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "ORI_HighHarper", "TalkToJaheira");
+
+QRY
+QRY_GLO_Jaheira_PreCityQuestChecker()
+AND
+QRY_QuestUpdateIsUnlockedForAny("ORI_HighHarper", "TalkedSCE") 
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Jaheira_PreCityQuestChecker()
+AND
+QRY_QuestUpdateIsUnlockedForAny("ORI_HighHarper", "TalkToHarper") 
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Jaheira_PreCityQuestChecker()
+AND
+QRY_QuestUpdateIsUnlockedForAny("ORI_HighHarper", "MeetWithHarpers") 
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Jaheira_PreCityQuestChecker()
+AND
+QRY_QuestUpdateIsUnlockedForAny("ORI_HighHarper", "FindHarpers")
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+
+
+//REGION Hurting her kids
+
+
+
+//If you have attacked her kids and she hasn't left, she has only one dialog for you - This is a catch all incase the rest doesn't work
+
+IF
+DB_GlobalFlag(LOW_JaheirasHouse_State_PlayerAttackedFamily_f505ff06-486a-4d8d-9986-95f4f91f9094)
+THEN
+PROC_LOW_JaheiraConfrontsAboutKids();
+
+PROC
+PROC_LOW_JaheiraConfrontsAboutKids()
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+PROC_Origins_ForceLowApprovalLeavingDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+PROC //Final fallback if player tries to rest without talking to her after it
+PROC_Camp_EndEvening()
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_GlobalFlag((FLAG)LOW_JaheirasHouse_State_PlayerAttackedFamily_f505ff06-486a-4d8d-9986-95f4f91f9094)
+THEN
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "GLO_Jaheira_Left");
+
+//END_REGION
+
+//REGION Isobel Fallback
+
+//In the event that you can brutally murder Isobel at any point after completing Moonrise, with Jaheira in your party, this is a catch all that turns her hostile.
+
+IF
+AttackedBy(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, _Player, _, _, _, _, _)
+AND
+DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6)
+AND
+GetRegion(_Player, "SCL_Main_A")
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+PROC_Origins_ForceLowApprovalLeavingDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+IF
+KilledBy(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, _Player, _, _)
+AND
+DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6)
+AND
+GetRegion(_Player, "SCL_Main_A")
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+PROC_Origins_ForceLowApprovalLeavingDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+//END_REGION
+
+//REGION Jaheira Counting House Flag Catch
+
+//Here to make sure that if Jaheira is in the party, but her inclusion doesn't fire, that she still gets the relevant flag
+IF
+DialogEnded(LOW_CountingHouse_Heist_63210311-4b3b-85e3-7278-2032e2a65bd7, _)
+AND
+DB_Players(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_GlobalFlag(LOW_CountingHouse_Heist_State_JaheiraSpoke_90aeada2-34a4-c70f-70ad-d5a199be7633)
+THEN
+PROC_GlobalSetFlagAndCache(LOW_CountingHouse_Heist_State_JaheiraSpoke_90aeada2-34a4-c70f-70ad-d5a199be7633);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

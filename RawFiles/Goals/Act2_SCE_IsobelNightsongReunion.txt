@@ -1,0 +1,306 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_SCE_IsobelNightsongReunion_ReunionMembers((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+DB_SCE_IsobelNightsongReunion_ReunionMembers((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211);
+
+DB_SCE_IsobelNightsongReunion_ReunionTriggers((TRIGGER)S_SCE_ReunionDialog_StartTrigger_60bde26f-d9d2-499e-b062-1933658c3f42);
+DB_SCE_IsobelNightsongReunion_ReunionTriggers((TRIGGER)S_SCE_ReunionDialog_DoorStartTrigger_8c2e4f58-b680-47b6-9619-f19e2dd8db0c);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)SCE_Nightsong_Event_RefusedJoinCampSolo_88e8c011-f245-4feb-9205-bb7f35210973, (DIALOGRESOURCE)SCE_NightsongSoloReunion_1dc738df-3423-82a6-2f11-3615feee5a1c);
+DB_GlobalFlagReactionAfterDialog((FLAG)SCE_Nightsong_Event_RefusedJoinCampCouple_a11fa0e4-fcb8-47bf-92e2-dc7e1e9e7102,(DIALOGRESOURCE)SCE_IsobelNightsongReunion_b487cee2-7e58-13bc-7ee3-74be836327d1);
+
+DB_QuestDef_State((FLAG)SCE_Nightsong_Event_RefusedJoinCampSolo_88e8c011-f245-4feb-9205-bb7f35210973,"SHA_Nightsong","NightsongFreed_RefusedJoinCampSolo");
+DB_QuestDef_State((FLAG)SCE_Nightsong_Event_RefusedJoinCampCouple_a11fa0e4-fcb8-47bf-92e2-dc7e1e9e7102,"SHA_Nightsong","NightsongFreed_RefusedJoinCampCouple");
+KBSECTION
+//REGION Main Reunion Dialog
+PROC
+PROC_SCE_CharacterInEpilogueHook((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+THEN
+PROC_RemoveNPCADs(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+PROC_SetRelationToPlayers((FACTION)ACT1_SHA_Nightsong_89d54194-f9fd-4a99-879a-e11971bfe3e4,50);
+PROC_SetRelationMutual((FACTION)ACT1_SHA_Nightsong_89d54194-f9fd-4a99-879a-e11971bfe3e4,(FACTION)Act2_HAV_Isobel_e8503b65-35b3-40a4-8fa6-43ba3a22655c,100);
+
+IF
+DB_InCamp(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+AND
+DB_AD_Dialog((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b,COL_KethericShowdown_AD_NightsongAfterCombat_d2060999-5499-e1a1-1a45-2f917b2a15f7)
+THEN
+PROC_RemoveNPCADs(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+
+// TODO: Have Scene Manager check if any scene members are outside the dialog trigger - waiting on [Link Redacted]
+// Register scene when Nightsong and Isobel are sent to the Epilogue
+IF
+FlagSet((FLAG)SCE_State_AtEpilogue_3541abb5-6aaf-48c7-bf30-5a13b3abc718, _ReunionMember, _)
+AND
+DB_SCE_IsobelNightsongReunion_ReunionMembers((CHARACTER)_ReunionMember)
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)S_SCE_ReunionDialog_StartTrigger_60bde26f-d9d2-499e-b062-1933658c3f42);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_SCE_ReunionDialog_DoorStartTrigger_8c2e4f58-b680-47b6-9619-f19e2dd8db0c);
+PROC_SceneDialogOnly("SCE_IsobelNightsongReunion_Scene_MainReunion", _ReunionMember, (TRIGGER)S_SCE_ReunionDialogTrigger_19929d0b-f585-4dac-b2b3-41dd35e2a22f);
+
+IF
+EnteredTrigger(_Avatar, _Trigger)
+AND
+DB_SCE_IsobelNightsongReunion_ReunionTriggers(_Trigger)
+AND
+DB_Avatars(_Avatar)
+THEN
+PROC_CharacterMoveTo(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, S_SCE_Isobel_Debrief_IdlePoint_255969ec-7683-4925-98be-f6b5674eba04, "Walk", "");
+
+IF
+EnteredTrigger(_Avatar, _Trigger)
+AND
+DB_SCE_IsobelNightsongReunion_ReunionTriggers(_Trigger)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SCE_IsobelNightsongReunion_AllMembersPresent()
+AND
+QRY_StartDialog((DIALOGRESOURCE)SCE_IsobelNightsongReunion_b487cee2-7e58-13bc-7ee3-74be836327d1, S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _Avatar)
+THEN
+DB_NOOP(1);
+
+
+IF
+DialogEnded((DIALOGRESOURCE)SCE_IsobelNightsongReunion_b487cee2-7e58-13bc-7ee3-74be836327d1, _)
+AND
+DB_SCE_IsobelNightsongReunion_ReunionTriggers(_Trigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+IF
+DialogStarted((DIALOGRESOURCE)SCE_IsobelNightsongReunion_b487cee2-7e58-13bc-7ee3-74be836327d1, _)
+AND
+NOT DB_OnlyOnce("SCE_IsobelNightsongReunion_MainReunionStarted")
+THEN
+DB_OnlyOnce("SCE_IsobelNightsongReunion_MainReunionStarted");
+
+PROC
+PROC_TWN_Finale_StartCheck((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+QRY_SCE_IsobelNightsongReunion_ShouldJoinCamp()
+AND
+DB_SceneManager((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+THEN
+PROC_SCE_NightsongIsobelReunion_MoveNightsongToCamp();
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion");
+
+PROC
+PROC_TWN_Finale_StartCheck((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+QRY_SCE_IsobelNightsongReunion_ShouldJoinCamp()
+AND
+DB_SceneManager((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+THEN
+PROC_SCE_NightsongIsobelReunion_MoveIsobelToCamp();
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion");
+
+
+QRY
+QRY_SCE_IsobelNightsongReunion_ShouldJoinCamp()
+AND
+NOT DB_OnlyOnce("SCE_IsobelNightsongReunion_MainReunionStarted")
+AND
+NOT DB_SCE_IsobelNightsongReunion_ViolentlyInterrupted(1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SCE_IsobelNightsongReunion_ShouldJoinCamp()
+AND
+DB_GlobalFlag((FLAG)SCE_IsobelNightsongReunion_JoiningCamp_cea17782-fc15-19d3-e658-7f2f955ebd9f)
+AND
+NOT DB_SCE_IsobelNightsongReunion_ViolentlyInterrupted(1)
+THEN
+DB_NOOP(1);
+
+
+IF
+TeleportedToCamp((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+AND
+DB_SceneManager((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b,"SCE_IsobelNightsongReunion_Scene_MainReunion")
+THEN
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion");
+
+IF
+TeleportedToCamp((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+AND
+DB_SceneManager((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211,"SCE_IsobelNightsongReunion_Scene_MainReunion")
+THEN
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion");
+
+//Adding to Camp if you go to Camp after SCE Reunion scene before going to INT
+IF
+TeleportedToCamp(_Avatar)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SCE_IsobelNightsongReunion_ShouldJoinCamp()
+AND
+DB_SceneManager((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+QRY_OnlyOnce("SCE_IsobelAndNightsong_AddIsobelToCamp")
+THEN
+PROC_SCE_NightsongIsobelReunion_MoveIsobelToCamp();
+
+IF
+TeleportedToCamp(_Avatar)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SCE_IsobelNightsongReunion_ShouldJoinCamp()
+AND
+DB_SceneManager((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+QRY_OnlyOnce("SCE_IsobelAndNightsong_AddNSToCamp")
+THEN
+PROC_SCE_NightsongIsobelReunion_MoveNightsongToCamp();
+
+
+IF
+DialogEnded((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _)
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_SCE_ReunionDialogTrigger_19929d0b-f585-4dac-b2b3-41dd35e2a22f);
+GoalCompleted;
+
+// Handle scene ending before Goal Completion
+PROC
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+NOT DB_SCE_IsobelNightsongReunion_ViolentlyInterrupted(1)
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_SCE_ReunionDialogTrigger_19929d0b-f585-4dac-b2b3-41dd35e2a22f);
+PROC_SCE_NightsongIsobelReunion_MoveNightsongToCamp();
+PROC_SCE_NightsongIsobelReunion_MoveIsobelToCamp();
+
+// Manually starting reunion dialog
+QRY
+QRY_SelectCustomDialog(_ReunionMember, _Player)
+AND
+DB_SceneManager((CHARACTER)_ReunionMember, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+QRY_SCE_IsobelNightsongReunion_AllMembersPresent()
+AND
+DB_SceneManager(_OtherReunionMember, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+_ReunionMember != _OtherReunionMember
+AND
+QRY_SpeakerIsAvailable(_OtherReunionMember)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)SCE_IsobelNightsongReunion_b487cee2-7e58-13bc-7ee3-74be836327d1,
+	S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211,
+	S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b,
+	_Player);
+
+// If everyone is present for the reunion, but one member is unavailable to talk then play a generic busy AD
+QRY
+QRY_SelectCustomDialog_AfterGenerics((CHARACTER)_ReunionMember, _Player)
+AND
+DB_SceneManager(_ReunionMember, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+QRY_SCE_IsobelNightsongReunion_AllMembersPresent()
+AND
+DB_SceneManager(_OtherReunionMember, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+_ReunionMember != _OtherReunionMember
+AND
+NOT QRY_SpeakerIsAvailable(_OtherReunionMember)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)GEB_AD_CantTalkNow_ae991ba1-8a2e-9cc7-b4c2-379af7f058c5, _ReunionMember);
+
+QRY
+QRY_SCE_IsobelNightsongReunion_AllMembersPresent()
+AND
+DB_SceneManager((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+AND
+DB_SceneManager((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "SCE_IsobelNightsongReunion_Scene_MainReunion")
+THEN
+DB_NOOP(1);
+
+//Shifts Isobel's initial location for SCE debrief if Nightsong is dead
+IF
+DB_PermaDefeated(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+THEN
+NOT DB_SCE_Debrief_Participant((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, (TRIGGER)S_SCE_IsobelPoint_d51cd5c0-9a39-4f86-9da5-116af810b914, (DIALOGRESOURCE)SCE_IsobelSoloReunion_29607941-2c6d-8244-742c-db0c577b1933);
+DB_SCE_Debrief_Participant((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, (TRIGGER)S_SCE_Isobel_Debrief_IdlePoint_255969ec-7683-4925-98be-f6b5674eba04, (DIALOGRESOURCE)SCE_IsobelSoloReunion_29607941-2c6d-8244-742c-db0c577b1933);
+
+//END_REGION
+
+//REGION Violence
+
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_Actor, (CHARACTER)_Character, "SCE_IsobelNightsongReunion_Scene_MainReunion", _Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+AND
+_Reason != "Attacked"
+THEN
+DB_SCE_IsobelNightsongReunion_ViolentlyInterrupted(1);
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion");
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("SCE_SetupNightsong_MoveToCamp")
+THEN
+PROC_State_Progress(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, "HAV_FlamingSpy", "Spy_DefaultBehaviour");
+PROC_State_Progress(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_Isobel", "HAV_Isobel_State_AtMoonrise");
+PROC_SCE_NightsongIsobelReunion_MoveIsobelToCamp();
+PROC_SCE_NightsongIsobelReunion_MoveNightsongToCamp();
+
+IF
+TextEvent("SCE_SetupNightsong_FreedFromShar")
+THEN
+PROC_IsobelNightsongReunion_Debug_FreedFromShar();
+
+IF
+TextEvent("SCE_SetupNightsong_FreedFromColony")
+THEN
+PROC_IsobelNightsongReunion_Debug_FreedFromColony();
+
+PROC
+PROC_SCE_DEBUG_SituationSpecificFlagSet()
+AND
+NOT DB_GlobalFlag((FLAG)SCE_IsobelNightsongReunion_Debug_FreeFromShar_8a9f49d5-43ab-465a-adcd-7b95418d0048)
+AND
+NOT DB_GlobalFlag((FLAG)SCE_IsobelNightsongReunion_Debug_FreeFromColony_dd23fae6-2a2e-4486-81a0-9b65bcdb03d2)
+THEN
+PROC_IsobelNightsongReunion_Debug_FreedFromShar();
+
+IF
+DB_GlobalFlag((FLAG)SCE_IsobelNightsongReunion_Debug_FreeFromShar_8a9f49d5-43ab-465a-adcd-7b95418d0048)
+THEN
+PROC_IsobelNightsongReunion_Debug_FreedFromShar();
+
+IF
+DB_GlobalFlag((FLAG)SCE_IsobelNightsongReunion_Debug_FreeFromColony_dd23fae6-2a2e-4486-81a0-9b65bcdb03d2)
+THEN
+PROC_IsobelNightsongReunion_Debug_FreedFromColony();
+
+PROC
+PROC_IsobelNightsongReunion_Debug_FreedFromShar()
+THEN
+NOT DB_NoLowAttitudeDialog((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+SetFlag((FLAG)SHA_NightsongPrison_State_NightsongFreed_24f27b06-6665-79ed-d7bf-e4bf356ca2fa);
+PROC_State_Progress(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "SHA_Nightsong", "SHA_State_Nightsong_KethericDefeated");
+PROC_SceneOver("SHA_NightsongPrison_MeetingNightsong");
+PROC_SelfHealing_Enable((CHARACTER)S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+PROC
+PROC_IsobelNightsongReunion_Debug_FreedFromColony()
+THEN
+SetFlag((FLAG)COL_KethericShowdown_State_NightsongFreed_bfe9a480-01bd-0474-f461-d18734170415);
+PROC_State_Progress(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "SHA_Nightsong", "SHA_State_Nightsong_KethericDefeated");
+PROC_SceneOver("SHA_NightsongPrison_MeetingNightsong");
+//END_REGION
+EXITSECTION
+PROC_SceneOver("SCE_IsobelNightsongReunion_Scene_MainReunion");
+ENDEXITSECTION
+ParentTargetEdge "Act2"
