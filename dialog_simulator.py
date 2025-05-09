@@ -3,24 +3,17 @@ import sys
 import os
 from colorama import init, Fore, Back, Style
 import random
-import graphviz
 import traceback # For error handling during rendering
 
 # Initialize colorama for colored terminal output
 init()
-
-# Add a check for graphviz import success
-try:
-    import graphviz
-    GRAPHVIZ_AVAILABLE = True
-except ImportError:
-    GRAPHVIZ_AVAILABLE = False
-    print(f"{Fore.YELLOW}Warning: 'graphviz' Python package not found. Visualization features will be disabled.{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}Install it with: pip install graphviz{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}You also need to install the Graphviz software: https://graphviz.org/download/{Style.RESET_ALL}")
-
 class DialogSimulator:
-    def __init__(self, json_file='output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'):
+    def __init__(
+            self, 
+            json_file='output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json',
+            flags_file='parsed_flags.json',
+            tags_file='parsed_tags.json'
+    ):
         """Initialize the dialog simulator with the specified JSON file"""
         with open(json_file, 'r', encoding='utf-8') as f:
             self.dialog_tree = json.load(f)
@@ -28,7 +21,26 @@ class DialogSimulator:
         self.root_nodes = {}
         self.metadata = self.dialog_tree["metadata"]
         self.all_nodes = self.dialog_tree["dialogue"]  # All nodes including children
-        
+        # Load the flags file if it exists
+        self.entire_flags = {}
+        if os.path.exists(flags_file):
+            try:
+                with open(flags_file, 'r', encoding='utf-8') as f:
+                    self.entire_flags = json.load(f)
+                self.entire_flags = {sample['name']: sample for sample in self.entire_flags}
+                print(f"Loaded {len(self.entire_flags)} flags from {flags_file}")
+            except Exception as e:
+                print(f"Error loading flags file {flags_file}: {e}")
+        # Load the tags file if it exists
+        self.entire_tags = {}
+        if os.path.exists(tags_file):
+            try:
+                with open(tags_file, 'r', encoding='utf-8') as f:
+                    self.entire_tags = json.load(f)
+                self.entire_tags = {sample['name']: sample for sample in self.entire_tags}
+                print(f"Loaded {len(self.entire_tags)} tags from {tags_file}")
+            except Exception as e:
+                print(f"Error loading tags file {tags_file}: {e}")
         # Extract root nodes from the dialog tree
         self.root_nodes = {node_id: node_data for node_id, node_data in self.dialog_tree["dialogue"].items() 
                            if not self._is_child_node(node_id)}
@@ -67,7 +79,7 @@ class DialogSimulator:
         # Track flags that have been set during playthrough
         self.default_flags = ["ORI_INCLUSION_GALE", "ORI_INCLUSION_ASTARION", "ORI_INCLUSION_LAEZEL", "ORI_INCLUSION_SHADOWHEART", "ORI_INCLUSION_WYLL", "ORI_INCLUSION_KARLACH", "ORI_INCLUSION_HALSIN", "ORI_INCLUSION_MINTHARA", "ORI_INCLUSION_MINSC", "ORI_INCLUSION_RANDOM"]
         self.active_flags = set(self.default_flags)
-    
+        import pdb; pdb.set_trace()
     def set_initial_flags(self, flags):
         """Set the initial active flags for the simulator."""
         # Ensure flags is a set
@@ -144,9 +156,17 @@ class DialogSimulator:
     
     def _process_setflags(self, node_data):
         """Process flags that are set by a node"""
-        
         # if setflags has a flag with " = False", remove it from the active flags
         for flag in node_data.get('setflags', []):
+            if flag not in self.entire_flags and flag not in self.entire_tags:
+                continue
+            if flag in self.entire_flags or flag.split('= False')[0].strip() in self.entire_flags or flag.split('= True')[0].strip() in self.entire_flags:
+                flag_type = self.entire_flags[flag]['usage']
+                if flag_type.lower() not in ['global', 'dialog', 'user']:
+                    continue
+            if flag in self.entire_tags:
+                if self.entire_tags[flag]['categories'].lower() not in ['story', 'dialog', 'dialoghidden']:
+                    continue
             if "= False" in flag:
                 try:
                     self.active_flags.remove(flag.split('= False')[0].strip())
@@ -163,6 +183,15 @@ class DialogSimulator:
             return True
         # if checkflags has a flag with " = False", check whether it is not set.
         for flag in node_data.get('checkflags', []):
+            if flag not in self.entire_flags and flag not in self.entire_tags:
+                continue
+            if flag in self.entire_flags or flag.split('= False')[0].strip() in self.entire_flags or flag.split('= True')[0].strip() in self.entire_flags:
+                flag_type = self.entire_flags[flag]['usage']
+                if flag_type.lower() not in ['global', 'dialog', 'user']:
+                    continue
+            if flag in self.entire_tags:
+                if self.entire_tags[flag]['categories'].lower() not in ['story', 'dialog', 'dialoghidden']:
+                    continue
             if "= False" in flag:
                 if flag.split('= False')[0].strip() in self.active_flags:
                     return False
