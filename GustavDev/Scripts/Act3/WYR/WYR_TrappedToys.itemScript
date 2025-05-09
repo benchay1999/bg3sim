@@ -1,0 +1,139 @@
+#INCLUDE PUZZLE_TrappedPerception
+
+INIT
+	USING SHARED PUZZLE_TrappedPerception
+	ITEM:__Me
+	EXTERN SPELL:%TrapProjectile=Projectile_WYR_ExplosiveToy_Explosion
+	EXTERN INT:%IsOneShot = 0
+	EXTERN FIXEDSTRING:%ToyAD = "WYR_ExplosiveBearToy_AD_0808fc2e-bdd5-d37e-0b0b-47b3a16164dd"
+	INT:%ExplodeOnDeath=1
+	INT:%Exploded=0
+	CHARACTER:%Attacker
+
+EVENTS
+
+EVENT OnTrasformed
+ON
+	OnItemEvent(__Me,"WYR_RefugeeCamp_TrappedToysEmpty")
+ACTIONS
+	Set(%ExplodeOnDeath,0)
+
+// Trap Activation
+// destroyed
+EVENT OnTrapDestroy
+VARS
+CHARACTER:_Character
+ON
+	OnDamage(_,_,_Character,_)
+ACTIONS
+	IF "c1"
+		IsEqual(%IsOneShot,1)
+	THEN
+		ItemItemEvent(__Me,__Me,"Disarm")
+	ENDIF
+	Set(%Attacker, _Character)
+	CallFunction("ExplodeMyself")
+
+// damaged
+EVENT OnArmedTrapDamaged
+VARS
+CHARACTER:_Character
+ON
+	OnDamage(_,_,_Character,__Me)
+ACTIONS
+	IF "c1&c2"
+		ItemIsArmedTrap(__Me)
+		IsEqual(%Exploded,0)
+	THEN
+		IF "!c1"
+			IsEqual(_Character, null)
+		THEN
+			Set(%Attacker, _Character)
+		ENDIF		
+		CallFunction("TriggerTrap")
+	ENDIF
+								
+// touched
+EVENT OnArmedTrapActivated
+VARS
+CHARACTER:_Character
+ON
+	OnItemDisarmEvent(__Me, _Character, _, 0)
+	OnArmedTrapUsed(_Character, __Me)
+	OnCharacterPreMovedItem(_Character, __Me)
+	OnCharacterMovedItem(_Character,__Me)	
+ACTIONS
+	IF "c1&c2"
+		ItemIsArmedTrap(__Me)
+		IsEqual(%Exploded,0)
+	THEN
+		CallFunction("TriggerTrap")
+	ENDIF
+
+// disarmed
+EVENT OnTrapDeactivated
+VARS
+CHARACTER:_Character
+ON
+	OnItemDisarmEvent(__Me, _Character, _, 1)
+ACTIONS
+	IF "c1"
+		IsEqual(%IsOneShot,1)
+	THEN
+		ItemItemEvent(__Me,__Me,"Disarm")
+	ENDIF
+	DialogStart(_,%ToyAD,__Me)	
+
+// FUNCTIONS
+// playing AD before exploding
+EVENT TriggerTrap
+ON
+	OnFunction("TriggerTrap")
+ACTIONS
+	IF "c1&c2"
+		ItemIsArmedTrap(__Me)
+		IsEqual(%Exploded,0)
+	THEN
+		IF "c1"
+			IsEqual(%IsOneShot,1)
+		THEN
+			ItemItemEvent(__Me,__Me,"Disarm")
+		ENDIF
+		ItemSetCanInteract(__Me,0)
+		DialogStart(_,%ToyAD,__Me)
+		StartTimer("ExplodeAfterADTimer", 1.5, -1)
+	ENDIF
+
+// explode func
+EVENT ExplodeMyself
+ON
+	OnFunction("ExplodeMyself")
+	OnTimer("ExplodeAfterADTimer")	
+ACTIONS
+	IF "c1&c2"
+		IsEqual(%ExplodeOnDeath,1)
+		IsEqual(%Exploded,0)
+	THEN
+		Set(%Exploded,1)
+		IF "c1"
+			IsEqual(%Attacker, null)
+		THEN
+			ExplodeAt(__Me,%TrapProjectile,0,__Me)
+		ELSE
+			ExplodeAt(__Me,%TrapProjectile,0,%Attacker)
+		ENDIF
+		ItemDie(__Me,2)
+	ENDIF
+
+// advantage if been to basement
+EVENT PUZZLE_HiddenPerception_CheckAdvantage
+VARS
+	CHARACTER:_Char
+ON
+	OnFunction("PUZZLE_HiddenPerception_CheckAdvantage")
+ACTIONS
+	IF "c1"
+		HasGlobalFlag("WYR_MerchantsHouse_Knows_SecretInBasement")
+	THEN
+		SetVar(__Me,"CheckAdvantage_Result",INT:1)
+	ENDIF

@@ -1,0 +1,141 @@
+#INCLUDE DisplayTextOnCharacter
+#INCLUDE PUZZLE_TrappedPerception
+
+INIT	
+	USING SHARED PUZZLE_TrappedPerception
+	ITEM:__Me
+	EXTERN SPELL:%MineProjectile=Projectile_WYR_WyrmRock_StunTrap
+	USING SHARED DisplayTextOnCharacter
+	EXTERN STRING:%DialogKey = "GEN_AD_DisarmTrap"
+	ITEM:__Me
+	EXTERN FLOAT:%MaxWeight=50
+
+	FLOAT:%CurrentPercentage=0
+	FLOAT:%PreviousPercentage=0
+	FLOAT:%NewWeight=0
+
+
+EVENTS
+
+EVENT Initialize
+ON
+	OnInit()
+ACTIONS
+	StartTimer("UpdateMine",0.1,-1)
+
+EVENT Shutdown
+ON
+	OnShutdown()
+	OnItemDestroying(__Me)
+ACTIONS
+	StopTimer("UpdateMine")
+
+
+EVENT Update
+VARS
+	FLOAT:_PreviousWeight
+ON
+	OnTimer("UpdateMine")
+ACTIONS
+	IF "!c1"
+		ItemIsMoving(__Me)
+	THEN
+		Set(%NewWeight,0)
+		IterateCharactersOnObject(__Me,"MineCheck")
+		IterateItemsOnObject(__Me,"MineCheck")
+		Set(%PreviousPercentage,%CurrentPercentage)
+		Set(%CurrentPercentage,%NewWeight)
+		Divide(%CurrentPercentage,%MaxWeight)
+		Clamp(%CurrentPercentage,0,1)
+		IF "!c1"
+			IsEqual(%CurrentPercentage,%PreviousPercentage)
+		THEN
+			ItemEvent(__Me,"MineChange")
+		ENDIF
+	ENDIF
+
+EVENT WeightCalcChar
+VARS
+CHARACTER:_Char
+FLOAT:_Weight
+ON
+	OnIterateCharacter(_Char,"MineCheck")
+ACTIONS
+	IF "(!c1&c2&!c3&!c4&(!c5|!c6))&!c7&!c8"
+		// For _Char not null: has weight, not floating, not dead, not avoiding the visible trap
+		IsEqual(_Char,null)
+		CharacterGetStat(_Weight,_Char,Weight)
+		CharacterIsIgnoringGroundSurface(_Char)
+		CharacterIsDead(_Char)
+		CharacterAvoidsTraps(_Char)
+		IsVisible(__Me)
+		IsTagged(_Char, "ACT3_WYR_GORTASH")
+		IsTagged(_Char, "STEEL_WATCHER")
+	THEN
+		Add(%NewWeight,_Weight)
+	ENDIF
+
+EVENT WeightCalcItem
+VARS
+ITEM:_Item
+FLOAT:_Weight
+ON
+	OnIterateItem(_Item,"MineCheck")
+ACTIONS
+	IF "(!c1&!c2&!c3&c4&!c5)"
+		// For _Item not null: not moving, not destroyed, has weight, not falling
+		IsEqual(_Item,null)
+		ItemIsMoving(_Item)
+		ItemIsDestroyed(_Item)
+		ItemGetStat(_Weight,_Item,Weight)
+		ItemIsFalling(_Item)
+	THEN
+		Add(%NewWeight,_Weight)
+	ENDIF
+
+EVENT PlateChange
+ON
+	OnItemEvent(__Me,"MineChange")
+ACTIONS
+	IF "c1"
+		IsEqual(%CurrentPercentage,1)
+	THEN
+		ItemEvent(__Me,"Mine")
+	ENDIF
+	
+// When changing this event please apply them on the FetchSpellOnDamage event as well
+EVENT MineEvent
+VARS
+	CHARACTER:_Character
+	ITEM:_Item
+	INT:_DamagePercentage
+ON
+	OnItemEvent(__Me,"Mine")
+	OnDamage(_,_DamagePercentage,_Character,_Item)
+	OnItemDisarmEvent(__Me, _, _, 0)
+ACTIONS
+	IF "((c1&c2)|!c3)&!c4&!c5"
+		IsEqual(_Character,null)
+		IsEqual(_Item,null)
+		IsEqual(_DamagePercentage,0)
+		IsTagged(_Character, "STEEL_WATCHER")
+		IsTagged(_Character, "ACT3_WYR_GORTASH")
+	THEN
+		IF "c1"
+			IsEqual(_Character,null)
+		THEN
+			DebugText(__Me, "Explode 1")
+			ExplodeAt(__Me,%MineProjectile,0,__Me)
+		ELSE
+			DebugText(__Me, "Explode 2")
+			ExplodeAt(__Me,%MineProjectile,0,_Character)
+		ENDIF
+			DebugText(__Me, "Item Die")
+			ItemDie(__Me,1)
+	ENDIF
+
+EVENT FetchSpellOnDamage
+ON
+	FetchItemSpellOnDamage(_,_)
+ACTIONS
+	RETURN(1,%MineProjectile,0)

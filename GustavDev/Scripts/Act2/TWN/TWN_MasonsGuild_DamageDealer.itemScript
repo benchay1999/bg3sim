@@ -1,0 +1,66 @@
+INIT
+ITEM:__Me
+
+EXTERN SPELL:%TurretConeSpell = Zone_TWN_MasonsGuild_FireBreath
+EXTERN STRING:%TurretVisualFX = "VFX_Script_UND_KathericCity_FireTrap_Large_01"
+EXTERN FLOAT3:%TurretConeOffset = {0;0;0}
+EXTERN STRING:%TurretEventOn = null
+EXTERN STRING:%TurretEventOff = null
+EXTERN INT:%TurretIsOn = 1
+EXTERN FLOAT:%TurretSleepTime = 1
+EXTERN FLOAT:%TurretDelayTime = 0
+FLOAT:%TurretSavedDelayTime = 0
+INT:%Disarmed = 0
+
+EVENTS
+
+EVENT Turret_TurnOff
+ON
+	OnItemEvent(__Me, %TurretEventOff)
+ACTIONS
+	Set(%TurretIsOn,0)	
+
+EVENT Turret_TurnOn
+ON
+	OnItemEvent(__Me, %TurretEventOn)
+ACTIONS
+	IF "!c1"
+		IsEqual(%TurretSavedDelayTime,0)
+	THEN
+		Set(%TurretDelayTime,%TurretSavedDelayTime)
+	ENDIF
+	Set(%TurretIsOn,1)	
+	
+EVENT OnDisarm
+ON
+	OnItemDisarmEvent(__Me, _, _, 1)
+ACTIONS
+	Set(%Disarmed, 1)
+	Interrupt(Turret_Shoot)
+
+BEHAVIOUR
+
+REACTION Turret_Shoot, 1000
+USAGE ALL
+VARS 
+	FLOAT3:_Dir
+CHECK "c1&c2"
+	IsEqual(%TurretIsOn,1)
+	IsEqual(%Disarmed,0)
+ACTIONS
+	IF "!c1"
+		IsEqual(%TurretDelayTime,0)
+	THEN
+		Sleep(%TurretDelayTime)
+		Set(%TurretSavedDelayTime,%TurretDelayTime)
+		Set(%TurretDelayTime,0)
+	ENDIF
+	GetForwardDirection(__Me,_Dir)
+	ItemPlayEffect(__Me,%TurretVisualFX)
+	Sleep(.1)
+	ShootLocalCone(%TurretConeSpell,__Me,%TurretConeOffset,_Dir)
+	ItemEvent(__Me, "TWN_MasonsGuild_ShotMade")
+	Sleep(%TurretSleepTime)
+INTERRUPT
+ACTIONS
+	Reset()
