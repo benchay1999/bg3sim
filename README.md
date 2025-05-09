@@ -1,5 +1,10 @@
 # bg3sim
 
+## TODO
+- tags: Story/Dialog/DialogHidden, Code, unassigned, SpellCondition 등등이 있는데, checking 은 Story/Dialog만 하도록 바꾸기
+
+- flags: global/dialog/user만 포함
+
 ## Terminologies
 ### Story
 1. "session": 대화의 최소 단위. npc/물체와 상호작용 시 이루어지는 dialogue
