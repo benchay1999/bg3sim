@@ -1,0 +1,39 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION GUS-317596
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6 Hotfix 5")
+AND
+NOT DB_ORI_RandomKissFlag(_)
+THEN
+DB_ORI_RandomKissFlag((FLAG)ORI_Kiss_VersionA_6061dd44-55fe-41b0-a79c-fc696073de0a);
+DB_ORI_RandomKissFlag((FLAG)ORI_Kiss_VersionB_8da83898-1476-43e7-ab38-314c61b1ff74);
+DB_ORI_RandomKissFlag((FLAG)ORI_Kiss_VersionC_98e473ed-0144-482c-853a-e4fc739646f5);
+DB_ORI_RandomKissFlag((FLAG)ORI_Kiss_VersionD_0bdf3afd-1997-4c9e-82f3-b1365a47034c);
+DB_ORI_RandomKissCount(0);
+DB_BUGFIX_Marker("GUS-317596");
+//END_REGION GUS-317596
+
+//REGION GUS-318865 restore Minthara's config after losing it
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SavegameIsOlderThan("Release Patch 6 Hotfix 3")
+AND
+DB_AnubisConfigs(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,_Config)
+AND
+GetAnubisConfig(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,_Check)
+AND
+_Check != _Config
+THEN
+DB_BUGFIX_Marker("GUS-318865");
+DEV_EnableAnubis(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,_Config);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

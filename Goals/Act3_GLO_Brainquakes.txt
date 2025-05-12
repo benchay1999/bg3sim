@@ -1,0 +1,497 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Normal Brainquakes
+DB_GLO_Brainquakes_EndCodes(0,"Completed");
+DB_GLO_Brainquakes_EndCodes(1,"CantStartBusy");
+DB_GLO_Brainquakes_EndCodes(2,"Failed");
+
+// Optional, if you want to add party comment VoiceBark or/and Daisy AD.
+// First argument is the same name of the event you can use in the PROC_WYR_Brainquakes_StartForcedEvent
+NOT DB_GLO_Brainquakes_EventsData("", (VOICEBARKRESOURCE)NULL_00000000-0000-0000-0000-000000000000,	(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Directional Brainquakes
+//Relevant DBs
+//DifficultyClass and kind of roll
+//DB_GLO_Brainquakes_Directional_Difficult((STRING)_Ability, (DIFFICULTYCLASS)_DC, (STRING)_ID);
+//StunTime
+//DB_GLO_Brainquakes_Directional_StunTime((STRING)_ID, (REAL)_Time);
+
+//Basic setup
+//This database will register the triggers, and will only work for ILLITHID characters. So Jaheira or Halsin will be immune to this effects.
+//DB_GLO_Brainquakes_Directional_Triggers((TRIGGER)_OneShotTrigger, (TRIGGER)_VFXSourcePoint, (INTEGER)_BaseTime, (REAL)_StunTimeOverrided, (STRING)_ID, (STRING)_Region);
+
+//RapidMindmeldsADs
+//DistancePoints.
+//DB_GLO_RapidAD_MindMeldDistancePoints((STRING)_ID, (TRIGGER)_ClosestPointToOrigin, (TRIGGER)_FurthestPointToOrigin)
+//Setting the right region
+//Please, never NEVER reuse one of the other Directional Brainquakes for this region.
+//DB_GLO_RapidAD_MindMeldRegion((STRING)_ID, (TRIGGER)_MindmeldArea);
+//Helpers for the rapid ADs. Should be equal quantity of Helper items as dialogue ADs files.
+//DB_GLO_RapidAD_ADHelper("LOW_BaldursGate_Brainquakes", S_LOW_BaldursGate_RapidAD_Helper_001_27b7dec0-51da-4f2c-976c-5719dc5f8f51, LOW_BaldursGate_AD_RapidMelt_001_3d2de33c-8154-b13d-3379-a4d15992469f);
+
+//Aplying slow status
+//DB_GLO_Brainquakes_SlowZone((STRING)_ID, (TRIGGER)_RegionWhereApplies, (VOICEBARKRESOURCE)_VB);
+
+DB_GLO_RapidAD_ActiveRapidMindMeldStartTime(5000);
+
+//END_REGION
+
+KBSECTION
+//REGION Starting the normal brainquake event
+// Use this call for unique non-Chained events
+PROC
+PROC_GLO_Brainquakes_StartForcedEvent((CHARACTER)_Player,(STRING)_EventName)
+AND
+NOT DB_GLO_Brainquakes_RunningEvent_Current(_)
+AND
+QRY_GLO_Brainquakes_SelectAvailablePlayersNearby(_Player)
+AND
+QRY_GLO_Brainquakes_FilterUsersForEvent(_EventName)
+THEN
+PROC_GLO_Brainquakes_StartEvent_Internal(_EventName);
+
+PROC
+PROC_GLO_Brainquakes_StartForcedEvent((CHARACTER)_Player,(STRING)_EventName)
+AND
+NOT DB_GLO_Brainquakes_RunningEvent_Current(_EventName)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_Stop(_EventName,1);
+//END_REGION
+
+//REGION Running the normal brainquake event
+PROC
+PROC_GLO_Brainquakes_StartEvent_Internal((STRING)_EventName)
+AND
+QRY_OnlyOnce_Reset("GLO_Brainquakes_StartEvent_InternalOnlyOnce")
+AND
+DB_GLO_Brainquakes_RunningEvent_Users(_UserProfileID,_)
+AND
+DB_GLO_Brainquakes_AvailablePlayersNearby(_AvailablePlayer,_UserProfileID)
+AND
+QRY_OnlyOnce("GLO_Brainquakes_StartEvent_InternalOnlyOnce")
+THEN
+DB_GLO_Brainquakes_RunningEvent_Current(_EventName);
+PROC_GLO_Brainquakes_RunningEvent_TryShakeGround(_AvailablePlayer, _EventName);
+
+// 1) Shaking the ground
+PROC
+PROC_GLO_Brainquakes_RunningEvent_TryShakeGround((CHARACTER)_Player, (STRING)_EventName)
+THEN
+RealtimeObjectTimerLaunch(_Player, "GLO_Brainquakes_RunningEvent_QuakeDelay_Timer", 300);
+
+IF
+ObjectTimerFinished(_Player,"GLO_Brainquakes_RunningEvent_QuakeDelay_Timer")
+THEN
+PROC_GLO_Brainquakes_ShakeGroundAroundCharacter((CHARACTER)_Player);
+
+IF
+ObjectTimerFinished(_Player,"GLO_Brainquakes_RunningEvent_QuakeDelay_Timer")
+THEN
+RealtimeObjectTimerLaunch(_Player,"GLO_Brainquakes_RunningEvent_VBDelay_Timer", 2000);
+
+// if there's current event running, move tho the next part - playing VB
+IF
+ObjectTimerFinished(_Player,"GLO_Brainquakes_RunningEvent_VBDelay_Timer")
+AND
+DB_GLO_Brainquakes_RunningEvent_Current(_EventName)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_TryPlayVB((CHARACTER)_Player,_EventName);
+
+// 2) Play characters reaction VB
+// no VB to play, skip to the Daisy AD
+PROC
+PROC_GLO_Brainquakes_RunningEvent_TryPlayVB((CHARACTER)_Player,(STRING)_EventName)
+AND
+DB_GLO_Brainquakes_EventsData(_EventName,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_TryPlayDaisyAD(_EventName);
+
+// starting the VB
+PROC
+PROC_GLO_Brainquakes_RunningEvent_TryPlayVB((CHARACTER)_Player,(STRING)_EventName)
+AND
+DB_GLO_Brainquakes_EventsData(_EventName,_VB,_)
+AND
+_VB != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_GLO_Brainquakes_RunningEvent_AwaitingVBCompletion(_EventName,_VB);
+StartVoiceBark(_VB,_Player);
+
+IF
+VoiceBarkFailed(_VB)
+AND
+DB_GLO_Brainquakes_RunningEvent_AwaitingVBCompletion(_EventName,_VB)
+THEN
+NOT DB_GLO_Brainquakes_RunningEvent_AwaitingVBCompletion(_EventName,_VB);
+PROC_GLO_Brainquakes_RunningEvent_TryPlayDaisyAD(_EventName);
+
+IF
+VoiceBarkEnded(_VB,_)
+AND
+DB_GLO_Brainquakes_RunningEvent_AwaitingVBCompletion(_EventName,_VB)
+THEN
+NOT DB_GLO_Brainquakes_RunningEvent_AwaitingVBCompletion(_EventName,_VB);
+PROC_GLO_Brainquakes_RunningEvent_TryPlayDaisyAD(_EventName);
+
+// 3) Playing Daisy AD
+// no Daisy AD for this event - skipping to the end
+PROC
+PROC_GLO_Brainquakes_RunningEvent_TryPlayDaisyAD((STRING)_EventName)
+AND
+DB_GLO_Brainquakes_EventsData(_EventName,_,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_Complete(_EventName);
+
+// starting the Daisy AD
+PROC
+PROC_GLO_Brainquakes_RunningEvent_TryPlayDaisyAD((STRING)_EventName)
+AND
+DB_GLO_Brainquakes_EventsData(_EventName,_,_DaisyAD)
+AND
+_DaisyAD != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_GLO_Brainquakes_RunningEvent_Users(_UserProfileID,_EventName)
+AND
+QRY_GLO_Brainquakes_PlayEmperorAD(_DaisyAD,_UserProfileID)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_Complete(_EventName);
+
+// In case QRY_GLO_Brainquakes_PlayEmperorAD fails, we fail the event
+PROC
+PROC_GLO_Brainquakes_RunningEvent_TryPlayDaisyAD((STRING)_EventName)
+AND
+DB_GLO_Brainquakes_RunningEvent_Current(_EventName)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_Stop(_EventName,2);
+//END_REGION
+
+//REGION Ending the normal brainquake event
+// Successfully completing the event
+PROC
+PROC_GLO_Brainquakes_RunningEvent_Complete((STRING)_EventName)
+AND
+DB_GLO_Brainquakes_RunningEvent_Users(_UserProfileID,_EventName)
+AND
+NOT DB_GLO_Brainquakes_User_DoneEvent(_UserProfileID,_EventName)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_CompleteForUser(_UserProfileID,_EventName);
+
+PROC
+PROC_GLO_Brainquakes_RunningEvent_Complete((STRING)_EventName)
+AND
+DB_GLO_Brainquakes_RunningEvent_Current(_EventName)
+THEN
+PROC_GLO_Brainquakes_RunningEvent_Stop(_EventName,0);
+
+PROC
+PROC_GLO_Brainquakes_RunningEvent_CompleteForUser((STRING)_UserProfileID,(STRING)_EventName)
+THEN
+DB_GLO_Brainquakes_User_DoneEvent(_UserProfileID,_EventName);
+
+// Clearing the running event
+PROC
+PROC_GLO_Brainquakes_RunningEvent_Stop((STRING)_EventName,_)
+AND
+DB_GLO_Brainquakes_RunningEvent_Current(_EventName)
+THEN
+NOT DB_GLO_Brainquakes_RunningEvent_Current(_EventName);
+
+PROC
+PROC_GLO_Brainquakes_RunningEvent_Stop((STRING)_EventName,(INTEGER)_EndCode)
+AND
+DB_GLO_Brainquakes_EndCodes(_EndCode,_EndString)
+THEN
+PROC_GLO_Brainquakes_OnEventEnded(_EventName,_EndString);
+
+// Override this proc to react on the Brainquake Event ending.
+PROC
+PROC_GLO_Brainquakes_OnEventEnded((STRING)_EventName,(STRING)_EndCode)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Helpers normal brainquake event
+// Selecting all Players and their Users nearby of the Player who activated an Event
+QRY
+QRY_GLO_Brainquakes_SelectAvailablePlayersNearby(_)
+AND
+DB_GLO_Brainquakes_AvailablePlayersNearby(_AnyPlayer,_UserProfileID)
+THEN
+NOT DB_GLO_Brainquakes_AvailablePlayersNearby(_AnyPlayer,_UserProfileID);
+
+QRY
+QRY_GLO_Brainquakes_SelectAvailablePlayersNearby((CHARACTER)_EnteredPlayer)
+AND
+DB_Players(_AnyPlayer)
+AND
+NOT DB_CantAct(_AnyPlayer)
+AND
+GetDistanceTo(_EnteredPlayer,_AnyPlayer,_Dist)
+AND
+_Dist < 15.0
+AND
+GetReservedUserID(_AnyPlayer,_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+THEN
+DB_GLO_Brainquakes_AvailablePlayersNearby(_AnyPlayer,_UserProfileID);
+
+// Filtering Users applicable for the Event
+QRY
+QRY_GLO_Brainquakes_FilterUsersForEvent(_)
+AND
+DB_GLO_Brainquakes_RunningEvent_Users(_UserProfileID,_EventName)
+THEN
+NOT DB_GLO_Brainquakes_RunningEvent_Users(_UserProfileID,_EventName);
+
+QRY
+QRY_GLO_Brainquakes_FilterUsersForEvent((STRING)_EventName)
+AND
+DB_GLO_Brainquakes_AvailablePlayersNearby(_AvailablePlayer,_UserProfileID)
+AND
+NOT DB_GLO_Brainquakes_User_DoneEvent(_UserProfileID,_EventName)
+THEN
+DB_GLO_Brainquakes_RunningEvent_Users(_UserProfileID,_EventName);
+
+// Shaking the ground
+PROC
+PROC_GLO_Brainquakes_ShakeGroundAroundCharacter((CHARACTER)_Character)
+THEN
+PROC_ShakeCameraForTime((CHARACTER)_Character, 5000, VFX_Script_Brainquake_01_07202ba2-fe9c-fc79-46e3-cc421fafc0e8, 1);
+PROC_GLO_Brainquakes_ApplyExperiencedFlag((CHARACTER)_Character);
+
+PROC
+PROC_GLO_Brainquakes_ShakeGroundAroundCharacter((CHARACTER)_Character)
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+PROC_CharacterRegisterCrime(
+	_Character,
+	"GLO_BrainquakeEvents_Reaction",
+	NULL_00000000-0000-0000-0000-000000000000,
+	NULL_00000000-0000-0000-0000-000000000000,
+	_NewCrimeID);
+
+// party members are unaffected by the crime system, so we are making them cower manually
+PROC
+PROC_GLO_Brainquakes_ShakeGroundAroundCharacter((CHARACTER)_Character)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+GetDistanceTo(_Character, _PartyMember, _Distance)
+AND
+_Distance < 20
+AND
+Random(2000, _RandomTime)
+AND
+IntegerSum(1000, _RandomTime, _TimerTime)
+THEN
+RealtimeObjectTimerLaunch(_PartyMember, "GLO_Brainquakes_CowerParty_Timer", _TimerTime);
+PROC_GLO_Brainquakes_ApplyExperiencedFlag((CHARACTER)_PartyMember);
+
+IF
+ObjectTimerFinished(_PartyMember,"GLO_Brainquakes_CowerParty_Timer")
+THEN
+ApplyStatus(_PartyMember,"ANIM_COWER", 3.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GLO_Brainquakes_PlayEmperorAD((DIALOGRESOURCE)_EmperorAD,(STRING)_UserProfileID)
+AND
+DB_Avatars(_Avatar)
+AND
+GetReservedUserID(_Avatar,_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+THEN
+PROC_EmperorAD(_Avatar,_EmperorAD);
+
+PROC
+PROC_GLO_Brainquakes_ApplyExperiencedFlag((CHARACTER)_Char)
+AND
+GetFlag(GLO_Brainquakes_State_ExperiencedBrainquake_26d4362f-d301-41e6-8202-b79fca52d410, _Char, 0)
+THEN
+SetFlag(GLO_Brainquakes_State_ExperiencedBrainquake_26d4362f-d301-41e6-8202-b79fca52d410, _Char);
+//END_REGION
+
+//REGION Directional brainquakes
+
+//Converting Stun ID
+IF
+DB_GLO_Brainquakes_Directional_Difficult(_Ability, _DC, _ID)
+AND
+Concatenate(_ID, "_Timer_Stun", _IDStun)
+THEN
+DB_GLO_Brainquakes_Directional_Difficult_Internal(_Ability, _DC, _IDStun);
+
+IF
+DB_GLO_Brainquakes_Directional_Triggers(_OneShotTrigger, _, _, _, _, _)
+THEN
+PROC_TriggerRegisterForPlayers(_OneShotTrigger);
+
+IF
+EnteredTrigger(_Player, _OneShotTrigger)
+AND
+IsTagged(_Player, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+DB_GLO_Brainquakes_Directional_Triggers(_OneShotTrigger, (TRIGGER)_VFXSourcePoint, (INTEGER)_BaseTime, (REAL)_StunTimeOverrided, (STRING)_ID, (STRING)_Region)
+AND
+DB_GLO_Brainquakes_Directional_StunTime(_ID, _OldStunTime)
+THEN
+NOT DB_GLO_Brainquakes_Directional_Triggers(_OneShotTrigger, _VFXSourcePoint, _BaseTime, _StunTimeOverrided, _ID, _Region);
+NOT DB_GLO_Brainquakes_Directional_StunTime(_ID, _OldStunTime);
+DB_GLO_Brainquakes_Directional_StunTime(_ID, _StunTimeOverrided);
+PROC_GLO_DirectionalBrainquake_StartBrainquakeShakeAndVFX((CHARACTER)_Player, _VFXSourcePoint, 5000, _ID, _Region);
+PROC_GLO_DirectionalBrainquake_ReadyBrainquakeSlowAndStun(_BaseTime, _ID);
+
+PROC
+PROC_GLO_DirectionalBrainquake_StartBrainquakeShakeAndVFX((CHARACTER)_Player, (TRIGGER)_VFXSourcePoint, (INTEGER)_Time, (STRING)_ID, (STRING) _Region)
+AND
+Concatenate(_ID, "_BrainquakeTimer", _TimerIDOut)
+THEN
+PROC_LoopEffect(VFX_Script_Brainquake_01_07202ba2-fe9c-fc79-46e3-cc421fafc0e8,_VFXSourcePoint, _TimerIDOut, _Region,"", 1.5);
+PROC_ShakeCameraForTime((CHARACTER)_Player, _Time, VFX_Script_Brainquake_01_07202ba2-fe9c-fc79-46e3-cc421fafc0e8, 1);
+RealtimeObjectTimerLaunch(_VFXSourcePoint, _TimerIDOut, _Time);
+DB_GLO_Brainquakes_Directional_Timer(_TimerIDOut);
+
+IF
+ObjectTimerFinished(_Source, _Timer)
+AND
+DB_GLO_Brainquakes_Directional_Timer(_Timer)
+THEN
+NOT DB_GLO_Brainquakes_Directional_Timer(_Timer);
+PROC_StopLoopEffect(_Source, _Timer);
+PROC_GLO_Brainquake_Directional_RemoveNetherbrainSlow();
+
+PROC
+PROC_GLO_DirectionalBrainquake_ReadyBrainquakeSlowAndStun((INTEGER)_BaseTime, (STRING)_ID)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_Defeated(_PartyMember)
+AND
+IsTagged(_PartyMember, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+THEN
+PROC_GLO_DirectionalBrainquake_ReadyBrainquakeSlowAndStun((CHARACTER)_PartyMember, _BaseTime, _ID, 1.0, 1.0);
+
+PROC
+PROC_GLO_DirectionalBrainquake_ReadyBrainquakeSlowAndStun((CHARACTER)_Char, (INTEGER)_BaseTime, (STRING)_ID, (REAL)_Time_Stun, (REAL)_Time_Slow)
+AND
+Random(_BaseTime, _RandomTime)
+AND
+IntegerToReal(_BaseTime, _RealBaseTime)
+AND
+RealProduct(_RealBaseTime, 1.5, _RealBuffer)
+AND
+RealToInteger(_RealBuffer, _Buffer)
+AND
+IntegerSum(_RandomTime, _Buffer, _OffsetDelay)
+AND
+Concatenate(_ID, "_Timer_Slow", _IDSlow)
+AND
+Concatenate(_ID, "_Timer_Stun", _IDStun)
+THEN
+DB_GLO_Brainquakes_Directional_TimerSlow(_Char, _IDSlow);
+DB_GLO_Brainquakes_Directional_TimerStun(_Char, _IDStun);
+DB_GLO_Brainquakes_Directional_StunTime(_IDStun, _Time_Stun);
+DB_GLO_Brainquakes_Directional_SlowTime(_IDSlow, _Time_Slow);
+RealtimeObjectTimerLaunch(_Char, _IDSlow, _RandomTime);
+RealtimeObjectTimerLaunch(_Char, _IDStun, _OffsetDelay);
+
+IF
+ObjectTimerFinished(_Char, _IDSlow)
+AND
+DB_GLO_Brainquakes_Directional_TimerSlow((CHARACTER)_Char, _IDSlow)
+AND
+DB_GLO_Brainquakes_Directional_SlowTime(_IDSlow, _Time_Slow)
+AND
+HasActiveStatus(_Char, "END_NETHERBRAIN_SLOW", 0)
+THEN
+ApplyStatus(_Char, "END_NETHERBRAIN_SLOW", _Time_Slow, 1);
+
+IF
+ObjectTimerFinished(_Char,_IDStun)
+AND
+DB_GLO_Brainquakes_Directional_TimerStun((CHARACTER)_Char, _IDStun)
+AND
+DB_GLO_Brainquakes_Directional_Difficult_Internal((STRING)_Ability, (DIFFICULTYCLASS)_DC, (STRING)_IDStun)
+THEN
+NOT DB_GLO_Brainquakes_Directional_TimerStun(_Char, _IDStun);
+RequestPassiveRoll((CHARACTER)_Char, S_GLO_Netherbrain_3858e896-d7dd-4699-b37d-d3919ff15ba7, "SavingThrow", _Ability, _DC, 0, _IDStun);
+
+IF
+RollResult(_IDStun, _Char, _, 0, _, _)
+AND
+DB_GLO_Brainquakes_Directional_StunTime(_IDStun, _Time)
+THEN
+ApplyStatus(_Char,"STUNNED",_Time, 1);
+//DB_GLO_Brainquake_Directional_StunnedCharacter(_IDStun, _Char);
+
+//Overload this call to manage all your removal.
+PROC
+PROC_GLO_Brainquake_Directional_RemoveNetherbrainSlow()
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Force slow zone
+IF
+EnteredTrigger(_Player, _SlowZone)
+AND
+IsTagged(_Player, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+DB_GLO_Brainquakes_SlowZone(_ID, _SlowZone, _VB)
+AND
+DB_Players(_Player)
+AND
+Concatenate(_ID, "_SlowZone", _OutID)
+AND
+QRY_OnlyOnce(_OutID)
+THEN
+StartVoiceBark(_VB, _Player);
+
+IF
+DB_InRegion(_Char, _SlowZone)
+AND
+DB_GLO_Brainquakes_SlowZone(_ID, _SlowZone, _VB)
+AND
+NOT DB_Defeated(_Char)
+AND
+IsTagged(_Char, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+HasActiveStatus(_Char, "END_NETHERBRAIN_SLOW", 0)
+THEN
+ApplyStatus(_Char, "END_NETHERBRAIN_SLOW", -1.0, 1);
+
+IF
+LeftTrigger(_Char, _SlowZone)
+AND
+IsTagged(_Char, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+DB_GLO_Brainquakes_SlowZone(_ID, _SlowZone, _VB)
+THEN
+RemoveStatus(_Char, "END_NETHERBRAIN_SLOW", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_StateSet_Defeated(_Char)
+AND
+HasActiveStatus(_Char, "END_NETHERBRAIN_SLOW", 1)
+THEN
+RemoveStatus(_Char, "END_NETHERBRAIN_SLOW", NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("GLO_Brainquakes_TestQuake")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_GLO_Brainquakes_ShakeGroundAroundCharacter((CHARACTER)_Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

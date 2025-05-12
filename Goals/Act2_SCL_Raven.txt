@@ -1,0 +1,316 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Dialogs
+DB_Dialogs((CHARACTER)S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700,(DIALOGRESOURCE)SCL_ServantOfTheRaven_Memories_921b345b-7a8f-c720-63cb-ef96f8f23a5a);
+DB_Dialogs((CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,(DIALOGRESOURCE)SCL_ServantOfTheRaven_Raven_4e7afde5-4cce-35e2-e6be-915bd4615f3a);
+
+DB_SpotPlayers(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700,"SCL_ServantOfTheRaven_ServantSpotPlayers", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+DB_HasItemEvent((ITEM)S_SCL_ServantOfTheRaven_HarperLedger_c2e4b6e3-5d33-4cdf-afc0-5b583a1aabf0,(FLAG)SCL_ServantOfTheRaven_HasLedger_7227384c-b4b1-4e66-8890-3e4adc6b587e);
+DB_GiveItemToEvent((ITEM)S_SCL_ServantOfTheRaven_HarperLedger_c2e4b6e3-5d33-4cdf-afc0-5b583a1aabf0,SCL_ServantOfTheRaven_HandOverLedger_141bb733-1aa8-4d69-883c-2f7d2d5d84a6);
+
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_SCL_ServantOfTheRaven_Madeline_c3d3ab85-8f51-47f0-9b05-3d6010651bd1,(DIALOGRESOURCE)SCL_ServantOfTheRaven_Madeline_SwD_d998049f-6bdf-3ae0-549e-208471e26231);
+SetFlag((FLAG)GLO_SpeakWithDead_State_QuestionsLimitReached_01c40268-4a8d-4787-8566-77e01ff04762,S_SCL_ServantOfTheRaven_Madeline_c3d3ab85-8f51-47f0-9b05-3d6010651bd1);
+
+DB_CustomDialogRange(S_SCL_ServantOfTheRaven_Madeline_InvisibleSpeaker_2727ddcc-8a70-4e56-95c2-e83a7a8351f6,5000);
+
+PROC_SetCorpseOwner(S_SCL_ServantOfTheRaven_Madeline_c3d3ab85-8f51-47f0-9b05-3d6010651bd1, S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700);
+TriggerRegisterForCharacter((TRIGGER)S_SCL_Raven_CorpseBoxTrigger_b6230937-c74f-4fd6-a1eb-aa7dcd7e6f68, S_SCL_ServantOfTheRaven_Madeline_c3d3ab85-8f51-47f0-9b05-3d6010651bd1);
+
+//REGION Journal
+DB_QuestDef_State((FLAG)SCL_ServantOfTheRaven_State_DialogUnlocked_7d5cc6c3-ea5c-4c5d-bfd7-bfe5d65f02de, "SCL_ServantOfTheRaven", "AgreedToHelp");
+DB_QuestDef_State((FLAG)SCL_ServantOfTheRaven_State_HasLedger_7227384c-b4b1-4e66-8890-3e4adc6b587e, "SCL_ServantOfTheRaven", "FoundLedger");
+
+//Closing entries
+DB_QuestDef_State((FLAG)SCL_ServantOfTheRaven_State_MissionAbandoned_358c9395-06d3-4a91-bb2f-663e19be256c, "SCL_ServantOfTheRaven", "AbandonedMission");
+DB_QuestDef_State((FLAG)SCL_ServantOfTheRaven_Event_ForgaveMadeline_1aa550bf-d606-3fca-484f-818ed1f8c59b, "SCL_ServantOfTheRaven", "ForgaveMadeline");
+DB_QuestDef_State((FLAG)SCL_ServantOfTheRaven_Event_StabbedShadarKai_5651334c-ad7d-8a76-1927-07eab5c713c6, "SCL_ServantOfTheRaven", "StabbedShadarKai");
+DB_QuestDef_SawPermaDefeatedState("SCL_ServantOfTheRaven", "ShadarKaiPermadefeatedOrLeft", (CHARACTER)S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700);
+DB_QuestDef_LevelLoaded("SCL_ServantOfTheRaven", "MovedToNextAct", "INT_Main_A");
+//END_REGION Journal
+
+// Combat NPC Reactivity
+DB_CombatReact_AD_OnNextTurn(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, (DIALOGRESOURCE)SCL_ServantOfTheRaven_AD_TakingTurn_001_Combat_7a094862-791a-a5c7-8c57-5d009d9c35b2);
+DB_CombatReact_AD_OnNextTurn(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, (DIALOGRESOURCE)SCL_ServantOfTheRaven_AD_TakingTurn_002_Combat_5f10ac8c-efcd-dee3-f38f-0d340029a6cb);
+DB_CombatReact_AD_OnNextTurn(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, (DIALOGRESOURCE)SCL_ServantOfTheRaven_AD_TakingTurn_003_Combat_2021e58c-a12b-f1c3-e666-aea13ebb07fb);
+KBSECTION
+//Auto start dialog when approaching the servant
+PROC
+PROC_SpotPlayers_Spotted(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, "SCL_ServantOfTheRaven_ServantSpotPlayers", _Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)SCL_ServantOfTheRaven_ShadarKai_6c8848e8-eba4-ba0b-5883-6731698dc0fa, (CHARACTER)S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, S_SCL_ServantOfTheRaven_HarperTeacher_c3d3ab85-8f51-47f0-9b05-3d6010651bd1,S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,_Player)
+THEN
+DB_Noop(1);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)SCL_ServantOfTheRaven_Memories_921b345b-7a8f-c720-63cb-ef96f8f23a5a,_ID)
+THEN
+PROC_DialogAddSpeakingActor(_ID,(CHARACTER)S_SCL_ServantOfTheRaven_Madeline_SpeakerHelper_2727ddcc-8a70-4e56-95c2-e83a7a8351f6);
+PROC_DialogAddSpeakingActor(_ID,(CHARACTER)S_SCL_ServantOfTheRaven_Madeline_c3d3ab85-8f51-47f0-9b05-3d6010651bd1);
+
+//REGION Sending Raven Messanger
+//Reverse case with the global flag is not needed since that means player already near shadar kai
+IF
+FlagSet((FLAG)SCL_ServantOfTheRaven_State_HasLedger_7227384c-b4b1-4e66-8890-3e4adc6b587e,(CHARACTER)_Player,_)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag((FLAG)SCL_ServantOfTheRaven_State_DialogUnlocked_7d5cc6c3-ea5c-4c5d-bfd7-bfe5d65f02de)
+AND
+QRY_OnlyOnce("SCL_ServantOfTheRaven_RegisterRavenAppearance")
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)S_SCL_ServantOfTheRaven_RavenAppearBox_1088a182-a779-4c0c-8e9c-3d49bf8ed4e5);
+
+IF
+LeftTrigger(_Player,(TRIGGER)S_SCL_ServantOfTheRaven_RavenAppearBox_1088a182-a779-4c0c-8e9c-3d49bf8ed4e5)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("SCL_Raven_SummonServant")
+THEN
+PROC_SCL_ServantOfTheRaven_SummonServant((CHARACTER)_Player);
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_SCL_ServantOfTheRaven_RavenAppearBox_1088a182-a779-4c0c-8e9c-3d49bf8ed4e5);
+
+//Summoning the servant to the player's location and initiating dialog (only if the player is not in combat)
+PROC
+PROC_SCL_ServantOfTheRaven_SummonServant((CHARACTER)_Player)
+AND
+NOT IsInCombat(_Player,1)
+AND
+NOT DB_Defeated(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+AND
+NOT DB_InteractiveDialogSpeaker(_,S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+THEN
+SetHasDialog((CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,0);
+PROC_Foop(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+TeleportTo(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39, _Player);
+PROC_Foop(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+PROC_SCL_ServantOfTheRaven_SelectPetPalSpeaker(_Player);
+
+PROC
+PROC_SCL_ServantOfTheRaven_SelectPetPalSpeaker((CHARACTER)_Player)
+AND
+QRY_GetClosestAvailableCharacterTo(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,0)
+AND
+DB_ClosestAvailableCharacterTo(_ClosestPlayer,S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,_)
+AND
+QRY_GLO_SelectFavouredSpeaker_SingleTag(_ClosestPlayer,(CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,(TAG)PETPAL_dc860a81-f3c2-4c1a-ab90-e7583324845c,0)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Speaker)
+THEN
+PROC_TryStartAD(SCL_ServantOfTheRaven_Raven_AD_GoBack_825af9e8-7355-0182-f71d-e7b53c01b739,S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,_Speaker);
+
+//If the player was in combat while leaving the area, save the combat ID and teleport the servant there once that combat has ended. (Also handling switching combats)
+PROC
+PROC_SCL_ServantOfTheRaven_SummonServant((CHARACTER)_Player)
+AND
+IsInCombat(_Player,1)
+AND
+NOT DB_Defeated(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+AND
+CombatGetGuidFor(_Player, _CombatID)
+THEN
+DB_SCL_ServantOfTheRaven_PlayerInCombat(_CombatID, _Player);
+
+IF
+SwitchedCombat(_Player,_OldCombatID,_NewCombatID)
+AND
+DB_SCL_ServantOfTheRaven_PlayerInCombat(_OldCombatID, (CHARACTER)_Player)
+THEN
+NOT DB_SCL_ServantOfTheRaven_PlayerInCombat(_OldCombatID, _Player);
+DB_SCL_ServantOfTheRaven_PlayerInCombat(_NewCombatID, _Player);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_SCL_ServantOfTheRaven_PlayerInCombat(_CombatID, _Player)
+THEN
+NOT DB_SCL_ServantOfTheRaven_PlayerInCombat(_CombatID, _Player);
+PROC_SCL_ServantOfTheRaven_SummonServant((CHARACTER)_Player);
+
+//Wait for Raven to leave dialog, if it is in one
+PROC
+PROC_SCL_ServantOfTheRaven_SummonServant((CHARACTER)_Player)
+AND
+NOT IsInCombat(_Player,1)
+AND
+NOT DB_Defeated(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+AND
+DB_InteractiveDialogSpeaker(_ID,S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+THEN
+DB_SCL_ServantOfTheRaven_RavenInDialog(_ID,_Player);
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_SCL_ServantOfTheRaven_RavenInDialog(_ID,_Player)
+THEN
+NOT DB_SCL_ServantOfTheRaven_RavenInDialog(_ID,_Player);
+PROC_SCL_ServantOfTheRaven_SummonServant((CHARACTER)_Player);
+
+IF
+AutomatedDialogRequestFailed(SCL_ServantOfTheRaven_Raven_AD_GoBack_825af9e8-7355-0182-f71d-e7b53c01b739,_ID)
+THEN
+PROC_Foop(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+TeleportTo(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,S_SCL_ServantOfTheRaven_Raven_HomeTrigger_4bfc08ca-28a0-40fa-b14b-3b1cac121333);
+PROC_Foop(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+SetHasDialog((CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,1);
+
+IF
+AutomatedDialogEnded(SCL_ServantOfTheRaven_Raven_AD_GoBack_825af9e8-7355-0182-f71d-e7b53c01b739,_ID)
+THEN
+PROC_Foop(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+TeleportTo(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,S_SCL_ServantOfTheRaven_Raven_HomeTrigger_4bfc08ca-28a0-40fa-b14b-3b1cac121333);
+PROC_Foop(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+SetHasDialog((CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,1);
+
+//END_REGION
+
+
+//REGION Flags in dialogs
+//Touching raven in dialog, it pecks the player
+IF
+FlagSet((FLAG)SCL_ServantOfTheRaven_Event_RavenPeck_5d060fb4-f53c-442d-82b9-89adde8f1176,_Character,0)
+THEN
+ApplyDamage(_Character,2,"Piercing",S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+ClearFlag((FLAG)SCL_ServantOfTheRaven_Event_RavenPeck_5d060fb4-f53c-442d-82b9-89adde8f1176,_Character,0);
+
+//Dealing damage to the Servant while he is possessed and knives himself - Changed the damage to apply % max hp damage, with a failsafe that it also can't kill them
+IF
+DB_GlobalFlag(SCL_ServantOfTheRaven_Event_KnifeStab_ac71529b-a5b0-493f-bf8b-3137f2184d51)
+THEN
+PROC_ApplyLimitedDamagePercent(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, 7.0, "Piercing", S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700);
+PROC_GlobalClearFlagAndCache((FLAG)SCL_ServantOfTheRaven_Event_KnifeStab_ac71529b-a5b0-493f-bf8b-3137f2184d51);
+
+//END_REGION
+
+
+//REGION Ending the booster
+//If the player abandons or compeltes the quest, the servant planeshifts away
+IF
+DialogEnded((DIALOGRESOURCE)SCL_ServantOfTheRaven_Memories_921b345b-7a8f-c720-63cb-ef96f8f23a5a,_ID)
+AND
+DB_GlobalFlag(SCL_ServantOfTheRaven_State_MissionAbandoned_358c9395-06d3-4a91-bb2f-663e19be256c)
+THEN
+PROC_SCL_Servant_PlaneShift();
+
+IF
+FlagSet((FLAG)SCL_ServantOfTheRaven_State_RitualMidpoint_84a08002-4ad4-e26b-1a86-c2114c061d65, _, _)
+AND
+IsInInventoryOf((ITEM)S_SCL_ServantOfTheRaven_HarperLedger_c2e4b6e3-5d33-4cdf-afc0-5b583a1aabf0, S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, 1)
+THEN
+Drop((ITEM)S_SCL_ServantOfTheRaven_HarperLedger_c2e4b6e3-5d33-4cdf-afc0-5b583a1aabf0);
+
+IF
+DialogEnded((DIALOGRESOURCE)SCL_ServantOfTheRaven_Memories_921b345b-7a8f-c720-63cb-ef96f8f23a5a,_ID)
+AND
+DB_GlobalFlag(SCL_ServantOfTheRaven_Servant_TaskCompleted_0271ade4-4b59-4287-9fba-10e4aedf013b)
+THEN
+PROC_SCL_Servant_PlaneShift();
+
+PROC
+PROC_SCL_Servant_PlaneShift()
+THEN
+PROC_Poof(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700);
+
+PROC
+PROC_SCL_Servant_PlaneShift()
+AND
+NOT QRY_SCL_ServantOfTheRaven_TryStartRavenByeAD()
+THEN
+PROC_Poof(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+
+QRY
+QRY_SCL_ServantOfTheRaven_TryStartRavenByeAD()
+AND
+NOT DB_PermaDefeated(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+AND
+QRY_GetClosestAvailableCharacterTo(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,1)
+AND
+DB_ClosestAvailableCharacterTo(_,_Player,_)
+AND
+QRY_GLO_SelectFavouredSpeaker_SingleTag(_Player,(CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,(TAG)PETPAL_dc860a81-f3c2-4c1a-ab90-e7583324845c,0)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Speaker)
+AND
+QRY_OnlyOnce("SCL_ServantOfTheRaven_RavenSaysBye")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)SCL_ServantOfTheRaven_Raven_AD_Bye_70b7e381-dd35-62c1-f4c0-3ab6b38c47b8, S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39, _Speaker)
+THEN
+SetHasDialog(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,0);
+LookAtEntity((CHARACTER)S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39,_Player,3.0);
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)SCL_ServantOfTheRaven_Raven_AD_Bye_70b7e381-dd35-62c1-f4c0-3ab6b38c47b8,_)
+THEN
+PROC_Poof(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)SCL_ServantOfTheRaven_Raven_AD_Bye_70b7e381-dd35-62c1-f4c0-3ab6b38c47b8,_)
+THEN
+PROC_Poof(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+
+//If players mess with Madeline's body without triggering a crime reaction and combat, an AD plays and then they leave
+
+IF
+LeftTrigger(S_SCL_ServantOfTheRaven_Madeline_c3d3ab85-8f51-47f0-9b05-3d6010651bd1, (TRIGGER)S_SCL_Raven_CorpseBoxTrigger_b6230937-c74f-4fd6-a1eb-aa7dcd7e6f68)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)SCL_ServantOfTheRaven_State_BodyGone_24e52e54-ea06-4501-a4b6-7d2240c41cc0);
+
+IF
+FlagSet((FLAG)SCL_ServantOfTheRaven_State_BodyGone_24e52e54-ea06-4501-a4b6-7d2240c41cc0, _, _)
+AND
+QRY_SpeakerIsAvailable(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, 0, 1, 0)
+THEN
+PROC_TryStartAD(SCL_ServantOfTheRaven_AD_Idle_f6c2d33b-33f3-e95e-35f4-8d06929d91c6, S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39);
+
+IF
+AutomatedDialogEnded(SCL_ServantOfTheRaven_AD_Idle_f6c2d33b-33f3-e95e-35f4-8d06929d91c6, _)
+AND
+DB_GlobalFlag((FLAG)SCL_ServantOfTheRaven_State_BodyGone_24e52e54-ea06-4501-a4b6-7d2240c41cc0)
+THEN
+PROC_SCL_Servant_PlaneShift();
+
+IF
+CombatEnded(_ID)
+AND
+DB_Was_InCombat(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700, _ID)
+AND
+DB_PermaDefeated(S_SCL_ServantOfTheRaven_Raven_3e4d4ec4-e687-42dd-8149-47cf10a42b39)
+AND
+NOT DB_PermaDefeated(S_SCL_ServantOfTheRaven_ShadarKai_a66dd998-1e87-433b-b147-359c0572e700)
+THEN
+PROC_SCL_Servant_PlaneShift();
+GoalCompleted;
+//END_REGION
+
+//REGION Journal
+PROC
+PROC_SCL_Servant_PlaneShift()
+AND
+NOT DB_GlobalFlag(SCL_ServantOfTheRaven_State_MissionAbandoned_358c9395-06d3-4a91-bb2f-663e19be256c)
+THEN
+QuestUpdate("SCL_ServantOfTheRaven", "ShadarKaiPermadefeatedOrLeft");
+
+// Player completed quest: give reward to the right player who does it in the dialog.
+IF
+FlagSet((FLAG)SCL_ServantOfTheRaven_Event_PlayerCompletedTask_b3d1b8d4-2f25-edca-f72d-b4a731b73d43, (CHARACTER)_Player, _)
+THEN
+QuestUpdate(_Player, "SCL_ServantOfTheRaven", "TaskCompleted");
+//END_REGION Journal
+
+//REGION Debug
+IF
+TextEvent("scl_receiveledger")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("Debug_SCL_ServantOfTheRaven_ReceivedLedger")
+THEN
+SetFlag((FLAG)SCL_ServantOfTheRaven_Event_HandOverLedger_141bb733-1aa8-4d69-883c-2f7d2d5d84a6, _Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

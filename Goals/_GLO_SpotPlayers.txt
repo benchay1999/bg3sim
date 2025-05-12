@@ -1,0 +1,2146 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: 
+// -[Link Redacted]
+// -[Link Redacted]
+
+// This goal implements the same functionality as the old StartEventOnSight behaviour script
+// You can add/remove spotting constraints at any time, and the the spotting logic will react
+// to them immediately.
+
+// DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+// Make _Spotter (which must be an NPC) start spotting, unless _GlobalStopFlag is currently set.
+//  * Setting _GlobalStartFlag after NPC stopped spotting, will make them restart spotting. It will be cleared again immediately
+//  * Setting _GlobalStopFlag after the NPC started spotting, will stop the spotting
+//  * _Identifier is used in all of the other databases to link them to this spotter
+//  * _GlobalStartFlag and _GlobalStopFlag can be null
+
+// DB_SpotPlayers_Continuous((CHARACTER)_Spotter, (STRING)_Identifier)
+// Normally, spotting stops when a target has been spotted. If you set this database, it won't
+//   * Additionally, it will set a DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target) for everyone that's currently spotted by _Spotter,
+//     as well as DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target, _SpotEvent) (see DB_SpotPlayers_SpotEvent)
+//   * When a character is no longer spotted (no longer fulfills all conditions), DB_SpotPlayers_Spotted() will be unset and
+//     additionally, PROC_SpotPlayers_UnSpotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target) will be called
+//     (and also PROC_SpotPlayers_UnSpotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (STRING)_SpotEvent);
+//      see DB_SpotPlayers_SpotEvent)
+
+// PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+// PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (STRING)_Event) (see DB_SpotPlayers_SpotEvent)
+// Called to report that a valid target was seen
+//   * Spotting stops after a target was found and reported (unless DB_SpotPlayers_Continuous is set)
+//   * Can resume spotting afterwards by setting the global flag _GlobalStartFlag, or by calling PROC_SpotPlayers_RestartSpotting()
+
+// DB_SpotPlayers_SpotEvent((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_SpotEvent)
+// If set, also call PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (STRING)_SpotEvent) when someone is spotted
+//   * If a new one name gets set, the previous one gets cleared
+
+// DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag)
+// Enable starting/stopping of spotting by setting object flags on _Spotter
+//   * DB_SpotPlayers() also needs to be set in any case
+
+// DB_SpotPlayers_CustomRadius((CHARACTER)_Spotter, (STRING)_Identifier, (REAL)_CustomRadius);
+// Specify a custom detection range
+//   * if not set, the default sight range of _Spotter gets used
+
+// DB_SpotPlayers_SpotTrigger((CHARACTER)_Spotter, (STRING)_Identifier, (TRIGGER)_Trigger);
+// Specify a trigger in which spotted characters must be
+//   * if not set, characters can be anywhere in the sight range or custom radius
+//   * can clear any spot trigger if set with PROC_SpotPlayers_ClearSpotTrigger(_Spotter, _Identifier) (clearing DB also works)
+//   * the trigger will be registered and unregistered for characters of interest by the logic of this goal (See also DB_SpotPlayers_SpotTrigger_ManualRegistering)
+//   * if you define multiple triggers, the condition will be fulfilled when the target is in one of the triggers
+
+// DB_SpotPlayers_SpotTrigger_ManualRegistering((TRIGGER)_Trigger);
+// Disables the automatic registering and unregistering for this trigger.
+// Note: If this database is filled in after DB_SpotPlayers_SpotTrigger, the trigger will already be registered at the time it is filled.
+
+// DB_SpotPlayers_HasObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectFlag, (INTEGER)_ExpectedValue);
+// Specify that spotted characters must (_ExpectedValue == 1) or must not (_ExpectedValue == 0) have a particular object flag
+//   * if multiple are set, they must (not) have all of the specified object flags
+
+// DB_SpotPlayers_HasTag((CHARACTER)_Spotter, (STRING)_Identifier, (TAG)_HasTag, (INTEGER)_ExpectedValue);
+// Specify that spotted characters must (_ExpectedValue == 1) or must not (_ExpectedValue == 0) have a particular tag
+//   * if multiple are set, they must (not) have all of the specified tag
+
+// DB_SpotPlayers_SpotterIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specify that spotting events should be reported even when the spotter is unable to talk (in an interactive dialog, silenced, ...)
+// Note: ignores combat, that is handled separately
+//   * if not set, the spotter will block spotting events for _Identifier while unable to talk
+
+// DB_SpotPlayers_TargetIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specify that spotting events should be reported for targets even when they are unable to talk (in an interactive dialog, silenced, ...)
+// Note: ignores combat, that is handled separately
+//   * if not set, spotting events of targets unable to talk will be blocked for _Identifier
+
+// DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specify that spotting events should be reported for *players* even when they are wildshaped
+// (NPCs included via DB_SpotPlayers_IncludeExtra are not affected by this)
+//   * if not set, spotting events of players that are wildshaped will be blocked for _Identifier
+
+// DB_SpotPlayers_NoSpotterInAD((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specifies that spotting events should not be reported while the spotter is in an automated dialog
+//   * if not set, spotting events will be reported even when the spotter is in an automated dialog
+
+// DB_SpotPlayers_NoTargetInAD((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specifies that spotting events should be not be reported for targets that are in an automated dialog
+//   * if not set, spotting events will be reported even when a spotted target in an automated dialog
+
+// DB_SpotPlayers_IncludeDefeated((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specifies that spotting events should be reported even for targets that are currently defeated
+//   * if not set, spotting events of defeated targets will be blocked for _Identifier
+//   * orthogonal to DB_SpotPlayers_TargetIgnoreCantTalk: defeated targets often can't talk either, so set both if you intend both
+
+// DB_SpotPlayers_IncludeSummons((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specifies that spotting events should also be reported for player summons. By default, only characters in DB_Players() are spotted.
+//   * if not set, spotted player summons will be ignored for _Identifier
+
+// DB_SpotPlayers_IncludeFollowers((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specifies that spotting events should also be reported for party followers. By default, only characters in DB_Players() are spotted.
+//   * if not set, spotted party followers will be ignored for _Identifier
+
+// DB_SpotPlayers_IncludeExtra((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+// Specifies that the spotter should also report seeing target (even if not a player/summon/party follower)
+//   * if not set, other characters besides players/summons/party followers will never be reported
+
+// DB_SpotPlayers_IncludeInconspicuous((CHARACTER)_Spotter, (STRING)_Identifier)
+// Specifies that the spotter should also report seeing inconspicuous targets.
+//   * if not set, inconspicuous characters will never be reported
+
+// DB_SpotPlayers_IgnoreCombat((CHARACTER)_Spotter, (STRING)_Identifier);
+// Specifies that spotting events should also be reported while _Spotter is in combat
+//   * if not set, spotting will be suspended for _Identifier while _Spotter is in combat
+
+// DB_SpotPlayers_IgnoreSpotterCrimeHandling((CHARACTER)_Character, (STRING)_Identifier);
+// Specifies that spotting events should also be reported while _Spotter is reacting to a crime
+//   * if not set, spotting will be suspended for _Identifier while _Spotter is in a crime reaction
+
+// PROC_SpotPlayers_RestartSpotting((CHARACTER)_Spotter, (STRING)_Identifier)
+// Restart spotting after it was stopped
+//   * Same as setting the global flag _GlobalStartFlag, but without frame delay (also works if _GlobalStopFlag is null)
+
+// PROC_SpotPlayers_StopSpotting((CHARACTER)_Spotter, (STRING)_Identifier)
+// Stop spotting
+//   * Same as setting the global flag _GlobalStopFlag, but without frame delay (also works is _GlobalStopFlag is null)
+
+// PROC_SpotPlayers_StopSpotting((STRING)_Identifier)
+// Stop spotting for all spotters
+//   * Same as setting the global flag _GlobalStopFlag, but without frame delay (also works is _GlobalStopFlag is null)
+
+// QRY_SpotPlayers_IsSpotting((CHARACTER)_Spotter, (STRING)_Identifier)
+// Returns whether _Spotter is currently spotting
+
+// DB_SpotPlayers_BlockTargetFTB((CHARACTER)_Spotter, (STRING)_Identifier)
+// Blocks spotting for targets in FTB.
+NOT DB_SpotPlayers_BlockTargetFTB((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, "");
+KBSECTION
+//REGION Global start/stop spotting
+IF
+FlagSet(_GlobalStartFlag, NULL_00000000-0000-0000-0000-000000000000, _) // flagType: Global
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+THEN
+ClearFlag(_GlobalStartFlag, NULL_00000000-0000-0000-0000-000000000000);
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+IF
+FlagSet(_GlobalStopFlag, NULL_00000000-0000-0000-0000-000000000000, _) // flagType: Global
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+THEN
+ClearFlag(_GlobalStopFlag, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+// Start conditions
+// By default, start spotting immediately. Set _GlobalStopFlag in advance to prevent this.
+IF
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+AND
+_GlobalStopFlag != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetFlag(_GlobalStopFlag, NULL_00000000-0000-0000-0000-000000000000, 0)
+THEN
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+IF
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+AND
+_GlobalStopFlag == NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+IF
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+AND
+_GlobalStartFlag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+ClearFlag(_GlobalStartFlag, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+AND
+_GlobalStopFlag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+ClearFlag(_GlobalStopFlag, NULL_00000000-0000-0000-0000-000000000000);
+
+// Cleanup dependency: DB_SpotPlayers
+IF
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers(_Spotter, _Identifier, _, _)
+THEN
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+//END_REGION
+
+//REGION Object flag start/stopping
+IF
+FlagSet(_ObjectStartFlag, _Spotter, _)
+AND
+DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag)
+THEN
+ClearFlag(_ObjectStartFlag, _Spotter);
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+IF
+FlagSet(_ObjectStopFlag, _Spotter, _)
+AND
+DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag)
+THEN
+ClearFlag(_ObjectStopFlag, _Spotter);
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+IF
+DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag)
+AND
+_ObjectStartFlag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+ClearFlag(_ObjectStartFlag, _Spotter);
+
+IF
+DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag)
+AND
+_ObjectStopFlag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+ClearFlag(_ObjectStopFlag, _Spotter);
+//END_REGION
+
+//REGION Track whether spotter is active, not permadefeated, not offstage and in the current level
+// If not, no need to keep track of targets of interest, their flags etc
+// (will be re-evaluated every time DB_CurrentLevel(_Level) changes)
+IF
+DB_InternPlayerSpot_Active(_Spotter)
+AND
+NOT DB_PermaDefeated(_Spotter)
+AND
+NOT DB_OffStage(_Spotter)
+AND
+DB_CurrentLevel(_Level)
+AND
+Exists(_Spotter, 1)
+AND
+GetRegion(_Spotter,_Level)
+THEN
+DB_InternPlayerSpot_Available((CHARACTER)_Spotter);
+
+// Leaving level -> invalidate all
+IF
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+AND
+NOT DB_CurrentLevel(_)
+THEN
+NOT DB_InternPlayerSpot_Available(_Spotter);
+
+// Teleported in from another level -> can start spotting
+IF
+EnteredLevel(_Spotter, _, _Level)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_InternPlayerSpot_Active(_Spotter)
+AND
+NOT DB_PermaDefeated(_Spotter)
+AND
+NOT DB_OffStage(_Spotter)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, _, _, _)
+THEN
+DB_InternPlayerSpot_Available(_Spotter);
+
+// Teleported out to another level -> stop spotting
+IF
+EnteredLevel(_Spotter, _, _Level)
+AND
+DB_InternPlayerSpot_Available((CHARACTER)_Spotter)
+AND
+NOT DB_CurrentLevel(_Level)
+THEN
+NOT DB_InternPlayerSpot_Available(_Spotter);
+
+// Inactive -> don't spot
+IF
+DB_InternPlayerSpot_Available(_Spotter)
+AND
+NOT DB_InternPlayerSpot_Active(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_Available(_Spotter);
+
+// PermaDefeated -> can't spot (don't exclude plain defeated, as we may want to have surrendered characters starting a dialog after combat)
+PROC
+PROC_StateSet_PermaDefeated((CHARACTER)_Spotter)
+AND
+DB_InternPlayerSpot_Available(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_Available(_Spotter);
+
+// Offstage -> can't spot
+IF
+WentOnStage(_Spotter, 0)
+AND
+DB_InternPlayerSpot_Available((CHARACTER)_Spotter)
+THEN
+NOT DB_InternPlayerSpot_Available((CHARACTER)_Spotter);
+
+// Cleanup dependency: DB_InternPlayerSpot_Active
+IF
+DB_InternPlayerSpot_Available(_Spotter)
+AND
+NOT DB_InternPlayerSpot_Active(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_Available(_Spotter);
+
+
+// Only track spotter's interests if they're available and spotting
+IF
+DB_InternPlayerSpot_Available(_Spotter)
+AND
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_Available(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier);
+//END_REGION
+
+//REGION Restart/stop spotting/clean up spotting
+PROC
+PROC_SpotPlayers_RestartSpotting((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+PROC
+PROC_SpotPlayers_StopSpotting((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+PROC
+PROC_SpotPlayers_StopSpotting((STRING)_Identifier)
+AND
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+QRY
+QRY_SpotPlayers_IsSpotting((CHARACTER)_Spotter, (STRING)_Identifier)
+AND
+DB_InternPlayerSpot_Spotting(_Spotter, _Identifier)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SpotPlayers_CleanupSpotting((STRING)_Identifier)
+THEN
+PROC_SpotPlayers_StopSpotting((STRING)_Identifier);
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier);
+//END_REGION
+
+//REGION Targets of interest
+IF
+DB_InternPlayerSpot_TrackSpotterInterests((CHARACTER)_Spotter, (STRING)_Identifier)
+AND
+DB_Players(_Player)
+THEN
+DB_InternPlayerSpot_Players(_Spotter, _Identifier, _Player);
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Player);
+
+IF
+DB_InternPlayerSpot_Players(_Spotter, _Identifier, _Player)
+AND
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_Players(_Player)
+THEN
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Player);
+NOT DB_InternPlayerSpot_Players(_Spotter, _Identifier, _Player);
+
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests((CHARACTER)_Spotter, (STRING)_Identifier)
+AND
+DB_SpotPlayers_IncludeSummons(_Spotter, _Identifier)
+AND
+DB_PlayerSummons(_Summon)
+THEN
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Summon);
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Summon);
+
+IF
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Summon)
+AND
+NOT DB_PlayerSummons(_Summon)
+THEN
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Summon);
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Summon);
+
+IF
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Summon)
+AND
+NOT DB_SpotPlayers_IncludeSummons(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Summon);
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Summon);
+
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_IncludeFollowers(_Spotter, _Identifier)
+AND
+DB_PartyFollowers(_Follower)
+THEN
+DB_InternPlayerSpot_Followers(_Spotter, _Identifier, _Follower);
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Follower);
+
+IF
+DB_InternPlayerSpot_Followers(_Spotter, _Identifier, _Follower)
+AND
+NOT DB_PartyFollowers(_Follower)
+THEN
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Follower);
+NOT DB_InternPlayerSpot_Followers(_Spotter, _Identifier, _Follower);
+
+IF
+DB_InternPlayerSpot_Followers(_Spotter, _Identifier, _Follower)
+AND
+NOT DB_SpotPlayers_IncludeFollowers(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Follower);
+NOT DB_InternPlayerSpot_Followers(_Spotter, _Identifier, _Follower);
+
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_IncludeExtra(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+DB_InternPlayerSpot_ExtraTargetOfInterest(_Spotter, _Identifier, _Target);
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_ExtraTargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IncludeExtra(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_ExtraTargetOfInterest(_Spotter, _Identifier, _Target);
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target);
+
+
+// Cleanup dependency: DB_InternPlayerSpot_TrackSpotterInterests
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target);
+NOT DB_InternPlayerSpot_Players(_Spotter, _Identifier, _Target);
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target);
+NOT DB_InternPlayerSpot_Followers(_Spotter, _Identifier, _Target);
+NOT DB_InternPlayerSpot_ExtraTargetOfInterest(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION Trigger handling
+// Keep track of the spotter/target combos for which we need trigger registration
+IF
+DB_SpotPlayers_SpotTrigger((CHARACTER)_Spotter, (STRING)_Identifier, (TRIGGER)_Trigger)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target);
+
+IF
+DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target);
+
+IF
+DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target)
+AND
+NOT DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _Trigger)
+THEN
+NOT DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target);
+
+IF
+DB_SpotPlayers_SpotTrigger_ManualRegistering(_Trigger)
+AND
+DB_InternPlayerSpot_TriggerRegistered(_Trigger, _Target)
+THEN
+NOT DB_InternPlayerSpot_TriggerRegistered(_Trigger, _Target);
+
+// Need trigger for any spotter/target combo -> register
+IF
+DB_InternPlayerSpot_SpotTriggerActiveFor(_, _, _Trigger, _Target)
+AND
+NOT DB_InternPlayerSpot_TriggerRegistered(_Trigger, _Target)
+AND
+NOT DB_SpotPlayers_SpotTrigger_ManualRegistering((TRIGGER)_Trigger)
+THEN
+DB_InternPlayerSpot_TriggerRegistered(_Trigger, _Target);
+TriggerRegisterForCharacter(_Trigger, _Target);
+
+// No longer needed -> unregister
+IF
+DB_InternPlayerSpot_TriggerRegistered(_Trigger, _Target)
+AND
+NOT DB_InternPlayerSpot_SpotTriggerActiveFor(_, _, _Trigger, _Target)
+AND
+NOT DB_SpotPlayers_SpotTrigger_ManualRegistering((TRIGGER)_Trigger)
+THEN
+NOT DB_InternPlayerSpot_TriggerRegistered(_Trigger, _Target);
+TriggerUnregisterForCharacter(_Trigger, _Target);
+
+// Track targets that need to be in a trigger
+IF
+DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _Trigger)
+AND
+DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target)
+AND
+DB_InRegion(_Target, _Trigger)
+THEN
+DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _Trigger);
+
+IF
+DB_InternPlayerSpot_SpotTriggerActiveFor(_Spotter, _Identifier, _Trigger, _Target)
+AND
+NOT DB_InRegion(_Target, _Trigger)
+THEN
+NOT DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _Trigger);
+
+// In any of the triggers -> ok
+IF
+DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _)
+THEN
+DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target);
+
+
+// In none of the triggers but needs to be in a trigger -> not ok
+IF
+DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _)
+AND
+NOT DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _)
+THEN
+NOT DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target);
+
+// Fallback in case no trigger defined
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _)
+THEN
+DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target);
+
+// Public helper to clear all define spot triggers (if any)
+PROC
+PROC_SpotPlayers_ClearSpotTrigger((CHARACTER)_Spotter, (STRING)_Identifier)
+AND
+DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _Trigger)
+THEN
+NOT DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _Trigger);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest and DB_SpotPlayers_SpotTrigger
+IF
+DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _Trigger)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _Trigger);
+
+IF
+DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _Trigger)
+AND
+NOT DB_SpotPlayers_SpotTrigger(_Spotter, _Identifier, _Trigger)
+THEN
+NOT DB_InternPlayerSpot_TargetInTrigger(_Spotter, _Identifier, _Target, _Trigger);
+//END_REGION
+
+//REGION Object flags
+PROC
+PROC_InternSpotPlayers_CheckObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (FLAG)_ChangedFlag, (INTEGER)_CurrentValue, (INTEGER)_ExpectedValue)
+AND
+_CurrentValue != _ExpectedValue
+THEN
+NOT DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_InternSpotPlayers_CheckObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (FLAG)_ChangedFlag, (INTEGER)_CurrentValue, (INTEGER)_ExpectedValue)
+AND
+_CurrentValue == _ExpectedValue
+AND
+NOT QRY_SpotPlayers_HasWrongObjectFlag(_Spotter, _Identifier, _Target, _ChangedFlag)
+THEN
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+
+IF
+FlagSet(_ChangedFlag, (CHARACTER)_Target, _)
+AND
+DB_SpotPlayers_HasObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ChangedFlag, (INTEGER)_ExpectedValue)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+PROC_InternSpotPlayers_CheckObjectFlag(_Spotter, _Identifier, _Target, _ChangedFlag, 1, _ExpectedValue);
+
+IF
+FlagCleared(_ChangedFlag, (CHARACTER)_Target, _)
+AND
+DB_SpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ChangedFlag, _ExpectedValue)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+PROC_InternSpotPlayers_CheckObjectFlag(_Spotter, _Identifier, _Target, _ChangedFlag, 0, _ExpectedValue);
+
+//Recheck dialog flags on shape change.
+IF
+ShapeshiftChanged(_Target, _, _, _)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT QRY_SpotPlayers_HasWrongObjectFlag(_Spotter, _Identifier, _Target, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+
+//Recheck dialog flags on shape change.
+IF
+ShapeshiftChanged(_Target, _, _, _)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+QRY_SpotPlayers_HasWrongObjectFlag(_Spotter, _Identifier, _Target, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+NOT DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+
+// This wil succeed if DB_SpotPlayers_HasObjectFlag is defined with both value 0 and 1 for the changed flag, while technically it should fail.
+// Let's consider that a user input error. We could add an extra rule for that if needed.
+QRY
+QRY_SpotPlayers_HasWrongObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (FLAG)_ChangedFlag)
+AND
+DB_SpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag, _ExpectedValue)
+AND
+_ObjectFlag != _ChangedFlag
+AND
+NOT GetFlag(_ObjectFlag, _Target, _ExpectedValue)
+THEN
+DB_NOOP(1);
+
+// Initialisation (including if no flags have to be checked)
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT QRY_SpotPlayers_HasWrongObjectFlag(_Spotter, _Identifier, _Target, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+
+// In case a new flag requirement gets defined, check it for existing targets of interest
+IF
+DB_SpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag, _ExpectedValue)
+THEN
+PROC_InternPlayerSpot_CheckNewFlag(_Spotter, _Identifier, _ObjectFlag, _ExpectedValue);
+
+PROC
+PROC_InternPlayerSpot_CheckNewFlag((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectFlag, (INTEGER)_ExpectedValue)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+GetFlag(_ObjectFlag, _Target, _CurrentValue)
+THEN
+PROC_InternSpotPlayers_CheckObjectFlag(_Spotter, _Identifier, _Target, _ObjectFlag, _CurrentValue, _ExpectedValue);
+
+// In case an existing flag requirement gets removed, check all targets to see whether they might fulfill the requirements now
+IF
+DB_SpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag, _ExpectedValue)
+THEN
+DB_InternSpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag);
+
+IF
+DB_InternSpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag)
+AND
+NOT DB_SpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag, _)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT QRY_SpotPlayers_HasWrongObjectFlag(_Spotter, _Identifier, _Target, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternSpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag)
+AND
+NOT DB_SpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag, _)
+THEN
+NOT DB_InternSpotPlayers_HasObjectFlag(_Spotter, _Identifier, _ObjectFlag);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION Specific tags
+PROC
+PROC_InternSpotPlayers_CheckTag((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (TAG)_ChangedTag, (INTEGER)_CurrentValue, (INTEGER)_ExpectedValue)
+AND
+_CurrentValue != _ExpectedValue
+THEN
+NOT DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_InternSpotPlayers_CheckTag((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (TAG)_ChangedTag, (INTEGER)_CurrentValue, (INTEGER)_ExpectedValue)
+AND
+_CurrentValue == _ExpectedValue
+AND
+NOT QRY_SpotPlayers_HasWrongTag(_Spotter, _Identifier, _Target, _ChangedTag)
+THEN
+DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target);
+
+IF
+TagSet((CHARACTER)_Target, _ChangedTag)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_HasTag((CHARACTER)_Spotter, (STRING)_Identifier, (TAG)_ChangedTag, (INTEGER)_ExpectedValue)
+THEN
+PROC_InternSpotPlayers_CheckTag(_Spotter, _Identifier, _Target, _ChangedTag, 1, _ExpectedValue);
+
+IF
+TagCleared((CHARACTER)_Target, _ChangedTag)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_HasTag(_Spotter, _Identifier, _ChangedTag, _ExpectedValue)
+THEN
+PROC_InternSpotPlayers_CheckTag(_Spotter, _Identifier, _Target, _ChangedTag, 0, _ExpectedValue);
+
+// This wil succeed if DB_SpotPlayers_HasTag is defined with both value 0 and 1 for the changed flag, while technically it should fail.
+// Let's consider that a user input error. We could add an extra rule for that if needed.
+QRY
+QRY_SpotPlayers_HasWrongTag((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (TAG)_ChangedTag)
+AND
+DB_SpotPlayers_HasTag(_Spotter, _Identifier, _Tag, _ExpectedValue)
+AND
+_Tag != _ChangedTag
+AND
+NOT IsTagged(_Target, _Tag, _ExpectedValue)
+THEN
+DB_NOOP(1);
+
+// Initialisation (including if no tags have to be checked)
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT QRY_SpotPlayers_HasWrongTag(_Spotter, _Identifier, _Target, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target);
+
+// In case a new tag gets defined, check the tag for existing targets of interest
+IF
+DB_SpotPlayers_HasTag(_Spotter, _Identifier, _Tag, _ExpectedValue)
+THEN
+PROC_InternPlayerSpot_CheckNewTag(_Spotter, _Identifier, _Tag, _ExpectedValue);
+
+PROC
+PROC_InternPlayerSpot_CheckNewTag((CHARACTER)_Spotter, (STRING)_Identifier, (TAG)_Tag, (INTEGER)_ExpectedValue)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+IsTagged(_Target, _Tag, _CurrentValue)
+THEN
+PROC_InternSpotPlayers_CheckTag(_Spotter, _Identifier, _Target, _Tag, _CurrentValue, _ExpectedValue);
+
+// In case an existing tag requirement gets removed, check all targets to see whether they might fulfill the requirements now
+IF
+DB_SpotPlayers_HasTag(_Spotter, _Identifier, _Tag, _ExpectedValue)
+THEN
+DB_InternSpotPlayers_HasTag(_Spotter, _Identifier, _Tag);
+
+IF
+DB_InternSpotPlayers_HasTag(_Spotter, _Identifier, _Tag)
+AND
+NOT DB_SpotPlayers_HasTag(_Spotter, _Identifier, _Tag, _)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT QRY_SpotPlayers_HasWrongTag(_Spotter, _Identifier, _Target, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternSpotPlayers_HasTag(_Spotter, _Identifier, _Tag)
+AND
+NOT DB_SpotPlayers_HasTag(_Spotter, _Identifier, _Tag, _)
+THEN
+NOT DB_InternSpotPlayers_HasTag(_Spotter, _Identifier, _Tag);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target);
+
+//END_REGION
+
+//REGION Inconspicuous Targets.
+
+// Track targets that need to be in a trigger
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_Is_InconspicuousPartyMember(_Target)
+THEN
+DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_IncludeInconspicuous(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_Is_InconspicuousPartyMember(_Target)
+AND
+NOT DB_SpotPlayers_IncludeInconspicuous(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target);
+
+//END_REGION
+
+//REGION Spotter dialog checks
+// Don't care about ability to speak (initialisation)
+IF
+DB_SpotPlayers_SpotterIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier);
+
+// Not able to speak 
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_SpotterIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_CantTalk_IgnoreCombat(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier);
+
+// Able to speak
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_SpotterIgnoreCantTalk(_Spotter, _Identifier)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Spotter)
+THEN
+DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier);
+
+// Cleanup dependency: DB_InternPlayerSpot_TrackSpotterInterests
+IF
+DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier);
+
+
+// Don't care about ADs (initialisation)
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_NoSpotterInAD(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier);
+
+//Init: cares about ADs but not in AD
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_NoSpotterInAD(_Spotter, _Identifier)
+AND
+NOT DB_DialogNPCs(_, _Spotter, _)
+THEN
+DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier);
+
+//Init: cares about ADs but in interactive dialog
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_NoSpotterInAD(_Spotter, _Identifier)
+AND
+DB_DialogNPCs(_Inst, _Spotter, _)
+AND
+NOT DB_AutomatedDialog(_Inst)
+THEN
+DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier);
+
+// In AD and must not be in AD
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_NoSpotterInAD((CHARACTER)_Spotter, (STRING)_Identifier)
+AND
+DB_DialogNPCs(_Inst, _Spotter, _)
+AND
+DB_AutomatedDialog(_Inst)
+THEN
+NOT DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier);
+
+// Left AD and must not be in AD -> ok
+IF
+DialogActorLeft(_,_Inst,(CHARACTER)_Spotter,_)
+AND
+DB_AutomatedDialog(_Inst)
+AND
+DB_SpotPlayers_NoSpotterInAD(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier);
+
+// Cleanup dependency: DB_InternPlayerSpot_TrackSpotterInterests
+IF
+DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier);
+
+
+// Join both conditions
+IF
+DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_SpotterADChecksOk(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_SpotterAbleToSpeakChecksOk(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier);
+//END_REGION
+
+//REGION Target dialog checks
+// Don't care about ability to speak (initialisation)
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_TargetIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+// Not able to to speak 
+// if the target can't speak because it's defeated, but we explicitly allowed defeated targets, then we allow the target
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+NOT DB_Is_WildShaped(_Target)
+AND
+DB_CantTalk_IgnoreCombat(_Target)
+AND
+NOT DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+NOT DB_Is_WildShaped(_Target)
+AND
+DB_CantTalk_IgnoreCombat(_Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+NOT DB_Defeated(_Target)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Target)
+AND
+NOT DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+NOT DB_Defeated(_Target)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_Is_WildShaped(_Target)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Target)
+AND
+NOT DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, _, _)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_Is_WildShaped(_Target)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+NOT DB_Defeated(_Target)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+// Able to speak
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+NOT DB_Is_WildShaped(_Target)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Target)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+NOT DB_Is_WildShaped(_Target)
+AND
+DB_CantTalk_IgnoreCombat(_Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+DB_Defeated(_Target)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Target)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_Summons(_Spotter, _Identifier, _Target)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+DB_Defeated(_Target)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_Is_WildShaped(_Target)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Target)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Spotter, _Identifier)
+AND
+DB_Is_WildShaped(_Target)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+DB_Defeated(_Target)
+THEN
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target);
+
+
+// Don't care about ADs (initialisation)
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_NoTargetInAD(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, _Target);
+
+// In AD and must not be in AD -> unavailable
+IF
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_NoTargetInAD(_Spotter, _Identifier)
+AND
+DB_DialogNPCs(_Inst, _Target, _)
+AND
+DB_AutomatedDialog(_Inst)
+THEN
+NOT DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, (CHARACTER)_Target);
+
+// Left dialog (AD or not) -> ok (definitely not in AD)
+IF
+DialogActorLeft(_, _, (CHARACTER)_Target,_)
+AND
+DB_InternPlayerSpot_TargetOfInterest((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+THEN
+DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, _Target);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, _Target);
+
+// Join both conditions
+IF
+DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target)
+THEN
+DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetADChecksOk(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetAbleToSpeakChecksOk(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION Target player wildshaped
+// Wildshaped and shouldn't be
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IncludeWildshapedPlayers(_Spotter, _Identifier)
+AND
+DB_Is_WildShaped(_Target)
+THEN
+NOT DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, (CHARACTER)_Target);
+
+// Not wildshaped and shouldn't be -> ok
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IncludeWildshapedPlayers(_Spotter, _Identifier)
+AND
+NOT DB_Is_WildShaped(_Target)
+THEN
+DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, (CHARACTER)_Target);
+
+// Can be wildshaped -> always ok
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_IncludeWildshapedPlayers(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, (CHARACTER)_Target);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION Target not defeated
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+DB_Defeated(_Target)
+THEN
+NOT DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+AND
+NOT DB_Defeated(_Target)
+THEN
+DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, (CHARACTER)_Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_IncludeDefeated(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, (CHARACTER)_Target);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION Combat for spotter
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+DB_Is_InCombat(_Spotter, _)
+THEN
+NOT DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+NOT DB_Is_InCombat(_Spotter, _)
+THEN
+DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier);
+
+// Cleanup dependency: DB_InternPlayerSpot_TrackSpotterInterests
+IF
+DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier);
+//END_REGION
+
+//REGION Combat for targets
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+DB_Is_InCombat(_Target, _)
+THEN
+NOT DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+NOT DB_Is_InCombat(_Target, _)
+THEN
+DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION FTB for targets
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_BlockTargetFTB(_Spotter, _Identifier)
+AND
+NOT DB_Is_InFTB(_Target)
+THEN
+DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+NOT DB_SpotPlayers_BlockTargetFTB(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_SpotPlayers_BlockTargetFTB(_Spotter, _Identifier)
+AND
+DB_Is_InFTB(_Target)
+THEN
+NOT DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target);
+
+
+IF
+DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target);
+
+
+//END_REGION
+
+//REGION Crime reactions
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Spotter, _Identifier)
+THEN
+DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier);
+
+QRY
+QRY_PlayerSpotting_NPCDisturbanceBlocksSpotting((CHARACTER)_Spotter)
+AND
+GetHandlingCrimeID(_Spotter, _CrimeID)
+AND
+CrimeHasProperty(_CrimeID, (DISTURBANCEPROPERTY)NoSceneManagerInterrupt_e305c93f-eaf2-4b73-ae0a-0be56a1b0549,0)
+AND
+CrimeHasProperty(_CrimeID, (DISTURBANCEPROPERTY)BackgroundReaction_db918cfb-a484-437c-93bb-8bc36fe98a9c,0)
+THEN
+DB_NOOP(1);
+
+// Don't use the CrimeID parameter, because when switching from one crime to another, we first
+// get an event about stopping the handling for one crime, and then in the same frame an event
+// about starting the handling of the next one. We don't want spotting to be enabled and then
+// disabled again immediately, because then they may spot someone in between (since it's
+// triggered by pure database rules) even though they're actually handling another crime.
+IF
+OnCrimeInvestigatorSwitchedState(_, _Spotter, _, _)
+AND
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Spotter, _Identifier)
+AND
+NOT QRY_PlayerSpotting_NPCDisturbanceBlocksSpotting(_Spotter)
+THEN
+DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier);
+
+IF
+OnCrimeInvestigatorSwitchedState(_, _Spotter, _, _)
+AND
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Spotter, _Identifier)
+AND
+QRY_PlayerSpotting_NPCDisturbanceBlocksSpotting(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Spotter, _Identifier)
+AND
+NOT QRY_PlayerSpotting_NPCDisturbanceBlocksSpotting(_Spotter)
+THEN
+DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier);
+
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Spotter, _Identifier)
+AND
+QRY_PlayerSpotting_NPCDisturbanceBlocksSpotting(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier);
+
+// Cleanup dependency: DB_InternPlayerSpot_TrackSpotterInterests
+IF
+DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier)
+AND
+NOT DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier);
+
+
+
+//END_REGION
+
+//REGION Active spotter & custom radius
+IF
+Activated(_Spotter)
+AND
+DB_InternPlayerSpot_Spotting((CHARACTER)_Spotter, _)
+AND
+NOT DB_InternPlayerSpot_Active(_Spotter)
+THEN
+DB_InternPlayerSpot_Active((CHARACTER)_Spotter);
+
+IF
+Deactivated(_Spotter)
+AND
+DB_InternPlayerSpot_Active((CHARACTER)_Spotter)
+THEN
+NOT DB_InternPlayerSpot_Active(_Spotter);
+
+// Also check active status when DB_InternPlayerSpot_TrackSpotterInterests gets defined, because we don't get
+// Activated events when reloading story. Also needed when defining DB_SpotPlayers on the fly
+IF
+DB_InternPlayerSpot_Spotting(_Spotter, _)
+AND
+NOT DB_InternPlayerSpot_Active(_Spotter)
+AND
+IsActive(_Spotter, 1)
+THEN
+DB_InternPlayerSpot_Active(_Spotter);
+
+// Clean up dependency: DB_InternPlayerSpot_Spotting
+IF
+DB_InternPlayerSpot_Active(_Spotter)
+AND
+NOT DB_InternPlayerSpot_Spotting((CHARACTER)_Spotter, _)
+THEN
+NOT DB_InternPlayerSpot_Active(_Spotter);
+
+// Keep range unique
+IF
+DB_SpotPlayers_CustomRadius(_Spotter, _Identifier, _NewRange)
+AND
+DB_SpotPlayers_CustomRadius(_Spotter, _Identifier, _OldRange)
+AND
+_NewRange != _OldRange
+THEN
+NOT DB_SpotPlayers_CustomRadius(_Spotter, _Identifier, _OldRange);
+
+// No custom radius -> just forward DB_Sees events (no need to check active, because
+// inactive characters don't generate Saw events)
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+NOT DB_SpotPlayers_CustomRadius(_Spotter, _Identifier, (REAL)_)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_Sees(_Spotter, _Target)
+THEN
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target);
+
+// And also cancel them again when losing sight
+IF
+DB_InternPlayerSpot_TrackSpotterInterests(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target)
+AND
+NOT DB_Sees(_Spotter, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target);
+
+IF
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_Active(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target);
+
+// Custom radius and spotter active -> start radius checking timer if not running
+IF
+DB_SpotPlayers_CustomRadius(_Spotter, _, (REAL)_)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _, _)
+AND
+DB_InternPlayerSpot_Active(_Spotter)
+AND
+NOT DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter)
+THEN
+DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter);
+DB_InternPlayerSpot_RadiusCheckTimerRunning(1);
+
+// Start timer when first spotter with custom radius becomes active
+IF
+DB_InternPlayerSpot_RadiusCheckTimerRunning(1)
+THEN
+TimerLaunch("NotifyOnPlayerSight_RadiusCheck", 953);
+
+IF
+TimerFinished("NotifyOnPlayerSight_RadiusCheck")
+THEN
+TimerLaunch("NotifyOnPlayerSight_RadiusCheck", 953);
+
+// No radius check needed when spotter becomes inactive
+IF
+DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter)
+AND
+NOT DB_InternPlayerSpot_Active(_Spotter)
+THEN
+NOT DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter);
+
+// Neither when no targets of interest anymore
+IF
+DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _, _)
+THEN
+NOT DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter);
+
+// Stop the timer if no radius checks are needed anymore for any spotter
+IF
+DB_InternPlayerSpot_RadiusCheckTimerRunning(1)
+AND
+NOT DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_)
+THEN
+NOT DB_InternPlayerSpot_RadiusCheckTimerRunning(1);
+TimerCancel("NotifyOnPlayerSight_RadiusCheck");
+
+// Check radiuses of characters in sight
+IF
+TimerFinished("NotifyOnPlayerSight_RadiusCheck")
+AND
+DB_InternPlayerSpot_RadiusCheckTimerRunningFor(_Spotter)
+AND
+DB_SpotPlayers_CustomRadius(_Spotter, _Identifier, (REAL)_Radius)
+AND
+DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+AND
+DB_Sees(_Spotter, _Target)
+AND
+GetDistanceTo(_Spotter, _Target, _Dist)
+THEN
+PROC_InternSpotPlayers_UpdateInRange(_Spotter, _Identifier, _Target, _Radius, _Dist);
+
+PROC
+PROC_InternSpotPlayers_UpdateInRange((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (REAL)_Radius, (REAL)_Dist)
+AND
+_Dist <= _Radius
+THEN
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_InternSpotPlayers_UpdateInRange((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (REAL)_Radius, (REAL)_Dist)
+AND
+_Dist > _Radius
+THEN
+NOT DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target);
+
+// Cleanup dependency: DB_InternPlayerSpot_TargetOfInterest
+IF
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetOfInterest(_Spotter, _Identifier, _Target)
+THEN
+NOT DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target);
+//END_REGION
+
+//REGION Set/Change spot event identifier
+IF
+DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _SpotEvent)
+AND
+DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _OtherSpotEvent)
+AND
+_SpotEvent != _OtherSpotEvent
+THEN
+NOT DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _OtherSpotEvent);
+//END_REGION
+
+//REGION Checking for about-to-start combat
+//If combat is about to start (and code hasn't processed that yet), the character's databases will be cleared & refilled when it starts and ends.
+
+QRY
+QRY_InternPlayerSpot_IsAboutToFight((CHARACTER)_Spotter, (CHARACTER)_Target, (STRING)_Identifier)
+AND
+QRY_InternPlayerSpot_IsAboutToFight_Reason((CHARACTER)_Spotter, (CHARACTER)_Target, (STRING)_Identifier)
+THEN
+PROC_InternPlayerSpot_IsAboutToFightBlock((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternPlayerSpot_IsAboutToFightBlock((CHARACTER)_Spotter, (STRING)_Identifier)
+AND
+Concatenate("GLO_SpotPlayers_AboutToFightBlock_", _Identifier, _TimerName)
+THEN
+DB_InternPlayerSpot_IsAboutToFight((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName);
+RealtimeObjectTimerLaunch(_Spotter, _TimerName, 1000); 
+
+IF
+ObjectTimerFinished(_Spotter, _TimerName)
+AND
+DB_InternPlayerSpot_IsAboutToFight((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName)
+THEN
+NOT DB_InternPlayerSpot_IsAboutToFight((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName);
+
+QRY
+QRY_InternPlayerSpot_IsAboutToFight_Reason((CHARACTER)_Spotter, (CHARACTER)_Target, (STRING)_Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+IsEnemy(_Spotter, _Target, 1)
+AND
+CanFight(_Spotter, 1)
+AND
+CanFight(_Target, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InternPlayerSpot_IsAboutToFight_Reason((CHARACTER)_Spotter, (CHARACTER)_Target, (STRING)_Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+CanFight(_Spotter, 1)
+AND
+GetFaction(_Spotter, _Faction)
+AND
+DB_RelationChangingToHostile(_Faction, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InternPlayerSpot_IsAboutToFight_Reason((CHARACTER)_Spotter, (CHARACTER)_Target, (STRING)_Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+DB_EnterCombatRequested(_Target)
+AND
+CanFight(_Target, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InternPlayerSpot_IsAboutToFight_Reason((CHARACTER)_Spotter, (CHARACTER)_Target, (STRING)_Identifier)
+AND
+NOT DB_SpotPlayers_IgnoreCombat(_Spotter, _Identifier)
+AND
+DB_EnterCombatRequested(_Spotter)
+AND
+CanFight(_Spotter, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION The actual check
+// No need to check DB_InternPlayerSpot_TrackSpotterInterests/Active etc, because
+// the DBs below are not set in case the spotter is not active or being tracked
+IF
+DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target)
+AND
+// Includes sees check
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_IsAboutToFight(_Spotter, _Identifier, _)
+AND
+NOT QRY_InternPlayerSpot_IsAboutToFight(_Spotter, _Target, _Identifier)
+THEN
+PROC_InternSpotPlayers_Spotted(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_InternSpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_CheckDelay((CHARACTER)_Spotter, (STRING)_Identifier, _)
+AND
+Concatenate("GLO_SpotPlayers_AboutToFightBlock_", _Identifier, _TimerName)
+THEN
+DB_SpotPlayers_CheckDelay((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName);
+RealtimeObjectTimerLaunch(_Spotter, _TimerName, 300); //Give code a moment to process various deferred matters.
+
+IF
+ObjectTimerFinished(_Spotter, _TimerName)
+AND
+DB_SpotPlayers_CheckDelay((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName)
+AND
+DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier)
+AND
+DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_SpotterCrimesOk(_Spotter, _Identifier)
+AND
+// Includes sees check
+DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetDefeatedOkay(_Spotter, _Identifier, _Target)
+AND
+DB_InternPlayerSpot_TargetFTBOk(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_IsAboutToFight(_Spotter, _Identifier, _)
+AND
+NOT QRY_InternPlayerSpot_IsAboutToFight(_Spotter, _Target, _Identifier)
+THEN
+PROC_InternSpotPlayers_Spotted_Delayed((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target);
+
+IF
+ObjectTimerFinished(_Spotter, _TimerName)
+AND
+DB_SpotPlayers_CheckDelay((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName)
+THEN
+NOT DB_SpotPlayers_CheckDelay((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_TimerName);
+
+PROC
+PROC_InternSpotPlayers_Spotted_Delayed((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+NOT DB_SpotPlayers_Continuous(_Spotter, _Identifier)
+THEN
+NOT DB_InternPlayerSpot_Spotting(_Spotter, _Identifier);
+
+PROC
+PROC_InternSpotPlayers_Spotted_Delayed((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+THEN
+PROC_SpotPlayers_Spotted(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_SpotEvent((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_SpotEvent)
+THEN
+PROC_SpotPlayers_Spotted(_Spotter, _Identifier, _Target, _SpotEvent);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (STRING)_Event)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Continuous spotting spotted database and unspotting events
+PROC
+PROC_InternSpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_Continuous(_Spotter, _Identifier)
+THEN
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_InternSpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_Continuous(_Spotter, _Identifier)
+AND
+DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _Event)
+THEN
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target, _Event);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target, _Event)
+AND
+NOT DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _Event)
+THEN
+NOT DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target, _Event);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetWildShapeOk(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetTriggerOk(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetObjectFlagsOk(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetTagsOk(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_SpotterDialogChecksOk(_Spotter, _Identifier)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetDialogChecksOk(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_SpotterCombatOk(_Spotter, _Identifier)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetCombatOk(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_TargetInRange(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+
+IF
+DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target)
+AND
+NOT DB_InternPlayerSpot_InconspicuousOK(_Spotter, _Identifier, _Target)
+THEN
+PROC_SpotPlayers_Unspotted_Intern(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_SpotPlayers_Unspotted_Intern((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+THEN
+NOT DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_SpotPlayers_Unspotted_Intern((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _Event)
+THEN
+NOT DB_SpotPlayers_Spotted(_Spotter, _Identifier, _Target, _Event);
+
+PROC
+PROC_SpotPlayers_Unspotted_Intern((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+THEN
+PROC_SpotPlayers_Unspotted(_Spotter, _Identifier, _Target);
+
+PROC
+PROC_SpotPlayers_Unspotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+AND
+DB_SpotPlayers_SpotEvent(_Spotter, _Identifier, _Event)
+THEN
+PROC_SpotPlayers_Unspotted(_Spotter, _Identifier, _Target, _Event);
+
+PROC
+PROC_SpotPlayers_Unspotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target, (STRING)_Event)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Clean up databases
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag)
+THEN
+NOT DB_SpotPlayers((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_GlobalStartFlag, (FLAG)_GlobalStopFlag);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_Continuous((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_Continuous((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_SpotEvent((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_SpotEvent)
+THEN
+NOT DB_SpotPlayers_SpotEvent((CHARACTER)_Spotter, (STRING)_Identifier, (STRING)_SpotEvent);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag)
+THEN
+NOT DB_SpotPlayers_StartObjectFlags((CHARACTER)_Spotter, (CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectStartFlag, (FLAG)_ObjectStopFlag);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_CustomRadius((CHARACTER)_Spotter, (STRING)_Identifier, (REAL)_CustomRadius)
+THEN
+NOT DB_SpotPlayers_CustomRadius((CHARACTER)_Spotter, (STRING)_Identifier, (REAL)_CustomRadius);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_SpotTrigger((CHARACTER)_Spotter, (STRING)_Identifier, (TRIGGER)_Trigger)
+THEN
+NOT DB_SpotPlayers_SpotTrigger((CHARACTER)_Spotter, (STRING)_Identifier, (TRIGGER)_Trigger);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_HasObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectFlag, (INTEGER)_ExpectedValue)
+THEN
+NOT DB_SpotPlayers_HasObjectFlag((CHARACTER)_Spotter, (STRING)_Identifier, (FLAG)_ObjectFlag, (INTEGER)_ExpectedValue);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_HasTag((CHARACTER)_Spotter, (STRING)_Identifier, (TAG)_HasTag, (INTEGER)_ExpectedValue)
+THEN
+NOT DB_SpotPlayers_HasTag((CHARACTER)_Spotter, (STRING)_Identifier, (TAG)_HasTag, (INTEGER)_ExpectedValue);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_SpotterIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_SpotterIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_TargetIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_TargetIgnoreCantTalk((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_NoSpotterInAD((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_NoSpotterInAD((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_NoTargetInAD((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_NoTargetInAD((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IncludeSummons((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_IncludeSummons((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IncludeFollowers((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_IncludeFollowers((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IncludeExtra((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+THEN
+NOT DB_SpotPlayers_IncludeExtra((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IncludeInconspicuous((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_IncludeInconspicuous((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IgnoreCombat((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_IgnoreCombat((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_IgnoreSpotterCrimeHandling((CHARACTER)_Spotter, (STRING)_Identifier)
+THEN
+NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling((CHARACTER)_Spotter, (STRING)_Identifier);
+
+PROC
+PROC_InternSpotPlayers_CleanUp((STRING)_Identifier)
+AND
+DB_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target)
+THEN
+NOT DB_SpotPlayers_Spotted((CHARACTER)_Spotter, (STRING)_Identifier, (CHARACTER)_Target);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

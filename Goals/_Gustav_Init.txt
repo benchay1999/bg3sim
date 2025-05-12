@@ -1,0 +1,31 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+CharacterJoinedParty(_Avatar)
+AND
+IsTagged(_Avatar, AVATAR_306b9b05-1057-4770-aa17-01af21acd650, 1)
+AND
+TemplateIsInInventory((ITEMROOT)LOOT_Camp_Pack_398e7328-ce90-4c02-94a2-93341fac499a,_Avatar, 0)
+AND
+QRY_OnlyOnce("OneFreePackPerParty")
+THEN
+TemplateAddTo((ITEMROOT)LOOT_Camp_Pack_398e7328-ce90-4c02-94a2-93341fac499a, _Avatar, 1, 0);
+
+PROC
+PROC_CAMP_GiveFreeSupplies()
+AND
+GetHostCharacter(_Player)
+THEN
+TemplateAddTo((ITEMROOT)LOOT_Camp_Pack_398e7328-ce90-4c02-94a2-93341fac499a, _Player, 1, 0);
+
+IF
+TextEvent("camppack")
+THEN
+PROC_CAMP_GiveFreeSupplies();
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

@@ -1,0 +1,625 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Inclusion_CombatInclusionDialog((DIALOGRESOURCE)HAG_HagLair_ControlledByMask_1361aa03-0f97-2d64-dfc2-49df99251431);
+
+DB_GLO_HagMasks_Statuses(0, "HAG_MASK_HAGDEAD");
+DB_GLO_HagMasks_Statuses(1, "HAG_MASK");
+DB_GLO_HagMasks_Statuses(1, "HAG_MASK_CONTROLLED");
+DB_GLO_HagMasks_PossessedStatus("HAG_MASK_CONTROLLED");
+KBSECTION
+//REGION Alignment changes
+
+PROC
+PROC_Hagmasks_ClearNeutral((CHARACTER)_Character)
+AND
+DB_Hagmasks_Neutral(_Character, _Faction)
+THEN
+NOT DB_Hagmasks_Neutral(_Character, _Faction);
+ResetRelation((FACTION)GLO_HagMaskedVictims_208ebac7-6954-4087-802f-6145cce161c0, _Faction);
+ResetRelation(_Faction, (FACTION)GLO_HagMaskedVictims_208ebac7-6954-4087-802f-6145cce161c0);
+
+PROC
+PROC_Hagmasks_Neutral((CHARACTER)_Character)
+AND
+GetFaction(_Character, _Faction)
+THEN
+DB_Hagmasks_Neutral(_Character, _Faction);
+PROC_SetRelationMutual(_Faction, (FACTION)GLO_HagMaskedVictims_208ebac7-6954-4087-802f-6145cce161c0, 50);
+
+IF
+Equipped(_Mask, _Character)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+QRY_IsPartyMember(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+THEN
+PROC_Hagmasks_Neutral(_Character);
+
+IF
+BaseFactionChanged(_Character, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_Hagmasks_Neutral(_Character, _)
+THEN
+PROC_Hagmasks_ClearNeutral(_Character);
+PROC_Hagmasks_Neutral(_Character);
+
+IF
+Unequipped(_Mask, _Character)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+THEN
+PROC_Hagmasks_ClearNeutral(_Character);
+
+//END_REGION
+
+//REGION Take the mask off the victim.
+
+IF
+DB_GlobalFlag(HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720) // flagType: Global
+AND
+NOT DB_Defeated((CHARACTER)S_HAG_Hag_MaskedVictim1_d2832662-4a12-4565-bfe2-094b93ae8af8)
+AND
+GetEquippedItem((CHARACTER)S_HAG_Hag_MaskedVictim1_d2832662-4a12-4565-bfe2-094b93ae8af8, "Helmet", _Mask)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+THEN
+Unequip((CHARACTER)S_HAG_Hag_MaskedVictim1_d2832662-4a12-4565-bfe2-094b93ae8af8, _Mask);
+
+//END_REGION
+
+//REGION Reveal Illusions
+IF
+StatusApplied(_Object, "HAG_MASK_ILLUSION", _, _)
+AND
+IsItem(_Object, 1)
+THEN
+SetCanInteract((ITEM)_Object, 0);
+
+//END_REGION
+
+
+//REGION Statuses
+IF
+Equipped(_Mask, _Character)
+AND
+QRY_IsPartyMember(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo(_Character, _Status, _Mask);
+
+IF
+Resurrected(_Character)
+AND
+QRY_IsPartyMember(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+GetOwner(_Mask, _Character)
+AND
+IsEquipped(_Mask, 1)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo((CHARACTER)_Character, (STRING)_Status, (ITEM)_Mask);
+
+PROC
+PROC_HAG_HagMask_SwitchStatusTo((CHARACTER)_Character, (STRING)_Status, (ITEM)_Mask)
+THEN
+ApplyStatus(_Character, _Status, -1.0, 1, _Mask);
+
+PROC
+PROC_HAG_HagMask_SwitchStatusTo((CHARACTER)_Character, (STRING)_Status, (ITEM)_Mask)
+AND
+DB_GLO_HagMasks_Statuses(_Active, _Status)
+AND
+DB_Negate(_Active, _Inactive)
+AND
+DB_GLO_HagMasks_Statuses(_Inactive, _OtherStatus)
+AND
+HasActiveStatus(_Character, _OtherStatus, 1)
+THEN
+RemoveStatus(_Character, _OtherStatus, _Mask);
+
+QRY
+QRY_GLO_HagMasks_GetStatus((CHARACTER)_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+NOT DB_QRYRTN_GLO_HagMasks_GetStatus(_Status);
+
+QRY
+QRY_GLO_HagMasks_GetStatus((CHARACTER)_Character)
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+THEN
+DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK_HAGDEAD");
+
+QRY
+QRY_GLO_HagMasks_GetStatus((CHARACTER)_Character)
+AND
+NOT DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK_HAGDEAD")
+AND
+HasActiveStatus(_Character, "HAG_MASK_CONTROLIMMUNE", 1)
+THEN
+DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK_HAGDEAD");
+
+QRY
+QRY_GLO_HagMasks_GetStatus((CHARACTER)_Character)
+AND
+NOT DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK_HAGDEAD")
+THEN
+DB_QRYRTN_GLO_HagMasks_GetStatus("HAG_MASK");
+
+IF
+Equipped(_Mask, _Player)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+AND
+IsPartyMember(_Player, 0, 1)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+THEN
+PROC_HAG_PutOnMask(_Player, _Mask, _Helper);
+
+PROC
+PROC_HAG_PutOnMask((CHARACTER)_Character, (ITEM)_Mask, (ITEM)_Helper)
+THEN
+NOT DB_HAG_Mask_PutOnMaskDialog(1);
+
+IF
+DialogEnded(HAG_HagLair_PutOnMask_9ff28737-20bc-67a9-8f79-b9171a3ea729, _ID)
+AND
+DB_DialogNPCs(_ID, _Helper, 1)
+AND
+DB_HAG_Hagmasks(_Mask, (ITEM)_Helper)
+AND
+IsEquipped(_Mask, 0)
+THEN
+SetOnStage(_Mask, 1);
+
+IF
+DialogEnded(HAG_HagLair_PutOnMask_9ff28737-20bc-67a9-8f79-b9171a3ea729, _ID)
+AND
+DB_DialogNPCs(_ID, _Helper, 1)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+DB_HAG_Hagmasks(_Mask, (ITEM)_Helper)
+AND
+IsEquipped(_Mask, 0)
+AND
+IsPartyMember((CHARACTER)_Player, 0, 1)
+THEN
+Equip((CHARACTER)_Player, _Mask);
+
+PROC
+PROC_HAG_PutOnMask((CHARACTER)_Character, (ITEM)_Mask, (ITEM)_Helper)
+AND
+QRY_SpeakerIsAvailable(_Character)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Character, "HAG_HagLair_PutOnMask")
+THEN
+DB_HAG_Mask_PutOnMaskDialog(1);
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_HagLair_PutOnMask_9ff28737-20bc-67a9-8f79-b9171a3ea729, 1);
+
+PROC
+PROC_HAG_PutOnMask((CHARACTER)_Character, (ITEM)_Mask, (ITEM)_Helper)
+AND
+NOT DB_HAG_Mask_PutOnMaskDialog(1)
+AND
+QRY_SpeakerIsAvailable(_Character, 1)
+THEN
+DB_HAG_Mask_PutOnMaskDialog(1);
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_Hag_AD_PutOnMask_9152e9f6-1b7c-a048-644f-07591e337ac6, 1);
+
+IF
+FlagSet(HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720, _, _)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+GetOwner(_Mask, _Character)
+AND
+IsEquipped(_Mask, 1)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo((CHARACTER)_Character, (STRING)_Status, (ITEM)_Mask);
+
+IF
+FlagSet(HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720, _, _)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+GetOwner(_Mask, _Character)
+AND
+IsEquipped(_Mask, 1)
+AND
+HasActiveStatus(_Character, "HAG_MASK_CONTROLIMMUNE", 1)
+THEN
+RemoveStatus(_Character, "HAG_MASK_CONTROLIMMUNE");
+
+IF
+StatusRemoved(_Character, _Status, _, _)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+DB_HAG_Mask_FreedFromControl(_Character);
+NOT DB_CustomDefeatedState(_Character, "HAG_Mask_Controlled");
+
+IF
+DB_PermaDefeated(_Character) // IF you die, that's more pressing than mind control.
+AND
+DB_HAG_Mask_FreedFromControl(_Character)
+THEN
+NOT DB_HAG_Mask_FreedFromControl(_Character);
+
+IF
+DB_HAG_Mask_FreedFromControl(_Character)
+AND
+NOT DB_CantTalk(_Character)
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet((CHARACTER)_Character, "HAG_MASK_CONTROLLED_Removed")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)HAG_Hag_PAD_FreedFromControl_fbb6ff16-76b3-1cc4-240d-a569bcf10a24 , _Character)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Character, "HAG_MASK_CONTROLLED_Removed")
+THEN
+NOT DB_HAG_Mask_FreedFromControl(_Character);
+
+IF
+Unequipped(_Mask, _Character)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+RemoveStatus(_Character, "HAG_MASK_HAGDEAD");
+RemoveStatus(_Character, "HAG_MASK");
+RemoveStatus(_Character, _Status);
+
+IF
+DB_Downed(_Character)
+AND
+DB_HAG_PossessedByMask(_Character,_)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+RemoveStatus(_Character, _Status);
+
+IF
+DB_KnockedOut(_Character)
+AND
+DB_HAG_PossessedByMask(_Character,_)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+RemoveStatus(_Character, _Status);
+
+IF
+StatusApplied(_Character, "HAG_MASK_ADDUMMY", _Mask, _)
+AND
+DB_HAG_Hagmasks((ITEM)_Mask, _Helper)
+AND
+Random(3, 1)
+THEN
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, _Helper);
+
+PROC
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper)
+THEN
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_Hag_AD_WearMask_7c9d42fd-1a59-5de3-8f32-4f1c34a9c25f, 0);
+
+PROC
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)_Dialog, _)
+AND
+DialogIsAutomated(_Dialog, 0)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Helper, _Character, 0, 0, 0, 0)
+THEN
+PROC_HAG_TeleportHagMaskADHelper((CHARACTER)_Character, (ITEM)_Helper);
+
+PROC
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)_Dialog, 0)
+AND
+DialogIsAutomated(_Dialog, 1)
+AND
+NOT DB_DialogNPCs(_, _Helper, _) //Check for whether they're participating in any other AD.
+AND
+NOT DB_DialogNPCs(_, _Character, _) //Check for whether they're participating in any other AD.
+THEN
+PROC_HAG_TeleportHagMaskADHelper((CHARACTER)_Character, (ITEM)_Helper);
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog, _Helper);
+
+PROC
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)_Dialog, 1)
+AND
+DialogIsAutomated(_Dialog, 1)
+AND
+NOT DB_DialogNPCs(_, _Helper, _) //Check for whether they're participating in any other AD.
+AND
+NOT DB_DialogNPCs(_, _Character, _) //Check for whether they're participating in any other AD.
+THEN
+PROC_HAG_TeleportHagMaskADHelper((CHARACTER)_Character, (ITEM)_Helper);
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog, _Character, _Helper);
+
+PROC
+PROC_HAG_TeleportHagMaskADHelper((CHARACTER)_Character, (ITEM)_Helper)
+AND
+Random(9, _RandomX)
+AND
+Random(9, _RandomZ)
+AND
+IntegerSubtract(5, _RandomX, _CenteredRandomX)
+AND
+IntegerSubtract(5, _RandomZ, _CenteredRandomZ)
+AND
+IntegerProduct(_CenteredRandomX, _CenteredRandomX, _SqRandomX)
+AND
+IntegerProduct(_CenteredRandomZ, _CenteredRandomZ, _SqRandomZ)
+AND
+IntegerSum(_SqRandomX, _SqRandomZ, _Length)
+AND
+_Length != 0
+AND
+IntegerToReal(_Length, _RealLength)
+AND
+IntegerToReal(_RandomX, _RealX)
+AND
+IntegerToReal(_RandomZ, _RealZ)
+AND
+RealDivide(_RealX, _RealLength, _NormX)
+AND
+RealDivide(_RealZ, _RealLength, _NormZ)
+AND
+RealProduct(_NormX, 2.0, _ScaledX)
+AND
+RealProduct(_NormZ, 2.0, _ScaledZ)
+AND
+GetPosition(_Character, _X, _Y, _Z)
+AND
+RealSum(_X, _ScaledX, _NewX)
+AND
+RealSum(_Z, _ScaledZ, _NewZ)
+AND
+RealSum(_Y, 2.0, _NewY)
+THEN
+TeleportToPosition(_Helper, _NewX, _NewY, _NewZ, "", 0);
+
+IF
+StatusRemoved(_Character, _Status, _, _)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+AND
+DB_HAG_PossessedByMask((CHARACTER)_Character,_Helper)
+THEN
+ClearFlag(HAG_Mask_State_PossessedByHag_07a0a684-b0e9-427b-9d8b-691470e2be1b, _Helper, 0);
+NOT DB_HAG_PossessedByMask((CHARACTER)_Character,(ITEM)_Helper);
+
+IF
+StatusApplied(_Character, _Status, _, _)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+AND
+GetEquippedItem((CHARACTER)_Character, "Helmet", _Mask)
+AND
+DB_HAG_Hagmasks((ITEM)_Mask, _Helper)
+THEN
+SetFlag(HAG_Mask_State_PossessedByHag_07a0a684-b0e9-427b-9d8b-691470e2be1b, _Helper, 0);
+DB_HAG_PossessedByMask((CHARACTER)_Character,(ITEM)_Helper);
+
+QRY
+QRY_HAG_HagControlInteractiveDialog((CHARACTER)_Character, (ITEM)_Mask)
+AND
+IsTagged(_Character, (TAG)PALADIN_6d85ab2d-5c23-498c-a61e-98f05a00177a, 1)
+AND
+QRY_OncePerUserAndNearbyPlayers_IsSet(_Character, "HAG_HagMaskControlDialog")
+AND
+QRY_OncePerUserAndNearbyPlayers(_Character, "HAG_HagMaskControlDialog_Paladin")
+AND
+QRY_SpeakerIsAvailable(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+THEN
+ApplyStatus(_Character, "HAG_MASK", -1.0, 1, _Mask);
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_HagLair_ControlledByMask_1361aa03-0f97-2d64-dfc2-49df99251431, 1);
+
+
+QRY
+QRY_HAG_HagControlInteractiveDialog((CHARACTER)_Character, (ITEM)_Mask)
+AND
+IsTagged(_Character, (TAG)PALADIN_6d85ab2d-5c23-498c-a61e-98f05a00177a, 1)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Character, "HAG_HagMaskControlDialog")
+AND
+QRY_OncePerUserAndNearbyPlayers(_Character, "HAG_HagMaskControlDialog_Paladin")
+AND
+QRY_SpeakerIsAvailable(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+THEN
+ApplyStatus(_Character, "HAG_MASK", -1.0, 1, _Mask);
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_HagLair_ControlledByMask_1361aa03-0f97-2d64-dfc2-49df99251431, 1);
+
+QRY
+QRY_HAG_HagControlInteractiveDialog((CHARACTER)_Character, (ITEM)_Mask)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Character, "HAG_HagMaskControlDialog")
+AND
+QRY_SpeakerIsAvailable(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+THEN
+ApplyStatus(_Character, "HAG_MASK", -1.0, 1, _Mask);
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_HagLair_ControlledByMask_1361aa03-0f97-2d64-dfc2-49df99251431, 1);
+
+IF
+DialogEnded(HAG_HagLair_ControlledByMask_1361aa03-0f97-2d64-dfc2-49df99251431, _ID)
+AND
+DB_DialogPlayers(_ID, _Character, 1)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+AND
+HasActiveStatus(_Character, _Status, 1)
+THEN
+DB_CustomDefeatedState(_Character, "HAG_Mask_Controlled");
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLLED", _Mask, _)
+THEN
+RealtimeObjectTimerLaunch(_Character, "HAG_Mask_Controlled", 1200);
+
+IF
+ObjectTimerFinished(_Character, "HAG_Mask_Controlled")
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+AND
+HasActiveStatus(_Character, _Status, 1)
+AND
+GetEquippedItem((CHARACTER)_Character, "Helmet", _Mask)
+AND
+DB_HAG_Hagmasks((ITEM)_Mask, _Helper)
+AND
+NOT QRY_HAG_HagControlInteractiveDialog((CHARACTER)_Character, (ITEM)_Mask)
+THEN
+PROC_HAG_DoHagMaskDialog((CHARACTER)_Character, (ITEM)_Helper, (DIALOGRESOURCE)HAG_Hag_AD_ControlledByMask_56be7720-731f-5b70-9a1e-f24860c10525, 1);
+DB_CustomDefeatedState(_Character, "HAG_Mask_Controlled");
+
+
+// Paladin-specific logic:
+
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLLED_PALADIN", _Mask, _)
+AND
+QRY_OncePerUserAndNearbyPlayers_IsSet((CHARACTER)_Character, "HAG_HagMaskControlDialog")
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Character, "HAG_HagMaskControlDialog_Paladin")
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+ApplyStatus(_Character, _Status, -1.0, 1, _Mask);
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLLED_PALADIN", _Mask, _)
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet((CHARACTER)_Character, "HAG_HagMaskControlDialog")
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+ApplyStatus(_Character, _Status, -1.0, 1, _Mask);
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLLED_PALADIN", _Mask, _)
+AND
+QRY_OncePerUserAndNearbyPlayers_IsSet((CHARACTER)_Character, "HAG_HagMaskControlDialog")
+AND
+QRY_OncePerUserAndNearbyPlayers_IsSet(_Character, "HAG_HagMaskControlDialog_Paladin")
+THEN
+PROC_TryAbilityCheck((CHARACTER)_Character, (GUIDSTRING)S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d, "Charisma", (DIFFICULTYCLASS)Act1_Hard_831e1fbe-428d-4f4d-bd17-4206d6efea35, "HAG_HagMaskControlDialog");
+
+QRY
+QRY_GLO_SkillCheck_CheckAdvantage(_Character, _, "HAG_HagMaskControlDialog")
+AND
+IsTagged(_Character, (TAG)PALADIN_ANCIENTS_7c89622b-4194-41df-b2ff-145a5056ee49, 1)
+THEN
+DB_QRYRTN_GLO_Skillcheck_CheckAdvantage(1);
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLLED_PALADIN", _Mask, _)
+THEN
+RemoveStatus(_Character, "HAG_MASK_CONTROLLED_PALADIN", _Character);
+
+PROC
+PROC_RollResult("HAG_HagMaskControlDialog", _Character, _, _Result)
+AND
+_Result != 1
+AND
+GetEquippedItem((CHARACTER)_Character, "Helmet", _Mask)
+AND
+DB_HAG_Hagmasks((ITEM)_Mask, _Helper)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+THEN
+ApplyStatus(_Character, _Status, -1.0, 1, _Mask);
+
+PROC
+PROC_RollResult("HAG_HagMaskControlDialog", _Character, _, 1)
+AND
+GetEquippedItem((CHARACTER)_Character, "Helmet", _Mask)
+AND
+DB_HAG_Hagmasks((ITEM)_Mask, _Helper)
+THEN
+ApplyStatus(_Character, "HAG_MASK_CONTROLIMMUNE", -1.0, 1, _Character);
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLIMMUNE", _, _)
+AND
+DB_GLO_HagMasks_PossessedStatus(_Status)
+AND
+HasActiveStatus(_Character, _Status, 1)
+THEN
+RemoveStatus(_Character, _Status, _Character);
+
+IF
+StatusApplied(_Character, "HAG_MASK_CONTROLIMMUNE", _, _)
+AND
+GetEquippedItem((CHARACTER)_Character, "Helmet", _Mask)
+AND
+DB_HAG_Hagmasks(_Mask, _Helper)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo(_Character, _Status, _Mask);
+
+
+IF
+FlagSet((FLAG)HAG_HagLair_Event_BecomeImmune_b7a93187-8b26-422d-e373-6b905f36ae52, _Character, _)
+THEN
+ClearFlag((FLAG)HAG_HagLair_Event_BecomeImmune_b7a93187-8b26-422d-e373-6b905f36ae52, _Character, 0);
+ApplyStatus(_Character, "HAG_MASK_CONTROLIMMUNE", -1.0, 1, _Character);
+
+// Handling of HAG_MASK_CONTROLIMMUNE removal on long rest
+IF
+StatusRemoved(_Character,"HAG_MASK_CONTROLIMMUNE",_,_)
+AND
+DB_InCamp((CHARACTER)_Character)
+AND
+NOT DB_Dead((CHARACTER)_Character)
+AND
+QRY_IsPartyMember(_Character, 1)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+GetOwner(_Mask, _Character)
+AND
+IsEquipped(_Mask, 1)
+AND
+QRY_GLO_HagMasks_GetStatus(_Character)
+AND
+DB_QRYRTN_GLO_HagMasks_GetStatus(_Status)
+THEN
+PROC_HAG_HagMask_SwitchStatusTo((CHARACTER)_Character, (STRING)_Status, (ITEM)_Mask);
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "GLO_Hag"

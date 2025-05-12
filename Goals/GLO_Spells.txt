@@ -1,0 +1,1193 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_Spells_WildMagic_MephitTemplate((GUIDSTRING)MEPHIT_Mud_WildMagic_3844ba99-4e84-4ae0-8cf6-33b981b8bbfa);
+DB_GLO_Spells_WildMagic_MephitTemplate((GUIDSTRING)MEPHIT_Magma_WildMagic_9cf75e67-e219-4787-a410-7b2df9fbe255);
+DB_GLO_Spells_WildMagic_MephitTemplate((GUIDSTRING)Cambion_Male_WildMagic_d9889d28-ca01-41f2-973e-275bbc8e2fe1);
+
+DB_GLO_StatusGroupCrime("SG_Polymorph","Polymorphed","Polymorphed_SelfReactOnEnd");
+DB_GLO_StatusGroupCrime("SG_Charmed","Charmed","Charmed_SelfReactOnEnd");
+DB_GLO_StatusGroupCrime("SG_Paralyzed","Paralyzed","Paralyzed_SelfReactOnEnd");
+DB_GLO_StatusGroupCrime("SG_Dominated","Dominated","");
+DB_GLO_StatusGroupCrime("SG_Mad","Assault_Maddened","Maddened_SelfReactOnEnd");
+
+DB_LinkedCrimes( "Assault", "Assault_Maddened" );
+DB_LinkedCrimes( "Assault", "Maddened_SelfReactOnEnd" );
+
+// 0 = don't register, 1 = do register
+DB_GLO_StatusGroupCrime_CharmedStart(0,"");
+DB_GLO_StatusGroupCrime_CharmedStart(1,"Charmed");
+DB_GLO_StatusGroupCrime_CharmedEnd(0,"");
+DB_GLO_StatusGroupCrime_CharmedEnd(1,"Charmed_SelfReactOnEnd");
+
+
+// The CROWN_OF_MADNESS status has the InitiateCombat flag, which results in the generation of an AttackedBy event.
+// We don't want to react to this because the NPC is under control of a Charm-like spell at this point.
+// Block all crime reactions rather than only Assault, because that's less hacky/likely to break and it is
+// explainable based on the status' nature.
+DB_Spell_StatusNeedsAssaultBlock("CROWN_OF_MADNESS");
+
+//REGION
+// If a dominated character can resume their behaviours and Osiris logic add to DB.
+// DB_GLO_Spells_DoNotTurnDominatedCharacterEvil(_Character)
+NOT DB_GLO_Spells_DoNotTurnDominatedCharacterEvil((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+// Statuses that should make characters permanently evil
+// DB_GLO_Spells_TurnCharactersEvilStatuses(_Status)
+NOT DB_GLO_Spells_TurnCharactersEvilStatuses("");
+
+DB_LinkedCrimes("Dominated", "Dominated_SelfReactOnEnd");
+DB_CrimeAttitudeChange("Dominated", -30);
+DB_CrimeAttitudeChange("Dominated_SelfReactOnEnd", -30);
+//END_REGION
+
+//REGION Ranger summon level-up
+DB_GLO_Spells_RangersCompanion_LevelChange(4);
+DB_GLO_Spells_RangersCompanion_LevelChange(5);
+DB_GLO_Spells_RangersCompanion_LevelChange(6);
+DB_GLO_Spells_RangersCompanion_LevelChange(7);
+DB_GLO_Spells_RangersCompanion_LevelChange(8);
+DB_GLO_Spells_RangersCompanion_LevelChange(9);
+DB_GLO_Spells_RangersCompanion_LevelChange(10);
+DB_GLO_Spells_RangersCompanion_LevelChange(11);
+DB_GLO_Spells_RangersCompanion_LevelChange(12);
+
+DB_GLO_Spells_RangersCompanion_Spell("RANGERS_COMPANION_BEAR", "Target_RangersCompanion_Bear");
+DB_GLO_Spells_RangersCompanion_Spell("RANGERS_COMPANION_BOAR", "Target_RangersCompanion_Boar");
+DB_GLO_Spells_RangersCompanion_Spell("RANGERS_COMPANION_GIANTSPIDER", "Target_RangersCompanion_GiantSpider");
+DB_GLO_Spells_RangersCompanion_Spell("RANGERS_COMPANION_RAVEN", "Target_RangersCompanion_Raven");
+DB_GLO_Spells_RangersCompanion_Spell("RANGERS_COMPANION_WOLF", "Target_RangersCompanion_Wolf");
+//END_REGION
+
+//REGION Seeming
+DB_GLO_SeemingStatuses("SEEMING_TIEFLING_MALE");
+DB_GLO_SeemingStatuses("SEEMING_TIEFLING_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_DROW_MALE");
+DB_GLO_SeemingStatuses("SEEMING_DROW_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_HUMAN_MALE");
+DB_GLO_SeemingStatuses("SEEMING_HUMAN_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_GITHYANKI_MALE");
+DB_GLO_SeemingStatuses("SEEMING_GITHYANKI_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_DWARF_MALE");
+DB_GLO_SeemingStatuses("SEEMING_DWARF_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_ELF_MALE");
+DB_GLO_SeemingStatuses("SEEMING_ELF_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_HALFELF_MALE");
+DB_GLO_SeemingStatuses("SEEMING_HALFELF_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_HALFLING_MALE");
+DB_GLO_SeemingStatuses("SEEMING_HALFLING_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_GNOME_MALE");
+DB_GLO_SeemingStatuses("SEEMING_GNOME_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_DRAGONBORN_MALE");
+DB_GLO_SeemingStatuses("SEEMING_DRAGONBORN_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_HALFORC_MALE");
+DB_GLO_SeemingStatuses("SEEMING_HALFORC_FEMALE");
+DB_GLO_SeemingStatuses("SEEMING_HUMAN_STRONG_MALE");
+DB_GLO_SeemingStatuses("SEEMING_HUMAN_STRONG_FEMALE");
+
+NOT DB_GLO_RandomDisguise("");
+//END_REGION
+
+//REGION Flaming sphere
+DB_GLO_Spells_FlamingSphere_Auras("FLAMING_SPHERE_AURA", "FlamingSphere_State");
+DB_GLO_Spells_FlamingSphere_Auras("FLAMING_SPHERE_AURA3", "FlamingSphere_State_3");
+DB_GLO_Spells_FlamingSphere_Auras("FLAMING_SPHERE_AURA4", "FlamingSphere_State_4");
+DB_GLO_Spells_FlamingSphere_Auras("FLAMING_SPHERE_AURA5", "FlamingSphere_State_5");
+DB_GLO_Spells_FlamingSphere_Auras("FLAMING_SPHERE_AURA6", "FlamingSphere_State_6");
+//END_REGION
+
+//REGION Triggering crime reactions on saving against hostile spells
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL","Assault");
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL_BANISHMENT","Assault");
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL_CHARM","Charmed");
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL_CHARM_SUBTLE","Charmed");
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL_DOMINATED","Dominated");
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL_POLYMORPHED","Polymorphed_Saved");
+//END_REGION
+KBSECTION
+//REGION Wild Magic supression
+PROC
+PROC_WildMagic_Supress((CHARACTER)_Character)
+THEN
+SetTag(_Character, (TAG)SORCERER_WILD_MAGIC_SUPRESSED_a3b7a422-4d28-413d-adc4-e7d2001e37f5);
+
+PROC
+PROC_WildMagic_Supress((CHARACTER)_Character)
+AND
+IsTagged(_Character,(TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52,1)
+THEN
+ClearTag(_Character,(TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52);
+
+PROC
+PROC_WildMagic_Guarantee((CHARACTER)_Character)
+THEN
+SetTag(_Character, (TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52);
+
+PROC
+PROC_WildMagic_Guarantee((CHARACTER)_Character)
+AND
+IsTagged(_Character,(TAG)SORCERER_WILD_MAGIC_SUPRESSED_a3b7a422-4d28-413d-adc4-e7d2001e37f5,1)
+THEN
+ClearTag(_Character,(TAG)SORCERER_WILD_MAGIC_SUPRESSED_a3b7a422-4d28-413d-adc4-e7d2001e37f5);
+
+IF
+RandomCastProcessed(_Character, _, _, _, _)
+AND
+IsTagged(_Character, (TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52, 1)
+THEN
+ClearTag(_Character, (TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52);
+
+PROC
+PROC_WildMagic_Normal((CHARACTER)_Character)
+AND
+IsTagged(_Character,(TAG)SORCERER_WILD_MAGIC_SUPRESSED_a3b7a422-4d28-413d-adc4-e7d2001e37f5,1)
+THEN
+ClearTag(_Character,(TAG)SORCERER_WILD_MAGIC_SUPRESSED_a3b7a422-4d28-413d-adc4-e7d2001e37f5);
+
+PROC
+PROC_WildMagic_Normal((CHARACTER)_Character)
+AND
+IsTagged(_Character,(TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52,1)
+THEN
+ClearTag(_Character,(TAG)SORCERER_WILD_MAGIC_GUARANTEED_4bac801e-9471-4f41-88bc-caa39e358c52);
+//END_REGION
+
+//REGION Wild Magic - Mephit Aggro All Hack
+IF
+TagSet(_Mephit,(TAG)MEPHIT_b875ad18-12ea-4f09-a19b-67988e2eeb73)
+AND
+GetTemplate(_Mephit,_MephitTemplate)
+AND
+DB_GLO_Spells_WildMagic_MephitTemplate(_MephitTemplate)
+THEN
+DB_GLO_Spells_WildMagic_Mephit((CHARACTER)_Mephit);
+
+IF
+TagSet(_Fiend,(TAG)FIEND_44be2f5b-f27e-4665-86f1-49c5bfac54ab)
+AND
+GetTemplate(_Fiend,_FiendTemplate)
+AND
+DB_GLO_Spells_WildMagic_MephitTemplate(_FiendTemplate)
+THEN
+DB_GLO_Spells_WildMagic_Mephit((CHARACTER)_Fiend);
+
+//Way to make wildmagic mephits aggro everything: If they see someone, become aggressive to their faction.
+IF
+Saw(_Mephit,_Enemy,_)
+AND
+DB_GLO_Spells_WildMagic_Mephit(_Mephit)
+AND
+NOT DB_PermaDefeated(_Enemy)
+AND
+GetFaction(_Enemy,_Faction)
+THEN
+PROC_SetRelationMutual((FACTION)GLO_Spells_WildMagic_Mephit_bba2487a-4c9d-4d51-96c5-c04c565b482b,_Faction,0);
+
+//Edge case: If an NPC changes faction AFTER the mephit saw it, reapply hostility.
+IF
+BaseFactionChanged(_Char,_,_Faction)
+AND
+DB_GLO_Spells_WildMagic_Mephit(_Mephit)
+AND
+DB_Sees(_Mephit,_Char)
+THEN
+PROC_SetRelationMutual((FACTION)GLO_Spells_WildMagic_Mephit_bba2487a-4c9d-4d51-96c5-c04c565b482b,_Faction,0);
+
+PROC
+PROC_StateSet_PermaDefeated(_Mephit)
+AND
+DB_GLO_Spells_WildMagic_Mephit((CHARACTER)_Mephit)
+THEN
+NOT DB_GLO_Spells_WildMagic_Mephit(_Mephit);
+//END_REGION
+
+//REGION Reacting to being charmed/polymorphed/...
+//Regular case: NPCs
+
+QRY
+QRY_Spells_GetStatusCrime((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status)
+AND
+DB_QRYRTN_Spells_GetStatusCrime(_OldChar,_OldCaster,_OldStatus,_OldStatusGroup,_OldStartCrime,_OldStopCrime)
+THEN
+NOT DB_QRYRTN_Spells_GetStatusCrime(_OldChar,_OldCaster,_OldStatus,_OldStatusGroup,_OldStartCrime,_OldStopCrime);
+
+QRY
+QRY_Spells_GetStatusCrime((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status)
+AND
+DB_GLO_StatusGroupCrime(_StatusGroup,_StartCrimeName,_StopCrimeName)
+AND
+NOT DB_QRYRTN_Spells_GetStatusCrime(_,_,_,_,_,_)
+AND
+IsStatusFromGroup(_Status,_StatusGroup,1)
+AND
+NOT QRY_Spells_GetCustomStatusGroupCrime(_Char,_Caster,_Status,_StatusGroup)
+THEN
+DB_QRYRTN_Spells_GetStatusCrime(_Char,_Caster,_Status,_StatusGroup,_StartCrimeName,_StopCrimeName);
+
+QRY
+QRY_Spells_GetStatusCrime((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Spells_GetCustomStatusGroupCrime((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,"SG_Charmed")
+AND
+IsStatusFromGroup(_Status,"SG_Mad",0)
+AND
+IsStatusFromGroup(_Status,"SG_Charmed_Subtle",_Subtle)
+AND
+// Only have crime reactions to Charm/Friends in hard modes
+CheckRulesetModifierString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,"HARD",_HardMode)
+AND
+DB_Negate(_Subtle,_NotSubtle)
+AND
+DB_LogicOr(_NotSubtle,_HardMode,_RegisterOnEnd)
+AND
+DB_GLO_StatusGroupCrime_CharmedStart(_NotSubtle,_StartCrimeName)
+AND
+DB_GLO_StatusGroupCrime_CharmedEnd(_RegisterOnEnd,_StopCrimeName)
+THEN
+DB_QRYRTN_Spells_GetStatusCrime(_Char,_Caster,_Status,"SG_Charmed",_StartCrimeName,_StopCrimeName);
+
+QRY
+QRY_Spells_GetCustomStatusGroupCrime((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,"SG_Charmed")
+AND
+IsStatusFromGroup(_Status,"SG_Mad",1)
+AND
+DB_GLO_StatusGroupCrime("SG_Mad",_StartCrimeName,_StopCrimeName)
+THEN
+DB_QRYRTN_Spells_GetStatusCrime(_Char,_Caster,_Status,"SG_Mad",_StartCrimeName,_StopCrimeName);
+
+IF
+StatusApplied(_Char,_Status,_Caster,_StoryActionID)
+AND
+DB_PartyMembers((CHARACTER)_Caster)
+AND
+NOT DB_PartyMembers((CHARACTER)_Char)
+AND
+NOT DB_Origins(_Char) // Origins should never hold a charmed/polymorphed grudge. (They join/leave the party too often to properly track it)
+AND
+QRY_Spells_GetStatusCrime(_Char,_Caster,_Status)
+AND
+DB_QRYRTN_Spells_GetStatusCrime(_Char,_Caster,_Status,_StatusGroup,_StartCrimeName,_StopCrimeName)
+AND
+IsCharacter(_Char,1)
+THEN
+PROC_Spells_CrimeReactTo_Status(_Char,_Caster,_Status,_StatusGroup,_StartCrimeName,_StopCrimeName,_StoryActionID);
+
+PROC
+PROC_Spells_CrimeReactTo_Status((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,(STRING)_StatusGroup,(STRING)_StartCrimeName,(STRING)_StopCrimeName,(INTEGER)_StoryActionID)
+AND
+_StartCrimeName != ""
+AND
+DB_SceneManager(_Char,_SceneName)
+THEN
+PROC_SceneManager_HandleViolence(_Char,_Caster,_SceneName,"Attacked",_StoryActionID);
+
+PROC
+PROC_Spells_CrimeReactTo_Status((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,(STRING)_StatusGroup,(STRING)_StartCrimeName,(STRING)_StopCrimeName,(INTEGER)_StoryActionID)
+AND
+_StopCrimeName != ""
+THEN
+DB_Spells_CrimeReactTo_OnEnd(_Char,_Caster,_Status,_StopCrimeName,_StoryActionID);
+
+PROC
+PROC_Spells_CrimeReactTo_Status((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,(STRING)_StatusGroup,(STRING)_StartCrimeName,(STRING)_StopCrimeName,(INTEGER)_StoryActionID)
+AND
+_StartCrimeName != ""
+AND
+_StartCrimeName != "Assault_Maddened"
+AND
+CrimeGetNewID(_CrimeID)
+AND
+GetPosition(_Char,_X,_Y,_Z)
+THEN
+PROC_CharacterRegisterCrimeWithPosition(_Caster,_StartCrimeName,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Char,_CrimeID);
+
+PROC
+PROC_Spells_CrimeReactTo_Status((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,(STRING)_StatusGroup,"Assault_Maddened",(STRING)_StopCrimeName,(INTEGER)_StoryActionID)
+THEN
+PROC_CRIME_TryRegisterAssaultLikeCrime(_Caster,_Char,_StoryActionID,"_Maddened");
+
+PROC
+PROC_Spells_CrimeReactTo_Status((CHARACTER)_Char,(CHARACTER)_Caster,(STRING)_Status,(STRING)_StatusGroup,(STRING)_StartCrimeName,(STRING)_StopCrimeName,(INTEGER)_StoryActionID)
+AND
+DB_Spell_StatusNeedsAssaultBlock(_Status)
+AND
+NOT DB_IgnoreAssault(_Char)
+THEN
+// So we don't generate any Assault crime to which other NPCs could react; they should react to the
+// Charm/Polymorphed crime instead
+DB_IgnoreAssault(_Char);
+DB_Spell_AddedIgnoreAssault(_Char,_Caster,_Status);
+
+// The attack is triggered by the application of the status' boosts, which (at least currently)
+// means that the StatusApplied event always arrives before the AttackedBy event
+IF
+AttackedBy(_Char,_,_Caster,_,_,"StatusEnter",_)
+AND
+// Edge case: multiple statuses that may trigger multiple attack events
+QRY_OnlyOnce_Reset("Spell_StatusEnterAssault")
+AND
+DB_Spell_AddedIgnoreAssault((CHARACTER)_Char,(CHARACTER)_Caster,_Status)
+AND
+QRY_OnlyOnce("Spell_StatusEnterAssault")
+THEN
+NOT DB_Spell_AddedIgnoreAssault(_Char,_Caster,_Status);
+PROC_Spell_ClearIgnoreAssaultIfNoStatusesLeft(_Char);
+
+PROC
+PROC_Spell_ClearIgnoreAssaultIfNoStatusesLeft((CHARACTER)_Char)
+AND
+NOT DB_Spell_AddedIgnoreAssault(_Char,_,_)
+THEN
+NOT DB_IgnoreAssault(_Char);
+
+IF
+StatusRemoved(_Char,_Status,_,_ApplyStoryActionID)
+AND
+IsStatusFromGroup(_Status,"SG_Mad",0)
+AND
+DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+AND
+IsPartyMember(_Char,1,0)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+GetPosition(_Char,_X,_Y,_Z)
+THEN
+NOT DB_Spells_CrimeReactTo_OnEnd(_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID);
+PROC_CharacterRegisterCrimeWithPosition(_Caster,_StopCrimeName,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Char,_CrimeID);
+
+IF
+StatusRemoved(_Char,_Status,_,_ApplyStoryActionID)
+AND
+IsStatusFromGroup(_Status,"SG_Mad",1)
+AND
+DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+AND
+DB_Is_InCombat(_Char,_CombatID)
+THEN
+DB_Spells_CharacterMaddenedByPlayer_ReactOnLeavingCombat((GUIDSTRING)_Char);
+
+IF
+StatusRemoved(_Char,_Status,_,_ApplyStoryActionID)
+AND
+IsStatusFromGroup(_Status,"SG_Mad",1)
+AND
+DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+AND
+NOT DB_Is_InCombat(_Char,_)
+AND
+IsPartyMember(_Char,1,0)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+GetPosition(_Char,_X,_Y,_Z)
+THEN
+NOT DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID);
+PROC_CharacterRegisterCrimeWithPosition(_Caster,_StopCrimeName,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Char,_CrimeID);
+
+IF
+LeftCombat(_Char,_)
+AND
+DB_Spells_CharacterMaddenedByPlayer_ReactOnLeavingCombat(_Char)
+AND
+DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+AND
+IsPartyMember(_Char,1,0)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+GetPosition(_Char,_X,_Y,_Z)
+THEN
+NOT DB_Spells_CharacterMaddenedByPlayer_ReactOnLeavingCombat(_Char);
+NOT DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID);
+PROC_CharacterRegisterCrimeWithPosition(_Caster,_StopCrimeName,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Char,_CrimeID);
+
+IF
+EnteredCombat(_Char,_)
+AND
+DB_Spells_CharacterMaddenedByPlayer_ReactOnLeavingCombat(_Char)
+AND
+DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+THEN
+NOT DB_Spells_CharacterMaddenedByPlayer_ReactOnLeavingCombat(_Char);
+NOT DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID);
+
+IF
+Deactivated(_Char)
+AND
+DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+THEN
+NOT DB_Spells_CrimeReactTo_OnEnd((CHARACTER)_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID);
+
+IF
+CharacterJoinedParty(_Char)
+AND
+DB_Spells_CrimeReactTo_OnEnd(_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID)
+THEN
+NOT DB_Spells_CrimeReactTo_OnEnd(_Char,_Caster,_Status,_StopCrimeName,_ApplyStoryActionID);
+
+//Special case: Origin Characters -> Charming them leads to disapproval.
+IF
+StatusApplied(_Char, _CharmStatus, _Caster, _)
+AND
+DB_PartyMembers((CHARACTER)_Caster)
+AND
+DB_Origins((CHARACTER)_Char)
+AND
+IsStatusFromGroup(_CharmStatus,"SG_Charmed",1)
+AND
+NOT QRY_GLO_Spells_IgnoreFriendlyFire(_Char)
+THEN
+DB_Spell_CharmedBy_FriendlyFire((CHARACTER)_Char,(CHARACTER)_Caster,_CharmStatus);
+
+QRY
+QRY_GLO_Spells_IgnoreFriendlyFire((CHARACTER)_Char)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+
+IF
+StatusRemoved(_Char, _CharmStatus, _, _)
+AND
+DB_Spell_CharmedBy_FriendlyFire((CHARACTER)_Char,(CHARACTER)_Caster,_CharmStatus)
+THEN
+NOT DB_Spell_CharmedBy_FriendlyFire(_Char,_Caster,_CharmStatus);
+PROC_ORI_FriendlyFire_React((CHARACTER)_Caster,(CHARACTER)_Char);
+
+// Safety in case we somehow missed the AttackedBy event for the status
+IF
+StatusRemoved(_Char, _Status, _, _)
+AND
+DB_Spell_AddedIgnoreAssault((CHARACTER)_Char,_Caster,_Status)
+THEN
+NOT DB_IgnoreAssault(_Char);
+NOT DB_Spell_AddedIgnoreAssault(_Char,_Caster,_Status);
+//END_REGION
+
+//REGION Registering crimes when victims succeed on saving throws of hostile spells that don't trigger crimes otherwise
+IF
+StatusApplied((CHARACTER)_Character,_Status,(CHARACTER)_Caster,_StoryID)
+AND
+DB_PartyMembers(_Caster)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+DB_CRIME_SavedAgainstHostileSpellStatuses(_Status,"Assault")
+AND
+IsCharacter(_Character,1)
+THEN
+PROC_CRIME_TryRegisterAssaultLikeCrime(_Caster,_Character,_StoryID,"");
+
+IF
+StatusApplied((CHARACTER)_Character,_Status,(CHARACTER)_Caster,_StoryID)
+AND
+DB_PartyMembers(_Caster)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+DB_CRIME_SavedAgainstHostileSpellStatuses(_Status,_Crime)
+AND
+_Crime != "Assault"
+AND
+_Status != "SAVED_AGAINST_HOSTILE_SPELL_CHARM_SUBTLE"
+AND
+IsCharacter(_Character,1)
+THEN
+PROC_Spells_CrimeReactTo_Status(_Character,_Caster,"","",_Crime,"",_StoryID);
+
+IF
+StatusApplied((CHARACTER)_Character,_Status,(CHARACTER)_Caster,_StoryID)
+AND
+DB_PartyMembers(_Caster)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+_Status == "SAVED_AGAINST_HOSTILE_SPELL_CHARM_SUBTLE"
+AND
+DB_CRIME_SavedAgainstHostileSpellStatuses("SAVED_AGAINST_HOSTILE_SPELL_CHARM_SUBTLE",_Crime)
+AND
+CheckRulesetModifierString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,"HARD",1)
+AND
+IsCharacter(_Character,1)
+THEN
+PROC_Spells_CrimeReactTo_Status(_Character,_Caster,"","",_Crime,"",_StoryID);
+//END_REGION
+
+
+//REGION Dominate Spells
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+NOT DB_Dominated(_Target)
+THEN
+DB_Dominated(_Target);
+PROC_StateSet_Dominated(_Target);
+ApplyStatus(_Target, "DOMINATED_TECHNICAL", -1.0, 1);
+
+IF
+DB_Dominated(_Target)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+THEN
+NOT DB_Dominated(_Target);
+PROC_StateCleared_Dominated(_Target);
+RemoveStatus(_Target, "DOMINATED_TECHNICAL");
+
+PROC
+PROC_StateSet_Dominated((GUIDSTRING)_Target)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StateCleared_Dominated((GUIDSTRING)_Target)
+THEN
+DB_NOOP(1);
+
+// Character casts a domination spell when they already had another character under their control with the same status.
+IF
+StatusApplied((CHARACTER)_Target, _Status, (CHARACTER)_Causee, _)
+AND
+IsStatusFromGroup(_Status, "SG_Dominated", 1)
+AND
+DB_GLO_Spells_DominatedCharacter(_PrevTarget, _Status, _Causee)
+AND
+_Target != _PrevTarget
+THEN
+RemoveStatus(_PrevTarget, _Status, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_Defeated(_Causee)
+AND
+DB_GLO_Spells_DominatedCharacter((CHARACTER)_Target, _Status, (CHARACTER)_Causee)
+THEN
+RemoveStatus(_Target, _Status, _Causee);
+
+// Target gets dominated status, starts following the causee.
+IF
+StatusApplied((CHARACTER)_Target, _Status, (CHARACTER)_Causee, _)
+AND
+IsStatusFromGroup(_Status, "SG_Dominated", 1)
+THEN
+PROC_GLO_Spells_DominatedCharacter(_Target, _Status, _Causee);
+
+PROC
+PROC_GLO_Spells_DominatedCharacter((CHARACTER)_Target, (STRING)_Status, (CHARACTER)_Causee)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _Status, _Causee)
+THEN
+DB_GLO_Spells_DominatedCharacter(_Target, _Status, _Causee);
+BlockNewCrimeReactions(_Target, 1);
+PROC_GLO_Spells_TryApplyDominatedOwnerEffect(_Causee, _Status);
+PROC_GLO_Spells_DominateEnableForceUpdate(_Target);
+
+PROC
+PROC_GLO_Spells_DominatedCharacter((CHARACTER)_Target, (STRING)_Status, (CHARACTER)_Causee)
+AND
+QRY_OverrideAnubisConfig(_Target, "GLO_DominatedCharacter") // Update anubis stack
+AND
+DB_QRYRTN_AnubisConfigOverrideIndex(_Index)
+THEN
+DB_GLO_Spells_DominatedCharacterConfigOverride(_Target, _Status, _Causee, _Index);
+
+PROC
+PROC_GLO_Spells_DominateEnableForceUpdate((CHARACTER)_Target)
+AND
+NOT DB_Is_InCombat(_Target, _)
+AND
+NOT DB_GLO_Spells_DominateForceUpdated(_Target)
+THEN
+DB_GLO_Spells_DominateForceUpdated(_Target);
+SetForceUpdate(_Target, 1);
+
+PROC
+PROC_GLO_Spells_DominateDisableForceUpdate((CHARACTER)_Target)
+AND
+DB_GLO_Spells_DominateForceUpdated(_Target)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+THEN
+NOT DB_GLO_Spells_DominateForceUpdated(_Target);
+SetForceUpdate(_Target, 0);
+
+PROC
+PROC_GLO_Spells_DominateDisableForceUpdate((CHARACTER)_Target)
+AND
+DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+DB_Is_InCombat(_Target, _)
+AND
+DB_GLO_Spells_DominateForceUpdated(_Target)
+THEN
+NOT DB_GLO_Spells_DominateForceUpdated(_Target);
+SetForceUpdate(_Target, 0);
+
+// Visual effect for the character who is controlling the target
+PROC
+PROC_GLO_Spells_TryApplyDominatedOwnerEffect((CHARACTER)_Causee, (STRING)_Status)
+AND
+DB_GLO_Spells_DominatedOwnerStatus(_Status, _OwnerStatus)
+AND
+HasAppliedStatus(_Causee, _OwnerStatus, 0)
+THEN
+ApplyStatus(_Causee, _OwnerStatus, -1.0);
+
+// Save the first position the target was before being dominated by any means.
+PROC
+PROC_GLO_Spells_DominatedCharacter((CHARACTER)_Target, (STRING)_Status, (CHARACTER)_Causee)
+AND
+NOT DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _, _, _)
+AND
+GetPosition(_Target, _X, _Y, _Z)
+THEN
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z);
+
+//REGION Domination status removed
+IF
+StatusRemoved((CHARACTER)_Target, _Status, _, _)
+AND
+DB_GLO_Spells_DominatedCharacter(_Target, _Status, _Causee)
+THEN
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _Status, _Causee);
+PROC_GLO_PaladinSpells_TryRemoveDominatedStatusOwnerEffect(_Causee, _Status);
+PROC_GLO_Spells_LostDominatedControl(_Target, _Status, _Causee);
+PROC_GLO_Spells_CheckIsStillDominated(_Target, _Causee);
+
+PROC
+PROC_GLO_Spells_CheckIsStillDominated((CHARACTER)_Target, (CHARACTER)_Causee)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+THEN
+PROC_GLO_Spells_DominateDisableForceUpdate(_Target);
+BlockNewCrimeReactions(_Target, 0);
+DB_GLO_Spells_DominatedBy(_Target, _Causee);
+RealtimeObjectTimerLaunch(_Target, "GLO_Dominated_ReactToCrime", 100);
+
+// Wait for the config file to be updated
+IF
+ObjectTimerFinished((CHARACTER)_Target, "GLO_Dominated_ReactToCrime")
+AND
+DB_GLO_Spells_DominatedBy(_Target, _Causee)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+GetPosition(_Target,_X,_Y,_Z)
+THEN
+NOT DB_GLO_Spells_DominatedBy(_Target, _Causee);
+PROC_CharacterRegisterCrimeWithPosition(_Causee, "Dominated_SelfReactOnEnd", NULL_00000000-0000-0000-0000-000000000000, _X, _Y, _Z, _Target, _CrimeID);
+
+PROC
+PROC_GLO_PaladinSpells_TryRemoveDominatedStatusOwnerEffect((CHARACTER)_Causee, (STRING)_Status)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_, _Status, _Causee)
+AND
+DB_GLO_Spells_DominatedOwnerStatus(_Status, _OwnerStatus)
+THEN
+RemoveStatus(_Causee, _OwnerStatus);
+
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _Status, _Causee)
+AND
+DB_GLO_Spells_TurnCharactersEvilStatuses(_Status)
+AND
+DB_PartyMembers(_Causee) // Only when dominated by party members
+AND
+NOT DB_PartOfTheTeam(_Target) // Don't make team characters permanently hostile
+AND
+NOT DB_GLO_Spells_DoNotTurnDominatedCharacterEvil(_Target)
+AND
+NOT DB_PermaDefeated(_Target)
+AND
+QRY_GLO_Spells_BecomesEvilAfterStatus(_Target, _Status)
+THEN
+DB_PermanentlyEvil(_Target);
+
+PROC
+PROC_GLO_Spells_LostDominatedControl((CHARACTER)_Target, (STRING)_Status, (CHARACTER)_Char)
+AND
+GetFaction(_Target, _Faction)
+AND
+QRY_GLO_Spells_BecomesEvilAfterStatus(_Target, _Status)
+THEN
+DB_GLO_Spells_WillBecomeEvil(_Target);
+
+// Make permanently hostile after dominated as needed.
+IF
+DB_GLO_Spells_WillBecomeEvil(_Target)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+NOT DB_PartyMembers(_Target)
+THEN
+PROC_SetIndividualRelation(_Target, (FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360, 0, "GLO_Dominated", 1);
+
+// Clear hostile relation again when re-dominated afterwards
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _, _Player)
+AND
+DB_Players(_Player)
+THEN
+PROC_ClearIndividualRelation(_Target, (FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360, "GLO_Dominated");
+
+// Reassign anubis config.
+PROC
+PROC_GLO_Spells_LostDominatedControl((CHARACTER)_Target, (STRING)_Status, (CHARACTER)_Char)
+AND
+NOT DB_GLO_Spells_WillBecomeEvil(_Target)
+AND
+DB_GLO_Spells_DominatedCharacterConfigOverride(_Target, _Status, _Char, _Index)
+THEN
+NOT DB_GLO_Spells_DominatedCharacterConfigOverride(_Target, _Status, _Char, _Index);
+PROC_RemoveAnubisConfigOverride(_Target, _Index);
+
+QRY
+QRY_GLO_Spells_BecomesEvilAfterStatus((CHARACTER)_Char, (STRING)_Status)
+AND
+DB_GLO_Spells_TurnCharactersEvilStatuses(_Status)
+AND
+NOT DB_GLO_Spells_DoNotTurnDominatedCharacterEvil(_Char)
+AND
+GetFaction(_Char, _Faction)
+AND
+NOT QRY_FactionHostilityBlacklisted(_Faction, 1)
+AND
+NOT QRY_IsPlayerFaction(_Faction)
+THEN
+DB_NOOP(1);
+
+// Prepare dominated character to return if they don't have to become evil.
+PROC
+PROC_GLO_Spells_LostDominatedControl((CHARACTER)_Target, (STRING)_Status, (CHARACTER)_Char)
+AND
+NOT DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _, _, _)
+AND
+NOT DB_GLO_Spells_WillBecomeEvil(_Target)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Target, "GLO_Spells_DominatedCharacterReadyToReturn");
+
+PROC
+PROC_ReadyToMoveOn_Failed(_Target, "GLO_Spells_DominatedCharacterReadyToReturn")
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z)
+THEN
+NOT DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z);
+
+//Avoids dominated characters to force-update when they are in combat
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+DB_Is_InCombat(_Target, _)
+THEN
+PROC_GLO_Spells_DominateDisableForceUpdate(_Target);
+
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+NOT DB_Is_InCombat(_Target, _)
+THEN
+RealtimeObjectTimerCancel(_Target, "GLO_Spells_DominateAfterCombatUpdate");
+RealtimeObjectTimerLaunch(_Target, "GLO_Spells_DominateAfterCombatUpdate", 500); // Give some time to update character's state
+
+// Only force-activate again if character was already active after the combat encounter. 
+// If the controller character is too far away we can end up with a skeleton force-updating in the background failing his pathfiding
+IF
+ObjectTimerFinished((CHARACTER)_Target, "GLO_Spells_DominateAfterCombatUpdate")
+AND
+IsActive(_Target, 1)
+THEN
+PROC_GLO_Spells_DominateEnableForceUpdate(_Target);
+
+// If creature wasn't force updated and player approaches it, start force-updating it.
+IF
+Activated((CHARACTER)_Target)
+AND
+DB_GLO_Spells_DominatedCharacter(_Target, _, _)
+AND
+NOT DB_GLO_Spells_DominateForceUpdated(_Target)
+THEN
+PROC_GLO_Spells_DominateEnableForceUpdate(_Target);
+//END_REGION
+
+// Any previously dominated characters left
+PROC
+PROC_LongRest()
+AND
+DB_GLO_Spells_DominatedCharacter(_Target, _Status, _Owner)
+THEN
+RemoveStatus(_Target, _Status, _Owner);
+
+// If character is close to the point of return move there.
+PROC
+PROC_ReadyToMoveOn(_Target, "GLO_Spells_DominatedCharacterReadyToReturn")
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z)
+AND
+GetDistanceToPosition(_Target, _X, _Y, _Z, _Dist)
+AND
+_Dist < 50
+THEN
+PROC_CharacterMoveToPosition(_Target, _X, _Y, _Z, "Run", "GLO_Spells_DominatedCharacterReturns");
+
+// If not then disappear out of sight and reappear.
+PROC
+PROC_ReadyToMoveOn(_Target, "GLO_Spells_DominatedCharacterReadyToReturn")
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z)
+AND
+GetDistanceToPosition(_Target, _X, _Y, _Z, _Dist)
+AND
+_Dist >= 50
+THEN
+PROC_DisappearOutOfSight(_Target, "Run", 1, "GLO_Spells_DominatedCharacterDisappears");
+
+IF
+EntityEvent((CHARACTER)_Target, "GLO_Spells_DominatedCharacterDisappears")
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z)
+THEN
+AppearOutOfSightToPosition(_Target, _X, _Y, _Z, NULL_00000000-0000-0000-0000-000000000000, 0, NULL_00000000-0000-0000-0000-000000000000, "GLO_Spells_DominatedCharacterAppears");
+
+IF
+EntityEvent((CHARACTER)_Target, "GLO_Spells_DominatedCharacterAppears")
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z)
+THEN
+PROC_CharacterMoveToPosition(_Target, _X, _Y, _Z, "Run", "GLO_Spells_DominatedCharacterReturns");
+
+IF
+EntityEvent((CHARACTER)_Target, "GLO_Spells_DominatedCharacterReturns")
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z)
+THEN
+NOT DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z);
+
+IF
+DB_PermaDefeated(_Target)
+AND
+DB_GLO_Spells_DominatedCharacterReturnTo((CHARACTER)_Target, _X, _Y, _Z)
+THEN
+NOT DB_GLO_Spells_DominatedCharacterReturnTo(_Target, _X, _Y, _Z);
+
+//Block assigned dialogues
+QRY
+QRY_SelectCustomDialog(_Target, _)
+AND
+DB_GLO_Spells_DominatedCharacter((CHARACTER)_Target, _, _)
+THEN
+SysClear("DB_SelectedDialog", 2);
+SysClear("DB_SelectedDialog", 3);
+SysClear("DB_SelectedDialog", 4);
+SysClear("DB_SelectedDialog", 5);
+SysClear("DB_SelectedDialog", 6);
+DB_SelectedDialog((DIALOGRESOURCE)CMB_AD_CombatFallback_300686d9-9f7e-c18d-9d64-3f176c78b98b, _Target);
+
+//REGION Waypoint teleport management
+PROC
+PROC_WaypointTeleported((CHARACTER)_Char, (TRIGGER)_Waypoint)
+AND
+DB_GLO_Spells_DominatedCharacter(_Target, _, _Char)
+AND
+NOT DB_Camp(_, _, _, _Waypoint) // Avoid teleporting to CAMP
+THEN
+TeleportTo(_Target, _Char);
+//END_REGION
+
+//REGION Dominated character PADs.
+// Keep track of last character controlled.
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _, _Causee)
+AND
+DB_GLO_Spells_PreviouslyDominatedPAD(_PrevTarget, _Causee)
+AND
+_Target != _PrevTarget
+THEN
+NOT DB_GLO_Spells_PreviouslyDominatedPAD(_PrevTarget, _Causee);
+
+IF
+DB_GLO_Spells_DominatedCharacter(_Target, _, _Causee)
+AND
+NOT DB_GLO_Spells_PreviouslyDominatedPAD(_Target, _Causee)
+THEN
+DB_GLO_Spells_PreviouslyDominatedPAD(_Target, _Causee);
+
+// Clear active PAD DB.
+PROC
+PROC_LongRest()
+AND
+DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Causee)
+THEN
+NOT DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Causee);
+
+// Fill with new characters to react to.
+PROC
+PROC_LongRest()
+AND
+DB_GLO_Spells_PreviouslyDominatedPAD(_Target, _Causee)
+THEN
+DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Causee);
+NOT DB_GLO_Spells_PreviouslyDominatedPAD(_Target, _Causee);
+
+// Start timer to define the window in during which players will react to
+PROC
+PROC_LongRest()
+THEN
+TimerCancel("GLO_Spells_DominatedPADWindow");
+TimerLaunch("GLO_Spells_DominatedPADWindow", 300000); // 5 minutes
+
+// If too much time passes clear active PAD DB.
+IF
+TimerFinished("GLO_Spells_DominatedPADWindow")
+AND
+DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Causee)
+THEN
+NOT DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Causee);
+
+// During combat if player is fighting against previously dominated character play PAD.
+IF
+TurnStarted((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_Is_InCombat(_Target, _CombatID)
+AND
+QRY_IsEnemy(_Player, _Target)
+THEN
+NOT DB_GLO_Spells_PreviouslyDominatedPAD_Active(_Target, _Player);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_Spells_PAD_DominatedCharacterCombat_9f53b503-8a9f-6d5b-b746-736510f781c9, _Player);
+//END_REGION
+//END_REGION
+
+//REGION Re-summon companion when it changes root
+IF
+LeveledUp(_Player)
+AND
+DB_Players(_Player)
+AND
+IsTagged(_Player, (TAG)RANGER_37a733c1-a862-4157-b92a-9cff46232c6a, 1)
+AND
+GetLevel(_Player, _Level)
+AND
+DB_GLO_Spells_RangersCompanion_LevelChange(_Level)
+AND
+DB_PlayerSummons(_Summon)
+AND
+CharacterGetOwner(_Summon, _Player)
+AND
+DB_GLO_Spells_RangersCompanion_Spell(_Status, _Spell)
+AND
+HasActiveStatus(_Summon, _Status, 1)
+AND
+GetPosition(_Summon, _X, _Y, _Z)
+AND
+GetDistanceToPosition(_Player, _X, _Y, _Z, _Dist)
+AND
+HasLineOfSight(_Player, _Summon, _CanTargetSummon)
+THEN
+PROC_GLO_Spells_Resummon(_Player, _Spell, _X, _Y, _Z, _Dist, _CanTargetSummon);
+
+PROC
+PROC_GLO_Spells_Resummon((CHARACTER)_Player, (STRING)_Spell, (REAL)_X, (REAL)_Y, (REAL)_Z, (REAL)_Dist, 1)
+AND
+_Dist <= 18.0
+THEN
+DB_GLO_Spells_Resummoned(1);
+UseSpellAtPosition(_Player, _Spell, _X, _Y, _Z);
+
+PROC
+PROC_GLO_Spells_Resummon((CHARACTER)_Player, (STRING)_Spell, (REAL)_, (REAL)_, (REAL)_, (REAL)_Dist, (INTEGER)_CanTargetSummon)
+AND
+NOT DB_GLO_Spells_Resummoned(1)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+THEN
+UseSpellAtPosition(_Player, _Spell, _X, _Y, _Z);
+
+PROC
+PROC_GLO_Spells_Resummon((CHARACTER)_Player, (STRING)_Spell, (REAL)_, (REAL)_, (REAL)_, (REAL)_Dist, (INTEGER)_CanTargetSummon)
+AND
+DB_GLO_Spells_Resummoned(1)
+THEN
+NOT DB_GLO_Spells_Resummoned(1);
+
+//END_REGION
+
+//REGION Seeming
+
+IF
+StatusApplied(_Target, "SEEMING", _Caster, _)
+AND
+QRY_GetRandom("DB_GLO_SeemingStatuses", 1, "DB_GLO_RandomDisguise")
+AND
+DB_GLO_RandomDisguise((STRING)_Disguise)
+THEN
+ApplyStatus(_Target,_Disguise,-1.0,0,_Caster);
+//END_REGION
+
+//REGION PactOfTheBlade
+
+IF
+CastedSpell(_Caster,"Shout_PactOfTheBlade_Bind",_,_,_)
+AND
+GetItemByTagInInventory("PACT_OF_THE_BLADE_be460271-537a-4443-a9b5-6c6c6a005ab3",_Caster,_Item)
+THEN
+RequestDelete(_Item);
+//END_REGION
+
+//REGION PactOfTheBladeHexblade
+
+IF
+CastedSpell(_Caster,"Shout_Hexblade_Bind",_,_,_)
+AND
+GetItemByTagInInventory("PACT_OF_THE_BLADE_be460271-537a-4443-a9b5-6c6c6a005ab3",_Caster,_Item)
+THEN
+RequestDelete(_Item);
+//END_REGION
+
+//REGION TransmutationWizard
+IF
+TemplatesCombined(_Extract1,_Extract2,_,_,_,_Player,_Result)
+AND
+IsTagged(_Player,(TAG)DOUBLE_ALCHEMY_648a06ce-8eb0-4905-b4b8-6724df91a5f5,1)
+AND
+IsTagged(_Extract1,(TAG)ALCH_EXTRACT_85b58b89-c881-43c2-bbbe-7c8a0b3bf981,1)
+AND
+IsTagged(_Extract2,(TAG)ALCH_EXTRACT_85b58b89-c881-43c2-bbbe-7c8a0b3bf981,1)
+AND
+GetTemplate(_Result,_ResultTemplate)
+THEN
+PROC_TrySkillCheck((CHARACTER)_Player,(GUIDSTRING)_ResultTemplate,"Medicine",(DIFFICULTYCLASS)DC_Legacy_15_bddbb9b8-a242-4c3e-a2eb-3fd274c0c539,"GLO_AlchemyCheck");
+
+PROC 
+PROC_RollResult("GLO_AlchemyCheck", _Player, _ResultTemplate, 1)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+AND
+CreateAt(_ResultTemplate, _X, _Y, _Z, 0, 0, "", _Duplicate)
+THEN
+ToInventory((ITEM)_Duplicate, _Player, 1, 1, 0);
+//END_REGION
+
+//REGION Moonbeam tracking
+IF
+TagSet((ITEM)_Moonbeam, (TAG)MOONBEAM_26713098-eed9-4235-ace9-f8f196f9b60a)
+AND
+NOT DB_GLO_Moonbeams_BlockMoonbeam(_Moonbeam) // For cases in which script tries to block a moonbeam before the TagSet is thrown (see Shadowcurse)
+AND
+GetOwner(_Moonbeam, _Owner)
+AND
+DB_CurrentLevel(_Level)
+THEN
+DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level);
+
+IF
+TagSet((ITEM)_Moonbeam, (TAG)MOONBEAM_26713098-eed9-4235-ace9-f8f196f9b60a)
+AND
+DB_GLO_Moonbeams_BlockMoonbeam(_Moonbeam)
+AND
+GetOwner(_Moonbeam, _Owner)
+THEN
+NOT DB_GLO_Moonbeams_BlockMoonbeam(_Moonbeam);
+PROC_GLO_BreakConcentration(_Owner);
+
+IF
+DestroyedBy(_Moonbeam, _, _, _)
+AND
+DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level)
+THEN
+NOT DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level);
+NOT DB_GLO_Moonbeams_BlockMoonbeam(_Moonbeam);
+
+//Moving between levels will destroy moonbeam items. In this case break concentration
+IF
+LevelUnloading(_Level)
+AND
+DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level)
+THEN
+NOT DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level);
+PROC_GLO_BreakConcentration(_Owner);
+
+// When a level becomes unreachable DestroyedBy events will never be thrown for the moonbeams in them.
+// Clear DBs for those levels.
+PROC
+PROC_LevelBecameUnreachable(_Level)
+AND
+DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level)
+THEN
+NOT DB_GLO_Moonbeams(_Moonbeam, _Owner, _Level);
+NOT DB_GLO_Moonbeams_BlockMoonbeam(_Moonbeam);
+
+PROC
+PROC_GLO_Moonbeams_RemoveMoonbeamsFor((GUIDSTRING)_Caster)
+AND
+DB_GLO_Moonbeams(_, _Owner, _)
+THEN
+PROC_GLO_BreakConcentration(_Owner);
+
+//END_REGION
+//REGION Flaming Sphere
+// Add sphere to DB so we can track it leaving and entering combat. 
+// We don't turn the sphere off by default when it is first summoned, as the player might intend to initiate combat with it.
+IF
+StatusApplied(_FlamingSphere, _StatusAura, _, _)
+AND
+DB_GLO_Spells_FlamingSphere_Auras(_StatusAura, _Passive)
+AND 
+NOT DB_GLO_Spells_FlamingSpheres(_FlamingSphere, _StatusAura)
+THEN
+DB_GLO_Spells_FlamingSpheres(_FlamingSphere, _StatusAura);
+
+// Remove tracking of sphere after it has died/timed out
+PROC
+PROC_StateSet_PermaDefeated(_FlamingSphere)
+AND
+DB_GLO_Spells_FlamingSpheres(_FlamingSphere, _StatusAura)
+THEN
+NOT DB_GLO_Spells_FlamingSpheres(_FlamingSphere, _StatusAura);
+
+PROC
+PROC_StateSet_PermaDefeated(_FlamingSphere)
+AND
+DB_GLO_Spells_FlamingSphere_AuraToggled(_FlamingSphere)
+THEN
+NOT DB_GLO_Spells_FlamingSphere_AuraToggled(_FlamingSphere);
+
+// Turn on aura when sphere enters combat and the aura was automatically turned off
+IF
+EnteredCombat(_FlamingSphere, _)
+AND
+DB_GLO_Spells_FlamingSphere_AuraToggled((CHARACTER)_FlamingSphere)
+AND
+DB_GLO_Spells_FlamingSpheres(_FlamingSphere, _StatusAura)
+AND
+HasActiveStatus(_FlamingSphere, _StatusAura, 0)
+AND
+DB_GLO_Spells_FlamingSphere_Auras(_StatusAura, _Passive)
+THEN
+TogglePassive(_FlamingSphere, _Passive);
+NOT DB_GLO_Spells_FlamingSphere_AuraToggled(_FlamingSphere);
+
+// Turn off aura when sphere leaves combat
+IF
+LeftCombat(_FlamingSphere, _)
+AND
+DB_GLO_Spells_FlamingSpheres((CHARACTER)_FlamingSphere, _StatusAura)
+AND
+HasActiveStatus(_FlamingSphere, _StatusAura, 1)
+AND
+DB_GLO_Spells_FlamingSphere_Auras(_StatusAura, _Passive)
+THEN
+TogglePassive(_FlamingSphere, _Passive);
+DB_GLO_Spells_FlamingSphere_AuraToggled(_FlamingSphere);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,128 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRIME_LookAtStatus("CRIME_DISTRACTION", "Distraction");
+DB_CRIME_LookAtStatus("ENTHRALL_AURA", "Enthralled");
+KBSECTION
+//REGION Distraction
+IF
+StatusApplied(_Object,"CRIME_DISTRACTION",_,_)
+AND
+IsItem(_Object,1)
+AND
+GetOwner((ITEM)_Object,_Char)
+THEN
+PROC_CRIME_Distraction(_Object,_Char,NULL_00000000-0000-0000-0000-000000000000,"Distraction");
+
+IF
+StatusApplied(_Object,"CRIME_DISTRACTION",_,_)
+AND
+IsCharacter(_Object,1)
+AND
+NOT DB_Players((CHARACTER)_Object)
+AND
+CharacterGetOwner((CHARACTER)_Object,_Char)
+THEN
+PROC_CRIME_Distraction(_Object,_Char,NULL_00000000-0000-0000-0000-000000000000,"Distraction");
+
+IF
+StatusApplied(_Object,"CRIME_DISTRACTION",_,_)
+AND
+DB_Players((CHARACTER)_Object)
+THEN
+PROC_CRIME_Distraction(_Object,_Object,NULL_00000000-0000-0000-0000-000000000000,"Distraction");
+//END_REGION
+
+//REGION Enthrall
+IF
+StatusApplied(_Object,"ENTHRALL_AURA",_Caster,_)
+AND
+IsCharacter(_Object,1)
+AND
+NOT DB_Players((CHARACTER)_Object)
+THEN
+PROC_CRIME_Distraction(_Object,(CHARACTER)_Caster,(CHARACTER)_Object,"Enthralled");
+//END_REGION
+
+//REGION Common helpers
+PROC
+PROC_CRIME_Distraction((GUIDSTRING)_DistractionEvidence,(CHARACTER)_Caster,(CHARACTER)_Victim,(STRING)_DisturbanceName)
+AND
+NOT DB_CRIME_LookAt(_,_DisturbanceName,_DistractionEvidence,_Caster)
+AND
+DB_Players(_Char)
+AND
+GetPosition(_DistractionEvidence,_X,_Y,_Z)
+AND
+CrimeGetNewID(_ID)
+THEN
+DB_CRIME_LookAt(_ID,_DisturbanceName,_DistractionEvidence,_Caster);
+PROC_CharacterRegisterCrimeWithPosition(_Caster,_DisturbanceName,_DistractionEvidence,_X,_Y,_Z,_Victim,_ID);
+
+IF
+StatusRemoved(_DistractionEvidence,_Status,_,_)
+AND
+DB_CRIME_LookAtStatus(_Status,_DisturbanceName)
+AND
+DB_CRIME_LookAt(_ID,_DisturbanceName,_DistractionEvidence,_Caster)
+THEN
+PROC_CRIME_StopForAllCriminals(_ID);
+// Already clear here rather than waiting for PROC_CRIME_Finished,
+// so that in case the status got removed because it got re-applied
+// (e.g. castin Enthrall on an already enthralled NPC) we still
+// register a new disturbance even though the OnCrimeResolved event
+// for the previous one hasn't arrived yet (and hence PROC_CRIME_Finished
+//  hasn't been called yet)
+NOT DB_CRIME_LookAt(_ID,_DisturbanceName,_DistractionEvidence,_Caster);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_ID)
+AND
+DB_CRIME_LookAt(_ID,_DisturbanceName,_DistractionEvidence,_Caster)
+THEN
+NOT DB_CRIME_LookAt(_ID,_DisturbanceName,_DistractionEvidence,_Caster);
+//END_REGION
+
+//REGION Minor Illusion
+IF
+StatusApplied(_Entity, "MINOR_ILLUSION", _, _)
+THEN
+RealtimeObjectTimerLaunch(_Entity,"CRIME_Distraction_SetOwnerFrameDelay",0);
+
+IF
+ObjectTimerFinished(_Character,"CRIME_Distraction_SetOwnerFrameDelay")
+AND
+IsCharacter(_Character, 1)
+AND
+CharacterGetOwner((CHARACTER)_Character,_Owner)
+THEN
+ApplyStatus(_Character,"CRIME_DISTRACTION",-1.0,1,_Character);
+PROC_CRIME_Distraction(_Character,(CHARACTER)_Owner,NULL_00000000-0000-0000-0000-000000000000,"Distraction");
+
+IF
+ObjectTimerFinished(_Item,"CRIME_Distraction_SetOwnerFrameDelay")
+AND
+IsItem(_Item, 1)
+AND
+GetOwner((ITEM)_Item,_Owner)
+THEN
+ApplyStatus(_Item,"CRIME_DISTRACTION",-1.0,1,_Item);
+PROC_CRIME_Distraction(_Item,(CHARACTER)_Owner,NULL_00000000-0000-0000-0000-000000000000,"Distraction");
+
+IF
+StatusRemoved(_Character,"CRIME_DISTRACTION",_,_)
+AND
+GetTemplate(_Character,Cat_MinorIllusion_a4d03902-0382-4f88-866d-3bb2225a69a3)
+THEN
+Die(_Character, DEATHTYPE.Lifetime, _Character, 0, 1, 0.0);
+
+IF
+RollResult("STATUS_CombatDistraction", _NPC, _Distraction, 1, _, _)
+THEN
+RemoveStatus(_Distraction, "CRIME_DISTRACTION", _NPC); 
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

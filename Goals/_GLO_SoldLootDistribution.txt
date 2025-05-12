@@ -1,0 +1,528 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Useful loot sold by players to NPCs get distributed across guards and optionally other NPCs so they can equip it.
+
+// Level - Pool name -  distributor - distributor's stash container - trigger in which the distributor must be - trigger in which the chest must be
+NOT DB_LootDistribution_Distributor("","",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+// Pool name - character that can receive things from distributors in this pool
+NOT DB_LootDistribution_Receiver("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_LootDistribution_RandomPoolEntry("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+DB_LootDistribution_Slot(0,"Melee Main Weapon");
+DB_LootDistribution_Slot(1,"Ranged Main Weapon");
+KBSECTION
+//REGION Always trigger on region swap or long rest
+QRY
+QRY_LootDistribution_Valid((STRING)_Level,(CHARACTER)_Distributor,(ITEM)_StashContainer,(TRIGGER)_DistributorTrigger,(TRIGGER)_StashTrigger)
+AND
+DB_CurrentLevel(_Level)
+AND
+NOT DB_Defeated(_Distributor)
+AND
+NOT DB_OffStage(_Distributor)
+AND
+// Didn't go to another level
+Exists(_Distributor,1)
+AND
+IsDestroyed(_StashContainer,0)
+AND
+GetRegion(_Distributor,_Level)
+AND
+Exists(_DistributorTrigger,1)
+AND
+IsInTrigger(_Distributor,_DistributorTrigger,1)
+AND
+Exists(_StashTrigger,1)
+AND
+IsInTrigger(_StashContainer,_StashTrigger,1)
+AND
+IsInInventory(_StashContainer,0)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_LongRestOrLevelUnloading((STRING)_)
+THEN
+PROC_LootDistribution_Trigger();
+
+// Collect active containers with items to distribute
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_ActiveContainer(_Pool,_StashContainer)
+THEN
+NOT DB_LootDistribution_ActiveContainer(_Pool,_StashContainer);
+
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_ActiveDistributor(_Pool,_Distributor)
+THEN
+NOT DB_LootDistribution_ActiveDistributor(_Pool,_Distributor);
+
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_Distributor(_Level,_Pool,_Distributor,_StashContainer,_DistributorTrigger,_StashTrigger)
+AND
+QRY_LootDistribution_Valid(_Level,_Distributor,_StashContainer,_DistributorTrigger,_StashTrigger)
+THEN
+DB_LootDistribution_ActiveContainer(_Pool,_StashContainer);
+DB_LootDistribution_ActiveDistributor(_Pool,_Distributor);
+//END_REGION
+
+//REGION Track items traded to distributor
+QRY
+QRY_LootDistribution_IsDistributable((ITEM)_Item)
+AND
+IsWeapon(_Item,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_LootDistribution_IsDistributable((ITEM)_Item)
+AND
+IsConsumable(_Item,1)
+THEN
+DB_NOOP(1);
+
+// Only items sold at half price or lower are distributed (traders have to live too!)
+PROC
+PROC_EvaluateTradeDeal((CHARACTER)_Player,(CHARACTER)_Distributor,(INTEGER)_PlayerValue,(INTEGER)_DistributorValue)
+AND
+DB_LootDistribution_Distributor_WillDistribute(_Player,_Distributor)
+THEN
+NOT DB_LootDistribution_Distributor_WillDistribute(_Player,_Distributor);
+
+PROC
+PROC_EvaluateTradeDeal((CHARACTER)_Player,(CHARACTER)_Distributor,(INTEGER)_PlayerValue,(INTEGER)_DistributorValue)
+AND
+IntegerToReal(_PlayerValue,_PlayerRealValue)
+AND
+IntegerToReal(_DistributorValue,_DistributorRealValue)
+AND
+QRY_LootDistribution_DistributorProfitRatioOkay(_PlayerRealValue,_DistributorRealValue)
+THEN
+DB_LootDistribution_Distributor_WillDistribute(_Player,_Distributor);
+
+QRY
+QRY_LootDistribution_DistributorProfitRatioOkay((REAL)_PlayerValue,(REAL)_DistributorValue)
+AND
+_DistributorValue == 0.0
+AND
+_PlayerValue > 0.0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_LootDistribution_DistributorProfitRatioOkay((REAL)_PlayerValue,(REAL)_DistributorValue)
+AND
+_DistributorValue != 0.0
+AND
+RealDivide(_PlayerValue,_DistributorValue,_DistributorProfitRatio)
+AND
+_DistributorProfitRatio >= 2.0
+THEN
+DB_NOOP(1);
+
+IF
+MovedFromTo(_Item,(CHARACTER)_Player,(CHARACTER)_Distributor,1)
+AND
+DB_LootDistribution_Distributor_WillDistribute(_Player,_Distributor)
+AND
+DB_LootDistribution_Distributor(_Level,_Pool,_Distributor,_StashContainer,_DistributorTrigger,_StashContainerTrigger)
+AND
+QRY_LootDistribution_Valid(_Level,_Distributor,_StashContainer,_DistributorTrigger,_StashContainerTrigger)
+AND
+IsItem(_Item,1)
+AND
+IsStoryItem((ITEM)_Item,0)
+AND
+QRY_LootDistribution_IsDistributable(_Item)
+AND
+GetStackAmount(_Item,_Amount,_)
+THEN
+DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount);
+
+
+IF
+RemovedFrom((GUIDSTRING)_Item,(GUIDSTRING)_Distributor)
+AND
+DB_LootDistribution_Distributor_Gained(_Pool,(CHARACTER)_Distributor,(ITEM)_Item,_Amount)
+AND
+QRY_IsExistingItem(_Item,1)
+AND
+GetStackAmount(_Item,_RemovedAmount,_)
+AND
+IntegerSubtract(_Amount,_RemovedAmount,_NewAmount)
+THEN
+NOT DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount);
+DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_NewAmount);
+
+// Could be done by AI during combat after disarming
+IF
+Equipped(_Item,_Distributor)
+AND
+DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount)
+THEN
+NOT DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount);
+
+IF
+DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,0)
+THEN
+NOT DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,0);
+
+
+
+//END_REGION
+
+//REGION Stash container with items to hand out
+// Prevents culling by trade inventory regeneration etc (+ free gameplay)
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_ActiveDistributor(_Pool,_Distributor)
+AND
+DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount)
+AND
+IsInInventoryOf(_Item,_Distributor,1)
+AND
+DB_LootDistribution_Distributor(_Level,_Pool,_Distributor,_StashContainer,_DistributorTrigger,_StashContainerTrigger)
+THEN
+ToInventory(_Item,_StashContainer,_Amount,0,0);
+// Already set here so we can distribute immediately (without waiting for the AddedTo event)
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item);
+
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount)
+AND
+NOT DB_Defeated(_Distributor)
+THEN
+NOT DB_LootDistribution_Distributor_Gained(_Pool,_Distributor,_Item,_Amount);
+
+
+IF
+AddedTo(_Item,_StashContainer, _)
+AND
+DB_LootDistribution_Distributor(_Level,_Pool,_Distributor,(ITEM)_StashContainer,_DistributorTrigger,_StashContainerTrigger)
+AND
+QRY_IsExistingItem(_Item,1)
+AND
+// Can happen if multiple distributors use the same stash container
+NOT DB_LootDistribution_InPoolStash(_Pool,_StashContainer,(ITEM)_Item)
+AND
+QRY_LootDistribution_Valid(_Level,_Distributor,_StashContainer,_DistributorTrigger,_StashContainerTrigger)
+THEN
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item);
+
+QRY
+QRY_LootDistribution_ItemInPool((ITEM)_Item,(STRING)_Pool)
+AND
+DB_LootDistribution_Distributor(_Level,_Pool,_Distributor,_StashContainer,_,_)
+AND
+IsInInventoryOf(_Item,_Distributor,_OnDistributor)
+AND
+IsInInventoryOf(_Item,_StashContainer,_InContainer)
+AND
+DB_LogicOr(_OnDistributor,_InContainer,1)
+THEN
+DB_NOOP(1);
+
+IF
+RemovedFrom(_Item,_)
+AND
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,(ITEM)_Item)
+AND
+NOT QRY_LootDistribution_ItemInPool(_Item,_Pool)
+THEN
+NOT DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item);
+
+IF
+DestroyedBy(_Item,_,_,_)
+AND
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item)
+THEN
+NOT DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item);
+
+IF
+StackedWith(_Item1,_Item2)
+AND
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item1)
+THEN
+NOT DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item1);
+
+
+//END_REGION
+
+//REGION Build receiver candidate lists
+QRY
+QRY_LootDistribution_NothingToDistribute((STRING)_Pool)
+AND
+NOT DB_LootDistribution_InPoolStash(_Pool,_,_)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_Pool_CandidateList(_Pool,_NPC)
+THEN
+NOT DB_LootDistribution_Pool_CandidateList(_Pool,_NPC);
+
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_Pool_Processed(_Pool)
+THEN
+NOT DB_LootDistribution_Pool_Processed(_Pool);
+
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_ActiveContainer(_Pool,_StashContainer)
+AND
+NOT QRY_LootDistribution_NothingToDistribute(_Pool)
+AND
+// Can have multiple stash containers per pool, so don't collect more than once
+NOT DB_LootDistribution_Pool_Processed(_Pool)
+AND
+DB_LootDistribution_Receiver(_Pool,_NPC)
+AND
+NOT DB_Defeated(_NPC)
+AND
+// This would wreak havoc with getting equipped weapons and calculating appropriateness
+HasActiveStatusWithGroup(_NPC,"SG_Polymorph_BeastShape_NPC",0)
+THEN
+DB_LootDistribution_Pool_CandidateList(_Pool,_NPC);
+DB_LootDistribution_Pool_Processed(_Pool);
+
+// Randomise NPC order so not always the same NPCs get the best stuff
+// The normal way to shuffle is to take two random entries and exchange
+// those, but that's not possible in Osiris. We can however take a random
+// entry and place it at the end.
+PROC
+PROC_LootDistribution_Trigger()
+AND
+SysCount("DB_LootDistribution_Pool_CandidateList",2,_Count)
+AND
+_Count != 0
+AND
+// Compensate for the fact that we're not switching two random elements,
+// but pick one and move it to the end
+IntegerProduct(_Count,2,_Double)
+AND
+// Don't overdo it in case there are lots of receivers
+IntegerMin(_Double,50,_ShuffleCount)
+AND
+QRY_DoNTimes(_ShuffleCount)
+AND
+DB_QRY_RTN_DoNTimes(_)
+AND
+QRY_GetRandom("DB_LootDistribution_Pool_CandidateList",2,"DB_LootDistribution_RandomPoolEntry")
+AND
+DB_LootDistribution_RandomPoolEntry(_Pool,_NPC)
+THEN
+NOT DB_LootDistribution_Pool_CandidateList(_Pool,_NPC);
+DB_LootDistribution_Pool_CandidateList(_Pool,_NPC);
+//END_REGION
+
+//REGION Hand out weapons
+// Process pool once if at least one distributor is available
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_Pool_CandidateList(_Pool,_NPC)
+AND
+NOT DB_Defeated(_NPC)
+THEN
+PROC_LootDistribution_SelectBestWeaponForNPC(_Pool,_NPC);
+
+//Record score of currently equipped weapons
+PROC
+PROC_LootDistribution_SelectBestWeaponForNPC((STRING)_Pool,(CHARACTER)_NPC)
+AND
+DB_LootDistribution_BestWeapon(_Item,_PoolOrEmpty,_Score)
+THEN
+NOT DB_LootDistribution_BestWeapon(_Item,_PoolOrEmpty,_Score);
+
+PROC
+PROC_LootDistribution_SelectBestWeaponForNPC((STRING)_Pool,(CHARACTER)_NPC)
+THEN
+DB_LootDistribution_BestWeapon((ITEM)NULL_00000000-0000-0000-0000-000000000000,"",-1.0);
+
+// Score for currently equipped weapon, if any
+PROC
+PROC_LootDistribution_SelectBestWeaponForNPC((STRING)_Pool,(CHARACTER)_NPC)
+AND
+DB_LootDistribution_Slot(_Ranged,_SlotName)
+AND
+QRY_LootDistribution_GetEquippedWeaponScore(_NPC,_SlotName)
+AND
+DB_QRY_RTN_LootDistribution_GetEquippedWeaponScore(_Weapon,_Score)
+AND
+DB_LootDistribution_BestWeapon(_OtherWeapon,"",_OtherScore)
+AND
+_Score > _OtherScore
+THEN
+NOT DB_LootDistribution_BestWeapon(_OtherWeapon,"",_OtherScore);
+DB_LootDistribution_BestWeapon(_Weapon,"",_Score);
+
+// Find best weapon for this NPC
+PROC
+PROC_LootDistribution_SelectBestWeaponForNPC((STRING)_Pool,(CHARACTER)_NPC)
+AND
+DB_LootDistribution_ActiveContainer(_Pool,_StashContainer)
+AND
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item)
+AND
+IsWeapon(_Item,1)
+AND
+GetWeaponScoreForCharacter(_Item,_NPC,_NewScore)
+AND
+DB_LootDistribution_BestWeapon(_CurrentWeapon,_PoolOrEmpty,_CurrentScore)
+AND
+_NewScore > _CurrentScore
+THEN
+NOT DB_LootDistribution_BestWeapon(_CurrentWeapon,_PoolOrEmpty,_CurrentScore);
+DB_LootDistribution_BestWeapon(_Item,_Pool,_NewScore);
+
+PROC
+PROC_LootDistribution_SelectBestWeaponForNPC((STRING)_Pool,(CHARACTER)_NPC)
+AND
+DB_LootDistribution_BestWeapon(_Item,_Pool,_NewScore)
+AND
+_Item != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_LootDistribution_ActiveContainer(_Pool,_StashContainer)
+THEN
+DB_LootDistribution_Equipping(_Pool,_StashContainer,_NPC,_Item);
+NOT DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item);
+ToInventory(_Item,_NPC,1,0,0);
+
+IF
+AddedTo(_Item,(CHARACTER)_NPC, _)
+AND
+DB_LootDistribution_Equipping(_Pool,_StashContainer,_NPC,(ITEM)_Item)
+THEN
+Equip((CHARACTER)_NPC,_Item);
+
+IF
+Unequipped(_PreviousWeapon,_NPC)
+AND
+DB_LootDistribution_Equipping(_Pool,_StashContainer,_NPC,_Item)
+THEN
+ToInventory(_PreviousWeapon,_StashContainer,1,0,0);
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_PreviousWeapon);
+
+IF
+Equipped(_Weapon,_NPC)
+AND
+DB_LootDistribution_Equipping(_Pool,_StashContainer,_NPC,_Item)
+THEN
+NOT DB_LootDistribution_Equipping(_Pool,_StashContainer,_NPC,_Item);
+//END_REGION
+
+//REGION Hand out consumables
+PROC
+PROC_LootDistribution_Trigger()
+AND
+DB_LootDistribution_ActiveContainer(_Pool,_StashContainer)
+AND
+QRY_LootDistribution_ValidPoolReceivers(_Pool)
+AND
+SysCount("DB_QRY_RTN_LootDistribution_ValidPoolReceivers",1,_ReceiversCount)
+AND
+IntegerProduct(_ReceiversCount,2,_DoubleReceiversCount)
+AND
+DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item)
+AND
+IsConsumable(_Item,1)
+AND
+GetStackAmount(_Item,_Amount,_)
+AND
+// At most distribute twice as many instances as their are receivers
+// (avoid dumping 20 healing potions in two NPCs' inventories)
+IntegerMin(_Amount,_DoubleReceiversCount,_DistributeAmount)
+AND
+// Avoid potential recursion overflows in QRY_DoNTimes
+IntegerMin(_DistributeAmount,100,_SafeDistributeAmount)
+THEN
+PROC_LootDistribution_Consumable(_Pool,_StashContainer,_Item,_SafeDistributeAmount,_Amount);
+
+PROC
+PROC_LootDistribution_Consumable((STRING)_Pool,(ITEM)_StashContainer,(ITEM)_Item,(INTEGER)_DistributeAmount,(INTEGER)_OriginalStackAmount)
+AND
+QRY_DoNTimes(_DistributeAmount)
+AND
+DB_QRY_RTN_DoNTimes(_)
+AND
+QRY_LootDistribution_GetRandomConsumableCandidate("DB_QRY_RTN_LootDistribution_ValidPoolReceivers",1)
+AND
+DB_QRY_RTN_LootDistribution_GetRandomConsumableCandidate((CHARACTER)_Candidate)
+THEN
+NOT DB_QRY_RTN_LootDistribution_GetRandomConsumableCandidate(_Candidate);
+ToInventory(_Item,_Candidate,1,0,0);
+
+PROC
+PROC_LootDistribution_Consumable((STRING)_Pool,(ITEM)_StashContainer,(ITEM)_Item,(INTEGER)_DistributeAmount,(INTEGER)_OriginalStackAmount)
+AND
+_DistributeAmount == _OriginalStackAmount
+THEN
+NOT DB_LootDistribution_InPoolStash(_Pool,_StashContainer,_Item);
+//END_REGION
+
+//REGION Weapon helpers
+// Returns score for weapon currently equipped by _NPC (-1.0 if none)
+QRY
+QRY_LootDistribution_GetEquippedWeaponScore((CHARACTER)_NPC,(STRING)_SlotName)
+AND
+DB_QRY_RTN_LootDistribution_GetEquippedWeaponScore(_Item,_Score)
+THEN
+NOT DB_QRY_RTN_LootDistribution_GetEquippedWeaponScore(_Item,_Score);
+
+QRY
+QRY_LootDistribution_GetEquippedWeaponScore((CHARACTER)_NPC,(STRING)_SlotName)
+AND
+GetEquippedItem(_NPC,_SlotName,_Weapon)
+AND
+GetWeaponScoreForCharacter(_Weapon,_NPC,_Score)
+THEN
+DB_QRY_RTN_LootDistribution_GetEquippedWeaponScore(_Weapon,_Score);
+
+QRY
+QRY_LootDistribution_GetEquippedWeaponScore((CHARACTER)_NPC,(STRING)_SlotName)
+AND
+NOT DB_QRY_RTN_LootDistribution_GetEquippedWeaponScore(_,_)
+THEN
+DB_QRY_RTN_LootDistribution_GetEquippedWeaponScore(NULL_00000000-0000-0000-0000-000000000000,-1.0);
+//END_REGION
+
+//REGION Consumables
+QRY
+QRY_LootDistribution_ValidPoolReceivers((STRING)_Pool)
+AND
+DB_QRY_RTN_LootDistribution_ValidPoolReceivers(_NPC)
+THEN
+NOT DB_QRY_RTN_LootDistribution_ValidPoolReceivers(_NPC);
+
+QRY
+QRY_LootDistribution_ValidPoolReceivers((STRING)_Pool)
+AND
+DB_LootDistribution_Pool_CandidateList(_Pool,_NPC)
+THEN
+DB_QRY_RTN_LootDistribution_ValidPoolReceivers(_NPC);
+
+QRY
+QRY_LootDistribution_GetRandomConsumableCandidate((STRING)_DB,(INTEGER)_Arity)
+THEN
+// Can we do something smarter here?
+PROC_GetRandom(_DB,_Arity,"DB_QRY_RTN_LootDistribution_GetRandomConsumableCandidate");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

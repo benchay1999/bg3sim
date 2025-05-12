@@ -1,0 +1,368 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Needs to be top-level goal because CanBeLootedCapabilityChanged events for corpses placed in the editor arrive before the GameModeStarted event
+
+// [Link Redacted]
+NOT DB_CorpseLooting_ClearRedOutlineOnFactionTagged("",(FACTION)NULL_00000000-0000-0000-0000-000000000000,(TAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged("","",(FACTION)NULL_00000000-0000-0000-0000-000000000000,(TAG)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Mark a someone corpse as owned or not (they do not have to be dead yet)
+PROC
+PROC_SetCorpseOwner((CHARACTER)_Character,(CHARACTER)_Owner)
+AND
+DB_OwnedCorpse(_Character,_OldOwner)
+THEN
+NOT DB_OwnedCorpse(_Character,_OldOwner);
+
+PROC
+PROC_SetCorpseOwner((CHARACTER)_Character,(CHARACTER)_Owner)
+THEN
+DB_OwnedCorpse(_Character,_Owner);
+
+PROC
+PROC_ClearCorpseOwner((CHARACTER)_Character)
+AND
+DB_OwnedCorpse(_Character,_OldOwner)
+THEN
+NOT DB_OwnedCorpse(_Character,_OldOwner);
+//END_REGION
+
+//REGION Handle the owner getting defeated/being undefeated
+PROC
+PROC_StateSet_Defeated((GUIDSTRING)_Owner)
+AND
+DB_OwnedCorpse(_Character,(CHARACTER)_Owner)
+AND
+_Character != _Owner
+THEN
+DB_OwnerCorpse_DefeatedOwner(_Character,_Owner);
+PROC_ClearCorpseOwner((CHARACTER)_Character);
+
+PROC
+PROC_StateCleared_Defeated((GUIDSTRING)_Owner)
+AND
+DB_OwnerCorpse_DefeatedOwner(_Character,(CHARACTER)_Owner)
+THEN
+NOT DB_OwnerCorpse_DefeatedOwner(_Character,_Owner);
+PROC_SetCorpseOwner((CHARACTER)_Character,(CHARACTER)_Owner);
+
+PROC
+PROC_SetCorpseOwner((CHARACTER)_Character,(CHARACTER)_Owner)
+AND
+DB_OwnerCorpse_DefeatedOwner(_Character,_OldOwner)
+THEN
+NOT DB_OwnerCorpse_DefeatedOwner(_Character,_OldOwner);
+
+PROC
+PROC_ClearCorpseOwner((CHARACTER)_Character)
+AND
+DB_OwnerCorpse_DefeatedOwner(_Character,_OldOwner)
+THEN
+NOT DB_OwnerCorpse_DefeatedOwner(_Character,_OldOwner);
+//END_REGION
+
+//REGION When someone is defeated inside a crime region and is not a monster or beast, their inventory is owned by default
+// This causes the ownership of their items and inventory to not be cleared
+// Can override default behaviour with QRY_CorpseLooting_BlockMakeOwned() and QRY_CorpseLooting_ForceMakeOwned()
+IF
+CanBeLootedCapabilityChanged(_Character, 1)
+AND
+IsCharacter(_Character,1)
+THEN
+PROC_CorpseLooting_BecameLootable((CHARACTER)_Character);
+
+PROC
+PROC_CorpseLooting_BecameLootable((CHARACTER)_Character)
+AND
+IsPartyMember(_Character,1,0)
+AND
+NOT DB_OwnedCorpse(_Character,_)
+AND
+QRY_CorpseLooting_ShouldMakeOwned(_Character)
+THEN
+PROC_SetCorpseOwner(_Character,_Character);
+
+PROC
+PROC_CorpseLooting_BecameLootable((CHARACTER)_Character)
+THEN
+DB_CorpseLooting_CanBeOwned(_Character);
+
+IF
+CanBeLootedCapabilityChanged(_Character, 0)
+AND
+IsCharacter(_Character,1)
+THEN
+PROC_CorpseLooting_BecameUnlootable((CHARACTER)_Character);
+
+PROC
+PROC_CorpseLooting_BecameUnlootable((CHARACTER)_Character)
+AND
+DB_OwnedCorpse((CHARACTER)_Character,_Character)
+THEN
+PROC_ClearCorpseOwner(_Character);
+
+PROC
+PROC_CorpseLooting_BecameUnlootable((CHARACTER)_Character)
+THEN
+NOT DB_CorpseLooting_CanBeOwned(_Character);
+
+
+IF
+DB_CorpseLooting_CanBeOwned(_Character)
+AND
+DB_OwnedCorpse(_Character,_)
+THEN
+DB_CorpseLooting_OwnedCorpseActive(_Character);
+
+IF
+DB_CorpseLooting_OwnedCorpseActive(_Character)
+AND
+NOT QRY_CorpseLooting_CharacterNoRedOutline(_Character)
+THEN
+SetCharacterLootOwned(_Character,1);
+
+QRY
+QRY_CorpseLooting_CharacterNoRedOutline((CHARACTER)_Character)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+IF
+DB_CorpseLooting_OwnedCorpseActive(_Character)
+AND
+NOT DB_CorpseLooting_CanBeOwned(_Character)
+THEN
+NOT DB_CorpseLooting_OwnedCorpseActive(_Character);
+SetCharacterLootOwned(_Character,0);
+
+IF
+DB_CorpseLooting_OwnedCorpseActive(_Character)
+AND
+NOT DB_OwnedCorpse(_Character,_)
+THEN
+NOT DB_CorpseLooting_OwnedCorpseActive(_Character);
+SetCharacterLootOwned(_Character,0);
+
+// Handle killing/knocking out a surrendered character (looting should become forbidden)
+IF
+StatusRemoved((CHARACTER)_Character,"SURRENDERED",_,_)
+AND
+DB_CorpseLooting_CanBeOwned(_Character)
+THEN
+PROC_CorpseLooting_BecameLootable(_Character);
+
+QRY
+QRY_CorpseLooting_ShouldMakeOwned((CHARACTER)_Character)
+AND
+NOT QRY_CorpseLooting_BlockMakeOwned(_Character)
+AND
+HasActiveStatus(_Character,"SURRENDERED",0)
+AND
+IsTagged(_Character,MONSTER_90101158-141e-4896-8e60-f8db03f6dde3,0)
+AND
+IsTagged(_Character,BEAST_890b5a2a-e773-48df-b191-c887d87bec16,0)
+AND
+CharacterGetCrimeRegion(_Character,_Region)
+AND
+_Region != ""
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CorpseLooting_ShouldMakeOwned((CHARACTER)_Character)
+AND
+QRY_CorpseLooting_ForceMakeOwned(_Character)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned((CHARACTER)_Character)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CorpseLooting_ForceMakeOwned((CHARACTER)_Character)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Faction ownership: init tag tracking
+IF
+DB_CorpseLooting_ClearRedOutlineOnFactionTagged(_Level,_Faction,_Tag)
+THEN
+DB_FactionTagging_TrackTag(_Level,"GLO_CorpseLooting",_Faction,_Tag);
+
+IF
+DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_Faction,_Tag)
+THEN
+DB_FactionTagging_TrackTag(_Level,_FactionGroupID,_Faction,_Tag);
+// To detect it getting cleared again -> re-evaluate group
+DB_CorpseLooting_InternFactionGroup(_Level,_FactionGroupID,_Faction,_Tag);
+
+IF
+DB_FactionTagging_TrackTag(_Level,_FactionGroupID,_Faction,_Tag)
+AND
+NOT DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_Faction,_Tag)
+THEN
+NOT DB_FactionTagging_TrackTag(_Level,_FactionGroupID,_Faction,_Tag);
+
+//END_REGION
+
+//REGION Faction ownership: faction tagged
+PROC
+PROC_FactionTagging_TagSet((STRING)_Level,"GLO_CorpseLooting",(FACTION)_Faction,(TAG)_Tag,(STRING)_Trigger)
+THEN
+PROC_CorpseLooting_LootOwnershipCleared("GLO_CorpseLooting",_Faction);
+PROC_FactionSetLootOwned(_Faction,0);
+
+PROC
+PROC_FactionTagging_TagSet((STRING)_Level,(STRING)_FactionGroupID,(FACTION)_Faction,(TAG)_Tag,(STRING)_Trigger)
+AND
+DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_Faction,_Tag)
+AND
+NOT QRY_CorpseLooting_FactionGroupIsNOTTagged(_Level,_FactionGroupID)
+AND
+DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_GroupFactions,_Tag)
+THEN
+PROC_CorpseLooting_LootOwnershipCleared(_FactionGroupID,_GroupFactions);
+PROC_FactionSetLootOwned(_GroupFactions,0);
+
+// Re-evaluate on clearing a DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged entry
+IF
+DB_CorpseLooting_InternFactionGroup(_Level,_FactionGroupID,_Faction,_Tag)
+AND
+NOT DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_Faction,_Tag)
+AND
+NOT QRY_CorpseLooting_FactionGroupIsNOTTagged(_Level,_FactionGroupID)
+AND
+DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_GroupFactions,_Tag)
+THEN
+PROC_CorpseLooting_LootOwnershipCleared(_FactionGroupID,_GroupFactions);
+PROC_FactionSetLootOwned(_GroupFactions,0);
+
+PROC
+PROC_CorpseLooting_LootOwnershipCleared((STRING)_ID,(FACTION)_Faction)
+THEN
+DB_NOOP(1);
+
+// And clean up the tracking DB
+IF
+DB_CorpseLooting_InternFactionGroup(_Level,_FactionGroupID,_Faction,_Tag)
+AND
+NOT DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_Faction,_Tag)
+THEN
+NOT DB_CorpseLooting_InternFactionGroup(_Level,_FactionGroupID,_Faction,_Tag);
+
+QRY
+QRY_CorpseLooting_FactionGroupIsNOTTagged((STRING)_Level,(STRING)_FactionGroupID)
+AND
+DB_CorpseLooting_ClearRedOutlineOnFactionGroupTagged(_Level,_FactionGroupID,_Faction,_Tag)
+AND
+NOT DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Faction ownership: tag cleared
+PROC
+PROC_FactionTagging_TagCleared((STRING)_Level,(STRING)_Identifier,(FACTION)_Faction,(TAG)_Tag,(STRING)_Trigger)
+AND
+// For now, don't check whether we should make the corpses red again when
+// we're getting this event because a character's faction changed. This could
+// feel weird or be triggered in edge cases. We can revisit this if we encounter
+// cases where this would be desirable
+_Trigger != "BaseFactionChanged"
+AND
+DB_CorpseLooting_ClearRedOutlineOnFactionTagged(_Level,_Faction,_Tag)
+THEN
+PROC_FactionSetLootOwned(_Faction,1);
+
+PROC
+PROC_FactionSetLootOwned((FACTION)_Faction,0)
+AND
+DB_CurrentLevel(_Level)
+THEN
+DB_CorpseLooting_FactionForbiddenCleared(_Level,_Faction);
+
+PROC
+PROC_FactionSetLootOwned((FACTION)_Faction,1)
+AND
+DB_CurrentLevel(_Level)
+THEN
+NOT DB_CorpseLooting_FactionForbiddenCleared(_Level,_Faction);
+
+PROC
+PROC_FactionSetLootOwned((FACTION)_Faction,(INTEGER)_Owned)
+THEN
+FactionSetLootOwned(_Faction,_Owned);
+
+QRY
+QRY_CorpseLooting_CharacterNoRedOutline((STRING)_Level,(CHARACTER)_Character)
+AND
+GetBaseFaction(_Character,_Faction)
+AND
+QRY_CorpseLooting_FactionNotForbidden(_Level,_Faction)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CorpseLooting_FactionNotForbidden((STRING)_Level,(FACTION)_Faction)
+AND
+DB_CorpseLooting_FactionForbiddenCleared(_Level,_Faction)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CorpseLooting_FactionNotForbidden((STRING)_Level,(FACTION)_Faction)
+AND
+NOT DB_CorpseLooting_FactionForbiddenCleared(_Level,_Faction)
+AND
+FactionGetParentFaction(_Faction,1,_ParentFaction)
+AND
+QRY_CorpseLooting_FactionNotForbidden(_Level,_ParentFaction)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Clear red outlines for corpses based on a defeatcounter
+PROC
+PROC_CorpseLooting_ClearRedOutlinesForDefeatCounter((STRING)_DefeatCounterID)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_GLO_DefeatCounter(_Character,_DefeatCounterID)
+AND
+IsCharacter(_Character,1)
+THEN
+PROC_CorpseLooting_NoRedOutline(_Level,(CHARACTER)_Character);
+
+PROC
+PROC_CorpseLooting_NoRedOutline((STRING)_Level,(CHARACTER)_Character)
+THEN
+SetCharacterLootOwned(_Character,0);
+
+PROC
+PROC_CorpseLooting_NoRedOutline((STRING)_Level,(CHARACTER)_Character)
+AND
+NOT DB_PermaDefeated(_Character)
+THEN
+// Prevent them from being marked as owned again when they die
+DB_CorpseLooting_NoRedOutline(_Level,_Character);
+
+QRY
+QRY_CorpseLooting_CharacterNoRedOutline((STRING)_Level,(CHARACTER)_Character)
+AND
+DB_CorpseLooting_NoRedOutline(_Level,_Character)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,147 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Simple named counter
+PROC
+PROC_RemoveCounter((STRING)_Name)
+AND
+DB_GlobalCounter(_Name,_Count)
+THEN
+NOT DB_GlobalCounter(_Name,_Count);
+
+PROC
+PROC_DeclareCounter((STRING)_Name)
+THEN
+PROC_RemoveCounter(_Name);
+DB_GlobalCounter(_Name,0);
+
+PROC
+PROC_IncreaseCounter((STRING)_Name)
+THEN
+PROC_IncreaseCounter(_Name,1);
+
+PROC
+PROC_IncreaseCounter((STRING)_Name,(INTEGER)_Amount)
+AND
+DB_GlobalCounter(_Name,_Count)
+AND
+IntegerSum(_Count,_Amount,_NewCount)
+THEN
+NOT DB_GlobalCounter(_Name,_Count);
+DB_GlobalCounter(_Name,_NewCount);
+PROC_CounterIncreased(_Name,_NewCount);
+
+PROC
+PROC_CounterIncreased((STRING)_Name,(INTEGER)_NewCount)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DecreaseCounter((STRING)_Name)
+THEN
+PROC_DecreaseCounter(_Name,1);
+
+PROC
+PROC_DecreaseCounter((STRING)_Name,(INTEGER)_Amount)
+AND
+DB_GlobalCounter(_Name,_Count)
+AND
+IntegerSubtract(_Count,_Amount,_NewCount)
+THEN
+NOT DB_GlobalCounter(_Name,_Count);
+DB_GlobalCounter(_Name,_NewCount);
+PROC_CounterDecreased((STRING)_Name,(INTEGER)_NewCount);
+
+PROC
+PROC_CounterDecreased((STRING)_Name,(INTEGER)_NewCount)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IncreaseCounter((STRING)_Name)
+AND
+NOT DB_GlobalCounter(_Name,_)
+THEN
+DB_GlobalCounter(_Name,0);
+
+QRY
+QRY_IncreaseCounter((STRING)_Name)
+THEN
+PROC_IncreaseCounter(_Name,1);
+
+//END_REGION Simple named counter
+
+//REGION Counter Helper
+PROC
+PROC_CountHelper((STRING)_ID)
+AND
+NOT DB_CountHelper(_ID,_)
+THEN
+DB_CountHelper(_ID,0);
+
+PROC
+PROC_CountHelper((STRING)_ID)
+AND
+DB_CountHelper(_ID,_OldValue)
+AND
+IntegerSum(_OldValue,1,_Value)
+THEN
+NOT DB_CountHelper(_ID,_OldValue);
+DB_CountHelper(_ID,_Value);
+
+QRY
+QRY_CountHelperReset((STRING)_ID)
+AND
+DB_CountHelper(_ID,_Any)
+THEN
+NOT DB_CountHelper(_ID,_Any);
+
+QRY
+QRY_CountHelperReset((STRING)_ID)
+THEN
+DB_CountHelper(_ID,0);
+
+QRY
+QRY_CountHelper((STRING)_ID)
+THEN
+PROC_CountHelper((STRING)_ID);
+
+PROC
+PROC_ObjectCountHelper((GUIDSTRING)_Object,(STRING)_ID)
+THEN
+PROC_ObjectCountHelper(_Object,_ID,1);
+
+PROC
+PROC_ObjectCountHelper((GUIDSTRING)_Object,(STRING)_ID,_)
+AND
+NOT DB_ObjectCountHelper(_Object,_ID,_)
+THEN
+DB_ObjectCountHelper(_Object,_ID,0);
+
+PROC
+PROC_ObjectCountHelper((GUIDSTRING)_Object,(STRING)_ID,(INTEGER)_Count)
+AND
+DB_ObjectCountHelper(_Object,_ID,_OldValue)
+AND
+IntegerSum(_OldValue,_Count,_Value)
+THEN
+NOT DB_ObjectCountHelper(_Object,_ID,_OldValue);
+DB_ObjectCountHelper(_Object,_ID,_Value);
+
+PROC
+PROC_ObjectCountHelperReset((GUIDSTRING)_Object,(STRING)_ID)
+AND
+DB_ObjectCountHelper(_Object,_ID,_Counter)
+THEN
+NOT DB_ObjectCountHelper(_Object,_ID,_Counter);
+
+QRY
+QRY_ObjectCountHelper((GUIDSTRING)_Object,(STRING)_ID)
+THEN
+PROC_ObjectCountHelper((GUIDSTRING)_Object,(STRING)_ID);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

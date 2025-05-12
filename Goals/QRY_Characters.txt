@@ -1,0 +1,921 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_Sizes(0, (TAG)WEIGHT_TINY_9360d001-0cef-49e0-a2e0-4d715d4976ea);
+DB_GLO_Sizes(1, (TAG)WEIGHT_SMALL_7e99123d-6833-4461-9b4a-b5e281586734);
+DB_GLO_Sizes(2, (TAG)WEIGHT_MEDIUM_653cb906-38d1-4b80-b598-00b064efff3d);
+DB_GLO_Sizes(4, (TAG)WEIGHT_LARGE_346b447c-93ba-426c-acf5-da9244fb22ec);
+DB_GLO_Sizes(5, (TAG)WEIGHT_HUGE_5e77c1e9-5dbf-4b24-a616-80b5740e77b5);
+DB_GLO_Sizes(6, (TAG)WEIGHT_GARGANTUAN_7f26284a-0c98-48d8-85f3-6c7ab52997df);
+KBSECTION
+//REGION Speaker is available - 1 parameter (does not ignore combat)
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker)
+AND
+QRY_SpeakerIsAvailable(_Speaker,0)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+
+//REGION Speaker is available - 2 parameters (does not ignore muting statuses like shapeshift limitations)
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, (INTEGER)_IgnoreCombat)
+AND
+QRY_SpeakerIsAvailable(_Speaker, _IgnoreCombat, 0)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Speaker is available - 3 parameters (does not ignore being dead)
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, (INTEGER)_IgnoreCombat, (INTEGER)_IgnoreMutingStatuses)
+AND
+QRY_SpeakerIsAvailable(_Speaker, _IgnoreCombat, _IgnoreMutingStatuses, 0)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Speaker is available - 4 parameters 
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_IgnoreCombat, (INTEGER)_IgnoreMutingStatuses, (INTEGER)_AllowDeadSpeakers)
+THEN
+DB_NOOP(1);
+
+
+// QRY_SpeakerIsAvailable() parameters (as shown above):
+//   (INTEGER)_IgnoreCombat, (INTEGER)_IgnoreMutingStatuses, (INTEGER)_AllowDeadSpeakers
+
+// For every combination of parameters, we check the appropriate DB_CantTalk variant and
+//   * IsSpeakersReserved(_Speaker, 0)
+//       Reason: if you try to start multiple dialogs with the same speaker in a single frame
+//         and it succeeds for the first dialog, DB_CantTalk* won't be set yet when trying to
+//         to start the others since it only gets updated on DialogStarted. However, the speaker
+//         will already be reserved at that point
+//   * DB_ObjectIsDialogSoftLocked(_, _Speaker)
+//       Reason: soft-locked characters get added to dialogs when they are started and hence are
+//         immediately reserved from that point on. However, softlocking also means that they can
+//         join other dialogs as actual speakers (in that case, we will remove them from the
+//         original dialog)
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 0, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 0, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 0, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreDead(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 0, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreDead(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 1, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 1, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 1, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatusesDead(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 0, 1, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatusesDead(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 0, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreCombat(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 0, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreCombat(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 0, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreCombatDead(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 0, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreCombatDead(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 1, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 1, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 1, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatusesCombatDead(_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailable((GUIDSTRING)_Speaker, 1, 1, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk_IgnoreStatusesCombatDead(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+QRY_SpeakerIsInCurrentLevel(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInCurrentLevel((GUIDSTRING)_Speaker)
+AND
+DB_CurrentLevel(_CurrentLevel)
+AND
+GetRegion(_Speaker,_CurrentLevel)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Speaker is available, taking into account whether or not they have assigned nodes in the dialog
+QRY
+QRY_SpeakerIsAvailableForDialogSlot(NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)_Dialog,(INTEGER)_SpeakerSlot,(INTEGER)_AllowStartIfCombat,(GUIDSTRING)_TargetSpeaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableForDialogSlot((GUIDSTRING)_Speaker,(DIALOGRESOURCE)_Dialog,(INTEGER)_SpeakerSlot,(INTEGER)_AllowStartIfCombat)
+AND
+QRY_SpeakerIsAvailableForDialogSlot((GUIDSTRING)_Speaker,(DIALOGRESOURCE)_Dialog,(INTEGER)_SpeakerSlot,(INTEGER)_AllowStartIfCombat,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableForDialogSlot((GUIDSTRING)_Speaker,(DIALOGRESOURCE)_Dialog,(INTEGER)_SpeakerSlot,(INTEGER)_AllowStartIfCombat,(GUIDSTRING)_TargetSpeaker)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_DialogStart_SpeakerReserved(_Speaker)
+AND
+IsSpeakerReserved(_Speaker,0)	//shortcut all these checks if you're already in an interactive dialog
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(_DropMutedStatusses)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_TargetSpeaker,_Speaker)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(_IgnoreMutedStatusses)
+AND
+DB_LogicOr(_DropMutedStatusses,_IgnoreMutedStatusses,_AllowMutedStatusses)
+AND
+DialogSpeakerHasLines(_Dialog,_Speakerslot,_HasLines)
+AND
+DialogAllowDeadSpeakers(_Dialog,_AllowDeadSpeakers)
+AND
+QRY_SpeakerIsAvailableLinesCheck(_Speaker,_HasLines,_AllowStartIfCombat,_AllowMutedStatusses,_AllowDeadSpeakers)
+THEN
+DB_NOOP(1);
+
+// Has Lines
+QRY
+QRY_SpeakerIsAvailableLinesCheck((GUIDSTRING)_Speaker,1,(INTEGER)_AllowStartIfCombat,(INTEGER)_AllowMutedStatusses,(INTEGER)_AllowDeadSpeakers)
+AND
+QRY_SpeakerIsAvailable(_Speaker,_AllowStartIfCombat,_AllowMutedStatusses,_AllowDeadSpeakers)
+THEN
+DB_NOOP(1);
+
+// Does not have lines -> ignore muted statuses
+// Still care about dead/not dead (code does too)
+QRY
+QRY_SpeakerIsAvailableLinesCheck((GUIDSTRING)_Speaker,0,(INTEGER)_AllowStartIfCombat,(INTEGER)_AllowMutedStatusses,0)
+AND
+NOT DB_Dead((CHARACTER)_Speaker)
+AND
+IsSpeakerReserved(_Speaker,_Reserved)
+AND
+QRY_SpeakerIsAvailableNoLines(_Speaker,_Reserved,_AllowStartIfCombat)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableLinesCheck((GUIDSTRING)_Speaker,0,(INTEGER)_AllowStartIfCombat,(INTEGER)_AllowMutedStatusses,1)
+AND
+IsSpeakerReserved(_Speaker,_Reserved)
+AND
+QRY_SpeakerIsAvailableNoLines(_Speaker,_Reserved,_AllowStartIfCombat)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailableNoLines((GUIDSTRING)_Speaker,0,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableNoLines((GUIDSTRING)_Speaker,0,0)
+AND
+NOT DB_Is_InCombat(_Speaker, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableNoLines((GUIDSTRING)_Speaker,1,1)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableNoLines((GUIDSTRING)_Speaker,1,0)
+AND
+NOT DB_Is_InCombat(_Speaker, _)
+AND
+DB_ObjectIsDialogSoftLocked(_,_Speaker)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Speaker is in dialog range (and available)
+
+QRY
+QRY_SpeakerIsAvailableAndInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter, 0, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableAndInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter, (INTEGER)_IgnoreCombat, (INTEGER)_IgnoreShapeshift)
+AND
+QRY_SpeakerIsAvailable(_Speaker,_IgnoreCombat,_IgnoreShapeshift)
+AND
+QRY_SpeakerIsInDialogRange(_Speaker, _SourceCharacter)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter)
+AND
+DB_CustomDialogRange(_SourceCharacter,(INTEGER)_MaxDist)
+AND
+GetDistanceTo(_Speaker,_SourceCharacter,_Distance)
+AND
+_Distance < _MaxDist
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter)
+AND
+DB_CustomDialogRange(_Speaker,(INTEGER)_MaxDist)
+AND
+GetDistanceTo(_Speaker,_SourceCharacter,_Distance)
+AND
+_Distance < _MaxDist
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter)
+AND
+DB_InCamp((CHARACTER)_SourceCharacter)
+AND
+GetDistanceTo(_Speaker,_SourceCharacter,_Distance)
+AND
+_Distance < 40.0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsInDialogRange((GUIDSTRING)_Speaker,(GUIDSTRING)_SourceCharacter)
+AND
+NOT DB_CustomDialogRange(_SourceCharacter,_)
+AND
+NOT DB_CustomDialogRange(_Speaker,_)
+AND
+GetDistanceTo(_Speaker,_SourceCharacter,_Distance)
+AND
+_Distance < 10.0
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Speaker is available and in custom range 
+
+QRY
+QRY_SpeakerIsAvailableAndInCustomRange((GUIDSTRING)_Speaker, (GUIDSTRING)_Target, (REAL)_MaxRange)
+AND
+QRY_SpeakerIsAvailableAndInCustomRange(_Speaker,_Target,_MaxRange, 0, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableAndInCustomRange((GUIDSTRING)_Speaker, (GUIDSTRING)_Target, (REAL)_MaxRange, (INTEGER)_IgnoreCombat, (INTEGER)_IgnoreShapeshift)
+AND
+QRY_SpeakerIsAvailable(_Speaker,_IgnoreCombat,_IgnoreShapeshift)
+AND
+GetDistanceTo(_Speaker,_Target,_Distance)
+AND
+_Distance <= _MaxRange
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Forbidden Multiplayer dialogue (2 characters assigned to different players can't talk to each other)
+QRY
+QRY_PreventMPDialogue((CHARACTER)_Speaker1,(CHARACTER)_Speaker2)
+AND
+GetReservedUserID(_Speaker1,_UserID1)
+AND
+GetReservedUserID(_Speaker2,_UserID2)
+AND
+_UserID1 != -65536 //MagicValue for Not assigned to a user (AKA an NPC)
+AND
+_UserID2 != -65536
+AND
+_UserID1 != _UserID2
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Character has a dialog (Osiris OR Default Dialog)
+QRY
+QRY_GetHasDialogAny((CHARACTER)_NPC)
+AND
+DB_QRYRTN_GetHasDialogAny(_Old)
+THEN
+NOT DB_QRYRTN_GetHasDialogAny(_Old);
+
+QRY
+QRY_GetHasDialogAny((CHARACTER)_NPC)
+AND
+GetHasOsirisDialog(_NPC,_HasOsirisDialog)
+THEN
+DB_QRYRTN_GetHasDialogAny(_HasOsirisDialog);
+
+QRY
+QRY_GetHasDialogAny((CHARACTER)_NPC)
+AND
+DB_QRYRTN_GetHasDialogAny(0)
+AND
+GetHasDefaultDialog(_NPC,1)
+THEN
+NOT DB_QRYRTN_GetHasDialogAny(0);
+DB_QRYRTN_GetHasDialogAny(1);
+//END_REGION
+
+QRY
+QRY_CharacterIsHidden((CHARACTER)_Char)
+AND
+DB_HiddenCharacters(_Char,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Character_GetIsHidden((CHARACTER)_Char)
+AND
+DB_HiddenCharacters(_Char,_)
+THEN
+NOT DB_QRYRTN_Character_GetIsHidden(0);
+DB_QRYRTN_Character_GetIsHidden(1);
+
+QRY
+QRY_Character_GetIsHidden((CHARACTER)_Char)
+AND
+NOT DB_HiddenCharacters(_Char,_)
+THEN
+NOT DB_QRYRTN_Character_GetIsHidden(1);
+DB_QRYRTN_Character_GetIsHidden(0);
+
+QRY
+QRY_CharacterIsNull((CHARACTER)_Char)
+AND
+_Char == NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_NOOP(1);
+
+//REGION Find a player with petpal to talk to
+QRY
+QRY_PetPallerInDialogRange((CHARACTER)_Char)
+AND
+DB_QRY_RTN_PetPallerInDialogRange(_Petpaller)
+THEN
+NOT DB_QRY_RTN_PetPallerInDialogRange(_Petpaller);
+
+QRY
+QRY_PetPallerInDialogRange((CHARACTER)_Char)
+AND
+DB_Players(_Player)
+AND
+NOT DB_QRY_RTN_PetPallerInDialogRange(_)
+AND
+IsTagged(_Player,(TAG)PETPAL_dc860a81-f3c2-4c1a-ab90-e7583324845c, 1)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player,_Char)
+THEN
+DB_QRY_RTN_PetPallerInDialogRange(_Player);
+
+QRY
+QRY_PetPallerInDialogRange((CHARACTER)_Char)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Character and party member
+QRY
+QRY_IsPartyMember((GUIDSTRING)_Obj,(INTEGER)_IncludeNotControllable)
+AND
+IsCharacter(_Obj, 1)
+AND
+IsPartyMember((CHARACTER)_Obj, _IncludeNotControllable, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Can squeeze through small spaces //TODO: add a proper call for size checking
+QRY
+QRY_CheckCanSqueeze((CHARACTER)_Character) 
+AND
+DB_GLO_Sizes(_Size, _SizeTag)
+AND
+IsTagged(_Character, _SizeTag, 1)
+AND
+_Size < 2
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CheckCanSqueeze((CHARACTER)_Character)
+AND
+IsTagged(_Character, (TAG)DWARF_486a2562-31ae-437b-bf63-30393e18cbdd, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION IsEnemy //For now only characters can be enemies... Odd.
+QRY
+QRY_IsEnemy((GUIDSTRING)_Object1,(GUIDSTRING)_Object2)
+AND
+IsCharacter(_Object1,1)
+AND
+IsCharacter(_Object2,1)
+AND
+IsEnemy((CHARACTER)_Object1,(CHARACTER)_Object2,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsEnemy((GUIDSTRING)_Object1,(GUIDSTRING)_Object2)
+AND
+QRY_IsEnemy_Internal_CheckDBs(_Object1, _Object2)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsEnemy((GUIDSTRING)_Object1,(GUIDSTRING)_Object2)
+AND
+QRY_IsEnemy_Internal_CheckDBs(_Object2, _Object1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsEnemy_Internal_CheckDBs((GUIDSTRING)_Object1,(GUIDSTRING)_Object2)
+AND
+GetFaction(_Object1, _Faction1)
+AND
+GetFaction(_Object2, _Faction2)
+AND
+DB_RelationChangingToHostile(_Faction1, _Faction2)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsEnemy_Internal_CheckDBs((GUIDSTRING)_Object1,(GUIDSTRING)_Object2)
+AND
+GetFaction(_Object1, _Faction1)
+AND
+GetFaction(_Object2, _Faction2)
+AND
+DB_RelationChangingToTemporaryHostile(_Faction1, _Faction2)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsEnemyToAnyPlayerInCombat((CHARACTER)_Enemy, (GUIDSTRING)_CombatID)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+QRY_IsEnemy(_Enemy, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WasEnemyToAnyPlayerInCombat((CHARACTER)_Enemy, (GUIDSTRING)_CombatID)
+AND
+DB_Players(_Player)
+AND
+DB_Was_InCombat(_Player, _CombatID)
+AND
+QRY_IsEnemy(_Enemy, _Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Telepathic beings
+QRY
+QRY_IsTelepath((CHARACTER)_Char)
+AND
+IsTagged(_Char, MYCONID_480f5568-7c49-45e4-9543-7c06e43bdf52, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsTelepath((CHARACTER)_Char)
+AND
+IsTagged(_Char, MINDFLAYER_8ee4d870-3f6b-466c-968f-ab0ba2be6229, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GetIsTelepath((CHARACTER)_Char)
+AND
+DB_QRYRTN_GetIsTelepath(_Ret)
+THEN
+NOT DB_QRYRTN_GetIsTelepath(_Ret);
+
+QRY
+QRY_GetIsTelepath((CHARACTER)_Char)
+AND
+QRY_IsTelepath(_Char)
+THEN
+DB_QRYRTN_GetIsTelepath(1);
+
+QRY
+QRY_GetIsTelepath((CHARACTER)_Char)
+AND
+NOT DB_QRYRTN_GetIsTelepath(_)
+THEN
+DB_QRYRTN_GetIsTelepath(0);
+//END_REGION
+
+//REGION Return either _Attacker if it is a character, or _Owner if _Attacker it is an item
+// Useful for AttackedBy/KilledBy in case the attacker is an item (might be a summon
+//   created for a spell like Moon Beam)
+// Warning: the result could still be an item in case the attack was performed by an item that is not summoned
+QRY
+QRY_GetOwnerIfItemSummon((GUIDSTRING)_Owner, (GUIDSTRING)_Attacker)
+AND
+DB_QRYRTN_GetOwnerIfItemSummon(_Result)
+THEN
+NOT DB_QRYRTN_GetOwnerIfItemSummon(_Result);
+
+QRY
+QRY_GetOwnerIfItemSummon((GUIDSTRING)_Owner, (GUIDSTRING)_Attacker)
+AND
+IsItem(_Attacker,1)
+THEN
+DB_QRYRTN_GetOwnerIfItemSummon(_Owner);
+
+QRY
+QRY_GetOwnerIfItemSummon((GUIDSTRING)_Owner, (GUIDSTRING)_Attacker)
+AND
+NOT DB_QRYRTN_GetOwnerIfItemSummon(_)
+THEN
+DB_QRYRTN_GetOwnerIfItemSummon(_Attacker);
+
+QRY
+QRY_GetCharacterOwnerIfItemSummon((GUIDSTRING)_Owner, (GUIDSTRING)_Attacker)
+AND
+QRY_GetOwnerIfItemSummon(_Owner, _Attacker)
+AND
+DB_QRYRTN_GetOwnerIfItemSummon(_Result)
+AND
+IsCharacter(_Result, 1)
+THEN
+DB_QRYRTN_GetCharacterOwnerIfItemSummon((CHARACTER)_Result);
+
+IF
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_Result)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_OldResult)
+AND
+_Result != _OldResult
+THEN
+NOT DB_QRYRTN_GetCharacterOwnerIfItemSummon(_OldResult);
+//END_REGION
+
+//REGION Return the owner of a summoned item or a character
+QRY
+QRY_GetSummonOwner((GUIDSTRING)_Summon)
+AND
+DB_QRYRTN_GetSummonOwner(_Result)
+THEN
+NOT DB_QRYRTN_GetSummonOwner(_Result);
+
+QRY
+QRY_GetSummonOwner((GUIDSTRING)_Summon)
+AND
+IsItem(_Summon,1)
+AND
+GetOwner((ITEM)_Summon,_Owner)
+THEN
+DB_QRYRTN_GetSummonOwner(_Owner);
+
+QRY
+QRY_GetSummonOwner((GUIDSTRING)_Summon)
+AND
+IsCharacter(_Summon,1)
+AND
+CharacterGetOwner((CHARACTER)_Summon,_Owner)
+THEN
+DB_QRYRTN_GetSummonOwner(_Owner);
+
+//END_REGION
+
+//REGION Get character owner if it exists
+// Tries to get character owner - if the character has no owner, return the character
+QRY
+QRY_CharacterGetOwnerOrSelf((CHARACTER)_Character)
+AND
+DB_QRYRTN_CharacterGetOwnerOrSelf(_Result)
+THEN
+NOT DB_QRYRTN_CharacterGetOwnerOrSelf(_Result);
+
+QRY
+QRY_CharacterGetOwnerOrSelf((CHARACTER)_Character)
+THEN
+DB_QRYRTN_CharacterGetOwnerOrSelf(_Character);
+
+QRY
+QRY_CharacterGetOwnerOrSelf((CHARACTER)_Character)
+AND
+CharacterGetOwner(_Character, _Owner)
+THEN
+DB_QRYRTN_CharacterGetOwnerOrSelf(_Owner);
+
+IF
+DB_QRYRTN_CharacterGetOwnerOrSelf(_Result)
+AND
+DB_QRYRTN_CharacterGetOwnerOrSelf(_OldResult)
+AND
+_Result != _OldResult
+THEN
+NOT DB_QRYRTN_CharacterGetOwnerOrSelf(_OldResult);
+
+// Tries to get character owner, if nearby - if the character has no owner, return the character
+QRY
+QRY_CharacterGetOwnerInDialogRangeOrSelf((CHARACTER)_Character)
+AND
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Result)
+THEN
+NOT DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Result);
+
+QRY
+QRY_CharacterGetOwnerInDialogRangeOrSelf((CHARACTER)_Character)
+AND
+QRY_CharacterGetOwnerOrSelf((CHARACTER)_Character)
+AND
+DB_QRYRTN_CharacterGetOwnerOrSelf(_Owner)
+THEN
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Owner);
+
+// If the new owner is not in range, reset back to character
+QRY
+QRY_CharacterGetOwnerInDialogRangeOrSelf((CHARACTER)_Character)
+AND
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Owner)
+AND
+_Character != _Owner
+AND
+NOT QRY_SpeakerIsInDialogRange(_Character, _Owner)
+THEN
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Character);
+
+IF
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Result)
+AND
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_OldResult)
+AND
+_Result != _OldResult
+THEN
+NOT DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_OldResult);
+//END_REGION
+
+QRY
+QRY_IsNPC((GUIDSTRING)_Speaker)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+NOT DB_Origins((CHARACTER)_Speaker)
+THEN
+DB_NOOP(1);
+
+//REGION Multiplayer check
+QRY
+QRY_IsMultiPlayer()
+AND
+GetHostCharacter(_Host)
+AND
+GetReservedUserID(_Host,_HostUserID)
+AND
+DB_Players(_OtherPlayer)
+AND
+GetReservedUserID(_OtherPlayer,_OtherUserID)
+AND
+_HostUserID != _OtherUserID
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Party followers queries/procs
+QRY
+QRY_IsSummonOrPartyFollower((CHARACTER)_Character)
+AND
+IsSummon(_Character,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsSummonOrPartyFollower((CHARACTER)_Character)
+AND
+IsPartyFollower(_Character,1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Party Followers
+
+QRY
+QRY_IsLargerThan((CHARACTER)_Character, (TAG)_SizeCategory)
+AND
+DB_GLO_Sizes(_CategorySize, _SizeCategory)
+AND
+DB_GLO_Sizes(_CharSize, _Tag)
+AND
+_CharSize > _CategorySize
+AND
+IsTagged(_Character, _Tag, 1)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

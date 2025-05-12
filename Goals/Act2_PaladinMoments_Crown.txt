@@ -1,0 +1,183 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_PaladinMoments_AcceptedLastLightQuest((FLAG)GLO_HAV_IsobelGaveMission_4f0dd500-6de8-08ce-7db9-083c891e67e7);
+DB_GLO_PaladinMoments_AcceptedLastLightQuest((FLAG)HAV_Isobel_State_ReceivedMoonriseQuest_3025b1d0-30ba-4572-baf9-a4e97fea8ae5);
+DB_GLO_PaladinMoments_AcceptedLastLightQuest((FLAG)HAV_Jaheira_State_MissionGiven_7516666c-4c71-86d7-9d2b-9f3a4269970b);
+KBSECTION
+//REGION Betrayals
+
+//REGION Betraying Last Light
+// Zrell start
+IF
+FlagSet((FLAG)MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4, _, _DialogID)
+AND
+QRY_GLO_PaladinMoments_GotMoonriseQuest()
+THEN
+DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID);
+
+IF
+FlagSet((FLAG)FactionHostileToIndivPlayerAfterDialog_3a7747bd-004a-6e69-7ff5-4f4eb6c3c223, _, _DialogID)
+AND
+DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID)
+THEN
+NOT DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID);
+
+QRY
+QRY_DialogAttackRequested_CustomResponse((CHARACTER)S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _Player)
+AND
+DB_GLO_PaladinMoments_MightBetrayLastLight(_)
+AND
+QRY_GLO_PaladinMoments_WillNotBetrayLastLight()
+AND
+0 == 1 // We don't really want a custom response
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_PaladinMoments_WillNotBetrayLastLight()
+AND
+DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID)
+THEN
+NOT DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID);
+
+IF
+DialogEnded(_, _DialogID)
+AND
+DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID)
+THEN
+NOT DB_GLO_PaladinMoments_MightBetrayLastLight(_DialogID);
+DB_GLO_PaladinMoments_WillBetrayLastLight(1);
+
+// If the mission to kill Ketheric was given before kidnapping Isobel, then kidnapping her, it will break the paladins' oath.
+IF
+FlagSet((FLAG)HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+DB_GLO_PaladinMoments_WillBetrayLastLight(1)
+AND
+QRY_OnlyOnce("GLO_PaladinMoments_BetrayedHAVHarpers")
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+// Siding with Marcus
+IF
+FlagSet((FLAG)HAV_TakingIsobel_State_SidedWithSpy_5eb745b2-5043-2f36-4d3a-ee3f09ed7a82, _, _DialogID)
+AND
+QRY_GLO_PaladinMoments_GotMoonriseQuest()
+AND
+QRY_OnlyOnce("GLO_PaladinMoments_BetrayedHAVHarpers")
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+QRY
+QRY_GLO_PaladinMoments_GotMoonriseQuest()
+AND
+DB_GLO_PaladinMoments_AcceptedLastLightQuest(_Flag)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_GLO_PaladinMoments_AcceptedLastLightQuest(_Flag)
+THEN
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211);
+
+//END_REGION Betraying Last Light
+
+//REGION Betraying Ketheric - agreed to help bringing Nightsong but not doing so
+IF
+FlagSet((FLAG)MOO_Executioner_Knows_BalthazarIsMissing_84e5cbc6-d9ad-935b-b54c-fc227a365ad6, _, _DialogID)
+THEN
+DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID);
+
+IF
+FlagSet((FLAG)FactionHostileToIndivPlayerAfterDialog_3a7747bd-004a-6e69-7ff5-4f4eb6c3c223, _, _DialogID)
+AND
+DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID)
+THEN
+NOT DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID);
+
+IF
+DialogEnded(_, _DialogID)
+AND
+DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID)
+THEN
+NOT DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID);
+DB_GLO_PaladinMoments_WillHelpKethericWithNightsong(1);
+
+QRY
+QRY_DialogAttackRequested_CustomResponse((CHARACTER)S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _Player)
+AND
+DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_)
+AND
+QRY_GLO_PaladinMoments_WillNotHelpKethericWithNightsong()
+AND
+0 == 1 // We don't really want a custom response
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_PaladinMoments_WillNotHelpKethericWithNightsong()
+AND
+DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID)
+THEN
+NOT DB_GLO_PaladinMoments_MightHelpKethericWithNightsong(_DialogID);
+
+// - Killing Nightsong
+IF
+FlagSet((FLAG)SHA_NightsongPrison_Event_PermanentlyKillNightsong_097792de-6bd1-e7c9-77d3-fe6419e3170a, _, _)
+AND
+DB_GLO_PaladinMoments_WillHelpKethericWithNightsong(1)
+AND
+QRY_OnlyOnce("GLO_PaladinMoments_BetrayedKetheric")
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+// - Freeing Nightsong
+PROC
+PROC_NightsongPrison_FreeNightsong()
+AND
+DB_GLO_PaladinMoments_WillHelpKethericWithNightsong(1)
+AND
+QRY_OnlyOnce("GLO_PaladinMoments_BetrayedKetheric")
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+// Betraying Balthazar
+IF
+FlagSet((FLAG)SHA_NightsongPrison_State_PlayerBetrayedNecro_ed6e37a5-ea65-cf0b-f70b-8e9e2a7e4ed2, _, _DialogID)
+AND
+DB_GLO_PaladinMoments_WillHelpKethericWithNightsong(1)
+AND
+QRY_OnlyOnce("GLO_PaladinMoments_BetrayedKetheric")
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+//END_REGION Betraying Ketheric - agreed to help bringing Nightsong but not doing so
+
+//END_REGION
+
+PROC
+PROC_LevelLoadedOnce("INT_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+NOT DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+NOT DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211);
+
+SysClear("DB_GLO_PaladinMoments_AcceptedLastLightQuest", 1);
+ENDEXITSECTION
+ParentTargetEdge "Act2"

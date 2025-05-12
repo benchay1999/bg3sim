@@ -1,0 +1,31 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+// Wyll stops clapping once the song is changed
+PROC
+PROC_EPI_Epilogue_ChangeBardTrack((STRING)_)
+AND
+DB_EPI_Epilogue_PresentNPC((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, _, _, _, _)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+SetEntityEvent(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "EPI_Wyll_SongChanged", 1);
+
+IF
+FlagSet((FLAG)EPI_Epilogue_State_PartyGameplayStarted_1ff87c8c-a363-45fb-aeb8-762abc69b99e, _, _)
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllReleasedFromPact_79a90490-b009-507c-e0d3-f79b0bdd4cb6)
+AND
+NOT DB_GlobalFlag((FLAG)CAMP_Ravengard_State_RavengardInCamp_37309008-04cf-493c-8ca6-43034d331a8a)
+AND
+NOT DB_PermaDefeated(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03)
+THEN
+Die(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3c_EPI"

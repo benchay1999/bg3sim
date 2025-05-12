@@ -1,0 +1,3333 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_InternalGroup_Count(0);
+
+DB_LogicOr(0, 0, 0);
+DB_LogicOr(1, 0, 1);
+DB_LogicOr(0, 1, 1);
+DB_LogicOr(1, 1, 1);
+
+DB_LogicAnd(0, 0, 0);
+DB_LogicAnd(1, 0, 0);
+DB_LogicAnd(0, 1, 0);
+DB_LogicAnd(1, 1, 1);
+
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)GLO_PAD_CantTalk_b38cbc45-e8b5-614d-baf0-79ae565086cb);
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b);
+
+NOT DB_GLO_DieFlag((FLAG)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000, DEATHTYPE.None, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_ItemInventoryLockFlag((ITEM)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_InCharacterRespec((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, "");
+KBSECTION
+//REGION Defaults for item adding
+PROC
+TemplateAddTo((ITEMROOT)_ItemTemplate, (GUIDSTRING)_Object, (INTEGER)_Count)
+THEN
+TemplateAddTo(_ItemTemplate,_Object,_Count,1);
+
+PROC
+ToInventory((ITEM)_Item,(GUIDSTRING)_Container)
+THEN
+ToInventory(_Item,_Container,1,1,1);
+
+PROC
+ToInventory((ITEM)_Item, (GUIDSTRING)_TargetObject, (INTEGER)_Amount)
+THEN
+ToInventory(_Item, _TargetObject, _Amount, 1, 1);
+
+PROC
+ToInventory((ITEM)_Item, (GUIDSTRING)_TargetObject, (INTEGER)_Amount, (INTEGER)_ShowNotification)
+THEN
+ToInventory(_Item, _TargetObject, _Amount, _ShowNotification, 1);
+
+PROC
+MoveAllItemsTo((GUIDSTRING)_FromObject, (GUIDSTRING)_ToObject, (INTEGER)_MoveEquippedArmor, (INTEGER)_MoveEquippedWeapons, (INTEGER)_ClearOriginalOwner)
+THEN
+MoveAllItemsTo(_FromObject, _ToObject, _MoveEquippedArmor, _MoveEquippedWeapons, _ClearOriginalOwner, 0);
+
+//END_REGION
+
+//REGION Follow logic 
+PROC
+PROC_Follow((CHARACTER)_Char,(CHARACTER)_Target)
+THEN
+PROC_StopFollow(_Char);
+DB_Following(_Char,_Target);
+PROC_CheckCombatFollow(_Char,_Target);
+
+PROC
+PROC_CheckCombatFollow((CHARACTER)_Char,(CHARACTER)_Target)
+AND
+IsInCombat(_Char, 0)
+AND
+QRY_CheckCombatFollow_CombatRequestCheck((GUIDSTRING)_Char)
+THEN
+Follow((CHARACTER)_Char,_Target);
+
+QRY
+QRY_CheckCombatFollow_CombatRequestCheck((GUIDSTRING)_Char)
+AND
+NOT DB_EnterCombatRequested((GUIDSTRING)_Char)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CheckCombatFollow_CombatRequestCheck((GUIDSTRING)_Char)
+AND
+DB_EnterCombatRequested((GUIDSTRING)_Char)
+AND
+CanFight(_Char, 0)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StopFollow((CHARACTER)_Char)
+AND
+IsDead(_Char,0)
+THEN
+StopFollow(_Char);
+
+PROC
+PROC_StopFollow((CHARACTER)_Char)
+AND
+DB_Following(_Char,_Target)
+THEN
+NOT DB_Following(_Char,_Target);
+
+IF
+Dying(_Char)
+THEN
+PROC_StopFollow(_Char);
+
+IF
+EnteredCombat((CHARACTER)_Obj,_)
+AND
+DB_Following(_Obj,_)
+THEN
+StopFollow(_Obj);
+
+IF
+LeftCombat((CHARACTER)_Obj,_)
+AND
+DB_Following(_Obj,_Target)
+THEN
+Follow(_Obj,_Target);
+
+//END_REGION
+
+//REGION Killing characters in dialogue
+
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _Character, _DeathType, _Killer)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Character)
+AND
+_DeathType != DEATHTYPE.Chasm
+THEN
+Die(_Character, _DeathType, _Killer, 1, 0);
+
+IF
+FlagSet(_Flag, _Killer, _ID)
+AND
+_Killer != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_GLO_DieFlag(_Flag, _Character, _DeathType, _)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Character)
+AND
+_DeathType != DEATHTYPE.Chasm
+THEN
+Die(_Character, _DeathType, _Killer, 1, 0);
+
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _Character, _DeathType, _Killer)
+AND
+DB_InteractiveDialogSpeaker(_ID, _Character)
+AND
+_DeathType != DEATHTYPE.Chasm
+THEN
+DB_DialogDeath(_Character);
+Die(_Character, _DeathType, _Killer, 1, 0);
+ClearFlag(_Flag, NULL_00000000-0000-0000-0000-000000000000, _ID);
+
+IF
+FlagSet(_Flag, _Killer, _ID)
+AND
+_Killer != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_GLO_DieFlag(_Flag, _Character, _DeathType, _)
+AND
+DB_InteractiveDialogSpeaker(_ID, _Character)
+AND
+_DeathType != DEATHTYPE.Chasm
+THEN
+DB_DialogDeath(_Character);
+Die(_Character, _DeathType, _Killer, 1, 0);
+ClearFlag(_Flag, NULL_00000000-0000-0000-0000-000000000000, _ID);
+
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _Character, DEATHTYPE.Chasm, _Killer)
+AND
+DB_InteractiveDialogSpeaker(_ID, _Character)
+THEN
+DB_DialogDeath(_Character);
+PROC_GLO_DieFlag_ChasmDeath(_Character, _Killer);
+
+IF
+FlagSet(_Flag, _Killer, _ID)
+AND
+_Killer != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_GLO_DieFlag(_Flag, _Character, DEATHTYPE.Chasm, _)
+AND
+DB_InteractiveDialogSpeaker(_ID, _Character)
+THEN
+DB_DialogDeath(_Character);
+PROC_GLO_DieFlag_ChasmDeath(_Character, _Killer);
+
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _Character, DEATHTYPE.Chasm, _Killer)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Character)
+AND
+NOT DB_Players(_Character)
+THEN
+Die(_Character, DEATHTYPE.Chasm, _Killer, 1, 0);
+
+IF
+FlagSet(_Flag, _Killer, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _Victim, DEATHTYPE.Chasm, _)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Victim)
+AND
+DB_Players(_Victim)
+AND
+GetPosition(_Victim, _X, _Y, _Z)
+THEN
+PROC_Camp_PlayerEnteredChasm((CHARACTER)_Victim, _Killer, (REAL)_X, (REAL)_Y, (REAL)_Z);
+
+PROC
+PROC_GLO_DieFlag_ChasmDeath((CHARACTER)_Victim, (GUIDSTRING)_Killer)
+THEN
+DB_GLO_DieFlag_PrepareChasmDeath(_Victim, _Killer);
+SetDetached(_Victim, 1);
+SetVisible(_Victim, 0);
+
+IF
+DB_GLO_DieFlag_PrepareChasmDeath(_Victim, _Killer)
+AND
+NOT DB_InteractiveDialogSpeaker(_, _Victim)
+AND
+DB_Players(_Victim)
+AND
+GetPosition(_Victim, _X, _Y, _Z)
+THEN
+NOT DB_GLO_DieFlag_PrepareChasmDeath(_Victim, _Killer);
+PROC_Camp_PlayerEnteredChasm((CHARACTER)_Victim, _Killer, (REAL)_X, (REAL)_Y, (REAL)_Z);
+SetVisible(_Victim, 1);
+SetDetached(_Victim, 0);
+
+IF
+DB_GLO_DieFlag_PrepareChasmDeath(_Victim, _Killer)
+AND
+NOT DB_InteractiveDialogSpeaker(_, _Victim)
+AND
+NOT DB_Players(_Victim)
+AND
+GetPosition(_Victim, _X, _Y, _Z)
+THEN
+NOT DB_GLO_DieFlag_PrepareChasmDeath(_Victim, _Killer);
+SetVisible(_Victim, 1);
+SetDetached(_Victim, 0);
+SetOnStage(_Victim, 0);
+Die(_Victim, DEATHTYPE.Chasm, _Killer, 1, 0);
+
+IF
+FlagSet(_Flag, _Killer, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _, _, _)
+THEN
+ClearFlag(_Flag, _Killer, _ID);
+
+IF
+FlagSet(_Flag, _Killer, _ID)
+AND
+DB_GLO_DieFlag(_Flag, _, _, _OtherKiller)
+AND
+_Killer != NULL_00000000-0000-0000-0000-000000000000
+AND
+_OtherKiller != NULL_00000000-0000-0000-0000-000000000000
+AND
+_Killer != _OtherKiller
+AND
+GUIDToString(_Flag, _FlagName)
+AND
+GUIDToString(_Killer, _KillerName)
+AND
+GUIDToString(_OtherKiller, _OtherKillerName)
+AND
+Concatenate("Setting die flag ", _FlagName, _String1)
+AND
+Concatenate(_String1, " on killer ", _String2) 
+AND
+Concatenate(_String2, _KillerName, _String3)
+AND
+Concatenate(_String3, ", but die flag database already specifies killer ", _String4)
+AND
+Concatenate(_String4, _OtherKillerName, _String5)
+THEN
+DebugBreak(_String5);
+
+//REGION Generic helper flag
+
+IF
+FlagSet(GLO_CharacterDie_a0103c05-578b-4d42-b1e2-3b8ded63d0c1, _Victim, _ID)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Victim)
+THEN
+Die(_Victim, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 0);
+
+IF
+FlagSet(GLO_CharacterDie_a0103c05-578b-4d42-b1e2-3b8ded63d0c1, _Victim, _ID)
+AND
+DB_InteractiveDialogSpeaker(_ID, _Victim)
+AND
+IsCharacter(_Victim, 1)
+THEN
+DB_DialogDeath((CHARACTER)_Victim);
+Die(_Victim, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 0);
+
+//END_REGION
+
+IF
+Resurrected(_Character)
+AND
+DB_DialogDeath(_Character)
+THEN
+NOT DB_DialogDeath(_Character);
+
+//END_REGION
+
+//REGION Locking items in inventory if they are used in dialogue for extended periods of time
+
+IF
+FlagSet(_Flag, _Character, _ID)
+AND
+DB_GLO_ItemInventoryLockFlag(_Item, _Flag, _)
+AND
+DB_Players((CHARACTER)_Character)
+AND
+IsInMagicPockets(_Item, (CHARACTER)_Character, 1)
+THEN
+ToInventory(_Item, _Character, -1, 0, 1);
+ApplyStatus(_Item, "GEN_INVENTORYBOUND", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_GLO_ItemInventoryLockFlag_Locked(_Item, _ID);
+ClearFlag(_Flag, _Character, _ID);
+
+IF
+FlagSet(_Flag, _Character, _ID)
+AND
+DB_GLO_ItemInventoryLockFlag(_Item, _Flag, _)
+AND
+NOT DB_Players((CHARACTER)_Character)
+AND
+GetInventoryOwner(_Item, _Character)
+THEN
+ToInventory(_Item, _Character, -1, 0, 1);
+ApplyStatus(_Item, "GEN_INVENTORYBOUND", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_GLO_ItemInventoryLockFlag_Locked(_Item, _ID);
+ClearFlag(_Flag, _Character, _ID);
+
+IF
+FlagSet(_Flag, _Character, _ID)
+AND
+DB_GLO_ItemInventoryLockFlag(_Item, _Flag, _)
+AND
+DB_Players((CHARACTER)_Character)
+AND
+IsInMagicPockets(_Item, (CHARACTER)_Character, 0)
+THEN
+PROC_GLO_ItemInventoryLockFlag_NotInInventoryAssert(_Item, _Flag, _Character);
+ClearFlag(_Flag, _Character, _ID);
+
+IF
+FlagSet(_Flag, _Character, _ID)
+AND
+DB_GLO_ItemInventoryLockFlag(_Item, _Flag, _)
+AND
+NOT DB_Players((CHARACTER)_Character)
+AND
+NOT GetInventoryOwner(_Item, _Character)
+THEN
+PROC_GLO_ItemInventoryLockFlag_NotInInventoryAssert(_Item, _Flag, _Character);
+ClearFlag(_Flag, _Character, _ID);
+
+PROC
+PROC_GLO_ItemInventoryLockFlag_NotInInventoryAssert((ITEM)_Item, (FLAG)_Flag, (CHARACTER)_Character)
+AND
+GUIDToString(_Flag, _FlagName)
+AND
+GUIDToString(_Item, _ItemName)
+AND
+GUIDToString(_Character, _CharacterName)
+AND
+Concatenate("Trying to set Item Inventory Lock Flag ", _FlagName, _String1)
+AND
+Concatenate(_String1, " for item ", _String2)
+AND
+Concatenate(_String2, _ItemName, _String3)
+AND
+Concatenate(_String3, " on character ", _String4)
+AND
+Concatenate(_String4, _CharacterName, _String5)
+AND
+Concatenate(_String5, ", but the item is not in the character's magic pockets.", _StringFinal)
+THEN
+DebugBreak(_StringFinal);
+
+IF
+FlagSet(_Flag, _Character, _ID)
+AND
+DB_GLO_ItemInventoryLockFlag(_Item, _, _Flag)
+THEN
+RemoveStatus(_Item, "GEN_INVENTORYBOUND", NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_ItemInventoryLockFlag_Locked(_Item, _ID);
+ClearFlag(_Flag, _Character, _ID);
+
+IF
+DialogEnded(_Dialog, _ID)
+AND
+DB_GLO_ItemInventoryLockFlag_Locked(_Item, _ID)
+THEN
+RemoveStatus(_Item, "GEN_INVENTORYBOUND", NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_ItemInventoryLockFlag_Locked(_Item, _ID);
+
+//END_REGION
+
+//REGION Facing
+IF
+DB_DoNotFace((GUIDSTRING)_Char)
+THEN
+SetDoNotFaceFlag((CHARACTER)_Char,1);
+DB_CheckDoNotFace(_Char);
+
+IF
+DB_CheckDoNotFace(_Char)
+AND
+NOT DB_DoNotFace(_Char)
+THEN
+SetDoNotFaceFlag((CHARACTER)_Char,0);
+NOT DB_CheckDoNotFace(_Char);
+
+IF
+DB_DialogName(_Dialog, _InstanceID)
+AND
+DB_DoNotFaceDialog((GUIDSTRING)_Char, (DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_DoNotFace(_Char)
+AND
+DB_DialogSpeakers(_InstanceID, _Char, _)
+THEN
+DB_DoNotFace(_Char);
+DB_DoNotFaceDialogSet(_Char);
+
+IF
+DialogEnded(_Dialog, _InstanceId)
+AND
+DB_DoNotFaceDialog((GUIDSTRING)_Char, (DIALOGRESOURCE)_Dialog)
+AND
+DB_DoNotFace(_Char)
+AND
+DB_DoNotFaceDialogSet(_Char)
+THEN
+NOT DB_DoNotFace(_Char);
+
+IF
+AutomatedDialogEnded(_Dialog, _InstanceId)
+AND
+DB_DoNotFaceDialog((GUIDSTRING)_Char, (DIALOGRESOURCE)_Dialog)
+AND
+DB_DoNotFace(_Char)
+AND
+DB_DoNotFaceDialogSet(_Char)
+THEN
+NOT DB_DoNotFace(_Char);
+
+IF
+DB_DoNotFaceDialogSet(_Char)
+AND
+NOT DB_DoNotFace(_Char)
+THEN
+NOT DB_DoNotFaceDialogSet(_Char);
+
+PROC
+PROC_FaceCharacter((CHARACTER)_Character,(GUIDSTRING)_Target)
+AND
+NOT DB_DoNotFace(_Character)
+AND
+IsCharacter(_Character,1)
+AND
+NOT DB_CantMove(_Character)
+THEN
+LookAtEntity(_Character,_Target);
+
+PROC
+PROC_FaceEachother((CHARACTER)_CharacterA,(CHARACTER)_CharacterB)
+AND
+NOT DB_DoNotFace(_CharacterA)
+AND
+NOT DB_DoNotFace(_CharacterB)
+AND
+IsCharacter(_CharacterA,1)
+AND
+IsCharacter(_CharacterB,1)
+AND
+NOT DB_CantMove(_CharacterA)
+AND
+NOT DB_CantMove(_CharacterB)
+THEN
+LookAtEntity(_CharacterA,_CharacterB);
+LookAtEntity(_CharacterB,_CharacterA);
+
+//END_REGION
+
+//REGION Internal Dialog Logic (Starting dialog by clicking on NPC)
+PROC
+PROC_SetHasDialogIfChar((GUIDSTRING)_Npc, (INTEGER)_State)
+AND
+_Npc != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_Npc, 1)
+THEN
+SetHasDialog(_Npc, _State);
+
+PROC
+PROC_IncreaseInternalCount()
+AND
+DB_InternalGroup_Count(_Nr)
+AND
+IntegerSum(_Nr,1,_New)
+THEN
+NOT DB_InternalGroup_Count(_Nr);
+DB_InternalGroup_Count(_New);
+
+IF
+DB_Dialogs((GUIDSTRING)_Npc,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_SetHasDialogIfChar(_Npc,1);
+PROC_IncreaseInternalCount();
+PROC_InternalCounterEntry(_Npc,_Dialog);
+
+PROC
+PROC_InternalCounterEntry((GUIDSTRING)_Npc,(DIALOGRESOURCE)_Dialog)
+AND
+DB_InternalGroup_Count(_New)
+THEN
+DB_InternalCounter(_New,_Dialog,1);
+DB_Internal_Dialogs(_Npc,_Dialog,_New,1);
+
+IF
+DB_Dialogs((GUIDSTRING)_Npc,(GUIDSTRING)_Npc2,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_SetHasDialogIfChar(_Npc,1);
+PROC_SetHasDialogIfChar(_Npc2,1);
+PROC_IncreaseInternalCount();
+PROC_InternalCounterEntry(_Npc,_Npc2,_Dialog);
+
+PROC
+PROC_InternalCounterEntry((GUIDSTRING)_Npc,(GUIDSTRING)_Npc2,(DIALOGRESOURCE)_Dialog)
+AND
+DB_InternalGroup_Count(_Group)
+THEN
+DB_InternalCounter(_Group,_Dialog,2);
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1);
+DB_Internal_Dialogs(_Npc2,_Dialog,_Group,2);
+
+IF
+DB_Dialogs((GUIDSTRING)_Npc,(GUIDSTRING)_Npc2,(GUIDSTRING)_Npc3,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_SetHasDialogIfChar(_Npc,1);
+PROC_SetHasDialogIfChar(_Npc2,1);
+PROC_SetHasDialogIfChar(_Npc3,1);
+PROC_IncreaseInternalCount();
+PROC_InternalCounterEntry(_Npc,_Npc2,_Npc3,_Dialog);
+
+PROC
+PROC_InternalCounterEntry((GUIDSTRING)_Npc,(GUIDSTRING)_Npc2,(GUIDSTRING)_Npc3,(DIALOGRESOURCE)_Dialog)
+AND
+DB_InternalGroup_Count(_Group)
+THEN
+DB_InternalCounter(_Group,_Dialog,3);
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1);
+DB_Internal_Dialogs(_Npc2,_Dialog,_Group,2);
+DB_Internal_Dialogs(_Npc3,_Dialog,_Group,3);
+
+IF
+DB_Dialogs((GUIDSTRING)_Npc,(GUIDSTRING)_Npc2,(GUIDSTRING)_Npc3,(GUIDSTRING)_Npc4,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_SetHasDialogIfChar(_Npc,1);
+PROC_SetHasDialogIfChar(_Npc2,1);
+PROC_SetHasDialogIfChar(_Npc3,1);
+PROC_SetHasDialogIfChar(_Npc4,1);
+PROC_IncreaseInternalCount();
+PROC_InternalCounterEntry(_Npc,_Npc2,_Npc3,_Npc4,_Dialog);
+
+PROC
+PROC_InternalCounterEntry((GUIDSTRING)_Npc,(GUIDSTRING)_Npc2,(GUIDSTRING)_Npc3,(GUIDSTRING)_Npc4,(DIALOGRESOURCE)_Dialog)
+AND
+DB_InternalGroup_Count(_Group)
+THEN
+DB_InternalCounter(_Group,_Dialog,4);
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1);
+DB_Internal_Dialogs(_Npc2,_Dialog,_Group,2);
+DB_Internal_Dialogs(_Npc3,_Dialog,_Group,3);
+DB_Internal_Dialogs(_Npc4,_Dialog,_Group,4);
+
+QRY
+QRY_SelectNPCDialogs((GUIDSTRING)_Player,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,1)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+THEN
+DB_SelectedDialog(_Dialog,_Npc,_Player);
+
+QRY
+QRY_SelectNPCDialogs((GUIDSTRING)_Player,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,2)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+AND
+DB_Internal_Dialogs(_Npc2,_Dialog,_Group,2)
+THEN
+DB_SelectedDialog(_Dialog,_Npc,_Npc2,_Player);
+
+QRY
+QRY_SelectNPCDialogs((GUIDSTRING)_Player,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,3)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+AND
+DB_Internal_Dialogs(_Npc2,_Dialog,_Group,2)
+AND
+DB_Internal_Dialogs(_Npc3,_Dialog,_Group,3)
+THEN
+DB_SelectedDialog(_Dialog,_Npc,_Npc2,_Npc3,_Player);
+
+QRY
+QRY_SelectNPCDialogs((GUIDSTRING)_Player,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,4)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+AND
+DB_Internal_Dialogs(_Npc2,_Dialog,_Group,2)
+AND
+DB_Internal_Dialogs(_Npc3,_Dialog,_Group,3)
+AND
+DB_Internal_Dialogs(_Npc4,_Dialog,_Group,4)
+THEN
+DB_SelectedDialog(_Dialog,_Npc,_Npc2,_Npc3,_Npc4,_Player);
+
+QRY
+QRY_SelectDBDialogs((GUIDSTRING)_Npc, (GUIDSTRING)_Player)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+AND
+QRY_SelectNPCDialogs(_Player, _Dialog, _Group)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SelectDBDialogs((GUIDSTRING)_Npc, (GUIDSTRING)_Player)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,_Index)
+AND
+_Index != 1
+AND
+QRY_SelectNPCDialogs(_Player, _Dialog, _Group)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Default dialog
+QRY
+QRY_SelectDefaultDialog((GUIDSTRING)_Npc,(GUIDSTRING)_Player)
+AND
+IsCharacter(_Npc,1)
+AND
+GetDefaultDialog((CHARACTER)_Npc,_Dialog)
+THEN
+DB_SelectedDialog(_Dialog, _Npc, _Player);
+//END_REGION
+
+//REGION Internal Dialog Cleanup
+PROC
+PROC_RemoveAllDialogEntriesForSpeaker((GUIDSTRING)_NPC)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+THEN
+PROC_RemoveInternalDialogEntries(_Dialog,_Group);
+PROC_RemoveExternalDialogEntry(_Npc,_Dialog,_Group);
+
+PROC
+PROC_RemoveDialogEntryForSpeaker((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,1)
+THEN
+PROC_RemoveInternalDialogEntries(_Dialog,_Group);
+PROC_RemoveExternalDialogEntry(_Npc,_Dialog,_Group);
+
+PROC
+PROC_RemoveAllDialogEntriesForSpeaker((GUIDSTRING)_NPC)
+AND
+DB_AD_Dialog(_Npc, _AutomatedDialog)
+THEN
+PROC_RemoveNPCADs(_Npc, _AutomatedDialog);
+
+PROC
+PROC_RemoveAllDialogEntriesForSpeaker((GUIDSTRING)_NPC)
+AND
+DB_AD_Dialog(_Npc2, _Npc, _AutomatedDialog)
+THEN
+PROC_RemoveNPCADs(_Npc, _AutomatedDialog);
+
+PROC
+PROC_RemoveDialogEntryForSpeaker((GUIDSTRING)_NPC,(DIALOGRESOURCE)_AutomatedDialog)
+AND
+DB_AD_Dialog(_Npc, _AutomatedDialog)
+THEN
+PROC_RemoveNPCADs(_Npc, _AutomatedDialog);
+
+PROC
+PROC_RemoveDialogEntryForSpeaker((GUIDSTRING)_NPC,(DIALOGRESOURCE)_AutomatedDialog)
+AND
+DB_AD_Dialog(_Npc, _Npc2, _AutomatedDialog)
+THEN
+PROC_RemoveNPCADs(_Npc, _AutomatedDialog);
+
+//remove dialogs when an NPC dies.
+IF
+DB_PermaDefeated(_Npc)
+AND
+NOT DB_KeepDialogsOnDeath((CHARACTER)_Npc)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,_Nr)
+AND
+DB_Internal_Dialogs(_FirstSpeaker,_Dialog,_Group,1)
+THEN
+PROC_RemoveDialogEntryForSpeaker(_FirstSpeaker,_Dialog);
+
+PROC
+PROC_RemoveExternalDialogEntry((GUIDSTRING)_Npc,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,1)
+AND
+DB_Dialogs(_Npc,_Dialog)
+THEN
+NOT DB_Dialogs(_Npc,_Dialog);
+NOT DB_InternalCounter(_Group,_Dialog,1);
+
+PROC
+PROC_RemoveExternalDialogEntry((GUIDSTRING)_Npc,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,2)
+AND
+DB_Dialogs(_Npc,_Npc2,_Dialog)
+THEN
+NOT DB_Dialogs(_Npc,_Npc2,_Dialog);
+NOT DB_InternalCounter(_Group,_Dialog,2);
+
+PROC
+PROC_RemoveExternalDialogEntry((GUIDSTRING)_Npc,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,3)
+AND
+DB_Dialogs(_Npc,_Npc2,_Npc3,_Dialog)
+THEN
+NOT DB_Dialogs(_Npc,_Npc2,_Npc3,_Dialog);
+NOT DB_InternalCounter(_Group,_Dialog,3);
+
+PROC
+PROC_RemoveExternalDialogEntry((GUIDSTRING)_Npc,(DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_InternalCounter(_Group,_Dialog,4)
+AND
+DB_Dialogs(_Npc,_Npc2,_Npc3,_Npc4,_Dialog)
+THEN
+NOT DB_Dialogs(_Npc,_Npc2,_Npc3,_Npc4,_Dialog);
+NOT DB_InternalCounter(_Group,_Dialog,4);
+
+PROC
+PROC_RemoveInternalDialogEntries((DIALOGRESOURCE)_Dialog,(INTEGER)_Group)
+AND
+DB_Internal_Dialogs(_Npc,_Dialog,_Group,_Nr)
+THEN
+NOT DB_Internal_Dialogs(_Npc,_Dialog,_Group,_Nr);
+//END_REGION
+
+//REGION Cant Use Item Dialog
+PROC
+PROC_PlayCantUseItemAD((CHARACTER)_Speaker)
+AND
+QRY_TemporarilyMuted(_Speaker)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b, _Speaker);
+
+PROC
+PROC_PlayCantUseItemAD((CHARACTER)_Speaker)
+AND
+NOT QRY_TemporarilyMuted(_Speaker)
+AND
+DB_Hirelings_Hired(_Speaker)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b, _Speaker);
+
+PROC
+PROC_PlayCantUseItemAD((CHARACTER)_Speaker)
+AND
+DB_Is_InCombat(_Speaker,_)
+AND
+NOT DB_Hirelings_Hired(_Speaker)
+AND
+NOT QRY_TemporarilyMuted(_Speaker)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Combat_964ad41a-9386-d74d-bbbb-0768d248b188, _Speaker);
+
+PROC
+PROC_PlayCantUseItemAD((CHARACTER)_Speaker)
+AND
+NOT DB_Is_InCombat(_Speaker,_)
+AND
+NOT DB_Hirelings_Hired(_Speaker)
+AND
+NOT QRY_TemporarilyMuted(_Speaker)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_057cb7cf-5aa4-1ed7-9639-65530939b2f9, _Speaker);
+//END_REGION
+
+//REGION Start Dialog with 1 Item
+IF
+UseStarted(_Player,_Item)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Dialogs(_Item,_Dialog)
+THEN
+PROC_ProcessUseItemWithDialog(_Player,_Item,_Dialog);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(ITEM)_Item,(DIALOGRESOURCE)_Dialog)
+AND
+QRY_TemporarilyMuted(_Player)
+AND
+QRY_DialogShouldDropMutingStatusses(_Dialog, _Item,_Player,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatusses(_DropMuting)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(_IgnoreMuting)
+AND
+DB_LogicOr(_IgnoreMuting,_DropMuting,0)
+THEN
+DB_ItemDialogHandled(1);
+PROC_ProcessUseItemWithDialog_Muted(_Dialog, _Item,_Player);
+
+PROC
+PROC_ProcessUseItemWithDialog_Muted((DIALOGRESOURCE)_Dialog,(ITEM)_Item,(CHARACTER)_Player)
+AND
+NOT QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst(_Dialog,_Item,_Player,10.0)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b, _Player);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(ITEM)_Item,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_ItemDialogHandled(1)
+AND
+DB_Is_InCombat(_Player, _)
+THEN
+DB_ItemDialogHandled(1);
+PROC_PlayCantUseItemAD(_Player);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(ITEM)_Item,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_ItemDialogHandled(1)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Item,_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(ITEM)_Item,(DIALOGRESOURCE)_Dialog)
+THEN
+NOT DB_ItemDialogHandled(1);
+
+// From item's GEN_ItemDialog behavior script we can start interactive dialogs (used for modders to start item dialogs without Osiris support)
+IF
+DualEntityEvent(_Player,_Item,"GEN_StartItemDialog")
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+NOT DB_Dialogs(_Item,_)
+AND
+NOT DB_Is_InCombat(_Player,_)
+AND
+GetVarFixedStringUUID(_Item,"Cnst.ItemDialogue.ItemDialog",_Dialog)
+THEN
+PROC_ProcessUseItemWithDialog(_Player,(ITEM)_Item,(DIALOGRESOURCE)_Dialog);
+//END_REGION
+
+//REGION Start Dialog with 2 Items
+IF
+UseStarted(_Player,_Item)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Dialogs(_Item,_Other,_Dialog)
+THEN
+PROC_ProcessUseItemWithDialog(_Player,_Item,_Other,_Dialog);
+
+IF
+UseStarted(_Player,_Item)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Dialogs(_Other,_Item,_Dialog)
+THEN
+PROC_ProcessUseItemWithDialog(_Player,_Other,_Item,_Dialog);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(GUIDSTRING)_Item1,(GUIDSTRING)_Item2,(DIALOGRESOURCE)_Dialog)
+AND
+QRY_TemporarilyMuted(_Player)
+AND
+QRY_DialogShouldDropMutingStatusses(_Dialog, _Item1, _Item2, _Player,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatusses(_DropMuting)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(_IgnoreMuting)
+AND
+DB_LogicOr(_IgnoreMuting,_DropMuting,0)
+THEN
+DB_ItemDialogHandled(1);
+PROC_ProcessUseItemWithDialog_Muted(_Dialog,_Item1,_Item2,_Player);
+
+PROC
+PROC_ProcessUseItemWithDialog_Muted((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Item1,(GUIDSTRING)_Item2,(CHARACTER)_Player)
+AND
+NOT QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst(_Dialog,_Item1,_Item2,_Player,10.0)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b, _Player);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(GUIDSTRING)_Item1,(GUIDSTRING)_Item2,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_ItemDialogHandled(1)
+AND
+DB_Is_InCombat(_Player, _)
+THEN
+DB_ItemDialogHandled(1);
+PROC_PlayCantUseItemAD(_Player);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(GUIDSTRING)_Item1,(GUIDSTRING)_Item2,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_ItemDialogHandled(1)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Item1,_Item2,_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_ProcessUseItemWithDialog((CHARACTER)_Player,(GUIDSTRING)_Item1,(GUIDSTRING)_Item2,(DIALOGRESOURCE)_Dialog)
+THEN
+NOT DB_ItemDialogHandled(1);
+//END_REGION
+
+//REGION Start Automated Dialog with 1 Item 
+IF
+UseStarted(_Char,_Item)
+AND
+DB_AD_Dialog(_Item,_Dialog)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog,_Item);
+//END_REGION
+
+//REGION Track Object Invulnerable (mainly used by itemdialogs setting items temporarily invulnerable)
+PROC
+PROC_SetInvulnerable((GUIDSTRING)_Object,1)
+THEN
+ApplyStatus(_Object,"INVULNERABLE_NOT_SHOWN",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SetInvulnerable((GUIDSTRING)_Object,0)
+THEN
+RemoveStatus(_Object,"INVULNERABLE_NOT_SHOWN");
+//END_REGION
+
+//REGION Relation helpers
+PROC
+PROC_SetRelationMutual((FACTION)_Faction1,(FACTION)_Faction2,(INTEGER)_Relation)
+THEN
+PROC_SetRelation(_Faction1,_Faction2,_Relation);
+PROC_SetRelation(_Faction2,_Faction1,_Relation);
+
+PROC
+PROC_SetRelation((FACTION)_Faction1,(FACTION)_Faction2,(INTEGER)_Relation)
+AND
+_Relation == 0
+AND
+GetRelation(_Faction1, _Faction2, _CurrentRelation)
+AND
+_CurrentRelation > 0
+THEN
+DB_RelationChangingToHostile(_Faction1, _Faction2);
+
+PROC
+PROC_SetRelation((FACTION)_Faction1,(FACTION)_Faction2,(INTEGER)_Relation)
+THEN
+SetRelation(_Faction1, _Faction2, _Relation);
+
+IF
+RelationChanged(_Faction1, _Faction2, _, _)
+AND
+DB_RelationChangingToHostile(_Faction1, _Faction2)
+THEN
+NOT DB_RelationChangingToHostile(_Faction1, _Faction2);
+
+PROC
+PROC_SetRelationToPlayers((FACTION)_Faction,(INTEGER)_Relation)
+AND
+QRY_IsPlayerFaction(_Faction)
+THEN
+DebugBreak("Tried to PROC_SetRelationToPlayers on a player faction, that shouldn't happen and won't work");
+
+PROC
+PROC_SetRelationToPlayers((FACTION)_Faction,(INTEGER)_Relation)
+AND
+NOT QRY_IsPlayerFaction(_Faction)
+AND
+_Relation == 0
+AND
+NOT QRY_FactionHostilityBlacklisted(_Faction, 1)
+THEN
+PROC_SetRelationMutual(_Faction,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,_Relation);
+PROC_SetRelationToPlayers_ClearIndivPlayerRelations(_Faction);
+
+PROC
+PROC_SetRelationToPlayers((FACTION)_Faction,(INTEGER)_Relation)
+AND
+NOT QRY_IsPlayerFaction(_Faction)
+AND
+_Relation != 0
+THEN
+PROC_SetRelationMutual(_Faction,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,_Relation);
+PROC_SetRelationToPlayers_ClearHostileToPlayerGroup(_Faction);
+PROC_SetRelationToPlayers_ClearIndivPlayerRelations(_Faction);
+
+QRY
+QRY_IsPlayerFaction((FACTION)_Faction)
+AND
+DB_AvatarFactions(_Faction)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsPlayerFaction((FACTION)_Faction)
+AND
+DB_Hirelings_Factions(_Faction)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsPlayerFaction((FACTION)_Faction)
+AND
+DB_CompanionFactions(_Faction)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SetRelationToPlayers_ClearHostileToPlayerGroup((FACTION)_Faction)
+AND
+DB_PartOfTheTeam(_Player)
+AND
+IsPlayer(_Player,1)
+AND
+DB_HostileToPlayerGroup(_Faction, _Player)
+THEN
+NOT DB_HostileToPlayerGroup(_Faction, _Player);
+
+PROC
+PROC_SetRelationToPlayers_ClearIndivPlayerRelations((FACTION)_Faction)
+AND
+DB_AvatarFactions(_PlayerIndivFaction)
+THEN
+ClearRelation(_Faction, _PlayerIndivFaction);
+ClearRelation(_PlayerIndivFaction, _Faction);
+
+PROC
+PROC_SetRelationToPlayers_ClearIndivPlayerRelations((FACTION)_Faction)
+AND
+DB_Hirelings_Factions(_HirelingFaction)
+THEN
+ClearRelation(_Faction, _HirelingFaction);
+ClearRelation(_HirelingFaction, _Faction);
+
+PROC
+PROC_SetRelationToPlayers_ClearIndivPlayerRelations((FACTION)_Faction)
+AND
+DB_CompanionFactions(_CompanionFaction)
+THEN
+ClearRelation(_Faction, _CompanionFaction);
+ClearRelation(_CompanionFaction, _Faction);
+
+PROC
+PROC_SetHostileToIndivPlayerFaction((FACTION)_Faction,(CHARACTER)_Player)
+AND
+GetFaction(_Player,_PlayerFaction)
+THEN
+PROC_SetRelationMutual(_Faction,_PlayerFaction,0);
+
+PROC
+PROC_ClearRelationMutual((FACTION)_Faction1,(FACTION)_Faction2)
+THEN
+ClearRelation(_Faction1,_Faction2);
+ClearRelation(_Faction2,_Faction1);
+
+PROC
+PROC_ClearRelationToPlayers((FACTION)_Faction)
+THEN
+PROC_ClearRelationMutual(_Faction,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360);
+
+PROC
+PROC_ResetRelationMutual((FACTION)_Faction1,(FACTION)_Faction2)
+THEN
+ResetRelation(_Faction1,_Faction2);
+ResetRelation(_Faction2,_Faction1);
+
+//END_REGION
+
+//REGION Change Attitude
+IF
+FlagSet(ChangeAttitude_a73f2d9f-ee7f-4fa2-a6ce-1f839ca48e13, _Player, _Instance) // flagType: Object
+AND
+GetVarInteger(_Player,"ChangeAttitude",_Value)
+AND
+DB_DialogNPCs(_Instance,_Npc,1)
+THEN
+ClearFlag((FLAG)ChangeAttitude_a73f2d9f-ee7f-4fa2-a6ce-1f839ca48e13, _Player, _Instance); // flagType: Object
+AddAttitudeTowardsPlayer((CHARACTER)_Npc,(CHARACTER)_Player,_Value);
+
+PROC
+PROC_SetAttitude((CHARACTER)_NPC,(CHARACTER)_Player,(INTEGER)_Value)
+AND
+GetAttitudeTowardsPlayer(_NPC, _Player, _Attitude)
+AND
+IntegerSubtract(_Value, _Attitude, _Diff)
+THEN
+AddAttitudeTowardsPlayer(_NPC, _Player, _Diff);
+//END_REGION
+
+//REGION Doors
+PROC
+PROC_ItemCloseAndLock((ITEM)_Item,(STRING)_Key)
+THEN
+Close(_Item);
+Lock(_Item,_Key);
+
+PROC
+PROC_ItemUnlockAndOpen((ITEM)_Item)
+THEN
+PROC_ItemUnlockAndOpen(_Item, 1);
+
+// PROC_ItemUnlockAndOpen((ITEM)_Item, (INTEGER)_IgnoreArcaneLock)
+PROC
+PROC_ItemUnlockAndOpen((ITEM)_Item, 1)
+THEN
+Unlock(_Item);
+Open(_Item);
+PROC_ItemUnlockAndOpen_Succeeded(_Item);
+
+PROC
+PROC_ItemUnlockAndOpen((ITEM)_Item, 0)
+AND
+HasActiveStatus(_Item, "ARCANE_LOCK", 0)
+THEN
+Unlock(_Item);
+Open(_Item);
+PROC_ItemUnlockAndOpen_Succeeded(_Item);
+
+PROC
+PROC_ItemUnlockAndOpen((ITEM)_Item, 0)
+AND
+HasActiveStatus(_Item, "ARCANE_LOCK", 1)
+THEN
+PROC_ItemUnlockAndOpen_Failed(_Item);
+
+PROC
+PROC_ItemUnlockAndOpen_Succeeded((ITEM)_Item)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_ItemUnlockAndOpen_Failed((ITEM)_Item)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Helpers for PROC_CharacterMoveTo/PROC_DisappearoutOfSight
+QRY
+QRY_ReactToMoveDisappearAssault((CHARACTER)_Char,(CHARACTER)_SourceOwner,(CHARACTER)_Source,(INTEGER)_DamageAmount,(STRING)_DamageSource,(INTEGER)_StoryActionID)
+AND
+NOT QRY_IsOriginPartOfTheTeam(_Char)
+AND
+QRY_CRIME_CountsAsAssaultOutOfCombat(_Char,_SourceOwner,_Source,_DamageAmount,_DamageSource,_StoryActionID)
+AND
+NOT QRY_CRIME_IsNonEnemyAssaultZeroDamage(_Char,_Source,_DamageSource,_DamageAmount,_StoryActionID)
+AND
+CanFight(_Char,1)
+AND
+CanJoinCombat(_Char,1)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_SourceOwner,_Source)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_Attacker)
+AND
+NOT QRY_CRIME_StoryActionHandled(_Attacker,"Assault",_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_Char,-1)
+AND
+QRY_CanSeeAttackers(_Char,(CHARACTER)_SourceOwner,_Source)
+AND
+DB_SawAttacker(_Target)
+THEN
+NOT DB_SawAttacker(_Target);
+SysClear("DB_QRYRN_ReactToMoveDisappearAssault",1);
+DB_QRYRN_ReactToMoveDisappearAssault(_Attacker);
+//END_REGION
+
+//REGION Move to changes 
+PROC
+CharacterMoveTo((CHARACTER)_Character,(GUIDSTRING)_Target,(STRING)_MovementSpeed,(STRING)_Event)
+THEN
+CharacterMoveTo((CHARACTER)_Character,(GUIDSTRING)_Target,(STRING)_MovementSpeed,(STRING)_Event,-1);
+
+PROC
+CharacterMoveToPosition((CHARACTER)_Character,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event)
+THEN
+CharacterMoveToPosition(_Character,_X,_Y,_Z,_MovementSpeed,_Event,-1);
+
+PROC
+PROC_InternalMoveSaveDialogState((CHARACTER)_Char)
+AND
+NOT DB_StoryMoving(_Char,1)
+AND
+DB_Internal_Dialogs(_Char,_,_,_)
+THEN
+DB_NPCHadDialog(_Char,1);
+
+PROC
+PROC_InternalMoveSaveDialogState((CHARACTER)_Char)
+AND
+NOT DB_StoryMoving(_Char,1)
+AND
+DB_AD_Dialog(_Char,_)
+THEN
+DB_NPCHadDialog(_Char,1);
+
+PROC
+PROC_InternalMoveSaveDialogState((CHARACTER)_Char)
+AND
+NOT DB_StoryMoving(_Char,1)
+AND
+GetHasDefaultDialog(_Char, 1)
+THEN
+DB_NPCHadDialog(_Char,1);
+
+PROC
+PROC_InternalMoveDisableInteractiveDialogs((CHARACTER)_Char)
+AND
+NOT DB_AD_Dialog(_Char,_)
+THEN
+SetHasDialog(_Char,0);
+
+PROC
+PROC_InternalMoveRestoreDialogState((CHARACTER)_Char)
+AND
+DB_NPCHadDialog(_Char,1)
+THEN
+NOT DB_NPCHadDialog(_Char,1);
+SetHasDialog(_Char,1);
+
+QRY
+QRY_CharacterMoveTo_GuaranteeEventName((STRING)_Event)
+AND
+DB_QRY_RTN_CharacterMoveTo_GuaranteeEventName(_Result)
+THEN
+NOT DB_QRY_RTN_CharacterMoveTo_GuaranteeEventName(_Result);
+
+QRY
+QRY_CharacterMoveTo_GuaranteeEventName((STRING)_Event)
+AND
+_Event != ""
+THEN
+DB_QRY_RTN_CharacterMoveTo_GuaranteeEventName(_Event);
+
+QRY
+QRY_CharacterMoveTo_GuaranteeEventName("")
+THEN
+DB_QRY_RTN_CharacterMoveTo_GuaranteeEventName("_ResetGenericBehaviours_");
+
+PROC
+PROC_MoveIfNotInCombat((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event,(INTEGER)_MovementID)
+AND
+NOT DB_Is_InCombat(_Char,_)
+THEN
+CharacterMoveTo(_Char,_Point,_MovementSpeed,_Event,_MovementID);
+
+PROC
+PROC_MoveIfNotInCombat((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event,(INTEGER)_MovementID)
+AND
+NOT DB_Is_InCombat(_Char,_)
+THEN
+CharacterMoveToPosition(_Char,_X,_Y,_Z,_MovementSpeed,_Event,_MovementID);
+
+QRY
+QRY_Character_CantMove((CHARACTER)_Char, "ignore")
+AND
+DB_CantMove(_Char)
+AND
+DB_PermaDefeated(_Char)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Character_CantMove((CHARACTER)_Char, "check")
+AND
+DB_CantMove(_Char)
+THEN
+DB_NOOP(1);
+
+
+PROC
+PROC_CharacterMoveTo((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event)
+THEN
+PROC_CharacterMoveTo(_Char,_Point,_MovementSpeed,_Event,"ignore");
+
+// possible values for _CantMoveHandling:
+//   * "ignore": don't care about DB_CantMove, almost always move. Query succeeds unless the character is both PermaDefeated and CantMove (some PermaDefeated states may allow a character to still move)
+//   * "check": don't move if in DB_CantMov and fail query in that case. Otherwise move.
+PROC
+PROC_CharacterMoveTo((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+QRY_CharacterMoveTo((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event,_CantMoveHandling)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CharacterMoveTo((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+NOT QRY_Character_CantMove(_Char, _CantMoveHandling)
+THEN
+PROC_CharacterMoveTo_Intern((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event);
+
+PROC
+PROC_CharacterMoveTo_Intern((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event)
+THEN
+PROC_ObjectCountHelper(_Char,"MoveCommandID");
+
+PROC
+PROC_CharacterMoveTo_Intern((CHARACTER)_Char,(GUIDSTRING)_Point,(STRING)_MovementSpeed,(STRING)_Event)
+AND
+DB_ObjectCountHelper(_Char,"MoveCommandID",_ID)
+AND
+QRY_CharacterMoveTo_GuaranteeEventName(_Event)
+AND
+DB_QRY_RTN_CharacterMoveTo_GuaranteeEventName(_GuaranteedEvent)
+THEN
+PROC_InternalMoveSaveDialogState(_Char);
+PROC_InternalMoveDisableInteractiveDialogs(_Char);
+BlockNewCrimeReactions(_Char,1);
+PROC_MoveIfNotInCombat(_Char,_Point,_MovementSpeed,_GuaranteedEvent,_ID);
+DB_CharacterMovement(_Char,_GuaranteedEvent,_ID);
+DB_StoryMoving(_Char,1);
+DB_MovingTo(_Char,_Point,_MovementSpeed,_ID);
+
+PROC
+PROC_CharacterMoveToPosition((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event)
+THEN
+PROC_CharacterMoveToPosition(_Char,_X,_Y,_Z,_MovementSpeed,_Event,"ignore");
+
+
+PROC
+PROC_CharacterMoveToPosition((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+QRY_CharacterMoveToPosition(_Char,_X,_Y,_Z,_MovementSpeed,_Event,_CantMoveHandling)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CharacterMoveToPosition((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+NOT QRY_Character_CantMove(_Char, _CantMoveHandling)
+THEN
+PROC_CharacterMoveToPosition_Intern((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event);
+
+PROC
+PROC_CharacterMoveToPosition_Intern((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event)
+THEN
+PROC_ObjectCountHelper(_Char,"MoveCommandID");
+
+PROC
+PROC_CharacterMoveToPosition_Intern((CHARACTER)_Char,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_MovementSpeed,(STRING)_Event)
+AND
+DB_ObjectCountHelper(_Char,"MoveCommandID",_ID)
+AND
+QRY_CharacterMoveTo_GuaranteeEventName(_Event)
+AND
+DB_QRY_RTN_CharacterMoveTo_GuaranteeEventName(_GuaranteedEvent)
+THEN
+PROC_InternalMoveSaveDialogState(_Char);
+PROC_InternalMoveDisableInteractiveDialogs(_Char);
+BlockNewCrimeReactions(_Char,1);
+DB_CharacterMovement(_Char,_GuaranteedEvent,_ID);
+PROC_MoveIfNotInCombat(_Char,_X,_Y,_Z,_MovementSpeed,_GuaranteedEvent,_ID);
+DB_StoryMoving(_Char,1);
+DB_MovingTo(_Char,_X,_Y,_Z,_MovementSpeed,_ID);
+
+PROC
+PROC_ResumeStoryMoving((CHARACTER)_Char)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+THEN
+PROC_SelectMove(_Char,_ID);
+
+PROC
+PROC_SelectMove((CHARACTER)_Char,(INTEGER)_ID)
+AND
+DB_MovingTo(_Char,_Point,_Running,_ID)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+THEN
+CharacterMoveTo(_Char,_Point,_Running,_Event);
+
+PROC
+PROC_SelectMove((CHARACTER)_Char,(INTEGER)_ID)
+AND
+DB_MovingTo(_Char,_X,_Y,_Z,_Running,_ID)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+THEN
+CharacterMoveToPosition(_Char,_X,_Y,_Z,_Running,_Event);
+
+IF
+CharacterMoveToCancelled(_Char,_ID)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+AND
+// In case of combat, we want to resume afterwards
+IsInCombat(_Char,0)
+THEN
+PROC_CharacterMoveTo_Clear(_Char,_ID,"Cancelled");
+PROC_CharacterMoveToCancelled(_Char,_Event);
+
+PROC
+PROC_CharacterMoveToCancelled((CHARACTER)_Char,(STRING)_Event)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CharacterMoveTo_ClearAll((CHARACTER)_Char)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+THEN
+NOT DB_CharacterMovement(_Char,_Event,_ID);
+
+PROC
+PROC_CharacterMoveTo_ClearAll((CHARACTER)_Char)
+AND
+DB_MovingTo(_Char,_Point,_Running,_ID)
+THEN
+BlockNewCrimeReactions(_Char,0);
+NOT DB_MovingTo(_Char,_Point,_Running,_ID);
+
+PROC
+PROC_CharacterMoveTo_ClearAll((CHARACTER)_Char)
+AND
+DB_MovingTo(_Char,_X,_Y,_Z,_Running,_ID)
+THEN
+BlockNewCrimeReactions(_Char,0);
+NOT DB_MovingTo(_Char,_X,_Y,_Z,_Running,_ID);
+
+PROC
+PROC_CharacterMoveTo_ClearAll((CHARACTER)_Char)
+THEN
+PROC_InternalMoveRestoreDialogState(_Char);
+
+IF
+EntityEvent((CHARACTER)_Char,_Event)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+THEN
+PROC_CharacterMoveTo_Clear(_Char,_ID,"Finished");
+
+PROC
+PROC_CharacterMoveTo_Clear((CHARACTER)_Char,(INTEGER)_ID,(STRING)_Reason)
+AND
+DB_MovingTo(_Char,_Point,_Running,_ID)
+THEN
+NOT DB_MovingTo(_Char,_Point,_Running,_ID);
+
+PROC
+PROC_CharacterMoveTo_Clear((CHARACTER)_Char,(INTEGER)_ID,(STRING)_Reason)
+AND
+DB_MovingTo(_Char,_X,_Y,_Z,_Running,_ID)
+THEN
+NOT DB_MovingTo(_Char,_X,_Y,_Z,_Running,_ID);
+
+PROC
+PROC_CharacterMoveTo_Clear((CHARACTER)_Char,(INTEGER)_ID,"Finished")
+THEN
+SetEntityEvent(_Char,"ClearPeaceReturn", 1);
+
+PROC
+PROC_CharacterMoveTo_Clear((CHARACTER)_Char,(INTEGER)_ID,(STRING)_Reason)
+AND
+DB_CharacterMovement(_Char,_Event,_ID)
+THEN
+NOT DB_CharacterMovement(_Char,_Event,_ID);
+BlockNewCrimeReactions(_Char,0);
+PROC_CheckInternalMoveRestoreDialogState(_Char);
+
+PROC
+PROC_CheckInternalMoveRestoreDialogState((CHARACTER)_Char)
+AND
+NOT DB_CharacterMovement(_Char,_,_)
+THEN
+NOT DB_StoryMoving(_Char,1);
+PROC_InternalMoveRestoreDialogState(_Char);
+
+IF
+AttackedBy((CHARACTER)_Char,(CHARACTER)_SourceOwner,(CHARACTER)_Source,_,_DamageAmount,_DamageSource, _StoryActionID)
+AND
+DB_StoryMoving(_Char,1)
+AND
+QRY_ReactToMoveDisappearAssault(_Char,_SourceOwner,_Source,_DamageAmount,_DamageSource,_StoryActionID)
+AND
+DB_QRYRN_ReactToMoveDisappearAssault(_Attacker)
+THEN
+PROC_MakeNPCHostile(_Attacker,_Char);
+
+IF
+DB_PermaDefeated(_Char)
+AND
+DB_StoryMoving((CHARACTER)_Char,1)
+THEN
+PROC_ClearStoryMove(_Char);
+
+IF
+WentOnStage(_Char,0)
+AND
+DB_StoryMoving((CHARACTER)_Char,1)
+THEN
+PROC_ClearStoryMove(_Char);
+
+IF
+EnteredCombat((CHARACTER)_Char,_)
+AND
+DB_StoryMoving(_Char,1)
+THEN
+PurgeOsirisQueue(_Char,0);
+
+PROC
+PROC_Purge_CancelMovement((CHARACTER)_Char)
+AND
+DB_StoryMoving((CHARACTER)_Char,1)
+THEN
+PROC_ClearStoryMove(_Char);
+
+IF
+LeftCombat((CHARACTER)_Char,_)
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+DB_StoryMoving(_Char,1)
+THEN
+PROC_ResumeStoryMoving(_Char);
+
+PROC
+PROC_ClearStoryMove((CHARACTER)_Char)
+THEN
+NOT DB_StoryMoving(_Char,1);
+PROC_CharacterMoveTo_ClearAll(_Char);
+PurgeOsirisQueue(_Char,0);
+//END_REGION
+
+PROC
+PROC_StartMovie((STRING)_Movie)
+AND
+DB_Players(_Char)
+AND
+GetReservedUserID(_Char,_ID)
+AND
+GetUserProfileID(_ID,_UserProfile)
+AND
+NOT DB_MoviePlayed(_UserProfile,_Movie)
+THEN
+DB_MoviePlayed(_UserProfile,_Movie);
+MoviePlay(_Char,_Movie, 1);
+
+PROC
+PROC_TriggerMovieEndFadeIn((STRING) _Movie)
+AND
+DB_Players(_Char)
+AND
+GetReservedUserID(_Char,_ID)
+AND
+GetUserProfileID(_ID,_UserProfile)
+THEN
+TriggerMovieEndFadeIn(_Char,_Movie);
+
+//REGION check closest available character to object
+QRY
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck)
+AND
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,0,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player)
+AND
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player,(CHARACTER)_ExceptPlayer,(INTEGER)_IgnoreCombat)
+AND
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player,(CHARACTER)_ExceptPlayer,(INTEGER)_IgnoreCombat,0)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player,(CHARACTER)_ExceptPlayer,(INTEGER)_IgnoreCombat,(INTEGER)_HideCheck)
+AND
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player,(CHARACTER)_ExceptPlayer,(INTEGER)_IgnoreCombat,(INTEGER)_HideCheck, 0)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_GetClosestAvailableCharacterTo((GUIDSTRING)_Obj,(INTEGER)_SightCheck,(INTEGER)_PartyCheck,(CHARACTER)_Player,(CHARACTER)_ExceptPlayer,(INTEGER)_IgnoreCombat,(INTEGER)_HideCheck, (INTEGER)_MutedCheck)
+AND 
+QRY_GetClosestAvailableCharacterTo_ClearFacts(_Obj)
+AND
+DB_Players(_Char)
+AND
+_Char != _ExceptPlayer
+AND
+QRY_Conditional_HideCheck(_HideCheck,_Char)
+AND
+QRY_Conditional_CanSee(_SightCheck,_Obj,(CHARACTER)_Char)
+AND
+QRY_SpeakerIsAvailable(_Char,_IgnoreCombat, _MutedCheck)
+AND
+QRY_Conditional_IsInPartyWith(_PartyCheck,_Char,_Player)
+AND
+GetDistanceTo(_Char,_Obj,_Dist)
+AND
+IsTagged(_Char,AVATAR_306b9b05-1057-4770-aa17-01af21acd650,_IsAvatar)
+THEN
+DB_ClosestAvailableCharacterTo(_Char,_Obj,_Dist);
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Char,_Obj,_Dist,_IsAvatar);
+
+//Helper functions
+QRY
+QRY_GetClosestAvailableCharacterTo_ClearFacts((GUIDSTRING)_Obj)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Obj);
+
+PROC
+PROC_GetClosestAvailableCharacterTo_ClearFacts((GUIDSTRING)_Obj)
+AND
+DB_ClosestAvailableCharacterTo(_Char,_Obj,_Dist)
+THEN
+NOT DB_ClosestAvailableCharacterTo(_Char,_Obj,_Dist);
+
+PROC
+PROC_GetClosestAvailableCharacterTo_ClearFacts((GUIDSTRING)_Obj)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Char,_Obj,_Dist,_IsAvatar)
+THEN
+NOT DB_ClosestAvailableCharacterTo_PreferAvatar(_Char,_Obj,_Dist,_IsAvatar);
+
+IF
+DB_ClosestAvailableCharacterTo(_Char1,_Obj,_Dist1)
+AND
+DB_ClosestAvailableCharacterTo(_Char2,_Obj,_Dist2)
+AND
+_Char1 != _Char2
+AND
+_Dist1 <= _Dist2
+THEN
+NOT DB_ClosestAvailableCharacterTo(_Char2,_Obj,_Dist2);
+
+IF
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Char1,_Obj,_Dist1,1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Char2,_Obj,_Dist2,0)
+THEN
+NOT DB_ClosestAvailableCharacterTo_PreferAvatar(_Char2,_Obj,_Dist2,0);
+
+IF
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Char1,_Obj,_Dist1,_IsAvatar)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Char2,_Obj,_Dist2,_IsAvatar)
+AND
+_Char1 != _Char2
+AND
+_Dist1 <= _Dist2
+THEN
+NOT DB_ClosestAvailableCharacterTo_PreferAvatar(_Char2,_Obj,_Dist2,_IsAvatar);
+//END_REGION
+
+//REGION Start dialogue with closest available character to object
+
+//2 speakers
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst(_Dialog, _Speaker1, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+//2 speakers - targetted player
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0) // We don't check the range on target as we want to make sure that it will try to start on target player first no matter the range - scripters should make sure it makes sense
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _TargetPlayer, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+NOT QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _TargetPlayer, _MaxRange, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _ShowAttackButton, _PerformSightChecks)
+THEN
+DB_NOOP(1);
+
+//2 speakers - closest available (prioritize avatars)
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_GetClosestAvailableCharacterTo(_Speaker1, _PerformSightChecks, 1, (CHARACTER)_TargetPlayer, NULL_00000000-0000-0000-0000-000000000000, _AllowCombat, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range, 1) // Second Param is the character passed in as the first param of QRY_GetClosestAvailableCharacterTo()
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DB_ClosestAvailableCharacterTo(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range) 
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+
+//3 speakers
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst(_Dialog, _Speaker1, _Speaker2, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+//3 speakers - targetted player
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _TargetPlayer, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+NOT QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _TargetPlayer, _MaxRange, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _ShowAttackButton, _PerformSightChecks)
+THEN
+DB_NOOP(1);
+
+//3 speakers - closest available (prioritize avatars)
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_GetClosestAvailableCharacterTo(_Speaker1, _PerformSightChecks, 1, (CHARACTER)_TargetPlayer, NULL_00000000-0000-0000-0000-000000000000, _AllowCombat, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range, 1) // Second Param is the character passed in as the first param of QRY_GetClosestAvailableCharacterTo()
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DB_ClosestAvailableCharacterTo(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range) 
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+//4 speakers
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _Speaker3, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst(_Dialog, _Speaker1, _Speaker2, _Speaker3, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+//4 speakers - targetted player
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _TargetPlayer, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+NOT QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _Speaker3, _TargetPlayer, _MaxRange, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _ShowAttackButton, _PerformSightChecks)
+THEN
+DB_NOOP(1);
+
+//4 speakers - closest available (prioritize avatars)
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_GetClosestAvailableCharacterTo(_Speaker1, _PerformSightChecks, 1, (CHARACTER)_TargetPlayer, NULL_00000000-0000-0000-0000-000000000000, _AllowCombat, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range, 1) // Second Param is the character passed in as the first param of QRY_GetClosestAvailableCharacterTo()
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DB_ClosestAvailableCharacterTo(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range) 
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+//5 speakers
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+//5 speakers - targetted player
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _TargetPlayer, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+NOT QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _TargetPlayer, _MaxRange, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _ShowAttackButton, _PerformSightChecks)
+THEN
+DB_NOOP(1);
+
+//5 speakers - closest available (prioritize avatars)
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_GetClosestAvailableCharacterTo(_Speaker1, _PerformSightChecks, 1, (CHARACTER)_TargetPlayer, NULL_00000000-0000-0000-0000-000000000000, _AllowCombat, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range, 1) // Second Param is the character passed in as the first param of QRY_GetClosestAvailableCharacterTo()
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DB_ClosestAvailableCharacterTo(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range) 
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+//6 speakers
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _TargetPlayer, _MaxRange, 1, 1, 1, 1)
+THEN
+DB_NOOP(1);
+
+//6 speakers - targetted player
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _TargetPlayer, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange_TryTargetFirst((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+NOT QRY_SpeakerIsAvailable(_TargetPlayer, _AllowCombat, 0)
+AND
+QRY_StartDialogCustomWithAvailableSpeakerInRange(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _TargetPlayer, _MaxRange, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _ShowAttackButton, _PerformSightChecks)
+THEN
+DB_NOOP(1);
+
+//6 speakers - closest available (prioritize avatars)
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+QRY_GetClosestAvailableCharacterTo(_Speaker1, _PerformSightChecks, 1, (CHARACTER)_TargetPlayer, NULL_00000000-0000-0000-0000-000000000000, _AllowCombat, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range, 1) // Second Param is the character passed in as the first param of QRY_GetClosestAvailableCharacterTo()
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+QRY
+QRY_StartDialogCustomWithAvailableSpeakerInRange((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_TargetPlayer, (REAL)_MaxRange, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_ShowAttackButton, (INTEGER)_PerformSightChecks)
+AND
+DB_ClosestAvailableCharacterTo(_AvailableSpeaker, (CHARACTER)_Speaker1, _Range) 
+AND
+_Range <= _MaxRange
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _AvailableSpeaker, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, -1, _ShowAttackButton)
+THEN
+PROC_GetClosestAvailableCharacterTo_ClearFacts(_Speaker1);
+
+
+//END_REGION
+
+//REGION Conditional Party/Sight checks
+QRY
+QRY_Conditional_HideCheck(0,(CHARACTER)_Char)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_Conditional_HideCheck(1,(CHARACTER)_Char)
+AND
+NOT QRY_CharacterIsHidden(_Char)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_Conditional_CanSee(0,(GUIDSTRING)_Obj,(CHARACTER)_Char)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_Conditional_CanSee(1,(GUIDSTRING)_Obj,(CHARACTER)_Char)
+AND
+NOT QRY_Condition_CanSee_IsNotCharacterCheck(_Obj)
+AND
+CanSee((CHARACTER)_Obj,_Char,1)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_Condition_CanSee_IsNotCharacterCheck((GUIDSTRING)_Obj)
+AND
+IsCharacter(_Obj, 0)
+THEN
+DebugBreak("Checking QRY_Conditional_CanSee true for non-character. This will always fail.");
+
+QRY
+QRY_Conditional_IsInPartyWith(0,(GUIDSTRING)_Obj,(CHARACTER)_Char)
+THEN
+DB_NoOp(1);
+
+QRY
+QRY_Conditional_IsInPartyWith_IsNotCharacterCheck((GUIDSTRING)_Obj)
+AND
+IsCharacter(_Obj, 0)
+THEN
+DebugBreak("Checking QRY_Conditional_IsInPartyWith true for non-character. This will always fail.");
+
+QRY
+QRY_Conditional_IsInPartyWith(1,(GUIDSTRING)_Obj,(CHARACTER)_Char)
+AND
+NOT QRY_Conditional_IsInPartyWith_IsNotCharacterCheck((GUIDSTRING)_Obj)
+AND
+IsInPartyWith((CHARACTER)_Obj,_Char,1)
+THEN
+DB_NoOp(1);
+//END_REGION
+
+//REGION Appear helpers
+PROC
+PROC_Appear((CHARACTER)_Character)
+AND
+IsDead(_Character ,0)
+THEN
+AppearAt(_Character,NULL_00000000-0000-0000-0000-000000000000,1,NULL_00000000-0000-0000-0000-000000000000,"",0);
+
+PROC
+PROC_Appear((CHARACTER)_Character)
+AND
+IsDead(_Character ,1)
+THEN
+PROC_Foop(_Character);
+
+PROC
+AppearAt((CHARACTER)_Character,(GUIDSTRING)_Target,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent)
+THEN
+AppearAt((CHARACTER)_Character,(GUIDSTRING)_Target,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent,0);
+
+PROC
+AppearAtPosition((CHARACTER)_Character,(REAL)_X,(REAL)_Y,(REAL)_Z,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent)
+THEN
+AppearAtPosition((CHARACTER)_Character,(REAL)_X,(REAL)_Y,(REAL)_Z,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent,0);
+
+PROC
+AppearOutOfSightTo((CHARACTER)_Character,(GUIDSTRING)_Target,(GUIDSTRING)_DiractionFrom,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent)
+THEN
+AppearOutOfSightTo((CHARACTER)_Character,(GUIDSTRING)_Target,(GUIDSTRING)_DiractionFrom,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent,0);
+
+PROC
+AppearOutOfSightToPosition((CHARACTER)_Character,(REAL)_X,(REAL)_Y,(REAL)_Z,(GUIDSTRING)_DiractionFrom,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent)
+THEN
+AppearOutOfSightToPosition((CHARACTER)_Character,(REAL)_X,(REAL)_Y,(REAL)_Z,(GUIDSTRING)_DiractionFrom,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent,0);
+
+PROC
+AppearOnTrailOutOfSightTo((CHARACTER)_Character,(CHARACTER)_Target,(GUIDSTRING)_DiractionFrom,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent)
+THEN
+AppearOnTrailOutOfSightTo((CHARACTER)_Character,(CHARACTER)_Target,(GUIDSTRING)_DiractionFrom,(INTEGER)_PlaySpawn,(ANIMATION)_SpawnAnimation,(STRING)_AppearEvent,0);
+
+PROC
+PROC_AppearOutOfSightTo((CHARACTER)_Character, (GUIDSTRING)_Target, (GUIDSTRING)_DirectionFrom, (STRING)_AppearEvent)
+THEN
+AppearOutOfSightTo(_Character,_Target,_DirectionFrom,0,NULL_00000000-0000-0000-0000-000000000000,_AppearEvent,0);
+//END_REGION
+
+//REGION Disappear out of sight
+
+PROC
+DisappearOutOfSightTo((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event)
+THEN
+DisappearOutOfSightTo(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,-1);
+
+PROC
+PROC_DisappearOutOfSight((CHARACTER)_Character,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event)
+AND
+_Event != ""
+THEN
+PROC_DisappearOutOfSight(_Character,_MovementSpeed,_IncreaseSpeed,_Event,"ignore");
+
+PROC
+PROC_DisappearOutOfSight((CHARACTER)_Character,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,"")
+THEN
+PROC_DisappearOutOfSight(_Character,_MovementSpeed,_IncreaseSpeed,"PROC_DisappearOutOfSight_DefaultEvent","ignore");
+
+PROC
+PROC_DisappearOutOfSight((CHARACTER)_Character,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+QRY_DisappearOutOfSight(_Character,_MovementSpeed,_IncreaseSpeed,_Event,_CantMoveHandling)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DisappearOutOfSight((CHARACTER)_Character,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+QRY_DisappearOutOfSightTo(_Character,NULL_00000000-0000-0000-0000-000000000000,_MovementSpeed,_IncreaseSpeed,_Event,_CantMoveHandling)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DisappearOutOfSightTo((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event)
+THEN
+PROC_DisappearOutOfSightTo(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,"ignore");
+
+PROC
+PROC_DisappearOutOfSightTo((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+QRY_DisappearOutOfSightTo(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,_CantMoveHandling)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DisappearOutOfSightTo((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event,(STRING)_CantMoveHandling)
+AND
+NOT QRY_Character_CantMove(_Character,_CantMoveHandling)
+THEN
+PROC_DisappearOutOfSightTo_Intern(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event);
+
+PROC
+PROC_DisappearOutOfSightTo_Intern((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event)
+AND
+NOT DB_DisappearedOutOfSight(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,(INTEGER)_,1)
+THEN
+PROC_ObjectCountHelper(_Character,"MoveCommandID");
+
+PROC
+PROC_DisappearOutOfSightTo_Intern((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,(INTEGER)_IncreaseSpeed,(STRING)_Event)
+AND
+NOT DB_DisappearedOutOfSight(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,(INTEGER)_,1)
+AND
+DB_ObjectCountHelper(_Character,"MoveCommandID",_ID)
+THEN
+BlockNewCrimeReactions(_Character,1);
+DB_DisappearedOutOfSight(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,_ID,1);
+PROC_ExecuteDisappearOutOfSight(_Character,_Object,_MovementSpeed,_IncreaseSpeed,_Event,_ID);
+
+PROC
+PROC_ExecuteDisappearOutOfSight((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_,1,(STRING)_Event,(INTEGER)_MovementID)
+AND
+NOT QRY_DelayDisappearOutOfSight(_Character)
+THEN
+DisappearOutOfSightTo(_Character,_Object,"Sprint",1,_Event,_MovementID);
+
+PROC
+PROC_ExecuteDisappearOutOfSight((CHARACTER)_Character,(GUIDSTRING)_Object,(STRING)_MovementSpeed,0,(STRING)_Event,(INTEGER)_MovementID)
+AND
+NOT QRY_DelayDisappearOutOfSight(_Character)
+THEN
+DisappearOutOfSightTo(_Character,_Object,_MovementSpeed,0,_Event,_MovementID);
+
+//Not including DB_Is_InCombat for now as there may be characters that need to escape from combat.
+QRY
+QRY_DelayDisappearOutOfSight((CHARACTER)_Character)
+AND
+DB_Dominated(_Character)
+THEN
+DB_StoppedOutOfSight(_Character);
+
+QRY
+QRY_CanSeeAttackers((CHARACTER)_Char,(CHARACTER)_Src,(GUIDSTRING)_SrcSummon)
+AND
+_SrcSummon != NULL_00000000-0000-0000-0000-000000000000
+AND
+_SrcSummon != _Src
+AND
+IsItem(_SrcSummon,0)
+AND
+CanSee(_Char,_SrcSummon,1)
+THEN
+DB_SawAttacker((CHARACTER)_SrcSummon);
+
+QRY
+QRY_CanSeeAttackers((CHARACTER)_Char,(CHARACTER)_Src,(GUIDSTRING)_SrcSummon)
+AND
+NOT DB_SawAttacker(_)
+AND
+CanSee(_Char,_Src,1)
+THEN
+DB_SawAttacker(_Src);
+
+IF
+AttackedBy((CHARACTER)_Char,(CHARACTER)_Src,(CHARACTER)_SrcSummon,_,_DamageAmount,_DamageSource,_StoryActionID)
+AND
+NOT DB_StoppedOutOfSight(_Char)
+AND
+DB_DisappearedOutOfSight(_Char,_,_,_,_,_,1)
+AND
+QRY_ReactToMoveDisappearAssault(_Char,_Src,_SrcSummon,_DamageAmount,_DamageSource,_StoryActionID)
+AND
+DB_QRYRN_ReactToMoveDisappearAssault(_Attacker)
+AND
+IsOnStage(_Char,1)
+THEN
+DB_StoppedOutOfSight(_Char);
+PurgeOsirisQueue(_Char,0);
+PROC_SetRelationTemporaryHostile(_Char,_Attacker);
+
+PROC
+PROC_StateSet_Dominated(_Char)
+AND
+NOT DB_StoppedOutOfSight((CHARACTER)_Char)
+AND
+DB_DisappearedOutOfSight(_Char,_,_,_,_,_,1)
+AND
+NOT QRY_IsOriginPartOfTheTeam(_Char)
+AND
+IsOnStage(_Char,1)
+THEN
+DB_StoppedOutOfSight(_Char);
+PurgeOsirisQueue(_Char,0);
+
+IF
+EnterCombatFailed(_Char1,_Char2)
+AND
+DB_StoppedOutOfSight((CHARACTER)_Char1)
+AND
+NOT DB_Is_InCombat(_Char1,_)
+AND
+NOT DB_Dominated(_Char1)
+THEN
+PROC_ResumeDisappearOutOfSight(_Char1);
+
+IF
+EnterCombatFailed(_Char1,_Char2)
+AND
+DB_StoppedOutOfSight((CHARACTER)_Char2)
+AND
+NOT DB_Is_InCombat(_Char2,_)
+AND
+NOT DB_Dominated(_Char2)
+THEN
+PROC_ResumeDisappearOutOfSight(_Char2);
+
+PROC
+PROC_StateCleared_Dominated(_Char)
+AND
+DB_StoppedOutOfSight((CHARACTER)_Char)
+AND
+NOT DB_Is_InCombat(_Char,_)
+THEN
+PROC_ResumeDisappearOutOfSight(_Char);
+
+IF
+EnteredCombat((CHARACTER)_Char,_)
+AND
+IsOnStage(_Char,1)
+AND
+DB_DisappearedOutOfSight(_Char,_,_,_,_,_,1)
+AND
+IsTagged(_Char,(TAG)BEAST_890b5a2a-e773-48df-b191-c887d87bec16,0)
+AND
+CanFight(_Char,1)
+THEN
+DB_StoppedOutOfSight(_Char);
+PurgeOsirisQueue(_Char,0);
+
+IF
+LeftCombat((CHARACTER)_Char,_)
+AND
+DB_StoppedOutOfSight(_Char)
+THEN
+PROC_ResumeDisappearOutOfSight(_Char);
+
+PROC
+PROC_Purge_CancelMovement((CHARACTER)_Char)
+AND
+DB_StoppedOutOfSight(_Char)
+THEN
+PROC_CancelDisappearOutOfSight(_Char);
+
+PROC
+PROC_Purge_CancelMovement((CHARACTER)_Char)
+AND
+DB_DisappearedOutOfSight(_Char,_,_,_,_,_,_)
+THEN
+PROC_CancelDisappearOutOfSight(_Char);
+
+PROC
+PROC_ResumeDisappearOutOfSight((CHARACTER)_Char)
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+DB_DisappearedOutOfSight(_Char,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,1)
+THEN
+NOT DB_StoppedOutOfSight(_Char);
+PROC_ExecuteDisappearOutOfSight(_Char,_Object,_Running,_IncreaseSpeed,_Event,_MovementID);
+
+IF
+DB_PermaDefeated(_Char)
+AND
+DB_DisappearedOutOfSight((CHARACTER)_Char,_,_,_,_,_,_)
+THEN
+PROC_CancelDisappearOutOfSight(_Char);
+
+//Resets dialogue state before any custom reactions to the disappearance,
+//for the (common) case where the NPC is set on-stage and given a new dialogue.
+//Otherwise WentOnStage may remove the dialogue again.
+IF
+EntityEvent(_Character, _Event)
+AND
+DB_DisappearedOutOfSight((CHARACTER)_Character,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,_ReactToCombat)
+THEN
+PROC_DisappearOutOfSightTo_ResetInternal(_Character,_MovementID);
+
+IF
+WentOnStage(_Character,1)
+AND
+DB_DisappearedOutOfSight((CHARACTER)_Character,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,_ReactToCombat)
+THEN
+PROC_DisappearOutOfSightTo_ResetInternal(_Character,_MovementID);
+
+PROC
+PROC_CancelDisappearOutOfSight((CHARACTER)_Character)
+AND
+DB_DisappearedOutOfSight(_Character,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,_ReactToCombat)
+THEN
+PurgeOsirisQueue(_Character,0);
+PROC_DisappearOutOfSightToCancelled(_Character);
+PROC_DisappearOutOfSightTo_ResetInternal(_Character,_MovementID);
+
+IF
+DisappearOutOfSightToCancelled(_Character,_MovementID)
+AND
+// In case of being stopped while disappearing, we want to resume afterwards. Currently happens only due to attacking a char or it entering combat
+NOT DB_StoppedOutOfSight(_Character)
+AND
+DB_DisappearedOutOfSight(_Character,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,_ReactToCombat)
+THEN
+PROC_DisappearOutOfSightToCancelled(_Character);
+PROC_DisappearOutOfSightTo_ResetInternal(_Character,_MovementID);
+
+PROC
+PROC_DisappearOutOfSightToCancelled((CHARACTER)_Character)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DisappearOutOfSightTo_ResetInternal((CHARACTER)_Character,(INTEGER)_MovementID)
+AND
+DB_DisappearedOutOfSight(_Character,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,_ReactToCombat)
+THEN
+NOT DB_DisappearedOutOfSight(_Character,_Object,_Running,_IncreaseSpeed,_Event,_MovementID,_ReactToCombat);
+NOT DB_StoppedOutOfSight(_Character);
+BlockNewCrimeReactions(_Character,0);
+//END_REGION
+
+//REGION TemporaryHostileRelation
+PROC
+PROC_SetRelationTemporaryHostile((CHARACTER)_Npc,(CHARACTER)_NpcOrPlayer)
+AND
+_NpcOrPlayer!= NULL_00000000-0000-0000-0000-000000000000
+AND
+_Npc!= NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT QRY_RegisterHostileNonCombatantCrime(_Npc, _NpcOrPlayer)
+THEN
+PROC_RegisterTemporaryHostileRequest(_Npc,_NpcOrPlayer);
+SetRelationTemporaryHostile(_Npc,_NpcOrPlayer);
+
+PROC
+PROC_RegisterTemporaryHostileRequest((CHARACTER)_Npc,(CHARACTER)_NpcOrPlayer)
+AND
+GetFaction(_Npc, _NpcFaction)
+AND
+GetFaction(_NpcOrPlayer, _NpcOrPlayerFaction)
+THEN
+DB_RelationChangingToTemporaryHostile(_NpcFaction, _NpcOrPlayerFaction);
+// Code automatically performs an EnterCombat after the temporary hostile relation has set up
+DB_EnterCombatRequested(_Npc);
+DB_EnterCombatRequested(_NpcOrPlayer);
+
+IF
+RelationChanged(_Faction1, _Faction2, _, 0)
+AND
+DB_RelationChangingToTemporaryHostile(_Faction1, _Faction2)
+THEN
+NOT DB_RelationChangingToTemporaryHostile(_Faction1, _Faction2);
+
+IF
+EnterCombatFailed(_Object1, _Object2)
+AND
+GetFaction(_Object1, _Faction1)
+AND
+GetFaction(_Object2, _Faction2)
+AND
+DB_RelationChangingToTemporaryHostile(_Faction1, _Faction2)
+THEN
+NOT DB_RelationChangingToTemporaryHostile(_Faction1, _Faction2);
+
+PROC
+PROC_EnterCombat((GUIDSTRING)_Object1, (GUIDSTRING)_Object2)
+THEN
+DB_EnterCombatRequested(_Object1);
+DB_EnterCombatRequested(_Object2);
+EnterCombat(_Object1, _Object2);
+
+IF
+DB_Is_InCombat(_Object, _)
+AND
+DB_EnterCombatRequested(_Object)
+THEN
+NOT DB_EnterCombatRequested(_Object);
+
+IF
+EnterCombatFailed(_Object1, _Object2)
+THEN
+NOT DB_EnterCombatRequested(_Object1);
+NOT DB_EnterCombatRequested(_Object2);
+
+QRY
+QRY_RegisterHostileNonCombatantCrime((CHARACTER)_NPC, (CHARACTER)_Player)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Children(_NPC)
+THEN
+PROC_CharacterRegisterCrime(_Player, "HostileChild", NULL_00000000-0000-0000-0000-000000000000, _NPC, 0);
+
+//END_REGION
+
+IF
+LevelUnloading(_Region)
+THEN
+PROC_LevelUnloading(_Region);
+
+PROC
+PROC_LevelUnloading((STRING)_Region)
+THEN
+DB_NOOP(1);
+
+//REGION Healing status query
+QRY
+QRY_IsHealingStatus((STRING)_Status)
+AND
+GetStatusType(_Status,"HEAL")
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION item moving defaults
+PROC
+ItemMoveTo((ITEM)_Item,(GUIDSTRING)_Target, (REAL)_Speed, (REAL)_Acceleration, (INTEGER)_UseRotation,(STRING)_Event,(INTEGER)_DoHits)
+THEN
+ItemMoveTo(_Item,_Target,_Speed,_Acceleration,_UseRotation,_Event);
+
+PROC
+ItemMoveTo((ITEM)_Item,(GUIDSTRING)_Target, (REAL)_Speed, (REAL)_Acceleration, (INTEGER)_UseRotation)
+THEN
+ItemMoveTo(_Item,_Target,_Speed,_Acceleration,_UseRotation,"",1);
+
+PROC
+ItemMoveToPosition((ITEM)_Item, (REAL)_X, (REAL)_Y, (REAL)_Z, (REAL)_Speed, (REAL)_Acceleration, (STRING)_Event, (INTEGER)_DoHits)
+THEN
+ItemMoveToPosition(_Item, _X, _Y, _Z, _Speed, _Acceleration,_Event);
+
+PROC
+ItemMoveToPosition((ITEM)_Item, (REAL)_X, (REAL)_Y, (REAL)_Z, (REAL)_Speed, (REAL)_Acceleration)
+THEN
+ItemMoveToPosition(_Item, _X, _Y, _Z, _Speed, _Acceleration,"",1);
+
+//END_REGION
+
+//REGION effects
+PROC
+PlayEffectAtPosition((EFFECTRESOURCE)_FxName,(REAL)_X, (REAL)_Y, (REAL)_Z)
+THEN
+PlayEffectAtPosition(_FxName,_X,_Y,_Z,1.0);
+
+PROC
+PlayEffect((GUIDSTRING)_Object,(EFFECTRESOURCE)_FxName,(STRING)_Bone)
+THEN
+PlayEffect(_Object,_FxName,"", 1.0);
+
+PROC
+PlayEffect((GUIDSTRING)_Object,(EFFECTRESOURCE)_FxName)
+THEN
+PlayEffect(_Object,_FxName,"");
+//END_REGION
+
+//REGION Attack
+PROC
+Attack((CHARACTER)_Character, (GUIDSTRING)_Target)
+THEN
+Attack(_Character, _Target, 1);
+//END_REGION
+
+PROC
+ApplyDamage((GUIDSTRING)_Object, (INTEGER)_Damage, (STRING)_DamageType)
+THEN
+ApplyDamage(_Object, _Damage, _DamageType, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+ApplyStatus((GUIDSTRING)_Object, (STRING)_Status, (REAL)_Duration, (INTEGER)_Force)
+THEN
+ApplyStatus(_Object, _Status, _Duration, _Force, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+Die((ITEM)_Item)
+THEN
+Die(_Item, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 0);
+
+PROC
+Die((GUIDSTRING)_Object, (DEATHTYPE)_DeathType, (INTEGER)_GenerateTreasure)
+THEN
+Die(_Object, _DeathType, NULL_00000000-0000-0000-0000-000000000000, _GenerateTreasure, 0);
+
+PROC
+PROC_DieImmediate((CHARACTER)_Character, (DEATHTYPE)_DeathType, (INTEGER)_GenerateTreasure)
+THEN
+Die(_Character, _DeathType, NULL_00000000-0000-0000-0000-000000000000, _GenerateTreasure, 1);
+
+PROC
+Resurrect((CHARACTER)_Character)
+THEN
+Resurrect(_Character,NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+LookAtEntity((CHARACTER)_Character, (GUIDSTRING)_Target)
+THEN
+LookAtEntity(_Character, _Target, 3.0);
+
+PROC
+PROC_GameEndWithMovie("")
+THEN
+GameEnd();
+
+PROC
+PROC_GameEndWithMovie((STRING)_Movie)
+AND
+_Movie != ""
+THEN
+GameEndWithMovie(_Movie);
+
+//REGION Create quick procs
+PROC
+PROC_CreateAt((GUIDSTRING)_TemplateId,(REAL)_X,(REAL)_Y,(REAL)_Z)
+AND
+CreateAt(_TemplateId,_X,_Y,_Z,0,0,"",_)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CreateAtObject((GUIDSTRING)_TemplateId,(GUIDSTRING)_AnchorObject)
+AND
+CreateAtObject(_TemplateId,_AnchorObject,0,0,"",0,_)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION LevelUp
+PROC
+PROC_LevelUpBy((GUIDSTRING)_Object,(INTEGER)_LevelDiff)
+AND
+GetLevel(_Object,_Lvl)
+AND
+IntegerSum(_Lvl,_LevelDiff,_LvlPlusDiff)
+THEN
+SetLevel(_Object,_LvlPlusDiff);
+
+PROC
+PROC_LevelUp((GUIDSTRING)_Object)
+THEN
+PROC_LevelUpBy(_Object,1);
+//END_REGION
+
+//REGION IsInDangerousSurfaceFor
+QRY
+QRY_CharacterIsInDangerousSurface((CHARACTER)_Char)
+AND
+QRY_IsInDangerousSurfaceFor(_Char, _Char)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CharacterIsInDangerousSurface((CHARACTER)_Char, (REAL)_Radius)
+AND
+QRY_IsInDangerousSurfaceFor(_Char, _Char, _Radius, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CharacterIsInDangerousSurface((CHARACTER)_Char, (REAL)_Radius, (INTEGER)_AlsoIfCanStopMovement)
+AND
+QRY_IsInDangerousSurfaceFor(_Char, _Char, _Radius, _AlsoIfCanStopMovement)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsInDangerousSurfaceFor((GUIDSTRING)_Object, (CHARACTER)_Char)
+AND
+QRY_IsInDangerousSurfaceFor(_Object, _Char, -1.0, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsInDangerousSurfaceFor((GUIDSTRING)_Object, (CHARACTER)_Char, (REAL)_Radius)
+AND
+QRY_IsInDangerousSurfaceFor(_Object, _Char, _Radius, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsInDangerousSurfaceFor((GUIDSTRING)_Object, (CHARACTER)_Char, (REAL)_Radius, (INTEGER)_AlsoIfCanStopMovement)
+AND
+GetPosition(_Object, _X, _Y, _Z)
+AND
+IsInDangerousSurfaceFor(_X, _Y, _Z, _Char, _Radius, _AlsoIfCanStopMovement, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Real3 operations
+QRY
+QRY_Real3Compare((REAL)_X,(REAL)_Y,(REAL)_Z,(REAL)_X2,(REAL)_Y2,(REAL)_Z2)
+AND
+_X == _X2
+AND
+_Y == _Y2
+AND
+_Z == _Z2
+THEN
+DB_NOOP(1);
+
+//_Threshold must be positive
+QRY
+QRY_Real3CompareWithThreshold((REAL)_X,(REAL)_Y,(REAL)_Z,(REAL)_X2,(REAL)_Y2,(REAL)_Z2,(REAL)_Threshold)
+AND
+RealSubtract(_X, _X2, _DX)
+AND
+QRY_RealWithinThreshold(_DX, _Threshold)
+AND
+RealSubtract(_Y, _Y2, _DY)
+AND
+QRY_RealWithinThreshold(_DY, _Threshold)
+AND
+RealSubtract(_Z, _Z2, _DZ)
+AND
+QRY_RealWithinThreshold(_DZ, _Threshold)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_RealWithinThreshold((REAL)_X, (REAL)_Threshold)
+AND
+_X < _Threshold
+AND
+RealProduct(_Threshold, -1.0, _NegativeThreshold)
+AND
+_X > _NegativeThreshold
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_GetReal3SqrDistance((REAL)_X,(REAL)_Y,(REAL)_Z,(REAL)_X2,(REAL)_Y2,(REAL)_Z2)
+AND
+DB_QRYRTN_GetReal3SqrDistance(_DistSqr)
+THEN
+NOT DB_QRYRTN_GetReal3SqrDistance(_DistSqr);
+
+QRY
+QRY_GetReal3SqrDistance((REAL)_X,(REAL)_Y,(REAL)_Z,(REAL)_X2,(REAL)_Y2,(REAL)_Z2)
+AND
+RealSubtract(_X,_X2,_XDelta)
+AND
+RealSubtract(_Y,_Y2,_YDelta)
+AND
+RealSubtract(_Z,_Z2,_ZDelta)
+AND
+RealProduct(_XDelta,_XDelta,_XDeltqSqr)
+AND
+RealProduct(_YDelta,_YDelta,_YDeltqSqr)
+AND
+RealProduct(_ZDelta,_ZDelta,_ZDeltqSqr)
+AND
+RealSum(_XDeltqSqr,_YDeltqSqr,_XYDistSqr)
+AND
+RealSum(_XYDistSqr,_ZDeltqSqr,_DistSqr)
+THEN
+DB_QRYRTN_GetReal3SqrDistance(_DistSqr);
+//END_REGION
+
+//REGION Random selection of already-present speakers.
+
+IF
+FlagSet((FLAG)ORI_Event_SelectRandomCompanionInDialog_7c5a08c2-06ee-c482-e049-09b46c84227a, _, _)
+AND
+DB_ORI_SelectRandomCompanionInDialog_Candidate(_Companion)
+THEN
+NOT DB_ORI_SelectRandomCompanionInDialog_Candidate(_Companion);
+
+IF
+FlagSet((FLAG)ORI_Event_SelectRandomCompanionInDialog_7c5a08c2-06ee-c482-e049-09b46c84227a, _Speaker, _ID)
+AND
+DB_DialogPlayers(_ID, _Companion, _)
+AND
+_Speaker != _Companion
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+NOT DB_Avatars(_Companion)
+THEN
+DB_ORI_SelectRandomCompanionInDialog_Candidate((CHARACTER)_Companion);
+
+IF
+FlagSet((FLAG)ORI_Event_SelectRandomCompanionInDialog_7c5a08c2-06ee-c482-e049-09b46c84227a, _, _ID)
+AND
+QRY_GetRandom("DB_ORI_SelectRandomCompanionInDialog_Candidate", 1, "DB_ORI_SelectRandomCompanionInDialog_Selected")
+AND
+DB_ORI_SelectRandomCompanionInDialog_Selected((CHARACTER)_Selected)
+THEN
+NOT DB_ORI_SelectRandomCompanionInDialog_Selected(_Selected);
+DB_ORI_SelectedRandomCompanionInDialog(_Selected, _ID);
+SetFlag((FLAG)ORI_Event_SelectedRandomCompanionInDialog_4fe26103-84e4-5128-45b0-7582f0642240, _Selected, _ID);
+
+IF
+DB_ORI_SelectedRandomCompanionInDialog(_Speaker, _ID)
+AND
+NOT DB_DialogPlayers(_ID, _Speaker, _)
+THEN
+NOT DB_ORI_SelectedRandomCompanionInDialog(_Speaker, _ID);
+ClearFlag((FLAG)ORI_Event_SelectedRandomCompanionInDialog_4fe26103-84e4-5128-45b0-7582f0642240, _Speaker, _ID);
+
+//END_REGION
+
+//REGION Backwards compatibility call for RequestActive/PassiveRolls
+PROC
+RequestPassiveRoll((CHARACTER)_Roller, (GUIDSTRING)_RollSubject, (STRING)_SkillOrAbility, (DIFFICULTYCLASS)_DC, (STRING)_Event)
+THEN
+RequestPassiveRoll(_Roller, _RollSubject, "RawAbility", _SkillOrAbility, _DC, 0, _Event);
+
+PROC
+RequestActiveRoll((CHARACTER)_Roller, (GUIDSTRING)_RollSubject, (STRING)_SkillOrAbility, (DIFFICULTYCLASS)_DC, (STRING)_Event)
+THEN
+RequestActiveRoll(_Roller, _RollSubject, "RawAbility", _SkillOrAbility, _DC, 0, _Event);
+//END_REGION
+
+//REGION Backwards compatibility for CreateExplosion*
+PROC
+CreateExplosion((GUIDSTRING)_Target, (STRING)_SpellID, (INTEGER)_CasterLevel)
+THEN
+CreateExplosion(_Target, _SpellID, _CasterLevel, NULL_00000000-0000-0000-0000-000000000000);
+PROC
+CreateExplosionAtPosition((REAL)_X, (REAL)_Y, (REAL)_Z, (STRING)_SpellID, (INTEGER)_CasterLevel)
+THEN
+CreateExplosionAtPosition(_X, _Y, _Z, _SpellID, _CasterLevel, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Backwards compatibility call for Use
+PROC
+Use((CHARACTER)_Character, (ITEM)_Item, (STRING)_Event)
+THEN
+Use(_Character, _Item, 1, 0, _Event);
+//END_REGION
+
+//REGION Backwards compatibility call for AddSpell/RemoveSpell
+PROC
+AddSpell((CHARACTER)_Character, (STRING)_Skill)
+THEN
+AddSpell((CHARACTER)_Character, (STRING)_Skill, 1);
+
+PROC
+AddSpell((CHARACTER)_Character, (STRING)_Skill, (INTEGER)_ShowNotification)
+THEN
+AddSpell((CHARACTER)_Character, (STRING)_Skill, (INTEGER)_ShowNotification, 1);
+
+PROC
+RemoveSpell((CHARACTER)_Character, (STRING)_Spell)
+THEN
+RemoveSpell((CHARACTER)_Character, (STRING)_Spell, 1);
+//END_REGION
+
+//REGION Backwards compatibility for ObjectTimerLaunch
+PROC
+ObjectTimerLaunch((GUIDSTRING)_Entity, (STRING)_TimerID, (INTEGER)_Time)
+THEN
+ObjectTimerLaunch(_Entity, _TimerID, _Time, 1);
+//END_REGION
+
+//REGION Backwards compatibility for CreateSurface*
+PROC
+CreateSurface((GUIDSTRING)_Source, (STRING)_SurfaceType, (REAL)_Radius, (REAL)_Lifetime)
+THEN
+CreateSurface(_Source, _SurfaceType, _Radius, _Lifetime, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+CreateSurfaceAtPosition((REAL)_X, (REAL)_Y, (REAL)_Z, (STRING)_SurfaceType, (REAL)_Radius, (REAL)_Lifetime)
+THEN
+CreateSurfaceAtPosition(_X, _Y, _Z, _SurfaceType, _Radius, _Lifetime, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Backwards compatibility for MakePlayer
+PROC
+MakePlayer((CHARACTER)_TargetCharacter, (CHARACTER)_OwnerCharacter)
+THEN
+MakePlayer(_TargetCharacter, _OwnerCharacter, 1);
+//REGION
+
+//REGION Backwards compatibility for RemoveStatus(esWithGroup)
+PROC
+RemoveStatus((GUIDSTRING)_Target,(STRING)_Status)
+THEN
+RemoveStatus(_Target,_Status,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+RemoveStatusesWithGroup((GUIDSTRING)_Target,(STRING)_StatusGroup)
+THEN
+RemoveStatusesWithGroup(_Target,_StatusGroup,NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Backwards compatibility for PurgeQueue
+PROC
+PurgeOsirisQueue((CHARACTER)_Character)
+THEN
+PROC_Purge_CancelMovement(_Character);
+PurgeOsirisQueue(_Character,1);
+//END_REGION
+
+//REGION Backwards compatibility for Set*EntityEvent*
+PROC
+SetEntityEvent((GUIDSTRING)_Object, (STRING)_Event)
+THEN
+SetEntityEvent(_Object, _Event, 0);
+
+PROC
+SetEntityEventReal((GUIDSTRING)_Object, (STRING)_Event, (REAL)_RealParam)
+THEN
+SetEntityEventReal(_Object, _Event, _RealParam, 0);
+
+PROC
+SetEntityEventDialog((GUIDSTRING)_Object, (STRING)_Event, (DIALOGRESOURCE)_Dialog)
+THEN
+SetEntityEventDialog(_Object, _Event, _Dialog, 0);
+
+PROC
+SetEntityEventGuid((GUIDSTRING)_Object, (STRING)_Event, (GUIDSTRING)_GuidParam)
+THEN
+SetEntityEventGuid(_Object, _Event, _GuidParam, 0);
+
+PROC
+SetDualEntityEvent((GUIDSTRING)_Object1, (GUIDSTRING)_Object2, (STRING)_Event)
+THEN
+SetDualEntityEvent(_Object1, _Object2, _Event, 0);
+
+PROC
+SetDualEntityEventReal((GUIDSTRING)_Object1, (GUIDSTRING)_Object2, (STRING)_Event, (REAL)_RealParam)
+THEN
+SetDualEntityEventReal(_Object1, _Object2, _Event, _RealParam, 0);
+
+PROC
+SetDualEntityEventDialog((GUIDSTRING)_Object1, (GUIDSTRING)_Object2, (STRING)_Event, (DIALOGRESOURCE)_Dialog)
+THEN
+SetDualEntityEventDialog(_Object1, _Object2, _Event, _Dialog, 0);
+//END_REGION
+
+//REGION SetGravity overload with 2 parameters and no instigator
+PROC
+SetGravity((ITEM)_Item, (GRAVITYTYPE)_Value)
+THEN
+SetGravity(_Item, _Value, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION ScatterAt overload without maximum scatter distance
+PROC
+ScatterAt((ITEM)_Item, (REAL)_X, (REAL)_Y, (REAL)_Z)
+THEN
+ScatterAt(_Item, _X, _Y, _Z, -1.0);
+//END_REGION
+
+//REGION Respec functions
+PROC
+PROC_TryLaunchRespec((CHARACTER)_Character, (STRING)_Reason)
+AND
+DB_InCharacterRespec(_Character, _)
+THEN
+DebugText(_Character, "Character is already in respec UI!");
+
+PROC
+PROC_TryLaunchRespec((CHARACTER)_Character, (STRING)_Reason)
+AND
+NOT DB_InCharacterRespec(_Character, _)
+THEN
+DB_InCharacterRespec(_Character, _Reason);
+RealtimeObjectTimerLaunch(_Character, "LaunchSpec", 300); 
+
+IF
+ObjectTimerFinished((CHARACTER)_Character, "LaunchSpec")
+AND
+DB_InCharacterRespec(_Character, _Reason)
+THEN
+PROC_LaunchRespec(_Character, _Reason);
+
+PROC
+PROC_LaunchRespec((CHARACTER)_Character, (STRING)_Reason)
+THEN
+DB_NOOP(1);
+
+IF
+SavegameLoaded()
+AND
+DB_InCharacterRespec(_Character, _)
+THEN
+DB_RelaunchCharacterRespec(_Character);
+
+IF
+LevelGameplayStarted(_, _)
+AND
+DB_RelaunchCharacterRespec(_Character)
+THEN
+NOT DB_RelaunchCharacterRespec(_Character);
+PROC_TryRelaunchRespec(_Character);
+
+PROC
+PROC_TryRelaunchRespec((CHARACTER)_Character)
+AND
+DB_InCharacterRespec(_Character, _Reason)
+THEN
+PROC_LaunchRespec(_Character, _Reason);
+
+PROC
+PROC_FinishedRespecing((CHARACTER)_Character, (STRING)_Reason)
+AND
+DB_InCharacterRespec(_Character, _Reason)
+THEN
+NOT DB_InCharacterRespec(_Character, _Reason);
+//END_REGION
+
+//REGION Equip overloads
+PROC
+Equip((CHARACTER)_Character, (ITEM)_Item)
+THEN
+Equip((CHARACTER)_Character, (ITEM)_Item, 0, 0, 0);
+
+PROC
+Equip((CHARACTER)_Character, (ITEM)_Item, (INTEGER)_AddToMainInventoryOnFail)
+THEN
+Equip((CHARACTER)_Character, (ITEM)_Item, _AddToMainInventoryOnFail, 0, 0);
+//END_REGION
+
+PROC
+Equip((CHARACTER)_Character, (ITEM)_Item, (INTEGER)_AddToMainInventoryOnFail, (INTEGER)_ShowNotification)
+THEN
+Equip((CHARACTER)_Character, (ITEM)_Item, _AddToMainInventoryOnFail, _ShowNotification, 0);
+//END_REGION
+
+//REGION Looping animation overloads
+PROC
+PROC_PlayLoopingAnimation((GUIDSTRING)_Entity, (ANIMATION)_Start, (ANIMATION)_MandatoryLoop, (ANIMATION)_End)
+THEN
+PlayLoopingAnimation(_Entity,_Start,_MandatoryLoop,_End,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION AttachHitProxy overloads
+PROC
+AttachHitProxy((GUIDSTRING)_ParentObject, (GUIDSTRING)_ProxyObject)
+THEN
+AttachHitProxy(_ParentObject, _ProxyObject, "");
+//END_REGION
+
+//REGION SetHitpoints overloads
+PROC
+SetHitpoints((GUIDSTRING)_Entity, (INTEGER)_HP)
+THEN
+SetHitpoints(_Entity, _HP, "Guaranteed");
+//END_REGION
+
+//REGION SetHitpointsPercentage overloads
+PROC
+SetHitpointsPercentage((GUIDSTRING)_Entity, (REAL)_Percentage)
+THEN
+SetHitpointsPercentage(_Entity, _Percentage, "Guaranteed");
+//END_REGION
+
+//REGION Unlock overload with no unlocking character specified
+PROC
+Unlock((ITEM)_Item)
+THEN
+Unlock(_Item, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION ShowGameOverMenu overloads
+PROC
+ShowGameOverMenu()
+THEN
+ShowGameOverMenu("GameOver_Default");
+//END_REGION
+
+//REGION Set/ClearIndividualRelation hooks
+
+// Clear all cached individual relations because the new one should permanently override everything
+PROC
+PROC_SetIndividualRelation((GUIDSTRING)_Object, (FACTION)_Faction, (INTEGER)_Relation, (STRING)_Identifier, 1)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _AnyIdentifier, _AnyRelation)
+THEN
+NOT DB_GLO_IndividualRelationStack(_Object, _Faction, _AnyIdentifier, _AnyRelation);
+
+// Clear previously set individual relation, if any
+PROC
+PROC_SetIndividualRelation((GUIDSTRING)_Object, (FACTION)_Faction, (INTEGER)_Relation, (STRING)_Identifier, 0)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _OldRelation)
+THEN
+NOT DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _OldRelation);
+
+// And set/move to top of stack
+PROC
+PROC_SetIndividualRelation((GUIDSTRING)_Object, (FACTION)_Faction, (INTEGER)_Relation, (STRING)_Identifier, (INTEGER)_ClearBackedUpIndividualRelations)
+THEN
+DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _Relation);
+SetIndividualRelation(_Object, _Faction, _Relation);
+
+PROC
+PROC_ClearIndividualRelation((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier)
+AND
+NOT DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _)
+THEN
+PROC_ClearIndividualRelation_Error((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier);
+
+PROC
+PROC_ClearIndividualRelation((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _)
+THEN
+PROC_ClearIndividualRelation_Intern((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier);
+
+PROC
+PROC_ClearIndividualRelation_Intern((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier)
+AND
+DB_GLO_IndividualRelationClearInfo(_AnyIdentifier)
+THEN
+NOT DB_GLO_IndividualRelationClearInfo(_AnyIdentifier);
+
+PROC
+PROC_ClearIndividualRelation_Intern((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _AnyIdentifier, _Relation)
+THEN
+DB_GLO_IndividualRelationClearInfo(_AnyIdentifier);
+
+PROC
+PROC_ClearIndividualRelation_Intern((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier)
+AND
+SysCount("DB_GLO_IndividualRelationClearInfo", 1, _EntryCount)
+THEN
+PROC_ClearIndividualRelation_RemoveFromStack((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier, _EntryCount);
+
+PROC
+PROC_ClearIndividualRelation_Error((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier)
+AND
+GUIDToString(_Object, _ObjectString)
+AND
+GUIDToString(_Faction, _FactionString)
+AND
+Concatenate("Clearing individual relation for ", _ObjectString, _Message1)
+AND
+Concatenate(_Message1, " and faction ", _Message2)
+AND
+Concatenate(_Message2, _FactionString, _Message3)
+AND
+Concatenate(_Message3, " with identifier ", _Message4)
+AND
+Concatenate(_Message4, _Identifier, _Message5)
+AND
+Concatenate(_Message5, ", but there are no individual relations set for this combination using PROC_SetIndividualRelation. Doing nothing.", _Message6)
+THEN
+DebugBreak(_Message6);
+
+// Final individual relation removed -> clear
+PROC
+PROC_ClearIndividualRelation_RemoveFromStack((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier, 1)
+THEN
+ClearIndividualRelation(_Object, _Faction);
+
+// Remove the top of the individual relation stack -> restore the previous relation in the stack
+PROC
+PROC_ClearIndividualRelation_RemoveFromStack((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier, (INTEGER)_EntryCount)
+AND
+_EntryCount != 1
+AND
+SysFactAtIndex("DB_GLO_IndividualRelationClearInfo", 1, _EntryCount, "DB_GLO_IndividualRelation_TopOfStack")
+AND
+DB_GLO_IndividualRelation_TopOfStack((STRING)_Identifier)
+AND
+IntegerSubtract(_EntryCount, 1, _NextToLastEntry)
+AND
+SysFactAtIndex("DB_GLO_IndividualRelationClearInfo", 1, _EntryCount, "DB_GLO_IndividualRelation_NewTopOfStack")
+AND
+DB_GLO_IndividualRelation_NewTopOfStack((STRING)_OtherIdentifier)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _OtherIdentifier, _NewRelation)
+THEN
+NOT DB_GLO_IndividualRelation_TopOfStack(_Identifier);
+NOT DB_GLO_IndividualRelation_NewTopOfStack(_OtherIdentifier);
+SetIndividualRelation(_Object, _Faction, _NewRelation);
+
+// In all cases: remove the stack entry
+PROC
+PROC_ClearIndividualRelation_RemoveFromStack((GUIDSTRING)_Object, (FACTION)_Faction, (STRING)_Identifier, (INTEGER)_EntryCount)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _Relation)
+THEN
+NOT DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _Relation);
+
+// Clear all individual faction relations related to a particular identifier
+PROC
+PROC_ClearIndividualRelations((GUIDSTRING)_Object, (STRING)_Identifier)
+AND
+DB_GLO_IndividualRelationStack(_Object, _Faction, _Identifier, _)
+THEN
+PROC_ClearIndividualRelation(_Object, _Faction, _Identifier);
+
+//END_REGION
+
+//REGION Fades
+PROC
+ClearScreenFade((CHARACTER)_Character, (REAL)_Duration, (STRING)_Id)
+THEN
+ClearScreenFade(_Character,_Duration,_Id, 0);
+
+//END_REGION
+
+//REGION Spell casting helper
+// Normal order of events:
+//  * UsingSpell
+//  * UsingSpell* (if successful)
+//  * CastSpell -> CastedSpell, or CastSpellFailed
+// Alternative order in case animation events arrive out of order:
+//  * CastSpell -> CastedSpell, or CastSpellFailed
+//  * UsingSpell
+//  * UsingSpell* (if successful)
+
+// PROC_CastedSpellOnTarget hides this difference by triggering whenever the spell cast on a target is finished (as best as we can tell)
+
+// First Clean up leftovers from a previous cast by this caster, if any
+IF
+CastSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+THEN
+PROC_GLO_SpellCast_CleanUp(_Caster,_StoryActionID);
+
+IF
+UsingSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+THEN
+PROC_GLO_SpellCast_CleanUp(_Caster,_StoryActionID);
+
+// Record CastedSpell / CastSpellFailed
+IF
+CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+THEN
+DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,1);
+
+IF
+CastSpellFailed(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+THEN
+DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,0);
+
+// CastedSpell / CastSpellFailed after UsingSpell, clean up immediately (correct order)
+IF
+CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+AND
+DB_GLO_UsingSpell(_Caster,_StoryActionID)
+THEN
+PROC_GLO_SpellCast_CleanUp(_Caster,-1);
+
+IF
+CastSpellFailed(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+AND
+DB_GLO_UsingSpell(_Caster,_StoryActionID)
+THEN
+PROC_GLO_SpellCast_CleanUp(_Caster,-1);
+
+
+// UsingSpell before CastedSpell/CastSpellFailed -> record so we can clean up when CastedSpell/CastSpellFailed arrives
+IF
+UsingSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID)
+AND
+NOT DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,_)
+THEN
+DB_GLO_UsingSpell(_Caster,_StoryActionID);
+
+IF
+UsingSpellOnTarget(_Caster,_Target,_,_,_,_StoryActionID)
+THEN
+DB_GLO_UsingSpellTarget(_Caster,_Target,_StoryActionID);
+
+IF
+UsingSpellOnZoneWithTarget(_Caster,_Target,_,_,_,_StoryActionID)
+THEN
+DB_GLO_UsingSpellTarget(_Caster,_Target,_StoryActionID);
+
+// Both spell casting events arrived -> trigger proc
+IF
+DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,1)
+AND
+DB_GLO_UsingSpellTarget(_Caster,_Target,_StoryActionID)
+THEN
+NOT DB_GLO_UsingSpellTarget(_Caster,_Target,_StoryActionID);
+PROC_CastedSpellOnTarget(_Caster,_Target,_Spell,_SpellType,_SpellElement,_StoryActionID);
+
+// General cleaning up
+PROC
+PROC_GLO_SpellCast_CleanUp((GUIDSTRING)_Caster,(INTEGER)_ExceptForStoryActionID)
+AND
+DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,_Success)
+AND
+_StoryActionID != _ExceptForStoryActionID
+THEN
+NOT DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,_Success);
+
+PROC
+PROC_GLO_SpellCast_CleanUp((GUIDSTRING)_Caster,(INTEGER)_ExceptForStoryActionID)
+AND
+DB_GLO_UsingSpell(_Caster,_StoryActionID)
+AND
+_StoryActionID != _ExceptForStoryActionID
+THEN
+NOT DB_GLO_UsingSpell(_Caster,_StoryActionID);
+
+PROC
+PROC_GLO_SpellCast_CleanUp((GUIDSTRING)_Caster,(INTEGER)_ExceptForStoryActionID)
+AND
+DB_GLO_UsingSpellTarget(_Caster,_Target,_StoryActionID)
+AND
+_StoryActionID != _ExceptForStoryActionID
+THEN
+NOT DB_GLO_UsingSpellTarget(_Caster,_Target,_StoryActionID);
+
+// Spellcasts (or at least story action IDs) don't last across save/loading or level swaps
+IF
+LevelLoaded(_)
+AND
+DB_GLO_UsingSpell(_Caster,_StoryActionID)
+THEN
+PROC_GLO_SpellCast_CleanUp(_Caster,-1);
+
+IF
+LevelLoaded(_)
+AND
+DB_GLO_CastedSpell(_Caster,_Spell,_SpellType,_SpellElement,_StoryActionID,_Success)
+THEN
+PROC_GLO_SpellCast_CleanUp(_Caster,-1);
+
+// Dummy
+PROC
+PROC_CastedSpellOnTarget((GUIDSTRING)_Caster,(GUIDSTRING)_Target,(STRING)_Spell,(STRING)_SpellType,(STRING)_SpellElement,(INTEGER)_StoryActionID)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

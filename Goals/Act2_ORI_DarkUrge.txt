@@ -1,0 +1,443 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_KilledEvent((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, ORI_DarkUrge_State_KilledIsobel_9148a397-dd31-44b5-84dd-ecdaade56042);
+DB_KilledEvent((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (FLAG)ORI_DarkUrge_State_KilledJaheira_204d3243-72b3-438c-9144-eb2a0bf767ff); 
+
+
+DB_TopicalGreeting((FLAG)TG_DarkUrge_KilledIsobel_169d1b11-b5c3-42c4-a019-29e4002535cb);
+DB_TopicalGreetingEndCondition_LongRest((FLAG)TG_DarkUrge_KilledIsobel_169d1b11-b5c3-42c4-a019-29e4002535cb);
+
+DB_TopicalGreeting((FLAG)TG_DarkUrge_SlayerForm_2784c68b-bbd0-4a7a-b382-61b11554e3bb);
+DB_TopicalGreetingEndCondition_LongRest((FLAG)TG_DarkUrge_SlayerForm_2784c68b-bbd0-4a7a-b382-61b11554e3bb);
+
+DB_TopicalGreeting((FLAG)TG_DarkUrge_SparedIsobelNight_41745fbc-49e6-44dc-9c77-51dee7f1c21c);
+
+SetFlag(ORI_DarkUrge_State_DidNotHaveIsobelKillOrder_c75d223e-03d5-4eda-b4ec-faeb6c57e6de, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+DB_ORI_DarkUrge_SetupMooCatKilling(1);
+
+DB_SeenDeadNPCPartyFlag((CHARACTER)S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, ORI_DarkUrge_Knows_ButlerDied_6832b15a-2883-4c3d-b71a-b14ef967a32e);
+KBSECTION
+//REGION Spared Isobel
+
+QRY
+QRY_Camp_StartSoloDream_CustomDialogStart((DIALOGRESOURCE)CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e,(CHARACTER)_DarkUrge)
+THEN
+DB_NOOP(1);
+//If the query after this one fails, I don't want the dialogue to start with just one speaker.
+//The pipeline should recognise that this is an available speaker who then triggers the regular sleep cutscene, and as this dialogue never starts (therefore, never stops), the night should re-trigger.
+
+QRY
+QRY_Camp_StartSoloDream_CustomDialogStart((DIALOGRESOURCE)CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e,(CHARACTER)_DarkUrge)
+AND
+QRY_CampNight_Darkurge_BringInButler()
+AND
+DB_ORI_DarkUrge_FavouriteCharacter(_Character)
+AND
+QRY_StartDialog_Fixed(CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, _Character, _DarkUrge)
+THEN
+MakePlayerActive(_DarkUrge);
+
+IF
+DialogEnded(CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e, _ID)
+AND
+NOT DB_OffStage((CHARACTER)S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+THEN
+PROC_Poof((CHARACTER)S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, VFX_Script_Stub_Poof_01_NoSound_de020641-4dbd-855e-9b2f-f008a32d6737);
+
+
+//Debug triggering
+PROC
+PROC_CAMPDEBUG_QueueNight((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8, _IgnoreCampTypeRestrictions)
+AND
+DB_CampNight_Requirement((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8,(FLAG)ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced,(FLAG)DARKURGE_68888003-acaa-49d5-b4f2-0c6293797e59, (FLAG)IMPOSSIBLE_6e4b66e9-0f72-5171-04ba-441108b45b0e)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+NOT DB_CampNight_Requirement((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8,(FLAG)ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced,(FLAG)DARKURGE_68888003-acaa-49d5-b4f2-0c6293797e59, (FLAG)IMPOSSIBLE_6e4b66e9-0f72-5171-04ba-441108b45b0e);
+DB_ORI_DarkUrge_Debug_QueueingSparedISobelNight(_IgnoreCampTypeRestrictions);
+SetOnStage((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,1);
+TeleportTo((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, _DarkUrge);
+PROC_GLO_PartyMembers_Add((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, _DarkUrge);
+SetFlag((FLAG)SetPreset_Default_7eabc516-c15c-46ff-a99d-60d4a9f7037e, (CHARACTER)_DarkUrge, 0); // flagType: Object
+
+IF
+DB_ORI_DarkUrge_Debug_QueueingSparedISobelNight(_IgnoreCampTypeRestrictions)
+AND
+DB_CampNight_Requirement((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8,(FLAG)ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced,(FLAG)DARKURGE_68888003-acaa-49d5-b4f2-0c6293797e59, (FLAG)WYLL_042ed775-0b10-4d41-a4f5-b31e6f144206)
+THEN
+NOT DB_ORI_DarkUrge_Debug_QueueingSparedISobelNight(_IgnoreCampTypeRestrictions);
+PROC_CAMPDEBUG_QueueNight((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8, _IgnoreCampTypeRestrictions); //Now that conditions have been defined, re-queue the night.
+
+IF
+FlagSet(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce, _, _)
+THEN
+SetFlag(ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DB_GlobalFlag((FLAG)SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731)
+THEN
+SetFlag(ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DB_GlobalFlag(SHA_NightsongPrison_State_NightsongFreed_24f27b06-6665-79ed-d7bf-e4bf356ca2fa)
+THEN
+SetFlag(ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DB_GlobalFlag(ORI_DarkUrge_State_ResistedIsobelKilling_74b3931f-2b6c-0b99-4c46-a191d54f4568)
+THEN
+SetFlag(ORI_DarkUrge_SparedIsobel_Requirement_7b24b6bb-f9ef-414e-92e8-a662ce41fced, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_CampCompanionsHostile_22470894-85ac-9946-208e-f38461d8edde, _, _)
+THEN
+NOT DB_Camp_LeaveAfterIVB((VOICEBARKRESOURCE)CAMP_GD_SparedIsobel_IVB_AfterMurder_322898bd-dec2-222f-a78b-25ebb4e0fcfc);
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_GD_SparedIsobel_AfterMurder_03cdd141-a742-80d1-3cc4-0aed458caba5, _)
+AND
+DB_GlobalFlag((FLAG)ORI_DarkUrge_Event_CampCompanionsHostile_22470894-85ac-9946-208e-f38461d8edde)
+AND
+DB_InCamp(_Character)
+AND
+DB_Origins(_Character)
+AND
+NOT DB_Avatars(_Character)
+AND
+NOT DB_Defeated(_Character)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+NOT QRY_PreventMPDialogue(_Character, _DarkUrge)
+AND
+DB_GLO_PartyMembers_OriginalAlignment(_Character,_NpcFaction)
+THEN
+PROC_Origins_CompanionLeavePermanently(_Character, "CompanionHostile");
+PROC_ClearOriginLeavingDialogs(_Character);
+PROC_SetRelationToPlayers(_NpcFaction,0);
+DB_Origin_BecameHostile(_Character);
+PROC_ORI_DarkUrge_BecameHostileAfterMurder(_Character, _DarkUrge);
+
+IF
+Died((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Gale_Event_BombDisarmed_3d014e79-5595-9365-87bb-5cbb1f87fe5c)
+AND
+DB_ORI_DarkUrge_BecameHostileAfterMurder((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+PROC_Poof(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+PROC_ORI_Gale_DisableDeathEffect();
+
+PROC
+PROC_ORI_DarkUrge_BecameHostileAfterMurder((CHARACTER)_Character, _)
+THEN
+DB_ORI_DarkUrge_BecameHostileAfterMurder((CHARACTER)_Character);
+
+PROC
+PROC_ORI_DarkUrge_BecameHostileAfterMurder((CHARACTER)_Character, (CHARACTER)_DarkUrge)
+AND
+NOT DB_Players(_Character)
+THEN
+PROC_EnterCombat(_Character, _DarkUrge);
+
+IF
+BaseFactionChanged(_Character, _OldFaction, _NewFaction)
+AND
+DB_GLO_PartyMembers_OriginalAlignment(_Character,_NpcFaction)
+AND
+DB_ORI_DarkUrge_BecameHostileAfterMurder((CHARACTER)_Character)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+PROC_EnterCombat(_Character, _DarkUrge);
+
+//END_REGION
+
+//REGION Dark Urge - queue Killed Isobel because the Dark Urge either killed Isobel, or killed Nightsong (before Isobel was sent off)
+
+IF
+FlagSet(ORI_DarkUrge_State_KilledIsobel_9148a397-dd31-44b5-84dd-ecdaade56042, _Killer, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+QRY_SameUser((CHARACTER)_Killer, _DarkUrge)
+THEN
+SetFlag((FLAG)ORI_DarkUrge_KilledIsobel_Requirement_b19523f2-d4bf-42f7-9834-2d19e04b2119);
+
+IF
+FlagSet((FLAG)SHA_NightsongPrison_Event_PermanentlyKillNightsong_097792de-6bd1-e7c9-77d3-fe6419e3170a, _Character, _)
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+SetFlag((FLAG)ORI_DarkUrge_KilledIsobel_Requirement_b19523f2-d4bf-42f7-9834-2d19e04b2119);
+SetFlag((FLAG)ORI_DarkUrge_KilledIsobel_State_KilledIsobelByKillingNightsong_5881abbb-baf2-48fb-a083-ac2e8451415c);
+
+//END_REGION
+
+
+//REGION Slayer form
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_DarkUrge_KilledIsobel_SD_cf9ed4a0-7e1d-a0d5-eea7-3ea5aced83a1, _ID)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+QRY_ORI_DarkUrge_GetSlayerLevel()
+AND
+DB_QRYRTN_ORI_DarkUrge_SlayerLevel(_SlayerLevel)
+AND
+HasActiveStatus(_DarkUrge, _SlayerLevel, 1)
+THEN
+DB_ORI_DarkUrge_ResumeSlayerForm(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_DarkUrge_KilledIsobel_SD_cf9ed4a0-7e1d-a0d5-eea7-3ea5aced83a1, _ID)
+AND
+DB_GlobalFlag(ORI_DarkUrge_State_DreamSlayerForm_11d141ba-118e-c429-958f-e6999377e1ce)
+THEN
+DB_ORI_DarkUrge_ResumeSlayerForm(1);
+
+PROC
+PROC_CampNight_StartMorningMoments()
+AND
+DB_ORI_DarkUrge_ResumeSlayerForm(1)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+QRY_ORI_DarkUrge_GetSlayerLevel()
+AND
+DB_QRYRTN_ORI_DarkUrge_SlayerLevel(_SlayerLevel)
+THEN
+NOT DB_ORI_DarkUrge_ResumeSlayerForm(1);
+ApplyStatus(_DarkUrge, _SlayerLevel, -1.0, 0, _DarkUrge);
+
+//END_REGION
+
+//REGION Topical Greetings
+IF
+FlagSet((FLAG)ORI_DarkUrge_KilledIsobel_Requirement_b19523f2-d4bf-42f7-9834-2d19e04b2119, _, _)
+AND
+DB_ORI_DarkUrge(_Urge)
+THEN
+SetFlag(TG_DarkUrge_KilledIsobel_169d1b11-b5c3-42c4-a019-29e4002535cb, _Urge, 0);
+
+IF
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_DialogPlayers(_, _DarkUrge, _)
+THEN
+PROC_ORI_DarkUrgeCheckSlayerForm(_DarkUrge);
+
+PROC
+PROC_ORI_DarkUrgeCheckSlayerForm((CHARACTER)_DarkUrge)
+AND
+QRY_ORI_DarkUrge_GetSlayerLevel()
+AND
+DB_QRYRTN_ORI_DarkUrge_SlayerLevel(_SlayerLevel)
+AND
+HasActiveStatus(_DarkUrge, _SlayerLevel, 1)
+THEN
+SetFlag(TG_DarkUrge_SlayerForm_2784c68b-bbd0-4a7a-b382-61b11554e3bb, _DarkUrge, 0);
+
+IF
+StatusApplied(_DarkUrge, _SlayerLevel, _, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+QRY_ORI_DarkUrge_GetSlayerLevel()
+AND
+DB_QRYRTN_ORI_DarkUrge_SlayerLevel(_SlayerLevel)
+AND
+NOT DB_DialogPlayers(_, _DarkUrge, _)
+THEN
+SetFlag(TG_DarkUrge_SlayerForm_2784c68b-bbd0-4a7a-b382-61b11554e3bb, _DarkUrge, 0);
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e, _)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+THEN
+SetFlag(TG_DarkUrge_SparedIsobelNight_41745fbc-49e6-44dc-9c77-51dee7f1c21c, _DarkUrge, 0);
+
+//END_REGION
+
+//REGION React to potential DUB death
+
+IF
+Dying((CHARACTER)S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+DB_PartyMembers(_Character)
+AND
+CanSee(_Character, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, 1)
+THEN
+SetFlag(ORI_DarkUrge_Knows_ButlerDied_6832b15a-2883-4c3d-b71a-b14ef967a32e, _Character, 1);
+
+IF
+Dying((CHARACTER)S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_Is_InCombat(_Character, _Combat)
+AND
+DB_Is_InCombat(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, _Combat)
+THEN
+SetFlag(ORI_DarkUrge_Knows_ButlerDied_6832b15a-2883-4c3d-b71a-b14ef967a32e, _Character, 1);
+
+
+IF
+Dying((CHARACTER)S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+DB_PartyMembers(_Character)
+AND
+GetDistanceTo(_Character, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, _Distance)
+AND
+_Distance < 12
+THEN
+SetFlag(ORI_DarkUrge_Knows_ButlerDied_6832b15a-2883-4c3d-b71a-b14ef967a32e, _Character, 1);
+
+//END_REGION
+
+IF
+FlagSet((FLAG)NIGHT_DarkUrge_IsobelKillOrder_52916fa3-a23e-43b3-af5e-a41875ce7f47, NULL_00000000-0000-0000-0000-000000000000, 0)
+THEN
+ClearFlag(ORI_DarkUrge_State_DidNotHaveIsobelKillOrder_c75d223e-03d5-4eda-b4ec-faeb6c57e6de, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+DB_ORI_DarkUrge_SetupMooCatKilling(1)
+THEN
+DB_GLO_DieFlag((FLAG)ORI_DarkUrge_Event_KillMooCat_04ab3d84-1a1c-d3ca-8254-3cbdeca0a68a, (CHARACTER)S_MOO_Cat_8da4c9e8-e962-4b58-a34c-da99c79a7e37, DEATHTYPE.Physical, _DarkUrge);
+
+IF
+FlagSet((FLAG)SHA_NightsongsFate_State_ShadowheartFailedShar_6ece6afb-e764-744c-11ae-8710b87bcf8d, _, _ID)
+AND
+DB_DialogName((DIALOGRESOURCE)SHA_NightsongsFate_OM_Shadowheart_AOM_OOM_COM_7c1dc5a3-0410-ebf4-3b3b-b2ee753562db, _ID)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+DB_DialogPlayers(_ID, (CHARACTER)_DarkUrge, 2)
+THEN
+SetFlag((FLAG)ORI_DarkUrge_State_ConvincedSHToSpareNightsong_39f7972e-9fd3-cf85-aa8b-8151e81736aa, NULL_00000000-0000-0000-0000-000000000000, _ID);
+
+//REGION Journal
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Knows_KillIsobel_d9bf6b2f-a83e-3dbd-20dd-c420aac5c772, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "IsobelKillOrder");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_KilledIsobel_Requirement_b19523f2-d4bf-42f7-9834-2d19e04b2119, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "KilledIsobel");
+
+IF
+FlagSet(HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+DB_Dead((CHARACTER)S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+AND
+GetFlag((FLAG)ORI_DarkUrge_KilledIsobel_Requirement_b19523f2-d4bf-42f7-9834-2d19e04b2119, NULL_00000000-0000-0000-0000-000000000000, 0)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+DB_GlobalFlag((FLAG)ORI_DarkUrge_Knows_KillIsobel_d9bf6b2f-a83e-3dbd-20dd-c420aac5c772)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "OtherKilledIsobel");
+
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_KillFavouriteCharacter_65863750-e926-1f14-a3da-cda0b6ad1863, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "KilledCompanion");
+
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Quest_WallTentacle_deb4d961-4981-7479-ef45-d02cf907abf4, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "WallTentacle");
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_DarkUrge_SparedIsobel_SD_6971c0fa-ab56-41a4-a841-579d744d747e, _)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_DarkUrge_Event_KillFavouriteCharacter_65863750-e926-1f14-a3da-cda0b6ad1863)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "SparedIsobelAndCompanion");
+
+IF
+LevelLoaded("INT_Main_A")
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+QuestUpdateIsUnlocked(_DarkUrge, "ORI_Avatar_DarkUrge", "IsobelKillOrder", 1)
+AND
+QuestUpdateIsUnlocked(_DarkUrge, "ORI_Avatar_DarkUrge", "KilledIsobel", 0)
+AND
+QuestUpdateIsUnlocked(_DarkUrge, "ORI_Avatar_DarkUrge", "SparedIsobel", 0)
+AND
+QuestUpdateIsUnlocked(_DarkUrge, "ORI_Avatar_DarkUrge", "SparedIsobelAndCompanion", 0)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "SparedIsobel");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_State_ResistedIsobelKilling_74b3931f-2b6c-0b99-4c46-a191d54f4568, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+AND
+QuestUpdateIsUnlocked(_DarkUrge, "ORI_Avatar_DarkUrge", "IsobelKillOrder", 1)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "ResistedIsobelUrge");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Quest_MistressOfSouls_23613f98-8b26-65f5-9786-5bbf0018238e, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "MistressOfSouls");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Quest_Execution_2b151f88-d8bd-54b5-91f8-64f1fcdf31cb, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "Execution");
+
+IF
+FlagSet((FLAG)COL_TadpolingCentre_Knows_IdentifiedDarkUrgePod_454bacab-1300-1b25-6770-66f41ab30084, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+QuestUpdate(_DarkUrge, "ORI_Avatar_DarkUrge", "Pod");
+
+//END_REGION
+
+//REGION Background goals
+
+
+IF
+FlagSet(SHA_NightsongPrison_State_ShadowheartKilledNightsong_3cac3cd6-4c16-44a6-8246-a91922821169, _, _)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+PROC_GLO_Backgrounds_CompleteGoal(_DarkUrge, "Act2_HauntedOne_NightsongKilled");
+
+
+//END_REGION
+EXITSECTION
+NOT DB_ORI_DarkUrge_SetupMooCatKilling(1);
+ENDEXITSECTION
+ParentTargetEdge "Act2"

@@ -1,0 +1,86 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Keep track stolen items while the crime is active
+IF
+CrimeIsRegistered(_,_CrimeType,_CrimeID,_,_Criminal1,_,_,_)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Steal")
+AND
+// In case the item no longer exists because it got stacked/merged
+GetPosition(_Criminal1,_X,_Y,_Z)
+AND
+CrimeGetNumberOfEvidence(_CrimeID,_NumEvidence)
+AND
+QRY_DoNTimes(_NumEvidence)
+AND
+DB_QRY_RTN_DoNTimes(_Index)
+AND
+CrimeGetEvidence(_CrimeID,_Index,_Item)
+AND
+QRY_IsExistingItem(_Item,1)
+THEN
+PROC_CRIME_EvidenceOwnership_Record(_CrimeID,(ITEM)_Item,_X,_Y,_Z);
+
+PROC
+PROC_CRIME_EvidenceOwnership_Record((INTEGER)_CrimeID,(ITEM)_Item,(REAL)_X,(REAL)_Y,(REAL)_Z)
+THEN
+DB_CRIME_EvidenceOwnership_Item(_CrimeID,_Item,_X,_Y,_Z);
+
+IF
+OnCrimeMergedWith(_OldCrimeID,_NewCrimeID)
+AND
+DB_CRIME_EvidenceOwnership_Item(_OldCrimeID,_Item,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_EvidenceOwnership_Item(_OldCrimeID,_Item,_X,_Y,_Z);
+DB_CRIME_EvidenceOwnership_Item(_NewCrimeID,_Item,_X,_Y,_Z);
+
+PROC
+PROC_CRIME_EvidenceOwnership_Remove((INTEGER)_CrimeID,(ITEM)_Item)
+AND
+DB_CRIME_EvidenceOwnership_Item(_CrimeID,_Item,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_EvidenceOwnership_Item(_CrimeID,_Item,_X,_Y,_Z);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_EvidenceOwnership_Item(_CrimeID,_Item,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_EvidenceOwnership_Item(_CrimeID,_Item,_X,_Y,_Z);
+//END_REGION
+
+//REGION If stolen item dropped not too far from original location, restore owner
+IF
+DroppedBy((ITEM)_Item,_Mover)
+AND
+DB_CRIME_EvidenceOwnership_Item(_,_Item,_X,_Y,_Z)
+AND
+GetDistanceToPosition(_Item,_X,_Y,_Z,_Dist)
+AND
+_Dist < 15.0
+AND
+GetOriginalOwner(_Item,_Character)
+THEN
+SetOwner(_Item,_Character);
+PROC_CRIME_EvidenceOwnership_MaybeMovedCrime(_Mover,_Item,_Character);
+
+PROC
+PROC_CRIME_EvidenceOwnership_MaybeMovedCrime((CHARACTER)_Mover,(ITEM)_Item,(CHARACTER)_Owner)
+AND
+DB_Players(_Mover)
+AND
+QRY_GetMoveForbiddenItemInfo(_Mover,_Item,_Owner)
+AND
+DB_QRYRTN_GetMoveForbiddenItemInfo(_Owner,_CrimeName)
+THEN
+// Will cause NPCs to pick it up if they're not investigating the theft or handling another higher priority crime
+PROC_CharacterRegisterCrime(_Owner,_CrimeName,_Item,(CHARACTER)_Owner,0);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

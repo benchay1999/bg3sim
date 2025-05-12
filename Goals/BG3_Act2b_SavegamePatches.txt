@@ -1,0 +1,721 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION GUS-298675
+IF
+SavegameLoaded()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,5,0)
+AND
+DB_LevelLoadedOnce("INT_Main_A")
+AND
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+AND
+NOT DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_PartyMembers(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_PermaDefeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, 1);
+PROC_GlobalSetFlagAndCache((FLAG)GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_Dialogs(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, Halsin_InParty_890c2586-6b71-ca01-5bd6-19d533181c71);
+DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_BUGFIX_Marker("GUS-298675");
+//END_REGION
+
+//REGION GUS-299834
+IF
+SavegameLoaded()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,7,0)
+AND
+DB_CurrentLevel("INT_Main_A")
+THEN
+DB_TopicalGreeting((FLAG)TG_INT_EmperorRevealed_Event_SceneComplete_16bdcd15-3725-4d1a-befd-5df068091401);
+DB_TopicalGreetingStartCondition_FlagSet((FLAG)TG_INT_EmperorRevealed_Event_SceneComplete_16bdcd15-3725-4d1a-befd-5df068091401, (FLAG)INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6);
+DB_TopicalGreetingEndCondition_LeaveCamp((FLAG)TG_INT_EmperorRevealed_Event_SceneComplete_16bdcd15-3725-4d1a-befd-5df068091401);
+DB_BUGFIX_Marker("GUS-299834");
+//END_REGION GUS-299834
+
+//REGION GUS-300383
+IF
+SavegameLoaded()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,8,0)
+AND
+DB_InRegion(_Player, S_INT_EmperorRevealed_CombatPullTrigger_a5d355ad-771d-4e67-bb7e-fdf40e59ab21)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GLO_NarrativeCombat_ID("INT_Orpheus_NarrativeCombat", _ID)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("INT_Orpheus_NarrativeCombat", _Player);
+DB_BUGFIX_Marker("GUS-300383");
+//END_REGION GUS-300383
+
+//REGION GUS-300504
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,9,0)
+THEN
+DB_GlobalFlagReactionAfterDialog((FLAG)INT_EmperorRevealed_Event_GlobeDestroyed_d545fbcf-a098-4cca-9749-481aa6cd7fa3, (DIALOGRESOURCE)INT_EmperorRevealed_OrbExplodes_a521faf3-f6f1-3afa-b35d-c96ced8aca7f);
+DB_BUGFIX_Marker("GUS-300504");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(INT_EmperorRevealed_Event_GlobeDestroyed_d545fbcf-a098-4cca-9749-481aa6cd7fa3)
+THEN
+PROC_SetOnStage((ITEM)S_EmperorRevealed_GlobeOfDomination_Large_d70d37fb-4f58-4a65-bf19-4ea504f3e16c, 0);
+DB_BUGFIX_Marker("GUS-300504");
+//END_REGION GUS-300504
+
+//REGION GUS-300539
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,9,0)
+THEN
+DB_QuestDef_State((FLAG)INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6, "GLO_PrinceOrpheus", "DiscoveredOrpheusIsInArtefact");
+DB_BUGFIX_Marker("GUS-300539");
+//END_REGION GUS-300539
+
+//REGION GUS-300502
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,10,0)
+THEN
+DB_GlobalFlagReactionAfterDialog((FLAG)INT_EmperorRevealed_State_PlayerAgreedToHelpEmperor_a8997c32-e165-6e7c-888b-b5433c41a8d7, (DIALOGRESOURCE)INT_EmperorRevealed_EmperorPlea_415aa8b3-5eba-6ce5-ee7a-5113b38884e5);
+DB_GlobalFlagReactionAfterDialog((FLAG)INT_EmperorRevealed_Event_PlayerRefusedToHelpEmperor_34918c8c-dedf-4243-8172-97a70d23e2f6, (DIALOGRESOURCE)INT_EmperorRevealed_EmperorPlea_415aa8b3-5eba-6ce5-ee7a-5113b38884e5);
+DB_BUGFIX_Marker("GUS-300502");
+//END_REGION GUS-300502
+
+//REGION GUS-301370
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,12,0)
+AND
+DB_InRegion(_Player, (TRIGGER)S_INT_AstralPlaneArea_37dec4e1-9db0-44a9-bd39-a5f4362d2ab2)
+AND
+DB_Players(_Player)
+THEN
+SetLongRestAvailable(0);
+DB_BUGFIX_Marker("GUS-301370");
+//END_REGION GUS-301370
+
+//REGION GUS-301290
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,12,0)
+THEN
+NOT DB_AutoSaveTrigger((TRIGGER)S_INT_Start_Autosave_102dce5d-48fa-40cc-ac43-8e20d58bc2a0);
+DB_BUGFIX_Marker("GUS-301290");
+//END_REGION GUS-301290
+
+//REGION GUS-301810
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,14,0)
+THEN
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)INT_EmperorRevealed_OrbExplodes_a521faf3-f6f1-3afa-b35d-c96ced8aca7f);
+DB_DialogStarted_IgnoreStopConditions((DIALOGRESOURCE)INT_EmperorRevealed_OrbExplodes_a521faf3-f6f1-3afa-b35d-c96ced8aca7f);
+DB_DialogStarted_IgnoreStopConditions((DIALOGRESOURCE)INT_EmperorRevealed_EmperorPlea_415aa8b3-5eba-6ce5-ee7a-5113b38884e5);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)INT_EmperorRevealed_EmperorDies_ec591e20-85ae-3ccf-9963-a02e0828a891);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)INT_EmperorRevealed_EmperorDies_ec591e20-85ae-3ccf-9963-a02e0828a891);
+DB_BUGFIX_Marker("GUS-301810");
+//END_REGION GUS-301810
+
+//REGION GUS-301813
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,14,0)
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_InRegion(_Player, S_INT_AstralPlaneArea_37dec4e1-9db0-44a9-bd39-a5f4362d2ab2)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("INT_Patch_SetMaterialPlanePortal_Offstage")
+THEN
+PROC_SetOnStage((ITEM)S_INT_PortalFromAstralPlane_Spine_c485923b-d0c1-43b1-b61d-2d1a13649ae2, 0);
+DB_BUGFIX_Marker("GUS-301813");
+//END_REGION GUS-301813
+
+//REGION GUS-302080
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan(4,0,14,0)
+AND
+DB_CurrentLevel("INT_Main_A")
+THEN
+DB_INT_PreSkullGishGroup((CHARACTER)S_INT_Githyanki_FirstContact_001_798325ee-42ad-4237-86b1-e1410a548e26);
+DB_INT_PreSkullGishGroup((CHARACTER)S_INT_Githyanki_FirstContact_003_f95179b2-42d2-432f-93bc-c7c066fb5cfa);
+DB_INT_PreSkullGishGroup((CHARACTER)S_INT_Githyanki_FirstContact_004_189d5ced-1aad-4a59-b587-c598bf87daf1);
+DB_BUGFIX_Marker("GUS-302080");
+//END_REGION GUS-302080
+
+//REGION GUS-302132
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+NOT DB_GLO_EmperorPrelude_EmperorRevealedLevels(_)
+THEN
+DB_GLO_EmperorPrelude_EmperorRevealedLevels("BGO_Main_A");
+DB_GLO_EmperorPrelude_EmperorRevealedLevels("CTY_Main_A");
+DB_GLO_EmperorPrelude_EmperorRevealedLevels("END_Main");
+DB_BUGFIX_Marker("GUS-302132");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 3")
+AND
+DB_GLO_EmperorPrelude_EmperorRevealedLevels(_Level)
+AND
+DB_CurrentLevel(_Level)
+AND
+NOT DB_GlobalFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562)
+THEN
+SetFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562);
+DB_BUGFIX_Marker("GUS-302132");
+
+//END_REGION
+
+//REGION GUS-301370
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 4")
+AND
+DB_CurrentLevel("INT_Main_A")
+THEN
+DB_BlockedWaypointZone((TRIGGER)S_INT_AstralPlaneArea_37dec4e1-9db0-44a9-bd39-a5f4362d2ab2);
+DB_DangerZone((TRIGGER)S_INT_AstralPlaneArea_37dec4e1-9db0-44a9-bd39-a5f4362d2ab2,"INT_AstralPrison");
+DB_BUGFIX_Marker("GUS-301370");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 4")
+AND
+DB_InRegion(_Player, (TRIGGER)S_INT_AstralPlaneArea_37dec4e1-9db0-44a9-bd39-a5f4362d2ab2)
+AND
+DB_Players(_Player)
+THEN
+SetLongRestAvailable(0);
+DB_BUGFIX_Marker("GUS-301370");
+//END_REGION GUS-301370
+
+//REGION
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 2")
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_OnlyOnce("INT_InitialForcedCamp")
+AND
+DB_Camp_NightMode(1)
+AND
+NOT DB_Camp_QueuedNight(NIGHT_ArriveIntermezzo_d569aaf3-79f2-4313-98c3-6b50283b7db7)
+AND
+NOT DB_GlobalFlag(NIGHT_ArriveIntermezzo_d569aaf3-79f2-4313-98c3-6b50283b7db7)
+THEN
+PROC_Camp_TeleportAllToCamp();
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 2")
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_OnlyOnce("INT_InitialForcedCamp")
+AND
+NOT DB_Camp_NightMode(1)
+AND
+NOT DB_Camp_QueuedNight(NIGHT_ArriveIntermezzo_d569aaf3-79f2-4313-98c3-6b50283b7db7)
+AND
+NOT DB_GlobalFlag(NIGHT_ArriveIntermezzo_d569aaf3-79f2-4313-98c3-6b50283b7db7)
+AND
+QRY_OnlyOnce_Reset("INT_InitialForcedCamp")
+AND
+DB_Players(_MainPlayer)
+AND
+QRY_OnlyOnce("INT_InitialForcedCamp")
+THEN
+PROC_Camp_ForceEndTheDay((CHARACTER)_MainPlayer,"INTMAIN");
+
+//END_REGION
+
+//REGION GUS-303655
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 4")
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_GlobalFlag(INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6)
+THEN
+ClearFlag(INT_EmperorRevealed_State_InOrpheusFight_a54d65cb-b149-4f8e-ba52-6f9696a69a13);
+DB_BUGFIX_Marker("GUS-303655");
+//END_REGION GUS-303655
+
+//REGION GUS-303921
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_LevelUnreachable("SCL_Main_A")
+AND
+NOT DB_LevelLoadedOnce("BGO_Main_A")
+THEN
+DB_PreventKnockedOutPermaDefeated(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b);
+DB_PreventPermaDefeated(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b);
+DB_BUGFIX_Marker("GUS-303921-INT-A");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_ProgressTo_AfterOrpheusScene(1)
+THEN
+SetImmortal(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, 1);
+DB_BUGFIX_Marker("GUS-303921-INT-B");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_LevelUnreachable("SCL_Main_A")
+AND
+NOT DB_LevelLoadedOnce("BGO_Main_A")
+AND
+QRY_SaveGamePatch_GUS_303921_EmperorIsInDefeatedState()
+THEN
+PROC_SaveGamePatch_GUS_303921_RestoreEmperor();
+DB_Dialogs(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AfterOrpheus_b66e7115-ecea-7fc0-5a33-61a6eed77ab2);
+DB_BUGFIX_Marker("GUS-303921-INT-C");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 1")
+AND
+DB_LevelUnreachable("INT_Main_A")
+AND
+NOT DB_LevelUnreachable("CTY_Main_A")
+AND
+QRY_SaveGamePatch_GUS_303921_EmperorIsInDefeatedState()
+THEN
+PROC_SaveGamePatch_GUS_303921_RestoreEmperor();
+DB_BUGFIX_Marker("GUS-303921-INT-D");
+
+PROC
+PROC_SaveGamePatch_GUS_303921_RestoreEmperor()
+THEN
+NOT DB_Dead(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b);
+NOT DB_PermaDefeated(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b);
+PROC_CharacterFullRestore(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b);
+PROC_RemoveMutingStatusses(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b);
+DB_BUGFIX_Marker("GUS-303921-INT-E");
+//END_REGION GUS-303921
+
+//REGION GUS-306222
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+DB_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_GlobalFlag((FLAG)SHA_Orthon_State_ContractEnded_26c35edd-3617-82b3-b4d7-1b7bb6410485)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_OrthonLair_Knows_Orthon_84ce6c40-0906-afae-0b6a-1df4625fa9d3)
+THEN
+SetFlag((FLAG)SHA_OrthonLair_Knows_Orthon_84ce6c40-0906-afae-0b6a-1df4625fa9d3);
+DB_BUGFIX_Marker("GUS-306222");
+
+//END_REGION
+
+//REGION GUS-306045
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 3")
+AND
+DB_CurrentLevel("INT_Main_A")
+THEN
+DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 1);
+DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 3);
+DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 4);
+DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 5);
+DB_BUGFIX_Marker("GUS-306045");
+//END_REGION GUS-306045
+
+//REGION GUS-309663
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_CurrentLevel("INT_Main_A")
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player, (TRIGGER)S_INT_EmperorRevealed_CombatPullTrigger_a5d355ad-771d-4e67-bb7e-fdf40e59ab21)
+THEN
+DB_BUGFIX_Marker("GUS-309663");
+TimerCancel("INT_DaisyADTimer");
+PROC_RemoveDaisyAD(_Player, (DIALOGRESOURCE)INT_EmperorRevealed_DaisyAD_InsideAstralPrisonHurry_fce37cb8-66d6-5d44-0147-c31f2a82d3f7);
+//END_REGION GUS-309663
+
+//REGION GUS-304221
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_Debug_TeleportFlags((FLAG)INT_Debug_EmperorRevealed_State_AfterOrpheus_96b5ce4b-fbff-400d-9894-13f0b2e8b268,(TRIGGER)S_INT_SecondTeleportPoint_6be655e4-c0d1-48a2-96d1-517300aacbb4)
+THEN
+NOT DB_Debug_TeleportFlags((FLAG)INT_Debug_EmperorRevealed_State_AfterOrpheus_96b5ce4b-fbff-400d-9894-13f0b2e8b268,(TRIGGER)S_INT_SecondTeleportPoint_6be655e4-c0d1-48a2-96d1-517300aacbb4);
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 4")
+AND
+DB_GlobalFlag((FLAG)INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6)
+AND
+NOT DB_GlobalFlag((FLAG)INT_EmperorRevealed_State_AfterOrpheus_96b5ce4b-fbff-400d-9894-13f0b2e8b268)
+THEN
+SetFlag((FLAG)INT_EmperorRevealed_State_AfterOrpheus_96b5ce4b-fbff-400d-9894-13f0b2e8b268, NULL_00000000-0000-0000-0000-000000000000, 0, 0);
+//END_REGION
+
+//REGION GUS-309883
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5")
+AND
+DB_GlobalFlag((FLAG)INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6)
+THEN
+NOT DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 1);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 3);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 4);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_AD_EmperorCallsObjectiveDuringOrpheusFight_b1fe8b8b-6160-fc20-bc53-d2f3f0b68686, 5);
+DB_BUGFIX_Marker("GUS-309883");
+//END_REGION
+
+//REGION GUS-310169
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 4", "SCL_Main_A", "GUS-310169");
+
+//Shadowhearts's quest has ended with her leaving the party, so she should leave permanently
+PROC
+PROC_ApplySavegamePatchInLevel("SCL_Main_A", "GUS-310169")
+AND
+DB_GlobalFlag(ORI_Shadowheart_State_TempleLeave_5ab52fa9-6f29-4a16-8333-851af045fab1)
+AND
+NOT DB_DisappearedOutOfSight(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,_,_,_,"Origin_RestoreDialog",_,_)
+AND
+DB_CAMP_WalkingToCamp(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+GetFlag(GLO_Companion_Leave_363c71f4-8b46-c0c0-4bbb-0e5a85e4652d, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+THEN
+NOT DB_CAMP_WalkingToCamp(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+//END_REGION
+
+//REGION GUS-312440
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 5", "INT_Main_A", "GUS-312440");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUS-312440")
+AND
+DB_PartOfTheTeam(_Companion)
+AND
+NOT DB_DisappearedOutOfSight(_Companion,_,_,_,"Origin_RestoreDialog",_,_)
+AND
+DB_CAMP_WalkingToCamp(_Companion)
+THEN
+NOT DB_CAMP_WalkingToCamp(_Companion);
+PROC_SaveGamePatch_GUS_312440_RestoreIfKarlach(_Companion);
+
+//karlach was dismissed to camp but didn't appear - this will re-dismiss her and bring her back to camp if she's supposed to be there
+PROC
+PROC_SaveGamePatch_GUS_312440_RestoreIfKarlach(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_PermaDefeated(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_InCamp(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+THEN
+PROC_DismissToCamp(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c);
+//END_REGION
+
+//REGION GUS-310454
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "INT_Main_A", "GUS-310454");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUS-310454")
+THEN
+PROC_TriggerRegisterForParty((TRIGGER)S_INT_FightingOffstageTrigger_71a75efc-49ee-4d81-b3a7-94f5ed3b2498);
+PROC_TriggerRegisterForParty((TRIGGER)S_INT_EmperorRevealArea_f765db82-3fa8-4f4b-b92a-55bdc95fc1ba);
+PROC_TriggerRegisterForParty((TRIGGER)S_INT_EmperorFightingOffstageTrigger_8b7af747-5a84-403f-9a25-aeb486a18f10);
+PROC_TriggerRegisterForParty((TRIGGER)S_INT_EmperorRevealed_CombatPullTrigger_a5d355ad-771d-4e67-bb7e-fdf40e59ab21);
+//END_REGION
+
+//REGION  GUS-319784
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_CAMP_WalkingToCamp(_Origin)
+AND
+NOT DB_DisappearedOutOfSight(_Origin, _, _, _,  "Origin_RestoreDialog", _, _)
+AND
+DB_CantMove(_Origin)
+THEN
+NOT DB_CAMP_WalkingToCamp(_Origin);
+DB_Camp_WalkingToCampPaused(_Origin);
+DB_BUGFIX_Marker("GUS-319784-a");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_CAMP_WalkingToCamp(_Origin)
+AND
+NOT DB_DisappearedOutOfSight(_Origin, _, _, _, "Origin_RestoreDialog", _, _)
+AND
+NOT DB_CantMove(_Origin)
+THEN
+PROC_DismissToCamp((CHARACTER)_Origin);
+DB_BUGFIX_Marker("GUS-319784-b");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_BUGFIX_Marker("GUS-319784-a")
+AND
+DB_ActiveCamp("INTMAIN")
+AND
+NOT DB_Camp_NightMode(1)
+AND
+QRY_Camp_AnyAvatarInCamp()
+AND
+NOT DB_GlobalFlag((FLAG)NIGHT_ArriveIntermezzo_d569aaf3-79f2-4313-98c3-6b50283b7db7)
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_Camp_ForceEndTheDay(_Player,"");
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+AND
+DB_BUGFIX_Marker("GUS-319784-a")
+AND
+DB_ActiveCamp("INTMAIN")
+AND
+NOT DB_Camp_NightMode(1)
+AND
+NOT DB_GlobalFlag((FLAG)NIGHT_ArriveIntermezzo_d569aaf3-79f2-4313-98c3-6b50283b7db7)
+THEN
+DB_BUGFIX_GUS_31978_WaitForArrival(1);
+
+IF
+EntityEvent(_Character, "Origin_RestoreDialog")
+AND
+DB_BUGFIX_GUS_31978_WaitForArrival(1)
+THEN
+PROC_Camp_TeleportAllToCamp();
+
+PROC
+PROC_Camp_PlayCampNight()
+THEN
+NOT DB_BUGFIX_GUS_31978_WaitForArrival(1);
+
+//END_REGION
+
+//REGION GUS-315734
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 6", "INT_Main_A", "GUS-315734");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUS-315734")
+THEN
+NOT DB_GLO_NarrativeCombat_Region("INT_CampAmbush_NarrativeCombat",(TRIGGER)S_CAMP_INT_Area_9ef2ce12-074b-456a-9808-19c80dff20ff);
+DB_GLO_NarrativeCombat_Region("INT_CampAmbush_NarrativeCombat",(TRIGGER)S_INT_CampAmbush_Area_f2ccd3c7-70c0-4ab5-96bd-95493557d632);
+//END_REGION
+
+//REGION GUS-314213
+// From INT onwards remove every TRACKLIGHT and curse statuses from entities.
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 6")
+AND
+DB_LevelUnreachable("SCL_Main_A")
+THEN
+PROC_SavegamePatch_GUS314213_ClearCurse();
+
+PROC
+PROC_SavegamePatch_GUS314213_ClearCurse()
+AND
+DB_SCL_ShadowCurse_Subject(_Character)
+THEN
+DB_BUGFIX_Marker("GUS-314213_Curse");
+RemoveStatus(_Character, "SCL_AREA");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_1");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_2");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_3");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_4");
+NOT DB_SCL_ShadowCurse_Subject(_Character);
+
+PROC
+PROC_SavegamePatch_GUS314213_ClearCurse()
+AND
+DB_SCL_ShadowCurse_TrackLight(_Object)
+AND
+Exists(_Object, 1)
+THEN
+DB_BUGFIX_Marker("GUS-314213_TrackLight");
+RemoveStatus(_Object, "SCL_TRACKLIGHT", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SavegamePatch_GUS314213_ClearCurse()
+AND
+DB_SCL_ShadowCurse_TrackLight(_Object)
+THEN
+DB_BUGFIX_Marker("GUS-314213");
+NOT DB_SCL_ShadowCurse_TrackLight(_Object);
+//END_REGION GUS-314213
+
+//REGION GUS-285398
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel("Release Patch 6", "CTY_Main_A", "GUS-285398");
+
+PROC
+PROC_ApplySavegamePatchInLevel("CTY_Main_A", "GUS-285398")
+THEN
+DB_BUGFIX_Marker("GUS-285398");
+DB_LOW_DevilsFee_TimerSummons(500);
+DB_LOW_DevilsFee_TimerSummons_Increment(500);
+//END_REGION GUS-285398
+
+//REGION GUS-319817
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 8", "INT_Main_A", "GUS-319817");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUS-319817")
+AND
+DB_GlobalFlag(INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6)
+AND
+DB_INT_ReadyToLeave(1)
+AND
+NOT DB_Camp_NightMode(1)
+AND
+DB_Players(_Player)
+AND
+IsOnStage(S_INT_PortalFromAstralPlane_OrpheusChamber_d16098eb-cb90-4ef9-a66b-86eac687e547, 0)
+THEN
+PROC_SetOnStage(S_INT_PortalFromAstralPlane_OrpheusChamber_d16098eb-cb90-4ef9-a66b-86eac687e547, 1);
+//END_REGION GUS-319817
+
+//REGION GUSX-8492
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 7", "INT_Main_A", "GUSX-8492-A");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUSX-8492-A")
+AND
+DB_GlobalFlag(INT_EmperorRevealed_Event_SceneComplete_2fa4811a-8757-40e7-a0bb-dc7e210dd6e6)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GLO_NarrativeCombat_Participant("INT_Orpheus_NarrativeCombat", _, _Player)
+THEN
+PROC_GLO_NarrativeCombat_EndCombat("INT_Orpheus_NarrativeCombat");
+//END_REGION GUSX-8492
+
+//REGION GUSX-8492
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 7", "INT_Main_A", "GUSX-8492-B");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUSX-8492-B")
+AND
+DB_InRegion(_Player, (TRIGGER)S_INT_EmperorRevealArea_f765db82-3fa8-4f4b-b92a-55bdc95fc1ba)
+AND
+DB_PartyMembers(_Player)
+AND
+QRY_OnlyOnce("INT_FightingOffstageTrigger_Unregister")
+THEN
+PROC_TriggerUnregisterForParty((TRIGGER)S_INT_FightingOffstageTrigger_71a75efc-49ee-4d81-b3a7-94f5ed3b2498);
+//END_REGION GUSX-8492
+
+//REGION GUSX-8492
+PROC
+PROC_ApplySavegamePatches()
+THEN
+PROC_CheckShouldSavegamePatchInLevel_SetBugfixMarker("Release Patch 7", "INT_Main_A", "GUSX-8492-C");
+
+PROC
+PROC_ApplySavegamePatchInLevel("INT_Main_A", "GUSX-8492-C")
+AND
+DB_ProgressTo_AfterOrpheusScene(1)
+THEN
+PROC_RemoveDialogEntryForSpeaker((CHARACTER)S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, (DIALOGRESOURCE)INT_EmperorRevealed_EmperorPlea_415aa8b3-5eba-6ce5-ee7a-5113b38884e5);
+//END_REGION GUSX-8492
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

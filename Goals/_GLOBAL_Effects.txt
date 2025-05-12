@@ -1,0 +1,549 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_CleanUpEffects();
+KBSECTION
+//REGION Savegame handle fixes 
+IF
+LevelLoaded(_)
+THEN
+PROC_InvalidateLoopEffects();
+PROC_InvalidateLoopBeamEffects();
+
+PROC
+PROC_InvalidateLoopEffects()
+AND
+DB_LoopEffect((GUIDSTRING)_object, (INTEGER64) _fxHandle,(STRING)_ID,(STRING)_Region,(EFFECTRESOURCE)_effect,(STRING)_BoneName, (REAL)_Scale)
+THEN
+NOT DB_LoopEffect(_object, _fxHandle,_ID,_Region,_effect,_BoneName,_Scale);
+DB_LoopEffect(_object, (INTEGER64)-1,_ID,_Region,_effect,_BoneName,_Scale);
+
+PROC
+PROC_InvalidateLoopBeamEffects()
+AND
+DB_LoopBeamEffect((GUIDSTRING)_Source,(GUIDSTRING)_Target,(INTEGER64)_EffectHandle,(STRING)_ID,(STRING)_Region,(EFFECTRESOURCE)_effect,(STRING)_SrcBone,(STRING)_TargetBone)
+THEN
+NOT DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone);
+DB_LoopBeamEffect(_Source,_Target,(INTEGER64)-1,_ID,_Region,_effect,_SrcBone,_TargetBone);
+//END_REGION
+
+/***************************/
+/*** EFFECT REGISTRATION ***/
+/***************************/
+QRY
+QRY_PlayLoopEffectCleanUp()
+AND
+DB_PlayLoopEffectHandleResult((INTEGER64)_ID)
+THEN
+NOT DB_PlayLoopEffectHandleResult(_ID);
+
+// Always succeed
+QRY
+QRY_PlayLoopEffectCleanUp()
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PlayLoopEffect((GUIDSTRING)_Source, (STRING)_ID, (EFFECTRESOURCE)_Effect, (STRING)_BoneName)
+AND
+QRY_PlayLoopEffect(_Source, _ID, _Effect,_BoneName, 1.0)
+THEN
+DB_Noop(1);
+
+QRY
+QRY_PlayLoopEffect((GUIDSTRING)_Source, (STRING)_ID, (EFFECTRESOURCE)_Effect, (STRING)_BoneName,(REAL)_Scale)
+AND
+_BoneName != "__POSITION__"
+AND
+QRY_PlayLoopEffectCleanUp()
+AND
+PlayLoopEffect(_Source, _effect, _BoneName,_Scale, _fxHandle)
+THEN
+DB_PlayLoopEffectHandleResult(_fxHandle);
+
+QRY
+QRY_PlayLoopEffect((GUIDSTRING)_Source, (STRING)_ID, (EFFECTRESOURCE)_Effect, "__POSITION__", (REAL)_Scale)
+AND
+NOT DB_LoopEffect_CustomPosition(_Source,_ID,_,_,_)
+AND
+QRY_PlayLoopEffectCleanUp()
+AND
+GetPosition(_Source, _X, _Y, _Z)
+AND
+PlayLoopEffectAtPosition(_Effect, _X, _Y, _Z,_Scale, _fxHandle)
+THEN
+DB_PlayLoopEffectHandleResult(_fxHandle);
+
+QRY
+QRY_PlayLoopEffect((GUIDSTRING)_Source, (STRING)_ID, (EFFECTRESOURCE)_Effect, "__POSITION__", (REAL)_Scale)
+AND
+DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z)
+AND
+NOT DB_LoopEffect_CustomRotation(_Source,_ID,_,_,_)
+AND
+QRY_PlayLoopEffectCleanUp()
+AND
+PlayLoopEffectAtPosition(_Effect, _X, _Y, _Z,_Scale, _fxHandle)
+THEN
+DB_PlayLoopEffectHandleResult(_fxHandle);
+
+QRY
+QRY_PlayLoopEffect((GUIDSTRING)_Source, (STRING)_ID, (EFFECTRESOURCE)_Effect, "__POSITION__", (REAL)_Scale)
+AND
+DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z)
+AND
+DB_LoopEffect_CustomRotation(_Source,_ID,_XR,_YR,_ZR)
+AND
+QRY_PlayLoopEffectCleanUp()
+AND
+PlayLoopEffectAtPositionAndRotation(_Effect, _X, _Y, _Z, _XR, _YR, _ZR, _Scale, _fxHandle)
+THEN
+DB_PlayLoopEffectHandleResult(_fxHandle);
+
+PROC
+PROC_LoopEffectAtPosition((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,(REAL)_X,(REAL)_Y,(REAL)_Z,(STRING)_Region)
+THEN
+DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z);
+PROC_LoopEffect(_effect, _Source,_ID,_Region,"__POSITION__");
+
+PROC
+PROC_LoopEffectAtPositionAndRotation((EFFECTRESOURCE)_effect,(GUIDSTRING)_Source,(STRING)_ID,(STRING)_Region,(REAL)_Scale)
+AND
+GetPosition(_Source,_X,_Y,_Z)
+AND
+GetRotation(_Source,_XR,_YR,_ZR)
+THEN
+DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z);
+DB_LoopEffect_CustomRotation(_Source,_ID,_XR,_YR,_ZR);
+PROC_LoopEffect(_effect, _Source,_ID,_Region,"__POSITION__",_Scale);
+
+PROC
+PROC_LoopEffectAtPositionAndRotation((EFFECTRESOURCE)_effect,(GUIDSTRING)_Source,(STRING)_ID,(STRING)_Region,(REAL)_X,(REAL)_Y,(REAL)_Z,(REAL)_XR,(REAL)_YR,(REAL)_ZR,(REAL)_Scale)
+AND
+GetPosition(_Source,_X,_Y,_Z)
+AND
+GetRotation(_Source,_XR,_YR,_ZR)
+THEN
+DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z);
+DB_LoopEffect_CustomRotation(_Source,_ID,_XR,_YR,_ZR);
+PROC_LoopEffect(_effect, _Source,_ID,_Region,"__POSITION__",_Scale);
+
+
+
+PROC
+PROC_LoopEffect((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,(STRING)_Region,(STRING)_BoneName)
+THEN
+PROC_LoopEffect(_effect, _Source,_ID,_Region,_BoneName, 1.0);
+
+PROC
+PROC_LoopEffect((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,(STRING)_Region,(STRING)_BoneName, (REAL)_Scale)
+THEN
+DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale);
+PROC_LoopEffect_Queued();
+
+PROC
+PROC_LoopEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,(STRING)_Region,(STRING)_BoneName, (REAL)_Scale)
+AND
+DB_ActiveLevel(_Region)
+AND
+QRY_PlayLoopEffect(_Source, _ID, _effect, _BoneName, _Scale)
+AND
+DB_PlayLoopEffectHandleResult(_fxHandle)
+THEN
+DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_LoopEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,(STRING)_Region,(STRING)_BoneName, (REAL)_Scale)
+AND
+_Region!="__ANY__"
+AND
+NOT DB_ActiveLevel(_Region)
+THEN
+DB_LoopEffect(_Source, (INTEGER64)-1,_ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_LoopEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,"__ANY__",(STRING)_BoneName, (REAL)_Scale)
+AND
+DB_ActiveLevel(_)
+AND
+NOT QRY_BlockEffectInCombat(_effect,_Source)
+AND
+QRY_PlayLoopEffect(_Source, _ID, _effect, _BoneName, _Scale)
+AND
+DB_PlayLoopEffectHandleResult(_fxHandle)
+THEN
+DB_LoopEffect(_Source, _fxHandle,_ID,"__ANY__",_effect, _BoneName,_Scale);
+
+PROC
+PROC_LoopEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,"__ANY__",(STRING)_BoneName, (REAL)_Scale)
+AND
+DB_ActiveLevel(_)
+AND
+QRY_BlockEffectInCombat(_effect,_Source)
+THEN
+DB_LoopEffect(_Source, (INTEGER64)-1,_ID,"__ANY__",_effect, _BoneName,_Scale);
+
+PROC
+PROC_LoopEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(STRING)_ID,"__ANY__",(STRING)_BoneName, (REAL)_Scale)
+AND
+NOT DB_ActiveLevel(_)
+THEN
+DB_LoopEffect(_Source, (INTEGER64)-1,_ID,"__ANY__",_effect, _BoneName,_Scale);
+
+
+PROC
+PROC_LoopBeamEffect((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(GUIDSTRING)_Target,(STRING)_SrcBone,(STRING)_TargetBone,(STRING)_ID,(STRING)_Region)
+THEN
+DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone);
+PROC_LoopEffect_Queued();
+
+PROC
+PROC_LoopBeamEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(GUIDSTRING)_Target,(STRING)_SrcBone,(STRING)_TargetBone,(STRING)_ID,(STRING)_Region)
+AND
+_Region!="__ANY__"
+AND
+NOT DB_ActiveLevel(_Region)
+THEN
+DB_LoopBeamEffect(_Source,_Target,(INTEGER64)-1,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+PROC
+PROC_LoopBeamEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(GUIDSTRING)_Target,(STRING)_SrcBone,(STRING)_TargetBone,(STRING)_ID,(STRING)_Region)
+AND
+DB_ActiveLevel(_Region)
+AND
+PlayLoopBeamEffect(_Source,_Target,_effect,_SrcBone,_TargetBone,_EffectHandle)
+THEN
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+PROC
+PROC_LoopBeamEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(GUIDSTRING)_Target,(STRING)_SrcBone,(STRING)_TargetBone,(STRING)_ID,"__ANY__")
+AND
+DB_ActiveLevel(_)
+AND
+PlayLoopBeamEffect(_Source,_Target,_effect,_SrcBone,_TargetBone,_EffectHandle)
+THEN
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,"__ANY__",_effect,_SrcBone,_TargetBone);
+
+PROC
+PROC_LoopBeamEffect_Intern((EFFECTRESOURCE)_effect, (GUIDSTRING)_Source,(GUIDSTRING)_Target,(STRING)_SrcBone,(STRING)_TargetBone,(STRING)_ID,"__ANY__")
+AND
+NOT DB_ActiveLevel(_)
+THEN
+DB_LoopBeamEffect(_Source,_Target,(INTEGER64)-1,_ID,"__ANY__",_effect,_SrcBone,_TargetBone);
+
+/***********************/
+/*** EFFECT DELETION ***/
+/***********************/
+
+PROC
+PROC_StopLoopEffect((INTEGER64)_fxHandle)
+AND
+_fxHandle!=-1
+THEN
+StopLoopEffect(_fxHandle);
+
+PROC
+PROC_StopLoopEffect((GUIDSTRING)_Source,(STRING)_ID)
+AND
+DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale)
+THEN
+PROC_StopLoopEffect(_fxHandle);
+NOT DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_StopLoopEffect((GUIDSTRING)_Source,(STRING)_ID)
+AND
+DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z)
+THEN
+NOT DB_LoopEffect_CustomPosition(_Source,_ID,_X,_Y,_Z);
+
+PROC
+PROC_StopLoopBeamEffect((GUIDSTRING)_Source,(STRING)_ID)
+AND
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone)
+THEN
+PROC_StopLoopEffect(_EffectHandle);
+NOT DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+/************************/
+/*** EFFECTS CLEAN-UP ***/
+/************************/
+
+PROC
+PROC_CleanUpEffects()
+THEN
+PROC_CleanUpLoopEffects();
+PROC_CleanUpLoopBeamEffects();
+
+PROC
+PROC_CleanUpLoopEffects()
+AND
+DB_LoopEffect(_Object, _,_ID,_,_,_,_)
+THEN
+PROC_StopLoopEffect(_Object,_ID);
+
+PROC
+PROC_CleanUpLoopBeamEffects()
+AND
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone)
+THEN
+PROC_StopLoopBeamEffect(_Source,_ID);
+
+
+
+/************************/
+
+//REGION stopping effects for a region 
+
+PROC
+PROC_StopEffectsForRegion((STRING)_Region)
+THEN
+PROC_StopLoopEffectsForRegion(_Region);
+PROC_StopLoopBeamEffectsForRegion(_Region);
+
+PROC
+PROC_StopLoopEffectsForRegion((STRING)_Region)
+AND
+DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale)
+THEN
+PROC_StopLoopEffect(_fxHandle);
+NOT DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale);
+DB_LoopEffect(_Source,(INTEGER64)-1,_ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_StopLoopBeamEffectsForRegion((STRING)_Region)
+AND
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone)
+THEN
+PROC_StopLoopEffect(_EffectHandle);
+NOT DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone);
+DB_LoopBeamEffect(_Source,_Target,(INTEGER64)-1,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+PROC
+PROC_StopLoopEffectsForRegion((STRING)_)
+AND
+DB_LoopEffect(_Source, _fxHandle,_ID,"__ANY__",_effect, _BoneName,_Scale)
+THEN
+PROC_StopLoopEffect(_fxHandle);
+NOT DB_LoopEffect(_Source, _fxHandle,_ID,"__ANY__",_effect, _BoneName,_Scale);
+DB_LoopEffect(_Source, (INTEGER64)-1,_ID,"__ANY__",_effect, _BoneName,_Scale);
+
+PROC
+PROC_StopLoopBeamEffectsForRegion((STRING)_)
+AND
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,"__ANY__",_effect,_SrcBone,_TargetBone)
+THEN
+PROC_StopLoopEffect(_EffectHandle);
+NOT DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,"__ANY__",_effect,_SrcBone,_TargetBone);
+DB_LoopBeamEffect(_Source,_Target,(INTEGER64)-1,_ID,"__ANY__",_effect,_SrcBone,_TargetBone);
+//END_REGION
+
+//REGION starting effects for a region 
+
+PROC
+PROC_StartEffectsForRegion((STRING)_Region)
+THEN
+PROC_StartLoopEffectsForRegion(_Region);
+PROC_StartLoopBeamEffectsForRegion(_Region);
+
+PROC
+PROC_StartLoopEffectsForRegion((STRING)_Region)
+AND
+DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale)
+AND
+NOT QRY_BlockEffectInCombat(_effect,_Source)
+AND
+QRY_PlayLoopEffect(_Source, _ID, _effect, _BoneName)
+AND
+DB_PlayLoopEffectHandleResult(_NewfxHandle)
+THEN
+NOT DB_LoopEffect(_Source, _fxHandle,_ID,_Region,_effect, _BoneName,_Scale);
+DB_LoopEffect(_Source, _NewfxHandle,_ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_StartLoopBeamEffectsForRegion((STRING)_Region)
+AND
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone)
+AND
+PlayLoopBeamEffect(_Source,_Target,_effect,_SrcBone,_TargetBone,_NewEffectHandle)
+THEN
+NOT DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone);
+DB_LoopBeamEffect(_Source,_Target,_NewEffectHandle,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+///////
+
+PROC
+PROC_StartLoopEffectsForRegion((STRING)_)
+AND
+DB_LoopEffect(_Source, _fxHandle,_ID,"__ANY__",_effect, _BoneName,_Scale)
+AND
+NOT QRY_BlockEffectInCombat(_effect,_Source)
+AND
+QRY_PlayLoopEffect(_Source, _ID, _effect, _BoneName)
+AND
+DB_PlayLoopEffectHandleResult(_NewfxHandle)
+THEN
+NOT DB_LoopEffect(_Source, _fxHandle,_ID,"__ANY__",_effect, _BoneName,_Scale);
+DB_LoopEffect(_Source, _NewfxHandle,_ID,"__ANY__",_effect, _BoneName,_Scale);
+
+PROC
+PROC_StartLoopBeamEffectsForRegion((STRING)_Region)
+AND
+DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,"__ANY__",_effect,_SrcBone,_TargetBone)
+AND
+PlayLoopBeamEffect(_Source,_Target,_effect,_SrcBone,_TargetBone,_NewEffectHandle)
+THEN
+NOT DB_LoopBeamEffect(_Source,_Target,_EffectHandle,_ID,"__ANY__",_effect,_SrcBone,_TargetBone);
+DB_LoopBeamEffect(_Source,_Target,_NewEffectHandle,_ID,"__ANY__",_effect,_SrcBone,_TargetBone);
+
+//END_REGION
+
+IF
+LevelUnloading(_Region)
+THEN
+PROC_StopEffectsForRegion(_Region);
+
+// At LevelGameplayStarted instead of LevelLoaded, because sometimes characters are teleported to the current region
+// only during LevelLoaded, and this LevelLoaded handled may be exectuted before the one doing that
+// (which results in playing the effect on the character while they are still in the previous level, and that
+//  triggers an assert)
+IF
+LevelGameplayStarted(_Region,_)
+THEN
+PROC_StartEffectsForRegion(_Region);
+
+//REGION Special case: Some effects should stop during combat
+IF
+EnteredCombat(_Character,_)
+AND
+DB_LoopEffect(_Character, _fxHandle,_ID,_Region,_EffectName,_BoneName,_Scale)
+AND
+DB_LoopEffectDisabledInCombat(_EffectName)
+THEN
+PROC_StopLoopEffect(_fxHandle);
+NOT DB_LoopEffect(_Character, _fxHandle,_ID,_Region,_EffectName,_BoneName,_Scale);
+DB_LoopEffect(_Character, (INTEGER64)-1, _ID,_Region,_EffectName,_BoneName,_Scale);
+
+IF
+LeftCombat((CHARACTER)_Character,_)
+AND
+NOT DB_Defeated(_Character)
+AND
+DB_LoopEffect(_Character, (INTEGER64)-1, _ID,_Region,_EffectName,_BoneName,_Scale)
+AND
+DB_LoopEffectDisabledInCombat(_EffectName)
+AND
+QRY_PlayLoopEffect(_Character, _ID, _EffectName, _BoneName)
+AND
+DB_PlayLoopEffectHandleResult(_NewfxHandle)
+THEN
+NOT DB_LoopEffect(_Character, (INTEGER64)-1, _ID,_Region,_EffectName,_BoneName,_Scale);
+DB_LoopEffect(_Character,_NewfxHandle,_ID,_Region,_EffectName,_BoneName,_Scale);
+
+QRY
+QRY_BlockEffectInCombat((EFFECTRESOURCE)_EffectName,(GUIDSTRING)_Object)
+AND
+DB_LoopEffectDisabledInCombat(_EffectName)
+AND
+DB_Is_InCombat(_Object,_)
+THEN
+DB_NOOP(1);
+
+//REGION Queue effects started while a savegame is loading
+
+// Ensure that effects started on a buffered TimerFinished event from a savegame will
+// be delayed until after the LevelGameplayStarted event, because otherwise we will
+//   1) get the TimerFinished event even before the SavegameLoadStarted event (because it was in the event buffer loaded from the savegame)
+//   2) start a new looping vfx and store its handle
+//   3) on LevelGameplayStarted assume this is an old handle that was stored in the savegame, start the effect again, and replace the handle with this new one
+// As a result, the looping vfx started in step 1) will never be stopped anymore
+
+IF
+SavegameLoadStarted()
+THEN
+DB_GLO_Effects_SavegameLoading(1);
+
+PROC
+PROC_LoopEffect_Queued()
+AND
+NOT DB_GLO_Effects_SavegameLoading(1)
+AND
+IsGameStateRunning(0)
+THEN
+DB_GLO_Effects_SavegameLoading(1);
+
+IF
+LevelGameplayStarted(_, _)
+AND
+DB_GLO_Effects_SavegameLoading(1)
+THEN
+NOT DB_GLO_Effects_SavegameLoading(1);
+
+PROC
+PROC_LoopEffect_Queued()
+AND
+DB_GLO_Effects_SavegameLoading(1)
+AND
+DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale)
+THEN
+NOT DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale);
+// process along with all other effects once LevelGameplayStarted triggers
+DB_LoopEffect(_Source, (INTEGER64)-1, _ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_LoopEffect_Queued()
+AND
+NOT DB_GLO_Effects_SavegameLoading(1)
+AND
+DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale)
+THEN
+PROC_LoopEffect_Intern(_Effect, _Source, _ID, _Region, _BoneName, _Scale);
+NOT DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_LoopEffect_Queued()
+AND
+DB_GLO_Effects_SavegameLoading(1)
+AND
+DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone)
+THEN
+NOT DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone);
+// process along with all other effects once LevelGameplayStarted triggers
+DB_LoopBeamEffect(_Source,_Target,(INTEGER64)-1,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+PROC
+PROC_LoopEffect_Queued()
+AND
+NOT DB_GLO_Effects_SavegameLoading(1)
+AND
+DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone)
+THEN
+PROC_LoopBeamEffect_Intern(_Effect, _Source, _Target, _SrcBone, _TargetBone, _ID, _Region);
+NOT DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone);
+
+PROC
+PROC_StopLoopEffect((GUIDSTRING)_Source,(STRING)_ID)
+AND
+DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale)
+THEN
+NOT DB_QueuedLoopEffect(_Source, _ID,_Region,_effect, _BoneName,_Scale);
+
+PROC
+PROC_StopLoopBeamEffect((GUIDSTRING)_Source,(STRING)_ID)
+AND
+DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone)
+THEN
+NOT DB_QueuedLoopBeamEffect(_Source,_Target,_ID,_Region,_effect,_SrcBone,_TargetBone);
+//END_REGION
+
+//REGION Clean up when level becomes unreachable
+PROC
+PROC_LevelBecameUnreachable((STRING)_Level)
+AND
+DB_LoopEffect(_Source,_fxHandle,_ID,_Level,_effect, _BoneName,_Scale)
+THEN
+NOT DB_LoopEffect(_Source,_fxHandle,_ID,_Level,_effect, _BoneName,_Scale);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,848 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Infernal Box 
+DB_GLO_InfernalBox_BoxTeleport((TRIGGER)S_GLO_InfernalBox_BoxCampTeleport_2fd5026c-9a26-45ac-8cc7-669238fface8);
+DB_HasItemEvent(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, (FLAG)GLO_InfernalBox_State_CharacterHasBox_2ff44b15-a351-401b-8da9-cf42364af274);
+// When using the infernal box, if the dialog can't play fallback to VB
+//DB_ItemDialog_PlayerVB((ITEM)S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, (VOICEBARKRESOURCE)CHA_ShadowHeartRecruitment_VB_Box_45280190-0803-db1b-d76c-aaafd78807c1);
+
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)GLO_InfernalBox_PAD_ShadowheartBlock_40d3822e-e12f-2d51-ed0a-bc35356ff11d);
+
+PROC_GLO_InfernalBox_SetCurrentInteractiveDialog((DIALOGRESOURCE)GLO_InfernalBox_BoxInteraction_e7c6ec8e-833d-ba54-087c-b0a6345022ac, 0);
+//END_REGION
+
+//REGION Progress
+SetFlag((FLAG)GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Valid NPC owners
+// If for any case an NPC/Container needs to have the box, add entry to DB_GLO_InfernalBox_ValidOwners((GUIDSTRING)_Holder)
+NOT DB_GLO_InfernalBox_ValidOwners((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+
+// Address SH before she joins the party or dies
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)GLO_InfernalBox_LootingBoxFromShadowheart_c500e2ed-a882-29b2-58fe-4533ae493300);
+//END_REGION
+KBSECTION
+//REGION Init
+PROC
+PROC_GLO_Origins_SetupRecruitment("TUT_Avernus_C")
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+DB_GLO_InfernalMetal_BlockCompanionShadowheartTransfers(1);
+
+PROC
+PROC_GLO_Origins_SetupRecruitment(_Level)
+AND
+_Level != "TUT_Avernus_C"
+THEN
+NOT DB_GLO_InfernalMetal_BlockCompanionShadowheartTransfers(1);
+
+// Shadowheart joins players
+IF
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalMetal_BlockCompanionShadowheartTransfers(1)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_SHJoined")
+THEN
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+PROC_GLO_InfernalBox_ClearPartyNeverHadBoxFlag();
+
+PROC
+PROC_GLO_Origins_SetupRecruitment(_Level)
+AND
+_Level != "TUT_Avernus_C"
+AND
+DB_Avatars(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_SHJoined")
+THEN
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+PROC_GLO_InfernalBox_ClearPartyNeverHadBoxFlag();
+
+// Player acquires the infernal box by any other means from SH (during tutorial)
+IF
+FlagSet(GLO_InfernalBox_State_CharacterHasBox_2ff44b15-a351-401b-8da9-cf42364af274, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_ActiveLevel("TUT_Avernus_C")
+AND
+DB_Avatars(_Char) // Only for avatars and if they really have the box
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Char, 1)
+THEN
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+PROC_GLO_InfernalBox_SetPlayerOwner(_Player); 
+
+// Player acquires the infernal box by any other means from SH (outside tutorial)
+IF
+FlagSet(GLO_InfernalBox_State_CharacterHasBox_2ff44b15-a351-401b-8da9-cf42364af274, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_ActiveLevel("TUT_Avernus_C")
+THEN
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+PROC_GLO_InfernalBox_SetPlayerOwner(_Player);
+
+// Shadowheart dies and wasn't in the party, remove from DB and set up night
+// By default Shadowheart is never permadefeated.
+IF
+DB_Dead(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_GLO_InfernalBox_TryRemoveShadowheart();
+
+IF
+DB_KnockedOut(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_GLO_InfernalBox_TryRemoveShadowheart();
+
+IF
+DB_PermaDefeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_GLO_InfernalBox_TryRemoveShadowheart();
+
+PROC
+PROC_GLO_InfernalBox_TryRemoveShadowheart()
+AND
+NOT DB_CurrentLevel("TUT_Avernus_C")
+THEN
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+SetFlag(GLO_InfernalBox_Event_CampNightCanTrigger_02d4ce08-c435-499d-8109-d993cb9293dd, NULL_00000000-0000-0000-0000-000000000000);
+RemoveStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Box interactions
+IF
+FlagSet(ORI_Shadowheart_Event_BoxMissionBackground_d63c3541-b55a-307f-7aef-b453aeea2b41, _, _)
+THEN
+SetFlag(GLO_InfernalBox_State_ShadowheartTrustsPlayers_54f9f897-de81-4a6a-a9fc-66c5b62a42bf);
+
+IF
+FlagSet(ShadowHeart_InParty_Knows_SharWorshipper_634f858d-9b54-0711-e31f-075d304422ab, _, _)
+THEN
+SetFlag(GLO_InfernalBox_State_ShadowheartTrustsPlayers_54f9f897-de81-4a6a-a9fc-66c5b62a42bf);
+
+IF
+UseStarted(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282)
+THEN
+SetFlag(ORI_ShadowHeart_Event_UsedBox_b4882bf2-3a8b-33ea-cb90-567f57e595d3, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+UseStarted(_Player, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282)
+THEN
+PROC_GLO_InfernalBox_UseInteraction(_Player);
+
+PROC
+PROC_GLO_InfernalBox_UseInteraction((CHARACTER)_Player)
+AND
+QRY_OnlyOnce_Reset("GLO_InfernalBox_UsedBox")
+AND
+_Player != S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679
+AND
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT QRY_GLO_InfernalBox_CanUseBox(_Player)
+AND
+GetDistanceTo(_Player, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Dist)
+AND
+_Dist < 15.0
+AND
+QRY_StartDialog_Fixed(GLO_InfernalBox_PAD_ShadowheartBlock_40d3822e-e12f-2d51-ed0a-bc35356ff11d, (CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_UsedBox")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_InfernalBox_CanUseBox((CHARACTER)_Player)
+AND
+DB_GlobalFlag(GLO_InfernalBox_State_ShadowheartTrustsPlayers_54f9f897-de81-4a6a-a9fc-66c5b62a42bf)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_InfernalBox_CanUseBox((CHARACTER)_Player)
+AND
+IsInInventoryOf((ITEM)S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 0)
+THEN
+DB_NOOP(1); 
+
+// Player free to interact with the box after leaving the astral plane
+QRY
+QRY_GLO_InfernalBox_CanUseBox((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)CRE_AstralPrison_Event_LeftAstralPlane_58ec28f6-be1a-4044-8fbf-4229d8482bac)
+THEN
+DB_NOOP(1); 
+
+PROC
+PROC_GLO_InfernalBox_UseInteraction((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_UsedBox")
+AND
+QRY_GLO_InfernalBox_CanStartBoxInteractionDialog(_Player)
+AND
+QRY_SpeakerIsAvailable(_Player, 0, 1)
+THEN
+PROC_GLO_InfernalBox_UseInteraction_Internal(_Player);
+
+PROC
+PROC_GLO_InfernalBox_UseInteraction_Internal((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_UsedBox")
+AND
+DB_GLO_InfernalBox_CurrentInteractiveDialog(_Dialog)
+AND
+QRY_StartDialog_Fixed(_Dialog, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Player)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_UsedBox")
+THEN
+DB_NOOP(1);
+
+// If SH has options left, start the dialog
+PROC
+PROC_GLO_InfernalBox_UseInteraction_Internal((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_UsedBox")
+AND
+_Player == S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679
+AND
+QRY_StartDialog_Fixed(GLO_InfernalBox_BoxInteraction_e7c6ec8e-833d-ba54-087c-b0a6345022ac, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Player)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_UsedBox")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_InfernalBox_UseInteraction_Internal((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_UsedBox")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)CHA_ShadowHeartRecruitment_VB_Box_45280190-0803-db1b-d76c-aaafd78807c1, _Player);
+
+QRY
+QRY_GLO_InfernalBox_CanStartBoxInteractionDialog((CHARACTER)_Player)
+AND
+DB_GLO_InfernalBox_IgnoreChecks(1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_InfernalBox_CanStartBoxInteractionDialog((CHARACTER)_Player)
+AND
+GetFlag(GLO_InfernalBox_Event_TriedInvestigateBox_3d0bfe0d-43a8-43ff-a9a8-817c45ef7a87, _Player, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_InfernalBox_CanStartBoxInteractionDialog((CHARACTER)_Player)
+AND
+GetFlag(GLO_InfernalBox_Event_TriedOpenBox_6e89fd89-15dd-4f0f-b09a-4e9adc3325e0, _Player, 0)
+THEN
+DB_NOOP(1);
+
+IF
+VoiceBarkFailed(CHA_ShadowHeartRecruitment_VB_Box_45280190-0803-db1b-d76c-aaafd78807c1)
+AND
+GetFlag(ORI_ShadowHeart_Event_UsedBox_b4882bf2-3a8b-33ea-cb90-567f57e595d3, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+THEN
+ClearFlag(ORI_ShadowHeart_Event_UsedBox_b4882bf2-3a8b-33ea-cb90-567f57e595d3, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+VoiceBarkEnded(CHA_ShadowHeartRecruitment_VB_Box_45280190-0803-db1b-d76c-aaafd78807c1, _)
+AND
+GetFlag(ORI_ShadowHeart_Event_UsedBox_b4882bf2-3a8b-33ea-cb90-567f57e595d3, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+THEN
+ClearFlag(ORI_ShadowHeart_Event_UsedBox_b4882bf2-3a8b-33ea-cb90-567f57e595d3, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+// Use to change the current dialog that triggers when using the box.
+PROC
+PROC_GLO_InfernalBox_SetCurrentInteractiveDialog((DIALOGRESOURCE)_Dialog, (INTEGER)_IgnoreChecks)
+AND
+DB_GLO_InfernalBox_CurrentInteractiveDialog(_PrevDialog)
+THEN
+NOT DB_GLO_InfernalBox_CurrentInteractiveDialog(_PrevDialog);
+NOT DB_IgnoreMutingStatussesDialog(_PrevDialog);
+
+PROC
+PROC_GLO_InfernalBox_SetCurrentInteractiveDialog((DIALOGRESOURCE)_Dialog, (INTEGER)_IgnoreChecks)
+THEN
+DB_GLO_InfernalBox_CurrentInteractiveDialog(_Dialog);
+DB_IgnoreMutingStatussesDialog(_Dialog);
+
+PROC
+PROC_GLO_InfernalBox_SetCurrentInteractiveDialog((DIALOGRESOURCE)_Dialog, 0)
+THEN
+DB_GLO_InfernalBox_IgnoreChecks(1);
+
+PROC
+PROC_GLO_InfernalBox_SetCurrentInteractiveDialog((DIALOGRESOURCE)_Dialog, 1)
+THEN
+NOT DB_GLO_InfernalBox_IgnoreChecks(1);
+//END_REGION
+
+//REGION Last box owner management
+IF
+DB_PermaDefeated(_Char)
+AND
+DB_GLO_InfernalBox_ValidOwners(_Char)
+THEN
+NOT DB_GLO_InfernalBox_ValidOwners(_Char);
+
+// If character gets box, set it as last owner and set global flag
+PROC
+PROC_GLO_InfernalBox_SetPlayerOwner((CHARACTER)_Char)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Char, 1)
+THEN
+PROC_GLO_InfernalBox_ClearPartyNeverHadBoxFlag();
+PROC_GLO_InfernalBox_SetNewOwner(_Char);
+PROC_GlobalClearFlagAndCache(GLO_InfernalBox_Event_CampNightCanTrigger_02d4ce08-c435-499d-8109-d993cb9293dd);
+
+PROC
+PROC_GLO_InfernalBox_ClearPartyNeverHadBoxFlag()
+AND
+DB_GlobalFlag(GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3)
+THEN
+ClearFlag((FLAG)GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+AddedTo(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, (CHARACTER)_Holder, _)
+AND
+DB_GLO_InfernalBox_ValidOwners(_Holder)
+THEN
+PROC_GLO_InfernalBox_SetNewOwner(_Holder);
+
+IF
+AddedTo(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, (CHARACTER)_Holder, _)
+AND
+DB_Avatars(_Holder)
+THEN
+PROC_GLO_InfernalBox_SetNewOwner(_Holder);
+
+// Clear DB first
+PROC
+PROC_GLO_InfernalBox_SetNewOwner((CHARACTER)_NewOwner)
+AND 
+DB_GLO_InfernalBox_Owner(_PreviousOwner)
+AND
+_PreviousOwner != _NewOwner
+THEN
+NOT DB_GLO_InfernalBox_Owner(_PreviousOwner);
+
+// Set new owner
+PROC
+PROC_GLO_InfernalBox_SetNewOwner((CHARACTER)_NewOwner)
+THEN
+DB_GLO_InfernalBox_Owner(_NewOwner);
+PROC_GLO_InfernalBox_TryApplyBoundStatus();
+
+PROC
+PROC_GLO_InfernalBox_TryApplyBoundStatus()
+AND
+HasAppliedStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", 0)
+THEN
+ApplyStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GLO_InfernalBox_IsInValidNPCInventory()
+AND
+DB_GLO_InfernalBox_Owner(_Owner)
+AND
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)_Owner)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Party owner management
+// Players don't have access to avatars inventories if they were dismissed, in that case return the box.
+PROC
+PROC_GLO_AvatarDismissed((CHARACTER)_Member)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Member, 1)
+THEN
+PROC_GLO_InfernalBox_SendToAvatarFrom(_Member);
+
+// Return box if by any chance a hireling had the box and was dismissed.
+PROC
+PROC_Hirelings_Dismiss((CHARACTER)_Hireling)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Hireling, 1)
+THEN
+PROC_GLO_InfernalBox_SendToAvatarFrom(_Hireling);
+
+PROC
+PROC_GLO_InfernalBox_SendToAvatarFrom((CHARACTER)_Char)
+AND
+QRY_OnlyOnce_Reset("GLO_PuzzleBox_MoveToAvatar")
+AND
+DB_Avatars(_Avatar)
+AND
+_Avatar != _Char
+AND
+NOT DB_DismissedAvatar(_Avatar)
+AND
+QRY_OnlyOnce("GLO_PuzzleBox_MoveToAvatar")
+THEN
+PROC_GLO_InfernalBox_MoveBoxToCharacter(_Avatar);
+
+
+PROC
+PROC_Origins_CompanionLeavePermanently(_Companion, _)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Companion, 1)
+AND
+QRY_OnlyOnce_Reset("GLO_InfernalBox_CompanionPermanentlyLeaves")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_CompanionPermanentlyLeaves")
+THEN
+PROC_GLO_InfernalBox_MoveBoxToCharacter(_Player);
+
+QRY
+QRY_GLO_InfernalBox_PartyMemberDismiss((CHARACTER)_Origin,(CHARACTER)_Dismisser)
+AND
+GetFlag((FLAG)GLO_InfernalBox_State_CharacterHasBox_2ff44b15-a351-401b-8da9-cf42364af274, _Origin, 1)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Origin, 1)
+THEN
+PROC_GLO_InfernalBox_MoveBoxToCharacter(_Dismisser);
+
+PROC
+PROC_GLO_InfernalBox_MoveBoxToCharacter((CHARACTER)_Target)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Target, 0)
+AND
+HasAppliedStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", 0)
+THEN
+ToInventory(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Target, 1, 1, 1);
+
+PROC
+PROC_GLO_InfernalBox_MoveBoxToCharacter((CHARACTER)_Target)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Target, 0)
+AND
+HasAppliedStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", 1)
+THEN
+PROC_GLO_InfernalBox_SendToCharacter(_Target);
+RemoveStatus(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, "GLO_INFERNALBOX_BOUNDEDTO", NULL_00000000-0000-0000-0000-000000000000);
+
+// In case a new character is added to the DB and there was another entry.
+PROC
+PROC_GLO_InfernalBox_SendToCharacter((CHARACTER)_Target)
+AND
+DB_GLO_InfernalBox_SendToCharacter(_OldChar)
+AND
+_OldChar != _Target
+THEN
+NOT DB_GLO_InfernalBox_SendToCharacter(_OldChar);
+
+PROC
+PROC_GLO_InfernalBox_SendToCharacter((CHARACTER)_Target)
+THEN
+DB_GLO_InfernalBox_SendToCharacter(_Target);
+
+IF
+InventoryBoundChanged(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, 1)
+THEN
+DB_GLO_InfernalBox_HasBoundStatusActive(1);
+
+IF
+InventoryBoundChanged(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, 0)
+THEN
+NOT DB_GLO_InfernalBox_HasBoundStatusActive(1);
+
+IF
+DB_GLO_InfernalBox_SendToCharacter(_Char)
+AND
+NOT DB_GLO_InfernalBox_HasBoundStatusActive(1)
+THEN
+NOT DB_GLO_InfernalBox_SendToCharacter(_Char);
+ToInventory(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Char, 1, 1, 1);
+
+IF
+AddedTo(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _InventoryHolder, _)
+THEN
+PROC_CheckPuzzleBoxInventory();
+
+IF
+RemovedFrom(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _InventoryHolder)
+THEN
+PROC_CheckPuzzleBoxInventory();
+
+PROC
+PROC_CheckPuzzleBoxInventory()
+AND
+DB_GLO_InfernalBox_CharacterWithBox((CHARACTER)_InventoryHolder)
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282,_InventoryHolder,0)
+THEN
+ClearFlag(GLO_InfernalBox_State_BoxBoundedTo_f4d2be66-0443-4069-8ca2-570143f17e27, _InventoryHolder);
+NOT DB_GLO_InfernalBox_CharacterWithBox(_InventoryHolder);
+
+PROC
+PROC_CheckPuzzleBoxInventory()
+AND
+GetInventoryOwner(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _InventoryHolder)
+AND
+NOT DB_GLO_InfernalBox_CharacterWithBox((CHARACTER)_InventoryHolder)
+AND
+IsCharacter(_InventoryHolder,1)
+THEN
+SetFlag(GLO_InfernalBox_State_BoxBoundedTo_f4d2be66-0443-4069-8ca2-570143f17e27, _InventoryHolder);
+DB_GLO_InfernalBox_CharacterWithBox((CHARACTER)_InventoryHolder);
+
+
+IF
+DB_GLO_InfernalBox_CharacterWithBox(_Char)
+AND
+QRY_GLO_InfernalBox_CanBeOwner(_Char)
+THEN
+PROC_GLO_InfernalBox_SetNewOwner(_Char);
+
+QRY
+QRY_GLO_InfernalBox_CanBeOwner((CHARACTER)_Char)
+AND
+DB_GLO_InfernalBox_ValidOwners(_Char)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_InfernalBox_CanBeOwner((CHARACTER)_Char)
+AND
+DB_Players(_Char)
+THEN
+DB_NOOP(1);
+
+//REGION Team flag
+//player joins team or player receives box
+IF
+DB_PartOfTheTeam(_Player)
+AND
+DB_GLO_InfernalBox_CharacterWithBox(_Player)
+THEN
+SetFlag((FLAG)GLO_InfernalBox_State_TeamHasBox_d8b25e35-ec84-45e5-8395-5ce6faa36fbd, NULL_00000000-0000-0000-0000-000000000000);
+
+//player leaves team OR NPC receives box
+IF
+DB_GLO_InfernalBox_CharacterWithBox(_NPC)
+AND
+NOT DB_PartOfTheTeam(_NPC)
+THEN
+ClearFlag((FLAG)GLO_InfernalBox_State_TeamHasBox_d8b25e35-ec84-45e5-8395-5ce6faa36fbd, NULL_00000000-0000-0000-0000-000000000000);
+
+//player loses box
+PROC
+PROC_CheckPuzzleBoxInventory()
+AND
+DB_GLO_InfernalBox_CharacterWithBox(_InventoryHolder)
+AND
+NOT DB_PartOfTheTeam(_InventoryHolder)
+THEN
+ClearFlag((FLAG)GLO_InfernalBox_State_TeamHasBox_d8b25e35-ec84-45e5-8395-5ce6faa36fbd, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CheckPuzzleBoxInventory()
+AND
+NOT DB_GLO_InfernalBox_CharacterWithBox(_)
+THEN
+ClearFlag((FLAG)GLO_InfernalBox_State_TeamHasBox_d8b25e35-ec84-45e5-8395-5ce6faa36fbd, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//END_REGION
+
+//REGION Dialog management
+// Force the box to be added to the character (useful for dialogues)
+IF
+FlagSet(GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, _Char, _)
+THEN
+ClearFlag(GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, _Char);
+PROC_GLO_InfernalBox_MoveBoxToCharacter((CHARACTER)_Char);
+//END_REGION
+
+//REGION Camp events
+// Teleport also the box
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+NOT DB_GlobalFlag(GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3)
+AND
+NOT DB_GlobalFlag(GLO_InfernalBox_State_TeamHasBox_d8b25e35-ec84-45e5-8395-5ce6faa36fbd)
+AND
+DB_GlobalFlag(NIGHT_InfernalBoxAppears_47942a99-c44e-4e90-a0a2-6956bed9dc5b)
+AND
+NOT QRY_GLO_InfernalBox_IsInValidNPCInventory()
+AND
+DB_GLO_InfernalBox_BoxTeleport(_TeleportTrigger)
+THEN
+ClearOwnership(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282);
+TeleportTo(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _TeleportTrigger, "", 0, 0, 1);
+
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+NOT DB_GlobalFlag(GLO_InfernalBox_State_TeamHasBox_d8b25e35-ec84-45e5-8395-5ce6faa36fbd)
+AND
+NOT DB_GlobalFlag(NIGHT_InfernalBoxAppears_47942a99-c44e-4e90-a0a2-6956bed9dc5b)
+AND
+NOT QRY_GLO_InfernalBox_IsInValidNPCInventory()
+THEN
+PROC_GlobalSetFlagAndCache(GLO_InfernalBox_Event_CampNightCanTrigger_02d4ce08-c435-499d-8109-d993cb9293dd);
+
+// On waking up, add box to owner's inventory (if possible)
+PROC
+PROC_Camp_EveryoneWakeupEndHook()
+AND
+NOT DB_GlobalFlag(GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3)
+AND
+DB_GlobalFlag(NIGHT_InfernalBoxAppears_47942a99-c44e-4e90-a0a2-6956bed9dc5b)
+AND
+NOT QRY_GLO_InfernalBox_IsInTeamInventory()
+AND
+NOT QRY_GLO_InfernalBox_IsInValidNPCInventory()
+THEN
+PROC_GLO_InfernalBox_AddToOwner();
+
+// Try giving the box to its owner
+PROC
+PROC_GLO_InfernalBox_AddToOwner()
+AND
+DB_GLO_InfernalBox_Owner(_LastOwner)
+AND
+NOT DB_Dead(_LastOwner)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_GiveToOwner")
+THEN
+PROC_GLO_InfernalBox_MoveBoxToCharacter(_LastOwner);
+
+// If owner is dead, give it to another player
+PROC
+PROC_GLO_InfernalBox_AddToOwner()
+AND
+QRY_OnlyOnce("GLO_InfernalBox_GiveToOwner")
+AND
+DB_Players(_Player)
+AND
+NOT DB_Dead(_Player)
+THEN
+PROC_GLO_InfernalBox_MoveBoxToCharacter(_Player);
+
+PROC
+PROC_GLO_InfernalBox_AddToOwner()
+THEN
+NOT DB_OnlyOnce("GLO_InfernalBox_GiveToOwner");
+
+QRY
+QRY_GLO_InfernalBox_IsInTeamInventory()
+AND
+DB_GLO_InfernalBox_CharacterWithBox(_Char)
+AND
+DB_PartOfTheTeam(_Char)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Taking it from Shadowheart
+IF
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalBox_BlockTakingBoxDialog(1)
+THEN
+DB_GLO_InfernalBox_BlockTakingBoxDialog(1);
+
+// Block looting Shadowheart's corpse if she has the box
+PROC
+PROC_BlockLootCorpse(_Player, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_Dead(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalBox_BlockTakingBoxDialog(1)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_LootingSHDialog")
+AND
+GetFlag(GLO_InfernalBox_State_CharacterHasBox_2ff44b15-a351-401b-8da9-cf42364af274, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_InfernalBox_LootingBoxFromShadowheart_c500e2ed-a882-29b2-58fe-4533ae493300, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _Player)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_LootingSHDialog")
+THEN
+DB_GLO_InfernalBox_BlockTakingBoxDialog(1);
+DB_CustomLootCorpseResponse(_Player, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 0);
+
+PROC
+PROC_StateSet_PermaDefeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalBox_BlockTakingBoxDialog(1)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_LootingSHDialog")
+THEN
+TimerCancel("GLO_InfernalBox_LootingSHDialog");
+TimerLaunch("GLO_InfernalBox_LootingSHDialog", 500);
+
+IF
+LeftCombat(_Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Dead(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalBox_BlockTakingBoxDialog(1)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_LootingSHDialog")
+THEN
+TimerCancel("GLO_InfernalBox_LootingSHDialog");
+TimerLaunch("GLO_InfernalBox_LootingSHDialog", 500);
+
+IF
+TimerFinished("GLO_InfernalBox_LootingSHDialog")
+THEN
+PROC_GLO_InfernalBox_TryStartLootingSHDialog();
+
+PROC
+PROC_GLO_InfernalBox_TryStartLootingSHDialog()
+AND
+NOT DB_Camp_SleepingPlayer(_)
+AND
+QRY_GetClosestAvailableCharacterTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 0)
+AND
+DB_ClosestAvailableCharacterTo(_ClosestPlayer, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Dist)
+AND
+_Dist < 10.0
+AND
+GetFlag(GLO_InfernalBox_State_CharacterHasBox_2ff44b15-a351-401b-8da9-cf42364af274, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+AND
+QRY_StartDialog((DIALOGRESOURCE)GLO_InfernalBox_LootingBoxFromShadowheart_c500e2ed-a882-29b2-58fe-4533ae493300, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _ClosestPlayer)
+AND
+QRY_OnlyOnce("GLO_InfernalBox_LootingSHDialog")
+THEN
+DB_GLO_InfernalBox_BlockTakingBoxDialog(1);
+
+PROC
+PROC_GLO_PartyMembers_Remove(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _, _)
+AND
+NOT DB_OnlyOnce("GLO_InfernalBox_LootingSHDialog")
+THEN
+NOT DB_GLO_InfernalBox_BlockTakingBoxDialog(1);
+
+//END_REGION
+
+//REGION Trying to remove box from inventory
+//Let's keep this part for now. With the InventoryBound boost CharacterPickpocketSuccess() won't be thrown, but we need to decide what to do UI-wise as right now it appears as any other item.
+IF
+CharacterPickpocketSuccess(_Player, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _, _, _)
+AND
+NOT QRY_StartDialog_Fixed(ORI_Shadowheart_FindsPlayerStealingBox_030b06f6-7cba-b2c0-ad3c-4475180446e1, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player)
+THEN
+ApplyStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "SHOCKED", 6.0, 0, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_InfernalBox_PAD_ShockedByBox_b179ba50-f370-c8a3-9087-8911599289a7, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+// For now let's ignore crimes where the box is involved (still allow other crimes like pickpoketing money).
+QRY
+QRY_CRIME_BlockRegisterCrime(_, _, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _, _)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Resurrecting Shadowheart edge-case
+IF
+Resurrected(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_Players((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_GLO_InfernalBox_RestartShadowheartOwnership();
+
+PROC
+PROC_GLO_InfernalBox_RestartShadowheartOwnership()
+AND
+NOT DB_GlobalFlag(NIGHT_InfernalBoxAppears_47942a99-c44e-4e90-a0a2-6956bed9dc5b)
+THEN
+ClearFlag(GLO_InfernalBox_Event_CampNightCanTrigger_02d4ce08-c435-499d-8109-d993cb9293dd, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GLO_InfernalBox_RestartShadowheartOwnership()
+THEN
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+PROC
+PROC_GLO_InfernalBox_RestartShadowheartOwnership()
+AND
+IsInInventoryOf(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1)
+THEN
+PROC_GLO_InfernalBox_SetNewOwner(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+AddedTo(S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+AND
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_Players((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_GLO_InfernalBox_SetNewOwner(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+//END_REGION
+
+//REGION Complete goal in Epilogue (box destroyed)
+
+PROC
+PROC_END_BrainBattle_DeleteKeyItems()
+THEN
+GoalCompleted;
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("resetbox")
+THEN
+NOT DB_OnlyOnce("GLO_InfernalBox_LootingSHDialog");
+DB_GLO_InfernalBox_ValidOwners((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+Resurrect(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+SetFlag((FLAG)GLO_InfernalBox_State_PartyNeverHadBox_c6bb9588-6916-4afa-b011-e4d7f8d1ffc3, NULL_00000000-0000-0000-0000-000000000000);
+SetFlag((FLAG)GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+TextEvent("receivebox")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("Debug_GLO_InfernalBox_ReceiveBox")
+THEN
+SetFlag((FLAG)GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, _Player);
+
+// Give box to avatar if they skipped Act 1
+IF
+LevelGameplayStarted(_Level, _)
+AND
+_Level != "TUT_Avernus_C"
+AND
+_Level != "TUT_Avernus_D"
+AND
+_Level != "WLD_Main_A"
+AND
+NOT DB_GlobalFlag((FLAG)VISITEDREGION_WLD_Main_A_925c721d-686b-4fbe-8c3c-d1233bf863b7)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_OnlyOnce("Debug_GLO_InfernalBox_SkippedAct1")
+THEN
+SetFlag((FLAG)GLO_InfernalBox_Event_ForceGiveBox_7addbb64-502f-48aa-9b71-da1b8d6c28eb, _Avatar);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

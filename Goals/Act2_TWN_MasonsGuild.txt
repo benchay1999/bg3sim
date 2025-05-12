@@ -1,0 +1,547 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_ItemDialog_NarratorAD((ITEM)S_TWN_MasonsGuild_MasonPlaque_fc0b2ed9-d912-4717-9b93-132ccda2f9e1, (DIALOGRESOURCE)TWN_MasonsGuild_AD_MasonPlaque_8e31c2a9-3ff9-1e26-2792-105405ef9601);
+
+DB_GLO_MovingObject((ITEM)S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, "TWN_MasonsGuild_TrapWall_Move", (TRIGGER)S_TWN_MasonsGuild_TrapWall_DefaultPos_e90d9140-f629-4fbe-8477-a941b9dcc871, (TRIGGER)S_TWN_MasonsGuild_TrapWall_NewPos_ce1860df-bf36-4b80-8076-d3668886b4d0, 2.0, 0.0, 0, "TWN_MasonsGuild_TrapWall_Moved", 0);
+DB_GLO_MovingObject((ITEM)S_TWN_MasonsGuild_Blocker_001_3509e836-cf2c-4df5-9665-16ad6ca9fa46, "TWN_MasonsGuild_Blocker_Move", (TRIGGER)S_TWN_MasonsGuild_Blocker_001_DefaultPos_521187e4-ec42-4424-916c-023d50fa394c, (TRIGGER)S_TWN_MasonsGuild_Blocker_001_NewPos_fa00437a-6398-44c3-a2b0-9189499bbf04, 12.0, 0.0, 0, "TWN_MasonsGuild_Blocker_001_Moved", 0);
+DB_GLO_MovingObject((ITEM)S_TWN_MasonsGuild_Blocker_002_b6829a21-9e2e-47af-996b-5c2ba61ebfb8, "TWN_MasonsGuild_Blocker_Move", (TRIGGER)S_TWN_MasonsGuild_Blocker_002_DefaultPos_394e4231-011c-42d3-ad87-376812134873, (TRIGGER)S_TWN_MasonsGuild_Blocker_002_NewPos_de4d31eb-dc63-4c63-ab12-f84d88be58f3, 12.0, 0.0, 0, "TWN_MasonsGuild_Blocker_002_Moved", 0);
+
+DB_TWN_MasonsGuild_DamageDealers((ITEM)S_TWN_MasonsGuild_DamageDealer_000_e7053ba8-8f50-4214-b908-728d04349a02);
+DB_TWN_MasonsGuild_DamageDealers((ITEM)S_TWN_MasonsGuild_DamageDealer_001_04ec4d69-ede3-42ec-8175-7db4a9a18e58);
+DB_TWN_MasonsGuild_DamageDealers((ITEM)S_TWN_MasonsGuild_DamageDealer_002_3b25a38d-e864-4b2d-91c6-44de662701fd);
+
+DB_TWN_MasonsGuild_Gratings((ITEM)S_TWN_MasonsGuild_Blocker_001_3509e836-cf2c-4df5-9665-16ad6ca9fa46, (TRIGGER)S_TWN_MasonsGuild_Blocker_001_Area_e5345ea2-96a0-4da9-a903-5079d3886af3, S_TWN_MasonsGuild_Blocker_001_Helper_b2c7eee8-5ab1-41a1-86b4-bbadb8b8b808);
+DB_TWN_MasonsGuild_Gratings((ITEM)S_TWN_MasonsGuild_Blocker_002_b6829a21-9e2e-47af-996b-5c2ba61ebfb8, (TRIGGER)S_TWN_MasonsGuild_Blocker_002_Area_07bdd194-5774-47fa-a992-e41d8b2b4baf, S_TWN_MasonsGuild_Blocker_002_Helper_53bd1f5f-312a-4740-ac2e-66ede13dac36);
+
+PROC_TriggerRegisterForParty((TRIGGER)S_TWN_MasonsGuild_TrapArea_5691684e-407b-4898-9412-fefc5d57b273);
+
+// Characters and Items in this area are pushed by the trap away, to avoid them being stuck inside a part of the trap (sliding wall, sliding grating)
+DB_TWN_MasonsGuild_PushObjectsAreas((TRIGGER)S_TWN_MasonsGuild_Blocker_001_Area_e5345ea2-96a0-4da9-a903-5079d3886af3);
+DB_TWN_MasonsGuild_PushObjectsAreas((TRIGGER)S_TWN_MasonsGuild_Blocker_002_Area_07bdd194-5774-47fa-a992-e41d8b2b4baf);
+DB_TWN_MasonsGuild_PushObjectsAreas((TRIGGER)S_TWN_MasonsGuild_TrapWall_ProblemArea_8bda35b1-1c4c-446b-8e9c-9fa31cc30fe0);
+
+// Trap States
+DB_GLO_ExclusiveFlag("TWN_MasonsGuild_TrapState", (FLAG)TWN_MasonsGuild_Trap_State_Deactivated_8348a548-b0ce-4ecb-aa6a-a9f762bf6b7c);
+DB_GLO_ExclusiveFlag("TWN_MasonsGuild_TrapState", (FLAG)TWN_MasonsGuild_Trap_State_Activating_ccee51cd-05b8-4881-8347-6179803eb8c2);
+DB_GLO_ExclusiveFlag("TWN_MasonsGuild_TrapState", (FLAG)TWN_MasonsGuild_Trap_State_Activated_7197cc96-d0d5-4866-b148-fc49db58e717);
+DB_GLO_ExclusiveFlag("TWN_MasonsGuild_TrapState", (FLAG)TWN_MasonsGuild_Trap_State_Deactivating_cb3e78be-5fd9-42f1-a667-872463fc4605);
+PROC_GlobalSetFlagAndCache(TWN_MasonsGuild_Trap_State_Deactivated_8348a548-b0ce-4ecb-aa6a-a9f762bf6b7c);
+
+DB_TWN_MasonsGuild_Trap_MaxShots(5);
+
+DB_ItemDialog_NarratorAD((ITEM)S_TWN_Masonry_FakeMasonBones_b02a9ee9-19c4-4fe3-961d-01cf6450cb4f,(DIALOGRESOURCE)TWN_MasonGuild_AD_FakeMasonBones_269356a9-32ee-dc30-68bd-968b3d77feed);
+
+DB_ItemDialog_NarratorAD((ITEM)S_TWN_MasonApprentice_02_e34c404d-b237-4706-b39c-402e8ecca229,(DIALOGRESOURCE)TWN_Masonry_AD_MasonApprentice_01_25d2c4df-a3a6-1847-77c1-469ae57ac5a6);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("mg_gr1")
+THEN
+SetEntityEvent(S_TWN_MasonsGuild_Blocker_001_Helper_b2c7eee8-5ab1-41a1-86b4-bbadb8b8b808, "TWN_MasonsGuild_Push");
+
+IF
+TextEvent("mg_gr2")
+THEN
+SetEntityEvent(S_TWN_MasonsGuild_Blocker_002_Helper_53bd1f5f-312a-4740-ac2e-66ede13dac36, "TWN_MasonsGuild_Push");
+
+IF
+TextEvent("mg_sw")
+THEN
+SetEntityEvent(S_TWN_MasonsGuild_TrapWall_Helper_fe8a3c9b-e213-416e-aafe-70cf13ea432e, "TWN_MasonsGuild_Push");
+
+IF
+TextEvent("mg_sw_on")
+THEN
+PROC_SetOnStage(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, 1);
+
+IF
+TextEvent("mg_sw_off")
+THEN
+PROC_SetOnStage(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, 0);
+
+IF
+TextEvent("mg_push")
+THEN
+PROC_TWN_MasonsGuild_CheckMoveObjectsOut((TRIGGER)S_TWN_MasonsGuild_TrapWall_ProblemArea_8bda35b1-1c4c-446b-8e9c-9fa31cc30fe0);
+PROC_TWN_MasonsGuild_CheckMoveObjectsOut((TRIGGER)S_TWN_MasonsGuild_Blocker_001_Area_e5345ea2-96a0-4da9-a903-5079d3886af3);
+PROC_TWN_MasonsGuild_CheckMoveObjectsOut((TRIGGER)S_TWN_MasonsGuild_Blocker_002_Area_07bdd194-5774-47fa-a992-e41d8b2b4baf);
+
+IF
+TextEvent("explodetrap")
+AND
+DB_TWN_MasonsGuild_Gratings(_Blocker, _BlockerArea, _BlockerHelper)
+AND
+DB_Players(_Player)
+AND
+IsInTrigger(_Player, _BlockerArea, 1)
+THEN
+CreateExplosion(_Player, "Projectile_TWN_MasonsGuild_Grating", -1, _BlockerHelper);
+
+IF
+TextEvent("mg_activatetrap")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Activate(_Player);
+
+IF
+TextEvent("mg_deactivatetrap")
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Deactivate();
+
+IF
+TextEvent("mg_basement")
+THEN
+PROC_TeleportPartiesTo(S_Debug_TWN_MasonsGuild_Basement_81854678-2b13-4287-99c3-3a7432308173, "");
+
+IF
+TextEvent("mg_oopen")
+THEN
+Open((ITEM)S_TWN_MasonsGuild_OuterSlidingWall_d6a70398-f14f-4462-be77-06a4a02a3b38);
+
+IF
+TextEvent("mg_oclose")
+THEN
+Close((ITEM)S_TWN_MasonsGuild_OuterSlidingWall_d6a70398-f14f-4462-be77-06a4a02a3b38);
+
+IF
+TextEvent("mg_iopen")
+THEN
+Open((ITEM)S_TWN_MasonsGuild_InnerSlidingWall_405982d4-e4b2-4181-a21a-eb748b32e1d2);
+
+IF
+TextEvent("mg_iclose")
+THEN
+Close((ITEM)S_TWN_MasonsGuild_InnerSlidingWall_405982d4-e4b2-4181-a21a-eb748b32e1d2);
+//END_REGION Debug
+
+//REGION Trap Init
+IF
+DB_TWN_MasonsGuild_Gratings(_Blocker, _BlockerArea, _)
+THEN
+TriggerRegisterForItems(_BlockerArea);
+//END_REGION Trap Init
+
+//REGION Outer Sliding Wall
+// if the player somehow got behind the wall without unlocking the area first then
+// we open the door from the within and unlock the heraldic stone which serves as a button
+IF
+UseStarted(_Player, S_TWN_MasonsGuild_OuterSlidingWallBackupLever_0c144415-8ad1-4ec6-96f0-9e1245da757b)
+AND
+IsLocked(S_TWN_MasonsGuild_OuterSlidingWallActivator_9b41b366-52ca-4812-8d23-18b407334b2f, 1)
+THEN
+DB_PerceptionSkillCheckADBlocked(S_TWN_MasonsGuild_OuterSlidingWallActivator_9b41b366-52ca-4812-8d23-18b407334b2f);
+SetEntityEvent(S_TWN_MasonsGuild_OuterSlidingWallActivator_9b41b366-52ca-4812-8d23-18b407334b2f, "StoryReveal");
+Unlock((ITEM)S_TWN_MasonsGuild_OuterSlidingWallActivator_9b41b366-52ca-4812-8d23-18b407334b2f);
+PROC_TWN_MasonsGuild_ActivateOuterSlidingWall();
+
+IF
+Unlocked((ITEM)S_TWN_MasonsGuild_OuterSlidingWallActivator_9b41b366-52ca-4812-8d23-18b407334b2f, _, _)
+THEN
+PROC_TWN_MasonsGuild_ActivateOuterSlidingWall();
+
+PROC
+PROC_TWN_MasonsGuild_ActivateOuterSlidingWall()
+AND
+QRY_OnlyOnce("TWN_MasonsGuild_ActivateOuterSlidingWall")
+THEN
+PROC_TWN_MasonsGuild_OpenCloseSlidingWall((ITEM)S_TWN_MasonsGuild_OuterSlidingWall_d6a70398-f14f-4462-be77-06a4a02a3b38);
+
+IF
+DualEntityEvent(_, (ITEM)_SlidingWall, "TWN_MasonsGuild_OuterSlidingWall_Move")
+THEN
+PROC_TWN_MasonsGuild_OpenCloseSlidingWall((ITEM)S_TWN_MasonsGuild_OuterSlidingWall_d6a70398-f14f-4462-be77-06a4a02a3b38);
+//END_REGION Outer Sliding Wall
+
+//REGION Secret Region for the storage in the masons lair
+IF
+DualEntityEvent(_, (ITEM)_SlidingWall, "TWN_MasonsGuild_InnerSlidingWall_Move")
+THEN
+PROC_TWN_MasonsGuild_OpenCloseSlidingWall((ITEM)S_TWN_MasonsGuild_InnerSlidingWall_405982d4-e4b2-4181-a21a-eb748b32e1d2);
+
+PROC
+PROC_TWN_MasonsGuild_OpenCloseSlidingWall((ITEM)_SlidingWall)
+AND
+QRY_TWN_MasonsGuild_SlidingWallIsNotMoving(_SlidingWall)
+AND
+IsClosed((ITEM)_SlidingWall, 1)
+THEN
+Open((ITEM)_SlidingWall);
+
+PROC
+PROC_TWN_MasonsGuild_OpenCloseSlidingWall((ITEM)_SlidingWall)
+AND
+QRY_TWN_MasonsGuild_SlidingWallIsNotMoving(_SlidingWall)
+AND
+IsOpened((ITEM)_SlidingWall, 1)
+THEN
+Close((ITEM)_SlidingWall);
+
+QRY
+QRY_TWN_MasonsGuild_SlidingWallIsNotMoving((ITEM)_SlidingWall)
+AND
+IsClosing(_SlidingWall, 0)
+AND
+IsOpening(_SlidingWall, 0)
+THEN
+DB_NOOP(1);
+//END_REGION Secret Region for the storage in the masons lair
+
+//REGION Bait Trap
+IF
+DB_TWN_MasonsGuild_PushObjectsAreas(_Trigger)
+THEN
+TriggerRegisterForItems(_Trigger);
+PROC_TriggerRegisterForParty(_Trigger);
+
+IF
+EnteredTrigger(_PartyMember, _Trigger)
+AND
+DB_TWN_MasonsGuild_PushObjectsAreas(_Trigger)
+THEN
+SetTag(_PartyMember, (TAG)ACT2_TWN_MASONSGUILD_VALIDTRAPTARGET_dda79ecf-88ae-4ac7-a714-1530e395783c);
+DB_TWN_MasonsGuild_PushableObjects((TRIGGER)_Trigger, (GUIDSTRING)_PartyMember);
+
+IF
+LeftTrigger(_PartyMember, _Trigger)
+AND
+DB_TWN_MasonsGuild_PushObjectsAreas(_Trigger)
+AND
+Exists(_PartyMember,1)
+THEN
+ClearTag(_PartyMember, (TAG)ACT2_TWN_MASONSGUILD_VALIDTRAPTARGET_dda79ecf-88ae-4ac7-a714-1530e395783c);
+
+IF
+LeftTrigger(_PartyMember, _Trigger)
+AND
+DB_TWN_MasonsGuild_PushObjectsAreas(_Trigger)
+THEN
+NOT DB_TWN_MasonsGuild_PushableObjects((TRIGGER)_Trigger, (GUIDSTRING)_PartyMember);
+
+IF
+ItemEnteredTrigger(_Item, _Trigger, _)
+AND
+DB_TWN_MasonsGuild_PushObjectsAreas(_Trigger)
+AND
+NOT DB_TWN_MasonsGuild_Gratings(_Item, _, _)
+AND
+NOT DB_TWN_MasonsGuild_DamageDealers(_Item)
+AND
+_Item != S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3
+AND
+Exists(_Item,1)
+THEN
+SetTag(_Item, (TAG)ACT2_TWN_MASONSGUILD_VALIDTRAPTARGET_dda79ecf-88ae-4ac7-a714-1530e395783c);
+DB_TWN_MasonsGuild_PushableObjects((TRIGGER)_Trigger, (GUIDSTRING)_Item);
+
+IF
+ItemLeftTrigger(_Item, _Trigger, _)
+AND
+DB_TWN_MasonsGuild_PushObjectsAreas(_Trigger)
+AND
+NOT DB_TWN_MasonsGuild_Gratings(_Item, _, _)
+AND
+NOT DB_TWN_MasonsGuild_DamageDealers(_Item)
+AND
+_Item != S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3
+THEN
+PROC_TWN_MasonsGuild_RemovePushableObject(_Item);
+
+PROC
+PROC_TWN_MasonsGuild_RemovePushableObject((ITEM)_Item)
+AND
+Exists(_Item,1)
+THEN
+ClearTag(_Item, (TAG)ACT2_TWN_MASONSGUILD_VALIDTRAPTARGET_dda79ecf-88ae-4ac7-a714-1530e395783c);
+
+PROC
+PROC_TWN_MasonsGuild_RemovePushableObject((ITEM)_Item)
+AND
+DB_TWN_MasonsGuild_PushableObjects((TRIGGER)_Trigger, (GUIDSTRING)_Item)
+THEN
+NOT DB_TWN_MasonsGuild_PushableObjects((TRIGGER)_Trigger, (GUIDSTRING)_Item);
+
+IF
+DualEntityEvent((CHARACTER)_Character, S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, "TWN_MasonsGuild_TrappedChestUsed")
+AND
+DB_PartyMembers(_Character)
+AND
+QRY_CharacterGetOwnerOrSelf(_Character)
+AND
+DB_QRYRTN_CharacterGetOwnerOrSelf(_OwnerOrSelf)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Activate(_OwnerOrSelf);
+
+IF 
+DestroyedBy((ITEM)S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, _, _Owner, _)
+AND
+IsInTrigger(S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, (TRIGGER)S_TWN_MasonsGuild_TrapArea_5691684e-407b-4898-9412-fefc5d57b273, 1)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Activate(_Owner);
+
+// "Throw" and "Use as Improvised Weapon(melee)" actions
+// don't generate PreMovedBy and MovedBy events
+IF 
+Moved(S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28)
+AND
+GetClosestPlayer(S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, _Character, _)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Activate(_Character);
+
+IF 
+PreMovedBy(S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, _Character)
+AND
+IsInTrigger(S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, (TRIGGER)S_TWN_MasonsGuild_TrapArea_5691684e-407b-4898-9412-fefc5d57b273, 1)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Activate(_Character);
+
+IF
+AddedTo((ITEM)S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, (CHARACTER)_Character, _)
+AND
+IsInTrigger(S_TWN_MasonsGuild_Bait_60017535-5852-4122-9f55-7416d6c60f28, (TRIGGER)S_TWN_MasonsGuild_TrapArea_5691684e-407b-4898-9412-fefc5d57b273, 1)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Activate(_Character);
+
+PROC
+PROC_TWN_MasonsGuild_BaitTrap_Activate((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)TWN_MasonsGuild_Trap_State_Deactivated_8348a548-b0ce-4ecb-aa6a-a9f762bf6b7c)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)TWN_MasonsGuild_Trap_State_Activating_ccee51cd-05b8-4881-8347-6179803eb8c2);
+DB_DangerZone((TRIGGER)S_TWN_MasonsGuild_TrapArea_5691684e-407b-4898-9412-fefc5d57b273, "TWN_MasonsGuild_TrapArea");
+DB_TWN_MasonsGuild_BaitTrap_Victim(_Player);
+PROC_TWN_MasonsGuild_BaitTrap_ActivateGratings();
+ObjectTimerLaunch(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, "TWN_MasonsGuild_TrapWallMove", 1000);
+
+// both gratings destroyed - activate the trap wall immediately
+PROC
+PROC_TWN_MasonsGuild_BaitTrap_ActivateGratings()
+AND
+DB_TWN_MasonsGuild_Gratings(_Grating, _, _)
+AND
+NOT DB_PermaDefeated(_Grating)
+THEN
+PROC_GLO_MovingObject_Move(_Grating);
+SetCanInteract(_Grating, 1);
+
+PROC
+PROC_TWN_MasonsGuild_BaitTrap_ActivateGratings()
+AND
+DB_TWN_MasonsGuild_Gratings(_Grating, _GratingArea, _GratingHelper)
+AND
+NOT DB_PermaDefeated(_Grating)
+THEN
+SetEntityEvent(_GratingHelper, "TWN_MasonsGuild_Push");
+
+IF
+ObjectTimerFinished(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, "TWN_MasonsGuild_TrapWallMove")
+THEN
+PROC_GLO_MovingObject_Move(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3);
+
+PROC
+PROC_GLO_MovingObject_FinishedMovement(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, _, (TRIGGER)S_TWN_MasonsGuild_TrapWall_NewPos_ce1860df-bf36-4b80-8076-d3668886b4d0, _)
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_ActivateDamageDealers();
+
+PROC
+PROC_TWN_MasonsGuild_BaitTrap_ActivateDamageDealers()
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+NOT DB_PermaDefeated(_DamageDealer)
+THEN
+SetEntityEvent(_DamageDealer, "TWN_MasonsGuild_ActivateDamageDealer");
+PROC_LoopEffect(VFX_Script_UND_KathericCity_FireTrap_Large_Pilot_01_03983ec4-9cf0-3167-502a-9d7929c865c1, _DamageDealer, "TWN_MasonsGuild_DamageDealerFireVFX", "SCL_Main_A", "");
+
+PROC
+PROC_GLO_MovingObject_FinishedMovement(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, _, (TRIGGER)S_TWN_MasonsGuild_TrapWall_NewPos_ce1860df-bf36-4b80-8076-d3668886b4d0, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)TWN_MasonsGuild_Trap_State_Activated_7197cc96-d0d5-4866-b148-fc49db58e717);
+
+PROC
+PROC_GLO_MovingObject_FinishedMovement(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, _, (TRIGGER)S_TWN_MasonsGuild_TrapWall_NewPos_ce1860df-bf36-4b80-8076-d3668886b4d0, _)
+AND
+DB_TWN_MasonsGuild_BaitTrap_Victim(_Player)
+AND
+QRY_TriggerEvents_AnyPartyMemberInTrigger((TRIGGER)S_TWN_MasonsGuild_TrapArea_5691684e-407b-4898-9412-fefc5d57b273)
+THEN
+ForceTurnBasedMode(_Player, 1);
+
+IF
+EntityEvent((ITEM)_DamageDealer, "TWN_MasonsGuild_ShotMade")
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _Shots)
+AND
+IntegerSum(_Shots, 1, _NewShots)
+THEN
+NOT DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _Shots);
+DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _NewShots);
+
+IF
+EntityEvent((ITEM)_DamageDealer, "TWN_MasonsGuild_ShotMade")
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+NOT DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _)
+THEN
+DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, 1);
+
+// as soon as 3 shots are made (or a damage dealer is destroyed) we check if we need to deactivate the trap
+// we only deactivate the trap if all the damage dealers either destroyed or made 3 shots
+IF
+DestroyedBy(_DamageDealer, _, _, _)
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+THEN
+PROC_StopLoopEffect(_DamageDealer, "TWN_MasonsGuild_DamageDealerFireVFX");
+
+IF
+DestroyedBy(_DamageDealer, _, _, _)
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+NOT QRY_TWN_MasonsGuild_HasActiveDamageDealers()
+THEN
+RealtimeObjectTimerLaunch(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, "TWN_MasonsGuild_BaitTrap_Deactivate", 1000);
+
+IF
+DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _ShotsMade)
+AND
+DB_TWN_MasonsGuild_Trap_MaxShots(_ShotsMade)
+AND
+NOT QRY_TWN_MasonsGuild_HasActiveDamageDealers()
+THEN
+RealtimeObjectTimerLaunch(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, "TWN_MasonsGuild_BaitTrap_Deactivate", 1000);
+
+QRY
+QRY_TWN_MasonsGuild_HasActiveDamageDealers()
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+IsDestroyed(_DamageDealer, 0)
+AND
+NOT DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TWN_MasonsGuild_HasActiveDamageDealers()
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+IsDestroyed(_DamageDealer, 0)
+AND
+DB_TWN_MasonsGuild_DamageDealersShots(_DamageDealer, _Shots)
+AND
+DB_TWN_MasonsGuild_Trap_MaxShots(_MaxShots)
+AND
+_Shots < _MaxShots
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, "TWN_MasonsGuild_BaitTrap_Deactivate")
+THEN
+PROC_TWN_MasonsGuild_BaitTrap_Deactivate();
+
+PROC
+PROC_TWN_MasonsGuild_BaitTrap_Deactivate()
+AND
+NOT DB_GlobalFlag((FLAG)TWN_MasonsGuild_Trap_State_Deactivating_cb3e78be-5fd9-42f1-a667-872463fc4605)
+THEN
+PROC_GlobalSetFlagAndCache(TWN_MasonsGuild_Trap_State_Deactivating_cb3e78be-5fd9-42f1-a667-872463fc4605);
+PROC_TWN_MasonsGuild_BaitTrap_DeactiveDamageDealers();
+SysClear("DB_TWN_MasonsGuild_DamageDealersShots", 2);
+SysClear("DB_TWN_MasonsGuild_BaitTrap_Victim", 1);
+SetEntityEvent(S_TWN_MasonsGuild_TrapWall_InvisibleHelper_fe8a3c9b-e213-416e-aafe-70cf13ea432e, "TWN_MasonsGuild_Push"); // push the objects out to avoid the players beings stuck
+PROC_GLO_MovingObject_Move(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3);
+PROC_GLO_MovingObject_Move(S_TWN_MasonsGuild_Blocker_001_3509e836-cf2c-4df5-9665-16ad6ca9fa46);
+PROC_GLO_MovingObject_Move(S_TWN_MasonsGuild_Blocker_002_b6829a21-9e2e-47af-996b-5c2ba61ebfb8);
+PROC_DangerZone_Safe("TWN_MasonsGuild_TrapArea");
+
+PROC
+PROC_TWN_MasonsGuild_BaitTrap_DeactiveDamageDealers()
+AND
+DB_TWN_MasonsGuild_DamageDealers(_DamageDealer)
+AND
+NOT DB_PermaDefeated(_DamageDealer)
+THEN
+SetEntityEvent(_DamageDealer, "TWN_MasonsGuild_DeactivateDamageDealer");
+PROC_StopLoopEffect(_DamageDealer, "TWN_MasonsGuild_DamageDealerFireVFX");
+
+PROC
+PROC_GLO_MovingObject_FinishedMovement(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, _, (TRIGGER)S_TWN_MasonsGuild_TrapWall_DefaultPos_e90d9140-f629-4fbe-8477-a941b9dcc871, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)TWN_MasonsGuild_Trap_State_Deactivated_8348a548-b0ce-4ecb-aa6a-a9f762bf6b7c);
+
+// fallback for the cases when a party member / item is stuck behind or inside the stone wall (or inside one of the gratings), this might block the player completely
+// usually the pushback should move the object out
+// but if it fails, we do a manual teleport
+PROC
+PROC_GLO_MovingObject_FinishedMovement(S_TWN_MasonsGuild_TrapWall_d5d0851a-8a0a-4194-b5fb-2be3255dd1e3, _, (TRIGGER)S_TWN_MasonsGuild_TrapWall_DefaultPos_e90d9140-f629-4fbe-8477-a941b9dcc871, _)
+THEN
+PROC_TWN_MasonsGuild_CheckMoveObjectsOut(S_TWN_MasonsGuild_TrapWall_ProblemArea_8bda35b1-1c4c-446b-8e9c-9fa31cc30fe0);
+
+PROC
+PROC_GLO_MovingObject_FinishedMovement(_Blocker, _, _BlockerNewPos, _)
+AND
+DB_GLO_MovingObject(_Blocker, "TWN_MasonsGuild_Blocker_Move", _, _BlockerNewPos, _, _, _, _, _)
+AND
+DB_TWN_MasonsGuild_Gratings(_Blocker, _BlockerArea, _)
+THEN
+PROC_TWN_MasonsGuild_CheckMoveObjectsOut(_BlockerArea);
+
+PROC
+PROC_TWN_MasonsGuild_CheckMoveObjectsOut((TRIGGER)_Trigger)
+AND
+DB_TWN_MasonsGuild_PushableObjects(_Trigger, _Object)
+AND
+IsInTrigger(_Object, _Trigger, 1)
+AND
+GetPosition(S_TWN_MasonsGuild_TrapWall_FallbackTeleportPos_0e508696-bd06-4035-b756-ec19fa14e9d2, _X, _Y, _Z)
+THEN
+PROC_TWN_MasonsGuild_MoveStuckObjectOut(_Object, _X, _Y, _Z);
+
+PROC
+PROC_TWN_MasonsGuild_MoveStuckObjectOut((GUIDSTRING)_Object, (REAL)_X, (REAL)_Y, (REAL)_Z)
+AND
+NOT QRY_TWN_MasonsGuild_FindValidPosition(_Object, _X, _Y, _Z)
+THEN
+NOT DB_TWN_MasonsGuild_ObjectTeleported(1);
+TeleportTo(_Object, S_TWN_MasonsGuild_TrapWall_FallbackTeleportPos_0e508696-bd06-4035-b756-ec19fa14e9d2, "", 0, 1, 1, 1, 1);
+
+QRY
+QRY_TWN_MasonsGuild_FindValidPosition((GUIDSTRING)_Object, (REAL)_X, (REAL)_Y, (REAL)_Z)
+AND
+FindValidPosition(_X, _Y, _Z, 2.0, _Object, 0, _ValidX, _ValidY, _ValidZ)
+THEN
+DB_TWN_MasonsGuild_ObjectTeleported(1);
+TeleportToPosition(_Object, _ValidX, _ValidY, _ValidZ, "", 0, 1, 1, 1, 1);
+
+QRY
+QRY_TWN_MasonsGuild_FindValidPosition((GUIDSTRING)_Object, (REAL)_X, (REAL)_Y, (REAL)_Z)
+AND
+NOT DB_TWN_MasonsGuild_ObjectTeleported(1)
+THEN
+DB_TWN_MasonsGuild_ObjectTeleported(1);
+TeleportToPosition(_Object, _X, _Y, _Z, "", 0, 1, 1, 1, 1);
+//END_REGION Bait Trap
+
+IF
+GameBookInterfaceClosed(S_TWN_MasonsGuild_TreasureMap_cbd3d1da-eae7-4714-8fd8-3e32b53e6134,_Player)
+THEN
+PROC_ShowMarker(_Player,"MOO_Prison_MasonMarker");
+
+PROC
+PROC_Shovel_CleanupMound((ITEM)S_MOO_BuriedMound_02_635e4ec7-0bd1-4c6f-847f-9c1500d62efb)
+AND
+DB_Players(_Player)
+THEN
+PROC_HideMarker(_Player,"MOO_Prison_MasonMarker");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

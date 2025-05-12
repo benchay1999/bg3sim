@@ -1,0 +1,165 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_MOO_FlyingGhouls((CHARACTER)S_MOO_FlyingGhoul_000_6a6a2784-47b0-4838-bc6a-31288ac99158);
+DB_MOO_FlyingGhouls(S_MOO_FlyingGhoul_001_ac6133f2-98fd-465b-9b12-e5bf72b4c3c9);
+DB_MOO_FlyingGhouls(S_MOO_FlyingGhoul_002_90b8c61f-c7e8-445c-a1b1-9d9874457529);
+
+DB_GlobalFlagReactionAfterDialog(MOO_FlyingGhouls_Event_FlyAway_6c5ac27e-800c-e7b3-f5a2-4a31cf7f682f, MOO_FlyingGhoul_f27e8def-1f58-7218-d68d-6e24a9a6db39);
+DB_GlobalFlagReactionAfterDialog(MOO_FlyingGhouls_Event_GhoulsTurned_c85a2acd-74b4-4d34-9cae-b618eab69eaa, MOO_FlyingGhoul_f27e8def-1f58-7218-d68d-6e24a9a6db39);
+
+PROC_TriggerRegisterForPlayers(S_MOO_FeedingGroundBox_b1ea7cfd-092b-42dd-ab77-edac1a186bbf);
+KBSECTION
+IF
+DB_InRegion(_Player, S_MOO_FeedingGroundBox_b1ea7cfd-092b-42dd-ab77-edac1a186bbf)
+AND
+NOT DB_HiddenCharacters(_Player, _)
+AND
+NOT DB_OnlyOnce("MOO_FlyingGhoul_Spotted")
+AND
+DB_Players(_Player)
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+AND
+QRY_StartDialog(MOO_FlyingGhoul_f27e8def-1f58-7218-d68d-6e24a9a6db39, S_MOO_FlyingGhoul_002_90b8c61f-c7e8-445c-a1b1-9d9874457529, _Player, S_MOO_FlyingGhoul_001_ac6133f2-98fd-465b-9b12-e5bf72b4c3c9, S_MOO_FlyingGhoul_000_6a6a2784-47b0-4838-bc6a-31288ac99158)
+THEN
+DB_OnlyOnce("MOO_FlyingGhoul_Spotted");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_FlyingGhouls_Event_GhoulsTurned_c85a2acd-74b4-4d34-9cae-b618eab69eaa)
+THEN
+SetFaction(S_MOO_FlyingGhoul_002_90b8c61f-c7e8-445c-a1b1-9d9874457529,(FACTION)ACT2_MOO_FlyingGhoulVictim_f75b162e-7282-4b7a-ad00-9548a1b0d3c6);
+
+IF
+DB_PermaDefeated(S_MOO_FlyingGhoul_002_90b8c61f-c7e8-445c-a1b1-9d9874457529)
+AND
+DB_GlobalFlag(MOO_FlyingGhouls_Event_GhoulsTurned_c85a2acd-74b4-4d34-9cae-b618eab69eaa)
+THEN
+PROC_MOO_FlyingGhouls_LeaveTower();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_FlyingGhouls_Event_FlyAway_6c5ac27e-800c-e7b3-f5a2-4a31cf7f682f)
+THEN
+PROC_MOO_FlyingGhouls_LeaveTower();
+
+PROC
+PROC_MOO_FlyingGhouls_LeaveTower()
+AND
+NOT DB_GlobalFlag(MOO_FlyingGhouls_Event_FlyAway_6c5ac27e-800c-e7b3-f5a2-4a31cf7f682f)
+THEN
+SetFlag(MOO_FlyingGhouls_Event_FlyAway_6c5ac27e-800c-e7b3-f5a2-4a31cf7f682f);
+
+PROC
+PROC_MOO_FlyingGhouls_LeaveTower()
+AND
+QRY_OnlyOnce("MOO_FlyingGhouls_LeaveOnce")
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Ghoul, "MOO_FlyingGhouls_ReadyToLeave_Notify");
+
+PROC
+PROC_ReadyToMoveOn(_Ghoul, "MOO_FlyingGhouls_ReadyToLeave_Notify")
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+THEN
+PROC_CharacterMoveTo(_Ghoul, S_MOO_TakeOffSpot_dfedfd05-cca8-4094-ba47-bcbdfb0a732e, "Walk", "MOO_FlyingGhoul_ReadyTakeoff");
+
+IF
+EntityEvent((CHARACTER)_Ghoul, "MOO_FlyingGhoul_ReadyTakeoff")
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+AND
+NOT DB_Defeated(_Ghoul)
+AND
+NOT DB_MOO_FlyingGhouls_WaitingTurn(_Ghoul)
+THEN
+DB_MOO_FlyingGhouls_WaitingTurn(_Ghoul);
+
+//So they are not causing each others casts to fail from a lack of space around trigger and wont try all casting at the same time
+IF
+DB_MOO_FlyingGhouls_WaitingTurn(_Ghoul)
+AND
+NOT DB_MOO_FlyingGhouls_ProcessingLeave(1)
+THEN
+PROC_MOO_FlyingGhouls_StartTakeOff((CHARACTER)_Ghoul);
+
+PROC
+PROC_MOO_FlyingGhouls_StartTakeOff((CHARACTER)_Ghoul)
+AND
+NOT DB_MOO_FlyingGhouls_ProcessingLeave(1)
+THEN
+DB_MOO_FlyingGhouls_ProcessingLeave(1);
+NOT DB_MOO_FlyingGhouls_WaitingTurn(_Ghoul);
+DB_MOO_FlyingGhouls_LeavingGhoul(_Ghoul);
+UseSpell(_Ghoul, "Projectile_MOO_Jump_Ghoul_Flying", S_MOO_GhoulFlyToPoint_e891e911-efca-4a46-985c-320cdbde02f2);
+
+IF
+WentOnStage(_Ghoul, 0)
+AND
+DB_MOO_FlyingGhouls((CHARACTER)_Ghoul)
+THEN
+PROC_MOO_FlyingGhouls_ClearGhoul((CHARACTER)_Ghoul);
+
+PROC
+PROC_StateSet_PermaDefeated(_Ghoul)
+AND
+DB_MOO_FlyingGhouls((CHARACTER)_Ghoul)
+THEN
+PROC_MOO_FlyingGhouls_ClearGhoul((CHARACTER)_Ghoul);
+
+PROC
+PROC_MOO_FlyingGhouls_ClearGhoul((CHARACTER)_Ghoul)
+AND
+DB_MOO_FlyingGhouls_WaitingTurn(_Ghoul)
+THEN
+NOT DB_MOO_FlyingGhouls_WaitingTurn(_Ghoul);
+
+PROC
+PROC_MOO_FlyingGhouls_ClearGhoul((CHARACTER)_Ghoul)
+AND
+DB_MOO_FlyingGhouls_LeavingGhoul(_Ghoul)
+AND
+DB_MOO_FlyingGhouls_ProcessingLeave(1)
+THEN
+NOT DB_MOO_FlyingGhouls_ProcessingLeave(1);
+NOT DB_MOO_FlyingGhouls_LeavingGhoul(_Ghoul);
+
+IF 
+CastedSpell((CHARACTER)_Ghoul, "Projectile_MOO_Jump_Ghoul_Flying", _, _, _)
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+AND
+DB_GlobalFlag(MOO_FlyingGhouls_Event_FlyAway_6c5ac27e-800c-e7b3-f5a2-4a31cf7f682f)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Ghoul, "MOO_FlyingGhouls_SetOffStage_Notify");
+
+IF
+CastSpellFailed((CHARACTER)_Ghoul, "Projectile_MOO_Jump_Ghoul_Flying", _, _, _)
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+AND
+DB_GlobalFlag(MOO_FlyingGhouls_Event_FlyAway_6c5ac27e-800c-e7b3-f5a2-4a31cf7f682f)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Ghoul, "MOO_FlyingGhouls_SetOffStage_Notify");
+
+PROC
+PROC_ReadyToMoveOn(_Ghoul, "MOO_FlyingGhouls_SetOffStage_Notify")
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+THEN
+PROC_DisappearOutOfSight((CHARACTER)_Ghoul, "Run", 0, "MOO_FlyingGhouls_OutOfSight");
+
+//Clear from assault so their bodies do not appear
+PROC
+PROC_ReadyToMoveOn(_Ghoul, "MOO_FlyingGhouls_SetOffStage_Notify")
+AND
+DB_MOO_FlyingGhouls(_Ghoul)
+AND
+DB_MOO_AssaultPositions(_Ghoul, _Trigger, _Group)
+THEN
+NOT DB_MOO_AssaultPositions(_Ghoul, _Trigger, _Group);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

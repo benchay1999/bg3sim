@@ -1,0 +1,651 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Definitions
+//These eyes are going to be somewhat dependent on how Act 2 eyes work, as these eyes behaviour may set expectations
+//on how Act 2 eyes will behave, so we will need to keep an eye (ha) on any Act 2 changes
+//There are custom AD responses to Murder for both GOB & UND if they see the body, but the eyes in Act 2 vanish on death.
+//So they will default to normal Murder response and vanish to stay consistent with Act 2.
+
+/*
+Scrying Eyes that currently use this script:
+S_GOB_Eye_7e80dd2a-19f6-4411-8a52-35c3878ef4c8
+S_UND_ScryingEye_0bdd9214-953c-427a-87fa-7fdc25ef3b73
+*/
+
+/*	
+DB_GLO_ScryingEye((CHARACTER)_Eye, (TRIGGER)_AreaOfInterest)
+- (CHARACTER)_Eye: the scrying eye
+- (TRIGGER)_AreaOfInterest (facultative): the eye will only care for player within this area. Stops following outside of this area.
+*/
+
+NOT DB_GLO_ScryingEye((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+//Any factions we want the eye to care about
+NOT DB_GLO_ScryingEye_AbsoluteFactions((FACTION)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+//REGION Behaviour, crime prio
+//DB_GLO_ScryingEye_LookOrFollow(_WasSneaking, _CommitedCrime, _ReasonToFollow)
+DB_GLO_ScryingEye_LookOrFollow(0, 0, "None");
+DB_GLO_ScryingEye_LookOrFollow(0, 1, "Crime");
+DB_GLO_ScryingEye_LookOrFollow(1, 0, "JustSneaking");
+DB_GLO_ScryingEye_LookOrFollow(1, 1, "SneakingCriminal");
+
+
+/*	Reasons for the eye to follow the player:
+	- None: unused/dummy reason
+	- Sneaking: the player was sneaking when the eye saw them, or the player tried to start sneaking and the eye saw that
+	- Crime: the eye saw the player perform a crime (assault or murder) 
+*/
+DB_GLO_ScryingEye_FollowReason(0, "None");
+DB_GLO_ScryingEye_FollowReason(1, "Sneaking");
+DB_GLO_ScryingEye_FollowReason(2, "Crime");
+
+DB_GLO_ScryingEye_IgnoredByEye((CHARACTER)S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+DB_GLO_ScryingEye_IgnoredByEye((CHARACTER)S_GOB_PainPriest_cad1854b-8f41-4038-b640-156ee0272f81);
+
+//END_REGION
+
+NOT DB_GLO_ScryingEye_PerRegionCrime((FLAG)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Registering eye for spotting events
+IF
+DB_GLO_ScryingEye((CHARACTER)_Eye, _Trigger)
+AND
+GetRegion(_Eye, _Region)
+THEN
+DB_GLO_ScryingEye(_Eye, _Trigger, _Region);
+DB_SpotPlayers(_Eye, "GLO_ScryingEye_Spotter", (FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_Continuous(_Eye, "GLO_ScryingEye_Spotter");
+DB_SpotPlayers_SpotTrigger(_Eye, "GLO_ScryingEye_Spotter", _Trigger);
+DB_SpotPlayers_TargetIgnoreCantTalk(_Eye, "GLO_ScryingEye_Spotter");
+DB_SpotPlayers_IncludeFollowers(_Eye, "GLO_ScryingEye_Spotter");
+DB_SpotPlayers_IncludeWildshapedPlayers(_Eye, "GLO_ScryingEye_Spotter");
+
+IF
+DB_GLO_ScryingEye((CHARACTER)_Eye,_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+TriggerRegisterForCharacter(_Trigger, _Eye);
+PROC_TriggerRegisterForPlayers(_Trigger);
+// Disable self-healing since they never enter combat, so otherwise it would be very hard to kill them
+PROC_SelfHealing_Disable(_Eye);
+
+IF
+DB_GLO_ScryingEye_PerRegionCrime(_Flag,_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+//END_REGION
+//REGION Player seeing eye
+IF
+DB_Sees(_Player, _ScryingEye)
+AND
+DB_Players(_Player)
+AND
+DB_GLO_ScryingEye(_ScryingEye,_)
+AND
+NOT DB_GlobalFlag((FLAG)GOB_ScryingEyes_State_Encountered_398adb4b-842d-4f3e-9523-6157489fe96b)
+THEN
+PROC_GlobalSetFlagAndCache(GOB_ScryingEyes_State_Encountered_398adb4b-842d-4f3e-9523-6157489fe96b);
+//END_REGION Player seeing eye
+//REGION Eye seeing player
+PROC
+PROC_SpotPlayers_Spotted(_Eye, "GLO_ScryingEye_Spotter", _Player)
+AND
+DB_GLO_ScryingEye(_Eye, _)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+HasActiveStatus(_Player,"SNEAKING", _WasSneaking)
+AND
+GetFlag(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _Player, _CommittedCrime)
+AND
+DB_GLO_ScryingEye_LookOrFollow(_WasSneaking, _CommittedCrime, _Reason)
+THEN
+PROC_GLO_ScryingEye_LookOrFollow(_Eye,_Player,_WasSneaking, _CommittedCrime,_Reason);
+
+IF
+StatusAttempt((CHARACTER)_Player, "SNEAKING", _, _)
+AND
+DB_Players(_Player)
+AND
+DB_GLO_ScryingEye(_Eye,(TRIGGER)_Region)
+AND
+DB_InRegion(_Player,_Region)
+AND
+DB_Sees(_Eye, _Player)
+AND
+QRY_GLO_ScryingEye_IsInArea(_Player, _Eye)
+THEN
+PROC_GLO_ScryingEye_StartFollow(_Eye, _Player, "Sneaking");
+
+
+// Follow or just look
+PROC
+PROC_GLO_ScryingEye_LookOrFollow((CHARACTER)_Eye, (CHARACTER)_Player, 0, 0, (STRING)_) //look
+THEN
+SetDualEntityEvent(_Eye, _Player, "GLO_ScryingEye_Event_SpottedChar");
+
+PROC
+PROC_GLO_ScryingEye_LookOrFollow((CHARACTER)_Eye, (CHARACTER)_Player, _, 1, (STRING)_Reason) //follow
+THEN
+PROC_GLO_ScryingEye_StartFollow(_Eye,_Player,_Reason);
+
+PROC
+PROC_GLO_ScryingEye_LookOrFollow((CHARACTER)_Eye, (CHARACTER)_Player, 1, _, (STRING)_Reason) //follow
+THEN
+PROC_GLO_ScryingEye_StartFollow(_Eye,_Player,_Reason);
+
+
+// Check if player is in a trigger that the eye cares about
+QRY
+QRY_GLO_ScryingEye_IsInArea((CHARACTER)_Player, (CHARACTER)_Eye)
+AND
+DB_GLO_ScryingEye(_Eye,_AreaTrigger)
+AND
+_AreaTrigger != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_InRegion(_Player, _AreaTrigger)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_ScryingEye_IsInArea((CHARACTER)_Player, (CHARACTER)_Eye)
+AND
+DB_GLO_ScryingEye(_Eye,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+//REGION Murder! Assault!
+IF
+AttackedBy((CHARACTER)_Eye, _AttackerOwner, _Attacker, _, _, _, _)
+AND
+DB_GLO_ScryingEye(_Eye, _, _Region)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Eye)
+THEN
+DebugText(_Player, "Eye was Attacked!");
+PROC_GLO_ScryingEye_SetActedHostile(_Player);
+//A one off effect makes more sense, and we don't have to worry about manually stopping it. 
+//PlayEffect(_Eye, (EFFECTRESOURCE)VFX_Script_Wyll_Horn_Cast_01_a5b7b36f-8033-c0cb-4767-801ab6214323);
+SetDualEntityEvent(_Eye, _Player, "GLO_ScryingEye_Event_Flee", 1);
+
+IF
+DB_Sees(_Eye,_Player)
+AND
+DB_GLO_ScryingEye(_Eye,_,_)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player,_CombatID)
+AND
+DB_Is_InCombat(_Enemy,_CombatID)
+AND
+NOT QRY_GLO_ScryingEye_IgnoredByEye((CHARACTER)_Enemy)
+AND
+IsEnemy(_Enemy,_Player,1)
+THEN
+PROC_GLO_ScryingEye_SetActedHostile(_Player);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Player,(STRING)_CrimeType,(INTEGER)_StoryID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_GLO_ScryingEye_IsValidCrime(_CrimeType)
+AND
+DB_GLO_ScryingEye((CHARACTER)_Eye, _Trigger, _Region)
+AND
+DB_CurrentLevel(_Region)
+AND
+DB_InRegion(_Player,_Trigger)
+AND
+NOT DB_GLO_ScryingEye_Denounce(_Eye,_,_)
+THEN
+PROC_GLO_ScryingEye_CheckSeeCrime(_Eye, _Player, _Victim, _CrimeType, _CrimeID);
+
+PROC
+PROC_CrimeMurderMaybeMakeSilentWitness((INTEGER)_CrimeID,(CHARACTER)_Eye,(CHARACTER)_Player,(CHARACTER)_Victim)
+AND
+DB_GLO_ScryingEye(_Eye,_)
+AND
+CrimeGetType(_CrimeID, _CrimeType)
+THEN
+PROC_GLO_ScryingEye_CheckSeeCrime(_Eye, _Player, _Victim, _CrimeType, _CrimeID);
+
+PROC
+PROC_GLO_ScryingEye_CheckSeeCrime((CHARACTER)_Eye, (CHARACTER)_Player, (CHARACTER)_Victim, (STRING)_CrimeType, (INTEGER)_CrimeID)
+AND
+NOT DB_GLO_ScryingEye_Denounce(_Eye,_,_)
+AND
+DB_Sees(_Eye, _Player)
+AND
+QRY_GLO_ScryingEye_SeeVictim(_Eye, _Victim)
+AND
+IsSummon(_Player, 0)
+AND
+NOT QRY_GLO_ScryingEye_IgnoredByEye(_Victim)
+AND
+DB_CurrentLevel(_Region)
+THEN
+DebugText(_Eye, "SAW CRIME!");
+PROC_GLO_ScryingEye_Alert((CHARACTER)_Eye, (CHARACTER)_Player);
+PROC_GLO_ScryingEye_SetActedHostile(_Player);
+PROC_GLO_ScryingEye_StartFollow(_Eye, _Player, "Crime");
+//PlayEffect(_Eye, (EFFECTRESOURCE)VFX_Script_Wyll_Horn_Cast_01_a5b7b36f-8033-c0cb-4767-801ab6214323);
+DB_GLO_ScryingEye_Denounce(_Eye, _Player, _CrimeID);
+PROC_CRIME_Guards_Call(_CrimeID,_Eye,"Arrest");
+
+QRY
+QRY_GLO_ScryingEye_SeeVictim((CHARACTER)_Eye, (CHARACTER)_Victim)
+AND
+DB_Sees(_Eye, _Victim)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_ScryingEye_SeeVictim((CHARACTER)_Eye, (CHARACTER)_Victim)
+AND
+_Eye == _Victim
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_ScryingEye_IsValidCrime((STRING)_CrimeType)
+AND
+QRY_CRIME_IsAssaultOrMurder(_CrimeType)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_ScryingEye_IgnoredByEye((CHARACTER)_Victim)
+AND
+DB_GLO_ScryingEye_IgnoredByEye(_Victim)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_ScryingEye_IgnoredByEye((CHARACTER)_Victim)
+AND
+NOT DB_GLO_ScryingEye_IgnoredByEye(_Victim) //Can add characters individually to the DB if we want them to be ignored but do not fall under the other conditions
+AND
+NOT DB_PlayerSummons(_Victim)
+AND
+IsTagged(_Victim, (TAG)BRANDED_ABSOLUTE_310f7186-bb0b-4905-b8f6-dfc2fe62570a, 0)
+AND
+IsTagged(_Victim, (TAG)GOBLIN_608597d9-bf00-4ede-aabe-767457280925, 0)
+AND
+IsTagged(_Victim, (TAG)DROWELF_a672ac1d-d088-451a-9537-3da4bf74466c, 0)
+AND
+IsTagged(_Victim, (TAG)SCRYING_EYE_0bdf874a-3703-49be-b1cf-4d291d4e495b, 0)
+AND
+IsTagged(_Victim, (TAG)DUERGARDWARF_78adf3cd-4741-47a8-94f6-f3d322432591, 0)
+AND
+NOT QRY_GLO_ScryingEye_IsAbsoluteFaction(_Victim)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_ScryingEye_IsAbsoluteFaction((CHARACTER)_Victim)
+AND
+GetFaction(_Victim,_Faction)
+AND
+DB_GLO_ScryingEye_AbsoluteFactions(_Faction)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_ScryingEye_SetActedHostile((CHARACTER)_Player)
+THEN
+SetFlag(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _Player);
+
+PROC
+PROC_GLO_ScryingEye_SetActedHostile((CHARACTER)_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GLO_ScryingEye_PerRegionCrime(_Flag,_Region)
+AND
+DB_InRegion(_Player,_Region)
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+
+IF
+FlagSet(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _,_)
+THEN
+PROC_GlobalSetFlagAndCache(GLO_ScryingEyes_State_PartyActedHostile_d3c6d338-36d5-41e7-97d1-9541e0a9bbcf);
+
+IF
+FlagCleared(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _,_)
+THEN
+PROC_GlobalClearFlagAndCache(GLO_ScryingEyes_State_PartyActedHostile_d3c6d338-36d5-41e7-97d1-9541e0a9bbcf);
+
+IF
+FlagCleared(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _Player, _)
+AND
+DB_Players(_OtherPlayer)
+AND
+_Player != _OtherPlayer
+AND
+GetFlag(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _OtherPlayer, 1)
+THEN
+ClearFlag(GLO_ScryingEyes_State_ActedHostile_44fff0f3-bae2-4576-8e4b-8bfa091a504b, _OtherPlayer, 0);
+//END_REGION
+//REGION Following
+PROC
+PROC_GLO_ScryingEye_StartFollow((CHARACTER)_Eye, (CHARACTER)_Player, (STRING)_Reason)
+AND
+NOT DB_GLO_ScryingEye_Following(_, _Player, _) //player not being followed by any eye
+AND
+NOT DB_GLO_ScryingEye_Denounce(_Eye, _, _) //eye not reacting to a serious crime
+AND
+QRY_GLO_ScryingEye_OverridePreviousFollowing(_Eye, _Player, _Reason)
+AND
+NOT DB_GLO_ScryingEye_Following(_Eye, _, _) //eye not following anyone
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_ScryingEye_AD_5185b007-6d22-ed98-d853-b16d3ed5567c, _Eye);
+DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason);
+SetDualEntityEvent(_Eye, _Player, "GLO_ScryingEye_Event_Follow", 1);
+DebugText(_Eye, "Scrying Eye - Start Follow.");
+
+QRY
+QRY_GLO_ScryingEye_OverridePreviousFollowing((CHARACTER)_Eye, (CHARACTER)_Player, (STRING)_Reason)
+AND
+DB_GLO_ScryingEye_FollowReason(_Prio, _Reason)
+AND
+DB_GLO_ScryingEye_Following(_Eye, _OtherPlayer, _OtherReason)
+AND
+DB_GLO_ScryingEye_FollowReason(_OtherPrio, _Reason)
+AND
+_Prio > _OtherPrio 
+THEN
+PROC_GLO_ScryingEye_StopFollow(_Eye, _OtherPlayer, 0);
+
+QRY
+QRY_GLO_ScryingEye_OverridePreviousFollowing((CHARACTER)_Eye, (CHARACTER)_Player, (STRING)_Reason)
+THEN
+DB_NOOP(1);
+
+
+//--- Stop following
+PROC
+PROC_SpotPlayers_UnSpotted(_Eye, "GLO_ScryingEye_Spotter", _Player)
+AND
+DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason)
+THEN
+SetDualEntityEvent(_Eye, _Player, "GLO_ScryingEye_Event_LostSight", 1);
+DebugText(_Player, "Scrying Eye - The eye lost sight of you.");
+
+IF
+EntityEvent(_Eye, "GLO_ScryingEye_SearchEnded")
+AND
+DB_GLO_ScryingEye_Following((CHARACTER)_Eye, _Player, _Reason)
+THEN
+PROC_GLO_ScryingEye_StopFollow(_Eye, _Player, 1);
+NOT DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason);
+
+IF
+DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason)
+AND
+DB_Defeated(_Player)
+THEN
+NOT DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason);
+PROC_GLO_ScryingEye_StopFollow(_Eye, _Player, 1);
+DebugText(_Player, "Scrying Eye - You dead.");
+
+IF
+DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason)
+AND
+DB_GLO_ScryingEye(_Eye,_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_InRegion(_Player,_Trigger)
+THEN
+NOT DB_GLO_ScryingEye_Following(_Eye, _Player, _Reason);
+PROC_GLO_ScryingEye_StopFollow(_Eye, _Player, 1);
+DebugText(_Player, "Scrying Eye - You left the eye's area of interest.");
+
+// Stop following & alert
+PROC
+PROC_GLO_ScryingEye_StopFollow((CHARACTER)_Eye, (CHARACTER)_Player, (INTEGER)_ReevaluateSight)
+THEN
+SetEntityEvent(_Eye, "GLO_ScryingEye_Event_StopFollow");
+
+PROC
+PROC_GLO_ScryingEye_StopFollow((CHARACTER)_Eye, (CHARACTER)_Player, (INTEGER)_)
+AND
+DB_GLO_ScryingEye_Denounce(_Eye, _Player, _CrimeType)
+THEN
+PROC_StopLoopEffect(_Eye, "GLO_ScryingEye");
+NOT DB_GLO_ScryingEye_Denounce(_Eye, _Player, _CrimeType);
+
+//END_REGION
+//REGION Area of interest
+
+IF
+LeftTrigger(_Eye, _Trigger)
+AND
+DB_GLO_ScryingEye(_Eye,_Trigger)
+AND
+DB_GLO_ScryingEye_Following(_Eye, _Player, _)
+THEN
+PROC_GLO_ScryingEye_StopFollow((CHARACTER)_Eye, (CHARACTER)_Player, 1);
+DebugText(_Eye, "Left area of interest!");
+
+//END_REGION
+//REGION Guards
+PROC
+PROC_GLO_ScryingEye_Alert((CHARACTER)_Eye, (CHARACTER)_Player)
+THEN
+PlayEffect(_Eye, EFFECTRESOURCEGUID_VFX_Script_Stub_Poof_01_f0cf792a-0f74-d17e-ad0d-6052a6131416);
+SetDualEntityEvent(_Eye, _Player, "GLO_ScryingEye_Event_Flee", 1);
+
+//END_REGION
+//REGION Eyes allow player use requests
+
+QRY
+QRY_CRIME_AllowRequestOnReactionCustom((CHARACTER)_Player, (INTEGER)_CrimeID, (INTEGER)_RequestID, 0)
+AND
+CrimeGetLeadInvestigator(_CrimeID, _Eye)
+AND
+DB_GLO_ScryingEye(_Eye, _)
+THEN
+DB_QRYRTN_CRIME_AllowRequestOnReactionCustom(1);
+
+
+//Eyes extend crimes that would be over by the time a guard arrives
+IF
+CharacterOnCrimeSensibleActionNotification(_Eye, _Region, _InitialID, "CRIME_OsirisReaction", _, _Player, _, _, _, 1)
+AND
+DB_GLO_ScryingEye(_Eye, _)
+AND
+NOT DB_GLO_ScryingEye_Alarm_ReportCrime(_InitialID, _, _)
+AND
+CrimeGetNewID(_ReportCrimeID)
+AND
+CrimeGetEvidence(_InitialID, 1, _Evidence)
+THEN
+DB_GLO_ScryingEye_Alarm_ReportCrime(_InitialID, _ReportCrimeID, _Player);
+PROC_CharacterRegisterCrime(_Player, "GLO_ScryingEye_ReportCrime", _Evidence, NULL_00000000-0000-0000-0000-000000000000, _ReportCrimeID);
+
+//A guard reacts to the initial crime in time, stop the report crime.
+IF
+CharacterOnCrimeSensibleActionNotification(_Guard, _Region, _InitialID, _GuardReaction, _, _, _, _, _, 1)
+AND
+DB_GLO_ScryingEye_Alarm_ReportCrime(_InitialID, _ReportCrimeID, _Player)
+AND
+IsTagged(_Guard, (TAG)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd, 1)
+THEN
+NOT DB_GLO_ScryingEye_Alarm_ReportCrime(_InitialID, _ReportCrimeID, _Player);
+PROC_CRIME_StopForAllCriminals(_ReportCrimeID);
+
+PROC
+PROC_CRIME_Finished(_ReportCrimeID)
+AND
+DB_GLO_ScryingEye_Alarm_ReportCrime(_InitialID, _ReportCrimeID, _Player)
+THEN
+NOT DB_GLO_ScryingEye_Alarm_ReportCrime(_InitialID, _ReportCrimeID, _Player);
+
+//END_REGION
+//REGION Combat reinforcements
+
+IF
+CastedSpell((CHARACTER)_Eye,"Shout_HelpArrives_ScryingEye",_,_,_)
+AND
+DB_GLO_ScryingEye(_Eye, _)
+THEN
+PROC_GLO_ScryingEye_CombatReinforcements(_Eye);
+
+
+//Check if the crime region permits reinforcements.
+PROC
+PROC_GLO_ScryingEye_CombatReinforcements((CHARACTER)_Eye)
+AND
+CharacterGetCrimeRegion(_Eye,_Region)
+AND
+DB_CRIME_Guards_RegionReinforcements(_Region, _ReinforcementAmount)
+THEN
+PROC_GLO_ScryingEye_TryFindCombatReinforcements(_Eye, _ReinforcementAmount, _Region);
+PROC_GLO_ScryingEye_CallFoundCombatReinforcements(_Eye);
+
+//Look for reinforcement guards that will help the primary called guard, then call them.
+PROC
+PROC_GLO_ScryingEye_TryFindCombatReinforcements((CHARACTER)_Eye, (INTEGER)_ReinforcementAmount, (STRING)_Region)
+THEN
+PROC_GLO_ScryingEye_FindCombatReinforcement(_Eye, _Region);
+
+//Try to summon more reinforcements
+PROC
+PROC_GLO_ScryingEye_TryFindCombatReinforcements((CHARACTER)_Eye, (INTEGER)_ReinforcementAmount, (STRING)_Region)
+AND
+IntegerSubtract(_ReinforcementAmount, 1, _NewAmount)
+AND
+_NewAmount > 0
+THEN
+PROC_GLO_ScryingEye_TryFindCombatReinforcements(_Eye, _NewAmount, _Region);
+
+PROC
+PROC_GLO_ScryingEye_FindCombatReinforcement((CHARACTER)_Eye, (STRING)_Region)
+AND
+QRY_CRIME_Guards_GetClosestGuard(_Region,_Eye,0)
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard,_,_,_)
+AND
+QRY_CRIME_Guards_HomePos(_Guard)
+AND
+DB_QRYRTN_CRIME_Guards_HomePos(_X,_Y,_Z)
+AND
+CrimeGetNewID(_InvestigateCrimeID)
+THEN
+NOT DB_CRIME_Guards_Leaving(_Guard,_X,_Y,_Z);
+DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID,_Eye,_Guard,_Eye,"GLO_ScryingEye_CombatReinforcement",_Region,_X,_Y,_Z);
+
+PROC
+PROC_GLO_ScryingEye_CallFoundCombatReinforcements((CHARACTER)_Eye)
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID,_Eye,_Guard,_Eye,_InvestigationType,_Region,_X,_Y,_Z)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+GetPosition(_Eye,_EyeX,_EyeY,_EyeZ)
+THEN
+PROC_ClearStoryMove(_Guard);
+PROC_CancelDisappearOutOfSight(_Guard);
+PROC_CharacterRegisterCrimeWithPosition(_Eye,_InvestigationType,NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ, _Guard,_InvestigateCrimeID);
+DB_CRIME_CrimeInvestigationPos(_InvestigateCrimeID,_EyeX,_EyeY,_EyeZ);
+DB_CRIME_InvestigationNoWalkingTalking(_InvestigateCrimeID);
+SetForceUpdate(_Guard,1);
+
+IF
+EnteredCombat((CHARACTER)_Guard, _)
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID, _Eye, _Guard, _Eye, _InvestigationType, _Region, _X, _Y, _Z)
+THEN
+SetForceUpdate(_Guard,0);
+PROC_CRIME_StopForAllCriminals(_InvestigateCrimeID);
+
+IF
+LeftCombat((CHARACTER)_Guard, _)
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID, _Eye, _Guard, _Eye, _InvestigationType, _Region, _X, _Y, _Z)
+THEN
+PROC_CRIME_Guards_UnsummonCombatReinforcement(_Guard);
+
+IF
+LeftCombat((CHARACTER)_Eye, _)
+AND
+NOT DB_Defeated(_Eye)
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID, _Eye, _Guard, _Eye, _InvestigationType, _Region, _HomeX, _HomeY, _HomeZ)
+THEN
+SetForceUpdate(_Guard,0);
+PROC_CRIME_StopForAllCriminals(_InvestigateCrimeID);
+PROC_CRIME_Guards_UnsummonCombatReinforcement(_Guard);
+
+
+PROC
+PROC_CRIME_Guards_UnsummonCombatReinforcement((CHARACTER)_Guard)
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID, _Eye, _Guard, _Eye, _InvestigationType, _Region, _HomeX, _HomeY, _HomeZ)
+AND
+GetDistanceToPosition(_Guard,_HomeX,_HomeY,_HomeZ,_Dist)
+THEN
+NOT DB_GLO_ScryingEye_CombatReinforcements(_InvestigateCrimeID, _Eye, _Guard, _Eye, _InvestigationType, _Region, _HomeX, _HomeY, _HomeZ);
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ);
+SetEntityEvent(_Guard, "ClearPeaceReturn", 1);
+PROC_CRIME_Guards_ReturnHome(_Guard,_HomeX,_HomeY,_HomeZ,_Dist);
+
+QRY
+QRY_CRIME_GuardDisabled((CHARACTER)_Guard)
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_, _, _Guard, _, _, _, _, _, _)
+THEN
+DB_NOOP(1);
+
+//Guards that can't reach the witness instead appear nearby
+IF
+EntityEvent(_Guard, "GEB_Investigation_SceneUnreachable")
+AND
+DB_GLO_ScryingEye_CombatReinforcements(_ID, _Eye, (CHARACTER)_Guard, _, _, _, _, _, _)
+THEN
+DB_GLO_ScryingEye_GuardAppears((CHARACTER)_Guard, (CHARACTER)_Eye);
+PROC_AppearOutOfSightTo(_Guard, _Eye, _Eye, "GLO_ScryingEye_GuardAppears");
+
+IF
+EntityEvent((CHARACTER)_Guard, "GLO_ScryingEye_GuardAppears")
+AND
+DB_GLO_ScryingEye_GuardAppears(_Guard, _Eye)
+THEN
+NOT DB_GLO_ScryingEye_GuardAppears(_Guard, _Eye);
+PROC_CharacterMoveTo(_Guard, _Eye, "Run", "");
+
+//END_REGION
+//REGION Eye Death
+PROC
+PROC_StateSet_PermaDefeated(_Eye)
+AND
+DB_GLO_ScryingEye((CHARACTER)_Eye, _Trigger, _Region)
+THEN
+NOT DB_GLO_ScryingEye(_Eye, _Trigger, _Region);
+NOT DB_SpotPlayers(_Eye, "GLO_ScryingEye_Spotter", (FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_Continuous(_Eye, "GLO_ScryingEye_Spotter");
+NOT DB_SpotPlayers_SpotTrigger(_Eye, "GLO_ScryingEye_Spotter", _Trigger);
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Eye, "GLO_ScryingEye_Spotter");
+NOT DB_SpotPlayers_IncludeFollowers(_Eye, "GLO_ScryingEye_Spotter");
+NOT DB_SpotPlayers_IncludeWildshapedPlayers(_Eye, "GLO_ScryingEye_Spotter");
+PROC_Poof(_Eye);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

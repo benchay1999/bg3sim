@@ -1,0 +1,91 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)GLO_MagicMirror_f9af5a3b-fb57-b69d-7526-9abdaf50db78);
+
+//WLD_Main_A
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_ccb05ed5-ec6e-817c-1fa5-4e593c2fe4e2); //WLDMAIN
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_7b3ba493-0a68-89f7-4e94-0faa348f6d8e); //WLDBAS
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_786aa1c3-3bb9-8121-48a6-2a252ed9f803); //WLDDUNABB
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_5cf6a0fe-111f-84ee-26d9-9c44928c99d1); //WLDCAVGRN
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_2d6fe559-0884-8e75-3eeb-ec4aafa5ecbc); //WLDDUNSHA
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_8d873252-3477-89d4-4391-e666f3b5f717); //WLDCAVSND
+DB_MagicMirrorInstance("WLD_Main_A",(ITEM)UNI_MagicMirror_1d103deb-970d-8387-32d6-fe9400ef3433); //WLDUND
+//CRE_Main_A
+DB_MagicMirrorInstance("CRE_Main_A",(ITEM)UNI_MagicMirror_e5d472fc-5003-82ae-4205-b403c4a1d64b); //CREMAIN
+DB_MagicMirrorInstance("CRE_Main_A",(ITEM)UNI_MagicMirror_c003aaef-2958-84fb-3dc4-3dd75b367973); //CREINSIDE
+
+//SCL_Main_A
+DB_MagicMirrorInstance("SCL_Main_A",(ITEM)UNI_MagicMirror_d53821dd-a26c-8605-1ff3-cabc120a0c8d); //SCLMAIN
+DB_MagicMirrorInstance("SCL_Main_A",(ITEM)UNI_MagicMirror_a7616c24-2dac-8ed3-3981-fa2bc8724c07); //HAVEN
+DB_MagicMirrorInstance("SCL_Main_A",(ITEM)UNI_MagicMirror_1de869fb-df6a-862c-32dd-89625957c32a); //MOONRISE
+DB_MagicMirrorInstance("SCL_Main_A",(ITEM)UNI_MagicMirror_84a1e50d-c5f1-8fc4-1516-44da610e7be1); //SHARTEMPLE
+//INT_Main_A
+DB_MagicMirrorInstance("INT_Main_A",(ITEM)UNI_MagicMirror_6753b856-7d20-878f-1fb9-9caa68482511); //INTMAIN
+//BGO_Main_A
+DB_MagicMirrorInstance("BGO_Main_A",(ITEM)UNI_MagicMirror_39276c12-5fe7-8b96-2979-909017c727ec); //FARM
+//CTY_Main_A
+DB_MagicMirrorInstance("CTY_Main_A",(ITEM)UNI_MagicMirror_4a9e4ae1-d06e-828b-4915-b8505077412b); //SLUMS
+DB_MagicMirrorInstance("CTY_Main_A",(ITEM)UNI_MagicMirror_6b020a57-7917-8e67-2dd1-884529b24645); //ELFSONG
+
+KBSECTION
+IF
+TextEvent("mirror")
+THEN
+PROC_CacheLoadLevelTemplate((LEVELTEMPLATE)CLT_MagicMirror_A_Main_ff71f96c-c939-4092-8f3b-ef84815debb0);
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+NOT DB_DropMutingStatussesDialog((DIALOGRESOURCE)GLO_MagicMirror_f9af5a3b-fb57-b69d-7526-9abdaf50db78)
+THEN
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)GLO_MagicMirror_f9af5a3b-fb57-b69d-7526-9abdaf50db78);
+
+IF
+TemplateUseFinished(_Player,(ITEMROOT)UNI_MagicMirror_72ae7a39-d0ce-4cb6-8d74-ebdf7cdccf91,_Mirror,1)
+AND
+NOT QRY_GLO_MagicMirror_Eligible(_Player, _Mirror)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+
+QRY
+QRY_GLO_MagicMirror_Eligible((CHARACTER)_Player, (ITEM)_Mirror)
+AND
+NOT QRY_GLO_MagicMirror_Ineligible((CHARACTER)_Player, (ITEM)_Mirror)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Origins(_Player)
+AND
+IsTagged(_Player, FULL_CEREMORPH_3797bfc4-8004-4a19-9578-61ce0714cc0b, 0)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_MagicMirror_f9af5a3b-fb57-b69d-7526-9abdaf50db78,_Mirror,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_MagicMirror_Ineligible((CHARACTER)_Player, (ITEM)_Mirror)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_MagicMirror_f9af5a3b-fb57-b69d-7526-9abdaf50db78,_ID)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+THEN
+StartChangeAppearance(_Player);
+
+//REGION Disable Examine of Magic Mirrors (GUS-308416)
+IF
+DB_CurrentLevel(_Level)
+AND
+DB_MagicMirrorInstance(_Level,_MagicMirror)
+THEN
+SetCanExamine(_MagicMirror,0);
+NOT DB_MagicMirrorInstance(_Level,_MagicMirror);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

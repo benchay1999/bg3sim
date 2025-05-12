@@ -1,0 +1,51 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+// Ideally would be fetched when needed instead, although this would require us to tag
+// bludgeoning weapons
+IF
+AddedTo((ITEM)_Item, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+IsItem(_Item, 1)
+AND
+IsWeapon(_Item, 1)
+AND
+IsTagged(_Item, BLUDGEONING_3cbf1ad9-ebb4-4b37-8075-945fbfb471b3, 1)
+THEN
+PROC_MOO_BludgeoningTracking_SetFlag(_Player);
+DB_MOO_BludgeoningTracking_Weapons(_Player, _Item);
+
+PROC
+PROC_MOO_BludgeoningTracking_SetFlag((CHARACTER)_Player)
+AND
+NOT DB_MOO_BludgeoningTracking_Weapons(_Player, _)
+THEN
+SetFlag(MOO_Jailbreak_State_HasToolForGnomes_1ab0ffbf-c758-4def-8a86-3b841c82a7c1, _Player, 0);
+
+IF
+RemovedFrom((ITEM)_Item, (CHARACTER)_Player)
+AND
+DB_MOO_BludgeoningTracking_Weapons(_Player, _Item)
+THEN
+NOT DB_MOO_BludgeoningTracking_Weapons(_Player, _Item);
+PROC_MOO_BludgeoningTracking_Recheck(_Player);
+
+PROC
+PROC_MOO_BludgeoningTracking_Recheck((CHARACTER)_Player)
+AND
+NOT DB_MOO_BludgeoningTracking_Weapons(_Player, _)
+THEN
+ClearFlag(MOO_Jailbreak_State_HasToolForGnomes_1ab0ffbf-c758-4def-8a86-3b841c82a7c1, _Player, 0);
+
+IF
+LevelLoaded("INT_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

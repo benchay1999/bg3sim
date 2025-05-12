@@ -1,0 +1,218 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Lifting the Curse
+
+DB_QuestDef_State((FLAG)SCL_ShadowCurse_Knows_HeartOfTheLandPurpose_0563ee5c-69c1-4282-8348-1fecda57c475, "SCL_LiftingTheCurse", "HelpHalsin");
+DB_QuestDef_State((FLAG)SCL_AncientFist_Event_PlayerAcknowledgedThanielConnection_b1b27344-cbc6-48e2-a07f-57985ad0b1fc, "SCL_LiftingTheCurse", "ArtMentionsThaniel");
+DB_QuestDef_State((FLAG)HAV_LiftingTheCurse_State_HalsinGoToLake_bc4cd1f7-5e60-40e1-a583-aa886fe5b682, "SCL_LiftingTheCurse", "HalsinRitualReady");
+DB_QuestDef_State((FLAG)HAV_LiftingTheCurse_Event_PortalAppears_333d9c5e-501a-470d-9708-90b9d9b1ec01, "SCL_LiftingTheCurse", "HalsinRitualCombat");
+DB_QuestDef_State((FLAG)SCL_ShadowCurse_Knows_Oliver_Is_Thaniel_56af8bbd-eafe-3861-22a2-c253f16952e2, "SCL_LiftingTheCurse", "SeekOliver");
+DB_QuestDef_State((FLAG)SCL_LiftingTheCurse_State_OliverAgreedToReturnToThaniel_3073ae92-8e87-42d1-a426-fe3e6c5e6deb, "SCL_LiftingTheCurse", "TalkToThaniel");
+//END_REGION
+
+//REGION
+DB_QuestDef_State((FLAG)HAV_CursedFist_Quest_StartedNoFlamingFist_659617b2-a09f-4432-b3c2-6fc455d18894, "SCL_CursedFist", "MetArtNoJehlar");
+DB_QuestDef_State((FLAG)HAV_CursedFist_Quest_StartedWithFlamingFist_4f55c635-19a1-4ef0-96bf-916f87150f8b, "SCL_CursedFist", "MetArt");
+DB_QuestDef_State((FLAG)HAV_Florrick_State_ToldPlayerAboutArt_ce6a6e8e-1cd7-4847-b5ff-ec2504da4ab7, "SCL_CursedFist", "MetFlorrick");
+DB_QuestDef_State((FLAG)HAV_CursedFist_Knows_HalsinNotAvailable_4a9daf4b-d651-9f4a-ecf7-ee57c53c1b36, "SCL_CursedFist", "HalsinAlreadyDead");
+DB_QuestDef_State((FLAG)SCL_AncientFist_Event_PlayerAcknowledgedThanielConnection_b1b27344-cbc6-48e2-a07f-57985ad0b1fc, "SCL_CursedFist", "HeardMentionThaniel");
+DB_QuestDef_State((FLAG)GLO_LiftingTheCurse_Event_TravelToHaven_a946f0b8-badb-435d-915d-2e6a45845c7c, "SCL_CursedFist", "HalsinAtSleepingArt");
+DB_QuestDef_ChainedState("SCL_LiftingTheCurse", "HalsinMetArt", "SCL_CursedFist", "LearnArtsPast");
+
+DB_QuestDef_BookReadState("SCL_CursedFist", "FoundNote", (ITEM)S_HAV_AncientFist_WritOfCommand_80b54d25-5274-4b70-b405-d979eb43a454);
+//END_REGION
+KBSECTION
+//REGION Lifting the Curse
+
+IF
+FlagSet((FLAG)CAMP_HalsinQuest_HasMet_WakedThaniel_c7e24553-7c8d-4580-9707-3996e6b37fb3, _, _)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "KillKetheric");
+
+IF
+DialogEnded(HAV_HalsinQuest_PortalEmerge_603c48af-cffb-2998-f1ee-6f6ece03a4f2, _)
+AND
+NOT DB_Defeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "HalsinRitualComplete");
+
+IF
+FlagSet(HAV_CursedFist_Event_HalsinReactsToThanielMention_57c83dde-fbdb-84ba-363f-9a01f31461e7, _, _)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "HalsinMetArt");
+
+IF
+DialogEnded(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _)
+AND
+NOT DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinAvailableForFist_38bd3ada-29d4-4a1d-900b-c58799aad3df)
+AND
+NOT DB_GlobalFlag(GLO_Halsin_State_PermaDefeated_86bc3df1-08b4-fbc4-b542-6241bcd03df1)
+AND
+DB_GlobalFlag(SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "GetHalsinForArt");
+
+//SwD path
+IF
+DialogEnded(HAV_CursedFist_Dead_CursedFist_64ae5a17-7924-1ac2-0490-7b2d3f40c057, _)
+AND
+DB_GlobalFlag(HAV_LiftingTheCurse_State_KnowsBreathLocation_cb21724a-b0ee-4aea-a866-2d5f6b55423c)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_PermaDefeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+QuestUpdateIsUnlocked(_Player, "SCL_LiftingTheCurse", "HalsinRitualReady", 0)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "TellHalsinArt_SwD");
+
+
+IF
+DestroyedBy(S_HAV_HalsinPortal_f2b5ad7f-013c-4c9e-a755-5fe9ff3287f6, _, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)HAV_LiftingTheCurse_State_ChannelingComplete_1afd47bc-e8d5-464d-823a-7dba82fcf5c3)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "HalsinDied");
+
+PROC
+PROC_LevelLoadedOnce("INT_Main_A")
+AND
+NOT DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "OliverNotFound");
+
+IF
+DialogEnded((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _)
+AND
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+THEN
+QuestUpdate("SCL_LiftingTheCurse", "CurseLifted");
+//END_REGION
+
+//REGION SCL_CursedFist
+IF
+DialogEnded(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _)
+AND
+DB_GlobalFlag(HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8)
+AND
+QRY_OnlyOnce("SCL_CursedFist_QuestStart")
+THEN
+SetFlag(HAV_CursedFist_Quest_StartedWithFlamingFist_4f55c635-19a1-4ef0-96bf-916f87150f8b, NULL_00000000-0000-0000-0000-000000000000, 1);
+
+IF
+DialogEnded(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _)
+AND
+NOT DB_GlobalFlag(HAV_CursedFist_State_CursedFistNotAlone_4d268b7e-76cd-4a54-9878-f86135b24ab8)
+AND
+QRY_OnlyOnce("SCL_CursedFist_QuestStart")
+THEN
+SetFlag(HAV_CursedFist_Quest_StartedNoFlamingFist_659617b2-a09f-4432-b3c2-6fc455d18894, NULL_00000000-0000-0000-0000-000000000000, 1);
+
+IF
+AddedTo(S_HAV_AncientFist_ImportantItem_Surgeon_1329c22c-d23a-4d31-96b0-6b734074f1dc,_Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "SCL_CursedFist", "FoundNote", 1)
+AND
+QRY_OnlyOnce("SCL_CursedFist_FoundLute")
+THEN
+QuestUpdate("SCL_CursedFist", "FoundLute");
+PROC_GlobalSetFlagAndCache(SCL_AncientFist_State_KnowsLuteImportant_713fdc97-387d-4baa-8152-a6617d630e44);
+
+IF
+DialogStarted(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _ID)
+AND
+DB_DialogRequestCache_SpeakerList_Players(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d, _ID, _Player, _)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player, "SCL_CursedFist", "MetArt", 0)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player, "SCL_CursedFist", "MetArtNoJehlar", 0)
+AND
+GetFlag(SCL_AncientFist_ItemCollected_e04f808d-6a51-4597-800e-306fdb4f825a, _Player, 1)
+AND
+QRY_OnlyOnce("SCL_CursedFist_FoundLute")
+THEN
+QuestUpdate("SCL_CursedFist", "FoundLuteBeforeArt");
+PROC_GlobalSetFlagAndCache(SCL_AncientFist_State_KnowsLuteImportant_713fdc97-387d-4baa-8152-a6617d630e44);
+
+
+IF
+FlagSet(SCL_AncientFist_FluteHandover_ac2f9c5a-c853-4569-949b-dea5e2c806ea, _, _)
+AND
+DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinAvailableForFist_38bd3ada-29d4-4a1d-900b-c58799aad3df)
+THEN
+QuestUpdate("SCL_CursedFist", "HalsinThereWhenWoken");
+
+IF
+FlagSet(SCL_AncientFist_FluteHandover_ac2f9c5a-c853-4569-949b-dea5e2c806ea, _, _)
+AND
+DB_PermaDefeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+QuestUpdate("SCL_CursedFist", "HalsinAlreadyDead");
+
+IF
+DialogEnded(HAV_CursedFist_d19739b9-c366-4272-7306-6ad04076916d,_)
+AND
+GetFlag(SCL_AncientFist_FluteHandover_ac2f9c5a-c853-4569-949b-dea5e2c806ea, S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055, 1)
+AND
+NOT DB_GlobalFlag(HAV_LiftingTheCurse_State_HalsinAvailableForFist_38bd3ada-29d4-4a1d-900b-c58799aad3df)
+THEN
+QuestUpdate("SCL_CursedFist", "BringHalsin");
+
+IF
+DB_PermaDefeated(S_HAV_AncientFist_MartCullagh_378938e2-2193-49a3-a06e-8e26cc128055)
+AND
+DB_QuestIsOpened("SCL_CursedFist")
+THEN
+QuestUpdate("SCL_CursedFist", "ArtDead");
+//END_REGION
+
+//REGION Switch Nightsong Quest to SCL
+IF
+QuestUpdateUnlocked(_, "SHA_Nightsong", "BalthazarSentForNightsong")
+THEN
+QuestSetCategory("SHA_Nightsong", "Shadowcurse");
+
+IF
+QuestUpdateUnlocked(_, "SHA_Nightsong", "FoundSHA")
+THEN
+QuestSetCategory("SHA_Nightsong", "Shadowcurse");
+//END_REGION
+
+//REGION Setting the correct ends for Arabella if her parents were not interacted with after SnakeCourt
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_GlobalFlag(DEN_ShadowDruid_State_KidFreed_8d9e9065-7bb5-a516-15c3-c9d8c1f4f5e2)
+THEN
+QuestUpdate("DEN_SnakeCourt", "ParentAutoReunited");
+
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+NOT DB_GlobalFlag(DEN_ShadowDruid_State_KidFreed_8d9e9065-7bb5-a516-15c3-c9d8c1f4f5e2)
+AND
+DB_Avatars(_Avatar)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Avatar, "DEN_SnakeCourt", "KidDied", 1)
+THEN
+QuestUpdate("DEN_SnakeCourt", "LeftRegion");
+
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+NOT DB_GlobalFlag(DEN_ShadowDruid_State_KidFreed_8d9e9065-7bb5-a516-15c3-c9d8c1f4f5e2)
+AND
+DB_Avatars(_Avatar)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Avatar, "DEN_SnakeCourt", "KidDiedFirst", 1)
+THEN
+QuestUpdate("DEN_SnakeCourt", "LeftRegion");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

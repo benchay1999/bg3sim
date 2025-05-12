@@ -1,0 +1,2803 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// To intercept a dialog request, define one of these:
+//   QRY_SelectCustomDialog((GUIDSTRING)_Target,(GUIDSTRING)_Source)
+//   QRY_SelectCustomDialog_AfterGenerics((GUIDSTRING)_Target,(GUIDSTRING)_Source)
+// The former is called before any generics (DB_AD_Dialog, reflection/relationship dialogs, companion-companion dialogs, ) are checked, but still after
+// speaker availability checks are confirmed (not dead, not in combat).
+//
+// If you wish to select the dialog to start in one of these queries, along with the speakers to use for that, define one of the following in their actions:
+//   DB_SelectedDialog(_Dialog, _Speaker1);
+//   DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2);
+//   ..
+//   DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+//
+
+DB_PlayerName_DialogVars(1,"GEN_PlayerName_c11eee1e-7815-6143-7233-f2427799fa53");
+DB_PlayerName_DialogVars(2,"GEN_PlayerName2_85df4a15-4d9b-4f68-0512-d104305d8dac");
+DB_PlayerName_DialogVars(3,"GEN_PlayerName3_06efd872-a64f-cae5-10f5-16759a7d6466");
+DB_PlayerName_DialogVars(4,"GEN_Playername4_703fdb8e-725b-280d-4ad0-a0881729ffa7");
+
+NOT DB_DialogBlockAttackButton((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_Dialogs_DialogBlockStatusesDialogOverride((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_Dialogs_DialogBlockRestoreMutingStatuses((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+
+// Normally, if a character is a dialogue and it gets banished (Target_Banishment spell), the dialogues it is in are stopped.
+// Setting this DB for a character prevents that, e.g. if a character gets banished as part of the normal flow of a dialogue.
+NOT DB_BanishedInDialog((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_Dialogs_StartDatingDialog((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Dialogs_DatingDialog((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Convenience function to start an AD
+PROC
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1)
+AND
+DialogIsAutomated(_Dialog, _IsAutomated)
+AND
+QRY_TryStartAD_CheckAutomated(_Dialog, _IsAutomated)
+AND
+_IsAutomated == 1
+AND
+QRY_StartDialog_Fixed(_Dialog, _Speaker1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2)
+AND
+DialogIsAutomated(_Dialog, _IsAutomated)
+AND
+QRY_TryStartAD_CheckAutomated(_Dialog, _IsAutomated)
+AND
+_IsAutomated == 1
+AND
+QRY_StartDialog_Fixed(_Dialog, _Speaker1, _Speaker2)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3)
+AND
+DialogIsAutomated(_Dialog, _IsAutomated)
+AND
+QRY_TryStartAD_CheckAutomated(_Dialog, _IsAutomated)
+AND
+_IsAutomated == 1
+AND
+QRY_StartDialog_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TryStartAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4)
+AND
+DialogIsAutomated(_Dialog, 1)
+AND
+QRY_StartDialog_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TryStartAD_CheckAutomated((DIALOGRESOURCE)_Dialog, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TryStartAD_CheckAutomated((DIALOGRESOURCE)_Dialog, 0)
+AND
+GUIDtoString(_Dialog, _DialogResourceName)
+AND
+Concatenate("Dialog started with Proc_TryStartAD is not automated according to its resource: ", _DialogResourceName, _AssertString)
+THEN
+DebugBreak(_AssertString);
+//END_REGION
+
+//REGION Interactive dialog starting
+//QRY_StartDialog -> QRY_StartDialogCustom_Upgrade (Padded to 6 speakers + Default params added for LowAttitude,Crime,Combat,Attack Button)
+//QRY_StartDialog_Fixed -> QRY_StartDialogCustom_Fixed (Padded to 6 speakers + Default params added for LowAttitude,Crime,Combat,Attack Button)
+//QRY_StartDialogCustom_Upgrade -> QRY_StartDialogCustom_Fixed (With Upgraded speakers)
+//QRY_StartDialogCustom_Fixed -> QRY_StartDialog_Internal
+//QRY_StartDialog_Internal -> StartDialog_Internal (Also checks all speakers and fills the DialogRequestCache databases)
+
+QRY
+QRY_StartDialog_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Upgrade(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//Padding from 1 to 6 speakers
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//Padding from 2 to 6 speakers
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//Padding from 3 to 6 speakers
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//Padding from 4 to 6 speakers
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//Padding from 5 to 6 speakers
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//Find and upgrade player
+QRY
+QRY_StartDialogCustom_Upgrade((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+QRY_Dialog_FindAndUpgradePlayer(_Dialog,_Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, _BlockInteractiveIfCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer((GUIDSTRING)_UpgradedSpeaker1, (GUIDSTRING)_UpgradedSpeaker2, (GUIDSTRING)_UpgradedSpeaker3, (GUIDSTRING)_UpgradedSpeaker4, (GUIDSTRING)_UpgradedSpeaker5, (GUIDSTRING)_UpgradedSpeaker6)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _UpgradedSpeaker1, _UpgradedSpeaker2, _UpgradedSpeaker3, _UpgradedSpeaker4, _UpgradedSpeaker5, _UpgradedSpeaker6, _AllowLowAttitudeIntercept, _AllowCrimeIntercept, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//_BlockInteractiveIfCombat == -1 -> Fetch AllowJoinCombat from Dialog Resource
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+_BlockInteractiveIfCombat == -1
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowCombat)
+AND
+DB_Negate(_AllowCombat, _BlockIfCombat)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockIfCombat, (INTEGER)_ShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowLowAttitudeIntercept, (INTEGER)_AllowCrimeIntercept, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+_BlockInteractiveIfCombat != -1
+AND
+NOT QRY_StartOverrideDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, _AllowCrimeIntercept, _AllowLowAttitudeIntercept)
+AND
+QRY_StartDialog_Internal(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, _BlockInteractiveIfCombat, _ShowAttackButton)
+THEN
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6);
+
+PROC
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker6 != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6);
+
+PROC
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+AND
+_Speaker5 != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5);
+
+PROC
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+AND
+_Speaker4 != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4);
+
+PROC
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+AND
+_Speaker3 != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3);
+
+PROC
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+AND
+_Speaker2 != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2);
+
+PROC
+PROC_DialogFlagSetup_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+AND
+_Speaker1 != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1);
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, -1)
+AND
+DialogIsAllowingJoinCombat(_Dialog, _AllowJoinCombat)
+AND
+DB_Negate(_AllowJoinCombat, _BlockInteractiveIfCombat)
+AND
+QRY_Dialog_FindAndUpgradePlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _BlockInteractiveIfCombat)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_BlockInteractiveIfCombat)
+AND
+_BlockInteractiveIfCombat != -1
+AND
+DialogIsAutomated(_Dialog, _Automated)
+AND
+DB_Negate(_BlockInteractiveIfCombat, _AllowCombat)
+AND
+DB_LogicOr(_Automated, _AllowCombat, _AllowIfCombat)
+AND
+QRY_Dialog_FindAndUpgradePlayer_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowIfCombat)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowIfCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer(_UpgradedSpeaker1, _UpgradedSpeaker2, _UpgradedSpeaker3, _UpgradedSpeaker4, _UpgradedSpeaker5, _UpgradedSpeaker6)
+THEN
+NOT DB_QRYRTN_Dialog_FindAndUpgradePlayer(_UpgradedSpeaker1, _UpgradedSpeaker2, _UpgradedSpeaker3, _UpgradedSpeaker4, _UpgradedSpeaker5, _UpgradedSpeaker6);
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowIfCombat)
+AND
+DB_Dialog_FindAndUpgradePlayer_PlayerFound(1)
+THEN
+NOT DB_Dialog_FindAndUpgradePlayer_PlayerFound(1);
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowCombat)
+AND
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Dialog,_Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, _AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_UpgradedSpeaker1)
+AND
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Dialog,_Speaker2,_Speaker1, _Speaker3, _Speaker4, _Speaker5, _Speaker6, _AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_UpgradedSpeaker2)
+AND
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Dialog,_Speaker3,_Speaker1, _Speaker2, _Speaker4, _Speaker5, _Speaker6, _AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_UpgradedSpeaker3)
+AND
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Dialog,_Speaker4,_Speaker1, _Speaker2, _Speaker3, _Speaker5, _Speaker6, _AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_UpgradedSpeaker4)
+AND
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Dialog,_Speaker5,_Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker6, _AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_UpgradedSpeaker5)
+AND
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Dialog,_Speaker6,_Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_UpgradedSpeaker6)
+THEN
+DB_QRYRTN_Dialog_FindAndUpgradePlayer(_UpgradedSpeaker1, _UpgradedSpeaker2, _UpgradedSpeaker3, _UpgradedSpeaker4, _UpgradedSpeaker5, _UpgradedSpeaker6);
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowCombat)
+AND
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_OldSpeaker)
+THEN
+NOT DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_OldSpeaker);
+
+//Early out if the speaker is already an avatar: We've found our player and it's already the best version.
+QRY
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowCombat)
+AND
+DB_Avatars((CHARACTER)_Speaker)
+THEN
+DB_Dialog_FindAndUpgradePlayer_PlayerFound(1);
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((GUIDSTRING)_Speaker);
+
+//Find an available avatar
+QRY
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowCombat)
+AND
+NOT DB_Dialog_FindAndUpgradePlayer_PlayerFound(1)
+AND
+DB_PartyMembers((CHARACTER)_Speaker)
+AND
+QRY_CharacterGetOwnerInDialogRangeOrSelf(_Speaker)
+AND
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Owner)
+AND
+QRY_GetBestAvatarForCompanion(_Owner,1,1,1,_AllowCombat)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Owner, _Avatar)
+AND
+_Avatar != _Speaker1
+AND
+_Avatar != _Speaker2
+AND
+_Avatar != _Speaker3
+AND
+_Avatar != _Speaker4
+AND
+_Avatar != _Speaker5
+AND
+NOT QRY_Dialog_BlockSpeakerUpgrade(_Dialog,_Speaker,_Avatar)
+THEN
+DB_Dialog_FindAndUpgradePlayer_PlayerFound(1);
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((GUIDSTRING)_Avatar);
+
+//Party follower reassignment
+QRY
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowCombat)
+AND
+NOT DB_Dialog_FindAndUpgradePlayer_PlayerFound(1)
+AND
+DB_PartyMembers((CHARACTER)_Speaker)
+AND
+QRY_CharacterGetOwnerInDialogRangeOrSelf(_Speaker)
+AND
+DB_QRYRTN_CharacterGetOwnerInDialogRangeOrSelf(_Owner)
+AND
+_Speaker != _Owner
+AND
+_Owner != _Speaker1
+AND
+_Owner != _Speaker2
+AND
+_Owner != _Speaker3
+AND
+_Owner != _Speaker4
+AND
+_Owner != _Speaker5
+AND
+QRY_SpeakerIsAvailable(_Owner, _AllowCombat)
+AND
+NOT QRY_Dialog_BlockSpeakerUpgrade(_Dialog,_Speaker,_Owner)
+THEN
+DB_Dialog_FindAndUpgradePlayer_PlayerFound(1);
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((GUIDSTRING)_Owner);
+
+QRY
+QRY_Dialog_FindAndUpgradePlayer_UpgradeSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (INTEGER)_AllowCombat)
+AND
+NOT DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_)
+THEN
+DB_QRYRTN_Dialog_FindAndUpgradePlayer_UpgradeSpeaker(_Speaker);
+
+QRY
+QRY_Dialog_BlockSpeakerUpgrade((DIALOGRESOURCE)_Dialog,(CHARACTER)_Speaker,(CHARACTER)_Avatar)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_Internal((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, (INTEGER)_BlockInteractiveIfCombat, (INTEGER)_ShowAttackButton)
+AND
+DialogIsAutomated(_Dialog, _Automated)
+AND
+DB_Negate(_BlockInteractiveIfCombat, _AllowCombat)
+AND
+DB_LogicOr(_Automated, _AllowCombat, _AllowStartIfCombat)
+AND
+QRY_SpeakerIsAvailableForDialogSlot(_Speaker1,_Dialog,1,_AllowStartIfCombat,NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_SpeakerIsAvailableForDialogSlot(_Speaker2,_Dialog,2,_AllowStartIfCombat,_Speaker1)
+AND
+QRY_SpeakerIsAvailableForDialogSlot(_Speaker3,_Dialog,3,_AllowStartIfCombat,_Speaker1)
+AND
+QRY_SpeakerIsAvailableForDialogSlot(_Speaker4,_Dialog,4,_AllowStartIfCombat,_Speaker1)
+AND
+QRY_SpeakerIsAvailableForDialogSlot(_Speaker5,_Dialog,5,_AllowStartIfCombat,_Speaker1)
+AND
+QRY_SpeakerIsAvailableForDialogSlot(_Speaker6,_Dialog,6,_AllowStartIfCombat,_Speaker1)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker1,_Automated)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker2,_Automated)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker3,_Automated)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker4,_Automated)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker5,_Automated)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker6,_Automated)
+AND
+QRY_StartDialog_BlockAttackButton_Intern(_Dialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6)
+AND
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(_BlockAttackButton)
+AND
+DB_Negate(_BlockAttackButton, _AllowAttackButton)
+AND
+DB_LogicAnd(_ShowAttackButton, _AllowAttackButton, _FinalShowAttackButton)
+AND
+QRY_DropMutingStatussesAndWait((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, _FinalShowAttackButton)
+AND
+QRY_StartDialogIfNotOngoingAD(_Dialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6,_FinalShowAttackButton)
+THEN
+DB_NOOP(1);
+
+//If some of the speakers are Muted(Silenced/Wildshape) and the dialog is important, we drop the statusses before starting the dialog.
+//However dropping statusses is not an instant process, so the speakers are reserved and system is set in a waiting mode for all speakers to become available.
+QRY
+QRY_DropMutingStatussesAndWait((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton)
+AND
+QRY_DialogShouldDropMutingStatusses(_Dialog, (GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatusses(1)
+AND
+QRY_DropMutingStatusses(_Dialog,_Speaker1)
+AND
+QRY_DropMutingStatusses(_Dialog,_Speaker2)
+AND
+QRY_DropMutingStatusses(_Dialog,_Speaker3)
+AND
+QRY_DropMutingStatusses(_Dialog,_Speaker4)
+AND
+QRY_DropMutingStatusses(_Dialog,_Speaker5)
+AND
+QRY_DropMutingStatusses(_Dialog,_Speaker6)
+AND
+DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_)
+THEN
+DB_DialogStart_WaitingForDroppedMutingStatus((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton);
+DB_DialogStart_SpeakerReserved(_Speaker1);
+DB_DialogStart_SpeakerReserved(_Speaker2);
+DB_DialogStart_SpeakerReserved(_Speaker3);
+DB_DialogStart_SpeakerReserved(_Speaker4);
+DB_DialogStart_SpeakerReserved(_Speaker5);
+DB_DialogStart_SpeakerReserved(_Speaker6);
+
+QRY
+QRY_DropMutingStatussesAndWait((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DialogShouldDropMutingStatusses((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatusses(_OldValue)
+THEN
+NOT DB_QRYRTN_DialogShouldDropMutingStatusses(_OldValue);
+
+QRY
+QRY_DialogShouldDropMutingStatusses((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker1)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker2)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker3)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker4)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker5)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Speaker6)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatusses(1);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(_Value)
+THEN
+NOT DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(_Value);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+DB_DropMutingStatussesDialog(_Dialog)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+DB_OriginDialog(_,_Dialog)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern((DIALOGRESOURCE)_Dialog, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker(_Dialog, _Speaker)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+NOT DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(1)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(0);
+
+QRY
+QRY_DialogShouldDropMutingStatusses(_Dialog, (GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRYRTN_DialogShouldDropMutingStatusses(_)
+THEN
+DB_QRYRTN_DialogShouldDropMutingStatusses(0);
+
+QRY
+QRY_DialogShouldIgnoreMutingStatusses((DIALOGRESOURCE)_Dialog)
+AND
+QRY_DialogShouldIgnoreMutingStatusses((DIALOGRESOURCE)_Dialog,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DialogShouldIgnoreMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_,(GUIDSTRING)_)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(_OldValue)
+THEN
+NOT DB_QRYRTN_DialogShouldIgnoreMutingStatusses(_OldValue);
+
+QRY
+QRY_DialogShouldIgnoreMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_,(GUIDSTRING)_)
+AND
+DB_IgnoreMutingStatussesDialog(_Dialog)
+THEN
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(1);
+
+QRY
+QRY_DialogShouldIgnoreMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2)
+AND
+DB_Is_WildShaped((CHARACTER)_Speaker2)
+AND
+IsTagged(_Speaker2,PETPAL_dc860a81-f3c2-4c1a-ab90-e7583324845c,1)
+AND
+IsTagged(_Speaker1,BEAST_890b5a2a-e773-48df-b191-c887d87bec16,1)
+THEN
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(1);
+
+
+QRY
+QRY_DialogShouldIgnoreMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_,(GUIDSTRING)_)
+AND
+NOT DB_QRYRTN_DialogShouldIgnoreMutingStatusses(_)
+THEN
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0);
+
+QRY
+QRY_DropMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker)
+AND
+NOT DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_Speaker)
+AND
+QRY_HasMutingStatusAndCache(_Speaker)
+THEN
+PROC_RemoveMutingStatusesWithRestore(_Dialog,_Speaker);
+DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_Speaker);
+PROC_DialogStart_WaitingForDroppedMutingStatus_FallbackTimer(_Dialog, _Speaker);
+
+PROC
+PROC_DialogStart_WaitingForDroppedMutingStatus_FallbackTimer((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+GUIDToString(_Dialog, _DialogString)
+AND
+GUIDToString(_Speaker, _SpeakerString)
+AND
+Concatenate(_DialogString, "_", _Temp1)
+AND
+Concatenate(_Temp1, _SpeakerString, _Temp2)
+AND
+Concatenate(_Temp2, "_DropMutingTimer", _Timer)
+THEN
+DB_DialogStart_WaitingForDroppedMutingStatus_FallbackTimer(_Dialog, _Speaker, _Timer);
+TimerLaunch(_Timer, 3000);
+
+IF
+TimerFinished(_Timer)
+AND
+DB_DialogStart_WaitingForDroppedMutingStatus_FallbackTimer(_Dialog, _Speaker, _Timer)
+THEN
+NOT DB_DialogStart_WaitingForDroppedMutingStatus_FallbackTimer(_Dialog, _Speaker, _Timer);
+NOT DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_Speaker);
+
+QRY
+QRY_DropMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DialogShouldDropMutingStatussesForSpeaker((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+DialogActorLeft(_Dialog,_ID,_Player,_)
+AND
+// 1) Click on regular NPC while wildshaped -> can't talk AD starts
+// 2) Immediately click on party member -> wildshape starts getting dropped
+// 3) DialogActorLeft for the can't talk AD arrives and we restore the
+//    wildshape statuses that we were in the process of dropping
+// -> don't do anything if we're waiting for wildshape statuses to drop
+NOT DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_,_Player)
+AND
+NOT DB_Dialogs_DialogBlockRestoreMutingStatuses(_Dialog, _Player)
+THEN
+PROC_RestoreMutingStatuses(_Player);
+
+QRY
+QRY_TemporarilyMuted((GUIDSTRING)_Speaker)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Speaker)
+AND
+QRY_HasMutingStatusAndCache(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TemporarilyMuted((GUIDSTRING)_Speaker)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Speaker)
+AND
+QRY_HasMutingStatusAndCache(_Speaker)
+THEN
+DB_NOOP(1);
+
+//This version (From DialogStartRequest) is more restrictive than the version in QRY_StartDialog which allows muted dialogs if the muted player has no lines. For player started dialogs however we do not want to allow this.
+QRY
+QRY_SelectMutedOverrideDialog((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Target, (GUIDSTRING)_Player, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_TemporarilyMuted(_Player)
+AND
+NOT DB_Dialogs_DialogBlockStatusesDialogOverride(_Dialog, _)
+AND
+QRY_DialogShouldDropMutingStatusses(_Dialog, (GUIDSTRING)_Target,(GUIDSTRING)_Player, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatusses(0)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_Target,_Player)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_PAD_CantTalk_b38cbc45-e8b5-614d-baf0-79ae565086cb, _Player);
+
+QRY
+QRY_HasMutedSpeakersWithLines((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker1 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_TemporarilyMuted(_Speaker1)
+AND
+DialogSpeakerHasLines(_Dialog, 1, 1)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog, NULL_00000000-0000-0000-0000-000000000000, _Speaker1)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_HasMutedSpeakersWithLines((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker2 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_TemporarilyMuted(_Speaker2)
+AND
+DialogSpeakerHasLines(_Dialog, 2, 1)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog, _Speaker1, _Speaker2)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_HasMutedSpeakersWithLines((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker3 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_TemporarilyMuted(_Speaker3)
+AND
+DialogSpeakerHasLines(_Dialog, 3, 1)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_Speaker1,_Speaker3)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_HasMutedSpeakersWithLines((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker4 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_TemporarilyMuted(_Speaker4)
+AND
+DialogSpeakerHasLines(_Dialog, 4, 1)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_Speaker1,_Speaker4)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_HasMutedSpeakersWithLines((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker5 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_TemporarilyMuted(_Speaker5)
+AND
+DialogSpeakerHasLines(_Dialog, 5, 1)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_Speaker1,_Speaker5)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_HasMutedSpeakersWithLines((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+_Speaker6 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_TemporarilyMuted(_Speaker6)
+AND
+DialogSpeakerHasLines(_Dialog, 6, 1)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_Speaker1,_Speaker6)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_NOOP(1);
+
+IF
+DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_Speaker)
+AND
+NOT DB_AttemptingMutingStatuses(_Speaker,_,_)
+AND
+NOT DB_CurrentMutingStatuses(_Speaker,_,_)
+AND
+NOT DB_MutingStatuses_Restoring(_Speaker,(STRING)_,(GUIDSTRING)_)
+THEN
+NOT DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_Speaker);
+
+IF
+DB_DialogStart_WaitingForDroppedMutingStatus((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton)
+AND
+NOT DB_DialogStart_WaitingForDroppedMutingStatus_Speaker(_Dialog,_)
+THEN
+NOT DB_DialogStart_WaitingForDroppedMutingStatus((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton);
+NOT DB_DialogStart_SpeakerReserved(_Speaker1);
+NOT DB_DialogStart_SpeakerReserved(_Speaker2);
+NOT DB_DialogStart_SpeakerReserved(_Speaker3);
+NOT DB_DialogStart_SpeakerReserved(_Speaker4);
+NOT DB_DialogStart_SpeakerReserved(_Speaker5);
+NOT DB_DialogStart_SpeakerReserved(_Speaker6);
+PROC_StartDialog_AfterDroppedMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton);
+
+PROC
+PROC_StartDialog_AfterDroppedMutingStatusses((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,(INTEGER)_FinalShowAttackButton)
+AND
+NOT QRY_StartDialogIfNotOngoingAD(_Dialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6,_FinalShowAttackButton)
+THEN
+PROC_RestoreMutingStatuses(_Speaker1);
+PROC_RestoreMutingStatuses(_Speaker2);
+PROC_RestoreMutingStatuses(_Speaker3);
+PROC_RestoreMutingStatuses(_Speaker4);
+PROC_RestoreMutingStatuses(_Speaker5);
+PROC_RestoreMutingStatuses(_Speaker6);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+DB_DialogBlockAttackButton(_Dialog)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+QRY_StartDialog_BlockAttackButton(_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1)
+AND
+DB_Is_InCombat(_Speaker1,_)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1)
+AND
+DB_Is_InCombat(_Speaker2,_)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1)
+AND
+DB_Is_InCombat(_Speaker3,_)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1)
+AND
+DB_Is_InCombat(_Speaker4,_)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1)
+AND
+DB_Is_InCombat(_Speaker5,_)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1)
+AND
+DB_Is_InCombat(_Speaker6,_)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT QRY_StartDialog_BlockAttackButton_Intern_ValidHostileSpeaker(_Dialog, _Speaker1)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+NOT QRY_IsNPC(_Speaker1)
+AND
+NOT QRY_IsNPC(_Speaker2)
+AND
+NOT QRY_IsNPC(_Speaker3)
+AND
+NOT QRY_IsNPC(_Speaker4)
+AND
+NOT QRY_IsNPC(_Speaker5)
+AND
+NOT QRY_IsNPC(_Speaker6)
+THEN
+NOT DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(0);
+DB_QRY_RTN_StartDialog_BlockAttackButton_Intern(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern_ValidHostileSpeaker((GUIDSTRING)_Target)
+AND
+DB_DialogNPCs(_ID, _Target, _)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+QRY_StartDialog_BlockAttackButton_Intern_ValidHostileSpeaker(_Dialog, (GUIDSTRING)_Target)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton_Intern_ValidHostileSpeaker((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT QRY_ObjectFactionHostilityBlacklisted(_Speaker,0)
+AND
+CanFight(_Speaker, 1)
+AND
+NOT DB_Defeated(_Speaker)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialog_BlockAttackButton((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogIfNotOngoingAD((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, (INTEGER)_ShowAttackButton)
+AND
+DB_DialogStart_WaitingForDroppedMutingStatus((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,_)
+THEN
+//If a dialog is waiting for muting statusses, return true so QRY_StartDialog returns true, but don't start a dialog.
+DB_StartDialogIfNotOngoingAD_Success(1);
+
+QRY
+QRY_StartDialogIfNotOngoingAD((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, (INTEGER)_ShowAttackButton)
+AND
+QRY_IsOnGoingAD(_Dialog, _Speaker1)
+THEN
+// We don't want to restart the AD in this case to avoid spamming an AD when you keep clicking on a character,
+// but we don't want to report a failure either (that could cause a fallback to a different dialog)
+DB_StartDialogIfNotOngoingAD_Success(1);
+
+QRY
+QRY_StartDialogIfNotOngoingAD((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, (INTEGER)_ShowAttackButton)
+AND
+NOT DB_DialogStart_WaitingForDroppedMutingStatus((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6,_)
+AND
+NOT QRY_IsOnGoingAD(_Dialog, _Speaker1)
+AND
+QRY_FreeAvailableInclusionSpeakers(_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6)
+AND
+QRY_StartDialog_SaveControlledPlayer(_Dialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6)
+AND
+StartDialog_Internal(_Dialog,_ShowAttackButton,_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6,1,_InstanceID,0)
+THEN
+PROC_StartDialog_PreDialogStarted(_Dialog,1, _InstanceID, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+PROC_StartDialog_StuckTimelineLoad_Detector(_Dialog, _InstanceID);
+SysClear("DB_StartedDialog", 7);
+DB_StartedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+DB_StartDialogIfNotOngoingAD_Success(1);
+
+QRY
+QRY_StartDialogIfNotOngoingAD((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, (INTEGER)_ShowAttackButton)
+AND
+NOT DB_StartDialogIfNotOngoingAD_Success(1)
+AND
+QRY_StartDialogFailed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6)
+AND
+1==0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogIfNotOngoingAD((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6, (INTEGER)_ShowAttackButton)
+AND
+QRY_StartDialogIfNotOngoingAD_ClearSucces()
+AND
+1==0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartDialogIfNotOngoingAD_ClearSucces()
+THEN
+NOT DB_StartDialogIfNotOngoingAD_Success(1);
+
+QRY
+QRY_IsOnGoingAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+DB_AutomatedDialog(_ID)
+AND
+DB_DialogSpeakers(_ID, _Speaker1, _)
+THEN
+DB_NOOP(1);
+
+//If we start an interactive dialog with a party member that is not currently controlled, code will switch control to that character. When the dialog is done, we want to switch control back to the original controlled character.
+QRY
+QRY_StartDialog_SaveControlledPlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+DialogIsAutomated(_Dialog,0)
+THEN
+PROC_StartDialog_SaveControlledPlayer(_Dialog,_Speaker1);
+PROC_StartDialog_SaveControlledPlayer(_Dialog,_Speaker2);
+PROC_StartDialog_SaveControlledPlayer(_Dialog,_Speaker3);
+PROC_StartDialog_SaveControlledPlayer(_Dialog,_Speaker4);
+PROC_StartDialog_SaveControlledPlayer(_Dialog,_Speaker5);
+PROC_StartDialog_SaveControlledPlayer(_Dialog,_Speaker6);
+
+QRY
+QRY_StartDialog_SaveControlledPlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+THEN
+DB_NOOP(1);
+
+//If the speaker is an uncontrolled partymember, find the controlled partymember of the user and save the data.
+PROC
+PROC_StartDialog_SaveControlledPlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker)
+AND
+DB_PartyMembers((CHARACTER)_Speaker)
+AND
+IsControlled(_Speaker,0)
+AND
+DB_PartyMembers(_CurrentlyControlled)
+AND
+NOT DB_Dialog_SaveControlledPlayer(_Dialog,_,_CurrentlyControlled)
+AND
+QRY_SameUser(_Speaker,_CurrentlyControlled)
+AND
+IsControlled(_CurrentlyControlled,1)
+AND
+NOT DB_InteractiveDialogSpeaker(_,_CurrentlyControlled) //if the controlled character is already in an interactive dialog, code will not switch control, so we don't need to revert it afterwards.
+THEN
+DB_Dialog_SaveControlledPlayer(_Dialog,_Speaker,_CurrentlyControlled);
+
+PROC
+PROC_StartDialog_SaveControlledPlayer((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_CurrentlyControlled)
+AND
+DB_Dialog_SaveControlledPlayer(_Dialog,_Speaker,(CHARACTER)_CurrentlyControlled)
+THEN
+NOT DB_Dialog_SaveControlledPlayer(_Dialog,_Speaker,_CurrentlyControlled);
+
+//Speaker left dialog, revert control to saved character.
+IF
+DialogActorLeft(_Dialog,_,_Speaker,_)
+AND
+DB_Dialog_SaveControlledPlayer(_Dialog,(CHARACTER)_Speaker,_CurrentlyControlled)
+AND
+IsControlled(_Speaker,1)
+AND
+QRY_SameUser(_Speaker,_CurrentlyControlled)
+THEN
+MakePlayerActive(_CurrentlyControlled);
+
+IF
+DialogActorLeft(_Dialog,_,_Speaker,_)
+AND
+DB_Dialog_SaveControlledPlayer(_Dialog,(CHARACTER)_Speaker,_CurrentlyControlled)
+THEN
+NOT DB_Dialog_SaveControlledPlayer(_Dialog,_Speaker,_CurrentlyControlled);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers((GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers((GUIDSTRING)_Speaker,_,_,_,_,_)
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers(_,(GUIDSTRING)_Speaker,_,_,_,_)
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers(_,_,(GUIDSTRING)_Speaker,_,_,_)
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers(_,_,_,(GUIDSTRING)_Speaker,_,_)
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers(_,_,_,_,(GUIDSTRING)_Speaker,_)
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+QRY
+QRY_FreeAvailableInclusionSpeakers(_,_,_,_,_,(GUIDSTRING)_Speaker)
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+//REGION Stuck Timeline Detector
+PROC
+PROC_StartDialog_StuckTimelineLoad_Detector((DIALOGRESOURCE)_Dialog, (INTEGER)_InstanceID)
+AND
+GUIDToString(_Dialog,_DialogName)
+AND
+Concatenate("StuckTimelineLoad_Detector_",_DialogName,_Substring)
+AND
+ConcatenateInteger(_Substring,_InstanceID,_TimerName)
+THEN
+TimerLaunch(_TimerName,10000);
+DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName);
+
+IF
+DialogStarted(_Dialog,_InstanceID)
+AND
+DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName)
+THEN
+TimerCancel(_TimerName);
+NOT DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName);
+
+IF
+AutomatedDialogStarted(_Dialog,_InstanceID)
+AND
+DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName)
+THEN
+TimerCancel(_TimerName);
+NOT DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName);
+
+IF
+DialogRequestFailed(_Dialog,_InstanceID)
+AND
+DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName)
+THEN
+TimerCancel(_TimerName);
+NOT DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName);
+
+IF
+AutomatedDialogRequestFailed(_Dialog,_InstanceID)
+AND
+DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName)
+THEN
+TimerCancel(_TimerName);
+NOT DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_TimerName);
+
+IF
+TimerFinished(_StuckTimelineLoad_Timername)
+AND
+DB_StartDialog_StuckTimelineLoad_Detection((DIALOGRESOURCE)_Dialog,_InstanceID,_StuckTimelineLoad_Timername)
+AND
+GUIDToString(_Dialog,_DialogName)
+AND
+Concatenate("Dialog Timeline failed to load but Osiris got no fail event: ",_DialogName,_Error)
+THEN
+NOT DB_StartDialog_StuckTimelineLoad_Detection(_Dialog,_InstanceID,_StuckTimelineLoad_Timername);
+DB_StartDialog_StuckTimelineLoad_StuckDetected(_Dialog); 
+DebugBreak(_Error);
+
+IF
+DB_StartDialog_StuckTimelineLoad_StuckDetected(_Dialog)  //This is just a tracking/logging database
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//DIALOG REQUEST CACHE
+//Because of the delay between requesting a dialog and the events for a dialog starting and all actors joining, we use a temporary cache system.
+//When a dialogue is requested through QRY_StartDialog, we create a DialogRequestCache.
+//This holds:
+//- DB_DialogRequestCache_DialogInstance(_Dialog,_Inst) : The name of the dialogue and the instance. This will exist until all speakers have been confirmed and the dialog is officially started (or failed) 
+//- DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Inst,_Actor,_Index) : Each speaker that has been added to the dialogue. Adding could still fail. Entry removed and replaced with DB_DialogSpeakers after DialogActorJoined/DialogActorJoinFailed.
+//- DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Inst,_Actor,_Index) : Same but only players
+//- DB_DialogRequestCache_SpeakerList_NPCs(_Dialog,_Inst,_Actor,_Index) : Same but only non players
+//This data only lasts while the dialog is in the process of starting and once we get all the official events, these values are cleared.
+//AFTER creating the lists, we call 2 functions: PROC_StartDialog_AddExtraSpeakers and PROC_StartDialog_AddInclusionSpeakers
+//- These allow custom scripting to add speakers early on in the process so they are loaded in on time for timelines. e.g. Inclusions
+//- Adding speaking roles at a later time (e.g. at DialogStarted) is too late and could result in missed lines.
+
+PROC
+PROC_StartDialog_PreDialogStarted((DIALOGRESOURCE)_Dialog, 1 /*ONLY ON SUCCES*/ ,(INTEGER)_DialogInstance,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+THEN
+DB_DialogRequestCache_DialogInstance(_Dialog,_DialogInstance);
+PROC_DialogRequestCache_SetAutomated(_Dialog,_DialogInstance);
+PROC_DialogRequestCache_MakeSpeakerLists(_Dialog,_DialogInstance, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+PROC_StartDialog_CheckMakeOriginActive(_Dialog);
+PROC_StartDialog_AddExtraSpeakers(_Dialog,_DialogInstance);
+PROC_StartDialog_AddNearbySpeakersToDialog(_Dialog,_DialogInstance);
+PROC_StartDialog_AddInclusionSpeakers(_Dialog,_DialogInstance);
+PROC_StartDialog_ChangeClothing(_Dialog,_DialogInstance);
+
+// For OOMs the code switches control to the origin (since OOM dialogs are between an NPC and Origin)
+// but that happens too late for the inclusion system to work correctly
+// we speed up the process a bit
+PROC
+PROC_StartDialog_CheckMakeOriginActive((DIALOGRESOURCE)_Dialog)
+AND
+DB_OriginMoment_QueuedMoment(_Dialog, _Origin, _OM_Type)
+AND
+_OM_Type == OOM_018ab052-38df-6d2c-117f-8d7c1e56b061
+THEN
+MakePlayerActive(_Origin);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StartDialog_AddNearbySpeakersToDialog((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StartDialog_AddInclusionSpeakers((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogRequestCache_SetAutomated((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DialogIsAutomated(_Dialog, 1)
+THEN
+DB_AutomatedDialog(_Inst);
+
+IF
+DialogActorJoinFailed(_Dialog,_Instance,_Actor)
+THEN
+PROC_DialogRequestCache_RemoveSpeaker(_Dialog,_Instance,_Actor);
+
+IF
+DialogActorJoinFailed(_Dialog,_Instance,_Actor)
+AND
+DB_Dialog_IncludedNearbySpeakers(_Instance,_Actor)
+THEN
+NOT DB_Dialog_IncludedNearbySpeakers(_Instance,_Actor);
+
+IF
+DialogActorLeft(_Dialog,_Instance,_Actor,_)
+THEN
+PROC_DialogRequestCache_RemoveSpeaker(_Dialog,_Instance,_Actor);
+
+IF
+DialogActorLeft(_Dialog,_Instance,_Actor,_)
+AND
+DB_Dialog_IncludedNearbySpeakers(_Instance,_Actor)
+THEN
+NOT DB_Dialog_IncludedNearbySpeakers(_Instance,_Actor);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Actor)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Instance,_Actor,_Index)
+THEN
+NOT DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Instance,_Actor,_Index);
+DB_DialogRequestCache_UpdatePlayerCount(_Instance);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Actor)
+AND
+DB_DialogRequestCache_SpeakerList_NPCs(_Dialog,_Instance,_Actor,_Index)
+THEN
+NOT DB_DialogRequestCache_SpeakerList_NPCs(_Dialog,_Instance,_Actor,_Index);
+DB_DialogRequestCache_UpdateNPCCount(_Instance);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Actor)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Instance,_Actor,_Index)
+AND
+DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_Count)
+AND
+IntegerSubtract(_Count,1,_NewCount)
+THEN
+NOT DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_Count);
+DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_NewCount);
+NOT DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Instance,_Actor,_Index);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_, (INTEGER)_Instance, (GUIDSTRING)_)
+AND
+DB_DialogRequestCache_UpdateNPCCount(_Instance)
+AND
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_NPCCount)
+THEN
+NOT DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_NPCCount);
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,0);
+PROC_DialogRequestCache_UpdateNPCCount(_Dialog,_Instance);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_, (INTEGER)_Instance, (GUIDSTRING)_)
+AND
+DB_DialogRequestCache_UpdatePlayerCount(_Instance)
+AND
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_PlayerCount)
+THEN
+NOT DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_PlayerCount);
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,0);
+PROC_DialogRequestCache_UpdatePlayerCount(_Dialog,_Instance);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Actor)
+AND
+NOT DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Instance,_,_)
+THEN
+NOT DB_DialogRequestCache_DialogInstance(_Dialog,_Instance);
+PROC_DialogRequestCache_MakeSpeakerLists_ClearCounters(_Dialog,_Instance);
+
+PROC
+PROC_DialogRequestCache_RemoveSpeaker((DIALOGRESOURCE)_, (INTEGER)_Instance, (GUIDSTRING)_)
+THEN
+NOT DB_DialogRequestCache_UpdateNPCCount(_Instance);
+NOT DB_DialogRequestCache_UpdatePlayerCount(_Instance);
+
+PROC
+PROC_DialogRequestCache_UpdateNPCCount((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance)
+AND
+DB_DialogRequestCache_SpeakerList_NPCs(_Dialog,_Instance,_Actor,_)
+THEN
+PROC_DialogRequestCache_MakeSpeakerLists_UpdateCount(_Dialog, _Instance, _Actor);
+
+PROC
+PROC_DialogRequestCache_UpdatePlayerCount((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Instance,_Actor,_)
+THEN
+PROC_DialogRequestCache_MakeSpeakerLists_UpdateCount(_Dialog, _Instance, _Actor);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_UpdateCount((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Speaker)
+AND
+DB_Players((CHARACTER)_Speaker)
+AND
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_Count);
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_NewCount);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_UpdateCount((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Speaker)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_Count);
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_NewCount);
+
+IF
+DialogRequestFailed(_Dialog,_Instance)
+THEN
+PROC_DialogRequestCache_ClearCache(_Dialog,_Instance);
+
+IF
+DialogEnded(_Dialog,_Instance)
+THEN
+PROC_DialogRequestCache_ClearCache(_Dialog,_Instance);
+
+IF
+AutomatedDialogRequestFailed(_Dialog,_Instance)
+THEN
+PROC_DialogRequestCache_ClearCache(_Dialog,_Instance);
+
+IF
+AutomatedDialogEnded(_Dialog,_Instance)
+THEN
+PROC_DialogRequestCache_ClearCache(_Dialog,_Instance);
+
+PROC
+PROC_DialogRequestCache_ClearCache((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Instance,_Actor,_)
+THEN
+PROC_DialogRequestCache_RemoveSpeaker(_Dialog,_Instance,_Actor);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+THEN
+DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,0);
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,0);
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,0);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Instance,_Speaker1);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Instance,_Speaker2);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Instance,_Speaker3);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Instance,_Speaker4);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Instance,_Speaker5);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Instance,_Speaker6);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_ClearCounters((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance)
+AND
+DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_SpeakerCount)
+AND
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_PlayerCount)
+AND
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_NPCCount)
+THEN
+NOT DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_SpeakerCount);
+NOT DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_PlayerCount);
+NOT DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_NPCCount);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Speaker)
+AND
+DB_Players((CHARACTER)_Speaker)
+AND
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Instance,(GUIDSTRING)_Speaker,_NewCount);
+NOT DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_Count);
+DB_DialogRequestCache_PlayerCount(_Dialog,_Instance,_NewCount);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Speaker)
+AND
+NOT DB_Players((CHARACTER)_Speaker)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+DB_DialogRequestCache_SpeakerList_NPCs(_Dialog,_Instance,(GUIDSTRING)_Speaker,_NewCount);
+NOT DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_Count);
+DB_DialogRequestCache_NPCCount(_Dialog,_Instance,_NewCount);
+
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate((DIALOGRESOURCE)_Dialog, (INTEGER)_Instance, (GUIDSTRING)_Speaker)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Instance,_Speaker,_NewCount);
+NOT DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_Count);
+DB_DialogRequestCache_SpeakerCount(_Dialog,_Instance,_NewCount);
+
+//Default implementation: Don't add as listener if no speaking role found
+PROC
+PROC_DialogAddSpeakingActor((INTEGER)_Id,(GUIDSTRING)_Speaker)
+THEN
+PROC_DialogAddSpeakingActor(_Id,_Speaker,0,0); 
+
+PROC
+PROC_DialogAddSpeakingActor((INTEGER)_Id,(GUIDSTRING)_Speaker,(INTEGER)_ListenerFallback)
+THEN
+PROC_DialogAddSpeakingActor(_Id,_Speaker,_ListenerFallback,0); 
+
+//Speaking Actors should only be added at the time of the request before the dialog has started (While DialogRequestCache is still active)
+//Speaking Actors will only be added if there is a reserved slot for them
+PROC
+PROC_DialogAddSpeakingActor((INTEGER)_Id,(GUIDSTRING)_Speaker,(INTEGER)_ListenerFallback,(INTEGER)_ConsiderSpeakerGroups)
+AND
+NOT DB_DialogEnding(_,_Id)	//don't add if the dialog is ending already
+AND
+QRY_SpeakerIsAvailable(_Speaker,1,1,1) //This is a low level check. If you want to be more selective, do it on a higher level
+AND
+DB_DialogRequestCache_DialogInstance(_Dialog,_Id)
+AND
+QRY_PrepForInteractiveDialog_IfInteractive(_Dialog,_Id,_Speaker)
+THEN
+DialogAddActorAtReservedSlot(_Id,_Speaker,_ListenerFallback,0,_ConsiderSpeakerGroups);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Id,_Speaker);
+
+PROC
+PROC_DialogAddSpeakingActorAt((INTEGER)_Id,(GUIDSTRING)_Speaker,(INTEGER)_Slot)
+AND
+NOT DB_DialogEnding(_,_Id)	//don't add if the dialog is ending already
+AND
+QRY_SpeakerIsAvailable(_Speaker,1,1,1) //This is a low level check. If you want to be more selective, do it on a higher level
+AND
+DB_DialogRequestCache_DialogInstance(_Dialog,_Id)
+AND
+QRY_PrepForInteractiveDialog_IfInteractive(_Dialog,_Id,_Speaker)
+THEN
+DialogAddActorAt(_Id,_Speaker,_Slot);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Id,_Speaker);
+
+QRY
+QRY_PrepForInteractiveDialog_IfInteractive((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst,(GUIDSTRING)_Speaker)
+AND
+NOT DB_AutomatedDialog(_Inst)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PrepForInteractiveDialog_IfInteractive((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst,(GUIDSTRING)_Speaker)
+AND
+DB_AutomatedDialog(_Inst)
+AND
+QRY_PrepForInteractiveDialog(_Dialog,_Speaker,1)
+THEN
+DB_NOOP(1);
+
+//Actors added after a dialog has started should be added as listeners
+PROC
+PROC_DialogAddSpeakingActor((INTEGER)_Id,(GUIDSTRING)_Speaker,_)
+AND
+NOT DB_DialogRequestCache_DialogInstance(_,_Id)
+THEN
+DebugBreak("Can't add speaking actors to a dialogue that has already started.");
+
+PROC
+PROC_DialogAddSpeakingActorAt((INTEGER)_Id,(GUIDSTRING)_Speaker,(INTEGER)_Slot)
+AND
+NOT DB_DialogRequestCache_DialogInstance(_,_Id)
+THEN
+DebugBreak("Can't add speaking actors at slot to a dialogue that has already started.");
+
+//Only to be used from the inclusion pipeline. This method used the peanut parameter so that maximum 3 players/campers are added in one dialog.
+QRY
+QRY_DialogAddInclusionActor((INTEGER)_Id,(GUIDSTRING)_Speaker,(INTEGER)_ConsiderSpeakerGroups)
+AND
+NOT DB_DialogEnding(_,_Id)	//don't add if the dialog is ending already
+AND
+QRY_SpeakerIsAvailable(_Speaker,1,1,1) //This is a low level check. If you want to be more selective, do it on a higher level
+AND
+NOT DB_ObjectIsDialogSoftLocked(_, _Speaker) //Don't take softlocked speakers out of a dialog just to add them as a softlocked target elsewhere.
+AND
+DB_DialogRequestCache_DialogInstance(_Dialog,_Id)
+THEN
+DialogRequestStop(_Speaker);	//stop any dialogs for this one. Since you're considered available and not softlocked, we can simply do this.
+DialogAddActorAtReservedSlot(_Id,_Speaker,0,1,_ConsiderSpeakerGroups);
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Id,_Speaker);
+
+//Listening Actors are added no matter what, they will always be added to a slot at the end.
+PROC
+PROC_DialogAddListeningActor((INTEGER)_Id,(GUIDSTRING)_Speaker)
+AND
+NOT DB_DialogEnding(_,_Id)	//don't add if the dialog is ending already
+AND
+QRY_SpeakerIsAvailable(_Speaker,1,1,1) //This is a low level check. If you want to be more selective, do it on a higher level
+AND
+NOT DB_ObjectIsDialogSoftLocked(_, _Speaker) //Don't take softlocked speakers out of a dialog just to add them as a listener.
+THEN
+DialogRequestStop(_Speaker);	//stop any dialogs for this one. Since you're considered available and not softlocked, we can simply do this.
+DialogAddActor(_Id,_Speaker);
+PROC_DialogAddListeningActor_UpdateSpeakerLists(_Id,_Speaker);
+
+PROC
+PROC_DialogAddListeningActor_UpdateSpeakerLists((INTEGER)_Id,(GUIDSTRING)_Speaker)
+AND
+DB_DialogRequestCache_DialogInstance(_Dialog,_Id)
+THEN
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate(_Dialog,_Id,_Speaker);
+
+QRY
+QRY_PrepForInteractiveDialog((DIALOGRESOURCE)_,(GUIDSTRING)_Speaker, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+DialogRequestStop(_Speaker);
+
+QRY
+QRY_PrepForInteractiveDialog((DIALOGRESOURCE)_,(GUIDSTRING)_Speaker, 0)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_ObjectIsDialogSoftLocked(_, _Speaker)
+THEN
+PROC_Inclusion_RemoveOrigin(_Speaker);
+
+//ADs don't support softlocking, so stop any dialogs, unless you're in an interactive one
+QRY
+QRY_PrepForInteractiveDialog((DIALOGRESOURCE)_Dialog,_Speaker, 1)
+AND
+_Speaker != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsSpeakerReserved(_Speaker,0)
+AND
+NOT QRY_IsOnGoingAD(_Dialog,_Speaker)	//have to check this here, because script will not actually play a dialog if that's the case
+THEN
+DialogRequestStop(_Speaker);
+
+QRY
+QRY_PrepForInteractiveDialog(_,NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PrepForInteractiveDialog(_,_, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Flags Setup The Start Of Dialog
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Given a dialog and speakers, check if this dialog needs to be overriden with another one and if so, start it
+// Find the last player among the speakers (assume it's the main player)
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowCrimeIntercept, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+QRY_StartOverrideDialog_ClearPlayerSpeaker()
+AND
+NOT QRY_StartOverrideDialog_SetIfPlayer(_Speaker6)
+AND
+NOT QRY_StartOverrideDialog_SetIfPlayer(_Speaker5)
+AND
+NOT QRY_StartOverrideDialog_SetIfPlayer(_Speaker4)
+AND
+NOT QRY_StartOverrideDialog_SetIfPlayer(_Speaker3)
+AND
+NOT QRY_StartOverrideDialog_SetIfPlayer(_Speaker2)
+AND
+NOT QRY_StartOverrideDialog_SetIfPlayer(_Speaker1)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartOverrideDialog_ClearPlayerSpeaker()
+THEN
+SysClear("DB_StartOverrideDialog_PlayerSpeaker", 1);
+
+QRY
+QRY_StartOverrideDialog_SetIfPlayer((GUIDSTRING)_Speaker)
+AND
+NOT DB_StartOverrideDialog_PlayerSpeaker(_)
+AND
+DB_Players((CHARACTER)_Speaker)
+THEN
+DB_StartOverrideDialog_PlayerSpeaker((CHARACTER)_Speaker);
+
+// Can be overloaded to detect that a dialog you tried to start was overridden by another one
+PROC
+PROC_DialogOverridden((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+THEN
+DB_StartOverrideDialog_Started(1);
+
+//Clean up previous reasons
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, 1, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+QRY_StartOverrideDialog_ClearFailReasons()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartOverrideDialog_ClearFailReasons()
+AND
+DB_QRYRTN_StartDialog_FailReason(_OldReason)
+THEN
+NOT DB_QRYRTN_StartDialog_FailReason(_OldReason);
+
+
+// Muted Dialog override
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, 1, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+NOT DB_Dialogs_DialogBlockStatusesDialogOverride(_Dialog, _)
+AND
+QRY_HasMutedSpeakersWithLines(_Dialog, _Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+QRY_DialogShouldDropMutingStatusses(_Dialog, (GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatusses(0)
+AND
+QRY_DialogShouldIgnoreMutingStatusses(_Dialog,_Speaker1,_Player)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+DB_QRYRTN_StartDialog_FailReason("MutedOverride");
+PROC_DialogOverridden(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+
+// Busy override
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, 1, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+NOT DB_SelectedDialog(_Dialog,_)
+AND
+NOT DB_SelectedDialog(_Dialog,_,_)
+AND
+NOT DB_SelectedDialog(_Dialog,_,_,_)
+AND
+NOT DB_SelectedDialog(_Dialog,_,_,_,_)
+AND
+NOT DB_SelectedDialog(_Dialog,_,_,_,_,_)
+AND
+NOT DB_SelectedDialog(_Dialog,_,_,_,_,_,_)
+AND
+// This won't start a dialog, since otherwise you'd get an AD of the NPC saying "not now",
+// which is strange for dialog started from story
+QRY_CharacterIsBusy((CHARACTER)_Speaker1)
+THEN
+DB_QRYRTN_StartDialog_FailReason("BusyOverride");
+PROC_DialogOverridden(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+// Origin moment override (can't disable)
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowCrimeIntercept, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+QRY_PlayOriginMoment(_Dialog, _Speaker1, _Player)
+THEN
+DB_QRYRTN_StartDialog_FailReason("OriginMomentOverride");
+PROC_DialogOverridden(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+// Origin recruitment override (can't disable)
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowCrimeIntercept, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+QRY_StartOriginOverrideDialog(_Dialog, _Speaker1, _Player)
+THEN
+DB_QRYRTN_StartDialog_FailReason("AvatarSwapOverride");
+PROC_DialogOverridden(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+// Low attitude override
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowCrimeIntercept, 1)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+QRY_StartLowAttitudeOverrideDialog(_Dialog, _Speaker1, _Player)
+THEN
+DB_QRYRTN_StartDialog_FailReason("LowAttOverride");
+PROC_DialogOverridden(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _, _)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_Dialogs_DialogBlockStatusesDialogOverride(_Dialog, _Override)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Player)
+AND
+QRY_TemporarilyMuted(_Player)
+AND
+QRY_DialogShouldDropMutingStatussesForSpeaker_Intern(_Dialog, _Player)
+AND
+DB_QRYRTN_DialogShouldDropMutingStatussesForSpeaker_Intern(0)
+AND
+QRY_StartDialog_Fixed(_Override, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6) //Should start correctly - players should have no lines.
+THEN
+DB_QRYRTN_StartDialog_FailReason("ShapeshiftOverride");
+PROC_DialogOverridden(_Override, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _, _)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_Dialogs_StartDatingDialog(_Dialog)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+DB_ORI_Partnered(_Player, _Partner)
+AND
+_Partner != _Speaker1
+AND
+QRY_StartDialog_Fixed(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1) //Should start correctly - players should have no lines.
+THEN
+DB_QRYRTN_StartDialog_FailReason("StartDatingOverride");
+PROC_DialogOverridden(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _, _)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_Dialogs_StartDatingDialog(_Dialog)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+GetFlag(ORI_State_DoubleDating_41320aeb-8e1a-433d-a82e-3d78aff578da, _Player, 1)
+AND
+QRY_StartDialog_Fixed(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1)
+THEN
+DB_QRYRTN_StartDialog_FailReason("StartDatingOverride");
+PROC_DialogOverridden(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _, _)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_Dialogs_StartDatingDialog(_Dialog)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+DB_ORI_WasDating((CHARACTER)_Player, (CHARACTER)_Speaker1)
+AND
+QRY_StartDialog_Fixed(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1)
+THEN
+DB_QRYRTN_StartDialog_FailReason("StartDatingOverride");
+PROC_DialogOverridden(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, _, _)
+AND
+NOT DB_StartOverrideDialog_Started(1)
+AND
+DB_Dialogs_DatingDialog(_Dialog)
+AND
+DB_StartOverrideDialog_PlayerSpeaker(_Player)
+AND
+NOT DB_ORI_Dating((CHARACTER)_Player, (CHARACTER)_Speaker1)
+AND
+QRY_StartDialog_Fixed(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1)
+THEN
+DB_QRYRTN_StartDialog_FailReason("DatingOverride");
+PROC_DialogOverridden(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+// Clean up
+QRY
+QRY_StartOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6, (INTEGER)_AllowCrimeIntercept, (INTEGER)_AllowLowAttitudeIntercept)
+AND
+DB_StartOverrideDialog_Started(1)
+THEN
+NOT DB_StartOverrideDialog_Started(1);
+//END_REGION
+
+//REGION Busy Dialog
+
+PROC
+PROC_GenericsSetBusyDialog((CHARACTER)_Character)
+THEN
+DB_Dialogs_Busy(_Character);
+
+PROC
+PROC_GenericsClearBusyDialog((CHARACTER)_Character)
+THEN
+NOT DB_Dialogs_Busy(_Character);
+
+//Character busy for custom reasons.
+QRY
+QRY_CharacterIsBusy((CHARACTER)_Character)
+AND
+DB_Dialogs_Busy(_Character)
+THEN
+DB_NOOP(1);
+
+//Busy because disappearing out of sight.
+QRY
+QRY_CharacterIsBusy((CHARACTER)_Character)
+AND
+DB_DisappearedOutOfSight(_Character, _Object, _MovementSpeed, _IncreaseSpeed, _Event, _ID, 1)
+THEN
+DB_NOOP(1);
+
+//Busy because investigating crime.
+QRY
+QRY_CharacterIsBusy((CHARACTER)_Character)
+AND
+DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID, _Character)
+THEN
+DB_NOOP(1);
+
+// Busy because of Scene Manager.
+QRY
+QRY_CharacterIsBusy((CHARACTER)_Character)
+AND
+DB_InternScene_LeftTriggerDialogsBlocked(_Character, _SceneName)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Dialog selection for when a player clicks on an NPC
+
+QRY
+QRY_SelectCustomDialog((GUIDSTRING)_Npc, (GUIDSTRING)_Player)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics((GUIDSTRING)_Npc, (GUIDSTRING)_Player)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+// Result for all of the subqueries must be of the form (can only return one of these):
+//   DB_SelectedDialog(_Dialog, _Speaker1);
+//   DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2);
+//   ..
+//   DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+
+QRY
+QRY_SelectDialog((GUIDSTRING)_Npc, (GUIDSTRING)_Player)
+AND
+NOT QRY_FailedToSelectDialog(_Npc, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OverrideSelectedDialog((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+// Override when Player can't speak 
+QRY_SelectMutedOverrideDialog(_Dialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4,_Speaker5,_Speaker6)
+THEN
+DB_SelectedDialogOverridden(1);
+
+// Base query is negative to avoid having 10 overloads
+QRY
+QRY_FailedToSelectDialog((GUIDSTRING)_Npc, (GUIDSTRING)_Player)
+AND
+// Click on Busy Crime Investigator
+NOT QRY_SelectCrimeBusyDialog(_Npc, _Player)
+AND
+// User intercept
+NOT QRY_SelectCustomDialog(_Npc, _Player)
+AND
+// DB_AD_Dialog
+NOT QRY_SelectADForRequest(_Npc, _Player)
+AND
+// Reflection dialogs
+NOT QRY_SelectReflectionDialog(_Npc, _Player)
+AND
+// Companion-to-companion talk fallback
+NOT QRY_SelectCompanionFallback(_Npc, _Player)
+AND
+// Relationship dialogs
+NOT QRY_SelectRelationShipDialog(_Npc, _Player)
+AND
+// User intercept after built-in intercepts
+NOT QRY_SelectCustomDialog_AfterGenerics(_Npc, _Player)
+AND
+// DB_Dialogs
+NOT QRY_SelectDBDialogs(_Npc, _Player)
+AND
+// Default dialog (sidebar)
+NOT QRY_SelectDefaultDialog(_Npc, _Player)
+AND
+GUIDToString(_Npc,_NpcStr)
+AND
+Concatenate("Failed to select dialog for ",_NpcStr,_Msg)
+THEN
+DebugBreak(_Msg);
+//END_REGION
+
+//REGION Select and start a dialog after a player clicks on an NPC
+IF
+DialogStartRequested(_Npc, _Player)
+AND
+QRY_SelectAndStartDialog(_Npc,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SelectAndStartDialog((GUIDSTRING)_Npc,(GUIDSTRING)_Player)
+AND
+QRY_SpeakerIsAvailable(_Npc,1,1)
+AND
+QRY_SpeakerIsAvailable(_Player,1,1)
+AND
+QRY_SelectDialog(_Npc, _Player)
+AND
+QRY_StartSelectedDialog()
+THEN
+DB_NOOP(1);
+
+// Start selected dialog with 1, 2, .., 6 speakers
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1)
+AND
+NOT QRY_OverrideSelectedDialog(_Dialog,_Speaker1, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2)
+AND
+NOT QRY_OverrideSelectedDialog(_Dialog,_Speaker1, _Speaker2, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3)
+AND
+NOT QRY_OverrideSelectedDialog(_Dialog,_Speaker1, _Speaker2, _Speaker3, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4)
+AND
+NOT QRY_OverrideSelectedDialog(_Dialog,_Speaker1, _Speaker2, _Speaker3, _Speaker4, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5)
+AND
+NOT QRY_OverrideSelectedDialog(_Dialog,_Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, NULL_00000000-0000-0000-0000-000000000000, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2, (GUIDSTRING)_Speaker3, (GUIDSTRING)_Speaker4, (GUIDSTRING)_Speaker5, (GUIDSTRING)_Speaker6)
+AND
+NOT QRY_OverrideSelectedDialog(_Dialog,_Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6, 1, 1, -1, 1)
+THEN
+DB_NOOP(1);
+
+//If a dialogue is overridden, QRY_StartSelectedDialog() should still return true. (Since a dialogue started)
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_SelectedDialogOverridden(1)
+THEN
+NOT DB_SelectedDialogOverridden(1);
+
+//If a dialogue is overridden, QRY_StartSelectedDialog() should still return true. (Since a dialogue started)
+QRY
+QRY_StartSelectedDialog()
+AND
+DB_QRYRTN_StartDialog_FailReason(_)
+THEN
+DB_NOOP(1);
+
+// Clean up DB_SelectedDialog
+QRY
+QRY_StartSelectedDialog()
+AND
+QRY_CleanUpSelectedDialog()
+AND
+// Avoid QRY_StartSelectedDialog from succeeding even if QRY_StartDialog() failed
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CleanUpSelectedDialog()
+AND
+DB_SelectedDialog(_Dialog, _Speaker1)
+THEN
+NOT DB_SelectedDialog(_Dialog, _Speaker1);
+
+QRY
+QRY_CleanUpSelectedDialog()
+AND
+DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2)
+THEN
+NOT DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2);
+
+QRY
+QRY_CleanUpSelectedDialog()
+AND
+DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3)
+THEN
+NOT DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3);
+
+QRY
+QRY_CleanUpSelectedDialog()
+AND
+DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4)
+THEN
+NOT DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4);
+
+QRY
+QRY_CleanUpSelectedDialog()
+AND
+DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5)
+THEN
+NOT DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5);
+
+QRY
+QRY_CleanUpSelectedDialog()
+AND
+DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6)
+THEN
+NOT DB_SelectedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6);
+//END_REGION
+
+//REGION Automated dialogs
+IF
+DB_AD_Dialog((GUIDSTRING)_Char,(DIALOGRESOURCE)_)
+AND
+IsCharacter(_Char,1)
+THEN
+SetHasDialog(_Char,1);
+
+IF
+DB_AD_Dialog((GUIDSTRING)_Char1,(GUIDSTRING)_Char2,(DIALOGRESOURCE)_)
+AND
+IsCharacter(_Char1,1)
+THEN
+SetHasDialog(_Char1,1);
+
+IF
+DB_AD_Dialog((GUIDSTRING)_Char1,(GUIDSTRING)_Char2,(DIALOGRESOURCE)_)
+AND
+IsCharacter(_Char2,1)
+THEN
+SetHasDialog(_Char2,1);
+
+QRY
+QRY_SelectADForRequest((GUIDSTRING)_Char,(GUIDSTRING)_Player)
+AND
+DB_AD_Dialog(_Char,_Dialog)
+AND
+NOT DB_ADRequested(_Char)
+THEN
+DB_SelectedDialog(_Dialog, _Char);
+
+IF
+DB_StartedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6)
+AND
+DB_AD_Dialog(_Speaker1, _Dialog)
+THEN
+DB_ADRequested(_Speaker1);
+
+QRY
+QRY_SelectADForRequest((GUIDSTRING)_Char1,(GUIDSTRING)_Player)
+AND
+DB_AD_Dialog(_Char1,_Char2,_Dialog)
+AND
+NOT DB_ADRequested(_Char1)
+AND
+NOT DB_ADRequested(_Char2)
+THEN
+DB_SelectedDialog(_Dialog, _Char1, _Char2);
+
+QRY
+QRY_SelectADForRequest((GUIDSTRING)_Char2,(GUIDSTRING)_Player)
+AND
+DB_AD_Dialog(_Char1,_Char2,_Dialog)
+AND
+NOT DB_ADRequested(_Char1)
+AND
+NOT DB_ADRequested(_Char2)
+THEN
+DB_SelectedDialog(_Dialog, _Char1, _Char2);
+
+IF
+DB_StartedDialog(_Dialog, _Speaker1, _Speaker2, _Speaker3, _Speaker4, _Speaker5, _Speaker6)
+AND
+DB_AD_Dialog(_Speaker1, _Speaker2, _Dialog)
+THEN
+DB_ADRequested(_Speaker1);
+DB_ADRequested(_Speaker2);
+
+IF
+AutomatedDialogEnded(_Dialog,_Inst)
+THEN
+PROC_ClearADRequests(_Dialog,_Inst);
+
+IF
+AutomatedDialogRequestFailed(_Dialog,_Inst)
+THEN
+PROC_ClearADRequests(_Dialog,_Inst);
+
+PROC
+PROC_ClearADRequests((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DB_AD_Dialog(_Npc,_Dialog)
+AND
+DB_DialogNPCs(_Inst,_Npc,1)
+THEN
+NOT DB_ADRequested(_Npc);
+
+PROC
+PROC_ClearADRequests((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DB_AD_Dialog(_Player,_Dialog)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+THEN
+NOT DB_ADRequested(_Player);
+
+PROC
+PROC_ClearADRequests((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DB_AD_Dialog(_,_,_Dialog)
+AND
+DB_DialogNPCs(_Inst,_Npc,_)
+THEN
+NOT DB_ADRequested(_Npc);
+
+PROC
+PROC_ClearADRequests((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DB_AD_Dialog(_,_,_Dialog)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+THEN
+NOT DB_ADRequested(_Player);
+
+PROC
+PROC_RemoveNPCADs((GUIDSTRING)_Npc)
+AND
+DB_AD_Dialog(_Npc,_Dialog)
+THEN
+PROC_RemoveNPCADs((GUIDSTRING)_Npc, (DIALOGRESOURCE)_Dialog);
+
+PROC
+PROC_RemoveNPCADs((GUIDSTRING)_Npc)
+AND
+DB_AD_Dialog(_Npc,_Npc2,_Dialog)
+THEN
+PROC_RemoveNPCADs((GUIDSTRING)_Npc, (DIALOGRESOURCE)_Dialog);
+
+PROC
+PROC_RemoveNPCADs((GUIDSTRING)_Npc2)
+AND
+DB_AD_Dialog(_Npc,_Npc2,_Dialog)
+THEN
+PROC_RemoveNPCADs((GUIDSTRING)_Npc2, (DIALOGRESOURCE)_Dialog);
+
+PROC
+PROC_RemoveNPCADs((GUIDSTRING)_Npc, (DIALOGRESOURCE)_Dialog)
+AND
+DB_AD_Dialog(_Npc,_Dialog)
+THEN
+NOT DB_AD_Dialog(_Npc,_Dialog);
+NOT DB_ADRequested(_Npc);
+
+PROC
+PROC_RemoveNPCADs((GUIDSTRING)_Npc, (DIALOGRESOURCE)_Dialog)
+AND
+DB_AD_Dialog(_Npc,_Npc2,_Dialog)
+THEN
+NOT DB_AD_Dialog(_Npc,_Npc2,_Dialog);
+NOT DB_ADRequested(_Npc);
+NOT DB_ADRequested(_Npc2);
+
+//END_REGION
+
+//REGION Low attitude Dialog
+QRY
+QRY_GetLowAttitudeDialog((GUIDSTRING)_Npc)
+AND
+DB_QRY_RTN_GetLowAttitudeDialog(_Dialog)
+THEN
+NOT DB_QRY_RTN_GetLowAttitudeDialog(_Dialog);
+
+QRY
+QRY_GetLowAttitudeDialog((GUIDSTRING)_Npc)
+AND
+NOT DB_QRY_RTN_GetLowAttitudeDialog(_)
+THEN
+DB_QRY_RTN_GetLowAttitudeDialog((DIALOGRESOURCE)GEB_Default_Hostile_f6394e88-2eca-142b-2ccd-b30fd3efc25f);
+
+QRY
+QRY_StartLowAttitudeOverrideDialog((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_NPC, (GUIDSTRING)_Player)
+AND
+IsCharacter(_NPC,1)
+AND
+NOT DB_SceneManager((CHARACTER)_NPC,_)
+AND
+NOT DB_Players(_NPC)
+AND
+NOT DB_NoLowAttitudeDialog(_NPC)
+AND
+QRY_GetLowAttitudeDialog(_NPC)
+AND
+DB_QRY_RTN_GetLowAttitudeDialog(_LowAttDialog)
+AND
+DialogIsAutomated(_Dialog,0)
+AND
+IsTagged(_NPC,(TAG)CANTSPEAK_693d950b-2617-43ac-8e3c-2ff5fda7f956,0)
+AND
+GetAttitudeTowardsPlayer((CHARACTER)_NPC,(CHARACTER)_Player,_Att)
+AND
+_Att <= -45
+AND
+QRY_StartDialogCustom_Fixed(_LowAttDialog,_NPC,_Player,0,0,1,1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION End dialog when speaker dies
+IF
+Dying(_Char)
+AND
+NOT DB_DialogDeath(_Char)
+THEN
+DialogRequestStop(_Char);
+//END_REGION
+
+//REGION End dialog when speaker gets banished
+IF
+DB_Is_Banished(_Char)
+AND
+NOT DB_BanishedInDialog(_Char)
+THEN
+DialogRequestStop(_Char);
+//END_REGION
+
+//REGION Player Name Dialog Variable
+IF
+DB_DialogPlayers(_Inst,_Player,_PlayerNr)
+AND
+DB_PlayerName_DialogVars(_PlayerNr,_VariableName)
+AND
+DB_DialogName(_Dialog, _Inst)
+AND
+GetDisplayName(_Player,_StringHandle)
+THEN
+DialogSetVariableTranslatedString(_Dialog,_VariableName,_StringHandle);
+//END_REGION
+
+//REGION Wake characters up on dialog start
+
+IF
+DB_InteractiveDialogSpeaker(_ID, _Speaker)
+AND
+DB_DialogName(_DialogName, _ID)
+AND
+NOT DB_GLO_SleepingDialog(_DialogName)
+AND
+HasActiveStatus(_Speaker, "SLEEPING", 1)
+THEN
+RemoveStatus(_Speaker, "SLEEPING");
+
+IF
+DB_InteractiveDialogSpeaker(_ID, _Speaker)
+AND
+DB_DialogName(_DialogName, _ID)
+AND
+NOT DB_GLO_SleepingDialog(_DialogName)
+AND
+HasActiveStatus(_Speaker, "SLEEP", 1)
+THEN
+RemoveStatus(_Speaker, "SLEEP");
+
+//Disable trade for sleeping characters
+IF
+StatusApplied(_Character,_SleepingStatus,_,_)
+AND
+IsStatusFromGroup(_SleepingStatus,"SG_Sleeping",1)
+AND
+NOT DB_GLO_SleepingStatus_TradeDisabled((CHARACTER)_Character)
+AND
+CanTrade((CHARACTER)_Character,1)
+THEN
+SetCanTrade(_Character,0);
+DB_GLO_SleepingStatus_TradeDisabled((CHARACTER)_Character);
+
+IF
+StatusRemoved(_Character,_SleepingStatus,_,_)
+AND
+DB_GLO_SleepingStatus_TradeDisabled((CHARACTER)_Character)
+AND
+IsStatusFromGroup(_SleepingStatus,"SG_Sleeping",1)
+AND
+HasActiveStatusWithGroup(_Character,"SG_Sleeping",0) //make sure they don't have any other sleeping statuses applied
+THEN
+SetCanTrade(_Character,1);
+NOT DB_GLO_SleepingStatus_TradeDisabled((CHARACTER)_Character);
+
+//END_REGION
+
+QRY
+QRY_IsInAllowJoinCombatDialog((GUIDSTRING)_Entity)
+AND
+SpeakerGetDialog(_Entity, 0, _Dialog, _)
+AND
+DialogIsAllowingJoinCombat(_Dialog, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsInAllowJoinCombatDialog((GUIDSTRING)_Entity)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_Dialog, _, _Entity, _)
+AND
+DialogIsAllowingJoinCombat(_Dialog,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_StartWorldDialog((DIALOGRESOURCE)_Dialog, (TRIGGER)_Trigger)
+AND
+StartWorldTimeline(_Dialog,	_Trigger, 1, _)
+THEN
+DB_NOOP(1);
+
+//REGION Timeline fade helpers
+// Record fade-outs triggered at the end of a dialog by the timeline system,
+// and cancel them if no new dialog gets started within 3 seconds
+IF
+TimelineScreenFadeStarted(_UserID,_DialogInstanceID,_Dialog)
+AND
+// Sanity checks, should never fail
+DialogIsAutomated(_Dialog,0)
+AND
+ConcatenateInteger("DIALOGS_TimelineFadeForceCancelTimer_",_UserID,_TimerName)
+THEN
+PROC_Dialogs_CancelExistingTimelineClearWait(_UserID);
+DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName);
+PROC_GLO_Dialogs_FadeTimerCheckDialogEnded(_DialogInstanceID,_TimerName);
+
+// The TimelineScreenFadeStarted should always arrive before DialogEnded, but be paranoid
+PROC
+PROC_GLO_Dialogs_FadeTimerCheckDialogEnded((INTEGER)_DialogInstanceID,(STRING)_TimerName)
+AND
+NOT DB_DialogName(_,_DialogInstanceID)
+THEN
+// One frame delay in case more TimelineScreenFadeStarted for other users still arrive in this frame
+TimerLaunch(_TimerName,0);
+
+// Dialog
+IF
+DialogEnded(_,_DialogInstanceID)
+AND
+DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName)
+THEN
+TimerLaunch(_TimerName,3000);
+
+IF
+TimerFinished(_TimerName)
+AND
+DB_DialogTimelineFaded(_UserID,_AnyDialogInstanceID,_TimerName)
+THEN
+NOT DB_DialogTimelineFaded(_UserID,_AnyDialogInstanceID,_TimerName);
+ClearTimelineScreenFade(_UserID,0.2);
+
+PROC
+PROC_Dialogs_CancelExistingTimelineClearWait((INTEGER)_UserID)
+AND
+DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName)
+THEN
+NOT DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName);
+TimerCancel(_TimerName);
+
+// Cancel the timer if a new dialog got started, but record that we're waiting for a dialog to start
+// (if it fails to start, we still have to cancel it)
+PROC
+PROC_DialogRequestCache_MakeSpeakerLists_Evaluate((DIALOGRESOURCE)_Dialog,(INTEGER)_Instance,(GUIDSTRING)_Speaker)
+AND
+DialogIsAutomated(_Dialog,0)
+AND
+DB_PartyMembers((CHARACTER)_Speaker)
+AND
+GetReservedUserID(_Speaker,_UserID)
+AND
+DB_DialogTimelineFaded(_UserID,_AnyDialogInstanceID,_TimerName)
+THEN
+TimerCancel(_TimerName);
+NOT DB_DialogTimelineFaded(_UserID,_AnyDialogInstanceID,_TimerName);
+DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance);
+
+// Dialog successfully started -> let timeline system cancel the fade when it's ready loading the new timeline
+IF
+DialogStarted(_Dialog,_Instance)
+AND
+DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance)
+THEN
+NOT DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance);
+
+// Dialog failed to start -> clear fade immediately
+IF
+DialogRequestFailed(_Dialog,_Intance)
+AND
+DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance)
+THEN
+NOT DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance);
+ClearTimelineScreenFade(_UserID,0.5);
+
+// Manual clearing
+PROC
+PROC_ClearScreenFadeTimeline((INTEGER)_DialogInstanceID,(REAL)_Seconds)
+AND
+DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName)
+THEN
+PROC_ClearScreenFadeTimelineForUser(_UserID,_Seconds);
+
+PROC
+PROC_ClearScreenFadeTimelineForUser((INTEGER)_UserID,(REAL)_Seconds)
+AND
+DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName)
+THEN
+NOT DB_DialogTimelineFaded(_UserID,_DialogInstanceID,_TimerName);
+TimerCancel(_TimerName);
+ClearTimelineScreenFade(_UserID,_Seconds);
+
+PROC
+PROC_ClearScreenFadeTimelineForUser((INTEGER)_UserID,(REAL)_Seconds)
+AND
+DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance)
+THEN
+NOT DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance);
+
+// UserID becomes invalid -> clear DBs
+IF
+SavegameLoadStarted()
+AND
+DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance)
+THEN
+NOT DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance);
+
+IF
+SavegameLoadStarted()
+AND
+DB_DialogTimelineFaded(_UserID,_,_)
+THEN
+PROC_Dialogs_CancelExistingTimelineClearWait(_UserID);
+
+IF
+UserDisconnected(_UserID,_,_)
+AND
+DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance)
+THEN
+NOT DB_DialogTimelineFaded_WaitingForStart(_UserID,_Instance);
+
+IF
+UserDisconnected(_UserID,_,_)
+THEN
+PROC_Dialogs_CancelExistingTimelineClearWait(_UserID);
+//END_REGION
+
+//REGION Remove Invisibility post dialogue when character speaks
+//Avatar
+IF
+DialogStartRequested(_, _Speaker)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_DialogueResource, _ID, _Speaker, _SpeakerSlot)
+AND
+DialogSpeakerHasLines(_DialogueResource, _SpeakerSlot, 1)
+AND
+HasActiveStatusWithGroup(_Speaker, "SG_Invisible", 1)
+THEN
+RemoveStatusesWithGroup(_Speaker, "SG_Invisible", _Speaker);
+
+IF
+DialogStarted(_DialogResource, _ID)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_DialogueResource, _ID, _Speaker, _SpeakerSlot)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_, _, _Speaker, _)
+AND
+DialogSpeakerHasLines(_DialogResource, _SpeakerSlot, 1)
+AND
+HasActiveStatusWithGroup(_Speaker, "SG_Invisible", 1)
+THEN
+RemoveStatusesWithGroup(_Speaker, "SG_Invisible", _Speaker);
+
+//Companion
+IF
+DialogActorJoined(_DialogueResource, _ID, _Speaker, _SpeakerSlot)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_DialogueResource, _ID, _Speaker, _SpeakerSlot)
+AND
+DB_PartyMembers((CHARACTER)_Speaker)
+AND
+DialogSpeakerHasLines(_DialogueResource, _SpeakerSlot, 1)
+AND
+HasActiveStatusWithGroup(_Speaker, "SG_Invisible", 1)
+THEN
+RemoveStatusesWithGroup(_Speaker, "SG_Invisible", _Speaker);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

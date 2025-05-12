@@ -1,0 +1,299 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*----
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_Player, (CHARACTER)_NPC, (STRING)_ID)
+returns a preferred speaker in 
+DB_QRYRTN_GLO_SelectFavouredSpeaker((GUIDSTRING)_Speaker)
+who is visible to the _NPC, available for dialogue and within speaking distance.
+
+The criteria of selection are stored in
+DB_GLO_FavouredSpeakerConditions((STRING)_ID, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired),
+and the order in the databased is used for priority: earlier conditions outweigh later ones.
+
+_ID: unique selection ID. Use the same in the query
+_Condition: The specific condition - e.g. the name of the tag or flag.
+_Type: Condition type.
+Currently supported condition types:
+- Tag
+- ObjectFlag
+_Desired : Whether you're selecting for characters who do have the tag, or characters who don't.
+
+Alternatively criteria can be defined with tag expressions in the following database:
+DB_GLO_FavouredSpeaker_WithTagExpression((STRING)_ID, (STRING)_TagExpression);
+
+_ID: unique selection ID. Use the same in the query
+_TagExpression: a string containing tag expression, formatted for SatisfiesTagExpression API query
+
+Additionally for any kind of selection certain character can be excluded as unwanted by use of
+DB_GLO_FavouredSpeaker_Exclude((STRING)_ID, (GUIDSTRING)_Character);
+----*/
+NOT DB_GLO_FavouredSpeaker_Exclude("",NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Single tag default
+QRY
+QRY_GLO_SelectFavouredSpeaker_SingleTag((GUIDSTRING)_Player, _, _, _)
+AND
+DB_GLO_FavouredSpeakerConditions("_Temp_Default_SingleTag", _Condition, _Type, _Desired)
+THEN
+NOT DB_GLO_FavouredSpeakerConditions("_Temp_Default_SingleTag", _Condition, _Type, _Desired);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_SingleTag((GUIDSTRING)_Player, _, _Tag, _)
+THEN
+DB_GLO_FavouredSpeakerConditions("_Temp_Default_SingleTag", _Tag, "Tag", 1);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_SingleTag((GUIDSTRING)_Player, _, _Tag, 1)
+THEN
+DB_GLO_FavouredSpeakerConditions("_Temp_Default_SingleTag", AVATAR_306b9b05-1057-4770-aa17-01af21acd650, "Tag", 1);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_SingleTag((GUIDSTRING)_Player, (CHARACTER)_NPC, (TAG)_Tag, (INTEGER)_Avatar)
+AND
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_Player, (CHARACTER)_NPC, "_Temp_Default_SingleTag")
+THEN
+DB_NOOP(0);
+
+//END_REGION
+
+//REGION Tag expression selection
+QRY
+QRY_GLO_SelectFavouredSpeaker_TagExpression((GUIDSTRING)_Player, (CHARACTER)_Target, (STRING)_TagExpression)
+AND
+DB_GLO_FavouredSpeaker_WithTagExpression("_Temp_Default_TagExpression", _Expression)
+THEN
+NOT DB_GLO_FavouredSpeaker_WithTagExpression("_Temp_Default_TagExpression", _Expression);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_TagExpression((GUIDSTRING)_Player, (CHARACTER)_Target, (STRING)_TagExpression)
+THEN
+DB_GLO_FavouredSpeaker_WithTagExpression("_Temp_Default_TagExpression", _TagExpression);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_TagExpression((GUIDSTRING)_Player, (CHARACTER)_Target, (STRING)_TagExpression)
+AND
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_Player, (CHARACTER)_Target, "_Temp_Default_TagExpression")
+THEN
+DB_NOOP(0);
+
+//END_REGION Tag expression selection
+
+//REGION Speaker Selection
+QRY
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_Player, (CHARACTER)_NPC, (STRING)_ID)
+THEN
+SysClear("DB_GLO_SelectFavouredSpeaker_Candidates", 1);
+SysClear("DB_QRYRTN_GLO_SelectFavouredSpeaker", 1);
+
+// filter candidates by availability and sight
+// put the one from input as 1st candidate
+QRY
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_Player, (CHARACTER)_NPC, (STRING)_ID)
+AND
+NOT DB_GLO_FavouredSpeaker_Exclude(_ID,_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, _NPC)
+THEN
+DB_GLO_SelectFavouredSpeaker_Candidates((GUIDSTRING)_Player); // no parallel tasks, so we don't need _ID
+
+// filter all others
+QRY
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_Player, (CHARACTER)_NPC, (STRING)_ID)
+AND
+DB_Players(_Candidate)
+AND
+_Candidate != _Player
+AND
+NOT DB_GLO_FavouredSpeaker_Exclude(_ID,_Candidate)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Candidate, _NPC)
+THEN
+DB_GLO_SelectFavouredSpeaker_Candidates((GUIDSTRING)_Candidate);
+
+// take 1st of candidates as our answer
+QRY
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_, (CHARACTER)_, (STRING)_ID)
+AND
+DB_GLO_SelectFavouredSpeaker_Candidates(_Player)
+AND
+NOT DB_QRYRTN_GLO_SelectFavouredSpeaker(_)
+THEN
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Player);
+
+// compare with alternatives
+QRY
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_, (CHARACTER)_NPC, (STRING)_ID)
+THEN
+SysClear("DB_GLO_SelectFavouredSpeaker_CacheCandidateCheck",3);
+SysClear("DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck",2);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker((GUIDSTRING)_, (CHARACTER)_NPC, (STRING)_ID)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Candidate)
+AND
+DB_GLO_SelectFavouredSpeaker_Candidates(_Alternative)
+AND
+_Alternative != _Candidate
+THEN
+PROC_GLO_SelectFavouredSpeaker_CheckAlternative((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (STRING)_ID);
+
+QRY
+QRY_GLO_SelectNearbyPlayerSpeaker((CHARACTER)_PartyMember, (STRING)_ID)
+AND
+QRY_OnlyOnce_Reset("GLO_SelectNearbyPlayerSpeaker")
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_Players(_PartyMember)
+AND
+DB_Players(_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, _PartyMember)
+AND
+QRY_OnlyOnce("GLO_SelectNearbyPlayerSpeaker")
+AND
+QRY_GLO_SelectFavouredSpeaker(_Player, _PartyMember, _ID)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternative((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (STRING)_ID)
+THEN
+NOT DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1);
+
+// tag/flag checks
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternative((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (STRING)_ID)
+AND
+DB_GLO_FavouredSpeakerConditions(_ID, _Condition, _Type, _Desired)
+AND
+NOT DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1)
+THEN
+PROC_GLO_SelectFavouredSpeaker_CheckAlternativeCondition((GUIDSTRING)_Alternative, _NPC, _Condition, _Type, _Desired);
+
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternativeCondition((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Player)
+AND
+NOT QRY_GLO_SelectFavouredSpeaker_HasCondition(_Player, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired)
+AND
+QRY_GLO_SelectFavouredSpeaker_HasCondition(_Alternative, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired)
+AND
+QRY_GLO_SelectFavouredSpeaker_CanSee(_NPC,_Alternative)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Alternative, 1)
+THEN
+SysClear("DB_QRYRTN_GLO_SelectFavouredSpeaker", 1);
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Alternative);
+DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1);
+
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternativeCondition((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Player)
+AND
+QRY_GLO_SelectFavouredSpeaker_HasCondition(_Player, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired)
+AND
+NOT QRY_GLO_SelectFavouredSpeaker_HasCondition(_Alternative, (GUIDSTRING)_Condition, (STRING)_Type, (INTEGER)_Desired)
+AND
+QRY_GLO_SelectFavouredSpeaker_CanSee(_NPC,_Player)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Player, 1)
+THEN
+DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1);
+
+// tag expressions checks
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternative((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (STRING)_ID)
+AND
+DB_GLO_FavouredSpeaker_WithTagExpression(_ID, _TagExpression)
+AND
+NOT DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1)
+THEN
+PROC_GLO_SelectFavouredSpeaker_CacheCandidateCheck(_TagExpression);
+PROC_GLO_SelectFavouredSpeaker_CheckAlternativeTagExpression((GUIDSTRING)_Alternative, (CHARACTER)_NPC, _TagExpression);
+
+// precache check for main candidate to avoid calling API twice below
+PROC
+PROC_GLO_SelectFavouredSpeaker_CacheCandidateCheck((STRING)_TagExpression)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Candidate)
+AND
+NOT DB_GLO_SelectFavouredSpeaker_CacheCandidateCheck(_Candidate,_TagExpression,_)
+AND
+SatisfiesTagExpression(_Candidate, _TagExpression, _Value)
+THEN
+DB_GLO_SelectFavouredSpeaker_CacheCandidateCheck(_Candidate,_TagExpression,_Value);
+
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternativeTagExpression((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (STRING)_TagExpression)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Candidate)
+AND
+DB_GLO_SelectFavouredSpeaker_CacheCandidateCheck(_Candidate,_TagExpression,1)
+AND
+SatisfiesTagExpression(_Alternative, _TagExpression, 0)
+AND
+QRY_GLO_SelectFavouredSpeaker_CanSee(_NPC,_Candidate)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Candidate, 1)
+THEN
+DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1);
+
+PROC
+PROC_GLO_SelectFavouredSpeaker_CheckAlternativeTagExpression((GUIDSTRING)_Alternative, (CHARACTER)_NPC, (STRING)_TagExpression)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Candidate)
+AND
+DB_GLO_SelectFavouredSpeaker_CacheCandidateCheck(_Candidate,_TagExpression,0)
+AND
+SatisfiesTagExpression(_Alternative, _TagExpression, 1)
+AND
+QRY_GLO_SelectFavouredSpeaker_CanSee(_NPC,_Alternative)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Alternative, 1)
+THEN
+SysClear("DB_QRYRTN_GLO_SelectFavouredSpeaker", 1);
+DB_QRYRTN_GLO_SelectFavouredSpeaker(_Alternative); // no need to recache, we're dropping out of CheckAlternativeTagExpression
+DB_GLO_SelectFavouredSpeaker_EstablishedSuperiority(1);
+
+//END_REGION
+
+//REGION Condition types
+QRY
+QRY_GLO_SelectFavouredSpeaker_HasCondition((GUIDSTRING)_Char, (GUIDSTRING)_Tag, "Tag", (INTEGER)_Desired)
+AND
+IsTagged(_Char, (TAG)_Tag, _Desired)
+THEN
+DB_NOOP(0);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_HasCondition(_Char, (GUIDSTRING)_Flag, "Flag", _Desired)
+AND
+GetFlag((FLAG)_Flag, _Char, _Desired) // flagType: Object
+THEN
+DB_NOOP(0);
+
+//END_REGION
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_CanSee((CHARACTER)_NPC,(GUIDSTRING)_Player)
+AND
+DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Player,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_SelectFavouredSpeaker_CanSee((CHARACTER)_NPC,(GUIDSTRING)_Player)
+AND
+NOT DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Player,_)
+AND
+CanSee(_NPC,_Player,_CanSee)
+THEN
+DB_QRYRTN_GLO_SelectFavouredSpeaker_CacheCanSeeCheck(_Player,_CanSee);
+EXITSECTION
+
+ENDEXITSECTION

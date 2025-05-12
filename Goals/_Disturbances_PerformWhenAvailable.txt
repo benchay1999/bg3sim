@@ -1,0 +1,570 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// PROC_Disturbance_PerformWhenAvailable((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_Delay)
+//   - Queue a disturbance with _NPC as "criminal" of type _DisturbanceType with _Evidence and _Victim, and execute it
+//     once _NPC becomes available to react to it. _Delay can be 0 in case the reaction should trigger immediately, or 1 if it should be delayed
+
+// QRY_Disturbance_PerformWhenAvailable_Retry((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+//   - Called after _NPC switches from the "Confronting" state to a new state when handling _DisturbanceType.
+//     Can override and make it succeed in case the same disturbance should be rescheduled (because you detected
+//     it got interrupted)
+
+// PROC_Disturbance_PerformWhenAvailable_Finished((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+//   - Called when _NPC successfully finished handling _DisturbanceType (QRY_Disturbance_PerformWhenAvailable_Retry failed), or when it was permanently
+//     aborted (-> _CrimeID == 0)
+
+DB_ReregisterObjectsOnRegionSwap("GEB_PerformWhenAvailable");
+
+
+KBSECTION
+//REGION Main entry point
+PROC
+PROC_Disturbance_PerformWhenAvailable((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_Delay)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,(INTEGER)_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,(INTEGER)_,(INTEGER)_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,(INTEGER)_)
+THEN
+PROC_Disturbances_PerformWhenAvailable_ClearTryCount(_NPC,_DisturbanceType,_Evidence,_Victim);
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+PROC_Disturbance_PerformWhenAvailable_CheckQueue(_NPC);
+
+PROC
+PROC_Disturbances_PerformWhenAvailable_ClearTryCount((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+AND
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_Delay)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_ForceUpdating(_NPC)
+THEN
+// We do this here and not just when starting the disturbance, because otherwise if you flee
+// a combat with an NPC that has an incapacitating status that will still last a couple of
+// turns, they will still have it when you return and will not have done anything
+DB_Disturbance_PerformWhenAvailable_ForceUpdating(_NPC);
+SetForceUpdate(_NPC,1);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_Delay)
+THEN
+// Won't do anything if already registered
+PROC_RegisterLevelObject("GEB_PerformWhenAvailable", _NPC);
+//END_REGION
+
+//REGION Keep track per level of NPCs that have to perform
+// Gets called both via PROC_Disturbance_PerformWhenAvailable() above (if not yet registered),
+// and when we come back to a level in which an NPC was supposed to react, but got interrupted
+// by a level swap
+PROC
+PROC_LevelObjectRegistered("GEB_PerformWhenAvailable", (GUIDSTRING)_NPC)
+THEN
+// Cancel queued disabling of force-activating, if any
+RealtimeObjectTimerCancel(_NPC, "GEB_PerformWhenAvailable_StopForceActivate");
+
+PROC
+PROC_LevelObjectRegistered("GEB_PerformWhenAvailable", (GUIDSTRING)_NPC)
+AND
+// Registering a global character always results in a registered message, even if they're in a different level
+GetRegion(_NPC,_Region)
+AND
+DB_CurrentLevel(_Region)
+THEN
+DB_Disturbance_PerformWhenAvailable_CurrentLevel((CHARACTER)_NPC);
+PROC_Disturbance_PerformWhenAvailable_CheckQueue(_NPC);
+
+IF
+LeftLevel(_NPC,_Level)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_Disturbance_PerformWhenAvailable_CurrentLevel((CHARACTER)_NPC)
+THEN
+// Treat same as level unloading
+PROC_Disturbance_PerformWhenAvailable_Cleanup(_NPC,1);
+
+PROC
+PROC_LevelObjectUnregistered("GEB_PerformWhenAvailable", (GUIDSTRING)_NPC)
+AND
+DB_Disturbance_PerformWhenAvailable_CurrentLevel((CHARACTER)_NPC)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_CurrentLevel((CHARACTER)_NPC);
+//END_REGION
+
+//REGION Main trigger + abort triggers
+IF
+StatusApplied(_Object,_Status,_,_)
+AND
+QRY_IsExistingCharacter(_Object,1)
+AND
+QRY_IsStatusUnconsciousOrEquivalent(_Status)
+THEN
+DB_Disturbance_PerformWhenAvailable_Incapacitated((GUIDSTRING)_Object,_Status);
+
+IF
+StatusRemoved(_Object,_Status,_,_)
+AND
+DB_Disturbance_PerformWhenAvailable_Incapacitated(_Object,_Status)
+AND
+HasActiveStatus(_Object,_Status,0)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_Incapacitated(_Object,_Status);
+PROC_Disturbance_PerformWhenAvailable_CheckQueue((CHARACTER)_Object);
+
+PROC
+PROC_StateCleared_CantAct((GUIDSTRING)_Object)
+AND
+DB_Disturbance_PerformWhenAvailable_CurrentLevel((CHARACTER)_Object)
+THEN
+PROC_Disturbance_PerformWhenAvailable_CheckQueue((CHARACTER)_Object);
+
+PROC
+PROC_StateSet_PermaDefeated((GUIDSTRING)_Object)
+AND
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Reevaluate(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+
+// Immediate action queued -> start it
+PROC
+PROC_Disturbance_PerformWhenAvailable_CheckQueue((CHARACTER)_NPC)
+AND
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,0)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim)
+AND
+DB_Disturbance_PerformWhenAvailable_CurrentLevel(_NPC)
+AND
+NOT DB_CantAct(_NPC)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Incapacitated(_NPC,_)
+AND
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount)
+AND
+IntegerSum(_TryCount,1,_NewTryCount)
+THEN
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+NOT DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+NOT DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount);
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_NewTryCount);
+
+// Otherwise pick delayed one
+PROC
+PROC_Disturbance_PerformWhenAvailable_CheckQueue((CHARACTER)_NPC)
+AND
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,1)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim)
+AND
+DB_Disturbance_PerformWhenAvailable_CurrentLevel(_NPC)
+AND
+NOT DB_CantAct(_NPC)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Incapacitated(_NPC,_)
+AND
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount)
+AND
+IntegerSum(_TryCount,1,_NewTryCount)
+THEN
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim, 1);
+NOT DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,1);
+NOT DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount);
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_NewTryCount);
+
+// With delay - start timer
+IF
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,1)
+AND
+Random(2000,_Delay)
+AND
+IntegerSum(3000,_Delay,_StartDelay)
+THEN
+RealtimeObjectTimerLaunch(_NPC,"GEB_PerformWhenAvailable_StartDelay",_StartDelay);
+
+// No delay -> start immediately
+IF
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,0)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Start(_NPC,_DisturbanceType,_Evidence,_Victim);
+
+// Starting with delay and newly queued one that should start without delay -> requeue the starting one so we pick the other one
+IF
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,0)
+THEN
+PROC_Disturbance_PerformWhenAvailable_CancelDelayedStarting(_NPC);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_CancelDelayedStarting((CHARACTER)_NPC)
+AND
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_OtherDisturbanceType,_OtherEvidence,_OtherVictim,1)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Reevaluate(_NPC,_OtherDisturbanceType,_OtherEvidence,_OtherVictim,1);
+//END_REGION
+
+//REGION Register the disturbance + handle registration result
+IF
+ObjectTimerFinished((CHARACTER)_NPC,"GEB_PerformWhenAvailable_StartDelay")
+AND
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Start(_NPC,_DisturbanceType,_Evidence,_Victim);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Start((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+THEN
+PROC_CharacterRegisterCrime(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_NPC,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+THEN
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID);
+NOT DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+
+PROC
+PROC_CharacterRegisterCrime_Blocked((CHARACTER)_NPC,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+THEN
+// Don't restart, would probably result in endless loop. The caller can intercept this too and trigger
+// the restart if they want to.
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent(_NPC,1);
+
+//END_REGION
+
+//REGION Interrupts while starting/ongoing
+IF
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_CurrentLevel(_NPC)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Reevaluate(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+
+IF
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_CurrentLevel(_NPC)
+THEN
+// Check whether in spite of the interrupt, it's a success (and if not, restart)
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess(_NPC,_DisturbanceType,_Evidence,_Victim,_CrimeID);
+
+// Includes PermaDefeated, OffStage and Combat
+PROC
+PROC_StateSet_CantAct((GUIDSTRING)_Object)
+AND
+DB_Disturbance_PerformWhenAvailable_Starting((CHARACTER)_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+AND
+DB_CantAct(_NPC)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Reevaluate(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+
+PROC
+PROC_StateSet_CantAct((GUIDSTRING)_Object)
+AND
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID)
+THEN
+// Check whether in spite of the interrupt, it's a success (and if not, restart)
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess(_NPC,_DisturbanceType,_Evidence,_Victim,_CrimeID);
+//END_REGION
+
+//REGION Evaluate result of performing the action
+// Finished reaction, allow user check for success (could have been interrupted)
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_NPC,"Confronting",_)
+AND
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_,_CrimeID)
+THEN
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess(_NPC,_DisturbanceType,_Evidence,_Victim,_CrimeID);
+
+// In case it's not a continuous crime, we'll get this one first
+IF
+OnCrimeResolved(_CrimeID,_,_,_,_,_)
+AND
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_,_CrimeID)
+THEN
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess(_NPC,_DisturbanceType,_Evidence,_Victim,_CrimeID);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_Disturbance_PerformWhenAvailable_CheckSuccess(1)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_CheckSuccess(1);
+
+// Success -> Finalize
+PROC
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+// User intercept
+NOT QRY_Disturbance_PerformWhenAvailable_Retry(_NPC,_DisturbanceType,_Evidence,_Victim,_CrimeID)
+THEN
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent(_NPC,1);
+DB_Disturbance_PerformWhenAvailable_CheckSuccess(1);
+
+// Too many tries -> Finalize
+PROC
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_CheckSuccess(1)
+AND
+DB_Disturbance_PerformWhenAvailable_TryCount(_NPC,_DisturbanceType,_Evidence,_Victim,_TryCount)
+AND
+_TryCount >= 3
+THEN
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent(_NPC,1);
+DB_Disturbance_PerformWhenAvailable_CheckSuccess(1);
+
+//Failure and not too many tries -> Requeue
+PROC
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_CheckSuccess(1)
+AND
+// Retry after a delay (to avoid spamming)
+Random(5000,_Delay)
+AND
+IntegerSum(500,_Delay,_FinalDelay)
+THEN
+// Will stop the old one, okay since we're going to start a new one
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent(_NPC,0);
+DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim);
+// Could have been started for another disturbance already; since the NPC is clearly still not yet available,
+// it's fine to cancel the old timer and restart it
+RealtimeObjectTimerCancel(_NPC,"GEB_Disturbance_PerformWhenAvailable_Requeue");
+RealtimeObjectTimerLaunch(_NPC,"GEB_Disturbance_PerformWhenAvailable_Requeue",_FinalDelay);
+
+IF
+ObjectTimerFinished((CHARACTER)_NPC,"GEB_Disturbance_PerformWhenAvailable_Requeue")
+AND
+DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim);
+PROC_Disturbance_PerformWhenAvailable_Reevaluate(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+QRY
+QRY_Disturbance_PerformWhenAvailable_Retry((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Finished((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Clean up and stop force-activation
+PROC
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent((CHARACTER)_NPC,(INTEGER)_Finish)
+AND
+DB_Disturbance_PerformWhenAvailable_ClearCurrent(1)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_ClearCurrent(1);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent((CHARACTER)_NPC,(INTEGER)_Finish)
+AND
+DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+THEN
+ObjectTimerCancel(_NPC,"GEB_PerformWhenAvailable_StartDelay");
+NOT DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+DB_Disturbance_PerformWhenAvailable_ClearCurrent(1);
+PROC_Disturbances_PerformWhenAvailable_ClearTryCountIfFinished(_NPC,_DisturbanceType,_Evidence,_Victim,_Finish);
+PROC_Disturbance_PerformWhenAvailable_Finished(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent((CHARACTER)_NPC,(INTEGER)_Finish)
+AND
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID);
+PROC_CRIME_StopForAllCriminals(_CrimeID);
+DB_Disturbance_PerformWhenAvailable_ClearCurrent(1);
+PROC_Disturbances_PerformWhenAvailable_ClearTryCountIfFinished(_NPC,_DisturbanceType,_Evidence,_Victim,_Finish);
+PROC_Disturbance_PerformWhenAvailable_Finished(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent((CHARACTER)_NPC,(INTEGER)_Finish)
+AND
+DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_DisturbanceType,_Evidence,_Victim);
+RealtimeObjectTimerCancel(_NPC,"GEB_Disturbance_PerformWhenAvailable_Requeue");
+DB_Disturbance_PerformWhenAvailable_ClearCurrent(1);
+PROC_Disturbances_PerformWhenAvailable_ClearTryCountIfFinished(_NPC,_DisturbanceType,_Evidence,_Victim,_Finish);
+PROC_Disturbance_PerformWhenAvailable_Finished(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent((CHARACTER)_NPC,1)
+AND
+DB_Disturbance_PerformWhenAvailable_ClearCurrent(1)
+THEN
+PROC_Disturbance_PerformWhenAvailable_MaybeCleanup(_NPC);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent((CHARACTER)_NPC,(INTEGER)_Finish)
+THEN
+PROC_Disturbance_PerformWhenAvailable_CheckQueue(_NPC);
+
+
+PROC
+PROC_Disturbances_PerformWhenAvailable_ClearTryCountIfFinished((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,1)
+THEN
+PROC_Disturbances_PerformWhenAvailable_ClearTryCount(_NPC,_DisturbanceType,_Evidence,_Victim);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Cleanup((CHARACTER)_NPC,_)
+THEN
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent(_NPC,1);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Cleanup((CHARACTER)_NPC,_)
+AND
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+PROC_Disturbances_PerformWhenAvailable_ClearTryCount(_NPC,_DisturbanceType,_Evidence,_Victim);
+PROC_Disturbance_PerformWhenAvailable_Finished(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Cleanup((CHARACTER)_NPC,_)
+THEN
+PROC_UnregisterLevelObject("GEB_PerformWhenAvailable",_NPC);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Cleanup((CHARACTER)_NPC,0)
+THEN
+// Give the DefaultCharacter.ReturnToIdlePos behaviour time to kick in (it will force-activate itself when it starts, so no need to wait until it ends)
+RealtimeObjectTimerLaunch(_NPC, "GEB_PerformWhenAvailable_StopForceActivate", 100);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Cleanup((CHARACTER)_NPC,1)
+THEN
+PROC_Disturbance_PerformWhenAvailable_StopForceActivate(_NPC);
+
+IF
+ObjectTimerFinished((CHARACTER)_NPC, "GEB_PerformWhenAvailable_StopForceActivate")
+THEN
+PROC_Disturbance_PerformWhenAvailable_StopForceActivate(_NPC); 
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_StopForceActivate((CHARACTER)_NPC)
+THEN
+RealtimeObjectTimerCancel(_NPC,"GEB_PerformWhenAvailable_StopForceActivate");
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_StopForceActivate((CHARACTER)_NPC)
+AND
+DB_Disturbance_PerformWhenAvailable_ForceUpdating(_NPC)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_ForceUpdating(_NPC);
+SetForceUpdate(_NPC,0);
+//END_REGION
+
+//REGION Misc cleanups
+// When not handling anything anymore and nothing is queued anymore, cleanup (mainly stop force activation)
+PROC
+PROC_Disturbance_PerformWhenAvailable_MaybeCleanup((CHARACTER)_NPC)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_Starting(_NPC,_,_,_,_)
+AND
+NOT DB_Disturbance_PerformWhenAvailable_DelayedRequeue(_NPC,_,_,_)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Cleanup(_NPC,0);
+
+// Finished without entering confrontation state or being Resolved -> was interrupted -> check whether
+// we need to re-queue.
+// Don't use PROC_CRIME_Finished so that the callers can use it to clean up stuff that they will check
+// in their QRY_Disturbance_PerformWhenAvailable_Retry() overload (and OnCrimeResolved is already handled
+// above)
+IF
+OnCrimeRemoved(_CrimeID,_,_,_,_,_)
+AND
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID)
+THEN
+PROC_Disturbance_PerformWhenAvailable_CheckSuccess(_NPC,_DisturbanceType,_Evidence,_Victim,_CrimeID);
+
+IF
+OnCrimeMergedWith(_CrimeID,_NewCrimeID)
+AND
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_CrimeID);
+DB_Disturbance_PerformWhenAvailable_Ongoing(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay,_NewCrimeID);
+
+PROC
+PROC_LevelUnloading(_)
+AND
+DB_Disturbance_PerformWhenAvailable_CurrentLevel(_NPC)
+THEN
+NOT DB_Disturbance_PerformWhenAvailable_CurrentLevel(_NPC);
+PROC_Disturbance_PerformWhenAvailable_Cleanup(_NPC,1);
+//END_REGION
+
+//REGION Evaluate what to do after becoming invalid
+QRY
+QRY_Disturbance_PerformWhenAvailable_ShouldCancel((CHARACTER)_NPC)
+AND
+DB_PermaDefeated(_NPC)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Disturbance_PerformWhenAvailable_ShouldCancel((CHARACTER)_NPC)
+AND
+DB_OffStage(_NPC)
+THEN
+// Offstage -> permanently cancel (don't know whether they'll come on stage again, and if/when they do,
+// these disturbances may not make sense anymore)
+DB_NOOP(1);
+
+QRY
+QRY_Disturbance_PerformWhenAvailable_ShouldCancel((CHARACTER)_NPC)
+AND
+DB_PartyMembers(_NPC)
+THEN
+DB_NOOP(1);
+
+// Should cancel everything -> finish
+PROC
+PROC_Disturbance_PerformWhenAvailable_Reevaluate((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_Delay)
+AND
+QRY_Disturbance_PerformWhenAvailable_ShouldCancel(_NPC)
+THEN
+PROC_Disturbance_PerformWhenAvailable_Cleanup(_NPC,0);
+PROC_Disturbance_PerformWhenAvailable_Finished(_NPC,_DisturbanceType,_Evidence,_Victim,0);
+
+// Otherwise (re)queue
+PROC
+PROC_Disturbance_PerformWhenAvailable_Reevaluate((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_Delay)
+AND
+NOT QRY_Disturbance_PerformWhenAvailable_ShouldCancel(_NPC)
+THEN
+DB_Disturbance_PerformWhenAvailable_Queued(_NPC,_DisturbanceType,_Evidence,_Victim,_Delay);
+// Also rechecks the queue
+PROC_Disturbance_PerformWhenAvailable_ClearCurrent(_NPC,0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

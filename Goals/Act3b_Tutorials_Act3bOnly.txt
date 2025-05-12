@@ -1,0 +1,36 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+DB_InRegion(_Player, S_CAMP_ELFSONG_Area_000_1f57deba-bbd8-4614-a77f-63a158d333d9 )
+AND
+DB_Players(_Player)
+THEN
+PROC_GLO_Tutorials_TrackedTimerStart(_Player, "GLO_Tutorials_ElfsongTutorial", 3000);
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished(_Player, "GLO_Tutorials_ElfsongTutorial")
+THEN
+PROC_ShowUnifiedTutorialForPlayer((CHARACTER)_Player, (UNIFIEDTUTORIAL)Elfsong_Dumbwaiter_1ac1174a-2a54-4539-b21c-f6dd9fef5856);
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord(_Player, "GLO_Tutorials_ElfsongTutorial");
+
+IF
+TurnStarted(_Player)
+AND
+DB_Is_InCombat(S_GLO_DoubtingArtist_3ae152be-8ff6-420c-81a0-68d6a55cd5bd, _CombatId)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Is_InCombat(_Player, _CombatId)
+AND
+IsAlly((CHARACTER)_Player, S_GLO_DoubtingArtist_3ae152be-8ff6-420c-81a0-68d6a55cd5bd, 0)
+AND
+HasAppliedStatus(S_GLO_DoubtingArtist_3ae152be-8ff6-420c-81a0-68d6a55cd5bd, "LOW_OSKARSBELOVED_OSKARPOSSESSED", 1)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_Player, (UNIFIEDTUTORIAL)Non_Lethal_Attacks_140eab81-0fe8-4c8b-8b28-1b4b632cda3e);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

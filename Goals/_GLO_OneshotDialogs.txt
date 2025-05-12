@@ -1,0 +1,320 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_OneShot_VoiceBarkTrigger_GlobalKinds("Global");
+DB_OneShot_VoiceBarkTrigger_GlobalKinds("GlobalIgnoreFailure");
+
+KBSECTION
+//REGION One Shot Automated Dialogs
+
+IF
+DB_OneShot_ADTrigger((TRIGGER)_Trigger,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_NPC)
+THEN
+DB_OneShotPlayerTrigger(_Trigger);
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,1);
+DB_OneShot_ADSpeakers(_Trigger,_Npc,1);
+
+IF
+DB_OneShot_ADTrigger((TRIGGER)_Trigger,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_NPC,(GUIDSTRING)_NPC2)
+THEN
+DB_OneShotPlayerTrigger(_Trigger);
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,2);
+DB_OneShot_ADSpeakers(_Trigger,_Npc,1);
+DB_OneShot_ADSpeakers(_Trigger,_Npc2,2);
+
+PROC
+PROC_DoStartOneShotAD((CHARACTER)_Player,(TRIGGER)_Trigger)
+AND
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,1)
+AND
+DB_OneShot_ADSpeakers(_Trigger,_Npc,1)
+THEN
+PROC_TryStartAD(_Dialog,_Npc);
+
+PROC
+PROC_DoStartOneShotAD((CHARACTER)_Player,(TRIGGER)_Trigger)
+AND
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,2)
+AND
+DB_OneShot_ADSpeakers(_Trigger,_Npc,1)
+AND
+DB_OneShot_ADSpeakers(_Trigger,_Npc2,2)
+THEN
+PROC_TryStartAD(_Dialog,_Npc,_Npc2);
+
+PROC
+PROC_ClearOneShotADCount((TRIGGER)_Trigger)
+AND
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,1)
+AND
+DB_OneShot_ADTrigger((TRIGGER)_Trigger,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_NPC)
+THEN
+NOT DB_OneShot_ADTrigger(_Trigger,_Dialog,_NPC);
+
+PROC
+PROC_ClearOneShotADCount((TRIGGER)_Trigger)
+AND
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,2)
+AND
+DB_OneShot_ADTrigger((TRIGGER)_Trigger,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_NPC,(GUIDSTRING)_NPC2)
+THEN
+NOT DB_OneShot_ADTrigger(_Trigger,_Dialog,_NPC,_NPC2);
+
+PROC
+PROC_ClearOneShotADSpeakers((TRIGGER)_Trigger)
+AND
+DB_OneShot_ADSpeakers(_Trigger,_Npc,_Count)
+THEN
+NOT DB_OneShot_ADSpeakers(_Trigger,_Npc,_Count);
+
+PROC
+PROC_OneShotADCleanup((TRIGGER)_Trigger)
+THEN
+PROC_ClearOneShotADCount(_Trigger);
+PROC_ClearOneShotADSpeakers(_Trigger);
+
+PROC
+PROC_RemoveOneShotAD((TRIGGER)_Trigger)
+THEN
+PROC_OneShotADCleanup(_Trigger);
+PROC_TriggerUnregisterForPlayers(_Trigger);
+NOT DB_OneShotPlayerTrigger(_Trigger);
+
+IF
+DB_PermaDefeated(_Npc)
+AND
+DB_OneShot_ADSpeakers(_Trigger,_Npc,_)
+THEN
+PROC_RemoveOneShotAD(_Trigger);
+
+PROC
+PROC_OneShotTriggerEntered((CHARACTER)_Player,(TRIGGER)_Trigger)
+AND
+DB_OneShot_ADSpeakerCount(_Trigger,_,_)
+AND
+DB_OneShot_ADSpeakers(_Trigger,_Npc,1)
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+QRY_SpeakerIsAvailable(_Npc)
+THEN
+PROC_DoStartOneShotAD(_Player,_Trigger);
+PROC_OneShotADCleanup(_Trigger);
+
+//if the dialog is started (manually), cleanup so this doesn't get started again
+IF
+AutomatedDialogStarted(_Dialog,_)
+AND
+DB_OneShot_ADSpeakerCount(_Trigger,_Dialog,_Count)
+THEN
+PROC_OneShotADCleanup(_Trigger);
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+//END_REGION
+
+//REGION One Shot Voice Bark
+
+IF
+DB_OneShot_VoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark)
+THEN
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"PerUserAndNearbyPlayers");
+
+// Possible values for _TrackingKind:
+//  * "PerUserAndNearbyPlayers" (default): same as QRY_OncePerUserAndNearbyPlayers()
+//  * "Global": until the voicebark succeeded once
+//  * "GlobalIgnoreFailure": try once, then never again even if the voicebark failed
+
+IF
+DB_OneShot_VoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark,(STRING)_TrackingKind)
+THEN
+DB_OneShot_VoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark,(STRING)_TrackingKind, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_OneShot_VoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark,(STRING)_TrackingKind, _)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_OneShot_VoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark,(STRING)_TrackingKind, (TRIGGER)_PassedTrigger)
+AND
+_PassedTrigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_TriggerRegisterForPlayers(_PassedTrigger);
+
+// Cleanup
+PROC
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_Dialog,_TrackingKind, _PassedTrigger)
+AND
+_PassedTrigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_TriggerUnregisterForPlayers(_PassedTrigger);
+
+PROC
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_Dialog,_TrackingKind, _PassedTrigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_Dialog,_TrackingKind, _PassedTrigger);
+
+PROC
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)_Trigger, (VOICEBARKRESOURCE)_VoiceBark)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_Dialog,_TrackingKind)
+THEN
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_Dialog,_TrackingKind);
+
+PROC
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)_Trigger, (VOICEBARKRESOURCE)_VoiceBark)
+AND
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,_VoiceBark, (TRIGGER)_PassedTrigger)
+THEN
+NOT DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,_VoiceBark, (TRIGGER)_PassedTrigger);
+
+
+// Global once
+IF
+EnteredTrigger(_Player,_Trigger)
+AND
+DB_Players(_Player)
+AND
+NOT DB_CantTalk(_Player)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,_TrackingKind, _PassedTrigger)
+AND
+DB_OneShot_VoiceBarkTrigger_GlobalKinds(_TrackingKind)
+AND
+NOT DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_,_,_)
+THEN
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,_VoiceBark,_PassedTrigger);
+PROC_OneShot_VoiceBarkStartGlobal(_Player, _Trigger, _VoiceBark, _TrackingKind, _PassedTrigger);
+
+PROC
+PROC_OneShot_VoiceBarkStartGlobal((CHARACTER)_Player, (TRIGGER)_Trigger, (VOICEBARKRESOURCE)_VoiceBark, (STRING)_TrackingKind, (TRIGGER)_PassedTrigger)
+THEN
+StartVoiceBark(_VoiceBark,_Player);
+
+PROC
+PROC_OneShot_VoiceBarkStartGlobal((CHARACTER)_Player, (TRIGGER)_Trigger, (VOICEBARKRESOURCE)_VoiceBark, "GlobalIgnoreFailure", (TRIGGER)_PassedTrigger)
+THEN
+// Will take care of unregistering the trigger
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"GlobalIgnoreFailure", (TRIGGER)_PassedTrigger);
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"GlobalIgnoreFailure");
+
+IF
+VoiceBarkStarted(_VoiceBark,_)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"Global", (TRIGGER)_PassedTrigger)
+THEN
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"Global", (TRIGGER)_PassedTrigger);
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"Global");
+
+IF
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger, _Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger)
+AND
+NOT DB_OneShot_VoiceBarkTrigger(_Trigger,_,_,_)
+THEN
+NOT DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger);
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+
+// Once per user/local players
+IF
+EnteredTrigger(_Player,_Trigger)
+AND
+DB_Players(_Player)
+AND
+NOT DB_CantTalk(_Player)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"PerUserAndNearbyPlayers", (TRIGGER)_PassedTrigger)
+AND
+QRY_OncePerUserAndNearbyPlayers_VoiceBarkID(_VoiceBark)
+AND
+DB_QRYRTN_OncePerUserAndNearbyPlayers_VoiceBarkID(_VBID)
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,_VBID)
+AND
+NOT DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_,_VoiceBark,_)
+THEN
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger);
+StartVoiceBark(_VoiceBark,_Player);
+
+IF
+VoiceBarkStarted(_VoiceBark,_)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,"PerUserAndNearbyPlayers", (TRIGGER)_PassedTrigger)
+AND
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,_VoiceBark, (TRIGGER)_PassedTrigger)
+AND
+QRY_OncePerUserAndNearbyPlayers_VoiceBarkID(_VoiceBark)
+AND
+DB_QRYRTN_OncePerUserAndNearbyPlayers_VoiceBarkID(_VBID)
+AND
+// Actually set the OncePerUser DB once the VB has started
+QRY_OncePerUserAndNearbyPlayers(_Player,_VBID)
+THEN
+DB_NOOP(1);
+
+// Cleanup
+IF
+VoiceBarkFailed(_VoiceBark)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,_, _)
+AND
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger)
+THEN
+NOT DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger);
+
+IF
+VoiceBarkEnded(_VoiceBark,_)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark,_,_)
+AND
+DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger)
+THEN
+NOT DB_OneShot_VoiceBarkTrigger_InProgress(_Trigger,_Player,(VOICEBARKRESOURCE)_VoiceBark, (TRIGGER)_PassedTrigger);
+
+// Helper
+QRY
+QRY_OncePerUserAndNearbyPlayers_VoiceBarkID((VOICEBARKRESOURCE)_VoiceBark)
+AND
+GUIDToString(_VoiceBark,_VBString)
+AND
+Concatenate("OneShot_VoiceBarkTrigger_",_VBString,_Mutex)
+THEN
+SysClear("DB_QRYRTN_OncePerUserAndNearbyPlayers_VoiceBarkID",1);
+DB_QRYRTN_OncePerUserAndNearbyPlayers_VoiceBarkID(_Mutex);
+
+//Cancel the voicebark
+IF
+EnteredTrigger(_Character, _CancelTrigger)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark, _TrackingKind, _CancelTrigger)
+AND
+DB_OneShot_VoiceBarkTrigger_GlobalKinds(_TrackingKind)
+THEN
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)_Trigger,(VOICEBARKRESOURCE)_VoiceBark);
+
+//Cancel the voicebark
+IF
+EnteredTrigger(_Player, _CancelTrigger)
+AND
+DB_OneShot_VoiceBarkTrigger(_Trigger,_VoiceBark, "PerUserAndNearbyPlayers", _CancelTrigger)
+AND
+QRY_OncePerUserAndNearbyPlayers_VoiceBarkID(_VoiceBark)
+AND
+DB_QRYRTN_OncePerUserAndNearbyPlayers_VoiceBarkID(_VBID)
+AND
+// Actually set the OncePerUser DB once the VB has started
+QRY_OncePerUserAndNearbyPlayers(_Player,_VBID)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

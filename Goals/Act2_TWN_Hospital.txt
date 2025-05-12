@@ -1,0 +1,486 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_TWN_Hospital_Assistants((CHARACTER)S_TWN_Hospital_ZealousAssistant_000_2250bda0-cf27-4567-8a71-b1a066113eb7);
+DB_TWN_Hospital_Assistants((CHARACTER)S_TWN_Hospital_ZealousAssistant_001_e2c2a930-2eb5-419f-9020-c141a0fd0753);
+DB_TWN_Hospital_Assistants((CHARACTER)S_TWN_Hospital_ZealousAssistant_002_a9e86a16-f426-4772-a187-39256c4568a1);
+DB_TWN_Hospital_Assistants((CHARACTER)S_TWN_Hospital_ZealousAssistant_003_2be9d074-245f-4f4f-9385-260d08f4ea73);
+
+DB_Dialogs((CHARACTER)S_TWN_Hospital_ZealousAssistant_000_2250bda0-cf27-4567-8a71-b1a066113eb7, (DIALOGRESOURCE)TWN_Hospital_ZealousAssistant_000_553f77c3-f655-9b03-70ac-7ab1a25fe12c);
+DB_Dialogs((CHARACTER)S_TWN_Hospital_ZealousAssistant_001_e2c2a930-2eb5-419f-9020-c141a0fd0753, (DIALOGRESOURCE)TWN_Hospital_ZealousAssistant_001_09947178-f775-58c3-6b86-51b1630127d3);
+DB_Dialogs((CHARACTER)S_TWN_Hospital_ZealousAssistant_002_a9e86a16-f426-4772-a187-39256c4568a1, (DIALOGRESOURCE)TWN_Hospital_ZealousAssistant_002_3ac18d9d-c6e6-9433-b91d-d28cdf19cf1b);
+DB_Dialogs((CHARACTER)S_TWN_Hospital_ZealousAssistant_003_2be9d074-245f-4f4f-9385-260d08f4ea73, (DIALOGRESOURCE)TWN_Hospital_ZealousAssistant_003_96473479-8f5b-dedb-a17e-e254c4d45e81);
+DB_Dialogs((CHARACTER)S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, (DIALOGRESOURCE)TWN_Hospital_Patient_00d74fa7-0695-686f-896f-48f4aa355129);
+
+//REGION Patient setup
+PROC_SetCanFight(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, 0);
+SetCanJoinCombat(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, 0);
+SetTag(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, IGNORE_DANGEROUS_SURFACES_bbf62461-4af4-4631-807a-eb0bd988d9a6); // the poor patient had his eyes removed
+SetTag(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9);
+SetFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb, S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494);
+PROC_SelfHealing_Disable((CHARACTER)S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494);
+PROC_CharacterDisableAllCrimes(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, 1); 
+
+TriggerRegisterForCharacter(S_TWN_Hospital_PatientEscapeArea_0bd60bd7-81ef-4bea-b41e-4b1612836d20, S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)TWN_Hospital_Event_ReleasePatient_b8dd8f9e-a7a1-47c8-a27f-2a84f5201aa4, (DIALOGRESOURCE)TWN_Hospital_Patient_00d74fa7-0695-686f-896f-48f4aa355129);
+DB_GLO_DieFlag((FLAG)TWN_Hospital_Event_KillPatientWithClear_51591e21-b8b1-4ffb-a9c8-d79e55d7370f, (CHARACTER)S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000);
+
+Use(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770, "TWN_Hospital_PatientOnChair");
+//END_REGION
+
+DB_GlobalFlagReactionAfterDialog((FLAG)TWN_Hospital_Event_KillPatient_e2659889-0153-4b54-9b91-d5bf91d69c70, (DIALOGRESOURCE)TWN_Hospital_Surgeon_10b263cd-b704-9eb2-71f9-2c7f6eb4739b);
+DB_GlobalFlagReactionAfterDialog((FLAG)TWN_Hospital_Event_MakeNursesKillEachOther_eeaccd5b-792a-4aa2-8503-17e0075422c7, (DIALOGRESOURCE)TWN_Hospital_Surgeon_10b263cd-b704-9eb2-71f9-2c7f6eb4739b);
+
+//Surgeon Teaching Methods
+DB_BookFlags(S_TWN_Hospital_SurgeonTeachingMethods_84eff29e-2768-4057-b4f0-97e89b089c2e,TWN_Hospital_State_KnowsSurgeonTeachingMethods_2c9722f5-8349-4f42-9aa8-6ec304ad6282);
+
+DB_SceneManager(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, "TWN_Hospital_Operation");
+DB_SceneManager(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_Hospital_Operation");
+DB_SceneNoHostileContinuousDisturbance("TWN_Hospital_Operation");
+
+DB_PermaDefeatedFlag((CHARACTER)S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, TWN_Hospital_State_PatientPermaDefeated_482ffbdd-4df2-4d1f-af76-e46ffdd2bdfc);
+DB_GLO_CompoundFlag(TWN_Hospital_State_PatientDead_482ffbdd-4df2-4d1f-af76-e46ffdd2bdfc, TWN_Hospital_State_PatientReleased_2d47b88f-3c8e-4f74-8833-6934c7a6b70d);
+
+//REGION Reception area
+
+DB_Dialogs(S_TWN_Hospital_Reception_Receptionist_3baf6794-2c83-4bd3-b2dd-70b4a9f98503, (DIALOGRESOURCE)TWN_Hospital_Reception_Receptionist_4cd1d078-0986-0370-2b67-b44db32af089);
+
+//Entrance checkpoint
+
+DB_GlobalFlagReactionAfterDialog((FLAG)TWN_Hospital_Reception_State_InLine_fd4c6ba1-e9f9-c8f5-e186-de837786d82a, (DIALOGRESOURCE)TWN_Hospital_Reception_Receptionist_4cd1d078-0986-0370-2b67-b44db32af089);
+
+DB_TrespassTrigger(S_TWN_Hospital_Reception_Trespass_901ec9f8-4307-4940-a884-e6f226071869,S_TWN_Hospital_Reception_OutTrigger_8f53c658-1ae4-42c8-813b-2451d05d73ea,"TWN_Hospital_Trespass");
+
+PROC_TriggerRegisterForPlayers(S_TWN_Reception_ClearenceArea_37604104-5c59-41cb-b1e3-5ef7789f295d);
+
+//END_REGION Reception area
+
+PROC_TriggerRegisterForPlayers(S_TWN_BloodBank_AstarionReactionTrigger_0a838d1b-8958-4452-a042-f8414dcfef3d);
+
+DB_ItemDialog_NarratorAD((ITEM)S_TWN_Hospital_EntrancePlaque_000_4eacc369-956b-4e85-b741-cdbd3d5a629a, (DIALOGRESOURCE)TWN_HospitalPlaque_AD_b24a19a6-054b-bc5c-994e-bdc877b52326);
+DB_ItemDialog_NarratorAD((ITEM)S_TWN_Hospital_EntrancePlaque_001_16e5c64f-0993-480a-bec5-77b694443ab7, (DIALOGRESOURCE)TWN_HospitalPlaque_AD_b24a19a6-054b-bc5c-994e-bdc877b52326);
+
+DB_GLO_DefeatCounter(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, "TWN_Hospital_SurgeonAndNurses");
+DB_GLO_DefeatCounter(S_TWN_Hospital_ZealousAssistant_000_2250bda0-cf27-4567-8a71-b1a066113eb7, "TWN_Hospital_SurgeonAndNurses");
+DB_GLO_DefeatCounter(S_TWN_Hospital_ZealousAssistant_001_e2c2a930-2eb5-419f-9020-c141a0fd0753, "TWN_Hospital_SurgeonAndNurses");
+DB_GLO_DefeatCounter(S_TWN_Hospital_ZealousAssistant_002_a9e86a16-f426-4772-a187-39256c4568a1, "TWN_Hospital_SurgeonAndNurses");
+DB_GLO_DefeatCounter(S_TWN_Hospital_ZealousAssistant_003_2be9d074-245f-4f4f-9385-260d08f4ea73, "TWN_Hospital_SurgeonAndNurses");
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("TWN_Hospital_SurgeonAndNurses", (FLAG)TWN_Hospital_State_Safe_fd2c3932-9fe4-4e21-ab51-1c8e71e82e02);
+
+//REGION Surgeon combat
+DB_TWN_Hospital_SurgeonSpells("Target_SurgeryAttack_Bonesaw_Surgeon", "SURGEON_ENABLE_ATTACK_BONESAW");
+DB_TWN_Hospital_SurgeonSpells("Target_SurgeryAttack_Leech_Surgeon", "SURGEON_ENABLE_ATTACK_LEECH");
+DB_TWN_Hospital_SurgeonSpells("Target_SurgeryAttack_Syringe_Surgeon", "SURGEON_ENABLE_ATTACK_SYRINGE");
+DB_TWN_Hospital_SurgeonSpells("Target_SurgeryAttack_Trepan_Surgeon", "SURGEON_ENABLE_ATTACK_TREPAN");
+//END_REGION 
+
+// Combat NPC Reactivity
+DB_CombatReact_AD_OnCast(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_InstrumentRequest_001_Combat_c80f1b4a-09dc-8907-f9eb-4914bb23d047, "Target_SurgeryInstruRequest_Surgeon");
+DB_CombatReact_AD_OnCast(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_InstrumentRequest_002_Combat_b10186ac-37a7-b149-8a25-8b49b6f9fff6, "Target_SurgeryInstruRequest_Surgeon");
+DB_CombatReact_AD_OnCast(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_InstrumentRequest_003_Combat_e5eecb1b-f060-acd4-0ded-65c59d7fb821, "Target_SurgeryInstruRequest_Surgeon");
+DB_CombatReact_AD_OnCast(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_InstrumentRequest_004_Combat_884cb249-89f3-6313-f516-889cd318a099, "Target_SurgeryInstruRequest_Surgeon");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_Bonesaw_Combat_f34d88ea-e6fb-ae12-b6d4-300e02f648e0, "SURGEON_ENABLE_ATTACK_BONESAW");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_Leech_Combat_f5529b8b-45b4-b6fe-257f-3fd25fc0e54f, "SURGEON_ENABLE_ATTACK_LEECH");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_Syringe_Combat_a66d4039-38d4-366f-e18b-d853e6a0b22a, "SURGEON_ENABLE_ATTACK_SYRINGE");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (DIALOGRESOURCE)TWN_Hospital_AD_Surgeon_Trepan_Combat_45d6dae5-bb53-7af8-747f-8c81c8c5ae57, "SURGEON_ENABLE_ATTACK_TREPAN");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_ZealousAssistant_000_2250bda0-cf27-4567-8a71-b1a066113eb7, (DIALOGRESOURCE)TWN_Hospital_AD_ResponseToSurgeon_000_Combat_5fedc7e1-6922-796d-d115-076884b46555, "SURGEON_NURSE_REQUEST_BUFF");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_ZealousAssistant_001_e2c2a930-2eb5-419f-9020-c141a0fd0753, (DIALOGRESOURCE)TWN_Hospital_AD_ResponseToSurgeon_001_Combat_cd0a0084-943c-a686-5e27-766144e99840, "SURGEON_NURSE_REQUEST_BUFF");
+DB_CombatReact_AD_AppliedStatus(S_TWN_Hospital_ZealousAssistant_003_2be9d074-245f-4f4f-9385-260d08f4ea73, (DIALOGRESOURCE)TWN_Hospital_AD_ResponseToSurgeon_003_Combat_57369e65-b169-1d7c-f3de-e9c6565d436d, "SURGEON_NURSE_REQUEST_BUFF");
+
+DB_HasItemEvent((ITEM)S_TWN_Hospital_ChairRestraintsKey_0848f66f-e4bd-4057-ada7-2c45dadd3165, (FLAG)TWN_Hospital_State_HasSurgicalBedKey_b5dbbbb5-6b24-4451-a3a5-92778311d310);
+
+SetOnStage(S_HospitalLiftTop_a6a53109-3772-4cc6-9212-e35ef0b35c3d, 0);
+SetOnStage(S_HospitalLiftMiddle_85391136-a631-40e1-a2e1-29015d637e42, 0);
+SetOnStage(S_HospitalLiftLeverBottom_798ffdc6-c24d-417e-ba38-bca63726c71d, 0);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("releasepatient")
+THEN
+PROC_TWN_Hospital_ReleasePatient();
+
+IF
+TextEvent("usechair")
+THEN
+Use(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770, "TWN_Hospital_PatientOnChair");
+//END_REGION Debug
+
+//REGION Init
+IF
+ReposeAdded(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770)
+THEN
+ApplyStatus(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_HOSPITAL_UNDEROPERATION", -1.0);
+
+IF
+StatusApplied(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_HOSPITAL_UNDEROPERATION", _, _)
+THEN
+Lock(S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770, "TWN_Hospital_ChairRestraintsKey");
+
+IF
+DB_TWN_Hospital_Assistants(_Assistant)
+AND
+DB_TWN_Bosses_SpotTrigger((CHARACTER)S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, _SpotID, _SpotTrigger)
+THEN
+DB_SceneManager(_Assistant, "TWN_Hospital_Operation");
+DB_GLO_DieFlag((FLAG)TWN_Hospital_Event_MakeNursesKillEachOtherWithClear_1047d1d0-7c2e-4531-b9f2-7aca6bd2e02f, _Assistant, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(_Assistant, _SpotID, _SpotTrigger);
+
+IF
+FlagSet((FLAG)TWN_Hospital_Event_KillPatient_e2659889-0153-4b54-9b91-d5bf91d69c70, _Speaker, _ID)
+THEN
+SetFlag((FLAG)TWN_Hospital_Event_KillPatientWithClear_51591e21-b8b1-4ffb-a9c8-d79e55d7370f, _Speaker, _ID);
+
+IF
+FlagSet((FLAG)TWN_Hospital_Event_MakeNursesKillEachOther_eeaccd5b-792a-4aa2-8503-17e0075422c7, _Speaker, _ID)
+THEN
+SetFlag((FLAG)TWN_Hospital_Event_MakeNursesKillEachOtherWithClear_1047d1d0-7c2e-4531-b9f2-7aca6bd2e02f, _Speaker, _ID);
+//END_REGION Init
+
+//REGION Main Dialog
+QRY
+QRY_SelectCustomDialog(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, _Player)
+AND
+NOT DB_PermaDefeated(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381)
+AND
+NOT DB_CantTalk(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381)
+AND
+NOT DB_TWN_Hospital_SceneOver(1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)TWN_Hospital_Surgeon_10b263cd-b704-9eb2-71f9-2c7f6eb4739b, S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, _Player);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)TWN_Hospital_Surgeon_10b263cd-b704-9eb2-71f9-2c7f6eb4739b, (INTEGER)_ID)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494);
+PROC_DialogAddSpeakingActor(_ID, S_TWN_Hospital_ZealousAssistant_000_2250bda0-cf27-4567-8a71-b1a066113eb7);
+PROC_DialogAddSpeakingActor(_ID, S_TWN_Hospital_ZealousAssistant_001_e2c2a930-2eb5-419f-9020-c141a0fd0753);
+PROC_DialogAddSpeakingActor(_ID, S_TWN_Hospital_ZealousAssistant_002_a9e86a16-f426-4772-a187-39256c4568a1);
+PROC_DialogAddSpeakingActor(_ID, S_TWN_Hospital_ZealousAssistant_003_2be9d074-245f-4f4f-9385-260d08f4ea73);
+
+IF
+FlagSet(TWN_Hospital_Event_KillPatient_e2659889-0153-4b54-9b91-d5bf91d69c70, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+PROC_SceneManager_RemoveFromScene(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_Hospital_Operation");
+
+IF
+FlagSet((FLAG)TWN_Hospital_Event_MakeNursesKillEachOther_eeaccd5b-792a-4aa2-8503-17e0075422c7, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+PROC_SceneOver("TWN_Hospital_Operation");
+
+IF
+FlagSet(TWN_Hospital_State_PeacefulResolution_3830c1aa-6271-4af8-ba6c-0537bad1c624, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+PROC_SceneOver("TWN_Hospital_Operation");
+//END_REGION Main Dialog
+
+//REGION Scene interruption & releasing the patient
+// Interrupting the scene makes the NPCs hostile
+PROC 
+PROC_SceneInterrupted(_, _, "TWN_Hospital_Operation", _)
+THEN
+PROC_TWN_Hospital_SceneCancelled();
+
+PROC 
+PROC_SceneInterrupted(_, _, "TWN_Hospital_Operation", "Died")
+THEN
+SetFlag(TWN_Hospital_State_OperationParticipantDied_a8a7c54f-5cbc-4270-b368-77a3b322885d, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+Unlocked(S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770, _, _)
+AND
+QRY_TWN_Hospital_PatientRestrained()
+THEN
+PROC_TWN_Hospital_ReleasePatient();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)TWN_Hospital_Event_ReleasePatient_b8dd8f9e-a7a1-47c8-a27f-2a84f5201aa4)
+THEN
+Unlock((ITEM)S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)TWN_Hospital_Event_ReleasePatient_b8dd8f9e-a7a1-47c8-a27f-2a84f5201aa4)
+AND
+QRY_TWN_Hospital_PatientRestrained()
+THEN
+PROC_TWN_Hospital_ReleasePatient();
+
+QRY
+QRY_TWN_Hospital_PatientRestrained()
+AND
+HasActiveStatus(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_HOSPITAL_UNDEROPERATION", 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TWN_Hospital_ReleasePatient()
+AND
+NOT DB_GlobalFlag(TWN_Hospital_State_PatientReleased_2d47b88f-3c8e-4f74-8833-6934c7a6b70d)
+THEN
+PROC_TWN_Hospital_SceneCancelled();
+RemoveStatus(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_HOSPITAL_UNDEROPERATION");
+PROC_GlobalSetFlagAndCache(TWN_Hospital_State_PatientReleased_2d47b88f-3c8e-4f74-8833-6934c7a6b70d);
+PROC_TryStartAD((DIALOGRESOURCE)TWN_Hospital_Patient_AD_78e2bdef-50a0-ea30-ad81-aa2693c4fda1, S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494);
+PROC_DisappearOutOfSightTo((CHARACTER)S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, S_TWN_Hospital_PatientEscapePosition_2904fff5-f507-440d-b54c-23bc11120c59, "Run", 0, "");
+
+PROC
+PROC_TWN_Hospital_SceneCancelled()
+AND
+GetFaction(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, _Faction)
+THEN
+PROC_SceneOver("TWN_Hospital_Operation");
+DB_TWN_Hospital_SceneOver(1);
+PROC_SetRelationToPlayers(_Faction, 0);
+PROC_SpotPlayers_StopSpotting(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, "TWN_Hospital_Surgeon");
+PROC_ForceStopDialog(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381);
+//END_REGION Scene interruption & releasing the patient
+
+//REGION Blood Bank
+IF
+EnteredTrigger(_Player, S_TWN_BloodBank_AstarionReactionTrigger_0a838d1b-8958-4452-a042-f8414dcfef3d)
+AND
+IsInPartyWith(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, 1)
+AND
+GetDistanceTo(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, _Dist)
+AND
+_Dist < 8.0
+AND
+QRY_OnlyOnce("TWN_BloodBankApproached")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)TWN_ApproachedBloodBankInventoryList_PAD_7ad869f1-904c-88d3-8abe-7a0fbfec4596, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+PROC_TriggerUnregisterForPlayers(S_TWN_BloodBank_AstarionReactionTrigger_0a838d1b-8958-4452-a042-f8414dcfef3d);
+
+IF
+AddedTo(S_TWN_BloodBankInventoryList_ccf165b7-1cf6-4111-a8a5-54526a50396d, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+IsInPartyWith(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, 1)
+AND
+GetDistanceTo(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, _Dist)
+AND
+_Dist < 8.0
+AND
+QRY_OnlyOnce("TWN_BloodBankInventoryList")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)TWN_InteractedWithBloodBankInventoryList_PAD_c770e379-31e0-f7d0-45a2-2f541a240e52, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+
+IF
+GameBookInterfaceClosed(S_TWN_BloodBankInventoryList_ccf165b7-1cf6-4111-a8a5-54526a50396d, _Player)
+AND
+IsInPartyWith(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, 1)
+AND
+GetDistanceTo(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, _Dist)
+AND
+_Dist < 8.0
+AND
+QRY_OnlyOnce("TWN_BloodBankInventoryList")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)TWN_InteractedWithBloodBankInventoryList_PAD_c770e379-31e0-f7d0-45a2-2f541a240e52, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+//END_REGION Blood Bank
+
+//REGION Reception area
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(TWN_Hospital_Reception_State_InLine_fd4c6ba1-e9f9-c8f5-e186-de837786d82a)
+AND
+NOT DB_GlobalFlag(TWN_Hospital_Reception_State_GainedAcess_f2f3f438-e6a4-4114-aaef-777db362be6a)
+THEN
+PROC_RemoveDBTrespassTrigger(S_TWN_Hospital_Reception_Trespass_901ec9f8-4307-4940-a884-e6f226071869,S_TWN_Hospital_Reception_OutTrigger_8f53c658-1ae4-42c8-813b-2451d05d73ea);
+DB_TrespassTrigger(S_TWN_Hospital_Reception_Tresspass_InLine_02ad008a-5aa2-424e-9035-fa320c239127,S_TWN_Hospital_Reception_OutTrigger_InLine_83559f44-29f7-4e72-adcb-ccccd8f8c391,"TWN_Hospital_Trespass");
+
+IF
+DB_GlobalFlag(TWN_Hospital_Reception_State_GainedAcess_f2f3f438-e6a4-4114-aaef-777db362be6a)
+THEN
+PROC_TWN_Reception_ClearTrespass();
+
+IF
+DB_GlobalFlag(TWN_Hospital_State_SurgeonDead_0820e94c-7007-4459-b935-2d33fbbf6aa9)
+THEN
+PROC_TWN_Reception_ClearTrespass();
+
+IF
+EnteredTrigger(_Player,S_TWN_Reception_ClearenceArea_37604104-5c59-41cb-b1e3-5ef7789f295d) //trigger only registered for players
+THEN
+PROC_TWN_Reception_ClearTrespass();
+
+PROC
+PROC_TWN_Reception_ClearTrespass()
+THEN
+PROC_RemoveDBTrespassTrigger(S_TWN_Hospital_Reception_Trespass_901ec9f8-4307-4940-a884-e6f226071869,S_TWN_Hospital_Reception_OutTrigger_8f53c658-1ae4-42c8-813b-2451d05d73ea);
+PROC_RemoveDBTrespassTrigger(S_TWN_Hospital_Reception_Tresspass_InLine_02ad008a-5aa2-424e-9035-fa320c239127,S_TWN_Hospital_Reception_OutTrigger_InLine_83559f44-29f7-4e72-adcb-ccccd8f8c391);
+PROC_TriggerUnregisterForPlayers(S_TWN_Reception_ClearenceArea_37604104-5c59-41cb-b1e3-5ef7789f295d);
+
+//trespass crime procs this particular override of PROC_DialogFlagSetup
+PROC
+PROC_DialogFlagSetup(TWN_Hospital_Reception_Receptionist_4cd1d078-0986-0370-2b67-b44db32af089,S_TWN_Hospital_Reception_Receptionist_3baf6794-2c83-4bd3-b2dd-70b4a9f98503,_Player,_,_,_)
+AND
+GetHitpointsPercentage(_Player,_HP)
+AND
+_HP<=40.0
+THEN
+SetFlag((FLAG)TWN_Hospital_Reception_State_LowHP_49c94af4-756c-fabd-ed7a-a88005598aed,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//clicking on the receptionist triggers this override of PROC_DialogFlagSetup
+PROC
+PROC_DialogFlagSetup(TWN_Hospital_Reception_Receptionist_4cd1d078-0986-0370-2b67-b44db32af089,S_TWN_Hospital_Reception_Receptionist_3baf6794-2c83-4bd3-b2dd-70b4a9f98503,_Player)
+AND
+GetHitpointsPercentage(_Player,_HP)
+AND
+_HP<=40.0
+THEN
+SetFlag((FLAG)TWN_Hospital_Reception_State_LowHP_49c94af4-756c-fabd-ed7a-a88005598aed,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+DialogEnded(TWN_Hospital_Reception_Receptionist_4cd1d078-0986-0370-2b67-b44db32af089,_)
+THEN
+ClearFlag((FLAG)TWN_Hospital_Reception_State_LowHP_49c94af4-756c-fabd-ed7a-a88005598aed,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//END_REGION Reception area
+
+//REGION Combat support
+IF
+CastedSpell(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, _Spell, _, _, _)
+AND
+DB_TWN_Hospital_SurgeonSpells(_Spell, _Status)
+AND
+QRY_TWN_Hospital_ClearStoredSpell()
+THEN
+DB_TWN_Hospital_LastSurgeonAttack(_Spell);
+
+QRY
+QRY_TWN_Hospital_ClearStoredSpell()
+AND
+DB_TWN_Hospital_LastSurgeonAttack(_Spell)
+THEN
+NOT DB_TWN_Hospital_LastSurgeonAttack(_Spell);
+
+IF
+AnimationEvent(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, "Script_SpellFinished", _)
+AND
+DB_TWN_Hospital_LastSurgeonAttack(_LastSpell)
+AND
+DB_TWN_Hospital_SurgeonSpells(_LastSpell, _Status)
+THEN
+NOT DB_TWN_Hospital_LastSurgeonAttack(_LastSpell);
+RemoveStatus(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, _Status);
+//END_REGION
+
+//REGION Nurses kill Surgeon
+IF
+FlagSet((FLAG)TWN_Hospital_Event_KillPatient_e2659889-0153-4b54-9b91-d5bf91d69c70, _, _)
+THEN
+TeleportTo(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, (TRIGGER)S_TWN_Hospital_PatientCinematicDeathPos_bfaf1100-040a-43ee-ac89-cc5da75c5248, "TWN_Hospital_PatientTeleportedToDeathPos", 0, 0, 0, 1, 1);
+
+IF
+EntityEvent(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, "TWN_Hospital_PatientTeleportedToDeathPos")
+THEN
+Die(S_TWN_Hospital_Patient_70280618-041e-4029-b0b8-9b9cb4b7c494, DEATHTYPE.Physical, S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, 0, 1, 0.0);
+Use((CHARACTER)S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, (ITEM)S_TWN_Hospital_Chair_5cf9348a-4162-484d-833d-50671254f770, "");
+//END_REGION
+
+//REGION PAD After surgeon dies
+IF
+DialogStarted((DIALOGRESOURCE)TWN_Hospital_Surgeon_10b263cd-b704-9eb2-71f9-2c7f6eb4739b, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+DB_TWN_Hospital_PlayerForDeathPAD(_Player);
+
+IF
+FlagSet((FLAG)TWN_Hospital_State_SurgeonPermaDefeated_0820e94c-7007-4459-b935-2d33fbbf6aa9, _, _)
+AND
+NOT DB_TWN_Hospital_PlayerForDeathPAD(_)
+AND
+GetClosestAlivePlayer(S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381, _Player, _)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)TWN_Hospital_PAD_SurgeonDead_77cb98b7-e472-a604-bbda-8af444173251, _Player);
+
+IF
+FlagSet((FLAG)TWN_Hospital_State_SurgeonPermaDefeated_0820e94c-7007-4459-b935-2d33fbbf6aa9, _, _)
+AND
+DB_TWN_Hospital_PlayerForDeathPAD(_Player)
+THEN
+NOT DB_TWN_Hospital_PlayerForDeathPAD(_Player);
+PROC_TryStartAD((DIALOGRESOURCE)TWN_Hospital_PAD_SurgeonDead_77cb98b7-e472-a604-bbda-8af444173251, _Player);
+//END_REGION
+
+//REGION Peaceful Resolution XP
+IF
+FlagSet(TWN_Hospital_Event_MakeNursesKillEachOther_eeaccd5b-792a-4aa2-8503-17e0075422c7, _, _)
+AND
+DB_TWN_Hospital_Assistants(_Nurse)
+THEN
+PROC_PeacefulResolve(_Nurse);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(TWN_Hospital_State_SurgeonKilledHimself_04969d92-f292-43c7-82a1-cd3ec967cded)
+THEN
+PROC_PeacefulResolve((CHARACTER)S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(TWN_Hospital_State_NursesKilledSurgeon_dc371af2-0788-43f9-990f-aaaf2192f8ca)
+THEN
+PROC_PeacefulResolve((CHARACTER)S_TWN_Hospital_Surgeon_e58b8b34-038b-4858-b817-c2a8096a9381);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(TWN_Hospital_State_NursesKilledSurgeon_dc371af2-0788-43f9-990f-aaaf2192f8ca)
+AND
+DB_TWN_Hospital_Assistants(_Nurse)
+THEN
+PROC_PeacefulResolve(_Nurse);
+//END_REGION
+
+//REGION Morgue lever
+
+PROC
+PROC_BlockUseOfItem(_Player,(ITEM)S_TWN_Morgue_CliffDoorLever_5db0e117-1c05-4672-8e45-c88a8cfb7121)
+AND
+DB_Players(_Player)
+AND
+NOT DB_TWN_MorgueCliffLeverUnlocked(1)
+THEN
+DB_CustomUseItemResponse(_Player,(ITEM)S_TWN_Morgue_CliffDoorLever_5db0e117-1c05-4672-8e45-c88a8cfb7121,0);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_UnlockedElsewhere_2b333f67-01d7-46ad-2c26-bf00d3c34440,_Player);
+
+IF
+UseFinished(_Player,(ITEM)S_TWN_Morgue_CliffDoorLever_5db0e117-1c05-4672-8e45-c88a8cfb7121,1)
+AND
+DB_TWN_MorgueCliffLeverUnlocked(1)
+THEN
+DB_TWN_MorgueCliffDoorUnlocked(1);
+PROC_ItemUnlockAndOpen((ITEM)S_TWN_Morgue_CliffDoor_540a1bca-1a02-4ed0-ba2e-da1c9834656b);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_MechanicalClunk_a96814b5-9d5b-cf71-b0c3-39d4aea3dfd6,S_TWN_Morgue_CliffDoor_540a1bca-1a02-4ed0-ba2e-da1c9834656b);
+
+IF
+Opened(S_TWN_Morgue_CliffDoor_540a1bca-1a02-4ed0-ba2e-da1c9834656b)
+THEN
+DB_TWN_MorgueCliffDoorUnlocked(1);
+DB_TWN_MorgueCliffLeverUnlocked(1);
+
+IF
+UseFinished(_Player,(ITEM)S_TWN_Morgue_CliffDoorLeverUnlocker_bfc472a0-1ca0-4330-9aa5-528268795e56,1)
+AND
+NOT DB_TWN_MorgueCliffDoorUnlocked(1)
+AND
+NOT DB_TWN_MorgueCliffLeverUnlocked(1)
+THEN
+DB_TWN_MorgueCliffLeverUnlocked(1);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_MechanicalClunk_a96814b5-9d5b-cf71-b0c3-39d4aea3dfd6,S_TWN_Morgue_CliffDoorLeverUnlocker_bfc472a0-1ca0-4330-9aa5-528268795e56);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_MechanicalClunk_a96814b5-9d5b-cf71-b0c3-39d4aea3dfd6,S_TWN_Morgue_CliffDoorLever_5db0e117-1c05-4672-8e45-c88a8cfb7121);
+
+IF
+UseFinished(_Player,(ITEM)S_TWN_Morgue_CliffDoorButton_ed0f5fde-4063-4086-accb-d9e27d95f5f0,1)
+AND
+NOT DB_TWN_MorgueCliffDoorUnlocked(1)
+THEN
+DB_TWN_MorgueCliffDoorUnlocked(1);
+DB_TWN_MorgueCliffLeverUnlocked(1);
+PROC_ItemUnlockAndOpen((ITEM)S_TWN_Morgue_CliffDoor_540a1bca-1a02-4ed0-ba2e-da1c9834656b);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_MechanicalClunk_a96814b5-9d5b-cf71-b0c3-39d4aea3dfd6,S_TWN_Morgue_CliffDoor_540a1bca-1a02-4ed0-ba2e-da1c9834656b);
+
+//END_REGION Morgue lever
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

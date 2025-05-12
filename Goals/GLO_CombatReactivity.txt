@@ -1,0 +1,882 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+	GLO_CombatReactivity
+is a simple system to define one-time ADs for NPCs based on events in combat.
+A list of possible events are:
+- on enter combat
+- on start of N round
+- on start of next round
+- on death
+- on NPC death post combat (AD / VB)
+- on another npc death
+- on HP drop below a threshold
+- on miss
+
+To utilize the system is to simply define one of the following self-explanatory databases
+- DB_CombatReact_AD_OnEntered((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog);
+- DB_CombatReact_AD_OnTurn((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog,(INTEGER)_Turn);
+	Parameter _Turn is a 1-based counter of current npc turn
+- DB_CombatReact_AD_OnNextTurn((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog);
+- DB_CombatReact_AD_OnDeath((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog);
+- DB_CombatReact_AD_OnDeathOther((GUIDSTRING)_NPC,(GUIDSTRING)_DyingNPC,(DIALOGRESOURCE)_Dialog);
+- DB_CombatReact_AD_OnDeathPostCombat((GUIDSTRING) _NPC, (DIALOGRESOURCE)_Dialog);
+- DB_CombatReact_VB_OnDeathPostCombat((GUIDSTRING) _NPC, (VOICEBARKRESOURCE)_Voicebark);
+- DB_CombatReact_AD_OnHPPercentage((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog,(INTEGER)_HPPercentage);
+- DB_CombatReact_AD_OnMiss((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog);
+- DB_CombatReact_AD_OnMiss((GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Target);
+	This version with 3 parameters is used when npc should AD on miss on certain target only
+- DB_CombatReact_AD_OnCast((GUIDSTRING)_NPC, (DIALOGRESOURCE)_Dialog, (STRING)_Spell);
+- DB_CombatReact_AD_OnCastOther((GUIDSTRING)_Reactor, (GUIDSTRING)_Caster, (DIALOGRESOURCE)_Dialog, (STRING)_Spell);
+	Allows a character to react to another character casting a spell
+- DB_CombatReact_AD_AppliedStatus((GUIDSTRING) _NPC, (DIALOGRESOURCE)_Dialog, (STRING)_Status);
+- DB_CombatReact_AD_StatusRemoved((GUIDSTRING) _NPC, (DIALOGRESOURCE)_Dialog, (STRING)_Status);
+- DB_CombatReact_AD_AppliedStatusGroup((GUIDSTRING) _NPC, (DIALOGRESOURCE)_Dialog, (STRING)_StatusGroup);
+- DB_CombatReact_AD_StatusGroupRemoved((GUIDSTRING) _NPC, (DIALOGRESOURCE)_Dialog, (STRING)_StatusGroup);
+- DB_CombatReact_AD_AppliedStatusToPlayer((GUIDSTRING)_StatusSource, (DIALOGRESOURCE)_Dialog, (STRING)_Status)
+- DB_CombatReact_AD_AppliedStatusToPlayerByOthers((GUIDSTRING) _NPC, (DIALOGRESOURCE)_Dialog, (STRING)_Status,(GUIDSTRING)_Speaker);
+
+Note 1. All these ADs are one-time only. If for some reason the dialog fails to start though,
+the record would stay until next chance to start the AD (next miss/next enter combat/etc.)
+
+Note 2. Each AD has a built-in delay between the event and the AD start to help mitigate weirdness
+of camera movements, FX, etc. all clashing with the AD. Delays are defined in DB_CombatReact_Delay below
+*/
+
+DB_CombatReact_Delay("CombatReact_OnEntered", 1000);
+DB_CombatReact_Delay("CombatReact_OnTurn", 500);
+DB_CombatReact_Delay("CombatReact_OnDeath", 0);
+DB_CombatReact_Delay("CombatReact_OnDeathOther", 500);
+DB_CombatReact_Delay("CombatReact_OnDeathPostCombatAD", 500);
+DB_CombatReact_Delay("CombatReact_OnDeathPostCombatVB", 500);
+DB_CombatReact_Delay("CombatReact_OnHPPercentage", 500);
+DB_CombatReact_Delay("CombatReact_OnMiss", 500);
+DB_CombatReact_Delay("CombatReact_OnCast", 500);
+DB_CombatReact_Delay("CombatReact_OnCastOther", 500);
+DB_CombatReact_Delay("CombatReact_AppliedStatus", 500);
+DB_CombatReact_Delay("CombatReact_RemovedStatus", 500);
+DB_CombatReact_Delay("CombatReact_AppliedStatusGroup", 500);
+DB_CombatReact_Delay("CombatReact_RemovedStatusGroup", 500);
+DB_CombatReact_Delay("CombatReact_AppliedStatusToPlayer", 500);
+DB_CombatReact_Delay("CombatReact_AppliedStatusToPlayerByOthers", 500);
+
+DB_CombatReact_OnDeathOther_Range(20.0);
+
+DB_CombatReact_PartyDeath_ApprovalThreshold(40.0);
+DB_DialogStarted_IgnoreStopConditions(GLO_PAD_CombatReact_PartyDeath_79a73729-fda2-b8f0-6103-e8d6105f71b0);
+KBSECTION
+//REGION Entered Combat
+IF
+EnteredCombat(_NPC,_CombatID)
+AND
+DB_CombatReact_AD_OnEntered(_NPC,_Dialog)
+THEN
+PROC_CombatReact_LaunchTimer(_NPC,"CombatReact_OnEntered");
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnEntered")
+AND
+DB_CombatReact_AD_OnEntered(_NPC,_Dialog)
+AND
+QRY_StartDialog_Fixed(_Dialog,_NPC)
+THEN
+NOT DB_CombatReact_AD_OnEntered(_NPC,_Dialog);
+//END_REGION Entered Combat
+
+//REGION On Turn
+//Only call the reset once if an NPC has any lines to speak on his turn
+IF
+EnteredCombat(_NPC,_CombatID)
+AND
+DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn)
+AND
+GUIDToString(_NPC, _NPCString)
+AND
+GUIDToString(_CombatID, _CombatIDString)
+AND
+Concatenate(_NPCString, _CombatIDString, _OnlyOnceString)
+AND
+QRY_OnlyOnce(_OnlyOnceString)
+THEN
+PROC_ObjectCountHelperReset(_NPC,"CombatReact_Turns");
+
+IF
+TurnStarted(_NPC)
+AND
+DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn) //Cleared when the line has played
+AND
+NOT DB_CombatReact_IncrementedTurn(_NPC)
+AND
+QRY_ObjectCountHelper(_NPC,"CombatReact_Turns")
+THEN
+DB_CombatReact_IncrementedTurn(_NPC);
+
+//If the current turn of combat for this NPC is a turn where the NPC has lines, launc ha timer
+IF
+TurnStarted(_NPC)
+AND
+DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn)
+AND
+DB_ObjectCountHelper(_NPC,"CombatReact_Turns",_Turn)
+THEN
+PROC_CombatReact_LaunchTimer(_NPC,"CombatReact_OnTurn");
+
+IF
+TurnStarted(_NPC)
+AND
+DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn)
+AND
+DB_CombatReact_IncrementedTurn(_NPC) 
+THEN
+NOT DB_CombatReact_IncrementedTurn(_NPC);
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnTurn")
+AND
+DB_ObjectCountHelper(_NPC,"CombatReact_Turns",_Turn)
+AND
+DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn)
+THEN
+PROC_TryStartAD(_Dialog, _NPC);
+NOT DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn);
+//END_REGION On Turn
+
+//REGION On Next Turn
+IF
+TurnStarted(_NPC)
+AND
+DB_CombatReact_AD_OnNextTurn(_NPC,_Dialog)
+THEN
+PROC_CombatReact_LaunchTimer(_NPC,"CombatReact_OnTurn");
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnTurn")
+AND
+DB_CombatReact_AD_OnNextTurn(_NPC,_Dialog)
+AND
+QRY_StartDialog_Fixed(_Dialog,_NPC)
+THEN
+NOT DB_CombatReact_AD_OnNextTurn(_NPC,_Dialog);
+//END_REGION
+
+//REGION On Death
+IF
+Dying(_NPC)
+AND
+DB_CombatReact_AD_OnDeath(_NPC,_Dialog)
+AND
+DB_Is_InCombat(_NPC,_CombatID)
+THEN
+DB_DialogDeath(_NPC);
+PROC_CombatReact_LaunchTimer(_NPC,"CombatReact_OnDeath");
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnDeath")
+AND
+DB_CombatReact_AD_OnDeath(_NPC,_Dialog)
+AND
+QRY_StartDialog_Fixed(_Dialog,_NPC)
+THEN
+NOT DB_CombatReact_AD_OnDeath(_NPC,_Dialog);
+//END_REGION On Death
+
+//REGION On Other Death
+IF
+Dying(_DyingNPC)
+AND
+DB_CombatReact_AD_OnDeathOther(_NPC,_DyingNPC,_Dialog)
+AND
+DB_Is_InCombat(_DyingNPC,_CombatID)
+AND
+DB_Is_InCombat(_NPC,_CombatID)
+AND
+DB_CombatReact_OnDeathOther_Range(_MaxDist)
+AND
+QRY_IsInRange(_NPC,_DyingNPC,_MaxDist)
+THEN
+DB_CombatReact_Temp_DeathOther(_NPC,_DyingNPC);
+PROC_CombatReact_LaunchTimer(_NPC,"CombatReact_OnDeathOther");
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnDeathOther")
+AND
+DB_CombatReact_Temp_DeathOther(_NPC,_DyingNPC)
+AND
+DB_CombatReact_AD_OnDeathOther(_NPC,_DyingNPC,_Dialog)
+AND
+QRY_StartDialog_Fixed(_Dialog,_NPC)
+THEN
+NOT DB_CombatReact_AD_OnDeathOther(_NPC,_DyingNPC,_Dialog);
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnDeathOther")
+AND
+DB_CombatReact_Temp_DeathOther(_NPC,_DyingNPC)
+THEN
+NOT DB_CombatReact_Temp_DeathOther(_NPC,_DyingNPC);
+//END_REGION On Other Death
+
+//REGION On Hitpoint
+IF
+HitpointsChanged(_NPC,_NewPercentage)
+AND
+DB_CombatReact_AD_OnHPPercentage(_NPC,_Dialog,_Percentage)
+AND
+_NewPercentage <= _Percentage
+THEN
+DB_CombatReact_Temp_HPPercentage(_NPC,_Percentage);
+PROC_CombatReact_LaunchTimer(_NPC,"CombatReact_OnHPPercentage");
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnHPPercentage")
+AND
+DB_CombatReact_Temp_HPPercentage(_NPC,_Percentage)
+AND
+DB_CombatReact_AD_OnHPPercentage(_NPC,_Dialog,_Percentage)
+AND
+QRY_StartDialog_Fixed(_Dialog,_NPC)
+THEN
+NOT DB_CombatReact_AD_OnHPPercentage(_NPC,_Dialog,_Percentage);
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnHPPercentage")
+AND
+DB_CombatReact_Temp_HPPercentage(_NPC,_Percentage)
+THEN
+NOT DB_CombatReact_Temp_HPPercentage(_NPC,_Percentage);
+//END_REGION On Hitpoints
+
+//REGION Missed
+IF
+MissedBy(_Target,_,_Attacker,_)
+AND
+NOT QRY_CombatReact_MissSpecificTarget(_Target,_Attacker)
+AND
+DB_CombatReact_AD_OnMiss(_Attacker,_Dialog)
+THEN
+PROC_CombatReact_LaunchTimer(_Attacker,"CombatReact_OnMiss");
+
+QRY
+QRY_CombatReact_MissSpecificTarget((GUIDSTRING)_Target,(GUIDSTRING)_Attacker)
+AND
+DB_CombatReact_AD_OnMiss(_Attacker,_Dialog,_Target)
+THEN
+DB_CombatReact_Temp_MissedTarget(_Attacker,_Target);
+PROC_CombatReact_LaunchTimer(_Attacker,"CombatReact_OnMiss");
+
+IF
+ObjectTimerFinished(_Attacker,"CombatReact_OnMiss")
+AND
+NOT DB_CombatReact_Temp_MissedTarget(_Attacker,_)
+AND
+DB_CombatReact_AD_OnMiss(_Attacker,_Dialog)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Attacker)
+THEN
+NOT DB_CombatReact_AD_OnMiss(_Attacker,_Dialog);
+
+IF
+ObjectTimerFinished(_Attacker,"CombatReact_OnMiss")
+AND
+DB_CombatReact_Temp_MissedTarget(_Attacker,_Target)
+AND
+DB_CombatReact_AD_OnMiss(_Attacker,_Dialog,_Target)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Attacker)
+THEN
+NOT DB_CombatReact_AD_OnMiss(_Attacker,_Dialog,_Target);
+
+IF
+ObjectTimerFinished(_Attacker,"CombatReact_OnMiss")
+AND
+DB_CombatReact_Temp_MissedTarget(_Attacker,_Target)
+THEN
+NOT DB_CombatReact_Temp_MissedTarget(_Attacker,_Target);
+//END_REGION Missed
+
+//REGION On Cast
+IF
+UsingSpell(_Caster, _Spell, _, _, _)
+AND
+DB_CombatReact_AD_OnCast(_Caster, _AD, _Spell)
+AND
+DB_Is_InCombat(_Caster, _CombatID)
+THEN
+DB_CombatReact_Temp_Cast(_Caster, _Spell);
+PROC_CombatReact_LaunchTimer(_Caster, "CombatReact_OnCast");
+
+IF
+UsingSpell(_Caster, _Spell, _, _, _)
+AND
+DB_CombatReact_AD_OnCastOther(_NPC, _Caster, _AD, _Spell)
+AND
+DB_Is_InCombat(_NPC, _CombatID)
+AND
+DB_Is_InCombat(_Caster, _CombatID)
+THEN
+DB_CombatReact_Temp_Cast(_NPC, _Spell);
+PROC_CombatReact_LaunchTimer(_NPC, "CombatReact_OnCastOther");
+
+IF
+ObjectTimerFinished(_Caster, "CombatReact_OnCast")
+AND
+DB_CombatReact_Temp_Cast(_Caster, _Spell)
+AND
+DB_CombatReact_AD_OnCast(_Caster, _AD, _Spell)
+AND
+QRY_StartDialog_Fixed(_AD, _Caster)
+THEN
+NOT DB_CombatReact_AD_OnCast(_Caster, _AD, _Spell);
+
+IF
+ObjectTimerFinished(_Caster, "CombatReact_OnCast")
+AND
+DB_CombatReact_Temp_Cast(_Caster, _Spell)
+THEN
+NOT DB_CombatReact_Temp_Cast(_Caster, _Spell);
+
+IF
+ObjectTimerFinished(_NPC, "CombatReact_OnCastOther")
+AND
+DB_CombatReact_Temp_Cast(_NPC, _Spell)
+AND
+DB_CombatReact_AD_OnCastOther(_NPC, _Caster, _AD, _Spell)
+AND
+QRY_StartDialog_Fixed(_AD, _NPC)
+THEN
+NOT DB_CombatReact_AD_OnCastOther(_NPC, _Caster, _AD, _Spell);
+
+IF
+ObjectTimerFinished(_NPC, "CombatReact_OnCastOther")
+AND
+DB_CombatReact_Temp_Cast(_NPC, _Spell)
+THEN
+NOT DB_CombatReact_Temp_Cast(_NPC, _Spell);
+//END_REGION
+
+//REGION On Applied Status
+IF
+StatusApplied(_StatusTarget, _Status, _, _)
+AND
+DB_CombatReact_AD_AppliedStatus(_StatusTarget, _, _Status)
+AND
+DB_Is_InCombat(_StatusTarget, _)
+THEN
+DB_CombatReact_Temp_Status(_StatusTarget, _Status);
+PROC_CombatReact_LaunchTimer(_StatusTarget, "CombatReact_AppliedStatus");
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_AppliedStatus")
+AND
+DB_CombatReact_Temp_Status(_StatusTarget, _Status)
+AND
+DB_CombatReact_AD_AppliedStatus(_StatusTarget, _AD, _Status)
+AND
+QRY_StartDialog_Fixed(_AD, _StatusTarget)
+THEN
+NOT DB_CombatReact_AD_AppliedStatus(_StatusTarget, _AD, _Status);
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_AppliedStatus")
+AND
+DB_CombatReact_Temp_Status(_StatusTarget, _Status)
+THEN
+NOT DB_CombatReact_Temp_Status(_StatusTarget, _Status);
+//END_REGION
+
+//REGION On Status Removed
+IF
+StatusRemoved(_StatusTarget, _Status, _, _)
+AND
+DB_CombatReact_AD_StatusRemoved(_StatusTarget, _, _Status)
+AND
+DB_Is_InCombat(_StatusTarget, _)
+THEN
+DB_CombatReact_Temp_RemovedStatus(_StatusTarget, _Status);
+PROC_CombatReact_LaunchTimer(_StatusTarget, "CombatReact_RemovedStatus");
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_RemovedStatus")
+AND
+DB_CombatReact_Temp_RemovedStatus(_StatusTarget, _Status)
+AND
+DB_CombatReact_AD_StatusRemoved(_StatusTarget, _AD, _Status)
+AND
+QRY_StartDialog_Fixed(_AD, _StatusTarget)
+THEN
+NOT DB_CombatReact_AD_StatusRemoved(_StatusTarget, _AD, _Status);
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_RemovedStatus")
+AND
+DB_CombatReact_Temp_RemovedStatus(_StatusTarget, _Status)
+THEN
+NOT DB_CombatReact_Temp_RemovedStatus(_StatusTarget, _Status);
+//END_REGION On Status Removed
+
+//REGION On Applied Status Group
+IF
+StatusApplied(_StatusTarget, _Status, _Source, _)
+AND
+DB_CombatReact_AD_AppliedStatusGroup(_StatusTarget, _, _StatusGroup)
+AND
+IsStatusFromGroup(_Status, _StatusGroup, 1)
+AND
+DB_Is_InCombat(_StatusTarget, _)
+THEN
+DB_CombatReact_Temp_StatusGroup(_StatusTarget, _StatusGroup);
+PROC_CombatReact_LaunchTimer(_StatusTarget, "CombatReact_AppliedStatusGroup");
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_AppliedStatusGroup")
+AND
+DB_CombatReact_Temp_StatusGroup(_StatusTarget, _StatusGroup)
+AND
+DB_CombatReact_AD_AppliedStatusGroup(_StatusTarget, _AD, _StatusGroup)
+AND
+QRY_StartDialog_Fixed(_AD, _StatusTarget)
+THEN
+NOT DB_CombatReact_AD_AppliedStatusGroup(_StatusTarget, _AD, _StatusGroup);
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_AppliedStatusGroup")
+AND
+DB_CombatReact_Temp_StatusGroup(_StatusTarget, _StatusGroup)
+THEN
+NOT DB_CombatReact_Temp_StatusGroup(_StatusTarget, _StatusGroup);
+
+//END_REGION
+
+//REGION On Status Group Removed
+IF
+StatusRemoved(_StatusTarget, _Status, _, _)
+AND
+DB_CombatReact_AD_StatusGroupRemoved(_StatusTarget, _, _StatusGroup)
+AND
+IsStatusFromGroup(_Status, _StatusGroup, 1)
+AND
+DB_Is_InCombat(_StatusTarget, _CombatID)
+THEN
+DB_CombatReact_Temp_RemovedStatusGroup(_StatusTarget, _StatusGroup);
+PROC_CombatReact_LaunchTimer(_StatusTarget, "CombatReact_RemovedStatusGroup");
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_RemovedStatusGroup")
+AND
+DB_CombatReact_Temp_RemovedStatusGroup(_StatusTarget, _StatusGroup)
+AND
+DB_CombatReact_AD_StatusGroupRemoved(_StatusTarget, _AD, _StatusGroup)
+AND
+QRY_StartDialog_Fixed(_AD, _StatusTarget)
+THEN
+NOT DB_CombatReact_AD_StatusGroupRemoved(_StatusTarget, _AD, _StatusGroup);
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_RemovedStatusGroup")
+AND
+DB_CombatReact_Temp_RemovedStatusGroup(_StatusTarget, _StatusGroup)
+THEN
+NOT DB_CombatReact_Temp_RemovedStatusGroup(_StatusTarget, _StatusGroup);
+//END_REGION On Status Removed
+
+//REGION Party members death
+IF
+HitpointsChanged(_Player,_Hpperc)
+AND
+_Hpperc <= 0.0
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_Is_WildShaped(_Player)
+AND
+DB_Is_InCombat(_Player,_CombatID)
+THEN
+PROC_CombatReact_PartyDeathIn(_Player,_CombatID);
+
+PROC
+PROC_CombatReact_PartyDeathIn((CHARACTER)_Victim,(GUIDSTRING)_CombatID)
+AND
+QRY_CombatReact_PartyDeath_GetPartnerInSameCombat(_Victim,_CombatID)
+AND
+DB_QRYRTN_CombatReact_PartyDeath_PartnerInSameCombat(_Victim,_Partner,_CombatID)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Partner,_Victim,1,0)
+AND
+NOT DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID)
+THEN
+DB_DialogDeath(_Victim);
+DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID);
+PROC_TryStartAD(GLO_PAD_CombatReact_PartyDeath_79a73729-fda2-b8f0-6103-e8d6105f71b0,_Partner,_Victim);
+
+QRY
+QRY_CombatReact_PartyDeath_GetPartnerInSameCombat((CHARACTER)_Victim,(GUIDSTRING)_CombatID)
+THEN
+SysClear("DB_QRYRTN_CombatReact_PartyDeath_PartnerInSameCombat",3);
+
+QRY
+QRY_CombatReact_PartyDeath_GetPartnerInSameCombat((CHARACTER)_Victim,(GUIDSTRING)_CombatID)
+AND
+DB_ApprovalRating(_Victim,_Partner,_Rating)
+AND
+DB_CombatReact_PartyDeath_ApprovalThreshold(_Threshold)
+AND
+_Rating >= _Threshold
+AND
+DB_Is_InCombat(_Partner,_CombatID)
+THEN
+DB_QRYRTN_CombatReact_PartyDeath_PartnerInSameCombat(_Victim,_Partner,_CombatID);
+
+QRY
+QRY_CombatReact_PartyDeath_GetPartnerInSameCombat((CHARACTER)_Victim,(GUIDSTRING)_CombatID)
+AND
+DB_ApprovalRating(_Partner,_Victim,_Rating)
+AND
+DB_CombatReact_PartyDeath_ApprovalThreshold(_Threshold)
+AND
+_Rating >= _Threshold
+AND
+DB_Is_InCombat(_Partner,_CombatID)
+THEN
+DB_QRYRTN_CombatReact_PartyDeath_PartnerInSameCombat(_Victim,_Partner,_CombatID);
+
+IF
+CombatRoundStarted(_CombatID,_)
+AND
+DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID)
+THEN
+NOT DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID)
+THEN
+NOT DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID);
+
+// this is not 100% correct, as it clears for all combats, but it's good enough
+IF
+AutomatedDialogForceStopping(GLO_PAD_CombatReact_PartyDeath_79a73729-fda2-b8f0-6103-e8d6105f71b0,_DialogID)
+AND
+DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID)
+THEN
+NOT DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID);
+
+// this is not 100% correct, as it clears for all combats, but it's good enough
+IF
+AutomatedDialogRequestFailed(GLO_PAD_CombatReact_PartyDeath_79a73729-fda2-b8f0-6103-e8d6105f71b0,_DialogID)
+AND
+DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID)
+THEN
+NOT DB_CombatReact_PartyDeath_SaidThisTurn(_CombatID);
+
+IF
+AutomatedDialogEnded(GLO_PAD_CombatReact_PartyDeath_79a73729-fda2-b8f0-6103-e8d6105f71b0,_DialogID)
+AND
+DB_DialogPlayers(_DialogID,_Victim,_)
+AND
+DB_DialogDeath((CHARACTER)_Victim)
+THEN
+NOT DB_DialogDeath(_Victim);
+
+//END_REGION Party members death
+
+//REGION On Applied Status to Player
+IF
+StatusApplied((CHARACTER)_Player, _Status, _StatusSource, _)
+AND
+DB_CombatReact_AD_AppliedStatusToPlayer(_StatusSource, _, _Status)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_Is_InCombat(_StatusSource, _CombatID)
+THEN
+DB_CombatReact_Temp_StatusToPlayer(_StatusSource, _Status);
+PROC_CombatReact_LaunchTimer(_StatusSource, "CombatReact_AppliedStatusToPlayer");
+
+IF
+ObjectTimerFinished(_StatusSource, "CombatReact_AppliedStatusToPlayer")
+AND
+DB_CombatReact_Temp_StatusToPlayer(_StatusSource, _Status)
+AND
+DB_CombatReact_AD_AppliedStatusToPlayer(_StatusSource, _AD, _Status)
+AND
+QRY_StartDialog_Fixed(_AD, _StatusSource)
+THEN
+NOT DB_CombatReact_AD_AppliedStatusToPlayer(_StatusSource, _AD, _Status);
+
+IF
+ObjectTimerFinished(_StatusSource, "CombatReact_AppliedStatusToPlayer")
+AND
+DB_CombatReact_Temp_StatusToPlayer(_StatusSource, _Status)
+THEN
+NOT DB_CombatReact_Temp_StatusToPlayer(_StatusSource, _Status);
+//END_REGION
+
+//REGION On Applied Status to Player by Others
+IF
+StatusApplied((CHARACTER)_Player, _Status, _StatusSource, _)
+AND
+DB_CombatReact_AD_AppliedStatusToPlayerByOthers(_StatusSource, _, _Status, _Speaker)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_Is_InCombat(_StatusSource, _CombatID)
+AND
+DB_Is_InCombat(_Speaker, _CombatID)
+THEN
+DB_CombatReact_Temp_StatusToPlayerByOthers(_Speaker, _Status);
+PROC_CombatReact_LaunchTimer(_Speaker, "CombatReact_AppliedStatusToPlayerByOthers");
+
+IF
+ObjectTimerFinished(_Speaker, "CombatReact_AppliedStatusToPlayerByOthers")
+AND
+DB_CombatReact_Temp_StatusToPlayerByOthers(_Speaker, _Status)
+AND
+DB_CombatReact_AD_AppliedStatusToPlayerByOthers(_StatusSource, _AD, _Status, _Speaker)
+AND
+QRY_StartDialog_Fixed(_AD, _Speaker)
+THEN
+NOT DB_CombatReact_AD_AppliedStatusToPlayerByOthers(_StatusSource, _AD, _Status, _Speaker);
+
+IF
+ObjectTimerFinished(_StatusTarget, "CombatReact_AppliedStatusToPlayerByOthers")
+AND
+DB_CombatReact_Temp_StatusToPlayerByOthers(_Speaker, _Status)
+THEN
+NOT DB_CombatReact_Temp_StatusToPlayerByOthers(_Speaker, _Status);
+
+//END_REGION
+
+//REGION Helpers and cleaning
+PROC
+PROC_CombatReact_LaunchTimer((GUIDSTRING)_NPC,(STRING)_TimerName)
+AND
+NOT DB_CombatReact_Timer(_NPC,_TimerName)
+AND
+DB_CombatReact_Delay(_TimerName,_Delay)
+THEN
+DB_CombatReact_Timer(_NPC,_TimerName);
+RealtimeObjectTimerLaunch(_NPC,_TimerName,_Delay);
+
+IF
+ObjectTimerFinished(_NPC,_AnyCombatReactTimer)
+AND
+DB_CombatReact_Timer(_NPC,_AnyCombatReactTimer)
+THEN
+NOT DB_CombatReact_Timer(_NPC,_AnyCombatReactTimer);
+
+
+// Clear temporary DBs that hold info while timer is running
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnDeathOther")
+AND
+DB_CombatReact_Temp_DeathOther(_NPC,_DyingNPC)
+THEN
+NOT DB_CombatReact_Temp_DeathOther(_NPC,_DyingNPC);
+
+IF
+ObjectTimerFinished(_NPC,"CombatReact_OnHPPercentage")
+AND
+DB_CombatReact_Temp_HPPercentage(_NPC,_Percentage)
+THEN
+NOT DB_CombatReact_Temp_HPPercentage(_NPC,_Percentage);
+
+IF
+ObjectTimerFinished(_Attacker,"CombatReact_OnMiss")
+AND
+DB_CombatReact_Temp_MissedTarget(_Attacker,_Target)
+THEN
+NOT DB_CombatReact_Temp_MissedTarget(_Attacker,_Target);
+
+
+// Clear all DBs if NPC is permadefeated
+IF
+DB_PermaDefeated(_NPC)
+THEN
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnEntered(_NPC,_Dialog)
+THEN
+NOT DB_CombatReact_AD_OnEntered(_NPC,_Dialog);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn)
+THEN
+NOT DB_CombatReact_AD_OnTurn(_NPC,_Dialog,_Turn);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnNextTurn(_NPC,_Dialog)
+THEN
+NOT DB_CombatReact_AD_OnNextTurn(_NPC,_Dialog);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnDeath(_NPC,_Dialog)
+THEN
+NOT DB_CombatReact_AD_OnDeath(_NPC,_Dialog);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnDeathOther(_NPC,_DyingOther,_Dialog)
+THEN
+NOT DB_CombatReact_AD_OnDeathOther(_NPC,_DyingOther,_Dialog);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnHPPercentage(_NPC,_Dialog,_HPPercentage)
+THEN
+NOT DB_CombatReact_AD_OnHPPercentage(_NPC,_Dialog,_HPPercentage);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnMiss(_NPC,_Dialog)
+THEN
+NOT DB_CombatReact_AD_OnMiss(_NPC,_Dialog);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnMiss(_NPC,_Dialog,_Target)
+THEN
+NOT DB_CombatReact_AD_OnMiss(_NPC,_Dialog,_Target);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnCast(_NPC,_Dialog,_Spell)
+THEN
+NOT DB_CombatReact_AD_OnCast(_NPC,_Dialog,_Spell);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_OnCastOther(_Reactor,_Caster,_Dialog,_Spell)
+THEN
+NOT DB_CombatReact_AD_OnCastOther(_Reactor,_Caster,_Dialog,_Spell);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_AppliedStatus(_NPC,_Dialog,_Status)
+THEN
+NOT DB_CombatReact_AD_AppliedStatus(_NPC,_Dialog,_Status);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_StatusRemoved(_NPC,_Dialog,_Status)
+THEN
+NOT DB_CombatReact_AD_StatusRemoved(_NPC,_Dialog,_Status);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_AppliedStatusGroup(_NPC,_Dialog,_StatusGroup)
+THEN
+NOT DB_CombatReact_AD_AppliedStatusGroup(_NPC,_Dialog,_StatusGroup);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_StatusGroupRemoved(_NPC,_Dialog,_StatusGroup)
+THEN
+NOT DB_CombatReact_AD_StatusGroupRemoved(_NPC,_Dialog,_StatusGroup);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_AppliedStatusToPlayer(_StatusSource,_Dialog,_Status)
+THEN
+NOT DB_CombatReact_AD_AppliedStatusToPlayer(_StatusSource,_Dialog,_Status);
+
+PROC
+PROC_CombatReact_RemoveCombatADs((CHARACTER)_NPC)
+AND
+DB_CombatReact_AD_AppliedStatusToPlayerByOthers(_NPC,_Dialog,_Status,_Speaker)
+THEN
+NOT DB_CombatReact_AD_AppliedStatusToPlayerByOthers(_NPC,_Dialog,_Status,_Speaker);
+
+//END_REGION Helpers and cleaning
+
+//REGION Post Combat ADs and VBs from Players
+IF
+CombatEnded(_CombatID)
+AND
+DB_Was_InCombat(_NPC, _CombatID)
+AND
+DB_CombatReact_AD_OnDeathPostCombat(_NPC, _AD)
+AND
+DB_Dead((CHARACTER)_NPC)
+AND
+DB_Players(_Player)
+AND
+DB_Was_InCombat(_Player, _CombatID)
+AND
+NOT DB_CantTalk(_Player)
+AND
+NOT DB_CombatReact_Temp_CombatEndedAD(_NPC, _, _)
+THEN
+DB_CombatReact_Temp_CombatEndedAD((GUIDSTRING)_NPC, (CHARACTER)_Player, (DIALOGRESOURCE)_AD);
+PROC_CombatReact_LaunchTimer(_Player, "CombatReact_OnDeathPostCombatAD");
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "CombatReact_OnDeathPostCombatAD")
+AND
+DB_CombatReact_Temp_CombatEndedAD(_NPC, _Player, _AD)
+AND
+DB_CombatReact_AD_OnDeathPostCombat(_NPC, _AD)
+THEN
+NOT DB_CombatReact_AD_OnDeathPostCombat(_NPC, _AD);
+NOT DB_CombatReact_Temp_CombatEndedAD(_NPC, _Player, _AD);
+PROC_TryStartAD(_AD, _Player);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_Was_InCombat(_NPC, _CombatID)
+AND
+DB_CombatReact_VB_OnDeathPostCombat(_NPC, _VB)
+AND
+DB_Dead((CHARACTER)_NPC)
+AND
+DB_Players(_Player)
+AND
+DB_Was_InCombat(_Player, _CombatID)
+AND
+NOT DB_CantTalk(_Player)
+AND
+NOT DB_CombatReact_Temp_CombatEndedVB(_NPC, _, _)
+THEN
+DB_CombatReact_Temp_CombatEndedVB((GUIDSTRING)_NPC, (CHARACTER)_Player, (VOICEBARKRESOURCE)_VB);
+PROC_CombatReact_LaunchTimer(_Player, "CombatReact_OnDeathPostCombatVB");
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "CombatReact_OnDeathPostCombatVB")
+AND
+DB_CombatReact_Temp_CombatEndedVB(_NPC, _Player, _VB)
+AND
+DB_CombatReact_VB_OnDeathPostCombat(_NPC, _VB)
+THEN
+NOT DB_CombatReact_Temp_CombatEndedVB(_NPC, _Player, _VB);
+NOT DB_CombatReact_VB_OnDeathPostCombat(_NPC, _VB);
+StartVoiceBark(_VB, _Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,91 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Nightsong and Sorcerous Sundries
+DB_LOW_SorcerousSundries_BanningDialogs(LOW_SorcerousSundries_LorroakanProjectionWarning_91430540-4848-ce3d-61a7-a0c8c3dbaa6c);
+DB_LOW_SorcerousSundries_BanningDialogs(LOW_SorcerousSundries_RolanProjectionWarning_859aa6d4-4fc1-398d-0131-91a63940345d);
+DB_LOW_SorcerousSundries_BanningDialogs(LOW_SorcerousSundries_RolanWarning_d8fcff57-2afa-06c0-5e21-36c77107c6be);
+DB_LOW_SorcerousSundries_BanningDialogs(LOW_SorcerousSundries_KlankCheckpoint_275b16c1-85d5-90ea-ccba-0f1441a6b298);
+DB_LOW_SorcerousSundries_BanningDialogs(LOW_SorcerousSundries_LorroakanProjection_b90d7005-f9c9-350d-2dc0-d821f756455f);
+
+//Talked to Lorroakan in person
+DB_QuestDef_State(LOW_Lorroakan_Quest_WaitingForCampNightsongDialog_ce238f16-8215-48f8-90b4-a503a4426efd, "SHA_Nightsong", "TalkedToLorroakan");
+
+//END_REGION
+KBSECTION
+//REGION SHA_Nightsong Conclusion
+//Saw Poster about Nightsong
+IF
+GameBookInterfaceClosed(_Pamphlet, _Player)
+AND
+DB_Players(_Player)
+AND
+GetTemplate(_Pamphlet, _Template)
+AND
+_Template == UNI_LOW_NightsongPamphlet_e7968b1c-d109-4a4f-b296-d90dd3662a9d
+AND
+QuestUpdateIsUnlocked(_Player, "SHA_Nightsong", "NightsongDead", 0)
+THEN
+QuestUpdate("SHA_Nightsong", "NightsongSawPoster");
+SetFlag((FLAG)GLO_AdventurersQuest_Knows_AboutBounty_93fcf273-334d-7aa8-d5c1-a4d154f0fe23);
+SetFlag((FLAG)LOW_SorcerousSundries_Knows_AboutLorroakanGoingAfterNightsong_06fc1554-756a-4d3f-8560-5848313210fa);
+
+//Speak to Rolan about meeting Lorroakan
+IF
+FlagSet(LOW_SorcerousSundries_Prodigy_Knows_SpeakToLorroakan_e3d59dd5-868a-a0e9-19c9-028697c2af39, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+QuestUpdate("SHA_Nightsong", "GoUpstairs");
+
+//Speak to Rolan's replacement about meeting Lorroakan
+IF
+DialogEnded(LOW_SorcerousSundries_LorroakanProjection_b90d7005-f9c9-350d-2dc0-d821f756455f, _)
+AND
+DB_GlobalFlag(LOW_SorcerousSundries_Knows_ProjectionToldGoUpstairs_8d84a325-ef3d-4a54-9c39-562f92a1bf30)
+AND
+DB_Avatars(_Avatar)
+AND
+QuestUpdateIsUnlocked(_Avatar, "SHA_Nightsong", "GoUpstairs", 0)
+THEN
+QuestUpdate("SHA_Nightsong", "GoUpstairsAlt");
+
+
+//Get told about the portals puzzle by Lorroakan's Projection
+IF
+DialogEnded(LOW_SorcerousSundries_PuzzleGuardian_5423a690-96fd-9057-4068-0b51ba9c14c0, _)
+THEN
+QuestUpdate("SHA_Nightsong", "ReachRamazith");
+
+//Used the wrong portal and kicked out
+IF
+TimerFinished("LOW_SorcerousSundries_WaitToSpawnPunisher")
+THEN
+QuestUpdate("SHA_Nightsong", "SorcerousKickedOut");
+
+//Learned you are banned from Sorcerous Sundries
+IF
+DialogEnded(_Dialog, _ID)
+AND
+DB_LOW_SorcerousSundries_BanningDialogs(_Dialog)
+AND
+DB_DialogSpeakers(_ID, _Player, 2)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(LOW_SorcerousSundries_BannedPlayer_2cea88b0-bc13-4537-a70a-d3f122ed9699, _Player, 1)
+THEN
+QuestUpdate("SHA_Nightsong", "SorcerousBanned");
+
+
+//Nightsong goes after Lorroakan after Aradin's Attack on camp
+IF
+DialogEnded(LOW_SorcerousSundries_NightsongPostAttack_42a7f9de-9883-9a29-20c0-721271188f18, _)
+THEN
+QuestUpdate("SHA_Nightsong", "AfterAradinAttack");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

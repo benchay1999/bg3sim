@@ -1,0 +1,215 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_ItemShopTrigger((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CRIME_BuyFromTrader_Excluded((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Delete an item shop trigger
+PROC
+PROC_ItemShopTrigger_Delete((TRIGGER)_Trigger)
+AND
+DB_CRIME_BuyFromTrader_Excluded(_Trigger,(ITEM)_Item)
+THEN
+NOT DB_CRIME_BuyFromTrader_Excluded(_Trigger,(ITEM)_Item);
+
+PROC
+PROC_ItemShopTrigger_Delete((TRIGGER)_Trigger)
+AND
+DB_ItemShopTrigger(_Trigger,_Owner)
+THEN
+NOT DB_ItemShopTrigger(_Trigger,_Owner);
+TriggerUnregisterForItems(_Trigger);
+//END_REGION
+
+//REGION Detect new items getting added to a shop trigger
+// Since we no longer block moving owned items, prevent a player from moving an item into a shop trigger and
+// then pick up/buy it
+IF
+DB_ItemShopTrigger(_Trigger,_)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+TriggerRegisterForItems(_Trigger);
+
+IF
+ItemEnteredTrigger(_Item,_Trigger,_Mover)
+AND
+// Ignore teleports by code or script
+_Mover != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_ItemShopTrigger(_Trigger,_Owner)
+AND
+NOT DB_CRIME_BuyFromTrader_Teleporting(_Item)
+AND
+_Mover != _Owner
+THEN
+DB_CRIME_BuyFromTrader_Excluded(_Trigger,_Item);
+
+IF
+ItemEnteredTrigger(_Item,_Trigger,_Mover)
+AND
+DB_CRIME_BuyFromTrader_Teleporting(_Item)
+THEN
+NOT DB_CRIME_BuyFromTrader_Teleporting(_Item);
+
+IF
+ItemLeftTrigger(_Item,_Trigger,_)
+AND
+DB_CRIME_BuyFromTrader_Excluded(_Trigger,_Item)
+THEN
+NOT DB_CRIME_BuyFromTrader_Excluded(_Trigger,_Item);
+//END_REGION
+
+//REGION Intercept stealing and transform into "are you interested in buying this?" dialogue if spotted by owner
+PROC
+PROC_BlockMoveOfItem((CHARACTER)_Char,(ITEM)_Item,(INTEGER)_RequestID)
+THEN
+PROC_CRIME_BuyFromTrader_Check(_Char,_Item,_RequestID);
+
+PROC
+PROC_BlockPickupOfItem((CHARACTER)_Char,(ITEM)_Item,(INTEGER)_RequestID)
+THEN
+PROC_CRIME_BuyFromTrader_Check(_Char,_Item,_RequestID);
+
+PROC
+PROC_BlockUseOfItem((CHARACTER)_Char,(ITEM)_Item,(INTEGER)_RequestID)
+AND
+// For books etc, but exclude things like levers and doors
+GetCanPickUp(_Item,1)
+AND
+IsPublicDomain(_Item,0)
+THEN
+PROC_CRIME_BuyFromTrader_Check(_Char,_Item,_RequestID);
+
+PROC
+PROC_CRIME_BuyFromTrader_Check((CHARACTER)_Player,(ITEM)_Item,(INTEGER)_RequestID)
+AND
+IgnoreGenerics(_Item,0)
+AND
+DB_Players(_Player)
+AND
+GetOwner(_Item,_Victim)
+AND
+_Victim != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CRIME_BuyFromTrader(_Player,(ITEM)_Item,_Victim,(INTEGER)_,(INTEGER)_,(INTEGER)_)
+AND
+IsTagged(_Victim, (TAG)TRADER_91d5ebc6-91ea-44db-8a51-216860d69b5b, 1)
+AND
+QRY_CRIME_BuyFromTrader_IsInShopTrigger((ITEM)_Item,_Victim)
+AND
+// For sale by default (normally set on roots)
+IsTagged(_Item,(TAG)SHOPTRIGGER_FOR_SALE_b148cfca-53d8-4b73-b052-de08394a235e,_ForSaleDefault)
+AND
+// Custom response if blocked/overridden (normally set on individual items, like quest items)
+IsTagged(_Item,(TAG)SHOPTRIGGER_NOT_FOR_SALE_f8fca7c4-c06b-4c2c-a9d4-43d959df51ec,_NotForSaleIndividual)
+AND
+CanTrade(_Victim, _CanTrade)
+AND
+DB_Negate(_ForSaleDefault,_NotForSaleDefault)
+AND
+DB_Negate(_CanTrade,_CannotTrade)
+AND
+DB_LogicOr(_NotForSaleDefault,_NotForSaleIndividual,_NotForSale)
+AND
+DB_LogicOr(_NotForsale,_CannotTrade,_NoSale)
+AND
+GetPosition(_Item,_X,_Y,_Z)
+AND
+CrimeGetNewID(_BuyDisturbanceID)
+THEN
+DB_HandledRequest(_Player,_Item,_RequestID);
+DB_CRIME_BuyFromTrader(_Player,_Item,_Victim,_BuyDisturbanceID,_RequestID,_NoSale);
+DB_CRIME_BuyFromTrader_OriginalPosition(_BuyDisturbanceID,_X,_Y,_Z);
+PROC_CharacterRegisterCrime(_Player,"BuyFromTrader",_Item,_Victim,_BuyDisturbanceID);
+
+// Trader did not notice the pickup, so fall back to the theft (allow the pickup -> steal crime will be registered)
+IF
+CrimeProcessingStarted(_CrimeID,0)
+AND
+DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,_NotForSale)
+AND
+DB_CRIME_BuyFromTrader_OriginalPosition(_BuyDisturbanceID,_X,_Y,_Z)
+THEN
+RequestProcessed(_Char,_RequestID,1);
+NOT DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,_NotForSale);
+NOT DB_CRIME_BuyFromTrader_OriginalPosition(_BuyDisturbanceID,_X,_Y,_Z);
+
+// Trader did notice the pickup -> add item to their inventory in preparation of the trade
+// Also temporarily add unique tag so it won't get stacked with other stuff, resulting
+// in us being unable to select it in the trade interface
+IF
+CrimeProcessingStarted(_CrimeID,1)
+AND
+DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,0)
+THEN
+RequestProcessed(_Char,_RequestID,0);
+ClearFlag((FLAG)GEB_ShopTrigger_State_NotForSale_48c7bdbc-f83a-4890-a178-200bc9e127cc,_Victim);
+SetTag(_Evidence,(TAG)SEPARATE_STACK_MERGING_f5071dac-7a94-4302-a3e6-a631d0d53619);
+
+IF
+CrimeProcessingStarted(_CrimeID,1)
+AND
+DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,1)
+THEN
+SetFlag((FLAG)GEB_ShopTrigger_State_NotForSale_48c7bdbc-f83a-4890-a178-200bc9e127cc,_Victim);
+RequestProcessed(_Char,_RequestID,0);
+
+IF
+TagSet(_Evidence,(TAG)SEPARATE_STACK_MERGING_f5071dac-7a94-4302-a3e6-a631d0d53619)
+AND
+DB_CRIME_BuyFromTrader(_Char,(ITEM)_Evidence,_Victim,_CrimeID,_RequestID,_)
+THEN
+ToInventory(_Evidence,_Victim,-1,0,0);
+
+QRY
+QRY_CRIME_BuyFromTrader_IsInShopTrigger((ITEM)_Item,(CHARACTER)_Trader)
+AND
+DB_ItemShopTrigger(_Trigger,_Trader)
+AND
+NOT DB_CRIME_BuyFromTrader_Excluded(_Trigger,_Item)
+AND
+IsInTrigger(_Item,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+// Did not buy it -> place back
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,_)
+AND
+IsInInventoryOf(_Evidence,_Victim,1)
+AND
+DB_CRIME_BuyFromTrader_OriginalPosition(_CrimeID,_X,_Y,_Z)
+THEN
+DB_CRIME_BuyFromTrader_Teleporting(_Evidence);
+TeleportToPosition(_Evidence,_X,_Y,_Z,"",0,0,0,0,0);
+
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,_NotForSale)
+AND
+DB_CRIME_BuyFromTrader_OriginalPosition(_CrimeID,_X,_Y,_Z)
+THEN
+ClearTag(_Evidence,(TAG)SEPARATE_STACK_MERGING_f5071dac-7a94-4302-a3e6-a631d0d53619);
+NOT DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_RequestID,_NotForSale);
+NOT DB_CRIME_BuyFromTrader_OriginalPosition(_CrimeID,_X,_Y,_Z);
+//END_REGION
+
+//REGION Pre-select the item in the trade interface
+QRY
+QRY_Trade_GetInitiallySelectedTradeObject((CHARACTER)_Char,(CHARACTER)_Victim)
+AND
+GetHandlingCrimeID(_Victim,_DisturbanceID)
+AND
+DB_CRIME_BuyFromTrader(_Char,_Evidence,_Victim,_CrimeID,_,_)
+THEN
+DB_QRY_RTN_Trade_GetInitiallySelectedTradeObject(_Evidence);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

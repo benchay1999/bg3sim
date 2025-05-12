@@ -1,0 +1,280 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_DaisyDreams_Daisies((CHARACTER)S_CAMP_DaisyPlaceholder_000_8d63f164-8a82-4bd1-aa79-2c575c70ce49);
+DB_GLO_DaisyDreams_Daisies(S_CAMP_DaisyPlaceholder_001_def59a51-6607-4dfb-92ac-eb497818138f);
+DB_GLO_DaisyDreams_Daisies(S_CAMP_DaisyPlaceholder_002_7fe0bedf-8f17-47e8-85ec-e3787d54788a);
+DB_GLO_DaisyDreams_Daisies(S_CAMP_DaisyPlaceholder_003_5a3fc9ef-6c02-4c94-866a-5aac4424b640);
+
+DB_Daisy_IdleTeleport("WLD_Main_A", (TRIGGER)S_CAMP_DaisyTP_61cfa52f-8939-4b87-9cc2-270b79a60190);
+
+//Used for same player starting multiple Daisy dialogues
+DB_GLO_DaisyBackups((CHARACTER)S_GLO_Daisy_Backup1_c10cd603-219f-464a-83e6-c8e2d7101471);
+DB_GLO_DaisyBackups((CHARACTER)S_GLO_Daisy_Backup2_c716113b-2780-4988-8f0c-148073540db8);
+DB_GLO_DaisyBackups((CHARACTER)S_GLO_Daisy_Backup3_3a81b967-a094-4df2-ad83-61991fa59f9d);
+
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_MALE_807af8f5-0183-42d9-8d40-6e93d5236cc2);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_MALE_VOICE_799118d3-901c-41cc-8f99-25326d23c649);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_FEMALE_17c2405e-5771-4150-ad00-b1ef8d1dd5ae);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_FEMALE_VOICE_3549f056-0826-45ee-a8ae-351449b70fe3);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_NEUTRAL_3caea564-7be7-4f04-ad3c-05f4ebee3926);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_DESIRETRACK_8f815f65-6fe5-4671-8e2b-63575e1f2e88);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_REASONTRACK_6ea65c6d-3172-4478-9530-b74cbdcbb870);
+DB_GLO_DaisyBackup_TagsToClone((TAG)DAISY_FEARTRACK_c1400eed-4e63-4cb6-8ae1-f616505fda1a);
+KBSECTION
+//REGION Daisy Assignment after default assigned
+IF
+CompanionSelectedForUser(_Daisy,_UserID)
+AND
+DB_Avatars(_Avatar)
+AND
+DB_GLO_DaisyDreams_Relationships(_Avatar, _OldDaisy)
+AND
+DB_GLO_DaisyDreams_Daisies(_OldDaisy)
+AND
+GetReservedUserID(_Avatar,_UserID)
+AND
+GetIdentity(_Daisy,0,_Gender)
+THEN
+DB_GLO_DaisyDreams_Relationships(_Avatar, _Daisy);
+NOT DB_GLO_DaisyDreams_Relationships(_Avatar, _OldDaisy);
+PROC_DaisyDesire_SetDaisyFor(_Avatar, _Daisy, _Gender);
+
+//END_REGION
+
+
+//REGION Daisy Initialisation during Character Creation
+IF
+CompanionSelectedForUser(_Daisy,_UserID)
+AND
+DB_Avatars(_Avatar)
+AND
+GetReservedUserID(_Avatar,_UserID)
+AND
+NOT DB_GLO_DaisyDreams_Relationships(_Avatar, _)
+AND
+GetIdentity(_Daisy,0,_Gender)
+THEN
+DB_GLO_DaisyDreams_Relationships(_Avatar, _Daisy);
+PROC_DaisyDesire_SetDaisyFor(_Avatar, _Daisy, _Gender);
+
+//When drop in multiplayer, CompanionSelectedForUser event is sent before the avatar is created, so we store the info.
+IF
+CompanionSelectedForUser(_Daisy,_UserID)
+AND
+NOT DB_GLO_DaisyDreams_Relationships(_, _Daisy)
+THEN
+DB_GLO_DaisyAwaitsAvatar(_Daisy,_UserID);
+
+IF
+DB_Avatars(_Avatar)
+AND
+NOT DB_GLO_DaisyDreams_Relationships(_Avatar, _)
+AND
+GetReservedUserID(_Avatar,_UserID)
+AND
+DB_GLO_DaisyAwaitsAvatar(_Daisy,_UserID)
+AND
+GetIdentity(_Daisy,0,_Gender)
+THEN
+NOT DB_GLO_DaisyAwaitsAvatar(_Daisy,_UserID);
+DB_GLO_DaisyDreams_Relationships(_Avatar, _Daisy);
+PROC_DaisyDesire_SetDaisyFor(_Avatar, _Daisy, _Gender);
+//END_REGION
+
+//REGION Daisy Initialisation after Character Creation
+//Avatar with a Random Daisy
+IF
+DB_Avatars(_Avatar)
+AND
+DB_CC_Done(1)
+AND
+NOT QRY_Daisy_InitCustomDaisy(_Avatar)
+AND
+DB_GLO_DaisyDreams_Daisies(_Daisy)
+AND
+NOT DB_GLO_DaisyDreams_Relationships(_, _Daisy)
+AND
+NOT DB_GLO_DaisyDreams_Relationships(_Avatar,_)
+AND
+GetIdentity(_Daisy,0,_Gender)
+THEN
+DB_GLO_DaisyDreams_Relationships(_Avatar, _Daisy);
+PROC_DaisyDesire_SetDaisyFor(_Avatar, _Daisy, _Gender);
+
+QRY
+QRY_Daisy_InitCustomDaisy((CHARACTER)_Avatar)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION QRYs
+IF
+TextEvent("daisytome")
+AND
+GetHostCharacter(_Player)
+AND
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy)
+THEN
+TeleportTo(_Daisy,_Player);
+
+//Clean return value
+QRY
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy)
+THEN
+NOT DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy);
+
+//Existing Daisy found
+QRY
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Avatar)
+AND
+DB_GLO_DaisyDreams_Relationships(_Avatar, _Daisy)
+THEN
+PROC_GLO_DaisyDreams_GetDaisy_Attempt(_Daisy,_Avatar);
+
+//If companion, return bonded avatar's Daisy
+QRY
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Companion)
+AND
+NOT DB_GLO_DaisyDreams_Relationships(_Companion, _)
+AND
+QRY_GetBestAvatarForCompanion(_Companion)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+AND
+DB_GLO_DaisyDreams_Relationships(_Avatar, _Daisy)
+THEN
+PROC_GLO_DaisyDreams_GetDaisy_Attempt(_Daisy,_Avatar);
+
+//If no Daisy found, throw error.
+QRY
+QRY_GLO_DaisyDreams_GetDaisy((CHARACTER)_Character)
+AND
+NOT DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_)
+AND
+GUIDToString(_Character,_CharacterUUID)
+AND
+Concatenate("Could not find Daisy for: ",_CharacterUUID,_DaisyError)
+THEN
+DebugBreak(_DaisyError);
+
+PROC
+PROC_GLO_DaisyDreams_GetDaisy_Attempt((CHARACTER)_Daisy,(CHARACTER)_Avatar)
+AND
+QRY_SpeakerIsAvailable(_Daisy)
+THEN
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_Daisy);
+DB_GLO_DaisyDreams_DaisyVoice(_Daisy,_Avatar);
+
+PROC
+PROC_GLO_DaisyDreams_GetDaisy_Attempt((CHARACTER)_Daisy,(CHARACTER)_Avatar)
+AND
+DB_GLO_DaisyBackups(_DaisyBackup)
+AND
+NOT DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_)
+AND
+QRY_SpeakerIsAvailable(_DaisyBackup)
+THEN
+Transform(_DaisyBackup,_Daisy,(SHAPESHIFTRULE)DISGUISE_ceccc4eb-d774-4cd5-9147-12322b81b763);
+PROC_GLO_DaisyDreams_Backup_CloneTags(_Daisy,_DaisyBackup);
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy(_DaisyBackup);
+DB_GLO_DaisyDreams_DaisyVoice(_DaisyBackup,_Avatar);
+
+PROC
+PROC_GLO_DaisyDreams_Backup_CloneTags((CHARACTER)_DaisyOrig,(CHARACTER)_DaisyBackup)
+AND
+DB_GLO_DaisyBackup_TagsToClone(_Tag)
+AND
+IsTagged(_DaisyOrig,_Tag,_HasTag)
+THEN
+PROC_SetConditionalTag(_DaisyBackup,_Tag,_HasTag);
+
+IF
+DB_GLO_DaisyDreams_DaisyVoice(_Daisy,_Player)
+THEN
+PROC_SetOnStage(_Daisy,1);
+
+IF
+DialogEnded(_DaisyDialog,_)
+AND
+DB_GLO_DaisyAvatarDialog(_DaisyDialog)
+AND
+DB_GLO_DaisyDreams_DaisyVoice(_Daisy,_Player)
+THEN
+NOT DB_GLO_DaisyDreams_DaisyVoice(_Daisy,_Player);
+SetOnStage(_Daisy,0);
+//END_REGION
+
+//REGION Teleporting Daisies to the camp
+IF
+DB_GLO_DaisyDreams_Relationships(_,_Daisy)
+AND
+DB_CurrentLevel(_CurrentLevel)
+AND
+DB_Daisy_IdleTeleport(_CurrentLevel, _TeleportPos)
+THEN
+TeleportTo(_Daisy,_TeleportPos);
+
+IF
+DB_GLO_DaisyBackups(_Daisy)
+AND
+DB_CurrentLevel(_CurrentLevel)
+AND
+DB_Daisy_IdleTeleport(_CurrentLevel, _TeleportPos)
+THEN
+TeleportTo(_Daisy,_TeleportPos);
+//END_REGION
+
+//REGION Daisy Dream Support
+IF
+DB_Camp_DaisyAvatarDreamDialog(_Dialog)
+THEN
+DB_GLO_DaisyAvatarDialog(_Dialog);
+
+QRY
+QRY_Camp_StartAvatarDream_CustomDialogStart((DIALOGRESOURCE)_DaisyDialog,(CHARACTER)_Player)
+AND
+DB_Camp_DaisyAvatarDreamDialog(_DaisyDialog)
+AND
+QRY_GLO_DaisyDreams_GetDaisy(_Player)
+AND
+DB_QRYRTN_GLO_DaisyDreams_GetDaisy((CHARACTER)_Daisy)
+AND
+QRY_StartDialogCustom_Fixed(_DaisyDialog,_Daisy,_Player, 0, 0, 0, 0)
+THEN
+PROC_GLO_DaisyDreams_ChangeClothing(_DaisyDialog,_Daisy);
+ClearFlag((FLAG)GLO_Tadpoled_PartyUsed_1f4048fa-8793-4a61-9f18-cc660b68601b,NULL_00000000-0000-0000-0000-000000000000,0);
+
+QRY
+QRY_Camp_StartAvatarDream_CustomDialogStart((DIALOGRESOURCE)_DaisyDialog,(CHARACTER)_Player)
+AND
+DB_Camp_DaisyAvatarDreamDialog(_DaisyDialog)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_DaisyDreams_ChangeClothing((DIALOGRESOURCE)_DaisyDialog,(CHARACTER)_Daisy)
+AND
+DB_GLO_DaisyDream_Vanity(_DaisyDialog)
+THEN
+PROC_SetArmourSet(_Daisy,ARMOURSET.Vanity);
+DB_GLO_DaisyDream_ClothingChanged(_DaisyDialog,_Daisy);
+
+IF
+DialogEnded((DIALOGRESOURCE)_DaisyDialog,_Inst)
+AND
+DB_GLO_DaisyDream_ClothingChanged(_DaisyDialog,_Daisy)
+THEN
+NOT DB_GLO_DaisyDream_ClothingChanged(_DaisyDialog,_Daisy);
+PROC_SetArmourSet(_Daisy,ARMOURSET.Normal);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

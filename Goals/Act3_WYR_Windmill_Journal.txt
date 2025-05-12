@@ -1,0 +1,40 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// WYR_Windmill_FindBody
+DB_QuestDef_State((FLAG)WYR_Windmill_State_MindflayerFoodExplained_abdda774-d715-e72b-dd69-25db489f1b8d, "WYR_Windmill", "FindBody");
+// WYR_Windmill_ReturnBody
+// logic in KB
+// WYR_Windmill_COMPLETION
+DB_QuestDef_State((FLAG)WYR_Windmill_Event_GiveRewardPower_63455abf-6d0d-2943-bd04-a780ee1f6da5, "WYR_Windmill", "FedMindflayer");
+DB_QuestDef_State((FLAG)WYR_Windmill_State_MindflayerPermaDefeated_bff439da-9df0-4b19-9590-0679d80aa856, "WYR_Windmill", "KilledMindflayer");
+DB_QuestDef_State((FLAG)WYR_Windmill_State_MindflayerHunts_52f1c3c5-a312-b0ae-c3a6-25785b0ad7d1, "WYR_Windmill", "MindflayerHunts");
+DB_QuestDef_State((FLAG)END_General_State_Started_a0fd5f91-e4b3-4d01-84d3-9ff484139e99, "WYR_Windmill", "LeftToEND");
+KBSECTION
+IF
+QuestUpdateUnlocked(_Player, "WYR_Windmill", "FindBody")
+AND
+TaggedItemsGetCountInMagicPockets("DEFEATED_f0020818-86f1-4ee9-a5a9-9ace9ecc9010 & HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8 & !PLAYABLE_25bf5042-5bf6-4360-8df8-ab107ccb0d37",_Player,_Count)
+AND
+_Count > 0
+THEN
+QuestUpdate(_Player, "WYR_Windmill", "ReturnBody");
+
+IF
+AddedTo(_Corpse,_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestIsOpened("WYR_Windmill")
+AND
+QRY_QuestUpdateIsUnlockedForAny("WYR_Windmill","FindBody")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_Windmill","ReturnBody")
+AND
+SatisfiesTagExpression(_Corpse,"DEFEATED_f0020818-86f1-4ee9-a5a9-9ace9ecc9010 & HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8 & !PLAYABLE_25bf5042-5bf6-4360-8df8-ab107ccb0d37",1)
+THEN
+QuestUpdate("WYR_Windmill", "ReturnBody");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

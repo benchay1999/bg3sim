@@ -1,0 +1,39 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_Absolute_Entails((FLAG)GLO_Absolute_Knows_Symbol_83f32ae2-fc51-a337-e07f-07e1ed666aab,(FLAG)GLO_Absolute_Knows_Name_1b7fa14e-1a35-342a-5aa9-6342116578b6);
+DB_GLO_Absolute_Entails((FLAG)GOB_Absolute_Knows_GoblinsWorship_78ecaeae-023b-cddf-6ad4-ac06ec05ca19,(FLAG)GLO_Absolute_Knows_Name_1b7fa14e-1a35-342a-5aa9-6342116578b6);
+DB_GLO_Absolute_Entails((FLAG)GLO_Absolute_Knows_MoonriseTowers_7253b35b-2ac8-ce7f-6181-689ef27536d9,(FLAG)GLO_Absolute_Knows_Name_1b7fa14e-1a35-342a-5aa9-6342116578b6); //add flags for true souls, tadpoles, etc.
+
+DB_GLO_Absolute_TrueSoul(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_GLO_Absolute_TrueSoul(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9);
+DB_GLO_Absolute_TrueSoul(S_UND_TheDrowNere_06bf05c5-216b-4eaf-91f5-8f1dd3d57f30);
+KBSECTION
+IF
+TagSet(_Character, (TAG)BRANDED_ABSOLUTE_310f7186-bb0b-4905-b8f6-dfc2fe62570a)
+AND
+DB_Players((CHARACTER)_Character)
+THEN
+SetFlag((FLAG)GLO_Absolute_Knows_Symbol_83f32ae2-fc51-a337-e07f-07e1ed666aab, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+QuestUpdate(_Character,"GOB_GoblinPriest_Brand","HIDDEN_WLD_Boosters");
+
+IF
+FlagSet((FLAG)_Flag, _, _) // flagType: Global
+AND
+DB_GLO_Absolute_Entails((FLAG)_Flag,(FLAG)_Entail)
+THEN
+SetFlag((FLAG)_Entail, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+DialogActorLeft(_,_ID,_NPC,_)
+AND
+DB_DialogPlayers(_ID,_Char,_)
+AND
+DB_GLO_Absolute_TrueSoul(_NPC)
+THEN
+StartVoiceBark(GLO_Absolute_VB_Cultists_1a78bd06-a6fa-7d30-7d1c-55fc6a2740c5, (CHARACTER)_Char);
+SysClear("DB_GLO_Absolute_TrueSoul",1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

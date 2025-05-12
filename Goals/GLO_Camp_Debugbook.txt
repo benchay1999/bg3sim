@@ -1,0 +1,357 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString1_2b74bfb0-0a66-30a9-7019-a4575df2df9b",(FLAG)Debug_CAMP_CampString1_b75b6383-4e62-4ebd-f09c-b1d4f2ae21c8);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString2_d74b1976-9057-e8c1-86c9-566cab704d46",(FLAG)Debug_CAMP_CampString2_eed4b73e-5fbc-c5e9-cd25-d98e71cec9b2);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString3_63e85729-5c8b-4e59-15f4-c88626eecbed",(FLAG)Debug_CAMP_CampString3_1bc8a2f1-7e9b-01a5-3cf4-1dd0a1e7da7d);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString4_3b0036d8-efc1-fdb4-5315-a3a0108b9667",(FLAG)Debug_CAMP_CampString4_a407ff83-e819-82eb-555f-4e33d871897c);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString5_dae5d3e6-9688-9b90-358c-18b75da0e8f3",(FLAG)Debug_CAMP_CampString5_ac88446a-c38a-3544-1664-940ae46dba75);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString6_47f3210c-e86f-6b84-fb3c-a3c165e85e1d",(FLAG)Debug_CAMP_CampString6_31c78931-6de6-e4b6-046a-1f975207e1c5);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString7_ef59ae26-3051-b5dc-e288-02a52f607a5b",(FLAG)Debug_CAMP_CampString7_18a94f12-4fee-6637-44bf-af9c9fba23cb);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString8_6105708a-7976-c9d2-3c94-7b4199752fe7",(FLAG)Debug_CAMP_CampString8_52e5327f-93a0-3888-db77-fbc30f06041e);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString9_73ea8bd6-2020-9bce-e64e-1419ac34df68",(FLAG)Debug_CAMP_CampString9_701c7968-e44d-a789-98f7-37bef5e7b60f);
+DB_CAMPDEBUGBOOK_StringVariableFlag("CampString10_91387b11-70c6-8b12-34ef-8556e8e60aa7",(FLAG)Debug_CAMP_CampString10_ecd33ebb-e2eb-439b-c769-0ede6a744e61);
+
+SetFlag((FLAG)Debug_CAMP_IgnoreCampTypeRestrictions_4118a620-c0e5-afaf-1bec-2e260882a45f,NULL_00000000-0000-0000-0000-000000000000,0);
+KBSECTION
+//REGION Simple Flags
+
+IF
+FlagSet((FLAG)Debug_CAMP_NoNightSelection_b7831dfa-d67c-05aa-4abd-b12c4a36dc52,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+DB_CampNight_DEBUG_Disabled(1);
+
+IF
+FlagCleared((FLAG)Debug_CAMP_NoNightSelection_b7831dfa-d67c-05aa-4abd-b12c4a36dc52,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+NOT DB_CampNight_DEBUG_Disabled(1);
+
+IF
+FlagSet((FLAG)Debug_CAMP_InviteAll_43aec80b-9a45-64ef-d123-fbcea7b05c0d,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_OriginCampFlags(_Character,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+AND
+NOT DB_Players(_Character)
+THEN
+SetEntityEvent(_Character,"DebugTeleportedToCamp");
+
+IF
+FlagSet((FLAG)Debug_CAMP_InviteAllCompanions_98bcd2b6-c8d5-1a8e-72df-0eb0ded536ee,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_OriginCampFlags(_Character,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+AND
+DB_Origins(_Character)
+AND
+NOT DB_Players(_Character)
+THEN
+SetEntityEvent(_Character,"DebugTeleportedToCamp");
+
+IF
+FlagSet((FLAG)Debug_CAMP_InviteAllFollowers_7492e9a8-119a-40ed-2950-911bb849924e,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_OriginCampFlags(_Character,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+AND
+NOT DB_Origins(_Character)
+AND
+NOT DB_Players(_Character)
+THEN
+SetEntityEvent(_Character,"DebugTeleportedToCamp");
+//END_REGION
+
+//REGION Generic Camp String Variables Calls
+//Clear old data
+PROC
+PROC_CAMPDEBUGBOOK_ResetCampStrings()
+AND
+DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_Guid)
+THEN
+NOT DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_Guid);
+
+//Clear old data
+PROC
+PROC_CAMPDEBUGBOOK_ResetCampStrings()
+AND
+DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,_GUID)
+THEN
+NOT DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,_GUID);
+
+IF
+DB_CAMPDEBUGBOOK_StringType(_NewType)
+AND
+DB_CAMPDEBUGBOOK_StringType(_OldType)
+AND
+_NewType != _OldType
+THEN
+NOT DB_CAMPDEBUGBOOK_StringType(_OldType);
+
+QRY
+QRY_CAMPDEBUGBOOK_GetFreeDialogString((GUIDSTRING)_ID)
+AND
+DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_FreeVariable,_Flag)
+THEN
+NOT DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_FreeVariable,_Flag);
+
+QRY
+QRY_CAMPDEBUGBOOK_GetFreeDialogString((GUIDSTRING)_ID)
+AND
+DB_CAMPDEBUGBOOK_StringVariableFlag(_StringVariable,_Flag) //List of All Variables
+AND
+NOT DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,_) // Subtract Variables already in use
+AND
+NOT DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_,_) //And only return the first available
+THEN
+DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_StringVariable,_Flag);
+
+//We ran out of available flags but have entries left, Remember the entry ID that we didn't find a node for, so we can start from there if we load in more entries. 
+QRY
+QRY_CAMPDEBUGBOOK_GetFreeDialogString((GUIDSTRING)_ID)
+AND
+NOT DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_,_)
+AND
+NOT DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_)
+THEN
+DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_ID);
+
+//Flags: The flags have a double use: 
+// Track Validity: If a node holds no text (i.e. you have more nodes than possible camp types) the flag is set to true, so the node is not shown.
+// As Event when the user selects a node in the dialog.
+IF
+DB_CAMPDEBUGBOOK_FlagCampStringCouple((FLAG)_Flag,_)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+ClearFlag(_Flag,NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+PROC_CAMPDEBUGBOOK_SetCampStringFlags()
+AND
+DB_CAMPDEBUGBOOK_StringVariableFlag(_StringVariable,_Flag)
+AND
+NOT DB_CAMPDEBUGBOOK_FlagCampStringCouple((FLAG)_Flag,_)
+AND
+NOT DB_GlobalFlag(_Flag)
+THEN
+SetFlag(_Flag,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//If we have more objects than nodes, show the Load More node
+PROC
+PROC_CAMPDEBUGBOOK_SetCampStringFlags()
+AND
+DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_GUID)
+AND
+GetFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+ClearFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Else, don't
+PROC
+PROC_CAMPDEBUGBOOK_SetCampStringFlags()
+AND
+NOT DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_)
+AND
+GetFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+SetFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0);
+
+QRY
+QRY_CAMPDEBUGBOOK_FirstObjectReached((GUIDSTRING)_FirstObject,(GUIDSTRING)_FirstObject)
+THEN
+DB_CAMPDEBUGBOOK_FirstObjectReached(1);
+
+QRY
+QRY_CAMPDEBUGBOOK_FirstObjectReached((GUIDSTRING)_Object,(GUIDSTRING)_FirstObject)
+AND
+DB_CAMPDEBUGBOOK_FirstObjectReached(1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CAMPDEBUGBOOK_InitialPopulate((STRING)_StringType)
+THEN
+DB_CAMPDEBUGBOOK_StringType(_StringType);
+PROC_CAMPDEBUGBOOK_ResetCampStrings();
+DB_CAMPDEBUGBOOK_FirstObjectReached(1);
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings(NULL_00000000-0000-0000-0000-000000000000);
+PROC_CAMPDEBUGBOOK_SetCampStringFlags();
+
+//Show next X objects in dialog
+IF
+FlagSet((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,_,_)
+AND
+DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_GUID)
+THEN
+ClearFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0);
+NOT DB_CAMPDEBUGBOOK_LoadMoreStringTracker(_GUID);
+NOT DB_CAMPDEBUGBOOK_FirstObjectReached(1);
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings(_GUID);
+PROC_CAMPDEBUGBOOK_SetCampStringFlags();
+
+PROC
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings((GUIDSTRING)_)
+AND
+DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,_GUID)
+THEN
+NOT DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,_GUID);
+
+IF
+DialogEnded((DIALOGRESOURCE)DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,_)
+THEN
+PROC_CAMPDEBUGBOOK_ResetCampStrings();
+//END_REGION
+
+//REGION Queue Camp Nights
+IF
+FlagSet((FLAG)Debug_CAMP_PopulateNights_022ded9e-3b49-9b50-d7d1-9c7069b3159e,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+ClearFlag((FLAG)Debug_CAMP_PopulateNights_022ded9e-3b49-9b50-d7d1-9c7069b3159e,NULL_00000000-0000-0000-0000-000000000000,0);
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,"CampVerb_38f3388d-636e-4803-e947-5b186a5bc960","Queue");
+PROC_CAMPDEBUGBOOK_InitialPopulate("CampNights");
+
+//Loop over all camp nights and as long as a node is available, set the Camper's Name as the text for the dialog's question node.
+PROC
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings((GUIDSTRING)_FirstObject)
+AND
+DB_CAMPDEBUGBOOK_StringType("CampNights")
+AND
+DB_CampNight(_NightFlag,_)
+AND
+QRY_CAMPDEBUGBOOK_FirstObjectReached(_NightFlag,_FirstObject)
+AND
+QRY_CAMPDEBUGBOOK_GetFreeDialogString(_NightFlag)
+AND
+DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_FreeVariable,_Flag)
+AND
+GetFlagName(_NightFlag,_Name)
+AND
+GetFlagDescription(_NightFlag,_Description)
+AND
+Concatenate(_Name,": ",_PartialString)
+AND
+Concatenate(_PartialString,_Description,_FullText)
+THEN
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,_FreeVariable,_FullText);
+DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,(GUIDSTRING)_NightFlag);
+
+//CampNight selected
+IF
+FlagSet(_DebugFlag,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_CAMPDEBUGBOOK_FlagCampStringCouple((FLAG)_DebugFlag,(GUIDSTRING)_NightFlag)
+AND
+DB_CAMPDEBUGBOOK_StringType("CampNights")
+AND
+GetFlag((FLAG)Debug_CAMP_IgnoreCampTypeRestrictions_4118a620-c0e5-afaf-1bec-2e260882a45f,NULL_00000000-0000-0000-0000-000000000000,_IgnoreCampTypeRestrictions)
+THEN
+PROC_CAMPDEBUG_QueueNight((FLAG)_NightFlag,_IgnoreCampTypeRestrictions);
+//END_REGION
+
+//REGION Invite individuals
+IF
+FlagSet((FLAG)Debug_CAMP_InviteIndiPopulate_41a67fb9-2eb9-d517-0b96-b364a7acc0ca,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+ClearFlag((FLAG)Debug_CAMP_InviteIndiPopulate_41a67fb9-2eb9-d517-0b96-b364a7acc0ca,NULL_00000000-0000-0000-0000-000000000000,0);
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,"CampVerb_38f3388d-636e-4803-e947-5b186a5bc960","Invite");
+PROC_CAMPDEBUGBOOK_InitialPopulate("Invite");
+
+//Loop over all camp followers and companions and as long as a node is available, set the Camper's Name as the text for the dialog's question node.
+PROC
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings((GUIDSTRING)_FirstObject)
+AND
+DB_CAMPDEBUGBOOK_StringType("Invite")
+AND
+DB_OriginCampFlags(_Character,(FLAG)_NameFlag,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+AND
+NOT DB_InCamp(_Character)
+AND
+NOT DB_Players(_Character)
+AND
+QRY_CAMPDEBUGBOOK_FirstObjectReached(_Character,_FirstObject)
+AND
+QRY_CAMPDEBUGBOOK_GetFreeDialogString(_Character)
+AND
+DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_FreeVariable,_Flag)
+AND
+GetFlagName(_NameFlag,_Name)
+THEN
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,_FreeVariable,_Name);
+DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,(GUIDSTRING)_Character);
+
+//Invitee selected
+IF
+FlagSet(_DebugFlag,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_CAMPDEBUGBOOK_FlagCampStringCouple((FLAG)_DebugFlag,(GUIDSTRING)_Character)
+AND
+DB_CAMPDEBUGBOOK_StringType("Invite")
+THEN
+SetEntityEvent(_Character,"DebugTeleportedToCamp");
+//END_REGION
+
+//REGION Change Camptype
+IF
+FlagSet((FLAG)Debug_CAMP_PopulateCampTypes_567f1f72-6224-4553-5003-d7fa60d21ed6,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+ClearFlag((FLAG)Debug_CAMP_PopulateCampTypes_567f1f72-6224-4553-5003-d7fa60d21ed6,NULL_00000000-0000-0000-0000-000000000000,0);
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,"CampVerb_38f3388d-636e-4803-e947-5b186a5bc960","Switch to");
+PROC_CAMPDEBUGBOOK_InitialPopulate("CampTypes");
+
+//Add a debug entry to reset the camptype
+PROC
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings((GUIDSTRING)_FirstObject)
+AND
+DB_CAMPDEBUGBOOK_StringType("CampTypes")
+AND
+QRY_CAMPDEBUGBOOK_GetFreeDialogString((GUIDSTRING)FAKEUUID_00000000-0000-0000-1337-000000000001)
+AND
+DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_FreeVariable,_Flag)
+THEN
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,_FreeVariable,"RESET CAMPTYPE OVERRIDE");
+DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,(GUIDSTRING)FAKEUUID_00000000-0000-0000-1337-000000000001);
+
+//Loop over all campsites and as long as a node is available, set the Camp's name as the text for the dialog's question node.
+PROC
+PROC_CAMPDEBUGBOOK_LoadMoreCampStrings((GUIDSTRING)_FirstObject)
+AND
+DB_CAMPDEBUGBOOK_StringType("CampTypes")
+AND
+DB_Camp(_Name,_Campfire,_,_)
+AND
+Exists(_Campfire,1)
+AND
+QRY_CAMPDEBUGBOOK_FirstObjectReached(_Campfire,_FirstObject)
+AND
+QRY_CAMPDEBUGBOOK_GetFreeDialogString(_Campfire)
+AND
+DB_QRYRTN_CAMPDEBUGBOOK_GetFreeDialogString(_FreeVariable,_Flag)
+THEN
+DialogSetVariableString(DebugBook_Camp_a4b60736-3e7a-5b59-099e-05f144d88532,_FreeVariable,_Name);
+DB_CAMPDEBUGBOOK_FlagCampStringCouple(_Flag,(GUIDSTRING)_Campfire);
+
+//Campsite selected
+IF
+FlagSet(_DebugFlag,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_CAMPDEBUGBOOK_FlagCampStringCouple((FLAG)_DebugFlag,(GUIDSTRING)_Campfire)
+AND
+DB_CAMPDEBUGBOOK_StringType("CampTypes")
+AND
+DB_Camp(_Name,(ITEM)_Campfire,_,_)
+THEN
+DB_ActiveCamp_Override(_Name);
+DB_ActiveCamp(_Name);
+
+//Reset selected
+IF
+FlagSet(_DebugFlag,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_CAMPDEBUGBOOK_FlagCampStringCouple((FLAG)_DebugFlag,(GUIDSTRING)FAKEUUID_00000000-0000-0000-1337-000000000001)
+AND
+DB_CAMPDEBUGBOOK_StringType("CampTypes")
+AND
+DB_ActiveCamp_Override(_Name)
+THEN
+NOT DB_ActiveCamp_Override(_Name);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

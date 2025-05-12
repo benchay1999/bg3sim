@@ -1,0 +1,331 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+SetOnStage((ITEM)S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+PROC_TriggerRegisterForPlayers(S_TWN_LeaveAct2DaisyWarningBox_4505f623-2c5d-4eae-ba0b-b86d156ce775);
+DB_DialogBlockTradeButton(GLO_ThrallOfTheAbsolute_LeaveWithoutKethericStone_e89ef423-ba39-2243-4383-dd28eef77c74);
+DB_IgnoreMutingStatussesDialog(GLO_ThrallOfTheAbsolute_LeaveWithoutKethericStone_e89ef423-ba39-2243-4383-dd28eef77c74);
+DB_AddCharactersInTriggerToDialog(GLO_ThrallOfTheAbsolute_AttemptLeaveAct2_0bc75b6b-86a4-dd78-7f2d-160aa6d70f7d, S_TWN_LeaveAct2DaisyWarningBox_4505f623-2c5d-4eae-ba0b-b86d156ce775, 1, 1, 1, 1);
+DB_AddCharactersInTriggerToDialog(GLO_ThrallOfTheAbsolute_LeaveWithoutKethericStone_e89ef423-ba39-2243-4383-dd28eef77c74, S_TWN_LeaveAct2DaisyWarningBox_4505f623-2c5d-4eae-ba0b-b86d156ce775, 1, 1, 1, 1);
+
+DB_TopicalGreeting((FLAG)TG_GLO_LiftingTheCurse_LiftedCurse_ac891d02-3650-4c3d-b180-f83465761882);
+DB_TopicalGreetingEndCondition_FlagSet((FLAG)TG_GLO_LiftingTheCurse_LiftedCurse_ac891d02-3650-4c3d-b180-f83465761882, (FLAG)VISITEDREGION_INT_Main_A_a2e1a618-d211-484e-9389-6b37308b8da1);
+KBSECTION
+IF
+TextEvent("finaletest")
+THEN
+SetOnStage((ITEM)S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 1);
+SetFlag((FLAG)SCE_Epilogue_State_HasStarted_9b4bae0b-6464-4b0e-a0e3-41201c0c3c9e);
+PROC_SCE_StartSetupDebrief();
+PROC_TeleportPartiesTo(S_Debug_TWN_MarchingArmy_e1dd0c36-8d2e-49cb-afb5-84b8fc9a3439,"");
+
+
+IF
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+THEN
+DB_SCE_Debrief_Participant(S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, S_SCE_SpiritPoint_f540bdee-3239-40a7-a9c9-b03200e0bace, HAV_HalsinQuest_Spirit_85232c87-9912-7c37-c068-3196688f88b3);
+
+
+PROC
+PROC_BlockUseOfItem(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209)
+THEN
+PROC_TWN_Finale_Act2ExitUsed((CHARACTER)_Player);
+
+PROC
+PROC_TWN_Finale_Act2ExitUsed((CHARACTER)_Player)
+AND
+_Player != S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323
+THEN
+PROC_TWN_Finale_StartCheck((CHARACTER)_Player);
+
+PROC //We do not want Halsin in the main speaker slot if the curse has not been lifted.
+PROC_TWN_Finale_Act2ExitUsed((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+AND
+NOT QRY_TWN_Finale_CannotFindReplacement()
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Player, (ITEM)S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, _, 1)
+THEN
+PROC_TWN_Finale_StartCheck((CHARACTER)_Player);
+
+QRY
+QRY_TWN_Finale_CannotFindReplacement()
+AND
+NOT QRY_GetClosestAvailableCharacterTo((ITEM)S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0)
+THEN
+PROC_PlayCantUseItemAD((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_CustomUseItemResponse((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+PROC
+PROC_TWN_Finale_Act2ExitUsed((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+THEN
+PROC_TWN_Finale_StartCheck((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+PROC
+PROC_TWN_Finale_StartCheck((CHARACTER)_Player)
+AND
+NOT QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+THEN
+DB_TWN_Finale_InitiatingPlayer(_Player);
+//ReadyCheckGlobal("TWN_Finale_ReadyCheck", "TWN_Finale_DepartureCheck", 1, _Player);
+//Level swap system will take over from here
+
+
+QRY
+QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+AND
+NOT QRY_SpeakerIsAvailable(_Player)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+//Moonrise Assault
+QRY
+QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+THEN
+PROC_TWN_Finale_BlockAct2DaisyDialog(_Player, GLO_ThrallOfTheAbsolute_AttemptLeaveAct2_0bc75b6b-86a4-dd78-7f2d-160aa6d70f7d);
+DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+//Nightsong dead path
+QRY
+QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_NightsongDeath")
+AND
+NOT DB_GlobalFlag(SCE_Debrief_State_Setup_0ebc6b35-0f07-4a73-b6b8-9782ecbcaccf)
+THEN
+PROC_TWN_Finale_BlockAct2DaisyDialog(_Player, GLO_ThrallOfTheAbsolute_AttemptLeaveAct2_0bc75b6b-86a4-dd78-7f2d-160aa6d70f7d);
+DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+//Leaving without Ketheric Stone
+QRY
+QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+DB_GlobalFlag(GLO_EmperorPrelude_State_KethericStoneCollected_98cc3440-0316-4056-9aeb-d8b6e7c79b64)
+AND
+NOT QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d)
+THEN
+PROC_TWN_Finale_BlockAct2DaisyDialog(_Player, GLO_ThrallOfTheAbsolute_LeaveWithoutKethericStone_e89ef423-ba39-2243-4383-dd28eef77c74);
+DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+PROC
+PROC_TWN_Finale_BlockAct2DaisyDialog((CHARACTER)_Player, (DIALOGRESOURCE)_Dialog)
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, NULL_00000000-0000-0000-0000-000000000000, _Player, 0, 0, 0, 0)
+THEN
+DB_NOOP(1); 
+
+QRY
+QRY_GLO_LevelSwap_CustomTransition((CHARACTER)_Player, "ReadyCheck_ToBGFromSCL", (STRING)_)
+THEN
+PROC_TWN_Finale_ReadyCheck_Passed();
+
+
+//Halsin leaves forever if the curse is not lifted
+IF
+DialogEnded(TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+THEN
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "TWN_StayingInSCL");
+PROC_DisappearOutOfSight(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "Walk", 0, "SCE_Halsin_LeavesForever");
+
+QRY
+QRY_PartyMembers_BlockLeaveMessage("TWN_StayingInSCL")
+AND
+DB_PermaDefeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+DB_NOOP(1);
+
+//Halsin joins camp if somehow curse is lifted but you left him behind and never got the option to add him to your party, clears Camp2 dialog for InParty
+IF
+DialogEnded(TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _)
+AND
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+AND
+NOT DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_PartyMembers(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, 1);
+PROC_GlobalSetFlagAndCache((FLAG)GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_Dialogs(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, Halsin_InParty_890c2586-6b71-ca01-5bd6-19d533181c71);
+DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+//Halsin joins camp for the INT forced camp night
+PROC
+PROC_FallbackCamp_OnCampNightQueued(_Flag)
+AND
+DB_CampNight_ForceOnLevelSwap(_Flag, "ReadyCheck_ToBGFromSCL", _, _)
+AND
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+AND
+NOT DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_PartyMembers(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, 1);
+PROC_GlobalSetFlagAndCache((FLAG)GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+DB_Dialogs(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, Halsin_InParty_890c2586-6b71-ca01-5bd6-19d533181c71);
+DB_InCamp(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+PROC
+PROC_TWN_Finale_ReadyCheck_Passed()
+AND
+DB_TWN_Finale_InitiatingPlayer(_Player)
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _Player)
+THEN
+NOT DB_OnlyOnce("TWN_Finale_LeavingAct");
+
+PROC
+PROC_TWN_Finale_ReadyCheck_Passed()
+AND
+DB_SCE_Debrief_BackOnStage(_NPC)
+AND
+NOT DB_PermaDefeated(_NPC)
+AND
+IsOnStage(_NPC, 0)
+THEN
+SetOnStage(_NPC, 1);
+
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, (INTEGER)_ID)
+AND
+DB_Players(_Player)
+AND
+NOT DB_TWN_Finale_InitiatingPlayer(_Player)
+THEN
+PROC_DialogAddListeningActor(_ID, _Player);
+
+IF
+DialogStarted((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, _InstanceID)
+THEN
+DialogSetTeleportPartyOnEnded(_InstanceID, (TRIGGER)S_INT_ActTeleport_c9aa7107-72d5-46d4-893d-32fe41506bf0);
+
+//REGION Origins can't leave act 2 without covering some topic.
+
+QRY
+QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+AND
+NOT DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, _)
+AND
+QRY_SCL_PartyMemberShadowcursed()
+THEN
+DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+QRY
+QRY_SCL_PartyMemberShadowcursed()
+AND
+DB_PartyMembers(_Character)
+AND
+DB_CustomDefeatedState(_Character, "SCL_Shadowcurse")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TWN_Finale_CannotUse((CHARACTER)_Player)
+AND
+NOT DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, _)
+AND
+QRY_TWN_Finale_CompanionHasUnfinishedBusiness_Internal()
+THEN
+DB_TWN_Finale_CompanionHasUnfinishedBusiness_LevelSwapData(_Player);
+DB_CustomUseItemResponse(_Player, S_TWN_ActExit_4df293a7-c9b7-4be4-b4a9-42400ddbe209, 0);
+
+QRY
+QRY_TWN_Finale_CompanionHasUnfinishedBusiness_Internal()
+AND
+QRY_TWN_Finale_CompanionHasUnfinishedBusiness()
+AND
+DB_TWN_Finale_InitiatingPlayer(_Player)
+THEN
+ReadyCheckGlobal("TWN_Finale_CompanionReadyCheck", "TWN_Finale_CompanionReadyCheck", 1, _Player);
+
+IF
+ReadyCheckPassed("TWN_Finale_CompanionReadyCheck")
+AND
+DB_TWN_Finale_CompanionHasUnfinishedBusiness_LevelSwapData((CHARACTER)_Player)
+THEN
+PROC_GLO_LevelSwapCheckPartyAvailableAndProceed("ReadyCheck_ToBGFromSCL",_Player);
+NOT DB_TWN_Finale_CompanionHasUnfinishedBusiness_LevelSwapData(_Player);
+
+IF
+ReadyCheckFailed("TWN_Finale_CompanionReadyCheck")
+AND
+DB_TWN_Finale_CompanionHasUnfinishedBusiness_LevelSwapData((CHARACTER)_Player)
+THEN
+NOT DB_TWN_Finale_CompanionHasUnfinishedBusiness_LevelSwapData(_Player);
+
+//Overload for specific characters
+QRY
+QRY_TWN_Finale_CompanionHasUnfinishedBusiness()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+
+//REGION Halsin Inclusion
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)TWN_Finale_LeavingAct_06d434ac-008b-1994-5dc5-f8fcd681553d, (INTEGER)_ID)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+AND
+NOT DB_PermaDefeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT QRY_TWN_Finale_HalsinNotPresent()
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+QRY
+QRY_TWN_Finale_HalsinNotPresent()
+AND
+QRY_State_IsBeforeState((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "SCL_LiftingTheCurse", "SCL_LiftingTheCurse_State_HalsinInAct2")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TWN_Finale_HalsinNotPresent()
+AND 
+DB_State_Current(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, "SCL_LiftingTheCurse", "SCL_LiftingTheCurse_State_HalsinInShadowFell")
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Lifting The Curse TG
+
+//TG - 76 - Lifted the Curse
+IF
+DB_GlobalFlag((FLAG)GLO_LiftingTheCurse_State_BreathHasBeenRestored_2113b54e-a140-4aa0-97ac-219fa7b7d038)
+AND
+DB_GlobalFlag((FLAG)SCE_Epilogue_State_HasStarted_9b4bae0b-6464-4b0e-a0e3-41201c0c3c9e)
+AND
+QRY_OnlyOnce("TG_GLO_LiftingTheCurse_Lifted")
+AND
+DB_Avatars(_Avatar)
+THEN
+SetFlag((FLAG)TG_GLO_LiftingTheCurse_LiftedCurse_ac891d02-3650-4c3d-b180-f83465761882, _Avatar);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

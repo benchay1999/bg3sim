@@ -1,0 +1,161 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_DialogBlockTradeButton(GLO_ThrallOfTheAbsolute_Act1ReturnAttempt_459d5b1a-4e14-d3be-5d56-d8ea0cbfdce9);
+DB_IgnoreMutingStatussesDialog(GLO_ThrallOfTheAbsolute_Act1ReturnAttempt_459d5b1a-4e14-d3be-5d56-d8ea0cbfdce9);
+
+DB_SCL_General_Act1ReturnAttemptDialogAreas((TRIGGER)S_SCL_Act1ReturnAttemptDialogBox_ToUNDFromSCL_7a5bb6d4-9c7e-495f-bdf2-f49f52bad40a);
+DB_SCL_General_Act1ReturnAttemptDialogAreas((TRIGGER)S_SCL_Act1ReturnAttemptDialogBox_ToCREFromSCL02_1b06fb7c-33c0-43a3-8c89-dc09883f9cba);
+
+KBSECTION
+//REGION DEBUG
+IF
+TextEvent("blockact1")
+AND
+NOT DB_GlobalFlag(GLO_DEBUG_ThrallOfTheAbsolute_State_BlockActReturn_907fc5a8-68e3-4fd4-a26e-86a3ff6eba4c)
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(GLO_DEBUG_ThrallOfTheAbsolute_State_BlockActReturn_907fc5a8-68e3-4fd4-a26e-86a3ff6eba4c);
+DebugText(_Player, "DEBUG: Blocked access to Act 1");
+
+IF
+TextEvent("blockact1")
+AND
+DB_GlobalFlag(GLO_DEBUG_ThrallOfTheAbsolute_State_BlockActReturn_907fc5a8-68e3-4fd4-a26e-86a3ff6eba4c)
+AND
+GetHostCharacter(_Player)
+THEN
+ClearFlag(GLO_DEBUG_ThrallOfTheAbsolute_State_BlockActReturn_907fc5a8-68e3-4fd4-a26e-86a3ff6eba4c);
+DebugText(_Player, "DEBUG: Unblock access to Act 1");
+
+IF
+TextEvent("toundelevator")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(_Player, S_Debug_SCL_Underdark_6936fa1d-ec7f-4198-b959-623ad7a3ce76);
+
+IF
+DB_GlobalFlag(GLO_DEBUG_ThrallOfTheAbsolute_State_BlockActReturn_907fc5a8-68e3-4fd4-a26e-86a3ff6eba4c) 
+THEN
+PROC_SCL_General_BlockReturnToAct1();
+
+IF
+FlagCleared((FLAG)GLO_DEBUG_ThrallOfTheAbsolute_State_BlockActReturn_907fc5a8-68e3-4fd4-a26e-86a3ff6eba4c, _, _)
+THEN
+ClearFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3);
+NOT DB_SCL_Teleporters_Blocked(S_SCL_LevelSwapTeleporter_Mountain_0d122b82-c4c9-4fda-81a1-cf9f9bf59167);
+NOT DB_SCL_Teleporters_Blocked(S_SCL_Elevator_Fort_ToUnderdark_3a89175c-1f32-4f49-853c-f0aa7e8c917f);
+
+//END_REGION
+//REGION Returning to Act 1
+IF
+DB_SCL_General_Act1ReturnAttemptDialogAreas(_DialogArea)
+THEN
+PROC_TriggerRegisterForPlayers(_DialogArea);
+DB_AddCharactersInTriggerToDialog(GLO_ThrallOfTheAbsolute_Act1ReturnAttempt_459d5b1a-4e14-d3be-5d56-d8ea0cbfdce9, _DialogArea, 1, 1, 1, 1);
+
+QRY
+QRY_SCL_General_CanReturnToAct1()
+AND
+NOT DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_BlockTeleport((CHARACTER)_,(ITEM)_Teleporter)
+AND
+DB_SCL_Teleporters_Blocked(_Teleporter)
+THEN
+DB_NOOP(1);
+
+//Block Act 1 upon entering Shadowfell
+IF
+ReadyCheckPassed("ReadyCheck_EnterNightsongPrison")
+THEN
+PROC_SCL_General_BlockReturnToAct1();
+
+//For the purpose of testing in case the ready check is skipped
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+THEN
+PROC_SCL_General_BlockReturnToAct1();
+
+PROC
+PROC_SCL_General_BlockReturnToAct1()
+THEN
+PROC_LockAllGroupWaypoints("Act1");
+PROC_LockAllGroupWaypoints("Act1b");
+DB_SCL_Teleporters_Blocked(S_SCL_LevelSwapTeleporter_Mountain_0d122b82-c4c9-4fda-81a1-cf9f9bf59167);
+DB_SCL_Teleporters_Blocked(S_SCL_Elevator_Fort_ToUnderdark_3a89175c-1f32-4f49-853c-f0aa7e8c917f);
+
+//SCL to Underdark teleporter
+PROC
+PROC_GLO_LevelSwap_BlockSwap((CHARACTER)_Player,"ReadyCheck_ToWLDFromSCL",(STRING)_CurrentLevel)
+AND
+NOT QRY_SCL_General_CanReturnToAct1()
+THEN
+DB_GLO_LevelSwap_Blocked(_CurrentLevel);
+PROC_SCL_ThrallOfTheAbsolute_Act1ReturnAttemptDialog((CHARACTER)_Player);
+
+//SCL to CRE teleporters
+PROC
+PROC_BlockUseOfItem(_Player, _Teleporter)
+AND
+DB_GLO_LevelSwap_Teleporter(_Teleporter, _)
+AND
+DB_SCL_Teleporters_Blocked(_Teleporter)
+THEN
+PROC_SCL_ThrallOfTheAbsolute_Act1ReturnAttemptDialog((CHARACTER)_Player);
+
+PROC
+PROC_SCL_ThrallOfTheAbsolute_Act1ReturnAttemptDialog((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+QRY_StartDialogCustom_Fixed(GLO_ThrallOfTheAbsolute_Act1ReturnAttempt_459d5b1a-4e14-d3be-5d56-d8ea0cbfdce9, NULL_00000000-0000-0000-0000-000000000000, _Player, 0, 0, 0, 0) //Daisy generics handle adding as speaker
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+
+//REGION Return to Act 1b
+
+//END_REGION
+
+//REGION On region load
+
+//Killing Halsin if we have never seen him before moving on to Act 2
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_GlobalFlag((FLAG)VISITEDREGION_WLD_Main_A_925c721d-686b-4fbe-8c3c-d1233bf863b7)
+AND
+NOT DB_GlobalFlag((FLAG)GOB_WolfPens_State_HalsinIntroHappened_7d0751b9-1055-4a54-9ccd-f5e95e2a1f69)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Halsin_Knows_MoonriseBriefing_9f8afde2-9dcf-3a5e-5e85-128913b820b7)
+AND
+NOT DB_Defeated(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+Die(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 0, 0);
+TeleportTo(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, S_DEN_GatePlayerMoveToPoint_002_e0ee6b1c-8b40-4a09-815b-1e032855978a, "Halsin_Dead_Offscreen_Teleport", 0, 0, 0, 0, 1);
+PROC_CampNight_ClearCampNight((FLAG)NIGHT_HalsinsReturn_a6ed2a44-776c-41d7-abfc-b8240209f886);
+PROC_CampNight_ClearCampNight((FLAG)NIGHT_HalsinsRevenge_55e86575-6b8c-45ab-b582-e5ed048e6a83);
+//END_REGION
+
+//REGION Leaving the region to INT or BGO
+PROC
+PROC_LevelUnloading("SCL_Main_A")
+AND
+DB_PartOfTheTeam(_Character)
+AND
+HasActiveStatus(_Character, "HAV_SELUNEOINTMENT", 1)
+THEN
+RemoveStatus(_Character, "HAV_SELUNEOINTMENT");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

@@ -1,0 +1,86 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_ApplySavegamePatches()
+AND
+NOT QRY_BG3_SaveGameIsOlderThan("Release Patch 5 Hotfix 4")
+AND
+NOT DB_SavegamePatches_ClearBubble(_)
+THEN
+GoalCompleted;
+
+
+//REGION Lava bubbles
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 5 Hotfix 4")
+THEN
+PROC_SavegamePatches_CleanUpLavaBubbles();
+
+// There can be a _lot_ of these, so timeslice their clearing
+PROC
+PROC_SavegamePatches_CleanUpLavaBubbles()
+AND
+DB_Destroyed(_Bubble)
+AND
+GUIDToString(_Bubble,_BubbleName)
+AND
+IsSubstring(_BubbleName,"PUZ_UND_LavaBubble",1)
+THEN
+DB_SavegamePatches_ClearBubble(_Bubble);
+
+PROC
+PROC_SavegamePatches_CleanUpLavaBubbles()
+THEN
+TimerLaunch("SavegamePatches_ClearBubbles",500);
+
+IF
+TimerFinished("SavegamePatches_ClearBubbles")
+THEN
+PROC_DeclareCounter("SavegamePatches_BubbleCounter");
+
+IF
+TimerFinished("SavegamePatches_ClearBubbles")
+AND
+QRY_DoNTimes(10)
+AND
+DB_QRY_RTN_DoNTimes(_Index)
+AND
+// Not the fastest way to get an individual element, but prevents server hickups
+// when this DB contains 35000 elements and we have to iterate over all remaining
+// ones every time to select the ones we want to clear this timeslice)
+SysFactAtIndex("DB_SavegamePatches_ClearBubble",1,1,"DB_SavegamePatches_SelectedBubble")
+AND
+DB_SavegamePatches_SelectedBubble((ITEM)_Bubble)
+THEN
+NOT DB_SavegamePatches_ClearBubble(_Bubble);
+// Automatically clears DB_Defeated, DB_CantTalk*, DB_CantMove, DB_CantAct
+NOT DB_Destroyed(_Bubble);
+// Since this one is supposed to be permanent, it doesn't get cleared automatically
+NOT DB_PermaDefeated(_Bubble);
+
+IF
+TimerFinished("SavegamePatches_ClearBubbles")
+AND
+NOT QRY_IsEmptyDB("DB_SavegamePatches_ClearBubble",1)
+AND
+Random(100,_Variance)
+AND
+IntegerSum(450,_Variance,_Delay)
+THEN
+TimerLaunch("SavegamePatches_ClearBubbles",_Delay);
+
+IF
+TimerFinished("SavegamePatches_ClearBubbles")
+AND
+NOT DB_SavegamePatches_ClearBubble(_)
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

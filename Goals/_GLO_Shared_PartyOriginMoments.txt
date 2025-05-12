@@ -1,0 +1,172 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+KBSECTION
+//Unlike Regular origin moments, Party origin moments do not involve an external NPC and do not hijack an existing dialog.
+//These simply start when a scripter decides it.
+//There are 4 versions. Each are baked into the same dialog and a flag decides which of the 4 greeting nodes is used.
+//ACM: The origin is an avatar and there's a random companion around to soundboard off of.
+//AOM: The origin is an avatar but there are no available companions.
+//COM: The origin is a companion and the bonded avatar is nearby and available.
+//OOM: The origin is a companion but the bonded avatar is not nearby and available.
+
+PROC
+PROC_StartPartyOriginMoment((CHARACTER)_Origin,(DIALOGRESOURCE)_OMDialog)
+THEN
+PROC_StartPartyOriginMoment(_Origin,_OMDialog,_OMDialog,_OMDialog,_OMDialog);
+
+PROC
+PROC_StartPartyOriginMoment((CHARACTER)_Origin,(DIALOGRESOURCE)_ACMDialog,(DIALOGRESOURCE)_AOMDialog,(DIALOGRESOURCE)_COMDialog,(DIALOGRESOURCE)_OOMDialog)
+THEN
+DB_OriginDialog(_Origin,_ACMDialog);
+DB_OriginDialog(_Origin,_AOMDialog);
+DB_OriginDialog(_Origin,_COMDialog);
+DB_OriginDialog(_Origin,_OOMDialog);
+PROC_StartPartyOriginMoment_ACM((CHARACTER)_Origin,(DIALOGRESOURCE)_ACMDialog);
+PROC_StartPartyOriginMoment_AOM((CHARACTER)_Origin,(DIALOGRESOURCE)_AOMDialog);
+PROC_StartPartyOriginMoment_COM((CHARACTER)_Origin,(DIALOGRESOURCE)_COMDialog);
+PROC_StartPartyOriginMoment_OOM((CHARACTER)_Origin,(DIALOGRESOURCE)_OOMDialog);
+
+//ACM Version
+PROC
+PROC_StartPartyOriginMoment_ACM((CHARACTER)_Origin,(DIALOGRESOURCE)_OMDialog)
+AND
+_OMDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Origin)
+AND
+DB_Avatars(_Origin)
+AND
+QRY_POM_FindNearestCompanion(_Origin)
+AND
+DB_QRYRTN_POM_FindNearestCompanion((CHARACTER)_Companion)
+AND
+QRY_StartDialog_Fixed(_OMDialog,_Origin,_Companion)
+THEN
+SetFlag((FLAG)ACM_c7125760-be83-711a-f842-c57da678c74d,_Origin,0);
+DB_OM_Type_Flag(NULL_00000000-0000-0000-0000-000000000000,_OMDialog,_Origin,(FLAG)ACM_c7125760-be83-711a-f842-c57da678c74d); //This will make sure the flag gets cleaned when the dialog is finished. (_GLO_Shared_OriginMoments)
+
+//AOM
+PROC
+PROC_StartPartyOriginMoment_AOM((CHARACTER)_Origin,(DIALOGRESOURCE)_OMDialog)
+AND
+DB_Players(_Origin)
+AND
+NOT DB_OM_Type_Flag(_,_OMDialog,_Origin,_)
+AND
+DB_Avatars(_Origin)
+AND
+QRY_StartDialog_Fixed(_OMDialog,_Origin,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+SetFlag((FLAG)AOM_794d7d9a-4e15-849c-7c0d-6e6cdb67cdcb,_Origin,0);
+DB_OM_Type_Flag(NULL_00000000-0000-0000-0000-000000000000,_OMDialog,_Origin,(FLAG)AOM_794d7d9a-4e15-849c-7c0d-6e6cdb67cdcb); //This will make sure the flag gets cleaned when the dialog is finished. (_GLO_Shared_OriginMoments)
+
+//COM
+PROC
+PROC_StartPartyOriginMoment_COM((CHARACTER)_Origin,(DIALOGRESOURCE)_OMDialog)
+AND
+DB_Players(_Origin)
+AND
+NOT DB_OM_Type_Flag(_,_OMDialog,_Origin,_)
+AND
+QRY_GetBestAvatarForCompanion(_Origin,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Origin,_Avatar)
+AND
+QRY_StartDialog_Fixed(_OMDialog,_Origin,_Avatar)
+THEN
+SetFlag((FLAG)COM_7075ec1a-70ad-bd25-3111-0a955cf07585,_Origin,0);
+DB_OM_Type_Flag(NULL_00000000-0000-0000-0000-000000000000,_OMDialog,_Origin,(FLAG)COM_7075ec1a-70ad-bd25-3111-0a955cf07585); //This will make sure the flag gets cleaned when the dialog is finished. (_GLO_Shared_OriginMoments)
+
+//OOM
+PROC
+PROC_StartPartyOriginMoment_OOM((CHARACTER)_Origin,(DIALOGRESOURCE)_OMDialog)
+AND
+DB_Players(_Origin)
+AND
+NOT DB_OM_Type_Flag(_,_OMDialog,_Origin,_)
+AND
+NOT DB_Avatars(_Origin)
+AND
+QRY_StartDialog_Fixed(_OMDialog,_Origin,NULL_00000000-0000-0000-0000-000000000000)
+THEN
+SetFlag((FLAG)OOM_018ab052-38df-6d2c-117f-8d7c1e56b061,_Origin,0);
+DB_OM_Type_Flag(NULL_00000000-0000-0000-0000-000000000000,_OMDialog,_Origin,(FLAG)OOM_018ab052-38df-6d2c-117f-8d7c1e56b061); //This will make sure the flag gets cleaned when the dialog is finished. (_GLO_Shared_OriginMoments)
+
+QRY
+QRY_POM_FindNearestCompanion((CHARACTER)_Avatar)
+AND
+DB_QRYRTN_POM_FindNearestCompanion(_Companion)
+THEN
+NOT DB_QRYRTN_POM_FindNearestCompanion(_Companion);
+
+//Prefer a partner
+QRY
+QRY_POM_FindNearestCompanion((CHARACTER)_Avatar)
+AND
+DB_ORI_Partnered(_Avatar,_Companion)
+AND
+QRY_SameUser(_Companion,_Avatar)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Companion,_Avatar,0,1)
+AND
+NOT DB_QRYRTN_POM_FindNearestCompanion(_)
+THEN
+DB_QRYRTN_POM_FindNearestCompanion(_Companion);
+
+//Or a date with the highest approval
+QRY
+QRY_POM_FindNearestCompanion((CHARACTER)_Avatar)
+AND
+NOT DB_QRYRTN_POM_FindNearestCompanion(_)
+AND
+DB_ORI_Dating(_Avatar,_Companion)
+AND
+DB_ApprovalRating(_Companion,_Avatar,_Rating)
+AND
+QRY_SameUser(_Companion,_Avatar)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Companion,_Avatar,0,1)
+THEN
+DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion,_Rating);
+
+
+//Otherwise nearby companion with the highest approval
+QRY
+QRY_POM_FindNearestCompanion((CHARACTER)_Avatar)
+AND
+NOT DB_QRYRTN_POM_FindNearestCompanion(_)
+AND
+NOT DB_QRYRTN_POM_FindNearestCompanion_Candidate(_,_)
+AND
+DB_ApprovalRating(_Companion,_Avatar,_Rating)
+AND
+QRY_SameUser(_Companion,_Avatar)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Companion,_Avatar,0,1)
+THEN
+DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion,_Rating);
+
+IF
+DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion,_Rating)
+AND
+DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion2,_Rating2)
+AND
+_Companion != _Companion2
+AND
+_Rating2 <= _Rating
+THEN
+NOT DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion2,_Rating2);
+
+QRY
+QRY_POM_FindNearestCompanion((CHARACTER)_Avatar)
+AND
+DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion,_Rating)
+THEN
+NOT DB_QRYRTN_POM_FindNearestCompanion_Candidate(_Companion,_Rating);
+DB_QRYRTN_POM_FindNearestCompanion(_Companion);
+EXITSECTION
+
+ENDEXITSECTION

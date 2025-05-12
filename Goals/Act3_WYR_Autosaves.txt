@@ -1,0 +1,99 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Autosaves
+DB_AutoSaveTrigger((TRIGGER)S_WYR_RivingtonStart_Autosave_2803953f-f054-453a-ae61-ed48ec0c4ab6);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_SouthSpanCheckpoint_Autosave_0df63370-a931-4730-8ca8-a9eafc720f8c);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_SouthSpanCheckpoint_Beyond_Autosave_bc8b187f-6b8e-470d-a25b-df727389a67c);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_SmugglersCave_Autosave_20a418b5-dd62-425f-b52e-0a01e71943d9);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_WyrmRock_Autosave_e2ecee04-6b12-471e-bb51-0da1d27b7785);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_GortashBossFight_Autosave_e177ec48-8e4d-4fc9-bbb3-d635368a8e51);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_WyrmwayStart_Autosave_ad1e9348-4deb-42d4-8a99-e9f3ff74a777);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_SkeletalDragon_AutoSave_7dc802d2-8380-4774-9da4-5fbf8e0a9f6a);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_RefugeeCamp_Autosave_29ffc8fb-70f5-4d27-8570-a019ca051445);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_GurCamp_Autosave_23197969-6522-4b47-a97d-e6f85af63cf6);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_Circus_Autosave_ccd4a0b9-6a13-4af9-80c0-f4e32e12730c);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_SmugglerTunnel_Autosave_d0a20c78-d103-4784-8ad3-0d9f76aa5f7c);
+DB_AutoSaveTrigger((TRIGGER)S_WYR_RaphaelTango_RoomArea_f0e79982-9e74-4c85-9f7b-46012cc79f26);
+KBSECTION
+IF
+AddedTo(S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("LOW_CrownController_Gortash_AutoSave")
+THEN
+PROC_GLO_TryAutosave();
+
+IF
+DB_PermaDefeated(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac)
+AND
+DB_CurrentLevel("BGO_Main_A")
+AND
+DB_Was_InCombat(S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, _CombatID)
+AND
+NOT DB_Is_InCombat(_, _CombatID)
+AND
+QRY_OnlyOnce("WYR_GortashDied_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+
+IF
+FlagSet((FLAG)WYR_Circus_State_PostCombat_ee4b2f6e-9d52-4bc5-bde6-bc0e1c015de4,_,_)
+AND
+QRY_OnlyOnce("WYR_CircusCombat_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+
+PROC
+PROC_StateSet_Defeated(S_WYR_SkeletalDragon_67770922-5e0a-40c5-b3f0-67e8eb50493a)
+AND
+DB_Was_InCombat(S_WYR_SkeletalDragon_67770922-5e0a-40c5-b3f0-67e8eb50493a, _CombatID)
+AND
+NOT DB_Is_InCombat(_, _CombatID)
+AND
+QRY_OnlyOnce("WYR_SkeletalDragon_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+
+IF
+DB_PermaDefeated(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+AND
+DB_CurrentLevel("BGO_Main_A")
+AND
+DB_Was_InCombat(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, _CombatID)
+AND
+NOT DB_Is_InCombat(_, _CombatID)
+AND
+QRY_OnlyOnce("WYR_WulbrenDead_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+AND
+QRY_OnlyOnce("WYR_PostRaphael_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_Raphael_Event_TeleportOut_45e8b74d-184f-c3f4-ea72-c93319cf004f, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+AND
+QRY_OnlyOnce("WYR_PostRaphael_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+
+PROC
+PROC_WYR_Circus_SendToJungle(_)
+AND
+QRY_OnlyOnce("WYR_Jungle_Autosave_OnlyOnce")
+THEN
+PROC_GLO_TryAutosave();
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

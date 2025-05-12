@@ -1,0 +1,732 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Inconspicuous forms (except for spider summon): petting, amusement, throwing rocks (goblin kids)
+DB_CRIME_ShapeshiftDisturbance((TAG)CAT_a7d28634-e3bf-40c3-8d8c-e1daf4acad74, "CritterReaction", "", "Harmless");
+DB_CRIME_ShapeshiftDisturbance((TAG)RAVEN_ccf8ba00-8e00-4f74-b146-598f46c97e9a, "CritterReaction", "", "Harmless");
+DB_CRIME_ShapeshiftDisturbance((TAG)RAT_9568e56b-27a2-45fc-92c5-fa33eeb6f54c, "CritterReaction", "", "Harmless");
+DB_CRIME_ShapeshiftDisturbance((TAG)FROG_0976fc05-da0e-43ea-8978-5accef445e0f, "CritterReaction", "", "Harmless");
+DB_CRIME_ShapeshiftDisturbance((TAG)CRAB_757ee779-e15e-4663-8a56-ab8929f56c02, "CritterReaction", "", "Harmless");
+
+//Slayer is BAD
+DB_CRIME_ShapeshiftDisturbance((TAG)SLAYER_ff6e2e2e-198c-40e3-ae79-4499c5a59eea, "DangerousMonsterReaction", "DangerousMonsterReactionFallback", "DangerousMonster");
+
+DB_CRIME_ShapeshiftDisturbance_Dangerous("DangerousBeast");
+DB_CRIME_ShapeshiftDisturbance_Dangerous("DangerousMonster");
+
+// Crime Region trigger - Crime region name - Harmless/Dangerous/Hostile - override disturbance name (can be empty to block) - override kind
+NOT DB_CRIME_ShapeshiftSummonDisturbance_RegionAlternativeReaction((TRIGGER)NULL_00000000-0000-0000-0000-000000000000, "", "", "", "");
+
+DB_CRIME_FleeReaction("CRIME_Follow");
+DB_CRIME_FleeReaction("CRIME_FollowComment");
+DB_CRIME_FleeReaction("CRIME_FollowCommentThrow");
+DB_CRIME_FleeReaction("CRIME_ThrowStones");
+DB_CRIME_FleeReaction("CRIME_HerdAnimal");
+
+DB_CRIME_DangerousShapeshiftTypes("DangerousBeast");
+DB_CRIME_DangerousShapeshiftTypes("DangerousMonster");
+KBSECTION
+//REGION Disable some reactions for origins
+// It's weird if unrecruited origins run away from your spider familiar
+IF
+DB_CRIME_ShapeshiftDisturbance((TAG)_Tag, _MainReaction, _FallBackReaction, _Dangerous)
+AND
+DB_CRIME_ShapeshiftDisturbance_Dangerous(_Dangerous)
+AND
+DB_Origins(_Origin)
+AND
+NOT DB_CharacterCrimeDisabled(_Origin, _MainReaction)
+THEN
+PROC_CharacterDisableCrime(_Origin, _MainReaction);
+
+IF
+DB_CRIME_ShapeshiftDisturbance((TAG)_Tag, _MainReaction, _FallbackReaction, _Dangerous)
+AND
+DB_CRIME_ShapeshiftDisturbance_Dangerous(_Dangerous)
+AND
+_FallbackReaction != ""
+AND
+DB_Origins(_Origin)
+AND
+NOT DB_CharacterCrimeDisabled(_Origin, _FallbackReaction)
+THEN
+PROC_CharacterDisableCrime(_Origin, _FallbackReaction);
+
+// Also custom ones
+IF
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_Disturbance, _FallbackDisturbance, _Dangerous)
+AND
+DB_CRIME_ShapeshiftDisturbance_Dangerous(_Dangerous)
+AND
+_Disturbance != ""
+AND
+DB_Origins(_Origin)
+AND
+NOT DB_CharacterCrimeDisabled(_Origin, _Disturbance)
+THEN
+PROC_CharacterDisableCrime(_Origin, _Disturbance);
+
+IF
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_Disturbance, _FallbackDisturbance, _Dangerous)
+AND
+DB_CRIME_ShapeshiftDisturbance_Dangerous(_Dangerous)
+AND
+_FallbackDisturbance != ""
+AND
+DB_Origins(_Origin)
+AND
+NOT DB_CharacterCrimeDisabled(_Origin, _FallbackDisturbance)
+THEN
+PROC_CharacterDisableCrime(_Origin, _FallbackDisturbance);
+//END_REGION
+
+//REGION Cleaning up
+// Done before registering so we do not check disturbances that just got registered in reaction
+// to a ShapeshiftChanged event (we also react to ShapeshiftChanged events for cleaning up)
+
+// Track confronting investigators so we can stop their confrontations immediately
+// (they react in a loop, which one the one hand is very much not done, but on the
+//  other hand there's no good other way to perform long disturbance reactions)
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID, _Investigator, _, "Confronting")
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, (TAG)_Tag, (STRING)_Disturbance, (STRING)_FallbackDisturbance, (INTEGER)_CrimeID, (INTEGER)_FallbackCrimeID)
+AND
+CrimeGetLeadInvestigator(_CrimeID, _Investigator)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance_Confronting(_CrimeID, _Investigator);
+
+IF
+DB_CRIME_ShapeshiftSummonDisturbance_Confronting(_CrimeID, _Investigator)
+AND
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_, _, _, _, _CrimeID, _)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance_Confronting(_CrimeID, _Investigator);
+
+PROC
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop((CHARACTER)_PartyMember, (INTEGER)_CrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_Confronting(_CrimeID, _Investigator)
+THEN
+CrimeConfrontationDone(_CrimeID, _Investigator);
+NOT DB_CRIME_ShapeshiftSummonDisturbance_Confronting(_CrimeID, _Investigator);
+
+PROC
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop((CHARACTER)_PartyMember, (INTEGER)_CrimeID)
+AND
+_CrimeID > 0
+THEN
+CharacterStopCrimeWithID(_PartyMember, _CrimeID);
+
+// Timed out and still have tag -> restart
+// Exception: if it gets resolved while there is no active level, it's because continuous crimes
+// are cleared on level swaps -> don't restart but keep the DB, so we can restart it in the new level (when we get
+// the LevelLoaded event)
+IF
+OnCrimeResolved(_CrimeID, _, _, _, _ ,_)
+AND
+DB_CurrentLevel(_)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance((CHARACTER)_PartyMember, (TAG)_Tag, (STRING)_Disturbance, (STRING)_FallbackDisturbance, (INTEGER)_CrimeID, (INTEGER)_FallbackCrimeID)
+AND
+IsTagged(_PartyMember, _Tag, 1)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+// In case of restarting, never add any ignores since they didn't see us change
+PROC_CRIME_ShapeshiftSummonDisturbance_Register(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, "");
+
+IF
+OnCrimeResolved(_CrimeID, _, _, _, _ ,_)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+AND
+IsTagged(_PartyMember, _Tag, 0)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+
+
+// Remove shapeshift
+IF
+ShapeshiftChanged(_Player, _, _, _)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_Player, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+AND
+IsTagged(_Player, _Tag, 0)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_Player, _CrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_Player, _FallbackCrimeID);
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_Player, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+
+// Summon leaves party
+IF
+CharacterLeftParty(_Summon)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_Summon, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_Summon, _CrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_Summon, _FallbackCrimeID);
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_Summon, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+
+//END_REGION
+
+
+//REGION Reactions to shapeshifted players and summons
+// Shapeshifting
+IF
+ShapeshiftChanged(_Player, _, _, _Status)
+AND
+_Status != ""
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Trigger(_Player);
+
+// Summons
+IF
+CharacterJoinedParty(_Summon)
+AND
+IsSummon(_Summon, 1)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Trigger(_Summon);
+
+PROC
+PROC_CRIME_ShapeshiftSummonDisturbance_Trigger((CHARACTER)_PartyMember)
+AND
+DB_CRIME_ShapeshiftDisturbance(_Tag, _Disturbance, _FallbackDisturbace, _Kind)
+AND
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _, _, _, _, _)
+AND
+IsTagged(_PartyMember, _Tag, 1)
+AND
+CharacterGetCrimeRegion(_PartyMember, _Region)
+AND
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_Disturbance, _FallbackDisturbace, _Kind, _Region)
+AND
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_FinalDisturbance, _FinalFallbackDisturbance, _NewKind)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Register(_PartyMember, _Tag, _FinalDisturbance, _FinalFallbackDisturbance, _NewKind);
+
+
+QRY
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance((STRING)_Disturbance, (STRING)_FallbackDisturbance, (STRING)_Kind, (STRING)_CrimeRegionName)
+AND
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance_Reset()
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_RegionAlternativeReaction(_RegionTrigger, _CrimeRegionName, _Kind, _OverrideDisturbance, _NewKind)
+THEN
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_OverrideDisturbance, "", _NewKind);
+
+QRY
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance((STRING)_Disturbance, (STRING)_FallbackDisturbance, (STRING)_Kind, (STRING)_CrimeRegionName)
+AND
+NOT DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_, _, _)
+THEN
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_Disturbance, _FallbackDisturbance, _Kind);
+
+QRY
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance((STRING)_Disturbance, (STRING)_Kind, (STRING)_CrimeRegionName)
+AND
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance("", "", _Kind)
+THEN
+NOT DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance("", "", _Kind);
+
+QRY
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance_Reset()
+AND
+DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_Disturbance, _FallbackDisturbance, _Kind)
+THEN
+NOT DB_QRYRTN_CRIME_ShapeshiftSummonDisturbance_GetDisturbance(_Disturbance, _FallbackDisturbance, _Kind);
+
+QRY
+QRY_CRIME_ShapeshiftSummonDisturbance_GetDisturbance_Reset()
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CRIME_ShapeshiftSummonDisturbance_Register((CHARACTER)_PartyMember, (TAG)_Tag, (STRING)_FinalDisturbance, (STRING)_FinalFallbackDisturbance, (STRING)_Kind)
+AND
+_FinalFallbackDisturbance != ""
+AND
+CrimeGetNewID(_CrimeID)
+AND
+CrimeGetNewID(_FallbackCrimeID)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _FinalDisturbance, _FinalFallbackDisturbance, _CrimeID, _FallbackCrimeID);
+// Characters that saw the shapeshift happen, ignore it if it's a dangerous form
+PROC_CRIME_ShapeshiftDisturbance_DoRegister(_PartyMember, _FinalDisturbance, _CrimeID, _Kind);
+// The fallback should still trigger though: even if you know it's a shapeshifted person, a wolf that gets up close should result
+// in NPCs backing off a little
+PROC_CharacterRegisterCrime(_PartyMember, _FinalFallbackDisturbance, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, _FallbackCrimeID);
+
+PROC
+PROC_CRIME_ShapeshiftSummonDisturbance_Register((CHARACTER)_PartyMember, (TAG)_Tag, (STRING)_FinalDisturbance, (STRING)_FinalFallbackDisturbance, (STRING)_Kind)
+AND
+_FinalFallbackDisturbance == ""
+AND
+_FinalDisturbance != ""
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _FinalDisturbance, _FinalFallbackDisturbance, _CrimeID, -1);
+PROC_CRIME_ShapeshiftDisturbance_DoRegister(_PartyMember, _FinalDisturbance, _CrimeID, _Kind);
+
+PROC
+PROC_CRIME_ShapeshiftSummonDisturbance_Register((CHARACTER)_PartyMember, (TAG)_Tag, (STRING)_FinalDisturbance, (STRING)_FinalFallbackDisturbance, (STRING)_Kind)
+AND
+_FinalFallbackDisturbance == ""
+AND
+_FinalDisturbance == ""
+THEN
+// Record that we're in a shape that normally triggers a disturbance, so we can recheck on leaving the trigger
+// or on entering another trigger with a custom reaction
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _FinalDisturbance, _FinalFallbackDisturbance, -1, -1);
+
+
+PROC
+PROC_CRIME_ShapeshiftDisturbance_DoRegister((CHARACTER)_PartyMember, (STRING)_Disturbance, (INTEGER)_CrimeID, (STRING)_Kind)
+AND
+NOT QRY_Crime_ShapeshiftDisturbance_IgnoreForNearbyCharacters(_PartyMember, _Disturbance, _CrimeID, _Kind)
+THEN
+PROC_CharacterRegisterCrime(_PartyMember, _Disturbance, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, _CrimeID);
+
+// Iterate around the party member and ignore the disturbance for nearby NPCs
+// (they saw you change, so no need to be super scared)
+PROC
+PROC_CRIME_ShapeshiftDisturbance_DoRegister((CHARACTER)_PartyMember, (STRING)_Disturbance, (INTEGER)_CrimeID, (STRING)_Kind)
+AND
+QRY_Crime_ShapeshiftDisturbance_IgnoreForNearbyCharacters(_PartyMember, _Disturbance, _CrimeID, _Kind)
+AND
+IntegerToString(_CrimeID, _CrimeIDString)
+AND
+Concatenate("CRIME_ShapeshiftSummonDisturbance_", _CrimeIDString, _IteratorID)
+AND
+Concatenate("CRIME_ShapeshiftSummonDisturbanceDone_", _CrimeIDString, _IteratorDoneID)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreIterator(_IteratorID, _IteratorDoneID, _CrimeID);
+IterateCharactersAround(_PartyMember, 20.0, _IteratorID, _IteratorDoneID);
+
+QRY
+QRY_Crime_ShapeshiftDisturbance_IgnoreForNearbyCharacters((CHARACTER)_PartyMember, (STRING)_Disturbance, (INTEGER)_CrimeID, (STRING)_Kind)
+AND
+// Not dangerous monster: even if you saw it getting summoned, it's still scary
+_Kind == "DangerousBeast"
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent((CHARACTER)_NPC, _IteratorID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreIterator(_IteratorID, _, _CrimeID)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance_Ignore(_CrimeID, _NPC);
+
+IF
+EntityEvent(_, _IteratorDoneID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreIterator(_IteratorID, _IteratorDoneID, _CrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _FinalDisturbance, _FinalFallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance_IgnoreIterator(_IteratorID, _IteratorDoneID, _CrimeID);
+PROC_CharacterRegisterCrime(_PartyMember, _FinalDisturbance, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, _CrimeID);
+
+IF
+EntityEvent(_, _IteratorDoneID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreIterator(_IteratorID, _IteratorDoneID, _FallbackCrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _FinalDisturbance, _FinalFallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance_IgnoreIterator(_IteratorID, _IteratorDoneID, _FallbackCrimeID);
+PROC_CharacterRegisterCrime(_PartyMember, _FinalFallbackDisturbance, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, _FallbackCrimeID);
+
+PROC
+PROC_CRIME_CrimeTriggers_GetSilentWitnessesForCrime((INTEGER)_CrimeID,(CHARACTER)_Perpetrator,(STRING)_DisturbanceType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_Ignore(_CrimeID, _NPC)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance_Ignore(_CrimeID, _NPC);
+DB_CRIME_CrimeTriggers_SilentWitnessesForCrime(_NPC);
+
+PROC
+PROC_CharacterRegisterCrime_Blocked(_PartyMember, _, _, _, _, _CrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_Ignore(_CrimeID, _NPC)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance_Ignore(_CrimeID, _NPC);
+
+PROC
+PROC_CharacterRegisterCrime_Blocked(_PartyMember, _, _, _, _, _CrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_PartyMember, _FallbackCrimeID);
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+
+PROC
+PROC_CharacterRegisterCrime_Blocked(_PartyMember, _, _, _, _, _FallbackCrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, "", _CrimeID, -1);
+//END_REGION
+
+//REGION Leaving/entering region with custom reaction
+IF
+DB_CRIME_ShapeshiftSummonDisturbance_RegionAlternativeReaction(_RegionTrigger, _RegionName, _Kind, _OverrideDisturbance, _NewKind)
+AND
+_RegionTrigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_TriggerRegisterForParty(_RegionTrigger);
+
+IF
+EnteredTrigger(_PartyMember, _CrimeRegionTrigger)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_RegionAlternativeReaction(_CrimeRegionTrigger, _CrimeRegionName, _Kind, _OverrideDisturbance, _NewKind)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_PartyMember, _CrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_PartyMember, _FallbackCrimeID);
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Trigger(_PartyMember);
+
+IF
+LeftTrigger(_PartyMember, _CrimeRegionTrigger)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_RegionAlternativeReaction(_CrimeRegionTrigger, _CrimeRegionName, _Kind, _OverrideDisturbance, _NewKind)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+THEN
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_PartyMember, _CrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Stop(_PartyMember, _FallbackCrimeID);
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Trigger(_PartyMember);
+//END_REGION
+
+//REGION No reactions to shapeshift-related disturbances in camp
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char, (STRING)_CrimeType, (INTEGER)_StoryActionID, (GUIDSTRING)_Evidence, (CHARACTER)_Victim, (INTEGER)_CrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _, _CrimeID, _)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_CrimeID);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char, (STRING)_CrimeType, (INTEGER)_StoryActionID, (GUIDSTRING)_Evidence, (CHARACTER)_Victim, (INTEGER)_FallbackCrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _, _, _FallbackCrimeID)
+THEN
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_FallbackCrimeID);
+
+IF
+DB_InCamp(_Char)
+AND
+NOT DB_PartyMembers(_Char)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_CrimeID)
+THEN
+CrimeIgnoreCrime(_CrimeID, _Char);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_CrimeID)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_CrimeID);
+
+//END_REGION
+
+//REGION NPCs temporarily joining camp (e.g. tiefling celebration)
+IF
+DB_CRIME_ShapeshiftDisturbance_TempInCamp((CHARACTER)_NPC, (TRIGGER)_)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_CrimeID)
+THEN
+CrimeIgnoreCrime(_CrimeID, _NPC);
+DB_CRIME_ShapeshiftDisturbance_TempIgnoring(_NPC, _CrimeID);
+
+IF
+DB_CRIME_ShapeshiftDisturbance_TempIgnoring(_NPC, _CrimeID)
+AND
+NOT DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _)
+THEN
+CrimeStopIgnoringCrime(_CrimeID, _NPC);
+NOT DB_CRIME_ShapeshiftDisturbance_TempIgnoring(_NPC,_CrimeID);
+
+IF
+DB_CRIME_ShapeshiftDisturbance_TempIgnoring(_NPC, _CrimeID)
+AND
+NOT DB_CRIME_ShapeshiftSummonDisturbance_IgnoreInCamp(_CrimeID)
+THEN
+NOT DB_CRIME_ShapeshiftDisturbance_TempIgnoring(_NPC,_CrimeID);
+
+QRY
+QRY_CRIME_ShapeshiftDisturbance_AnyPlayerInCamp()
+AND
+DB_Players(_Player)
+AND
+DB_InCamp(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+Teleported(_NPC, _, _, _, _, _PosX, _PosY, _PosZ, _)
+AND
+DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _CampTrigger)
+AND
+PositionIsInTrigger(_PosX, _PosY, _PosZ, _CampTrigger, 0)
+THEN
+NOT DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _CampTrigger);
+
+IF
+Teleported(_NPC, _, _, _, _, _PosX, _PosY, _PosZ, _)
+AND
+NOT DB_PartOfTheTeam(_NPC)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+NOT DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _)
+AND
+QRY_CRIME_ShapeshiftDisturbance_AnyPlayerInCamp()
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_Camp(_Camp, _, _CampTrigger, _)
+AND
+PositionIsInTrigger(_PosX, _PosY, _PosZ, _CampTrigger, 1)
+THEN
+DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _CampTrigger);
+
+// No need for temporary tracking if it is/becomes a regular in-camp character
+// (don't rely on DB_InCamp getting set before the Teleported event arrives)
+IF
+DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _CampTrigger)
+AND
+DB_InCamp(_NPC)
+THEN
+NOT DB_CRIME_ShapeshiftDisturbance_TempInCamp(_NPC, _CampTrigger);
+//END_REGION
+
+//REGION Handle switching levels
+// Continuous disturbances are only valid in their original level (code stops all continuous disturbances before a level gets unloaded)
+// -> create a new one (when switching to a new level while still shapeshifted)
+IF
+LevelLoaded(_)
+AND
+DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID)
+AND
+// This event will also trigger on savegame loads -> check whether the crime still exists (this query fails if it doesn't,
+// without asserting)
+NOT CrimeGetTension(_CrimeID, _)
+THEN
+NOT DB_CRIME_ShapeshiftSummonDisturbance(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, _CrimeID, _FallbackCrimeID);
+PROC_CRIME_ShapeshiftSummonDisturbance_Register(_PartyMember, _Tag, _Disturbance, _FallbackDisturbance, "");
+//END_REGION
+
+//REGION Track whether an NPC noticed a player shapeshift
+IF
+ShapeshiftChanged(_Player,_,_,_)
+AND
+DB_CRIME_WitnessedShapeshiftID(_ID,_AnyPlayer)
+THEN
+NOT DB_CRIME_WitnessedShapeshiftID(_ID,_AnyPlayer);
+
+IF
+ShapeshiftChanged(_Player,_,_,_)
+AND
+DB_Players(_Player)
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+DB_CRIME_WitnessedShapeshiftID(_CrimeID,_Player);
+PROC_CharacterRegisterCrime(_Player,"CheckNoticedShapeshift",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,_CrimeID);
+
+IF
+CharacterOnCrimeSensibleActionNotification(_NPC,_,_CrimeID,_,_,_Criminal1,_,_,_,_)
+AND
+DB_CRIME_WitnessedShapeshiftID(_CrimeID,_Criminal1)
+THEN
+DB_CRIME_WitnessedShapeshift(_NPC,_CrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_WitnessedShapeshiftID(_CrimeID,_Player)
+THEN
+// Let the user proc check all DB_CRIME_WitnessedShapeshift at once, so they
+// can have logic that depends on whether there is any specific (kind of) NPC among
+// all witnesses (if we call PROC_CRIME_WitnessedShapeshift separately for each NPC,
+// it's not possible to know which witnesses belong together)
+PROC_CRIME_WitnessedShapeshift(_Player,_CrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_WitnessedShapeshiftID(_CrimeID,_Criminal)
+AND
+DB_CRIME_WitnessedShapeshift(_NPC,_CrimeID)
+THEN
+NOT DB_CRIME_WitnessedShapeshift(_NPC,_CrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_WitnessedShapeshiftID(_CrimeID,_Criminal)
+THEN
+NOT DB_CRIME_WitnessedShapeshiftID(_CrimeID,_Criminal);
+
+
+// NPCs in combat won't react to disturbances -> check manually
+IF
+ShapeshiftChanged(_Player,_,_,_)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player,_CombatGUID)
+AND
+DB_CRIME_WitnessedShapeshiftID(_ID,_Player)
+AND
+DB_Is_InCombat(_NPC,_CombatGUID)
+AND
+NOT DB_PartyMembers((CHARACTER)_NPC)
+AND
+IsCharacter(_NPC,1)
+AND
+CanSee(_NPC,_Player,1)
+THEN
+// Will be processed next frame together with the disturbance results
+DB_CRIME_WitnessedShapeshift(_NPC,_ID);
+
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_Player,(INTEGER)_ID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Disabing / Enabling reactions to dangerous shapes
+PROC
+PROC_CRIME_DisableDangerousShapeshiftReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_DangerousShapeshiftTypes(_ShapeshiftType)
+AND
+DB_CRIME_ShapeshiftDisturbance(_, _Crime, _, _ShapeshiftType)
+AND
+_Crime != ""
+THEN
+PROC_CharacterDisableCrime(_NPC, _Crime);
+
+PROC
+PROC_CRIME_DisableDangerousShapeshiftReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_DangerousShapeshiftTypes(_ShapeshiftType)
+AND
+DB_CRIME_ShapeshiftDisturbance(_, _, _Crime, _ShapeshiftType)
+AND
+_Crime != ""
+THEN
+PROC_CharacterDisableCrime(_NPC, _Crime);
+
+PROC
+PROC_CRIME_EnableDangerousShapeshiftReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_DangerousShapeshiftTypes(_ShapeshiftType)
+AND
+DB_CRIME_ShapeshiftDisturbance(_, _Crime, _, _ShapeshiftType)
+AND
+_Crime != ""
+THEN
+PROC_CharacterEnableCrime(_NPC, _Crime);
+
+PROC
+PROC_CRIME_EnableDangerousShapeshiftReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_DangerousShapeshiftTypes(_ShapeshiftType)
+AND
+DB_CRIME_ShapeshiftDisturbance(_, _, _Crime, _ShapeshiftType)
+AND
+_Crime != ""
+THEN
+PROC_CharacterEnableCrime(_NPC, _Crime);
+//END_REGION
+
+
+//REGION Shapeshift tracking for criminals we care about
+// Registration: record current shape, and mark this shape as known
+PROC
+PROC_CRIME_Shapeshift_WitnessTrackCriminal((STRING)_TrackID,(CHARACTER)_Witness,(CHARACTER)_PlayerCriminal)
+THEN
+PROC_CRIME_Shapeshift_WitnessStopTrackingCriminal(_TrackID,_Witness,_PlayerCriminal);
+
+PROC
+PROC_CRIME_Shapeshift_WitnessTrackCriminal((STRING)_TrackID,(CHARACTER)_Witness,(CHARACTER)_PlayerCriminal)
+AND
+NOT DB_PolymorphedInto(_PlayerCriminal,_,_,_)
+THEN
+DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,"NoShapeshift",1);
+
+PROC
+PROC_CRIME_Shapeshift_WitnessTrackCriminal((STRING)_TrackID,(CHARACTER)_Witness,(CHARACTER)_PlayerCriminal)
+AND
+DB_PolymorphedInto(_PlayerCriminal,_,_,_)
+THEN
+DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,"CurrentShape",1);
+
+PROC
+PROC_CRIME_Shapeshift_WitnessStopTrackingCriminal((STRING)_TrackID,(CHARACTER)_Witness,(CHARACTER)_PlayerCriminal)
+AND
+DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,_KnownKind,_Known)
+THEN
+NOT DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,_KnownKind,_Known);
+
+// Polymorphed into default shape and was originally known in defaul shape -> currently known
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_PlayerCriminal,(INTEGER)_ID)
+AND
+DB_CRIME_ShapeshiftTracker_Known(_CrimeID,_Witness,_PlayerCriminal,"NoShapeshift",0)
+AND
+NOT DB_PolymorphedInto(_PlayerCriminal,_,_,_)
+THEN
+NOT DB_CRIME_ShapeshiftTracker_Known(_CrimeID,_Witness,_PlayerCriminal,"NoShapeshift",0);
+DB_CRIME_ShapeshiftTracker_Known(_CrimeID,_Witness,_PlayerCriminal,"NoShapeshift",1);
+
+// Polymorph into non-default shape while no witnesses (or witnesses that don't care) -> ignored from now on
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_PlayerCriminal,(INTEGER)_ID)
+AND
+DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,_KnownKind,1)
+AND
+DB_PolymorphedInto(_PlayerCriminal,_,_,_)
+AND
+NOT QRY_CRIME_ShapeshiftWitnessThatCares(_PlayerCriminal,_ID,_Witness)
+THEN
+NOT DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,_KnownKind,1);
+DB_CRIME_ShapeshiftTracker_Known(_TrackID,_Witness,_PlayerCriminal,_KnownKind,0);
+
+QRY
+QRY_CRIME_ShapeshiftWitnessThatCares((CHARACTER)_Criminal,(INTEGER)_ID,(CHARACTER)_Arrester)
+AND
+QRY_OnlyOnce_Reset("CRIME_ShapeshiftWitnessThatCares")
+AND
+DB_CRIME_WitnessedShapeshift(_Witness,_ID)
+AND
+NOT DB_OnlyOnce("CRIME_ShapeshiftWitnessThatCares")
+AND
+// Guards are allied to civilians but not the other way around, yet we assume
+// that civilians will also report
+IsAlly(_Witness,_Arrester,_Ally1)
+AND
+IsAlly(_Arrester,_Witness,_Ally2)
+AND
+DB_LogicOr(_Ally1,_Ally2,1)
+AND
+// If they're unable to start an AD, assume they're too busy/incapacitated to notice you shapeshifting as well
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)GEB_AD_Noticed_CriminalShapeshifting_d14d54f9-ed7e-a914-c040-7c68a93a76b7,_Witness,0,0,0,0)
+AND
+QRY_OnlyOnce("CRIME_ShapeshiftWitnessThatCares")
+THEN
+LookAtEntity(_Witness,_Criminal);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

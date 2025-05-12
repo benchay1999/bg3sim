@@ -1,0 +1,173 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_GLO_Sussur_RootTemplates((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+DB_GLO_Sussur_RootTemplates(UND_SussurTreeFlower_8706eab3-e05b-478d-833e-308379972dad);
+DB_GLO_Sussur_RootTemplates(UND_SussurTreeFlower_B_bf2e05d1-5a39-4d92-afbe-afe63022a6c2);
+DB_GLO_Sussur_RootTemplates(UND_SussurTreeFlower_C_44aaa3df-e08c-4554-8d4d-fb11e97622b4);
+
+NOT DB_GLO_Sussur_UnderdarkRegion((TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_GLO_Sussur_Flowers((ITEM)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+IF
+DestroyedBy(_Flower,_,_,_)
+AND
+DB_GLO_Sussur_Flowers(_Flower)
+THEN
+NOT DB_GLO_Sussur_Flowers(_Flower);
+
+
+//REGION Status
+IF
+DB_GLO_Sussur_Flowers(_Flower)
+THEN
+ApplyStatus(_Flower,"UND_ANCIENTSUSSURTREEANTIMAGIC_AURA",-1.0,1);
+
+IF
+StatusApplied(_Flower,"BURNING",_,_)
+AND
+Exists(_Flower,1)
+AND
+GetTemplate(_Flower, _Template)
+AND
+DB_GLO_Sussur_RootTemplates(_Template)
+AND
+HasActiveStatus(_Flower,"UND_ANCIENTSUSSURTREEANTIMAGIC_AURA",1)
+THEN
+RemoveStatus(_Flower,"UND_ANCIENTSUSSURTREEANTIMAGIC_AURA");
+
+IF
+StatusRemoved(_Flower,"BURNING",_,_)
+AND
+Exists(_Flower,1)
+AND
+GetTemplate(_Flower, _Template)
+AND
+DB_GLO_Sussur_RootTemplates(_Template)
+AND
+IsDestroyed((ITEM)_Flower,0)
+AND
+HasActiveStatus(_Flower,"UND_ANCIENTSUSSURTREEANTIMAGIC_AURA",0)
+THEN
+ApplyStatus(_Flower,"UND_ANCIENTSUSSURTREEANTIMAGIC_AURA",-1.0,1);
+//END_REGION Status
+
+
+//REGION Leaving Underdark
+IF
+DB_GLO_Sussur_UnderdarkRegion(_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)_Trigger);
+
+/*
+// Usually, these triggers are subregions, so it's not possible to throw an item away from it
+IF
+ItemLeftTrigger(_Item,_Trigger,_)
+AND
+DB_GLO_Sussur_UnderdarkRegion(_Trigger)
+AND
+GetTemplate(_Item,_Template)
+AND
+DB_GLO_Sussur_RootTemplates(_Template)
+THEN
+PROC_GLO_Sussur_Wither(_Item);
+*/
+
+IF
+AddedTo(_Item,_Holder, _)
+AND
+DB_GLO_Sussur_Flowers((ITEM)_Item)
+AND
+DB_GLO_Sussur_UnderdarkRegion(_UnderdarkRegion)
+THEN
+TriggerRegisterForCharacter(_UnderdarkRegion, (CHARACTER)_Holder);
+
+IF
+TemplateAddedTo(_Template,(ITEM)_Item,_Holder, _)
+AND
+DB_GLO_Sussur_RootTemplates(_Template)
+AND
+NOT QRY_GLO_Sussur_InUnderdark(_Holder)
+THEN
+PROC_GLO_Sussur_Wither(_Item);
+
+QRY
+QRY_GLO_Sussur_InUnderdark((GUIDSTRING)_Holder)
+AND
+DB_GLO_Sussur_UnderdarkRegion((TRIGGER)_Trigger)
+AND
+IsInTrigger(_Holder,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Sussur_InUnderdark((GUIDSTRING)_Holder)
+AND
+DB_Camp_UserCampChest(_, (ITEM)_Holder)
+THEN
+DB_NOOP(1);
+
+IF
+LeftTrigger(_Character,_Trigger)
+AND
+DB_GLO_Sussur_UnderdarkRegion(_Trigger)
+THEN
+RealtimeObjectTimerCancel(_Character,"Timer_GLO_Sussur_Wither");
+RealtimeObjectTimerLaunch(_Character,"Timer_GLO_Sussur_Wither",1000);
+
+IF
+EnteredTrigger(_Character,_Trigger)
+AND
+DB_GLO_Sussur_UnderdarkRegion(_Trigger)
+THEN
+RealtimeObjectTimerCancel(_Character,"Timer_GLO_Sussur_Wither");
+
+IF
+ObjectTimerFinished(_Character,"Timer_GLO_Sussur_Wither")
+AND
+DB_GLO_Sussur_RootTemplates(_Template)
+THEN
+IterateInventoryByTemplate(_Character,_Template,"GLO_Sussur_Wither","");
+
+IF
+EntityEvent(_Item,"GLO_Sussur_Wither")
+AND
+IsItem((ITEM)_Item,1)
+THEN
+PROC_GLO_Sussur_Wither(_Item);
+
+PROC
+PROC_GLO_Sussur_Wither((ITEM)_Item)
+AND
+IsInInventory(_Item,0)
+AND
+GetPosition(_Item,_X,_Y,_Z)
+AND
+CreateAtObject(UNI_UND_WitheredSussurPetals_a05c2c63-23b4-4700-8a51-655053d832b5,_Item,0,0,"",0,_Petal1)
+AND
+CreateAtObject(UNI_UND_WitheredSussurPetals_a05c2c63-23b4-4700-8a51-655053d832b5,_Item,0,0,"",0,_Petal2)
+THEN
+ScatterAt((ITEM)_Petal1,_X,_Y,_Z);
+ScatterAt((ITEM)_Petal2,_X,_Y,_Z);
+
+PROC
+PROC_GLO_Sussur_Wither((ITEM)_Item)
+AND
+IsInInventory(_Item,0)
+THEN
+Die(_Item,DEATHTYPE.DoT,NULL_00000000-0000-0000-0000-000000000000,1,1);
+
+PROC
+PROC_GLO_Sussur_Wither((ITEM)_Item)
+AND
+IsInInventory(_Item,1)
+THEN
+Transform(_Item,UNI_UND_WitheredSussurPetals_a05c2c63-23b4-4700-8a51-655053d832b5,POLYMORPH_a0ddddc8-255f-4014-9f63-d7608eb1c2a0);
+RemoveStatus(_Item,"UND_ANCIENTSUSSURTREEANTIMAGIC_AURA");
+NOT DB_GLO_Sussur_Flowers(_Item);
+//END_REGION Leaving Underdark
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

@@ -1,0 +1,978 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// DB_SceneManager((CHARACTER)_NPC,(STRING)_SceneName)
+//   Adds an NPC to a scene. NPCs added to a scene have all crime reactions disabled
+
+// DB_SceneTriggerManager((STRING)_SceneName,(TRIGGER)_Trigger)
+// DB_SceneTriggerManager((STRING)_SceneName,(TRIGGER)_Trigger,(INTEGER)_IgnoreItems)
+//   Defines a trigger for all NPCs in the scene (interrupt if they leave it). Default is _IgnoreItems == 1. If _IgnoreItems == 0, then also interrupt when an item leaves that trigger.
+//   Additionally, while NPCs are outside the trigger, it
+//     * pauses spotting for them with the same identifier
+//     * overrides their dialogs with an AD indicating they are busy
+
+// PROC_SceneDialogOnly((STRING)_SceneName,(CHARACTER)_NPC,(TRIGGER)_DialogTrigger)
+//   Shortcut to define a scene for NPC with the following properties, so the NPC behaves as usual, except that they will get an AD when they leave the scene trigger
+//  (so you can easily use this for existing NPCs that have a scenetrigger-bound dialog, but that apart from that should not have any scene-specific behaviours
+//   like ignoring disturbances)
+//     DB_SceneManager(_NPC,_SceneName);
+//     DB_SceneTriggerManager(_SceneName,_DialogTrigger);
+//     DB_SceneAllowAllDisturbances(_SceneName);
+//   Extra NPCs can be added as usual with DB_SceneManager(_NPC,_SceneName)
+//
+// The result is that NPCs that are members of this scene will
+//   * still react to all disturbances as usual
+//   * have an [[DB_GEB_UnavailableDialog|AD indicating they are busy]] while outside _DialogTrigger (instead of their normal dialog)
+//   * disable spotting with the same identifier as _SceneName while outside _DialogTrigger
+// I.e., apart from the dialog and spotting disabling/enabling, they behave as usual
+
+// DB_SceneCheckForCombat((CHARACTER)_NPC,(STRING)_SceneName)
+//   Call PROC_SceneInterrupted when _NPC sees another character that's in combat
+//   (without necessarily joining the combat, e.g. because they're neutral)
+NOT DB_SceneCheckForCombat((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,"");
+
+// DB_SceneAllowAllDisturbances((STRING)_SceneName)
+//   By default, scene members will only react to disturbances if they are the victim,
+//   and the scene is stopped when the disturbance gets registered (unless specifically
+//   allowed in PROC_SceneInterrupted, see DB_SceneManager_AllowDisturbance).
+//
+//   This DB will make all participants react to all disturbances as usual at all times.
+//   It's useful if the main purpose of a scene is to prevent a dialog tied to a scene
+//   trigger from getting started while an NPC is far away from it.
+NOT DB_SceneAllowAllDisturbances("");
+
+// DB_SceneNoHostileContinuousDisturbance((STRING)_SceneName)
+//   By default, continuous disturbances that lead to combat or NPCs fleeing (like aberrant wildshape) are
+//   not blocked for scenes. If you wish to block them anyway for your scene, define this DB.
+NOT DB_SceneNoHostileContinuousDisturbance("");
+
+// PROC_SceneInterrupted((GUIDSTRING)_SceneNPC,(CHARACTERGUID)_OtherCharacter,(STRING)_SceneName,(STRING)_InterruptType)
+//   Gets called whenever the scene gets interrupted.
+//   WARNING: this call by itself does not do anything. You have to overload this call and take the appropriate action, such as calling PROC_SceneOver()
+//   Possible values for _InterruptType:
+//     * LeftTrigger: NPC or item left the scene manager trigger
+//     * PlayerTeleportInDialog: player got teleport while in dialog with an NPC that's in a scene
+//     * Attacked: scene NPC got attacked (includes teleporting a scene NPC)
+//     * Died: scene NPC died
+//     * EnteredCombat: scene NPC entered combat
+//     * StartedDialog: a player started a dialog with a scene NPC
+//     * DestroyedItem: a party member destroyed a scene item
+//     * SawInCombat: a scene NPC saw another character that's in combat (while not necessarily being in combat themselves)
+//     * Spotted: a DB_SpotPlayers with the same identifier as this scene name exists for a scene member, and it spotted someone using that pipeline
+//     * Unspotted: a DB_SpotPlayers with the same identifier as this scene name exists for a scene member, and it lost sight of someone using that pipeline (only possible if DB_SpotPlayers_Continuous is defined)
+//     * DisturbanceRegistering: a disturbance is being registered with either a scene NPC as victim or evidence, or with an item in the scene trigger as evidence (if _IgnoreItems == 0)
+//         By default, if the interrupt does not call PROC_SceneOver then the disturbance registration will be blocked, and otherwise it will be allowed to continue.
+//         Additional DBs for this case:
+//           - DB_SceneManager_DisturbanceRegistering(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID) : contains all information about the disturbance being registered while inside PROC_SceneInterrupted
+//           - DB_SceneManager_BlockDisturbance(_CrimeID): can be defined in the interrupt proc to block registering the disturbance even if calling PROC_SceneOver
+//           - DB_SceneManager_AllowDisturbance(_CrimeID): can be defined in the interrupt proc to allow registering the disturbance even if not calling PROC_SceneOver. Takes precedence over DB_SceneManager_BlockDisturbance(_CrimeID).
+//         If a crime affects multiple scenes, then if one of them allows the crime to be passed registered, it will be registered
+//     * DisturbanceReaction: a scene NPC reacts to a disturbance.
+//         Additional DB for this case:
+//           - DB_SceneManager_DisturbanceReaction(_NPC,_Region,_CrimeID,_ReactionName,_Dialog,_Criminal,_Criminal2,_Criminal3,_Criminal4,_Primary) : contains information about the crime reaction
+
+// PROC_SceneOver((STRING)_SceneName)
+//   Cleans up the scene manager and restores all NPCs. No further PROC_SceneInterrupted() calls will occur for this scene.
+
+DB_GLO_GenericSceneManager_LeavingReason("LeftTrigger");
+DB_GLO_GenericSceneManager_LeavingReason("PlayerTeleportInDialog");
+
+DB_GLO_GenericSceneManager_ViolenceReason("Attacked");
+DB_GLO_GenericSceneManager_ViolenceReason("EnteredCombat");
+DB_GLO_GenericSceneManager_ViolenceReason("Died");
+
+
+DB_GLO_GenericSceneManager_HostileContinuousDisturbance("ShapeshiftIntDev");
+DB_GLO_GenericSceneManager_HostileContinuousDisturbance("GuardKiller");
+DB_GLO_GenericSceneManager_HostileContinuousDisturbance("GuardKiller_NPC");
+
+PROC_DeclareCounter("SceneManager_DisturbanceStack");
+KBSECTION
+//REGION RegisterDB
+IF
+DB_SceneManager((CHARACTER)_NPC,_SceneName)
+AND
+_NPC != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,_)
+THEN
+TriggerRegisterForCharacter(_Trigger,_NPC);
+
+IF
+DB_SceneTriggerManager((STRING)_SceneName,(TRIGGER)_Trigger)
+THEN
+DB_SceneTriggerManager(_SceneName,_Trigger,1);
+
+IF
+DB_SceneTriggerManager(_SceneName,_Trigger,0)
+THEN
+TriggerRegisterForItems(_Trigger);
+
+IF
+DB_SceneManager((CHARACTER)_NPC,_SceneName)
+THEN
+DB_InternScene_Exists(_SceneName);
+
+// To make disturbance-related rules more efficient
+IF
+DB_InternScene_Exists(_SceneName)
+AND
+NOT DB_SceneManager(_,_SceneName)
+THEN
+NOT DB_InternScene_Exists(_SceneName);
+
+//END_REGION
+
+//REGION Convenience method for dialogs with SceneTriggers (as in the root template sense of the word) 
+PROC
+PROC_SceneDialogOnly((STRING)_SceneName,(CHARACTER)_NPC,(TRIGGER)_DialogTrigger)
+THEN
+DB_SceneManager(_NPC,_SceneName);
+DB_SceneTriggerManager(_SceneName,_DialogTrigger,1);
+DB_SceneAllowAllDisturbances(_SceneName);
+//END_REGION
+
+//REGION Activation tracking
+IF
+Activated(_SceneNPC)
+AND
+DB_SceneManager((CHARACTER)_SceneNPC,_)
+THEN
+DB_InternScene_Active(_SceneNPC);
+
+IF
+Deactivated(_SceneNPC)
+AND
+DB_InternScene_Active((CHARACTER)_SceneNPC)
+THEN
+NOT DB_InternScene_Active(_SceneNPC);
+
+IF
+DB_SceneManager((CHARACTER)_SceneNPC,_)
+AND
+_SceneNPC != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsActive(_SceneNPC,1)
+THEN
+DB_InternScene_Active(_SceneNPC);
+
+IF
+DB_InternScene_Active(_SceneNPC)
+AND
+NOT DB_SceneManager((CHARACTER)_SceneNPC,_)
+THEN
+NOT DB_InternScene_Active(_SceneNPC);
+//END_REGION
+
+//REGION Check for combat near scenes
+IF
+DB_SceneCheckForCombat(_NPC,_SceneName)
+AND
+DB_Sees(_NPC,_Other)
+AND
+DB_Is_InCombat(_Other,_)
+THEN
+PROC_SceneInterrupted(_NPC,_Other,_SceneName,"SawInCombat");
+
+//END_REGION
+
+//REGION Register story action ID handled for everyone in the scene
+PROC
+PROC_SceneManager_HandleViolence((CHARACTER)_NPC,(CHARACTER)_Attacker,(STRING)_SceneName,(STRING)_InterruptReason,(INTEGER)_StoryActionID)
+AND
+NOT DB_SceneManager_OnlyOncePerStoryActionID(_SceneName, _StoryActionID)
+THEN
+DB_SceneManager_OnlyOncePerStoryActionID(_SceneName, _StoryActionID); // register the StoryActionID so multiple triggers from the same _StoryActionID isn't triggered multiple times.
+// If PROC_SceneInterrupted calls PROC_SceneOver, all current participants of the scene manager
+// will be backed up in DB_InternScene_BackedUpNPC, so we can mark the StoryActionID as handled
+// for them (so we won't also register a crime afterwards)
+// We could also always backup them here instead, but that would result in more overhead
+DB_InternScene_BackupOnCleanUp(_SceneName);
+PROC_SceneInterrupted(_NPC,_Attacker,_SceneName,_InterruptReason);
+PROC_SceneManager_MaybeHandledAttack(_SceneName,_StoryActionID);
+NOT DB_InternScene_BackupOnCleanUp(_SceneName);
+NOT DB_SceneManager_AllowViolenceDisturbanceRegistration(_SceneName);
+
+PROC
+PROC_SceneManager_MaybeHandledAttack((STRING)_SceneName,(INTEGER)_StoryActionID)
+AND
+DB_InternScene_BackedUpNPC(_SceneName,_NPC)
+AND
+NOT DB_SceneManager_AllowViolenceDisturbanceRegistration(_SceneName)
+THEN
+// Scene got ended because of the interrupt -> don't register crime
+PROC_CRIME_StoryActionHandled(_NPC,_StoryActionID);
+NOT DB_InternScene_BackedUpNPC(_SceneName,_NPC);
+//END_REGION
+
+//REGION Trigger Interrupt	
+IF
+LeftTrigger(_NPC,_Trigger)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,_)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneInterrupted(_NPC,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,_SceneName,"LeftTrigger");
+
+IF
+ItemLeftTrigger(_Item,_Trigger,_Mover)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,0)
+THEN
+PROC_SceneManager_ItemLeftTrigger(_Item,_Mover,_SceneName);
+
+PROC
+PROC_SceneManager_ItemLeftTrigger((ITEM)_Item,(GUIDSTRING)_Mover,(STRING)_SceneName)
+AND
+_Mover != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_Mover,1)
+THEN
+DB_InternScene_ItemLeftHandled(1);
+PROC_SceneInterrupted(_Item,(CHARACTER)_Mover,_SceneName,"LeftTrigger");
+
+PROC
+PROC_SceneManager_ItemLeftTrigger((ITEM)_Item,(GUIDSTRING)_Mover,(STRING)_SceneName)
+AND
+NOT DB_InternScene_ItemLeftHandled(1)
+THEN
+PROC_SceneInterrupted(_Item,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,_SceneName,"LeftTrigger");
+
+PROC
+PROC_SceneManager_ItemLeftTrigger((ITEM)_Item,(GUIDSTRING)_Mover,(STRING)_SceneName)
+AND
+DB_InternScene_ItemLeftHandled(1)
+THEN
+NOT DB_InternScene_ItemLeftHandled(1);
+
+IF
+DB_Is_InCombat(_NPC,_CombatID)
+AND
+DB_SceneManager((CHARACTER)_NPC,_SceneName)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player,_CombatID)
+THEN
+PROC_SceneInterrupted(_NPC,_Player,_SceneName,"EnteredCombat");
+
+PROC
+PROC_CRIME_TryRegisterAssaultLikeCrime((CHARACTER)_Assailant,(GUIDSTRING)_NPC,(INTEGER)_StoryActionID,_)
+AND
+DB_SceneManager((CHARACTER)_NPC,_SceneName)
+THEN
+PROC_SceneManager_HandleViolence(_NPC,_Assailant,_SceneName,"Attacked",_StoryActionID);
+
+IF
+Teleported(_Player, _, _OldX, _OldY, _OldZ, _NewX, _NewY, _NewZ, _Spell)
+AND
+_Spell != "RegionSwap"
+AND
+_Spell != "Invalid"
+AND
+QRY_CRIME_PlayerInDialogTeleportedTooFar(_Player, _OldX, _OldY, _OldZ)
+AND
+DB_CRIME_PlayerInDialogTeleportedTooFar(_ID, _Player, _NPC)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+NOT DB_CRIME_PlayerInDialogTeleportedTooFar(_ID, _Player, _NPC);
+PROC_SceneInterrupted(_NPC,_Player,_SceneName,"PlayerTeleportInDialog");
+
+//handle teleportation as an attack since it could generate the trigger leave event before the attacked event comes in
+IF
+UsingSpellOnTarget(_Source,(CHARACTER)_Target,_,"Teleportation",_,_StoryActionID)
+AND
+_Source != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsPlayer((CHARACTER)_Source,1)
+AND
+DB_SceneManager(_Target,_SceneName)
+THEN
+PROC_SceneManager_HandleViolence(_Target,_Source,_SceneName,"Attacked",_StoryActionID);
+
+QRY
+QRY_SceneDialogInterruptIfSceneNPC((CHARACTER)_NPC, (CHARACTER)_Player)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneInterrupted(_NPC,_Player,_SceneName,"StartedDialog");
+
+QRY
+QRY_SelectCustomDialog((CHARACTER)_NPC,(CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+QRY_SceneDialogInterruptIfSceneNPC(_NPC, _Player)
+AND
+// Don't let this query succeed, or the dialog logic will stop looking for the dialog to start
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+DestroyedBy(_Item,_Player,_,_)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,0)
+AND
+IsInTrigger(_Item,_Trigger,1)
+THEN
+PROC_SceneInterrupted(_Item,_Player,_SceneName,"DestroyedItem");
+//END_REGION
+
+//REGION Disturbance registration interrupt
+// Block registration of the crime if it pertains to a scene NPC/item and should be blocked for all involved scenes
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_SceneManager_DisturbanceInterrupt(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+AND
+NOT QRY_SceneManager_AnyDisturbancePassThrough(_CrimeID)
+THEN
+DB_NOOP(1);
+
+// Clean up at the end instead of at start because this query can be called recursively if
+// a new disturbance gets registered in the called PROC_InterruptScene -> all internal DBs
+// have to be specific to the current disturbance and cleaning up should happen once we're
+// finished handling it (since at the start you have no idea which are finished and which
+// are not).
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Char,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_SceneManager_CleanUpDisturbanceInterrupt(_CrimeID)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+// Do not block registration of a disturbance relevant to a scene if
+//  1) PROC_SceneOver() was called and DB_SceneManager_BlockDisturbance(_CrimeID) was not set, or
+//  2) PROC_SceneOver() was NOT called and DB_SceneManager_AllowDisturbance(_CrimeID)
+QRY
+QRY_SceneManager_AnyDisturbancePassThrough((INTEGER)_CrimeID)
+AND
+DB_QRYRTN_SceneManager_DisturbanceInterrupt(_CrimeID,(STRING)_SceneName)
+AND
+QRY_SceneManager_PassThroughAfterDisturbanceInterrupt(_CrimeID,_SceneName)
+THEN
+DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName);
+
+// Also don't block if unrelated to any scene
+QRY
+QRY_SceneManager_AnyDisturbancePassThrough((INTEGER)_CrimeID)
+AND
+NOT DB_QRYRTN_SceneManager_DisturbanceInterrupt(_CrimeID,_)
+THEN
+DB_NOOP(1);
+
+
+// Record for which scenes _CrimeID should be allowed. We will then block it for other scene NPCs when
+// they become active (not for all scene NPCs everywhere to avoid clogging the ignore lists of all crimes).
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName)
+AND
+// No need to create an exception in case the scene is over now
+DB_InternScene_Exists(_SceneName)
+THEN
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName);
+
+// Keep track of ignored continuous crimes that were implicitly blocked so we can stop ignoring them after the scene ends
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+CrimeIsContinuous(_CrimeID,1)
+THEN
+DB_InternScene_ContinuousDisturbance(_CrimeID);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+THEN
+DB_InternScene_CrimeActive(_CrimeID);
+
+// Handle newly defined scenes while a continuous crime is ongoing related to DB_SceneNoHostileContinuousDisturbance
+// 1) no DB_SceneNoHostileContinuousDisturbance
+IF
+DB_InternScene_Exists(_SceneName)
+AND
+NOT DB_SceneNoHostileContinuousDisturbance(_SceneName)
+AND
+DB_InternScene_CrimeActive(_CrimeID)
+AND
+CrimeGetType(_CrimeID,_DisturbanceType)
+AND
+DB_GLO_GenericSceneManager_HostileContinuousDisturbance(_DisturbanceType)
+THEN
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName);
+
+// 2) with DB_SceneNoHostileContinuousDisturbance (or DB_SceneNoHostileContinuousDisturbance defined afterwards)
+IF
+DB_SceneNoHostileContinuousDisturbance(_SceneName)
+AND
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName)
+AND
+CrimeGetType(_CrimeID,_DisturbanceType)
+AND
+DB_GLO_GenericSceneManager_HostileContinuousDisturbance(_DisturbanceType)
+THEN
+NOT DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName);
+
+IF
+TextEvent("dumpscenecrimes")
+AND
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName)
+AND
+CrimeGetType(_CrimeID,_Type)
+THEN
+DB_NOOP(1);
+
+// 3) DB_SceneAllowAllDisturbances (also handles the case when a disturbance gets newly registered)
+IF
+DB_InternScene_Exists(_SceneName)
+AND
+DB_SceneAllowAllDisturbances(_SceneName)
+AND
+DB_InternScene_CrimeActive(_CrimeID)
+THEN
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName);
+
+// Ignore a disturbance if not explicitly allowed
+IF
+DB_InternScene_CrimeActive(_CrimeID)
+AND
+DB_InternScene_Active(_NPC)
+AND
+DB_SceneManager(_NPC,_SceneName)
+AND
+NOT DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName)
+THEN
+DB_InternScene_Ignored(_CrimeID,_NPC);
+CrimeIgnoreCrime(_CrimeID,_NPC);
+
+// Non-continuous crimes are fire-and-forget: if you want to react to them, do so immediately
+IF
+DB_InternScene_Ignored(_CrimeID,_NPC)
+AND
+NOT DB_InternScene_ContinuousDisturbance(_CrimeID)
+THEN
+NOT DB_InternScene_Ignored(_CrimeID,_NPC);
+
+// If continuous reaction got re-allowed later on (e.g. because DB_SceneNoHostileContinuousDisturbance got defined), cancel ignore
+IF
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName)
+AND
+DB_InternScene_Ignored(_CrimeID,_NPC)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+NOT DB_InternScene_Ignored(_CrimeID,_NPC);
+CrimeStopIgnoringCrime(_CrimeID,_NPC);
+
+
+
+// Clean up DBs when disturbance finishes
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_InternScene_CrimeActive(_CrimeID)
+THEN
+NOT DB_InternScene_CrimeActive(_CrimeID);
+
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName)
+THEN
+NOT DB_InternScene_AllowDisturbanceForScene(_CrimeID,_SceneName);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_InternScene_Ignored(_CrimeID,_NPC)
+THEN
+NOT DB_InternScene_Ignored(_CrimeID,_NPC);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_InternScene_ContinuousDisturbance(_CrimeID)
+THEN
+NOT DB_InternScene_ContinuousDisturbance(_CrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName)
+THEN
+NOT DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName);
+
+
+QRY
+QRY_SceneManager_DisturbanceInterrupt((CHARACTER)_Char,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_SceneManager_PushDisturbanceInterruptDB()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SceneManager_DisturbanceInterrupt((CHARACTER)_Char,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+CrimeTypeHasProperty(_DisturbanceType,NoSceneManagerInterrupt_e305c93f-eaf2-4b73-ae0a-0be56a1b0549,0)
+AND
+QRY_SceneManager_CollectAffectedByDisturbance(_CrimeID,_Evidence,_Victim)
+AND
+DB_QRYRTN_SceneManager_CollectAffectedByDisturbance(_CrimeID,_SceneMember,_SceneName)
+THEN
+DB_QRYRTN_SceneManager_DisturbanceInterrupt(_CrimeID,_SceneName);
+// Have to set DB_SceneManager_DisturbanceInterrupt every time, because it can change due to recursion
+// (if a new crime gets registered inside the PROC_SceneInterrupted, it could change)
+DB_SceneManager_DisturbanceRegistering(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+PROC_SceneInterrupted(_SceneMember,_Char,_SceneName,"DisturbanceRegistering");
+
+QRY
+QRY_SceneManager_DisturbanceInterrupt((CHARACTER)_Char,(STRING)_DisturbanceType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_SceneManager_PopDisturbanceInterruptDB()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SceneManager_PushDisturbanceInterruptDB()
+THEN
+PROC_IncreaseCounter("SceneManager_DisturbanceStack");
+
+QRY
+QRY_SceneManager_PushDisturbanceInterruptDB()
+AND
+DB_SceneManager_DisturbanceRegistering(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+AND
+DB_GlobalCounter("SceneManager_DisturbanceStack", _Index)
+THEN
+DB_SceneManager_DisturbanceRegistering_Stack(_Index,_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+QRY
+QRY_SceneManager_PopDisturbanceInterruptDB()
+AND
+DB_GlobalCounter("SceneManager_DisturbanceStack", _Index)
+AND
+DB_SceneManager_DisturbanceRegistering_Stack(_Index,_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_SceneManager_DisturbanceRegistering_Stack(_Index,_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+DB_SceneManager_DisturbanceRegistering(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+PROC_DecreaseCounter("SceneManager_DisturbanceStack");
+
+IF
+DB_SceneManager_DisturbanceRegistering(_Char1,_DisturbanceType1,_StoryActionID1,_Evidence1,_Victim1,_CrimeID1)
+AND
+DB_SceneManager_DisturbanceRegistering(_Char2,_DisturbanceType2,_StoryActionID2,_Evidence2,_Victim2,_CrimeID2)
+AND
+_CrimeID1 != _CrimeID2
+THEN
+NOT DB_SceneManager_DisturbanceRegistering(_Char2,_DisturbanceType2,_StoryActionID2,_Evidence2,_Victim2,_CrimeID2);
+
+QRY
+QRY_SceneManager_CollectAffectedByDisturbance((INTEGER)_CrimeID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+AND
+DB_SceneManager(_Victim,_SceneName)
+THEN
+DB_QRYRTN_SceneManager_CollectAffectedByDisturbance(_CrimeID,(GUIDSTRING)_Victim,_SceneName);
+
+QRY
+QRY_SceneManager_CollectAffectedByDisturbance((INTEGER)_CrimeID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+AND
+_Evidence != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_Evidence,1)
+AND
+DB_SceneManager((CHARACTER)_Evidence,_SceneName)
+THEN
+DB_QRYRTN_SceneManager_CollectAffectedByDisturbance(_CrimeID,_Evidence,_SceneName);
+
+QRY
+QRY_SceneManager_CollectAffectedByDisturbance((INTEGER)_CrimeID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+AND
+_Evidence != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsItem(_Evidence,1)
+AND
+DB_SceneTriggerManager(_SceneName,(TRIGGER)_Trigger,0)
+AND
+IsInTrigger(_Evidence,_Trigger,1)
+THEN
+DB_QRYRTN_SceneManager_CollectAffectedByDisturbance(_CrimeID,_Evidence,_SceneName);
+
+
+// Scene interruption called PROC_SceneOver -> allow crime, unless DB_SceneManager_BlockDisturbance(1) was defined
+QRY
+QRY_SceneManager_PassThroughAfterDisturbanceInterrupt((INTEGER)_CrimeID,(STRING)_SceneName)
+AND
+NOT DB_InternScene_Exists(_SceneName)
+AND
+NOT DB_SceneManager_BlockDisturbance(_CrimeID)
+THEN
+DB_NOOP(1);
+
+// Scene interruption did not call PROC_SceneOver -> only allow crime if DB_SceneManager_AllowDisturbance(1) was defined
+QRY
+QRY_SceneManager_PassThroughAfterDisturbanceInterrupt((INTEGER)_CrimeID,(STRING)_SceneName)
+AND
+DB_InternScene_Exists(_SceneName)
+AND
+DB_SceneManager_AllowDisturbance(_CrimeID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SceneManager_PassThroughAfterDisturbanceInterrupt((INTEGER)_CrimeID,(STRING)_SceneName)
+AND
+DB_SceneAllowAllDisturbances(_SceneName)
+THEN
+DB_NOOP(1);
+
+
+// Cleanup
+QRY
+QRY_SceneManager_CleanUpDisturbanceInterrupt((INTEGER)_CrimeID)
+AND
+DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName)
+THEN
+NOT DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName);
+
+QRY
+QRY_SceneManager_CleanUpDisturbanceInterrupt((INTEGER)_CrimeID)
+AND
+DB_SceneManager_DisturbanceRegistering(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_SceneManager_DisturbanceRegistering(_Char,_DisturbanceType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+QRY
+QRY_SceneManager_CleanUpDisturbanceInterrupt((INTEGER)_CrimeID)
+AND
+DB_SceneManager_BlockDisturbance(_CrimeID)
+THEN
+NOT DB_SceneManager_BlockDisturbance(_CrimeID);
+
+QRY
+QRY_SceneManager_CleanUpDisturbanceInterrupt((INTEGER)_CrimeID)
+AND
+DB_SceneManager_AllowDisturbance(_CrimeID)
+THEN
+NOT DB_SceneManager_AllowDisturbance(_CrimeID);
+
+QRY
+QRY_SceneManager_CleanUpDisturbanceInterrupt((INTEGER)_CrimeID)
+AND
+DB_QRYRTN_SceneManager_CollectAffectedByDisturbance(_CrimeID,_SceneMember,_SceneName)
+THEN
+NOT DB_QRYRTN_SceneManager_CollectAffectedByDisturbance(_CrimeID,_SceneMember,_SceneName);
+
+QRY
+QRY_SceneManager_CleanUpDisturbanceInterrupt((INTEGER)_CrimeID)
+AND
+DB_QRYRTN_SceneManager_DisturbanceInterrupt(_CrimeID,_SceneName)
+THEN
+NOT DB_QRYRTN_SceneManager_DisturbanceInterrupt(_CrimeID,_SceneName);
+
+//END_REGION
+
+//REGION Disturbance reaction interrupt
+IF
+CharacterOnCrimeSensibleActionNotification(_NPC,_Region,_CrimeID,_ReactionName,_Dialog,_Criminal,_Criminal2,_Criminal3,_Criminal4,_Primary)
+AND
+DB_SceneManager_DisturbanceReaction(_OldNPC,_OldRegion,_OldCrimeID,_OldReactionName,_OldDialog,_OldCriminal,_OldCriminal2,_OldCriminal3,_OldCriminal4,_OldPrimary)
+THEN
+NOT DB_SceneManager_DisturbanceReaction(_OldNPC,_OldRegion,_OldCrimeID,_OldReactionName,_OldDialog,_OldCriminal,_OldCriminal2,_OldCriminal3,_OldCriminal4,_OldPrimary);
+
+IF
+CharacterOnCrimeSensibleActionNotification(_NPC,_Region,_CrimeID,_ReactionName,_Dialog,_Criminal,_Criminal2,_Criminal3,_Criminal4,_Primary)
+THEN
+DB_SceneManager_DisturbanceReaction(_NPC,_Region,_CrimeID,_ReactionName,_Dialog,_Criminal,_Criminal2,_Criminal3,_Criminal4,_Primary);
+
+IF
+CharacterOnCrimeSensibleActionNotification(_NPC,_Region,_CrimeID,_ReactionName,_Dialog,_Criminal,_Criminal2,_Criminal3,_Criminal4,_Primary)
+AND
+CrimeHasProperty(_CrimeID,NoSceneManagerInterrupt_e305c93f-eaf2-4b73-ae0a-0be56a1b0549,0)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneInterrupted(_NPC,_Criminal,_SceneName,"DisturbanceReaction");
+
+// Same for investigation
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_NPC,_, "Investigation")
+AND
+QRY_OnlyOnce_Reset("Scenemanager_Investigation")
+AND
+DB_SceneManager(_NPC,_SceneName)
+AND
+QRY_OnlyOnce("Scenemanager_Investigation")
+AND
+CrimeHasProperty(_CrimeID,NoSceneManagerInterrupt_e305c93f-eaf2-4b73-ae0a-0be56a1b0549,0)
+THEN
+PROC_SceneManager_HandleInvestigation(_CrimeID,_NPC);
+
+PROC
+PROC_SceneManager_HandleInvestigation((INTEGER)_CrimeID,(CHARACTER)_NPC)
+AND
+DB_SceneManager_DisturbanceReaction(_OldNPC,_OldRegion,_OldCrimeID,_ReactionName,_OldDialog,_OldCriminal,_OldCriminal2,_OldCriminal3,_OldCriminal4,_OldPrimary)
+THEN
+NOT DB_SceneManager_DisturbanceReaction(_OldNPC,_OldRegion,_OldCrimeID,_ReactionName,_OldDialog,_OldCriminal,_OldCriminal2,_OldCriminal3,_OldCriminal4,_OldPrimary);
+
+PROC
+PROC_SceneManager_HandleInvestigation((INTEGER)_CrimeID,(CHARACTER)_NPC)
+AND
+CrimeGetCriminals(_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4)
+AND
+CharacterGetCrimeRegion(_NPC,_Region)
+AND
+CrimeGetInterrogationDialog(_CrimeID,_NPC,_Dialog)
+AND
+CrimeGetLeadInvestigator(_CrimeID,_Lead)
+AND
+QRY_GetGuidsEqual(_NPC,_Lead)
+AND
+DB_QRYRTN_GetGuidsEqual(_Primary)
+THEN
+DB_SceneManager_DisturbanceReaction(_NPC,_Region,_CrimeID,"INVESTIGATION",_Dialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_Primary);
+
+PROC
+PROC_SceneManager_HandleInvestigation((INTEGER)_CrimeID,(CHARACTER)_NPC)
+AND
+DB_SceneManager_DisturbanceReaction(_NPC,_Region,_CrimeID,"INVESTIGATION",_Dialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_Primary)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneInterrupted(_NPC,_Criminal1,_SceneName,"DisturbanceReaction");
+//END_REGION
+
+
+
+//REGION Spotting/Unspotting
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)_Spotter,(STRING)_Identifier,(CHARACTER)_Target)
+AND
+DB_SceneManager(_Spotter,_Identifier)
+THEN
+PROC_SceneInterrupted(_Spotter,_Target,_Identifier,"Spotted");
+
+PROC
+PROC_SpotPlayers_Unspotted((CHARACTER)_Spotter,(STRING)_Identifier,(CHARACTER)_Target)
+AND
+DB_SceneManager(_Spotter,_Identifier)
+THEN
+PROC_SceneInterrupted(_Spotter,_Target,_Identifier,"Unspotted");
+//END_REGION
+
+//REGION Leaving trigger
+// If an NPC leaves a scene trigger (e.g. because of a disturbance that wasn't blocked), disable their dialog and pause their spotting
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_SceneNPC,(CHARACTER)_OtherCharacter,(STRING)_SceneName,"LeftTrigger")
+AND
+// Can have been cleared already by a PROC_SceneOver call in reaction to a situation-specific overload of PROC_SceneInterrupted
+DB_SceneManager((CHARACTER)_SceneNPC,_SceneName)
+THEN
+PROC_SceneManager_TryBlockDialog(_SceneNPC,_SceneName);
+
+// In case the scene gets registered while the NPC is outside the trigger
+IF
+DB_SceneTriggerManager(_SceneName,_Trigger,_)
+AND
+DB_SceneManager(_SceneNPC,_SceneName)
+AND
+_SceneNPC != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsInTrigger(_SceneNPC,_Trigger,0)
+THEN
+PROC_SceneManager_TryBlockDialog(_SceneNPC,_SceneName);
+
+PROC
+PROC_SceneManager_TryBlockDialog((CHARACTER)_SceneNPC,(STRING)_SceneName)
+AND
+NOT DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName)
+THEN
+DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName);
+
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_SceneNPC,(CHARACTER)_OtherCharacter,(STRING)_SceneName,"LeftTrigger")
+AND
+// Can have been cleared already by a PROC_SceneOver call in reaction to a situation-specific overload of PROC_SceneInterrupted
+DB_SceneManager((CHARACTER)_SceneNPC,_SceneName)
+AND
+QRY_SpotPlayers_IsSpotting(_SceneNPC,_SceneName)
+THEN
+DB_InternScene_LeftTriggerStoppedSpotting(_SceneNPC,_SceneName);
+PROC_SpotPlayers_StopSpotting(_SceneNPC,_SceneName);
+
+
+IF
+EnteredTrigger(_SceneNPC,_SceneTrigger)
+AND
+DB_SceneTriggerManager(_SceneName,_SceneTrigger,_)
+AND
+DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName)
+THEN
+NOT DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName);
+
+IF
+EnteredTrigger(_SceneNPC,_SceneTrigger)
+AND
+DB_SceneTriggerManager(_SceneName,_SceneTrigger,_)
+AND
+DB_InternScene_LeftTriggerStoppedSpotting(_SceneNPC,_SceneName)
+THEN
+NOT DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName);
+PROC_SpotPlayers_RestartSpotting(_SceneNPC,_SceneName);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_SceneNPC,(STRING)_SceneName)
+AND
+DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName)
+THEN
+NOT DB_InternScene_LeftTriggerDialogsBlocked(_SceneNPC,_SceneName);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_SceneNPC,(STRING)_SceneName)
+AND
+DB_InternScene_LeftTriggerStoppedSpotting(_SceneNPC,_SceneName)
+THEN
+NOT DB_InternScene_LeftTriggerStoppedSpotting(_SceneNPC,_SceneName);
+// Don't restart spotting, as we also stop spotting with the scene identifier when
+// removing an NPC from the scene
+
+//END_REGION
+
+//REGION Report scene interruption
+PROC 
+PROC_SceneInterrupted((GUIDSTRING)_SceneNPC,(CHARACTER)_OtherCharacter,(STRING)_SceneName,(STRING)_InterruptType)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION SceneOver	
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneManager_RemoveFromScene(_NPC,_SceneName);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,0)
+THEN
+PROC_TriggerUnregisterForItemsWhenInLevel(_Trigger);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,_IgnoreItems)
+THEN
+NOT DB_SceneTriggerManager(_SceneName,_Trigger,_IgnoreItems);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger)
+THEN
+NOT DB_SceneTriggerManager(_SceneName,_Trigger);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneCheckForCombat(_NPC,_SceneName)
+THEN
+NOT DB_SceneCheckForCombat(_NPC,_SceneName);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneNoHostileContinuousDisturbance(_SceneName)
+THEN
+NOT DB_SceneNoHostileContinuousDisturbance(_SceneName);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneAllowAllDisturbances(_SceneName)
+THEN
+NOT DB_SceneAllowAllDisturbances(_SceneName);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_SceneManager_OnlyOncePerStoryActionID(_SceneName, _StoryActionID)
+THEN
+NOT DB_SceneManager_OnlyOncePerStoryActionID(_SceneName, _StoryActionID);
+
+PROC
+PROC_SceneOver((STRING)_SceneName)
+AND
+DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName)
+THEN
+NOT DB_InternScene_DisturbanceAllowed(_CrimeID,_SceneName);
+
+//END_REGION
+
+//REGION Remove NPC from scene
+
+// May be used before a scene is fully over to exclude a npc
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_NPC, (STRING)_SceneName)
+AND
+DB_SceneTriggerManager(_SceneName,_Trigger,_)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+TriggerUnregisterForCharacter(_Trigger,_NPC);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_NPC, (STRING)_SceneName)
+AND
+DB_SceneManager(_NPC,_SceneName)
+AND
+DB_SpotPlayers(_NPC,_SceneName,_,_)
+THEN
+PROC_SpotPlayers_StopSpotting(_NPC,_SceneName);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_NPC, (STRING)_SceneName)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+NOT DB_SceneManager(_NPC,_SceneName);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_NPC, (STRING)_SceneName)
+AND
+DB_SceneCheckForCombat(_NPC,_SceneName)
+THEN
+NOT DB_SceneCheckForCombat(_NPC,_SceneName);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_NPC, (STRING)_SceneName)
+AND
+DB_InternScene_Ignored(_CrimeID,_NPC)
+THEN
+NOT DB_InternScene_Ignored(_CrimeID,_NPC);
+CrimeStopIgnoringCrime(_CrimeID,_NPC);
+
+PROC
+PROC_SceneManager_RemoveFromScene((CHARACTER)_NPC, (STRING)_SceneName)
+AND
+DB_InternScene_BackupOnCleanUp(_SceneName)
+THEN
+DB_InternScene_BackedUpNPC(_SceneName,_NPC);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

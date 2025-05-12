@@ -1,0 +1,264 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+NOT DB_WorldGossip_RegionTrigger((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Block World Gossip if players were ADing recently
+IF
+DB_DialogPlayers(_Inst,_Player,_)
+AND
+DB_DialogName(_, _Inst)
+AND
+DB_AutomatedDialog(_Inst)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+ObjectTimerCancel(_Player,"GLO_WorldGossip_Block");
+DB_BlockWorldGossip(_Player);
+
+IF
+DB_BlockWorldGossip(_Player)
+AND
+NOT DB_DialogPlayers(_,_Player,_)
+THEN
+ObjectTimerCancel(_Player,"GLO_WorldGossip_Block");
+ObjectTimerLaunch(_Player,"GLO_WorldGossip_Block",20000);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player,"GLO_WorldGossip_Block")
+THEN
+NOT DB_BlockWorldGossip(_Player);
+PROC_RetestPartyBanterTrigger(_Player);
+
+QRY
+QRY_WorldGossip_IsAnyoneNearbyBlocked((CHARACTER)_Anchor)
+AND
+DB_BlockWorldGossip(_Player)
+AND
+GetDistanceTo(_Player,_Anchor,_Dist)
+AND
+_Dist < 20.0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION World Gossip Trigger
+PROC
+PROC_RegisterWorldGossipTrigger((TRIGGER)_WorldGossipTrigger)
+AND
+NOT DB_WorldGossipTrigger(_WorldGossipTrigger,_,_)
+AND
+Exists(_WorldGossipTrigger,1)
+AND
+GetUUID(_WorldGossipTrigger,_TriggerUUID)
+AND
+Concatenate("WorldGossipTriggerCooldown_",_TriggerUUID,_TimerName) //OBJECTTIMER doesn't support triggers
+THEN
+DB_WorldGossipTrigger(_WorldGossipTrigger,1,_TimerName);
+PROC_TriggerRegisterForPlayers(_WorldGossipTrigger);
+
+PROC
+PROC_RegisterWorldGossipTrigger((TRIGGER)_WorldGossipTrigger)
+AND
+NOT DB_WorldGossipTrigger(_WorldGossipTrigger,_,_)
+AND
+NOT DB_ExecuteWhenObjectInCurrentLevel("RegisterWorldGossipTrigger",_WorldGossipTrigger)
+THEN
+DB_ExecuteWhenObjectInCurrentLevel("RegisterWorldGossipTrigger",_WorldGossipTrigger);
+
+PROC
+PROC_ExecuteWhenObjectInCurrentLevel("RegisterWorldGossipTrigger",_WorldGossipTrigger)
+THEN
+PROC_RegisterWorldGossipTrigger((TRIGGER)_WorldGossipTrigger);
+
+PROC
+PROC_UnregisterWorldGossipTrigger((TRIGGER)_WorldGossipTrigger)
+AND
+DB_WorldGossipTrigger(_WorldGossipTrigger,_State,_Timername)
+THEN
+NOT DB_WorldGossipTrigger(_WorldGossipTrigger,_State,_Timername);
+PROC_TriggerUnregisterForPlayers(_WorldGossipTrigger);
+
+PROC
+PROC_UnregisterWorldGossipTrigger((TRIGGER)_WorldGossipTrigger)
+AND
+DB_ExecuteWhenObjectInCurrentLevel("RegisterWorldGossipTrigger",_WorldGossipTrigger)
+THEN
+NOT DB_ExecuteWhenObjectInCurrentLevel("RegisterWorldGossipTrigger",_WorldGossipTrigger);
+
+PROC
+PROC_ClearWorldGossip_RegionTrigger((TRIGGER)_WorldGossipTrigger, (FLAG)_Flag)
+AND
+DB_WorldGossip_RegionTrigger(_WorldGossipTrigger, _Flag)
+THEN
+NOT DB_WorldGossip_RegionTrigger(_WorldGossipTrigger, _Flag);
+ClearFlag(_Flag);
+
+
+//Enter the trigger: play a world gossip and set trigger inactive for 1 minute.
+IF
+EnteredTrigger(_Player,_WorldGossipTrigger)
+AND
+DB_WorldGossipTrigger(_WorldGossipTrigger,1,_Timername)
+AND
+NOT QRY_WorldGossip_IsAnyoneNearbyBlocked(_Player)
+THEN
+NOT DB_WorldGossipTrigger(_WorldGossipTrigger,1,_Timername);
+DB_WorldGossipTrigger(_WorldGossipTrigger,0,_Timername);
+TimerLaunch(_Timername,60000);
+PROC_StartWorldGossip(_Player);
+
+PROC
+PROC_RetestPartyBanterTrigger((CHARACTER)_Player)
+AND
+DB_InRegion(_Player,_WorldGossipTrigger)
+AND
+DB_WorldGossipTrigger(_WorldGossipTrigger,1,_Timername)
+AND
+NOT QRY_WorldGossip_IsAnyoneNearbyBlocked(_Player)
+THEN
+NOT DB_WorldGossipTrigger(_WorldGossipTrigger,1,_Timername);
+DB_WorldGossipTrigger(_WorldGossipTrigger,0,_Timername);
+TimerLaunch(_Timername,60000);
+PROC_StartWorldGossip(_Player);
+
+IF
+TimerFinished(_Timername)
+AND
+DB_WorldGossipTrigger(_WorldGossipTrigger,0,_Timername)
+THEN
+NOT DB_WorldGossipTrigger(_WorldGossipTrigger,0,_Timername);
+DB_WorldGossipTrigger(_WorldGossipTrigger,1,_Timername);
+//END_REGION
+
+//REGION Starting the World Gossip
+//Set the region flags
+PROC
+PROC_StartWorldGossip((CHARACTER)_Player)
+AND
+DB_WorldGossip_RegionTrigger(_Trigger,(FLAG)_Flag)
+AND
+NOT DB_InRegion(_Player,_Trigger)
+THEN
+ClearFlag(_Flag,NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+PROC_StartWorldGossip((CHARACTER)_Player)
+AND
+DB_WorldGossip_RegionTrigger((TRIGGER)_Trigger,(FLAG)_Flag)
+AND
+DB_InRegion(_Player,_Trigger)
+THEN
+SetFlag(_Flag,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Let engine pick the gossip
+PROC
+PROC_StartWorldGossip((CHARACTER)_Player)
+AND
+FindGossipWorld(_Player,_AutomatedDialog,_Type)
+THEN
+PROC_WorldGossip_FetchSpeaker(_AutomatedDialog,1);
+PROC_WorldGossip_StartGossip(_AutomatedDialog);
+PROC_WorldGossip_Cleanup(_AutomatedDialog);
+
+//Recursive fetch of all speakers
+PROC
+PROC_WorldGossip_FetchSpeaker((DIALOGRESOURCE)_AutomatedDialog,(INTEGER)_Index)
+AND
+GetGossipSpeaker(_AutomatedDialog,_Index,_Speaker)
+AND
+IntegerSum(_Index,1,_NextIndex)
+THEN
+DB_GossipSpeaker(_AutomatedDialog,_Index,_Speaker);
+PROC_WorldGossip_FetchSpeaker(_AutomatedDialog,_NextIndex);
+
+//Start Gossip (4p version)
+PROC
+PROC_WorldGossip_StartGossip((DIALOGRESOURCE)_AutomatedDialog)
+AND
+DB_GossipSpeaker(_AutomatedDialog,4,_Speaker4)
+AND
+DB_GossipSpeaker(_AutomatedDialog,3,_Speaker3)
+AND
+DB_GossipSpeaker(_AutomatedDialog,2,_Speaker2)
+AND
+DB_GossipSpeaker(_AutomatedDialog,1,_Speaker1)
+AND
+NOT QRY_StartDialog_Fixed(_AutomatedDialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4)
+AND
+GUIDToString(_AutomatedDialog,_AutomatedDialogString)
+AND
+Concatenate("Could not start World Gossip: ",_AutomatedDialogString,_Error)
+THEN
+DebugBreak(_Error);
+
+//Start Gossip (3p version)
+PROC
+PROC_WorldGossip_StartGossip((DIALOGRESOURCE)_AutomatedDialog)
+AND
+NOT DB_GossipSpeaker(_AutomatedDialog,4,_)
+AND
+DB_GossipSpeaker(_AutomatedDialog,3,_Speaker3)
+AND
+DB_GossipSpeaker(_AutomatedDialog,2,_Speaker2)
+AND
+DB_GossipSpeaker(_AutomatedDialog,1,_Speaker1)
+AND
+NOT QRY_StartDialog_Fixed(_AutomatedDialog,_Speaker1,_Speaker2,_Speaker3)
+AND
+GUIDToString(_AutomatedDialog,_AutomatedDialogString)
+AND
+Concatenate("Could not start World Gossip: ",_AutomatedDialogString,_Error)
+THEN
+DebugBreak(_Error);
+
+//Start Gossip (2p version)
+PROC
+PROC_WorldGossip_StartGossip((DIALOGRESOURCE)_AutomatedDialog)
+AND
+NOT DB_GossipSpeaker(_AutomatedDialog,3,_)
+AND
+DB_GossipSpeaker(_AutomatedDialog,2,_Speaker2)
+AND
+DB_GossipSpeaker(_AutomatedDialog,1,_Speaker1)
+AND
+NOT QRY_StartDialog_Fixed(_AutomatedDialog,_Speaker1,_Speaker2)
+AND
+GUIDToString(_AutomatedDialog,_AutomatedDialogString)
+AND
+Concatenate("Could not start World Gossip: ",_AutomatedDialogString,_Error)
+THEN
+DebugBreak(_Error);
+
+//Start Gossip (1p version)
+PROC
+PROC_WorldGossip_StartGossip((DIALOGRESOURCE)_AutomatedDialog)
+AND
+NOT DB_GossipSpeaker(_AutomatedDialog,2,_)
+AND
+DB_GossipSpeaker(_AutomatedDialog,1,_Speaker1)
+AND
+NOT QRY_StartDialog_Fixed(_AutomatedDialog,_Speaker1)
+AND
+GUIDToString(_AutomatedDialog,_AutomatedDialogString)
+AND
+Concatenate("Could not start World Gossip: ",_AutomatedDialogString,_Error)
+THEN
+DebugBreak(_Error);
+
+PROC
+PROC_WorldGossip_Cleanup((DIALOGRESOURCE)_AutomatedDialog)
+AND
+DB_GossipSpeaker(_AutomatedDialog,_Index,_Speaker)
+THEN
+NOT DB_GossipSpeaker(_AutomatedDialog,_Index,_Speaker);
+
+PROC
+PROC_WorldGossip_Cleanup((DIALOGRESOURCE)_AutomatedDialog)
+THEN
+GossipCompleted(_AutomatedDialog,1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

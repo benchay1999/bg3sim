@@ -1,0 +1,58 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_DeclareCounter("ORI_DarkUrge_Urges");
+KBSECTION
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_HadUrge_f6cc5466-1052-4dcd-76da-72680082f795, _Speaker, _ID)
+AND
+DB_ORI_DarkUrge((CHARACTER)_Speaker)
+AND
+QRY_ORI_DarkUrge_UnexperiencedUrge(_ID)
+THEN
+PROC_IncreaseCounter("ORI_DarkUrge_Urges");
+
+QRY
+QRY_ORI_DarkUrge_UnexperiencedUrge((INTEGER)_ID)
+AND
+NOT DB_DialogName(_, _ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ORI_DarkUrge_UnexperiencedUrge((INTEGER)_ID)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+NOT DB_ORI_DarkUrge_ExperiencedUrges(_Dialog)
+THEN
+DB_ORI_DarkUrge_ExperiencedUrges(_Dialog);
+
+PROC
+PROC_CounterIncreased("ORI_DarkUrge_Urges", _Count)
+AND
+_Count > 2
+AND
+DB_ORI_DarkUrge(_Speaker)
+THEN
+QuestUpdate(_Speaker, "ORI_Avatar_DarkUrge", "SawUrges");
+
+IF
+FlagSet((FLAG)ORI_DarkUrge_Event_HadUrge_f6cc5466-1052-4dcd-76da-72680082f795, _Speaker, _ID)
+THEN
+ClearFlag((FLAG)ORI_DarkUrge_Event_HadUrge_f6cc5466-1052-4dcd-76da-72680082f795, _Speaker, _ID);
+
+IF
+DB_GlobalFlag((FLAG)NIGHT_DarkUrge_MurderOfAlfira_b0e97b06-b2f8-4376-829f-23d4b4bcf78d)
+THEN
+GoalCompleted;
+
+IF
+QuestUpdateUnlocked(_, "ORI_Avatar_DarkUrge", "SawUrges")
+THEN
+GoalCompleted;
+EXITSECTION
+PROC_RemoveCounter("ORI_DarkUrge_Urges");
+SysClear("DB_ORI_DarkUrge_ExperiencedUrges", 1);
+ENDEXITSECTION
+ParentTargetEdge "GLO_DarkUrge_SetupSubgoals"

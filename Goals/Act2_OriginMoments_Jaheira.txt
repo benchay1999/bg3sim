@@ -1,0 +1,67 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+// Not really an origin moment, but throughout the entirety of Act 2 we want to protect against NPC Jaheira staying a Beast, or staying invisible.
+
+IF
+LeftCombat(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _)
+AND
+DB_Is_WildShaped(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_PartyMembers(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0)
+AND
+HasActiveStatusWithGroup(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "SG_Polymorph_BeastShape", 1)
+THEN
+RemoveStatusesWithGroup(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "SG_Polymorph_BeastShape");
+RemoveStatus(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "INVISIBILITY_PANTHER");
+RemoveStatus(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "PROWL");
+
+//Catch all, just incase she somehow stops being a panther and this isn't cleared.
+IF
+LeftCombat(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _)
+AND
+NOT DB_PartOfTheTeam(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0)
+THEN
+RemoveStatus(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "INVISIBILITY_PANTHER");
+RemoveStatus(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "PROWL");
+
+//Second catch all, incase she was a follower and stopped being a follower, but was also something silly like a Spider
+
+IF
+CharacterLeftParty(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_Is_WildShaped(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+IsInCombat(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 0)
+THEN
+PROC_RemoveAllPolymorphs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+RemoveStatus(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "INVISIBILITY_PANTHER");
+RemoveStatus(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "PROWL");
+
+//Fix specific problem Jaheira can have by joining you for the Ketheric fight atop Moonrise - in certain situations he could frighten her,
+// she could turn into an NPC, then you could go to Colony and that maintains on her because she's outside of activation range. This handles clearing her up this while players are all busy with the aftermath of Ketheric's death
+
+PROC
+PROC_COL_KethericShowdown_AfterDefeat()
+AND
+NOT DB_Dead(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT QRY_SCL_ShadowCurse_Undead(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_GlobalFlag(MOO_Assault_State_JaheiraWaitingOnRoof_3f57e1aa-6ed0-4c38-855d-fcf7ddadcffb)
+AND
+HasActiveStatusWithGroup(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "SG_Frightened", 1)
+THEN
+RemoveStatusesWithGroup(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "SG_Frightened");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

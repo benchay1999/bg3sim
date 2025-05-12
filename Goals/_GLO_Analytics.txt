@@ -1,0 +1,152 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Party followers
+IF
+CharacterJoinedParty(_Follower)
+AND
+NOT DB_CMB_SpellFollower(_Follower)
+AND
+IsPartyFollower(_Follower,1)
+AND
+CharacterGetOwner(_Follower,_Recruiter)
+AND
+GUIDToString(_Recruiter,_RecruiterStr)
+AND
+Concatenate("type:follower,recruiter:",_RecruiterStr,_EventData)
+THEN
+DB_Analytics_PartyFollower(_Follower);
+TrackAnalyticsInfo("party_join",_EventData,_Follower);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+DB_PermaDefeated(_Follower)
+AND
+DB_Analytics_PartyFollower(_Follower)
+THEN
+TrackAnalyticsInfo("party_leave","type:follower,leave_type:permanent,reason:permadefeated",_Follower);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+NOT DB_PermaDefeated(_Follower)
+AND
+DB_Analytics_PartyFollower(_Follower)
+THEN
+TrackAnalyticsInfo("party_leave","type:follower,leave_type:,reason:",_Follower);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+DB_Analytics_PartyFollower(_Follower)
+THEN
+NOT DB_Analytics_PartyFollower(_Follower);
+//END_REGION
+
+//REGION Non-Origin companions (only tutorial for now, go through custom procs)
+PROC
+PROC_TUT_Misc_TutorialCompanion_Recruitment((CHARACTER)_Companion,(CHARACTER)_Player)
+AND
+GUIDToString(_Player,_RecruiterStr)
+AND
+Concatenate("type:non_origin_companion,recruiter:",_RecruiterStr,_EventData)
+THEN
+TrackAnalyticsInfo("party_join",_EventData,_Companion);
+
+PROC
+PROC_TUT_Misc_TutorialCompanion_RemoveCompanion((CHARACTER)_Companion,(STRING)_LeaveType,(STRING)_Reason)
+AND
+Concatenate("type:non_origin_companion,leave_type:",_LeaveType,_TempStr1)
+AND
+Concatenate(_TempStr1,",reason:",_TempStr2)
+AND
+Concatenate(_TempStr2,_Reason,_EventData)
+THEN
+TrackAnalyticsInfo("party_leave",_EventData,_Companion);
+//END_REGION
+
+//REGION Regular companions
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)_Companion,(CHARACTER)_Player)
+AND
+GUIDToString(_Player,_RecruiterStr)
+AND
+Concatenate("type:companion,recruiter:",_RecruiterStr,_EventData)
+THEN
+TrackAnalyticsInfo("party_join",_EventData,_Companion);
+
+IF
+DialogEnded(_, _ID)
+AND
+DB_ORI_ToCampAfterDialog(_Origin, _ID, _Run)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+GUIDToString(_Player,_RecruiterStr)
+AND
+Concatenate("type:companion,recruiter:",_RecruiterStr,_EventData)
+THEN
+TrackAnalyticsInfo("added_to_camp",_EventData,_Origin);
+
+PROC
+PROC_Origins_CompanionLeavePermanently((CHARACTER)_Companion,(STRING)_Reason)
+AND
+Concatenate("type:non_origin_companion,leave_type:permanently,reason:",_Reason,_FinalStr)
+THEN
+DB_Analytics_LeftPermanently(_Companion);
+TrackAnalyticsInfo("party_leave",_FinalStr,_Companion);
+
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Origin)
+AND
+NOT DB_GLO_PlayerCharactersSetup(1)
+AND
+NOT DB_Analytics_LeftPermanently(_Origin)
+THEN
+TrackAnalyticsInfo("party_leave","type:companion,leave_type:dismissed,reason:",_Origin);
+
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Origin)
+AND
+DB_Analytics_LeftPermanently(_Companion)
+THEN
+NOT DB_Analytics_LeftPermanently(_Companion);
+//END_REGION
+
+//REGION Character Swapping
+IF
+GainedControl(_Player1)
+AND
+DB_DialogPlayers(_ID, _Player2, _)
+AND
+_Player1 != _Player2
+AND
+NOT DB_Analytics_SwappedDuring(_ID)
+AND
+QRY_SameUser(_Player1, (CHARACTER)_Player2)
+AND
+QRY_SpeakerIsInDialogRange(_Player1, _Player2)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+GUIDToString(_Dialog, _DialogName)
+AND
+Concatenate("dialog:", _DialogName, _Result)
+THEN
+DB_Analytics_SwappedDuring(_ID);
+TrackAnalyticsInfo("player_dialog_swap", _Result, _Player1);
+
+IF
+DialogEnded(_, _ID)
+AND
+DB_Analytics_SwappedDuring(_ID)
+THEN
+NOT DB_Analytics_SwappedDuring(_ID);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

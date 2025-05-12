@@ -1,0 +1,540 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//To test DLCs, use ReCon command "unlockDLC _Identifier"
+
+//Refer to the DLC UUID in the UUID editor under "DLC" - the identifier is primarily for debug commands
+NOT DB_DLC((DLC)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_DLC_Installed((DLC)NULL_00000000-0000-0000-0000-000000000000);
+
+//You don't need to define a DLC sharing type if you don't need anything special done -
+//by default DLC is shared to other users if the host owns the DLC
+//Defining a non-supported sharing type will block that DLC from installing
+//_SharingType "DisallowSharing"
+//If a DLC is allowed to be shared (default), only the host needs to own the DLC
+//otherwise all users need to own the DLC for it to be activated
+//_SharingType "AllowNonHostSharing"
+//This allows the DLC to be considered installed if a non-host character owns this DLC
+//You might combine this with one time rewards that are NOT a shared reward
+//so only users who own a DLC receive certain items, like cosmetic Twitch rewards
+NOT DB_DLC_SharingType((DLC)NULL_00000000-0000-0000-0000-000000000000,"_SharingType");
+
+//Define objects, per DLC, that are set on or off stage when a DLC is (un)installed
+//DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_CurrentLevel)
+NOT DB_DLC_StageObjects((DLC)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,1,"_CurrentLevel");
+NOT DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Define item roots, per DLC, that are granted to each player in the session (once)
+//These will automatically be added to DB_DLC_StageObjects so they are put on/off stage when the DLC is (un)installed
+//DB_DLC_OneTimeRewards((DLC)_DLC,(ROOT)_RewardRootTemplate,(INTEGER)_Amount,(INTEGER)_SendToCampChest,(INTEGER)_SharedReward)
+NOT DB_DLC_OneTimeRewards((DLC)NULL_00000000-0000-0000-0000-000000000000,(ROOT)NULL_00000000-0000-0000-0000-000000000000,1,1,1);
+KBSECTION
+//REGION Initialize DLC state
+
+//DLC installation state updated
+IF
+DLCUpdated((DLC)_DLC,_,_)
+THEN
+PROC_DLC_CheckInstalled(_DLC);
+
+//Save game loaded - check installed DLCs
+IF
+SavegameLoaded()
+AND
+DB_DLC(_DLC)
+THEN
+PROC_DLC_CheckInstalled(_DLC);
+
+//Check the installation state of DLCs and force update
+IF
+DB_Avatars(_)
+THEN
+TimerCancel("GLO_DLC_Check");
+TimerLaunch("GLO_DLC_Check",100);
+
+IF
+TimerFinished("GLO_DLC_Check")
+AND
+NOT GetHostCharacter(_)
+THEN
+TimerLaunch("GLO_DLC_Check",1000);
+//GetHostCharacter is unreliable and there is no good event to check for it
+
+IF
+TimerFinished("GLO_DLC_Check")
+AND
+GetHostCharacter(_)
+AND
+DB_DLC(_DLC)
+THEN
+PROC_DLC_CheckInstalled(_DLC);
+
+IF
+TimerFinished("GLO_DLC_Check")
+AND
+DB_Avatars(_Player)
+AND
+DB_DLC(_DLC)
+THEN
+PROC_DLC_OneTimeRewards_Check(_DLC,_Player);
+
+//END_REGION
+
+//REGION Check and set installation
+
+IF
+TextEvent("dlc_block")
+AND
+GetTextEventParamUUID(1,_DLC)
+AND
+NOT DB_DLC_DebugBlockInstallation((DLC)_DLC)
+THEN
+DB_DLC_DebugBlockInstallation((DLC)_DLC);
+PROC_DLC_CheckInstalled((DLC)_DLC);
+
+IF
+TextEvent("dlc_unblock")
+AND
+GetTextEventParamUUID(1,_DLC)
+AND
+DB_DLC_DebugBlockInstallation((DLC)_DLC)
+THEN
+NOT DB_DLC_DebugBlockInstallation((DLC)_DLC);
+PROC_DLC_CheckInstalled((DLC)_DLC);
+
+//Disable missing DLCs
+PROC
+PROC_DLC_CheckInstalled((DLC)_DLC)
+AND
+NOT QRY_DLC_ShouldInstallDLC(_DLC)
+THEN
+PROC_DLC_SetInstalled(_DLC,0);
+
+//Enable newly installed DLCs
+//Check whether we should enable the DLCs
+PROC
+PROC_DLC_CheckInstalled((DLC)_DLC)
+AND
+NOT DB_DLC_Installed(_DLC)
+AND
+QRY_DLC_ShouldInstallDLC(_DLC)
+THEN
+PROC_DLC_SetInstalled(_DLC,1);
+
+//Set installed
+//Should be overloaded per DLC to set things on/off stage etc
+PROC
+PROC_DLC_SetInstalled((DLC)_DLC,0)
+AND
+DB_DLC_Installed(_DLC)
+THEN
+NOT DB_DLC_Installed(_DLC);
+
+PROC
+PROC_DLC_SetInstalled((DLC)_DLC,1)
+AND
+NOT DB_DLC_Installed(_DLC)
+THEN
+DB_DLC_Installed(_DLC);
+
+//QRY_DLC_ShouldInstallDLC(_DLC)
+//Sharing allowed and host owns DLC
+QRY
+QRY_DLC_ShouldInstallDLC((DLC)_DLC)
+AND
+NOT DB_DLC_DebugBlockInstallation(_DLC)
+AND
+NOT DB_DLC_SharingType(_DLC,_)
+AND
+GetHostCharacter(_Host)
+AND
+CharacterHasDLC(_Host,_DLC,1)
+THEN
+DB_NOOP(1);
+
+//Allow non-host DLC ownernship to install DLC
+QRY
+QRY_DLC_ShouldInstallDLC((DLC)_DLC)
+AND
+NOT DB_DLC_DebugBlockInstallation(_DLC)
+AND
+DB_DLC_SharingType(_DLC,"AllowNonHostSharing")
+AND
+DB_Avatars(_Player)
+AND
+CharacterHasDLC(_Player,_DLC,1)
+THEN
+DB_NOOP(1);
+
+//Sharing not allowed - all users should own the DLC
+QRY
+QRY_DLC_ShouldInstallDLC((DLC)_DLC)
+AND
+NOT DB_DLC_DebugBlockInstallation(_DLC)
+AND
+DB_DLC_SharingType(_DLC,"DisallowSharing")
+AND
+NOT QRY_DLC_SomeUserDoesntOwnDLC((DLC)_DLC)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DLC_SomeUserDoesntOwnDLC((DLC)_DLC)
+AND
+DB_Avatars(_Player)
+AND
+CharacterHasDLC(_Player,_DLC,0)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Generic handling: objects on or off stage with DLC
+
+//We can define objects that are to be set on or off stage when a DLC is (un)installed
+PROC
+PROC_DLC_SetInstalled((DLC)_DLC,1)
+AND
+DB_DLC_StageObjects(_DLC,_Object,_OnStage,(STRING)_)
+THEN
+PROC_DLC_StageObjects_SetOnStage(_Object,_OnStage);
+
+PROC
+PROC_DLC_SetInstalled((DLC)_DLC,0)
+AND
+DB_DLC_StageObjects(_DLC,_Object,1,(STRING)_)
+THEN
+PROC_DLC_StageObjects_SetOnStage(_Object,0);
+
+PROC
+PROC_DLC_SetInstalled((DLC)_DLC,0)
+AND
+DB_DLC_StageObjects(_DLC,_Object,0,(STRING)_)
+THEN
+PROC_DLC_StageObjects_SetOnStage(_Object,1);
+
+//Set DLC object on/off stage
+//Queued if object is not in current level
+PROC
+PROC_DLC_StageObjects_SetOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage)
+AND
+DB_DLC_StageObjects_ShouldGoOnStage(_Object,_OtherOnStage)
+AND
+_OnStage != _OtherOnStage
+THEN
+NOT DB_DLC_StageObjects_ShouldGoOnStage(_Object,_OtherOnStage);
+
+PROC
+PROC_DLC_StageObjects_SetOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage)
+AND
+NOT DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage)
+THEN
+DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage);
+
+//Only set on or off stage when in current level
+IF
+DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage)
+AND
+DB_DLC_StageObjects((DLC)_,(GUIDSTRING)_Object,(INTEGER)_,(STRING)_CurrentLevel)
+AND
+DB_CurrentLevel(_CurrentLevel)
+THEN
+PROC_DLC_StageObjects_SetOnStage_Internal((GUIDSTRING)_Object,(INTEGER)_OnStage);
+NOT DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage);
+
+//Empty current level string = in player inventory
+IF
+DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage)
+AND
+DB_DLC_StageObjects((DLC)_,(GUIDSTRING)_Object,(INTEGER)_,"")
+THEN
+PROC_DLC_StageObjects_SetOnStage_Internal((GUIDSTRING)_Object,(INTEGER)_OnStage);
+NOT DB_DLC_StageObjects_ShouldGoOnStage((GUIDSTRING)_Object,(INTEGER)_OnStage);
+
+PROC
+PROC_DLC_StageObjects_SetOnStage_Internal((GUIDSTRING)_Object,0)
+AND
+NOT IsOnStage(_Object,0)
+THEN
+SetOnStage(_Object,0);
+PROC_DLC_RemoveObjectInInventory(_Object);
+
+PROC
+PROC_DLC_StageObjects_SetOnStage_Internal((GUIDSTRING)_Object,1)
+AND
+NOT IsOnStage(_Object,1)
+THEN
+SetOnStage(_Object,1);
+PROC_DLC_RestoreObjectInInventory(_Object);
+
+//Change current level for DLC stage objects
+IF
+EnteredLevel(_Object,_,_Level)
+AND
+DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_OldLevel)
+AND
+_OldLevel != _Level
+THEN
+NOT DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_OldLevel);
+DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_Level);
+
+//Add to inventory
+IF
+AddedTo(_Object,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_OldLevel)
+AND
+_OldLevel != ""
+THEN
+NOT DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_OldLevel);
+DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,""); //Empty level string = no level tracking for on/off-staging
+
+//Remove to world
+//If moved to other player inventory, AddedTo will fix it again
+IF
+RemovedFrom(_Object,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_OldLevel)
+AND
+DB_CurrentLevel(_Level)
+AND
+_OldLevel != _Level
+THEN
+NOT DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_OldLevel);
+DB_DLC_StageObjects((DLC)_DLC,(GUIDSTRING)_Object,(INTEGER)_OnStageWhenInstalled,(STRING)_Level);
+
+
+//We don't want off stage objects in inventories
+PROC
+PROC_DLC_RemoveObjectInInventory((GUIDSTRING)_Object)
+AND
+IsInInventory(_Object,1)
+AND
+GetDirectInventoryOwner(_Object,(GUIDSTRING)_InventoryHolder)
+THEN
+DB_DLC_ObjectWasInInventory(_Object,_InventoryHolder);
+TeleportTo(_Object,_InventoryHolder,"",0,0,0,1,1);
+
+//Put them back in the inventories they were in if the DLC is reinstalled
+PROC
+PROC_DLC_RestoreObjectInInventory((GUIDSTRING)_Object)
+AND
+DB_DLC_ObjectWasInInventory(_Object,(GUIDSTRING)_InventoryHolder)
+THEN
+ToInventory(_Object,(GUIDSTRING)_InventoryHolder,1,0,1);
+NOT DB_DLC_ObjectWasInInventory((ITEM)_Object,(GUIDSTRING)_InventoryHolder);
+
+//END_REGION
+
+//REGION Generic handling: one time rewards
+
+PROC
+PROC_DLC_SetInstalled((DLC)_DLC,1)
+AND
+DB_Avatars(_Player)
+THEN
+PROC_DLC_OneTimeRewards_Check(_DLC,_Player);
+
+//Check again if loaded into game level
+IF
+LevelGameplayStarted(_Level,_)
+AND
+IsGameLevel(_Level,1)
+AND
+DB_DLC_Installed((DLC)_DLC)
+AND
+DB_Avatars(_Player)
+THEN
+PROC_DLC_OneTimeRewards_Check(_DLC,_Player);
+
+//Check again if new player added
+IF
+CharacterReservedUserIDChanged(_Player,_,_)
+AND
+DB_Avatars(_Player)
+AND
+DB_DLC_Installed((DLC)_DLC)
+THEN
+PROC_DLC_OneTimeRewards_Check(_DLC,_Player);
+
+PROC
+PROC_DLC_OneTimeRewards_Check((DLC)_DLC,(CHARACTER)_Player)
+AND
+GetReservedUserID(_Player,_UserId)
+THEN
+DB_DLC_OneTimeRewards_Check(_DLC,_Player,_UserId);
+
+IF
+DB_DLC_OneTimeRewards_Check((DLC)_DLC,(CHARACTER)_Player,(INTEGER)_UserId)
+AND
+DB_ActiveLevel(_CurrentLevel)
+AND
+DB_Camp_UserCampChest(_UserId,_Chest)
+AND
+Exists(_Chest,1)
+AND
+GetReservedUserID(_Player,_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+AND
+DB_DLC_OneTimeRewards(_DLC,_RewardRootTemplate,_Amount,_SendToCampChest,_SharedReward)
+AND
+NOT DB_DLC_OneTimeRewards_Received(_DLC,_RewardRootTemplate,_UserProfileID)
+AND
+QRY_DoNTimes(_Amount)
+AND
+DB_QRY_RTN_DoNTimes(_)
+AND
+NOT QRY_DLC_OneTimeRewards_BlockReceive(_Player,_DLC,_RewardRootTemplate,_Amount,_SendToCampChest,_SharedReward)
+AND
+CreateAtObject(_RewardRootTemplate,_Player,0,0,"",0,_Reward)
+THEN
+DB_DLC_OneTimeRewards_Received(_DLC,_RewardRootTemplate,_UserProfileID);
+PROC_DLC_GiveReward(_Reward,_Player,_SendToCampChest);
+
+IF
+DB_DLC_OneTimeRewards_Check((DLC)_DLC,(CHARACTER)_Player,(INTEGER)_UserId)
+AND
+DB_Camp_UserCampChest(_UserId,_Chest)
+THEN
+NOT DB_DLC_OneTimeRewards_Check(_DLC,_Player,_UserId);
+
+//Send to inventory
+PROC
+PROC_DLC_GiveReward((GUIDSTRING)_Reward,(CHARACTER)_Player,0)
+THEN
+ToInventory(_Reward,_Player,1,0,1);
+
+//Send to camp chest
+PROC
+PROC_DLC_GiveReward((GUIDSTRING)_Reward,(CHARACTER)_Player,1)
+THEN
+DB_DLC_TrackCampReward(_Reward,_Player);
+SendToCampChest(_Reward,_Player);
+
+IF
+AddedTo(_Reward,_CampChest,_)
+AND
+DB_DLC_TrackCampReward((GUIDSTRING)_Reward,(CHARACTER)_Player)
+AND
+DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+THEN
+NOT DB_DLC_TrackCampReward(_Reward,_Player);
+
+IF
+AddedTo(_Reward,_CampChest,_)
+AND
+DB_DLC_TrackCampReward((GUIDSTRING)_Reward,(CHARACTER)_Player)
+AND
+NOT DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+THEN
+NOT DB_DLC_TrackCampReward(_Reward,_Player);
+DB_DLC_CampChestWithReward(_CampChest,_Player);
+
+IF
+DB_PlayerInCamp((CHARACTER)_Player)
+AND
+DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+AND
+QRY_OnlyOncePerUser(_Player,"GLO_DLC_PingCampChest")
+THEN
+ObjectTimerLaunch(_Player,"GLO_DLC_PingCampChest",5000);
+
+//Pinging should be replaced by map markers at some point
+IF
+ObjectTimerFinished(_Player,"GLO_DLC_PingCampChest")
+AND
+DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+THEN
+DB_DLC_PingCampChest((GUIDSTRING)_CampChest,(CHARACTER)_Player);
+
+IF
+DB_DLC_PingCampChest((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+AND
+NOT DB_DialogPlayers(_,_Player,_)
+AND
+DB_InCamp(_Player)
+AND
+GetPosition(_CampChest,_X,_Y,_Z)
+THEN
+NOT DB_DLC_PingCampChest((GUIDSTRING)_CampChest,(CHARACTER)_Player);
+RequestPing(_X,_Y,_Z,_CampChest,_Player);
+
+IF
+TextEvent("pingcampchest")
+AND
+GetHostCharacter(_Player)
+AND
+DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+AND
+GetPosition(_CampChest,_X,_Y,_Z)
+THEN
+RequestPing(_X,_Y,_Z,_CampChest,_Player);
+
+IF
+UseStarted(_Player,_CampChest)
+AND
+DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player)
+THEN
+NOT DB_DLC_CampChestWithReward((GUIDSTRING)_CampChest,(CHARACTER)_Player);
+
+//Only give rewards to player with DLC if not shared reward
+QRY
+QRY_DLC_OneTimeRewards_BlockReceive((CHARACTER)_Player,(DLC)_DLC,(ROOT)_,(INTEGER)_,(INTEGER)_,0)
+AND
+CharacterHasDLC(_Player,_DLC,0)
+THEN
+DB_NOOP(1);
+
+//Only give shared rewards if any player has the DLC
+QRY
+QRY_DLC_OneTimeRewards_BlockReceive((CHARACTER)_Player,(DLC)_DLC,(ROOT)_,(INTEGER)_,(INTEGER)_,1)
+AND
+NOT DB_DLC_Installed(_DLC)
+THEN
+DB_NOOP(1);
+
+//If already in inventory, don't create another reward
+//This avoids receiving spamming rewards after story reloads
+QRY
+QRY_DLC_OneTimeRewards_BlockReceive((CHARACTER)_Player,(DLC)_,(ROOT)_RewardRootTemplate,(INTEGER)_RewardAmount,0,(INTEGER)_)
+AND
+TemplateIsInInventory((ITEMROOT)_RewardRootTemplate,_Player,_Amount)
+AND
+_Amount >= _RewardAmount
+THEN
+DB_NOOP(1);
+
+//If already in camp chest, don't create another reward
+//This avoids receiving spamming rewards after story reloads
+QRY
+QRY_DLC_OneTimeRewards_BlockReceive((CHARACTER)_Player,(DLC)_,(ROOT)_RewardRootTemplate,(INTEGER)_RewardAmount,1,(INTEGER)_)
+AND
+GetReservedUserID(_Player,_UserId)
+AND
+DB_Camp_UserCampChest(_UserId,_Chest)
+AND
+TemplateIsInInventory((ITEMROOT)_RewardRootTemplate,_Chest,_Amount)
+AND
+_Amount >= _RewardAmount
+THEN
+DB_NOOP(1);
+
+//Blocks character from receiving rewards during CC
+QRY
+QRY_DLC_OneTimeRewards_BlockReceive((CHARACTER)_Player,(DLC)_,(ROOT)_,(INTEGER)_,(INTEGER)_,(INTEGER)_)
+AND
+DB_CurrentLevel(_Level)
+AND
+IsGameLevel(_Level,0)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

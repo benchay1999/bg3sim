@@ -1,0 +1,104 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_WildMagic_AD("Shout_WildMagic_TurnMagic", (DIALOGRESOURCE)GLO_WildMagic_AD_TurnMagic_544e5cfb-ea0c-1b50-5814-1b00e7c5236c);
+DB_WildMagic_AD("Shout_WildMagic_Burning", (DIALOGRESOURCE)GLO_WildMagic_AD_Burning_d1e2d251-e12c-c226-732a-d1234ad8afcd);
+DB_WildMagic_AD("Shout_WildMagic_Teleport", (DIALOGRESOURCE)GLO_WildMagic_AD_Teleport_b08eed48-f531-7a68-93c2-6ea83cbfa7e7);
+DB_WildMagic_AD("Shout_WildMagic_Enchant", (DIALOGRESOURCE)GLO_WildMagic_AD_Enchant_bf2f449a-2630-5367-96ba-3612debf2cc2);
+DB_WildMagic_AD("Shout_WildMagic_SorceryPoints", (DIALOGRESOURCE)GLO_WildMagic_AD_SorceryPoints_4291bb00-2d08-4ae7-ef60-e7b793c30327);
+DB_WildMagic_AD("Shout_WildMagic_Fog", (DIALOGRESOURCE)GLO_WildMagic_AD_Fog_36972b46-9846-8372-6b48-4537b6fc9d45);
+DB_WildMagic_AD("Shout_WildMagic_Blur", (DIALOGRESOURCE)GLO_WildMagic_AD_Blur_1fbe352f-8f83-26c0-1054-179c7e51d99f);
+DB_WildMagic_AD("Shout_WildMagic_Heal", (DIALOGRESOURCE)GLO_WildMagic_AD_Healing_8e6739f5-8884-a81d-ff35-e36980d10bd7);
+DB_WildMagic_AD("Shout_WildMagic_Mephit", (DIALOGRESOURCE)GLO_WildMagic_AD_Mephit_ca35289b-e504-4948-9d84-9d7e6660ea83);
+DB_WildMagic_AD("Shout_WildMagic_Swap", (DIALOGRESOURCE)GLO_WildMagic_AD_Swap_b23fc826-4bc6-2b21-416f-59ae8efae161);
+KBSECTION
+IF
+RandomCastProcessed((CHARACTER)_Player, _, _Spell, _, _)
+AND
+DB_Players(_Player)
+THEN
+PROC_WildMagic_TryAD(_Player, _Spell);
+
+//Decrement AD cast cooldown with every wild magic cast.
+IF
+TurnStarted(_Player)
+AND
+DB_WildMagic_ADCastCooldown(_Player, _Cooldown)
+AND
+IntegerSubtract(_Cooldown, 1, _NewCooldown)
+THEN
+NOT DB_WildMagic_ADCastCooldown(_Player, _Cooldown);
+DB_WildMagic_ADCastCooldown(_Player, _NewCooldown);
+
+IF
+ObjectTimerFinished(_Player, "GLO_WildMagic_ADCooldown")
+THEN
+NOT DB_WildMagic_ADTimerCooldown(_Player);
+
+//Clear cast cooldown when it reaches 0.
+IF
+DB_WildMagic_ADCastCooldown(_Player, 0)
+THEN
+NOT DB_WildMagic_ADCastCooldown(_Player, 0);
+
+//Out of combat ADs. Limited to one AD per minute.
+PROC
+PROC_WildMagic_TryAD((CHARACTER)_Player, (STRING)_Spell)
+AND
+NOT DB_Is_InCombat(_Player, _)
+AND
+NOT DB_WildMagic_ADTimerCooldown(_Player)
+AND
+DB_WildMagic_AD(_Spell, _AD)
+THEN
+DB_WildMagic_QueuedAD(_Player, _AD);
+ObjectTimerLaunch(_Player, "GLO_WildMagic_ADDelay", 2000);
+
+IF
+ObjectTimerFinished(_Player, "GLO_WildMagic_ADDelay")
+AND
+DB_WildMagic_QueuedAD((CHARACTER)_Player, _AD)
+THEN
+PROC_TryStartAD(_AD, _Player);
+DB_WildMagic_ADTimerCooldown(_Player);
+ObjectTimerLaunch(_Player, "GLO_WildMagic_ADCooldown", 60000);
+NOT DB_WildMagic_QueuedAD(_Player, _AD);
+
+//In combat ADs. Limited to one AD per wild magic spell outcome per combat. Also limited to one AD per 1-3 combat turns.
+PROC
+PROC_WildMagic_TryAD((CHARACTER)_Player, (STRING)_Spell)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+NOT DB_WildMagic_ADCastCooldown(_Player, _)
+AND
+NOT DB_WildMagic_ADCombatCooldown(_Player, _Spell, _)
+AND
+DB_WildMagic_AD(_Spell, _AD)
+AND
+Random(1, _RandomInt)
+AND
+IntegerSum(_RandomInt, 2, _Cooldown)
+THEN
+PROC_TryStartAD(_AD, _Player);
+DB_WildMagic_ADCastCooldown(_Player, _Cooldown);		//Block ADs for the next _Cooldown wild magic casts for that player.
+DB_WildMagic_ADCombatCooldown(_Player, _Spell, _ID);	//Block ADs for that wild magic cast outcome for the rest of the combat on that player.
+
+//Clear AD cooldowns for every spell on a player when combat ends.
+IF
+LeftCombat((CHARACTER)_Player, _ID)
+AND
+DB_WildMagic_ADCombatCooldown(_Player, _Spell, _ID)
+THEN
+NOT DB_WildMagic_ADCombatCooldown(_Player, _Spell, _ID);
+
+IF
+LeftCombat((CHARACTER)_Player, _ID)
+AND
+DB_WildMagic_ADCastCooldown(_Player, _Cooldown)
+THEN
+NOT DB_WildMagic_ADCastCooldown(_Player, _Cooldown);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

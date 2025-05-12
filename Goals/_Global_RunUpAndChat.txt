@@ -1,0 +1,209 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION MoveToAndTalk
+
+//Start Walking
+PROC
+PROC_CharacterMoveToAndTalk((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut)
+THEN
+PROC_CharacterMoveToAndTalk((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut,0,0,0);
+
+PROC
+PROC_CharacterMoveToAndTalk_Fixed((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut)
+THEN
+PROC_CharacterMoveToAndTalk((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut,0,0,1);
+
+PROC
+PROC_CharacterMoveToAndTalk((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut,(INTEGER)_CheckForFallBackPlayers,(INTEGER)_ForcePartyCheck, (INTEGER)_Fixed)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_OldTarget,_OldDialog,_OldMoveEvent, _OldFixed)
+THEN
+// Since we cancel queued move + talks when a dialog starts, do the same when we queue a new move+talk
+CharacterMoveToAndTalkFail(_Character,_OldTarget,_OldMoveEvent,"NewMoveToAndTalkStarted");
+
+PROC
+PROC_CharacterMoveToAndTalk((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut,(INTEGER)_CheckForFallBackPlayers,(INTEGER)_ForcePartyCheck, (INTEGER)_Fixed)
+AND
+DB_CharacterMoveToAndTalk_CheckForFallBackCharacters(_Character,_OldTarget,_OldDialog,_OldCheckForFallBackPlayers,_OldForcePartyCheck)
+THEN
+NOT DB_CharacterMoveToAndTalk_CheckForFallBackCharacters(_Character,_OldTarget,_OldDialog,_OldCheckForFallBackPlayers,_OldForcePartyCheck);
+
+PROC
+PROC_CharacterMoveToAndTalk((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent,(STRING)_MovementSpeed,(REAL)_TimeOut,(INTEGER)_CheckForFallBackPlayers,(INTEGER)_ForcePartyCheck, (INTEGER)_Fixed)
+THEN
+CharacterMoveToAndTalk(_Character,_Target,_Dialog,_MoveEvent,_MovementSpeed,_TimeOut);
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed);
+DB_CharacterMoveToAndTalk_CheckForFallBackCharacters(_Character,_Target,_Dialog,_CheckForFallBackPlayers,_ForcePartyCheck);
+
+//Movement Failed
+IF
+CharacterMoveToAndTalkFailed((CHARACTER)_Character,(GUIDSTRING)_Target,(STRING)_MoveEvent,(STRING)_Reason)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+NOT DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed);
+
+IF
+AttackedBy(_Character,_Source,_Summon,_DamageType,_,_,_)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"Attacked");
+
+PROC
+PROC_LevelUnloading(_)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"LevelUnloading");
+
+IF
+LeftLevel(_Character,_Region)
+AND
+DB_CurrentLevel(_Region)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"LeftRegion");
+
+IF
+Died(_Target)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"TargetDied");
+
+IF
+Died(_Character)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"CharacterDied");
+
+IF
+DialogStarted(_,_ID)
+AND
+DB_DialogNPCS(_ID,_Character,_)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"DialogStarted");
+
+IF
+DB_Is_InCombat(_Character, _ID)
+AND
+DB_CharacterMoveToAndTalk_Info((CHARACTER)_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"CombatStarted");
+
+
+// Movement Finished
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+SetEntityEvent(_Character,_MoveEvent);
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,0)
+AND
+QRY_StartDialog(_Dialog, _Character, _Target)
+THEN
+DB_CharacterMoveToAndTalk_DialogStarted(1);
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,1)
+AND
+QRY_StartDialog_Fixed(_Dialog, _Character, _Target)
+THEN
+DB_CharacterMoveToAndTalk_DialogStarted(1);
+
+// Try to start dialog
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,0)
+AND
+NOT DB_CharacterMoveToAndTalk_DialogStarted(1)
+AND 
+DB_CharacterMoveToAndTalk_CheckForFallBackCharacters(_Character,(CHARACTER)_Target,_Dialog,1,0)
+AND
+DB_Players(_Target)
+AND
+QRY_GetClosestAvailableCharacterTo(_Target,1)
+AND
+NOT DB_MoveToAndTalk_FoundNewAvailablePlayer(1)
+THEN
+DB_MoveToAndTalk_FoundNewAvailablePlayer(1);
+PROC_CharacterMoveToAndTalkRequestDialog_Closest(_Character,_Target,_Dialog,_MoveEvent);
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,0)
+AND
+NOT DB_CharacterMoveToAndTalk_DialogStarted(1)
+AND 
+DB_CharacterMoveToAndTalk_CheckForFallBackCharacters(_Character,(CHARACTER)_Target,_Dialog,1,1)
+AND
+DB_Players(_Target)
+AND
+QRY_GetClosestAvailableCharacterTo(_Target,1,1,_Target)
+AND
+NOT DB_MoveToAndTalk_FoundNewAvailablePlayer(1)
+THEN
+DB_MoveToAndTalk_FoundNewAvailablePlayer(1);
+PROC_CharacterMoveToAndTalkRequestDialog_Closest(_Character,_Target,_Dialog,_MoveEvent);
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_MoveToAndTalk_FoundNewAvailablePlayer(1)
+THEN
+NOT DB_MoveToAndTalk_FoundNewAvailablePlayer(1);
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+AND
+NOT DB_CharacterMoveToAndTalk_DialogStarted(1)
+THEN
+CharacterMoveToAndTalkFail(_Character,_Target,_MoveEvent,"DialogFailedToStart");
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_DialogStarted(1)
+THEN
+NOT DB_CharacterMoveToAndTalk_DialogStarted(1);
+
+IF
+CharacterMoveToAndTalkRequestDialog((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed)
+THEN
+NOT DB_CharacterMoveToAndTalk_Info(_Character,_Target,_Dialog,_MoveEvent,_Fixed);
+
+PROC
+PROC_CharacterMoveToAndTalkRequestDialog_Closest((CHARACTER)_Character,(GUIDSTRING)_Target,(DIALOGRESOURCE)_Dialog,(STRING)_MoveEvent)
+AND
+DB_ClosestAvailableCharacterTo(_Player,(CHARACTER)_Target,_)
+AND
+QRY_StartDialog(_Dialog,_Character,_Player)
+THEN
+DB_CharacterMoveToAndTalk_DialogStarted(1);
+
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION

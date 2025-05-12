@@ -1,0 +1,36 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+TextEvent("tadtest")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_BlowHorn_AD_51f7dd73-7709-4cd6-a37e-3c79c564c970,_Player);
+
+IF
+TextEvent("spawnAsPlayerCharacter")
+AND
+GetTextEventParamUUID(1,_RootTemplate)
+AND
+GetHostCharacter(_Avatar)
+AND
+CreateAtObject(_RootTemplate,_Avatar,0,0,"DEBUG_SpawnedNewPlayer",1,_NewPlayer)
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent((CHARACTER)_SpawnedPlayer,"DEBUG_SpawnedNewPlayer")
+AND
+GetHostCharacter(_Player)
+THEN
+SetTag(_SpawnedPlayer,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+MakePlayer(_SpawnedPlayer,_Player);
+PROC_AssignCharacterToPlayer(_SpawnedPlayer,_Player);
+SetFaction(_SpawnedPlayer,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360);
+DB_Players(_SpawnedPlayer);
+EXITSECTION
+
+ENDEXITSECTION

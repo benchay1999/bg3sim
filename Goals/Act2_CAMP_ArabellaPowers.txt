@@ -1,0 +1,178 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Regular dialog replacements
+
+IF
+LongRestStarted()
+AND
+DB_InCamp((CHARACTER)S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805)
+AND
+DB_GlobalFlag((FLAG)TWN_ArabellaPowers_State_MovedToCamp_b5f880bc-272e-e8a3-8ca1-b3dca3bce191)
+AND
+DB_GlobalFlag((FLAG)TWN_ArabellasPowers_State_ToldParentsDead_cc1a3765-9334-cb88-602f-49ca052de39c)
+AND
+NOT DB_GlobalFlag(CAMP_ArabellaAtCamp_State_JergalSceneDone_28bd7736-306f-49a8-9e4b-3473673aa1e6)
+AND
+NOT DB_LevelUnreachable("SCL_Main_A")
+THEN
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(1);
+
+PROC
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(1)
+AND
+GetHostCharacter(_Char)
+THEN
+DebugText(_Char, "Setting up Arabella-Jergal threeway dialog");
+
+PROC
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(0)
+AND
+GetHostCharacter(_Char)
+THEN
+DebugText(_Char, "Clearing Arabella-Jergal threeway dialog");
+
+PROC
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(1)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805);
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f);
+DB_Dialogs(S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805,S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f,CAMP_ArabellaPowers_ThreeWay_ArabellaJergal_8f7f8543-cbb3-e460-28ff-298dc4bbaac9);
+
+PROC
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(0)
+AND
+DB_GlobalFlag(TWN_ArabellaPowers_State_MovedToCamp_b5f880bc-272e-e8a3-8ca1-b3dca3bce191)
+THEN
+PROC_GLO_Jergal_SetDialog((DIALOGRESOURCE)CAMP_Jergal_7f4acd9b-15c0-81fe-9409-623634ec3ed3);
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f);
+DB_Dialogs(S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f,(DIALOGRESOURCE)CAMP_ArabellaPowers_Arabella_d116229d-e77e-782b-1937-5271efa4e67e);
+
+PROC
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(0)
+AND
+NOT DB_GlobalFlag(TWN_ArabellaPowers_State_MovedToCamp_b5f880bc-272e-e8a3-8ca1-b3dca3bce191)
+THEN
+PROC_GlobalSetFlagAndCache(TWN_ArabellaPowers_State_StayedAtTown_58722b05-d7d2-5199-6ae1-937ae5b91b2b);
+
+IF
+DialogEnded(CAMP_ArabellaPowers_ThreeWay_ArabellaJergal_8f7f8543-cbb3-e460-28ff-298dc4bbaac9,_)
+THEN
+PROC_GlobalSetFlagAndCache(CAMP_ArabellaAtCamp_State_JergalSceneDone_28bd7736-306f-49a8-9e4b-3473673aa1e6);
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(0);
+
+IF
+DB_Dialogs(S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805,S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f,CAMP_ArabellaPowers_ThreeWay_ArabellaJergal_8f7f8543-cbb3-e460-28ff-298dc4bbaac9)
+AND
+GetHostCharacter(_Char)
+THEN
+DebugText(_Char,"Arabella-Jergal three way dialog was set up");
+
+//END_REGION Regular dialog replacements
+
+//REGION Giving players the spell from Arabella
+IF
+FlagSet(TWN_ArabellasPowers_State_TaughtSpell_29e06419-9ec5-e003-d8d7-570aa476170a, _Player, _)
+AND
+QRY_OnlyOnce("TWN_ArabellasPowers_ArabellaTaughtSpell")
+THEN
+AddSpell((CHARACTER)_Player, "Target_TWN_ArabellaPowers_ShadowEnsnare", 1, 0);
+PROC_GlobalSetFlagAndCache(TWN_ArabellasPowers_State_HasTaughtSpell_197eac6a-55b4-448b-aa6e-da7598333776);
+//END_REGION
+
+//REGION Scene management
+
+PROC
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(1)
+THEN
+DB_SceneManager(S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805,"CAMP_JergalArabellaThreeWay");
+DB_SceneManager(S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f,"CAMP_JergalArabellaThreeWay");
+
+
+//Handles ending the scene for Jergal leaving camp for SCE
+PROC
+PROC_SCE_StartSetupDebrief()
+AND
+DB_SceneManager(S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805,"CAMP_JergalArabellaThreeWay")
+THEN
+PROC_SceneOver("CAMP_JergalArabellaThreeWay");
+
+
+//Handles if Arabella leaves camp for some reason
+PROC
+PROC_CAMP_LeftCamp((CHARACTER)S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f)
+AND
+DB_SceneManager(S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f,"CAMP_JergalArabellaThreeWay")
+THEN
+PROC_SceneOver("CAMP_JergalArabellaThreeWay");
+
+IF
+DB_LevelUnreachable("SCL_Main_A")
+THEN
+PROC_SceneOver("CAMP_JergalArabellaThreeWay");
+DB_Dialogs(S_GLO_JergalAvatar_0133f2ad-e121-4590-b5f0-a79413919805, (DIALOGRESOURCE)CAMP_Jergal_7f4acd9b-15c0-81fe-9409-623634ec3ed3);
+
+
+PROC
+PROC_SceneInterrupted(S_DEN_SnakeKid_02257c1c-bbec-4ae3-9bcb-31c75a0a982f,_,"CAMP_JergalArabellaThreeWay", "EnteredCombat") // aren't as concerned abt Jergal, skeletal man can take a beating
+THEN
+PROC_SceneOver("CAMP_JergalArabellaThreeWay"); 
+
+IF
+DB_GlobalFlag(CAMP_ArabellaAtCamp_State_JergalSceneDone_28bd7736-306f-49a8-9e4b-3473673aa1e6)
+THEN
+PROC_SceneOver("CAMP_JergalArabellaThreeWay");
+
+PROC
+PROC_SceneOver("CAMP_JergalArabellaThreeWay")
+AND
+QRY_OnlyOnce("CAMP_JergalArabellaThreeWay_SceneOver")
+THEN
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(0);
+
+PROC
+PROC_SceneOver("CAMP_JergalArabellaThreeWay")
+AND
+GetHostCharacter(_Char)
+THEN
+DebugText(_Char,"CAMP_JergalArabellaThreeWay sce is over");
+//END_REGION Scene management
+
+//REGION Debug
+
+//Summoning Jergal to camp if you start game in editor
+IF
+LevelGameplayStarted("SCL_Main_A", 1)
+AND
+NOT DB_GlobalFlag(GLO_Jergal_State_JergalVisibleAtCamp_617fe345-b808-4e68-b970-14039e21bdcd)
+THEN
+PROC_GLO_Jergal_MoveToCamp();
+PROC_GLO_Jergal_Appear();
+
+IF
+TextEvent("Arabella_ThreeWay_Over")
+THEN
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(0);
+
+IF
+TextEvent("Arabella_ThreeWay_Reset")
+AND
+NOT DB_GlobalFlag(GLO_Jergal_State_JergalVisibleAtCamp_617fe345-b808-4e68-b970-14039e21bdcd)
+THEN
+PROC_GLO_Jergal_MoveToCamp();
+PROC_GLO_Jergal_Appear();
+
+IF
+TextEvent("Arabella_ThreeWay_Reset")
+THEN
+PROC_CAMP_ArabellaPowers_JergalDialog_SetUp(1);
+
+//END_REGION Debug
+
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

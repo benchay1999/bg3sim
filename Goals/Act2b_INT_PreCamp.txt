@@ -1,0 +1,40 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876);
+DB_DialogStarted_IgnoreStopConditions((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876);
+
+//Gortash and Orin setup
+PROC_GLO_SetupForAct_Place((CHARACTER)S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, (TRIGGER)S_INT_GortashPos_2c815835-7440-4df4-9c24-3117297fc427);
+PROC_GLO_SetupForAct_Place((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (TRIGGER)S_INT_OrinPos_f64a860b-4718-4fb9-8e85-6d06d220d585);
+KBSECTION
+IF
+LevelLoaded("INT_Main_A")
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("INT_EmperorRevealed_StartCinematic")
+AND
+QRY_StartDialog((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac, S_INT_FlamingFist_01_a60fe1c1-033f-4b04-83c1-1e04aee949cd, _Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876, _ID)
+THEN
+SetLevelStartingDialog(_ID, 1);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)INT_MeanwhileInTheCity_2717ea84-47b7-d97d-d335-639a1013a876, _ID)
+AND
+DB_Players(_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+THEN
+PROC_DialogAddListeningActor(_ID, _Player);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2b"

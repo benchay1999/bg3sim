@@ -1,0 +1,94 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//DB where the Crowd Trigger will be turned off on Long Rest if the Character is dead.
+// CROWD TRIGGER CHARACTER IMMIDIATE
+NOT DB_GLO_CrowdSupport_DisperseDead((TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,0);
+
+
+//DB where the Crowd Trigger will be turned off on Long Rest if the Global Flag is set.
+NOT DB_GLO_CrowdSupport_DisperseFlag((TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+
+//DB of linked Vignette characters who will all offstage after Long Rest if any of them are dead
+//All characters with the same "NameOfVignette" value will be offstaged
+
+// CHARACTER VIGNETTE ID KEY NPC IMMIDIATE
+NOT DB_GLO_CrowdSupport_DisperseVignette((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, "NameOfVignette",0,0);
+KBSECTION
+PROC
+PROC_LongRest()
+AND
+DB_PermaDefeated(_Character)
+AND
+DB_GLO_CrowdSupport_DisperseDead(_Trigger, _Character,0)
+THEN
+NOT DB_GLO_CrowdSupport_DisperseDead(_Trigger,_Character,0);
+DB_ExecuteWhenObjectInCurrentLevel("GLO_CrowdSupport_TriggerSetCrowdSpawningEnable",_Trigger);
+
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag(_Flag)
+AND
+DB_GLO_CrowdSupport_DisperseFlag(_Trigger, _Flag)
+THEN
+NOT DB_GLO_CrowdSupport_DisperseFlag(_Trigger, _Flag);
+DB_ExecuteWhenObjectInCurrentLevel("GLO_CrowdSupport_TriggerSetCrowdSpawningEnable",_Trigger);
+
+PROC
+PROC_ExecuteWhenObjectInCurrentLevel("GLO_CrowdSupport_TriggerSetCrowdSpawningEnable",_Trigger)
+THEN
+TriggerSetCrowdSpawningEnable((TRIGGER)_Trigger, 0);
+
+PROC
+PROC_CrowdSupport_DisperseCrowdOnDeath((CHARACTER)_Character)
+AND
+DB_GLO_CrowdSupport_DisperseDead(_Trigger,_Character,1)
+THEN
+TriggerSetCrowdSpawningEnable(_Trigger, 0);
+NOT DB_GLO_CrowdSupport_DisperseDead(_Trigger,_Character,1);
+TriggerSetCrowdBehaviour(_Trigger,CROWDBEHAVIOUR.Disperse);
+
+IF
+DB_PermaDefeated(_Character)
+AND
+DB_GLO_CrowdSupport_DisperseVignette((CHARACTER)_Character,_VignetteID,1,1)
+THEN
+PROC_CrowdSupport_OffStageLinkedImmidiately(_VignetteID);
+PROC_CrowdSupport_DisperseCrowdOnDeath(_Character);
+
+//Offstages linked vignette characters if one of them is dead on long rest
+PROC
+PROC_LongRest()
+AND
+DB_GLO_CrowdSupport_DisperseVignette(_Character,(STRING)_Vignette,1,0)
+AND
+DB_PermaDefeated(_Character)
+THEN
+PROC_CrowdSupport_OffStageLinked((STRING)_Vignette);
+
+PROC
+PROC_CrowdSupport_OffStageLinked((STRING)_Vignette)
+AND
+DB_GLO_CrowdSupport_DisperseVignette(_Character, _Vignette,_KeyNPC,_Immidiate)
+THEN
+NOT DB_GLO_CrowdSupport_DisperseVignette(_Character, _Vignette,_KeyNPC,_Immidiate);
+DB_ExecuteWhenObjectInCurrentLevel("GLO_OffStage",_Character);
+
+PROC
+PROC_CrowdSupport_OffStageLinkedImmidiately((STRING)_Vignette)
+AND
+DB_GLO_CrowdSupport_DisperseVignette(_Character, _Vignette,_KeyNPC,_Immidiate)
+THEN
+NOT DB_GLO_CrowdSupport_DisperseVignette(_Character, _Vignette,_KeyNPC,_Immidiate);
+DB_ExecuteWhenObjectInCurrentLevel("GLO_CrowdSupport_DisappearOutOfSight",_Character);
+
+PROC
+PROC_ExecuteWhenObjectInCurrentLevel("GLO_CrowdSupport_DisappearOutOfSight",_Character)
+THEN
+PROC_DisappearOutOfSight((CHARACTER)_Character,"Run",1,"");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

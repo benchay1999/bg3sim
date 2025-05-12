@@ -1,0 +1,92 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//Murder tribunal
+// Impressing the court
+// Becoming unholy assassin
+IF
+FlagSet((FLAG)LOW_MurderTribunal_State_BecameUnholyAssassin_75ba9b20-e08b-f48e-6f70-5c93586ec729, _, _DialogID) // Global flag only set in dialogues
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+
+//Gondians
+// Killing their families
+IF
+FlagSet((FLAG)LOW_SteelWatchFoundry_State_ExplosionInitiatedBy_03fdd686-63c7-4823-b49e-ed3e3edf4956, (CHARACTER)_Player, _DialogID)
+AND
+IsTagged(_Player, (TAG)PALADIN_6d85ab2d-5c23-498c-a61e-98f05a00177a, 1)
+AND
+DB_GlobalFlag((FLAG)LOW_SteelWatchFoundry_Knows_GondianFamiliesTaken_57a82e5f-8d8d-9a3b-0759-f4292ff57eab)
+AND
+NOT DB_LevelUnreachable("IRN_Main_A")
+THEN
+PROC_GLO_PaladinOathbreaker_BrokeOath(_Player);
+
+// Activating kill switch
+PROC
+PROC_LOW_SteelWatchFoundry_ActivateKillSwitch((CHARACTER)_Player, _, _, _)
+AND
+DB_Players(_Player)
+AND
+IsTagged(_Player, (TAG)PALADIN_6d85ab2d-5c23-498c-a61e-98f05a00177a, 1)
+AND
+DB_LOW_SteelWatchFoundry_Collared(_)
+AND
+QRY_OnlyOnce("GLO_PaladinsMoments_ActivatedSWKillSwitch")
+THEN
+PROC_GLO_PaladinOathbreaker_BrokeOath(_Player);
+
+//REGION Betrayals
+// Lorroakan and Nightsong confrontation - betraying Nightsong
+IF
+FlagSet((FLAG)LOW_SorcerousSundries_State_PlayersSideWithLorroakan_24c45d86-9027-48cc-afdd-3e6bac7d5425, _, _DialogID)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+
+// Wave Mistress - betraying her
+IF
+FlagSet((FLAG)LOW_BellyOfTheBeast_Event_WaveservantsTurnHostile_75616c87-a135-430a-870c-fbbec5951736, _, _DialogID)
+AND
+DB_GlobalFlag((FLAG)LOW_Allandra_State_AcceptedQuest_d0f4ea27-21a9-b8e9-f799-de5de71d441e)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+
+// Devilish Ox - not helping them
+
+PROC
+PROC_GLO_Origins_SetupRecruitment("CTY_Main_A")
+AND
+DB_GlobalFlag((FLAG)WYR_DevilishOx_Event_PlayerAgreesToHelpOx_770092da-b4f4-40f5-bec8-aa9a6af0a2f4)
+AND
+NOT QRY_GLO_PaladinMoments_DevilishOxInMagicPockets()
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+QRY
+QRY_GLO_PaladinMoments_DevilishOxInMagicPockets()
+AND
+DB_Players(_Player)
+AND
+IsInMagicPockets((ITEM)S_GLO_DevilishOx_AppleForm_2fb8359f-7fa7-4dab-8e0f-c1edef958a73, _Player, 1)
+THEN
+DB_NOOP(1);
+//END_REGION Betrayals
+
+PROC
+PROC_LevelLoadedOnce("END_Main")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

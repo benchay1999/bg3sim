@@ -1,0 +1,148 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_Init_SetItemOwners((STRING)_Region)
+AND
+DB_ItemOwnerShipTriggers(_Region,_Trigger,_Owner)
+THEN
+TriggerSetItemsOwner(_Trigger,_Owner);
+PROC_TriggerRegisterForPlayers(_Trigger);
+NOT DB_ItemOwnerShipTriggers(_Region,_Trigger,_Owner);
+DB_OwnershipTrigger_Internal(_Trigger, (CHARACTER)_Owner);
+
+IF
+DB_OwnershipTrigger_Internal(_Trigger, _Owner)
+AND
+DB_OwnershipTrigger_Internal(_Trigger, _PreviousOwner)
+AND
+_Owner != _PreviousOwner
+THEN
+NOT DB_OwnershipTrigger_Internal(_Trigger, _PreviousOwner);
+
+PROC
+PROC_Init_ClearItemOwners((STRING)_Region)
+AND
+DB_ItemOwnerShipClearItem(_Region,_Item)
+THEN
+ClearOwnership(_Item);
+NOT DB_ItemOwnerShipClearItem(_Region,_Item);
+
+IF
+DB_ItemOwnerShipTriggers(_Region,_Trigger,_Owner)
+AND
+DB_CurrentLevel(_Region)
+THEN
+PROC_Init_SetItemOwners(_Region);
+PROC_Init_ClearItemOwners(_Region);
+
+IF
+LevelLoaded(_Region)
+THEN
+PROC_Init_SetItemOwners(_Region);
+PROC_Init_ClearItemOwners(_Region);
+
+
+//REGION Ownership fallbacks
+IF
+DB_PermaDefeated(_FallbackOwner)
+AND
+DB_ItemOwnerShipTriggersFallback((TRIGGER)_Trigger, (CHARACTER)_FallbackOwner)
+THEN
+NOT DB_ItemOwnerShipTriggersFallback(_Trigger, _FallbackOwner);
+
+IF
+DB_PermaDefeated(_Owner)
+AND
+DB_OwnershipTrigger_Internal(_Trigger, (CHARACTER)_Owner)
+THEN
+NOT DB_OwnershipTrigger_Internal(_Trigger, _Owner);
+PROC_ItemOwnership_TrySetFallbackOwner(_Trigger, _Owner);
+
+PROC
+PROC_ItemOwnership_TrySetFallbackOwner((TRIGGER)_Trigger, (CHARACTER)_OldOwner)
+AND
+QRY_OnlyOnce_Reset("GLO_SetFallbackOwner")
+AND
+DB_ItemOwnerShipTriggersFallback(_Trigger, _NewOwner)
+AND
+QRY_OnlyOnce("GLO_SetFallbackOwner")
+THEN
+NOT DB_ItemOwnerShipTriggersFallback(_Trigger, _NewOwner);
+PROC_ItemOwnership_SetNewTriggerOwner(_Trigger, _NewOwner, _OldOwner);
+DB_OwnershipTrigger_Internal(_Trigger, _NewOwner);
+
+//END_REGION
+
+//REGION Set new trigger owner
+//Call to assign a new owner to items inside a trigger. Is being used as part of the Ownership fallback pipeline. This call should only be used when:
+// - The original ownership trigger is in the wrong position, maybe due to some change on the layout of the map, this can safely be used in savegame patching.
+// - When you need to reassign the ownership in trigger to a different character. In that case, you will need to override the character.
+// - When you need to add a new ownership Trigger.
+//This call, unlike the TriggerSetItemsOwner engine call, will not overwrite ownership for items owned by a different character rather than the former owner being specified in _OldOwner.
+// PROC_ItemOwnership_SetNewTriggerOwner((TRIGGER)_OwnershipTrigger, (CHARACTER)_NewOwner (CHARACTER)_OldOwner)
+// PROC_ItemOwnership_SetNewTriggerOwner((TRIGGER)_OwnershipTrigger, (CHARACTER)_NewOwner)
+//      _OwnershipTrigger: The new trigger you want to use.
+//      _Owner: The new owner of any not owned item.
+//      _OldOwner: If you fill this field, then _NewOwner will be the new owner of any item, inside _OwnershipTrigger, owned by _OldOwner. The default is NULL if you only want to add items to a new owner in that trigger. Not filling this field will not overwrite every item. Instead, this will only catch the items without the owner.
+PROC
+PROC_ItemOwnership_SetNewTriggerOwner((TRIGGER)_OwnershipTrigger, (CHARACTER)_NewOwner, (CHARACTER)_OldOwner)
+AND
+GUIDToString(_OwnershipTrigger, _OutStringTrigger)
+AND
+Concatenate(_OutStringTrigger, "_ItemOnwershipChange_Timer", _OwnershipChangeID)
+AND
+NOT DB_ItemOwnership_SetNewTriggerOwner_Internal(_OwnershipTrigger, _NewOwner, _OldOwner, _OwnershipChangeID)
+THEN
+DB_ItemOwnership_SetNewTriggerOwner_Internal(_OwnershipTrigger, _NewOwner, _OldOwner, _OwnershipChangeID);
+TimerLaunch(_OwnershipChangeID, 1000);
+TriggerRegisterForItems(_OwnershipTrigger);
+
+PROC
+PROC_ItemOwnership_SetNewTriggerOwner((TRIGGER)_OwnershipTrigger, (CHARACTER)_NewOwner)
+THEN
+PROC_ItemOwnership_SetNewTriggerOwner(_OwnershipTrigger, _NewOwner, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+ItemEnteredTrigger(_Item, _OwnershipTrigger, _)
+AND
+DB_ItemOwnership_SetNewTriggerOwner_Internal(_OwnershipTrigger, _NewOwner, _OldOwner, _)
+AND
+Exists(_Item,1)
+AND
+QRY_ItemOwnership_CheckOwner(_Item, _OldOwner)
+THEN
+ClearOwnership(_Item);
+SetOwner(_Item, _NewOwner);
+
+//To add the non-owned items to the list of owned items by _NewOwner.
+QRY
+QRY_ItemOwnership_CheckOwner((ITEM)_Item, (CHARACTER)_OldOwner)
+AND
+GetOwner(_Item, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ItemOwnership_CheckOwner((ITEM)_Item, (CHARACTER)_OldOwner)
+AND
+_OldOwner != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetOwner(_Item, _OldOwner)
+THEN
+DB_NOOP(1);
+
+IF
+TimerFinished(_OwnershipChangeID)
+AND
+DB_ItemOwnership_SetNewTriggerOwner_Internal(_OwnershipTrigger, _NewOwner, _OldOwner, _OwnershipChangeID)
+THEN
+TriggerUnregisterForItems(_OwnershipTrigger);
+NOT DB_ItemOwnership_SetNewTriggerOwner_Internal(_OwnershipTrigger, _NewOwner, _OldOwner, _OwnershipChangeID);
+
+//END_REGION Set new trigger owner
+EXITSECTION
+
+ENDEXITSECTION

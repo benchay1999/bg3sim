@@ -1,0 +1,268 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CheckLevelStart("EPI_Main_A");
+
+DB_RegionSafeSpot("EPI_Main_A",StartPoint_006_fc45ef99-8cf0-4fd9-ba87-ba364b198584);
+
+DB_GLO_CompoundFlag(ORI_Gale_State_ReturnedToWaterdeepAlone_909dc6c8-dc89-b13b-f0a5-289fa294beb6, ORI_Gale_State_ReturnedToWaterdeep_c7b41398-0b76-4c71-8825-2e16ff810199);
+DB_GLO_CompoundFlag(ORI_Gale_State_PlayerAgreedToWaterdeep_a6d891da-234f-8b4a-2b75-36aecaa3a902, ORI_Gale_State_ReturnedToWaterdeep_c7b41398-0b76-4c71-8825-2e16ff810199);
+DB_GLO_CompoundFlag(ORI_Gale_State_LeftPartnerToWaterdeepTower_edcc5ba3-7ce4-9095-f7e2-b97214783d10, ORI_Gale_State_ReturnedToWaterdeep_c7b41398-0b76-4c71-8825-2e16ff810199);
+
+//REGION Debug
+DB_GlobalFlagReactionAfterDialog(DEBUG_EPI_Epilogue_State_DebugBookSetup_04e699ec-4415-6003-3563-2ee867695232,DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea);
+
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalAstarion_cba62594-436b-456f-ac51-7fd8a33d0080);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalGale_c69fcc46-48ee-4575-b839-9808cccf8991);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalKarlach_588afe67-4623-4755-989a-6df232d11f65);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalLaezel_f12119fe-f8cd-4aa0-8df2-876e47a57848);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalShadowheart_7f2bef59-96a7-4ac5-a572-44e018e8af28);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalWyll_29a9bb64-ec83-4571-9c71-02a382351768);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalMinsc_09fd731c-9544-4738-87fe-93914fc731d1);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalMinthara_47a7406c-9462-4482-a586-b3dc39d32fba);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalHalsin_857c1d69-4e15-4c2d-ae2b-6b7e39cd5aeb);
+DB_EPI_Epilogue_DEBUG_HighApproval((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(FLAG)DEBUG_EPI_Epilogue_Event_HighApprovalJaheira_ec517305-95e1-42d8-b0a0-91066a92edfa);
+//END_REGION
+
+KBSECTION
+//REGION DEBUG
+//piggy-backing off of existing debug
+IF
+TextEvent("epi_recruitall")
+AND
+DB_Debug_END_GameFinale_RecruitedCompanions(_Char, _Flag)
+THEN
+SetFlag(_Flag);
+
+IF
+TextEvent("epi_forcestart")
+THEN
+PROC_DEBUG_EPI_Epilogue_DebugStart();
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_GlobalFlag(ORI_Karlach_State_EngineBurnedOut_2cd8d398-d6ec-3227-2dfb-975127fb5393)
+THEN
+DB_END_General_ForcedListener(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, 0);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_GlobalFlag(ORI_Karlach_State_EngineBurnedOut_2cd8d398-d6ec-3227-2dfb-975127fb5393)
+AND
+DB_Avatars(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+THEN
+DB_END_General_UnavailableAvatar(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, 0);
+DB_END_General_ForcedListener(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, 0);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_GlobalFlag(END_General_Debug_GaleWantsCrown_4580ddff-923e-2088-0381-99d8a73316c4)
+AND
+DB_GlobalFlag(ORI_Gale_State_ClaimedCrown_93279f0c-82f0-b1e5-ff24-34a47c47a85d)
+AND
+NOT DB_GlobalFlag(ORI_Gale_Knows_KarsiteWeave_22350fca-200a-bbf7-90ad-8d15168641f9)
+THEN
+DB_END_General_ForcedListener(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_GlobalFlag(END_General_Debug_GaleWantsCrown_4580ddff-923e-2088-0381-99d8a73316c4)
+AND
+DB_GlobalFlag(ORI_Gale_State_ClaimedCrown_93279f0c-82f0-b1e5-ff24-34a47c47a85d)
+AND
+NOT DB_GlobalFlag(ORI_Gale_Knows_KarsiteWeave_22350fca-200a-bbf7-90ad-8d15168641f9)
+AND
+DB_Avatars(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+DB_END_General_UnavailableAvatar(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+DB_END_General_ForcedListener(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_GlobalFlag((FLAG)ORI_DarkUrge_State_GoMadEnding_a0bea44c-be8a-26e4-ded5-c6c5827d4190)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_DarkUrge_State_BhaalResisted_74944ac3-1ea0-4eae-9653-1f1319f8646b)
+AND
+DB_ORI_DarkUrge(_DarkUrge)
+THEN
+DB_END_General_UnavailableAvatar(_DarkUrge, 1);
+DB_END_General_ForcedListener(_DarkUrge, 1);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_HandlingRelationshipDialog(_Camper,_RD,_Flag,_Region,_PartnerDateOnly, _MinApproval)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_RD,(FLAG)_Flag);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_Avatars(_Player)
+THEN
+PROC_DEBUG_END_IllithidOptionsFollower_RemoveFollowers((CHARACTER)_Player);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_Avatars(_Player)
+AND
+NOT DB_END_General_MainDialogAnchor(_)
+THEN
+DB_END_General_MainDialogAnchor(_Player); 
+
+//Handle before EPI setup to avoid flag timing conflicts
+//End relationship with partner if they went to Avernus without them
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+GetFlag(END_GameFinale_Event_AccompanyKarlachToHell_35150cbf-2c72-1049-37ed-14dbc3736135, _Avatar, 1)
+AND
+DB_ORI_Partnered(_Avatar, _Companion)
+AND
+NOT QRY_END_GameFinale_WillStayWithAvatarInAvernus((CHARACTER)_Companion)
+THEN
+PROC_END_GameFinale_EndRelationship(_Avatar, _Companion);
+
+//Wyll went with Karlach without romanced player
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_GlobalFlag(ORI_Wyll_State_FollowKarlachToHells_e91a4ad5-e2f5-b336-f583-9f480ee7544e)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+DB_ORI_Partnered(_Avatar, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+GetFlag(END_GameFinale_Event_AccompanyKarlachToHell_35150cbf-2c72-1049-37ed-14dbc3736135, _Avatar, 0)
+THEN
+PROC_END_GameFinale_EndRelationship(_Avatar);
+SetFlag(ORI_Wyll_State_TogetherButApart_87cd3adb-f4b0-44c0-9c35-d5fa1f0b0784, _Avatar);
+
+//End relationship if they left with Lae'zel 
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+GetFlag(ORI_Laezel_State_PlayerLaezelOrpheus_9bbf4067-fcb1-0c74-088d-ff887ca2abe5, _Avatar, 1)
+AND
+DB_ORI_Partnered(_Avatar, _Companion)
+AND
+_Companion != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+THEN
+PROC_END_GameFinale_EndRelationship(_Avatar,_Companion);
+
+//Comp Lae'zel ends relationship when she leaves to Vlaakith
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+NOT DB_GlobalFlag(ORI_Laezel_State_IsOnOrpheusPath_97244ccc-a6b5-403e-9cfe-a3502eb4af56)
+AND
+DB_GlobalFlag(END_GameFinale_State_LaezelLeavesFaerun_896fb62a-4f56-41d8-a173-7d06c4cb9209)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+GetFlag(ORI_Laezel_State_PlayerLaezelVlaakith_bf95c085-fe78-9cda-7aac-2d8e5b94a9cf, _Avatar, 0) //Didn't go with her
+AND
+DB_ORI_Partnered(_Avatar, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_END_GameFinale_EndRelationship(_Avatar,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+//Avatar Lae'zel leaves without their partner
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_Avatars(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_ORI_Partnered(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Companion)
+AND
+DB_GlobalFlag(END_GameFinale_State_LaezelLeavesFaerun_896fb62a-4f56-41d8-a173-7d06c4cb9209)
+THEN
+PROC_END_GameFinale_EndRelationship(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Companion);
+
+PROC
+PROC_DEBUG_EPI_Epilogue_DebugStart()
+AND
+DB_END_General_MainDialogAnchor(_Player)
+THEN
+PROC_TeleportPartiesTo(S_EPI_LevelLoadToPoint_3e1909dc-d482-431f-a029-3c1ff97f4127, "EPI_Epilogue_PartyArrived");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(DEBUG_EPI_Epilogue_State_DebugBookSetup_04e699ec-4415-6003-3563-2ee867695232)
+THEN
+PROC_DEBUG_EPI_Epilogue_DebugStart();
+ClearFlag(DEBUG_EPI_Epilogue_State_DebugBookSetup_04e699ec-4415-6003-3563-2ee867695232);
+
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_EPI_Epilogue_DEBUG_HighApproval(_Char, _Flag)
+AND
+DB_Avatars((CHARACTER)_Player)
+AND
+ChangeApprovalRating(_Char, _Player, 0, 60, _)
+THEN
+ClearFlag(_Flag);
+
+IF
+FlagSet(EPI_Epilogue_Debug_DUWasPartneredGoneMad_c8e58cd1-c1a2-4686-a5b5-e81030d281e1, _, _)
+AND
+DB_END_GameFinale_CharacterPartneredDialogs((FLAG)_PartneredWithFlag, _, _Character)
+AND
+DB_ORI_Partnered(_Avatar, _Character)
+AND
+DB_ORI_DarkUrge(_Avatar)
+THEN
+ClearFlag((FLAG)_PartneredWithFlag, _Avatar);
+SetFlag(ORI_DarkUrge_State_WasPartneredGoneMad_fb3ab877-e2c3-4887-8e27-7050dc1b5171, _Character);
+
+IF
+FlagSet(DEBUG_EPI_Epilogue_Event_SetPartnerToHells_9cb40ab2-3cb5-35b6-f53f-1ba9ee2e3806, _, _)
+AND
+DB_ORI_Partnered(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, _Partner)
+THEN
+SetFlag(END_GameFinale_Event_AccompanyKarlachToHell_35150cbf-2c72-1049-37ed-14dbc3736135, _Partner);
+ClearFlag(DEBUG_EPI_Epilogue_Event_SetPartnerToHells_9cb40ab2-3cb5-35b6-f53f-1ba9ee2e3806);
+
+IF
+FlagSet(DEBUG_EPI_Epilogue_Event_WyllFollowsKarlachToHell_32f2df76-28c6-4d11-b541-fb7281cecddb, _, _)
+THEN
+SetFlag(END_GameFinale_Event_AccompanyKarlachToHell_35150cbf-2c72-1049-37ed-14dbc3736135, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+SetFlag(ORI_Wyll_State_FollowKarlachToHells_e91a4ad5-e2f5-b336-f583-9f480ee7544e);
+
+IF
+FlagCleared(_Flag, _Avatar, _ID)
+AND
+DB_DialogName(DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea, _ID)
+AND
+DB_END_GameFinale_CharacterPartneredDialogs(_Flag, _, _Char)
+AND
+DB_END_GameFinale_CharacterPartnershipEndedFlags(_Char, _PartnershipEndedFlag)
+THEN
+SetFlag(_PartnershipEndedFlag, _Avatar);
+//END_REGION
+
+IF
+LevelLoaded("EPI_Main_A")
+THEN
+GoalCompleted;
+
+IF
+DB_CheckLevelStart("EPI_Main_A")
+AND
+DB_CurrentLevel("EPI_Main_A")
+THEN
+GoalCompleted;
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

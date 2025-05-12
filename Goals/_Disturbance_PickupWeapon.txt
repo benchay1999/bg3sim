@@ -1,0 +1,194 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Disarmed NPCs pick up their or other weapons after combat via the AI.
+// After combat, it's up to script to do so.
+
+DB_CRIME_PickupWeapon_Type("PickUpDisarmedEquipment");
+DB_CRIME_PickupWeapon_Type("PickUpDisarmedEquipmentAtLocation");
+KBSECTION
+//REGION Record the NPCs that are still without weapon at the end of combat
+IF
+CharacterDisarmed(_NPC,_Weapon,_WeaponSlot)
+AND
+IsPartyMember(_NPC,1,0)
+AND
+GetPosition(_NPC,_X,_Y,_Z)
+THEN
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+
+// NPC picked up other or the same weapon and equipped it in that slot
+IF
+Equipped(_SomeWeapon,_NPC)
+AND
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z)
+AND
+GetEquippedItem(_NPC,_WeaponSlot,_)
+THEN
+NOT DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+//END_REGION
+
+//REGION Shenanigans with the weapons after disarming
+// Weapon gets moved and NPC sees it happening -> track new location
+IF
+Moved(_Weapon)
+AND
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z)
+AND
+CanSee(_NPC,_Weapon,1)
+AND
+GetPosition(_Weapon,_NewX,_NewY,_NewZ)
+THEN
+NOT DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_NewX,_NewY,_NewZ);
+
+// Player tries to be smart
+IF
+EnteredChasm(_Weapon,_,_,_,_,_)
+AND
+DB_CRIME_DisarmedNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z)
+AND
+IsStoryItem(_Weapon,0)
+THEN
+// Okay, it worked
+NOT DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+
+IF
+EnteredChasm(_Weapon,_,_,_FallbackX,_FallbackY,_FallbackZ)
+AND
+DB_CRIME_DisarmedNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z)
+AND
+IsStoryItem((ITEM)_Weapon,1)
+THEN
+NOT DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+// Nice try!
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_FallbackX,_FallbackY,_FallbackZ);
+
+// NPC is no longer an NPC -> up to the player to equip stuff
+IF
+CharacterMadePlayer(_NPC)
+AND
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+
+// Player drops weapon
+IF
+DroppedBy((ITEM)_Weapon, _Char)
+AND
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z)
+AND
+CanSee(_NPC,_Char,1)
+AND
+GetPosition(_Weapon,_NewX,_NewY,_NewZ)
+THEN
+NOT DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+DB_CRIME_DisarmedNPC(_NPC,_Weapon,_WeaponSlot,_NewX,_NewY,_NewZ);
+//END_REGION
+
+//REGION Pick it up!
+IF
+LeftCombat((GUIDSTRING)_NPC, _)
+AND
+NOT DB_PermaDefeated(_NPC)
+AND
+DB_CRIME_DisarmedNPC((CHARACTER)_NPC,_Weapon,_Weaponslot,_X,_Y,_Z)
+AND
+QRY_CRIME_IsEnabled((CHARACTER)_NPC,"PickUpDisarmedEquipment")
+AND
+IsPartyMember(_NPC,1,0)
+AND
+IsInInventory(_Weapon,0)
+THEN
+DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,"FirstTry");
+// First check whether we can see it from where we are now
+PROC_Disturbance_PerformWhenAvailable(_NPC,"PickUpDisarmedEquipment",_Weapon,_NPC,0);
+
+IF
+LeftCombat((GUIDSTRING)_NPC, _)
+AND
+DB_CRIME_DisarmedNPC((CHARACTER)_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_DisarmedNPC((CHARACTER)_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z);
+
+// Success or permanently aborted -> clear DB
+PROC
+PROC_Disturbance_PerformWhenAvailable_Finished((CHARACTER)_NPC,"PickUpDisarmedEquipment",(GUIDSTRING)_Weapon,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+_CrimeID != 0
+AND
+GetInventoryOwner((ITEM)_Weapon,_NPC)
+AND
+DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,_Try)
+THEN
+NOT DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,_Try);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Finished((CHARACTER)_NPC,"PickUpDisarmedEquipment",(GUIDSTRING)_Weapon,(CHARACTER)_Victim,0)
+AND
+DB_CRIME_RearmingNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z,_Try)
+THEN
+NOT DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,_Try);
+
+//END_REGION
+
+//REGION Retry if we got interrupted and we can see the weapon
+// Only retry once, because the weapon may simply be unreachable (other reason it might have failed:
+// we couldn't see it because of a cloud or item that was in the way)
+QRY
+QRY_Disturbance_PerformWhenAvailable_Retry((CHARACTER)_NPC,(STRING)_DisturbanceType,(GUIDSTRING)_Weapon,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_PickupWeapon_Type(_DisturbanceType)
+AND
+DB_CRIME_RearmingNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z,"FirstTry")
+AND
+// When it's in their own inventory they can't see it either
+CanSee(_NPC,_Weapon,1)
+THEN
+NOT DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,"FirstTry");
+DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,"SecondTry");
+//END_REGION
+
+//REGION Fallback: go to the position where we got disarmed and try again
+PROC
+PROC_Disturbance_PerformWhenAvailable_Finished((CHARACTER)_NPC,"PickUpDisarmedEquipment",(GUIDSTRING)_Weapon,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_RearmingNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z,_Try)
+AND
+GetDistanceToPosition(_NPC,_X,_Y,_Z,_Dist)
+AND
+_Dist > 4.0
+THEN
+NOT DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,_Try);
+DB_CRIME_RearmingNPC(_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,"FirstTry");
+// Then go back to the original location where we got disarmed and look there
+PROC_Disturbance_PerformWhenAvailable(_NPC,"PickUpDisarmedEquipmentAtLocation",_Weapon,_NPC,0);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_NPC,"PickUpDisarmedEquipmentAtLocation",(INTEGER)_,(GUIDSTRING)_Weapon,_NPC,_DisturbanceID)
+AND
+DB_CRIME_RearmingNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z,_)
+THEN
+DB_CRIME_CrimeInvestigationPos(_DisturbanceID,_X,_Y,_Z);
+
+PROC
+PROC_Disturbance_PerformWhenAvailable_Finished((CHARACTER)_NPC,"PickUpDisarmedEquipmentAtLocation",(GUIDSTRING)_Weapon,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_RearmingNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z,_Try)
+THEN
+NOT DB_CRIME_RearmingNPC(_NPC,(ITEM)_Weapon,_WeaponSlot,_X,_Y,_Z,_Try);
+
+//END_REGION
+
+//REGION After picking up, equip
+IF
+AddedTo((ITEM)_Weapon, _NPC, _)
+AND
+DB_CRIME_RearmingNPC((CHARACTER)_NPC,_Weapon,_WeaponSlot,_X,_Y,_Z,_Try)
+THEN
+Equip(_NPC,_Weapon);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

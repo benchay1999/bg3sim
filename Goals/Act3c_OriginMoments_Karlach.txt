@@ -1,0 +1,88 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_END_GortashConfrontation_SteelWatcherInit();
+KBSECTION
+//REGION Tadpole Choice
+PROC
+PROC_GlobalFlagReactionAfterDialog(END_IllithidOptions_Event_TadpoleGroupDiscussion_55831e5e-9916-4099-a397-37f5e6967d2e, END_IllithidOptions_Assimilation_f909fcc9-a3dc-b91d-e91c-33f0479c55bb, _ID)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (DIALOGRESOURCE)END_IllithidOptions_WRD_KarlachTadpoleChoice_d3710a76-1807-1a13-5773-f77b00adaeff, NULL_00000000-0000-0000-0000-000000000000, S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, 0, 0);
+
+IF
+FlagSet((FLAG)END_IllithidOptions_State_ExitPortalAvailable_b97872a1-59cc-40cd-8963-e06be614adc0, _, _)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (DIALOGRESOURCE)END_IllithidOptions_WRD_KarlachTadpoleChoice_d3710a76-1807-1a13-5773-f77b00adaeff, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet((FLAG)END_IllithidOptions_State_OrpheusIsFree_3b747050-1be0-432e-9de6-e48faa4b74bb, _, _)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (DIALOGRESOURCE)END_IllithidOptions_WRD_KarlachTadpoleChoice_d3710a76-1807-1a13-5773-f77b00adaeff, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+PROC
+PROC_END_GortashConfrontation_SteelWatcherInit()
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Karlach_State_KilledByGortash_d74f8867-9752-45bc-ab54-3177101e8507)
+THEN
+SetOnStage(S_END_SteelWatcherVariant_3a75657b-f356-457a-8a2d-e939adf92862, 0);
+
+// If tag was set with the debug book active block her mindflayer OM from triggering to avoid set up blockers.
+IF
+TagSet(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, FULL_CEREMORPH_3797bfc4-8004-4a19-9578-61ce0714cc0b)
+AND
+DB_DialogName((DIALOGRESOURCE)DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea, _)
+THEN
+DB_Debug_ORI_Karlach_BlockMindflayerDialog(1);
+
+//Karlach becomes mindflayer IPRD
+IF
+TagSet(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, FULL_CEREMORPH_3797bfc4-8004-4a19-9578-61ce0714cc0b)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_Debug_ORI_Karlach_BlockMindflayerDialog(1)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, (DIALOGRESOURCE)Karlach_InPartyEND_84af8609-030b-252c-2335-65d7f410b0e7, (FLAG)ORI_Karlach_IPRD_BecameMindflayer_b90b15b1-15eb-4a73-bbdc-415c4652bef6, S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, 0);
+
+// Self reflection avatar dialog
+IF
+DB_END_General_PartyMindFlayer(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+DB_Avatars((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_CantTalk(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+NOT DB_ORI_Karlach_MindFlayerSelfReflectionTriggered(1)
+AND
+NOT DB_Debug_ORI_Karlach_BlockMindflayerDialog(1)
+AND
+QRY_StartDialog_Fixed(ORI_Karlach_AvatarTransformsIntoMindflayer_ef7d930a-db5a-e54d-9551-90edb479fa94, S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogStarted(ORI_Karlach_AvatarTransformsIntoMindflayer_ef7d930a-db5a-e54d-9551-90edb479fa94, _)
+THEN
+DB_ORI_Karlach_MindFlayerSelfReflectionTriggered(1);
+
+
+// Her keeping her upgrades doesn't make sense since she loses her infernal engine when transformed into a mind flayer. 
+IF
+TagSet(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, FULL_CEREMORPH_3797bfc4-8004-4a19-9578-61ce0714cc0b)
+THEN
+RemoveStatus(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, "ORI_KARLACH_FIRSTUPGRADE");
+RemoveStatus(S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c, "ORI_KARLACH_SECONDUPGRADE");
+
+IF
+TextEvent("ORI_Karlach_TestMindflayerAvatarDialog")
+AND
+DB_Players((CHARACTER)S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+AND
+QRY_StartDialog_Fixed(ORI_Karlach_AvatarTransformsIntoMindflayer_ef7d930a-db5a-e54d-9551-90edb479fa94, S_Player_Karlach_2c76687d-93a2-477b-8b18-8a14b549304c)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3c"

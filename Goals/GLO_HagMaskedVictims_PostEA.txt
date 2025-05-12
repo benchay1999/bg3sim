@@ -1,0 +1,42 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+// Act 3
+QRY
+QRY_GLO_HagCanPossessMaskedVictims()
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagIsTrulyDead_c7c3e64d-dcfc-431b-a224-535a0c4a8e9c)
+THEN
+DB_NOOP(1);
+
+// Remove NPC statuses when Hag is killed in Act 3
+IF
+FlagSet((FLAG)LOW_BlushingMermaid_State_HagIsTrulyDead_c7c3e64d-dcfc-431b-a224-535a0c4a8e9c,_,_)
+THEN
+PROC_GLO_RemoveHagMaskNPCStatuses();
+
+// Removing mask in Act 3
+IF
+Unequipped(_Mask, _Victim)
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagIsTrulyDead_c7c3e64d-dcfc-431b-a224-535a0c4a8e9c)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+THEN
+Die(_Victim, DEATHTYPE.Psychic, (CHARACTER)S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d, 1, 0);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "GLO_Hag"

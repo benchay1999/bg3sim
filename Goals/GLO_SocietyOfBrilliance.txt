@@ -1,0 +1,33 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_PaladinOathbreaker_ProtectedNPCs(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+DB_GLO_PaladinOathbreaker_ProtectedNPCs(S_UND_SocietyOfBrilliance_Hobgoblin_db424bf6-81ad-463d-8974-f73f1df5af09);
+KBSECTION
+//REGION Teleportation spell
+IF
+UsingSpell(_Character, "Shout_UND_SocietyOfBrilliance_Teleportation", _, _, _)
+THEN
+RealtimeObjectTimerLaunch(_Character, "UND_SocietyOfBrilliance_TeleportAnimationsDelay", 600); //Timer is needed because the VFX for disappearing also makes the character reappear after some time. If we play it too soon, we see the character reappear before they are set off stage.
+
+IF
+ObjectTimerFinished(_Character, "UND_SocietyOfBrilliance_TeleportAnimationsDelay")
+AND
+GetPosition(_Character, _X, _Y, _Z)
+THEN
+PlayEffectAtPosition(VFX_Spells_Cast_Intent_Utility_DimensionDoor_Root_01_7a4c033f-4128-31c0-fc04-951f8b7f2242, _X, _Y, _Z, 1.0);
+PlayEffect(_Character, VFX_Spells_Cast_Intent_Utility_DimensionDoor_BodyFX_Textkey_01_f4de2ffb-353f-a215-3311-f729bd8de1d6);
+
+IF
+CastedSpell(_Member,"Shout_UND_SocietyOfBrilliance_Teleportation",_,_,_)
+AND
+_Member != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_Member, 1)
+THEN
+PROC_SetOnStage(_Member, 0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

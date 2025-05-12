@@ -1,0 +1,202 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Attitude intercept
+IF
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+THEN
+DB_NoLowAttitudeDialog(_Victim);
+DB_ForceTemporaryKnockedOut(_Victim);
+
+IF
+FlagSet((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720,_,_)
+AND
+NOT DB_LevelLoadedOnce("CTY_Main_A")
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+AND
+DB_ForceTemporaryKnockedOut(_Victim)
+THEN
+NOT DB_ForceTemporaryKnockedOut(_Victim);
+
+IF
+FlagSet((FLAG)LOW_BlushingMermaid_State_HagIsTrulyDead_c7c3e64d-dcfc-431b-a224-535a0c4a8e9c,_,_)
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+AND
+DB_ForceTemporaryKnockedOut(_Victim)
+THEN
+NOT DB_ForceTemporaryKnockedOut(_Victim);
+
+PROC
+PROC_StateSet_Defeated(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d)
+AND
+NOT DB_GlobalFlag(LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+AND
+DB_Players(_Player)
+AND
+GetAttitudeTowardsPlayer(_Victim, _Player, _Attitude)
+AND
+_Attitude < 70
+THEN
+PROC_SetAttitude(_Victim, _Player, 70);
+//END_REGION
+
+//REGION Masked Servant roll resist
+IF
+TurnStarted(_MaskedServant)
+AND
+QRY_GLO_HagCanPossessMaskedVictims()
+AND
+DB_HAG_MaskedVictims((CHARACTER)_MaskedServant,_,_, _)
+AND
+HasActiveStatusWithGroup(_MaskedServant, "SG_Incapacitated", 0)
+THEN
+PROC_GLO_MaskedVictimPossessed(_MaskedServant);
+
+QRY
+QRY_GLO_HagCanPossessMaskedVictims()
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_MaskedVictimPossessed((CHARACTER)_MaskedServant)
+AND
+IsImmuneToStatus(_MaskedServant,"HAG_MASK_CONTROLLED_NPC",NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+RequestPassiveRoll(_MaskedServant, _MaskedServant, "SavingThrow", "Wisdom", (DIFFICULTYCLASS)DC_Legacy_19_1afda678-eb97-4b25-9548-0908e84b5475, 0, "HAG_MaskedServantResist");
+SetEntityEventReal(_MaskedServant,"GLO_CombatWait",1.0);
+
+PROC
+PROC_GLO_MaskedVictimPossessed((CHARACTER)_MaskedServant)
+AND
+IsImmuneToStatus(_MaskedServant,"HAG_MASK_CONTROLLED_NPC",NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+PROC_HAG_MaskedServant_ResistHagsWill(_MaskedServant);
+
+IF
+RollResult("HAG_MaskedServantResist",_MaskedServant,_MaskedServant,1,_, _)
+THEN
+PROC_HAG_MaskedServant_ResistHagsWill(_MaskedServant);
+
+PROC
+PROC_HAG_MaskedServant_ResistHagsWill((CHARACTER)_MaskedServant)
+THEN
+SetEntityEventReal(_MaskedServant,"GLO_CombatWait",2.6);
+RealtimeObjectTimerLaunch(_MaskedServant,"HAG_MaskedServantResist_EndTurnDelay",2500);
+ApplyStatus(_MaskedServant,"ANIM_MENTAL",1.0,1,_MaskedServant);
+
+PROC
+PROC_HAG_MaskedServant_ResistHagsWill((CHARACTER)_MaskedServant)
+AND
+DB_HAG_MaskedVictims(_MaskedServant, _, _, _Dialog)
+THEN
+PROC_TryStartAD(_Dialog, _MaskedServant);
+
+IF
+RollResult("HAG_MaskedServantResist", S_HAG_Hag_MaskedVictim1_d2832662-4a12-4565-bfe2-094b93ae8af8,_, 0, _, _)
+AND
+NOT DB_OnlyOnce("MaskedVictim1_AD_FailResist")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)HAG_Hag_MaskedVictim1_AD_FailResist_cc87ae26-2661-bc21-e07b-04f5bdc9a066, (CHARACTER)S_HAG_Hag_MaskedVictim1_d2832662-4a12-4565-bfe2-094b93ae8af8)
+THEN
+DB_OnlyOnce("MaskedVictim1_AD_FailResist");
+
+IF
+RollResult("HAG_MaskedServantResist", S_LOW_BlushingMermaid_QuenoraGrizly_9d475536-34f0-4a6f-9191-3a635b81a232,_, 0, _, _)
+AND
+NOT DB_OnlyOnce("QuenoraGrizly_AD_FailResist")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)LOW_BlushingMermaid_AD_QuenoraGrizly_FailResist_6c862cbc-cec7-d3f1-4f87-f0a8290c69d3, (CHARACTER)S_LOW_BlushingMermaid_QuenoraGrizly_9d475536-34f0-4a6f-9191-3a635b81a232)
+THEN
+DB_OnlyOnce("QuenoraGrizly_AD_FailResist");
+
+IF
+RollResult("HAG_MaskedServantResist",_MaskedServant,_, 0, _, _)
+THEN
+ApplyStatus(_MaskedServant,"HAG_MASK_CONTROLLED_NPC",6.0,0,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+ObjectTimerFinished(_MaskedServant,"HAG_MaskedServantResist_EndTurnDelay")
+THEN
+EndTurn(_MaskedServant);
+//END_REGION
+
+//REGION PAD for when masked victims see masked players and don't attack
+IF
+DB_Sees(_Player, _Victim)
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Victim)
+AND
+NOT DB_Is_InCombat(_Victim, _)
+AND
+NOT DB_Is_InCombat(_Player, _)
+AND
+HasActiveStatus(_Player, "HAG_MASK",1)
+AND
+HasActiveStatus(_Player, "HAG_MASK_CONTROLLED", 0)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player, "HAG_PAD_MaskedNeutral")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)HAG_HagLair_PAD_MaskedVictimsNeutral_048e6a2a-a5d8-8add-ae19-44fd5dbe4c92, _Player);
+//END_REGION
+
+//REGION Remove NPC statuses when Hag is killed
+// checks on DB_Dead explicitly because the Hag's magic doesn't fade unless she is specifically killed.
+IF
+DB_Dead(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BlushingMermaid_State_HagInBaldursGate_68d1731c-7a20-4692-a093-5aa39b69d211)
+THEN
+PROC_GLO_RemoveHagMaskNPCStatuses();
+
+PROC
+PROC_GLO_RemoveHagMaskNPCStatuses()
+AND
+DB_HAG_MaskedVictims(_Victim,_,_,_)
+THEN
+RemoveStatus(_Victim,"HAG_MASK_NPC");
+RemoveStatus(_Victim,"HAG_MASK_CONTROLLED_NPC");
+//END_REGION
+
+//REGION Removing mask
+IF
+Unequipped(_Mask, _Victim)
+AND
+NOT DB_CurrentLevel("CTY_Main_A")
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+THEN
+Die(_Victim, DEATHTYPE.Psychic, (CHARACTER)S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d, 1, 0);
+
+IF
+Unequipped(_Mask, _Victim)
+AND
+NOT DB_CurrentLevel("CTY_Main_A")
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+DB_HAG_Hagmasks(_Mask, _)
+AND
+DB_HAG_MaskedVictims(_Victim, _, _, _)
+THEN
+SetFlag((FLAG)HAG_Hag_RemovedMaskFromVictim_818b6813-34ea-4751-9520-dadfd5d41a37,_Victim);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "GLO_Hag"

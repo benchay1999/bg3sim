@@ -1,0 +1,813 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Blocks fleeing for level
+DB_CombatFlee_BlockedInLevel("TUT_Avernus_C");
+DB_CombatFlee_BlockedInLevel("END_Main");
+
+// Start level triggers as a last resort plan for fleeing teleport destination
+DB_CombatFlee_LastResortTrigger("WLD_Main_A",(TRIGGER)DOS2_StartPoint_000__000__000_b41c4f85-a580-cf6e-a4b9-9084e084452c);
+DB_CombatFlee_LastResortTrigger("SCL_Main_A", StartPoint_000_f968a8d3-b06d-4fc2-acf1-1e650e35e52d);
+
+DB_CombatFlee_MinimumDistanceToFlee(30.0);
+
+NOT DB_CMB_StatusOnInit((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,"");
+NOT DB_CMB_StatusOnInit((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,"",0);
+NOT DB_CMB_StatusOnInit((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,"",0, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_DoNotChangeAttitudeAfterCombat((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+IF
+CombatStarted(_CombatID)
+THEN
+DB_CombatStarted(_CombatID);
+
+IF
+CombatEnded(_CombatID)
+THEN
+NOT DB_CombatStarted(_CombatID);
+
+PROC
+PROC_ClearPreviousCombat((GUIDSTRING)_Char)
+AND
+DB_Was_InCombat(_Char,(GUIDSTRING)_Combat)
+THEN
+NOT DB_Was_InCombat(_Char,_Combat);
+
+PROC
+PROC_LevelUnloading(_)
+AND
+DB_Was_InCombat(_Char,_Combat)
+THEN
+NOT DB_Was_InCombat(_Char,_Combat);
+
+PROC
+PROC_LevelUnloading(_)
+AND
+DB_SwitchedCombat(_Object,_Combat)
+THEN
+NOT DB_SwitchedCombat(_Object,_Combat);
+
+IF
+EnteredCombat(_Object,_Combat)
+AND
+QRY_ShouldTrackCombat(_Object)
+THEN
+PROC_ClearPreviousCombat((GUIDSTRING)_Object);
+DB_Is_InCombat(_Object,_Combat);
+
+IF
+SwitchedCombat(_Object,_Old,_New)
+AND
+DB_Is_InCombat(_Object,_Old)
+THEN
+NOT DB_Is_InCombat(_Object,_Old);
+DB_Is_InCombat(_Object,_New);
+DB_SwitchedCombat(_Object,_Old);
+
+PROC
+PROC_LeftCombat((GUIDSTRING)_Object,(GUIDSTRING)_Combat)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ShouldTrackCombat((GUIDSTRING)_Object)
+AND
+CanFight(_Object,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ShouldTrackCombat((GUIDSTRING)_Object)
+AND
+IsCharacter(_Object,1)
+THEN
+DB_NOOP(1);
+
+IF
+LeftCombat(_Object,_Combat)
+AND
+DB_Is_InCombat(_Object,_Combat)
+THEN
+DB_Was_InCombat(_Object,_Combat);
+NOT DB_Is_InCombat(_Object,_Combat);
+PROC_LeftCombat(_Object,_Combat);
+
+IF
+LeftCombat(_Object,_)
+AND
+DB_SwitchedCombat(_Object,_Combat)
+THEN
+NOT DB_SwitchedCombat(_Object,_Combat);
+
+PROC
+PROC_SetCanFight((GUIDSTRING)_Object,(INTEGER)_Value)
+THEN
+SetCanFight(_Object,_Value);
+
+PROC
+PROC_SetCanFight((GUIDSTRING)_Object,0)
+AND
+IsItem(_Object,1)
+AND
+DB_Is_InCombat(_Object,_Combat)
+THEN
+NOT DB_Is_InCombat(_Object,_Combat);
+
+PROC
+PROC_SetCanFight((GUIDSTRING)_Object,1)
+AND
+CombatGetGuidFor(_Object,_Combat)
+THEN
+DB_Is_InCombat(_Object,_Combat);
+
+QRY
+QRY_GLO_IsOrWasInCombat((GUIDSTRING)_Char, (GUIDSTRING)_ID)
+AND
+DB_Is_InCombat(_Char, _ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_IsOrWasInCombat((GUIDSTRING)_Char, (GUIDSTRING)_ID)
+AND
+DB_Was_InCombat(_Char, _ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_IsOrWasInCombat((GUIDSTRING)_Char, (GUIDSTRING)_ID)
+AND
+DB_SwitchedCombat(_Char,_ID)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_BreakConcentration((GUIDSTRING)_Object)
+THEN
+PROC_GLO_BreakConcentration(_Object, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GLO_BreakConcentration((GUIDSTRING)_Object, (GUIDSTRING)_Cause)
+THEN
+ApplyStatus(_Object,"AI_HELPER_BREAKCONCENTRATION",0.1,1,_Cause);
+
+//REGION Post Combat Attitude Adjustment
+IF
+TemporaryHostileRelationRemoved(_Enemy,_,_PlayerFaction)
+AND
+NOT DB_Players(_Enemy)
+AND
+DB_Players(_Player)
+AND
+IsCharacter(_Enemy,1)
+AND
+GetFaction(_Player,_PlayerFaction)
+AND
+GetAttitudeTowardsPlayer(_Enemy,_Player,_Attitude)
+AND
+_Attitude > -45
+AND
+NOT DB_DoNotChangeAttitudeAfterCombat((CHARACTER)_Enemy)
+THEN
+PROC_SetAttitude(_Enemy,_Player,-45);
+
+IF
+LeftCombat(_Enemy,_ID)
+AND
+NOT DB_PermaDefeated(_Enemy)
+AND
+NOT DB_DoNotChangeAttitudeAfterCombat((CHARACTER)_Enemy)
+AND
+NOT DB_PartyMembers((CHARACTER)_Enemy)
+AND
+QRY_IsExistingCharacter(_Enemy,1)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Was_InCombat(_Player,_ID)
+AND
+IsEnemy(_Player,_Enemy,1)
+AND
+GetAttitudeTowardsPlayer(_Enemy,_Player,_Attitude)
+AND
+_Attitude > -45
+THEN
+PROC_SetAttitude(_Enemy,_Player,-45);
+//END_REGION
+
+//REGION Round Counter
+
+IF
+CombatRoundStarted(_ID, _CurrentRound)
+AND
+NOT DB_CMB_RoundCounter(_ID,_)
+THEN
+DB_CMB_RoundCounter(_ID,_CurrentRound);
+
+IF
+CombatRoundStarted(_ID, _NewRound)
+AND
+DB_CMB_RoundCounter(_ID,_PreviousRound)
+AND
+_NewRound != _PreviousRound
+THEN
+NOT DB_CMB_RoundCounter(_ID,_PreviousRound);
+DB_CMB_RoundCounter(_ID,_NewRound);
+
+IF
+CombatEnded(_ID)
+AND
+DB_CMB_RoundCounter(_ID,_CurrentRound)
+THEN
+NOT DB_CMB_RoundCounter(_ID,_CurrentRound);
+
+QRY
+QRY_CurrentCombatRoundIs((GUIDSTRING)_ID,(INTEGER)_Int)
+AND
+DB_CMB_RoundCounter(_ID,_CurrentRound)
+AND
+_Int == _CurrentRound
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CurrentCombatRoundIsGreaterThan((GUIDSTRING)_ID,(INTEGER)_Int)
+AND
+DB_CMB_RoundCounter(_ID,_CurrentRound)
+AND
+_Int < _CurrentRound
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CurrentCombatRoundIsLessThan((GUIDSTRING)_ID,(INTEGER)_Int)
+AND
+DB_CMB_RoundCounter(_ID,_CurrentRound)
+AND
+_Int > _CurrentRound
+THEN
+DB_NOOP(1);
+
+//Stabilize Downed statuses automatically after the combat ends
+IF
+CombatEnded(_ID)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Was_InCombat(_Player, _ID)
+AND
+DB_Downed(_Player)
+THEN
+ApplyStatus(_Player, "REMOVE_DOWNED", 0.1); //doesn't remove downed status, just stabilizes it
+
+
+//END_REGION
+
+//REGION Set Status on Init
+IF
+DB_CMB_StatusOnInit((GUIDSTRING)_Obj,(STRING)_Status)
+THEN
+NOT DB_CMB_StatusOnInit(_Obj,_Status);
+ApplyStatus(_Obj,_Status,-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_CMB_StatusOnInit((GUIDSTRING)_Obj,(STRING)_Status,(INTEGER)_Reapply)
+THEN
+ApplyStatus(_Obj,_Status,-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_CMB_StatusOnInit((GUIDSTRING)_Obj,(STRING)_Status,(INTEGER)_Reapply, (CHARACTER)_Causee)
+THEN
+ApplyStatus(_Obj,_Status,-1.0,1,_Causee);
+
+IF
+StatusRemoved(_Obj,_Status,_,_)
+AND
+DB_CMB_StatusOnInit(_Obj,_Status,1)
+THEN
+ApplyStatus(_Obj,_Status,-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusRemoved(_Obj,_Status,_,_)
+AND
+DB_CMB_StatusOnInit(_Obj,_Status,1,_Causee)
+THEN
+ApplyStatus(_Obj,_Status,-1.0,1,_Causee);
+//END_REGION
+
+
+//REGION Fleeing
+// -=Effects for players=-
+// Teleport to the camp if unlocked and visited once (introduction scene showed).
+// Otherwise teleport to the nearest unlocked waypoint if possible.
+// Otherwise teleport to the level spawn point.
+// Otherwise fail.
+
+// Fleeing is blocked for:
+// - certain levels
+// - in camp
+// - in danger zones
+// - in narrative combat
+IF
+DB_CombatFlee_BlockedInLevel(_Level)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_PartyMembers(_Player)
+THEN
+BlockFlee(_Player);
+DB_CombatFlee_BlockedFor(_Player);
+
+IF
+DB_InCamp(_Player)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_CombatFlee_BlockedFor(_Player)
+THEN
+BlockFlee(_Player);
+DB_CombatFlee_BlockedFor(_Player);
+
+IF
+DB_InDangerZone(_Player,_DangerZone)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_CombatFlee_BlockedFor(_Player)
+THEN
+BlockFlee(_Player);
+DB_CombatFlee_BlockedFor(_Player);
+
+IF
+DB_GLO_NarrativeCombat_Participant(_, _, _Player)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+NOT DB_CombatFlee_BlockedFor(_Player)
+THEN
+BlockFlee(_Player);
+DB_CombatFlee_BlockedFor(_Player);
+
+IF
+DB_CombatFlee_BlockedFor(_Player)
+AND
+NOT DB_InCamp(_Player)
+AND
+NOT DB_InDangerZone(_Player,_)
+AND
+NOT DB_GLO_NarrativeCombat_Participant(_, _, _Player)
+AND
+DB_CurrentLevel(_Level)
+AND
+NOT DB_CombatFlee_BlockedInLevel(_Level)
+THEN
+UnblockFlee(_Player);
+NOT DB_CombatFlee_BlockedFor(_Player);
+
+IF
+DB_CombatFlee_BlockedFor(_Player)
+AND
+NOT DB_PartyMembers(_Player)
+THEN
+UnblockFlee(_Player);
+NOT DB_CombatFlee_BlockedFor(_Player);
+
+
+IF
+FleeFromCombat(_Player,_CombatID)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+DB_CombatFlee_WaitForCombatLeave(_Player,_CombatID);
+
+IF
+DB_CombatFlee_WaitForCombatLeave((CHARACTER)_Player,(GUIDSTRING)_CombatID)
+AND
+NOT DB_Is_InCombat(_Player,_CombatID)
+AND
+QRY_CombatFlee_TryFleeCheckFailed((CHARACTER)_Player)
+THEN
+DebugBreak("No Flee target found. Check DB_CombatFlee_LastResortTrigger defined for this level");
+DebugText(_Player, "No Flee target found. Check log");
+
+IF
+DB_CombatFlee_WaitForCombatLeave((CHARACTER)_Player,(GUIDSTRING)_CombatID)
+AND
+NOT DB_Is_InCombat(_Player,_CombatID)
+THEN
+NOT DB_CombatFlee_WaitForCombatLeave(_Player,_CombatID);
+PROC_CombatFlee_CheckReenterCombatAfterFlee(_Player,_CombatID);
+
+
+QRY
+QRY_CombatFlee_TryFleeCheckFailed((CHARACTER)_Player)
+AND
+NOT QRY_CombatFlee_TryFleeToCamp(_Player)
+AND
+NOT QRY_CombatFlee_TryFleeToWaypoint(_Player)
+AND
+NOT QRY_CombatFlee_TryFleeToLevelStart(_Player)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_CombatFlee_TryFleeToCamp((CHARACTER)_Player)
+AND
+NOT QRY_Camp_IsPlayerBlockedFromTeleportToCamp(_Player)
+AND
+QRY_Camp_SwapCampIfNecessary(_Player)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_,_CampEntrance)
+THEN
+TeleportTo(_Player,_CampEntrance,"CMB_Fled",0,0,0,1,1);
+
+QRY
+QRY_CombatFlee_TryFleeToWaypoint((CHARACTER)_Player)
+AND
+NOT QRY_WaypointTeleport_PlayerBlocked(_Player)
+AND
+QRY_CombatFlee_FindFleeWaypoint(_Player)
+AND
+DB_QRYRTN_CombatFlee_FoundFleeWaypoint(_Player,_WaypointTrigger,_Distance)
+THEN
+NOT DB_QRYRTN_CombatFlee_FoundFleeWaypoint(_Player,_WaypointTrigger,_Distance);
+TeleportTo(_Player,_WaypointTrigger,"CMB_Fled",0,0,0,1,1);
+
+QRY
+QRY_CombatFlee_FindFleeWaypoint((CHARACTER)_Player)
+AND
+DB_WaypointUnlocked(_WaypointID,_Player)
+AND
+DB_WaypointInfo(_GroupID,_WaypointID,_WaypointItem,_TeleportTrigger)
+AND
+GetRegion(_TeleportTrigger, _TeleportRegion)
+AND
+GetRegion(_Player, _PlayerRegion)
+AND
+_PlayerRegion == _TeleportRegion
+AND
+GetDistanceTo(_Player,_TeleportTrigger,_Distance)
+AND
+NOT QRY_CombatFlee_FindFleeWaypoint_TooCloseToCombat(_TeleportTrigger,_Player)
+THEN
+DB_QRYRTN_CombatFlee_FoundFleeWaypoint(_Player,_TeleportTrigger,_Distance);
+
+// prioritize by distance
+IF
+DB_QRYRTN_CombatFlee_FoundFleeWaypoint(_Player,_TeleportTrigger1,_Distance1)
+AND
+DB_QRYRTN_CombatFlee_FoundFleeWaypoint(_Player,_TeleportTrigger2,_Distance2)
+AND
+_TeleportTrigger1 != _TeleportTrigger2
+AND
+_Distance1 <= _Distance2
+THEN
+NOT DB_QRYRTN_CombatFlee_FoundFleeWaypoint(_Player,_TeleportTrigger2,_Distance2);
+
+QRY
+QRY_CombatFlee_FindFleeWaypoint_TooCloseToCombat((TRIGGER)_TeleportTrigger,(CHARACTER)_Player)
+AND
+DB_CombatFlee_MinimumDistanceToFlee(_MinDist)
+AND
+DB_Is_InCombat(_Combatant,_CombatID)
+AND
+GetDistanceTo(_Combatant,_TeleportTrigger,_Distance)
+AND
+_Distance <= _MinDist
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CombatFlee_TryFleeToLevelStart((CHARACTER)_Player)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CombatFlee_LastResortTrigger(_Level,_Trigger)
+THEN
+TeleportTo(_Player,_Trigger,"CMB_Fled",0,0,0,1,1);
+
+// if fleeing resulted in player near one of the enemies from the combat
+// reenter combat (cause code ALWAYS leaves combat on flee, even if Osiris will not move player a centimeter away)
+PROC
+PROC_CombatFlee_CheckReenterCombatAfterFlee((CHARACTER)_Player,(GUIDSTRING)_CombatID)
+AND
+DB_Is_InCombat(_Combatant,_CombatID)
+AND
+GetDistanceTo(_Player,_Combatant,_Dist)
+AND
+DB_CombatFlee_MinimumDistanceToFlee(_MinDist)
+AND
+_Dist <= _MinDist
+AND
+IsEnemy((CHARACTER)_Combatant,_Player,1)
+THEN
+EnterCombat(_Player,_Combatant);
+
+IF
+EntityEvent(_Player,"CMB_Fled")
+THEN
+PROC_GLO_BreakConcentration(_Player);
+
+//END_REGION Fleeing
+
+//REGION Combat groups and dialogs
+// Once a character of a combat group joins a dialog, stop dialogs for all (active) objects in the same combat group.
+IF
+EnteredCombat(_Object,_Combat)
+AND
+NOT DB_CombatGroups_CheckedDialog(_Object,_Combat)
+AND
+GetCombatGroupID(_Object,_GroupID)
+AND
+_GroupID != ""
+AND
+NOT DB_CombatGroups_Iterator(_GroupID,_Combat,_,_)
+AND
+Concatenate("CombatGroupDialogCheck_",_GroupID,_IteratorEvent)
+AND
+Concatenate("CombatGroupDialogCheckFinished_",_GroupID,_IteratorFinishEvent)
+THEN
+DB_CombatGroups_Iterator(_GroupID,_Combat,_IteratorEvent,_IteratorFinishEvent);
+IterateActiveObjectsInSameCombatGroup(_Object,_IteratorEvent,_IteratorFinishEvent);
+
+IF
+EntityEvent(_PotentialMember,_IteratorEvent)
+AND
+DB_CombatGroups_Iterator(_GroupID,_Combat,_IteratorEvent,_IteratorFinishEvent)
+AND
+DB_DialogNPCs(_DialogID,_PotentialMember,_)
+AND
+GetCombatGroupID(_PotentialMember,_GroupID)
+AND
+DB_DialogName(_DialogName, _DialogID)
+AND
+DialogIsAllowingJoinCombat(_DialogName, 0)
+THEN
+PROC_ForceStopDialog(_PotentialMember);
+
+IF
+EntityEvent(_PotentialMember,_IteratorEvent)
+AND
+DB_CombatGroups_Iterator(_GroupID,_Combat,_IteratorEvent,_IteratorFinishEvent)
+THEN
+DB_CombatGroups_CheckedDialog(_PotentialMember,_Combat);
+
+IF
+EntityEvent(_,_IteratorFinishEvent)
+AND
+DB_CombatGroups_Iterator(_GroupID,_Combat,_IteratorEvent,_IteratorFinishEvent)
+THEN
+NOT DB_CombatGroups_Iterator(_GroupID,_Combat,_IteratorEvent,_IteratorFinishEvent);
+
+IF
+SwitchedCombat(_Object,_OldCombat,_NewCombat)
+AND
+DB_CombatGroups_CheckedDialog(_Object,_OldCombat)
+THEN
+NOT DB_CombatGroups_CheckedDialog(_Object,_OldCombat);
+DB_CombatGroups_CheckedDialog(_Object,_NewCombat);
+
+IF
+CombatEnded(_Combat)
+AND
+DB_CombatGroups_CheckedDialog(_Object,_Combat)
+THEN
+NOT DB_CombatGroups_CheckedDialog(_Object,_Combat);
+//END_REGION
+
+//REGION Party member combat and dialogs
+// Once a party member enters combat, all allies (includes party members) within combat range stop dialogs
+IF
+EnteredCombat(_Object,_Combat)
+AND
+DB_PartyMembers((CHARACTER)_Object)
+AND
+GetEnterCombatRange(_EnterCombatRange)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+_PartyMember != _Object
+AND
+IsAlly(_PartyMember,_Object,1)
+AND
+GetDistanceTo(_PartyMember,_Object,_Distance)
+AND
+_Distance <= _EnterCombatRange
+AND
+NOT QRY_IsInAllowJoinCombatDialog(_PartyMember)
+THEN
+PROC_TEMP_RequestStopDialog(_PartyMember);
+
+//If a dialogue is ongoing, simultaneously with a combat, which allows combat,
+//it's probably a mid-combat transformation scene, a start-of-combat speech,
+//or something similar.
+//We can pause the combat while it's happening and include any other players.
+IF
+DB_Is_InCombat(_Player, _Combat)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_Player)
+AND
+DB_Players(_OtherPlayer)
+AND
+DB_Is_InCombat(_OtherPlayer, _Combat)
+AND
+DB_DialogPlayers(_ID, _OtherPlayer, _)
+AND
+DB_DialogName(_DialogName, _ID)
+AND
+DialogIsAutomated(_DialogName, 0)
+THEN
+PROC_DialogAddSpeakingActor(_ID, _Player, 1, 1);
+
+IF
+DB_Is_InCombat(_Player, _Combat)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+DB_DialogName(_DialogName, _ID)
+AND
+DialogIsAutomated(_DialogName, 0)
+THEN
+PauseCombat(_Combat);
+
+IF
+DialogEnded(_Dialog, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+DB_Is_InCombat(_Player, _Combat)
+THEN
+ResumeCombat(_Combat);
+
+
+
+//END_REGION
+
+//REGION Temporary hostile feedback
+IF
+TurnStarted(_Object)
+AND
+DB_Is_InCombat(_Object,_Combat)
+AND
+NOT DB_GLO_CombatFirstTurnStarted(_Combat)
+THEN
+DB_GLO_CombatFirstTurnStarted(_Combat);
+
+IF
+CombatEnded(_Combat)
+AND
+DB_GLO_CombatFirstTurnStarted(_Combat)
+THEN
+NOT DB_GLO_CombatFirstTurnStarted(_Combat);
+
+// Wait until first turn started because before that the temporary hostile relation
+// propagation in code is not guaranteed to have happened yet
+IF
+DB_GLO_CombatFirstTurnStarted(_Combat)
+AND
+DB_Is_InCombat(_NPC,_Combat)
+AND
+NOT DB_PartyMembers((CHARACTER)_NPC)
+AND
+IsCharacter(_NPC,1)
+THEN
+// Will remove itself immediately if not temporary hostile
+ApplyStatus(_NPC,"TEMPORARILY_HOSTILE",-1.0,0,NULL_00000000-0000-0000-0000-000000000000);
+
+// Refresh when individual relation gets cleared
+PROC
+PROC_ClearIndividualRelation((GUIDSTRING)_NPC, (FACTION)_Faction, (STRING)_Identifier)
+AND
+NOT DB_PartyMembers((CHARACTER)_NPC)
+AND
+DB_Is_InCombat(_NPC,_Combat)
+AND
+DB_GLO_CombatFirstTurnStarted(_Combat)
+AND
+IsCharacter(_NPC,1)
+THEN
+// Will remove itself immediately if not temporary hostile
+ApplyStatus(_NPC,"TEMPORARILY_HOSTILE",-1.0,0,NULL_00000000-0000-0000-0000-000000000000);
+
+
+IF
+StatusApplied(_NPC,"TEMPORARILY_HOSTILE",_,_)
+THEN
+DB_GLO_Combat_TemporaryHostile(_NPC);
+
+IF
+StatusRemoved(_NPC,"TEMPORARILY_HOSTILE",_,_)
+THEN
+NOT DB_GLO_Combat_TemporaryHostile(_NPC);
+
+IF
+StatusApplied(_NPC,"PERMANENTLY_HOSTILE",_,_)
+THEN
+DB_GLO_Combat_PermanentlyHostile(_NPC);
+
+IF
+StatusRemoved(_NPC,"PERMANENTLY_HOSTILE",_,_)
+THEN
+NOT DB_GLO_Combat_PermanentlyHostile(_NPC);
+
+// A temporary hostile character might become permanently hostile -> check
+// (remove TEMPORARILY_HOSTILE status when it does)
+IF
+RelationChanged(_,_,0,1)
+AND
+DB_GLO_Combat_TemporaryHostile(_NPC)
+THEN
+// Gets removed immediately, but triggers the re-evaluation of
+// the TEMPORARILY_HOSTILE remove conditions
+ApplyStatus(_NPC,"HOSTILE_REFRESH",0.1,0,NULL_00000000-0000-0000-0000-000000000000);
+
+// A permanently hostile NPC might become no longer permanently hostile -> check
+// (might be temporary hostile afterwards, or not hostile at all anymore)
+IF
+RelationChanged(_,_,_,1)
+AND
+DB_GLO_Combat_PermanentlyHostile(_NPC)
+THEN
+// Gets removed immediately, but triggers the re-evaluation of
+// the PERMANENTLY_HOSTILE remove conditions
+ApplyStatus(_NPC,"HOSTILE_REFRESH",0.1,0,NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Try enter a combat if you don't know any participant that is guaranteed to be alive or permanently hostile
+PROC
+PROC_EnterCombatByID((GUIDSTRING)_NewParticipant,(GUIDSTRING)_CombatID)
+AND
+DB_Is_InCombat(_ExistingParticipant,_CombatID)
+THEN
+PROC_EnterCombatByIDWithParticipant(_NewParticipant,_ExistingParticipant);
+
+// If the existing participant is temporarily hostile to a player,
+// then they will (most likely) still be neutral to other players,
+// in which case EnterCombat does not work -> create a temporary
+// hostile relation to the new party member as well
+PROC
+PROC_EnterCombatByIDWithParticipant((GUIDSTRING)_NewParticipant,(GUIDSTRING)_ExistingParticipant)
+AND
+DB_PartyMembers((CHARACTER)_NewParticipant)
+AND
+DB_GLO_Combat_TemporaryHostile(_ExistingParticipant)
+THEN
+PROC_SetRelationTemporaryHostile((CHARACTER)_ExistingParticipant,(CHARACTER)_NewParticipant);
+
+PROC
+PROC_EnterCombatByIDWithParticipant((GUIDSTRING)_NewParticipant,(GUIDSTRING)_ExistingParticipant)
+AND
+DB_PartyMembers((CHARACTER)_NewParticipant)
+AND
+NOT DB_GLO_Combat_TemporaryHostile(_ExistingParticipant)
+THEN
+PROC_EnterCombat(_NewParticipant,_ExistingParticipant);
+
+PROC
+PROC_EnterCombatByIDWithParticipant((GUIDSTRING)_NewParticipant,(GUIDSTRING)_ExistingParticipant)
+AND
+NOT DB_PartyMembers((CHARACTER)_NewParticipant)
+THEN
+PROC_EnterCombat(_NewParticipant,_ExistingParticipant);
+//END_REGION
+
+//REGION Tag-based forced permanent hostility
+IF
+StatusApplied(_NPC,"TEMPORARILY_HOSTILE",_,_)
+AND
+IsTagged(_NPC,(TAG)ALWAYS_PERMANENTLY_HOSTILE_TO_ALL_PLAYERS_6115eeaa-0a4c-46b1-8a6d-2a83fbd65e07,1)
+AND
+GetFaction(_NPC,_Faction)
+AND
+NOT QRY_FactionHostilityBlacklisted(_Faction,1)
+THEN
+PROC_SetRelationToPlayers(_Faction,0);
+//END_REGION
+
+//REGION Enter combat if an enemy uses a spell on a player.
+
+PROC
+PROC_CastedSpellOnTarget((GUIDSTRING)_Enemy, (GUIDSTRING)_Target, (STRING)_, (STRING)_, (STRING)_, (INTEGER)_)
+AND
+_Enemy != NULL_00000000-0000-0000-0000-000000000000
+AND
+Exists(_Enemy,1)
+AND
+DB_PartyMembers((CHARACTER)_Target)
+AND
+NOT DB_Is_InCombat(_Enemy, _)
+AND
+IsEnemy((CHARACTER)_Target, (CHARACTER)_Enemy, 1)
+THEN
+PROC_EnterCombat(_Enemy, _Target);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

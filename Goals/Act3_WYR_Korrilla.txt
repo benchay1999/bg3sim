@@ -1,0 +1,124 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Korrilla The Spy
+//DEBUG
+IF
+TextEvent("WYR_TestKorrilla")
+THEN
+PROC_TeleportPartiesTo(S_WYR_Korrilla_DebugTeleportPoint_bedaa19e-e90e-4405-b59b-489bfcbf4870, "");
+
+//SETUP
+IF
+LevelLoaded("BGO_Main_A")
+AND
+QRY_State_IsBeforeState(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", "GLO_Warlock_Circus")
+AND
+QRY_OnlyOnce("WYR_KorrillaSetUp")
+THEN
+PROC_State_Progress(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297,"GLO_Warlock", "GLO_Warlock_Circus");
+PROC_GlobalSetFlagAndCache(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5);
+TeleportTo(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, (TRIGGER)S_WYR_Korrilla_AppearSpot_46bf2545-71c5-428a-8084-9d9832139663, "", 0, 0, 0, 1, 1);
+CharacterDisableAllCrimes(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297);
+PROC_SetOnStage(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 1);
+SetVisible(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 1);
+SetHitpointsPercentage(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 100.0);
+PROC_GLO_Warlock_ApplyStatus("GLO_KORRILLA_PROJECTEDIMAGE");
+PROC_GLO_Warlock_ApplyStatus("TWN_KORRILLATHESPY_PROXIMITYAURA");
+PROC_GLO_Warlock_RemoveStatus("GLO_KORRILLA_STEALTH");
+PROC_RemoveDialog(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297);
+DB_Dialogs(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, (DIALOGRESOURCE)WYR_Circus_Korrilla_c4b80ac7-bbd5-315b-88cb-d3ec95fe6cff);
+DB_SpotPlayers((CHARACTER)S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_Circus_Korrilla_SpottedPlayer", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+
+//If Korrilla spots the player, then she waves, then walks to a more hidden position and portals out
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_Circus_Korrilla_SpottedPlayer", _Player)
+THEN
+LookAtEntity((CHARACTER)S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, _Player, 5.0);
+PlayAnimation(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, CUST_Spy_Wave_01_3a492504-e16c-4743-a32d-165f44da2df3, "WYR_Circus_Korrilla_WaveFinished");
+//ObjectTimerLaunch(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_Circus_Korrilla_WavingTimer", 5000, 1);
+
+
+IF
+EntityEvent(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_Circus_Korrilla_WaveFinished")
+THEN
+SetFlag((FLAG)GLO_KorrillaTheSpy_Circus_State_TimeToLeave_16f3e3d2-ddaa-4cbb-ba57-4bb257e9f5ca); //Korrilla walks to exit location in Anubis
+
+IF
+EntityEvent(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_Korrilla_AtDisappearPosition")
+THEN
+PROC_GLO_Warlock_TeleportOut();
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_Circus_Korrilla_c4b80ac7-bbd5-315b-88cb-d3ec95fe6cff, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+THEN
+PROC_GLO_Warlock_TeleportOut();
+PROC_TryStartAD(GLO_KorrillaTheSpy_PAD_KorrillaVanishesReaction_d67b6532-f773-6e07-3a4f-615aa3b949dc, _Player);
+
+//IF Korrilla is approached by the player and she sees it, she teleports away
+IF
+StatusApplied(_Player, "TWN_KORRILLATHESPY_ISNEAR", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Sees((CHARACTER)S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, _Player)
+AND
+DB_GlobalFlag(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5)
+THEN
+PROC_GLO_Warlock_TeleportOut();
+PROC_TryStartAD(GLO_KorrillaTheSpy_PAD_KorrillaVanishesReaction_d67b6532-f773-6e07-3a4f-615aa3b949dc, _Player);
+
+IF
+DB_Sees((CHARACTER)S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, _Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5)
+AND
+HasActiveStatus(_Player, "TWN_KORRILLATHESPY_ISNEAR", 1)
+THEN
+PROC_GLO_Warlock_TeleportOut();
+PROC_TryStartAD(GLO_KorrillaTheSpy_PAD_KorrillaVanishesReaction_d67b6532-f773-6e07-3a4f-615aa3b949dc, _Player);
+
+PROC
+PROC_GLO_Warlock_TeleportOut()
+THEN
+PROC_WYR_Circus_Warlock_OnLeaving();
+
+PROC
+PROC_State_Changed(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", "GLO_Warlock_Circus", _)
+AND
+DB_GlobalFlag(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5)
+THEN
+PROC_WYR_Circus_Warlock_OnLeaving(); // state change will handling her actual teleportation
+
+PROC
+PROC_WYR_Circus_Warlock_OnLeaving()
+AND
+DB_GlobalFlag(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5)
+AND
+DB_CurrentLevel("BGO_Main_A")
+AND
+GetRegion(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "BGO_Main_A")
+AND
+GetPosition(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297,_X,_Y,_Z)
+THEN
+PlayEffectAtPosition((EFFECTRESOURCE)VFX_Script_Raphael_Poof_TeleportOut_01_8186a3ba-1f1d-33a4-005a-36607680f5a5,_X,_Y,_Z);
+
+PROC
+PROC_WYR_Circus_Warlock_OnLeaving()
+AND
+DB_GlobalFlag(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5)
+THEN
+PROC_SpotPlayers_StopSpotting(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_Circus_Korrilla_SpottedPlayer");
+PROC_GlobalClearFlagAndCache(WYR_Circus_State_WarlockPresent_9909b6d0-a013-484a-9c65-c735afda84f5);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

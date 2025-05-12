@@ -1,0 +1,105 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_Plague_Cures("Target_LesserRestoration",(FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,"OUT_PlagueHouse");
+DB_GLO_Plague_Cures("Target_LayOnHands_Cure",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,"OUT_PlagueHouse");
+DB_GLO_Plague_Cures("Target_Heal",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,"OUT_PlagueHouse"); //replace with real spell
+DB_GLO_Plague_CureFlags((FLAG)GLO_Plague_State_HasCure_73b217b3-51e0-8d34-a49e-ece0d06db16f,(FLAG)GLO_Plague_State_PartyHasCure_4d8a3018-d2f4-2609-6a77-a8027c42ef11,"OUT_PlagueHouse");
+DB_GLO_Plague_CureCheck((FLAG)GLO_Plague_Event_TryCure_3a223b01-0b91-bfce-4f1a-ded0b63803d8,(FLAG)GLO_Plague_Event_Cured_e36b3842-7404-d320-c996-46f4d799f769,"OUT_PlagueHouse");
+KBSECTION
+//REGION Cure
+//Cure Check
+IF
+DialogEnded(_,_ID)
+AND
+DB_GLO_Plague_CureChecked(_Char,_ID,_DB,_Int)
+THEN
+NOT DB_GLO_Plague_CureChecked(_Char,_ID,_DB,_Int);
+
+PROC
+PROC_GLO_Plague_PartyCheckCure((INTEGER)_ID,(STRING)_DB)
+AND
+NOT DB_GLO_Plague_CureChecked(_,_ID,_DB,_)
+AND
+QRY_GLO_Plague_PartyHasCure(_ID,_DB)
+AND
+NOT DB_GLO_Plague_CureChecked(_,_ID,_DB,1)
+AND
+DB_GLO_Plague_CureFlags(_,_Party,_DB)
+AND
+DB_GlobalFlag(_Party)
+THEN
+ClearFlag(_Party,NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GLO_Plague_PartyHasCure((INTEGER)_ID,(STRING)_DB)
+AND
+DB_GLO_Plague_CureFlags(_Any,_,_DB)
+AND
+DB_Players(_Char)
+AND
+NOT QRY_GLO_Plague_HasCure(_Char,_ID,_DB)
+THEN
+DB_GLO_Plague_CureChecked(_Char,_ID,_DB,0);
+ClearFlag(_Any,_Char);
+
+QRY
+QRY_GLO_Plague_HasCure((CHARACTER)_Char,(INTEGER)_ID,(STRING)_DB)
+AND
+DB_GLO_Plague_Cures(_Cure,_Flag,_,_DB)
+AND
+HasSpell(_Char,_Cure,_Int)
+AND
+QRY_SetConditionalObjectFlag(_Char,_Flag,_Int)
+AND
+_Int == 1
+AND
+NOT DB_GLO_Plague_CureChecked(_Char,_ID,_DB,_)
+AND
+DB_GLO_Plague_CureFlags(_Any,_Party,_DB)
+THEN
+DB_GLO_Plague_CureChecked(_Char,_ID,_DB,1);
+SetFlag(_Any,_Char);
+SetFlag(_Party,NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GLO_Plague_TryCure((CHARACTER)_NPC,(FLAG)_Try,(STRING)_Cure,(INTEGER)_ID,(STRING)_DB)
+AND
+DB_GLO_Plague_CureCheck(_,_Flag,_DB)
+AND
+DB_DialogPlayers(_ID,_Char,_)
+AND
+GetFlag(_Flag,_NPC,0)
+AND
+HasSpell((CHARACTER)_Char,_Cure,1)
+THEN
+SetFlag(_Flag,_NPC,_ID);
+ClearFlag(_Try,_Char);
+UseSpell(_Char,_Cure,_NPC);
+
+IF
+FlagSet(_Try,(CHARACTER)_Char,_ID)
+AND
+DB_GLO_Plague_CureCheck(_Try,_,_DB)
+AND
+DB_GLO_Plague_Cures(_Cure,_,_,_DB)
+AND
+GetFlag(_Try,_Char,1)
+AND
+NOT QRY_GLO_Plague_TryCure(_Char,_Try,_Cure,_ID,_DB)
+THEN
+ClearFlag(_Try,_Char);
+
+IF
+FlagSet(_Try,(CHARACTER)_Char,_ID)
+AND
+DB_GLO_Plague_Cures(_Cure,_,_Try,_DB)
+AND
+NOT QRY_GLO_Plague_TryCure(_Char,_Try,_Cure,_ID,_DB)
+THEN
+ClearFlag(_Try,_Char);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

@@ -1,0 +1,50 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_Debug_StartRecurrent((STRING)_ID,(INTEGER)_HowManyTimes,(INTEGER)_Interval)
+AND
+Concatenate("Debug_LaunchWithInterval_",_ID,_TimerID)
+THEN
+DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,1);
+TimerLaunch(_TimerID,_Interval);
+
+IF
+TimerFinished(_TimerID)
+AND
+DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,_Step)
+AND
+_Step <= _HowManyTimes
+THEN
+PROC_Debug_DoRecurrent(_ID,_Step);
+
+IF
+TimerFinished(_TimerID)
+AND
+DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,_Step)
+AND
+_HowManyTimes == _Step
+THEN
+NOT DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,_Step);
+
+IF
+TimerFinished(_TimerID)
+AND
+DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,_Step)
+AND
+IntegerSum(_Step,1,_NextStep)
+THEN
+NOT DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,_Step);
+DB_Debug_LaunchingWithInterval(_TimerID,_ID,_Interval,_HowManyTimes,_NextStep);
+TimerLaunch(_TimerID,_Interval);
+
+PROC
+PROC_Debug_DoRecurrent((STRING)_ID,(INTEGER)_Step)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

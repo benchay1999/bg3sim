@@ -1,0 +1,150 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_PartyDialogSuppressionZone((TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_PartyDialogSuppression_CustomDialogForParty((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_PartyDialogSuppression_CustomDialogForCompanion((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_PartyDialogSuppression_AllowAllRelationshipDialogsForCompanion((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_PartyDialogSuppression_AllowSpecificRelationshipDialogForCompanion((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+IF
+DB_PartyDialogSuppressionZone((TRIGGER)_Zone)
+THEN
+PROC_TriggerRegisterForPlayers(_Zone);
+
+//First time you are suppressed, use proc to block relationship dialogues and group discussions.
+IF
+EnteredTrigger(_Character,_SuppressionZone)
+AND
+DB_PartyDialogSuppressionZone(_SuppressionZone)
+AND
+NOT DB_PartyDialogSuppressed(_Character,_)
+THEN
+PROC_PartyDialogSuppressed_Start(_Character);
+
+IF
+EnteredTrigger(_Character,_SuppressionZone)
+AND
+DB_PartyDialogSuppressionZone(_SuppressionZone)
+THEN
+DB_PartyDialogSuppressed(_Character,_SuppressionZone);
+
+QRY
+QRY_PartyDialogSuppressed((CHARACTER)_Character)
+AND
+DB_PartyDialogSuppressed(_Character,_SuppressionZone)
+AND
+NOT QRY_PartyDialogSuppressionOverride(_Character,_SuppressionZone)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PartyDialogSuppressionOverride((CHARACTER)_Character, (TRIGGER)_SuppressionZone)
+AND
+DB_PartyDialogSuppression_AllowAllRelationshipDialogsForCompanion(_Character, _SuppressionZone)
+AND
+DB_HandlingRelationshipDialog(_Character, _, _, _, _, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PartyDialogSuppressionOverride((CHARACTER)_Character, (TRIGGER)_SuppressionZone)
+AND
+DB_PartyDialogSuppression_AllowSpecificRelationshipDialogForCompanion(_Character, _SuppressionZone, _AllowedDialog, _IPRDFlag)
+AND
+DB_HandlingRelationshipDialog(_Character, _AllowedDialog, _IPRDFlag, _, _, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PartyDialogSuppressed_CheckRelationshipDialogAllowed((CHARACTER)_Character, _, _)
+AND
+NOT DB_PartyDialogSuppressed(_Character,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PartyDialogSuppressed_CheckRelationshipDialogAllowed((CHARACTER)_Character, _, _)
+AND
+DB_PartyDialogSuppressed(_Character,_SuppressionZone)
+AND
+DB_PartyDialogSuppression_AllowAllRelationshipDialogsForCompanion(_Character, _SuppressionZone)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PartyDialogSuppressed_CheckRelationshipDialogAllowed((CHARACTER)_Character, (DIALOGRESOURCE)_QueuedRD, (FLAG)_Flag)
+AND
+DB_PartyDialogSuppressed(_Character,_SuppressionZone)
+AND
+DB_PartyDialogSuppression_AllowSpecificRelationshipDialogForCompanion(_Character, _SuppressionZone, _QueuedRD, _Flag)
+THEN
+DB_NOOP(1);
+
+//Player left suppression zone (or unregistered)
+IF
+LeftTrigger(_Character,_SuppressionZone)
+AND
+DB_PartyDialogSuppressed(_Character,_SuppressionZone)
+THEN
+NOT DB_PartyDialogSuppressed(_Character,_SuppressionZone);
+PROC_PartyDialogSuppressed_CheckStop(_Character);
+
+//If Suppressionzone DB got cleared.
+IF
+DB_PartyDialogSuppressed(_Character,_SuppressionZone)
+AND
+NOT DB_PartyDialogSuppressionZone(_SuppressionZone)
+THEN
+NOT DB_PartyDialogSuppressed(_Character,_SuppressionZone);
+PROC_PartyDialogSuppressed_CheckStop(_Character);
+
+//If the last zone was left, use proc to unblock relationship dialogues and group discussions.
+PROC
+PROC_PartyDialogSuppressed_CheckStop((CHARACTER)_Character)
+AND
+NOT DB_PartyDialogSuppressed(_Character,_)
+THEN
+PROC_PartyDialogSuppressed_Stop(_Character);
+
+//Use this hook to react to a character entering their first suppression zone
+PROC
+PROC_PartyDialogSuppressed_Start((CHARACTER)_Character)
+THEN
+DB_NOOP(1);
+//Actual suppression of In Party Dialogues happens in QRY_SelectCompanionFallback (_GLO_Shared_Origins)
+//Relationship Dialogues are cancelled, requeued and prevented in _GLOBAL_Shared_RelationshipDialogs
+//Delayed Group Discussions are cancelled in _GLOBAL_Shared_GroupDiscussions
+
+//Use this hook to react to a character leaving their last suppression zone
+PROC
+PROC_PartyDialogSuppressed_Stop((CHARACTER)_Character)
+THEN
+DB_NOOP(1);
+//Relationship Dialogues are requeued in _GLOBAL_Shared_RelationshipDialogs
+
+//Safety: I fear this type of BLOCK ALL DIALOGS DB may come back to bite me in the ass. So we're adding some safety checks. 
+PROC
+PROC_LongRest()
+THEN
+PROC_PartyDialogSuppression_SafetyCheck();
+
+IF
+SavegameLoaded()
+THEN
+PROC_PartyDialogSuppression_SafetyCheck();
+
+PROC
+PROC_PartyDialogSuppression_SafetyCheck()
+AND
+DB_PartyDialogSuppressed(_Character,_SuppressionZone)
+AND
+IsInTrigger(_Character,_SuppressionZone,0)
+THEN
+NOT DB_PartyDialogSuppressed(_Character,_SuppressionZone);
+PROC_PartyDialogSuppressed_CheckStop(_Character);
+
+
+EXITSECTION
+
+ENDEXITSECTION

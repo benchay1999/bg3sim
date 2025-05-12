@@ -1,0 +1,50 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/* Should be caught by a custom event in behaviour script,
+waiting for new behaviour script to be in a useable form */
+
+//Objects that use the lever script but should not react to attacks
+DB_GLO_LeverOnAttack_ExceptionTemplates((ROOT)PUZ_Ketheric_Giant_Forge_Valve_A_8df19728-fcdc-4875-a015-128b1a2f2f36);
+
+KBSECTION
+IF
+AttackedBy(_Object, _AttackerOwner, _Attacker, _, _, "Attack", _)
+AND
+IsItem(_Object, 1)
+AND
+QRY_GLO_LeverOnAttack_ExceptionTemplates((ITEM)_Object)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+THEN
+SetDualEntityEvent(_ResolvedAttacker, _Object, "GLO_HitByAttack", 1);
+
+IF
+AttackedBy(_Object, _AttackerOwner, _Attacker, _, _, "Offhand", _)
+AND
+IsItem(_Object, 1)
+AND
+QRY_GLO_LeverOnAttack_ExceptionTemplates((ITEM)_Object)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+THEN
+SetDualEntityEvent(_ResolvedAttacker, _Object, "GLO_HitByAttack", 1);
+
+QRY
+QRY_GLO_LeverOnAttack_ExceptionTemplates((ITEM)_Object)
+AND
+GetTemplate(_Object,(ROOT)_Template)
+AND
+NOT DB_GLO_LeverOnAttack_ExceptionTemplates(_Template)
+THEN
+DB_NOOP(1);
+
+
+
+EXITSECTION
+
+ENDEXITSECTION

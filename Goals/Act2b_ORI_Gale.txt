@@ -1,0 +1,90 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+SetOnStage((ITEM)S_ORI_Gale_GoodbyeLetter_91161a7c-d4f8-4a97-ba56-af8b68430fdc, 0);
+PROC_ORI_Gale_INTSetup();
+KBSECTION
+PROC
+PROC_ORI_Gale_INTSetup()
+AND
+NOT QRY_ORI_Gale_SkipINTSetup()
+THEN
+PROC_ORI_Gale_DoINTSetup();
+
+PROC
+PROC_ORI_Gale_DoINTSetup()
+AND
+DB_GlobalFlag((FLAG)ORI_Gale_Event_BombDisarmed_3d014e79-5595-9365-87bb-5cbb1f87fe5c)
+THEN
+SetFlag(ORI_Gale_State_WentToAct2b_006b18cf-a232-4e2a-a087-9d49855ac641, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_ORI_Gale_DoINTSetup()
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Gale_Event_BombDisarmed_3d014e79-5595-9365-87bb-5cbb1f87fe5c)
+AND
+DB_Defeated(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+QRY_GetBestAvatarForCompanion((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar)
+THEN
+DB_CompanionLeaving(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604,_Avatar);
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_AbandonedBombNotDisarmed");
+SetOnStage(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+PROC_ORI_Gale_DisableDeathEffect(); //If he's currently dead, don't let it end the game.
+
+PROC
+PROC_ORI_Gale_DoINTSetup() 
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Gale_Event_BombDisarmed_3d014e79-5595-9365-87bb-5cbb1f87fe5c)
+AND
+NOT DB_Defeated(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+QRY_GetBestAvatarForCompanion((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar)
+THEN
+DB_CompanionLeaving(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604,_Avatar);
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_BombNotDisarmed");
+SetOnStage(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+
+PROC
+PROC_ORI_Gale_DoINTSetup()
+AND
+DB_CompanionLeavingBackPack((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _, _Backpack)
+THEN
+PROC_ToInventoryAndOnStage(S_ORI_Gale_GoodbyeLetter_91161a7c-d4f8-4a97-ba56-af8b68430fdc, _Backpack, -1, 0, 1);
+
+
+PROC
+PROC_ORI_Gale_DoINTSetup()
+AND
+DB_CompanionLeavingBackPack((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _, _Backpack)
+AND
+NOT DB_Defeated(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+PROC_ToInventoryAndOnStage(S_ORI_Gale_GoodbyeLetter_91161a7c-d4f8-4a97-ba56-af8b68430fdc, _Backpack, -1, 0, 1);
+
+QRY
+QRY_Inclusion_BlockCompanionInclusion(_, INT_ORI_Gale_CRD_CrownOfKarsus_d61e7a6c-adde-2f37-447b-c096acc045e5)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ORI_Gale_SkipINTSetup()
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+GoalCompleted;
+
+QRY
+QRY_ORI_Gale_SkipINTSetup()
+AND
+DB_Avatars((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2b"

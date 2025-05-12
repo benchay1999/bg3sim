@@ -1,0 +1,565 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRIME_GuardKiller_WitnessTag((TAG)CIVILIAN_71120d5d-3853-46e4-9762-33f59aa6b4ae);
+DB_CRIME_GuardKiller_WitnessTag((TAG)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd);
+DB_CRIME_GuardKiller_WitnessTag((TAG)BADASSCIVILIAN_91f4b379-63a2-40e9-a509-7b9b2f90e4c8);
+DB_CRIME_GuardKiller_WitnessTag((TAG)NOT_MESSING_AROUND_542b58f0-42ad-4157-a28e-27434e0e7b18);
+
+// If the flag gets set, having killed any guards from the _Region,_Pool is forgiven (_Pool can be empty string to include all pools from that region);
+NOT DB_CRIME_GuardKiller_MakePeaceFlag("","",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+// No GuardKiller crime for killing guards from this region/pool combo
+NOT DB_CRIME_Guards_NoGuardKiller("","");
+KBSECTION
+// Kill a guard while there`s a witness -> famous!
+
+//REGION Record witnesses to guard killings
+IF
+DB_CRIME_Guards_RegionGuard(_Region,_Pool,_Guard)
+AND
+NOT DB_CRIME_Guards_NoGuardKiller(_Region,_Pool)
+THEN
+DB_ReportKiller(_Guard,(GUIDSTRING)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd);
+
+// NPCs in combat won't react to crimes, nor will NPCs out of combat react to crimes by players in combat
+// -> record witnesses manually rather than via crime system
+PROC
+PROC_ReportKiller((CHARACTER)_Killer,(CHARACTER)_KillerOwner,(CHARACTER)_Guard,(GUIDSTRING)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd)
+AND
+DB_CRIME_Guards_RegionGuard(_Region,_Pool,_Guard)
+AND
+// Could still trigger in case killer tracking is enabled for this NPC for another reason
+NOT DB_CRIME_Guards_NoGuardKiller(_Region,_Pool)
+AND
+DB_CRIME_Guards_RegionInfo(_Region,_Pool,_CancelGuardsGlobalFlag)
+AND
+QRY_CRIME_Guards_NoCancelFlag(_CancelGuardsGlobalFlag)
+AND
+DB_Players(_Killer)
+AND
+GUIDToString(_Guard,_GuardUUIDStr)
+AND
+Concatenate("CRIME_GuardKillerWitnesses_",_GuardUUIDStr,_GuardIterator)
+AND
+QRY_OnlyOnce(_GuardIterator) //In the event the guard is in more than one Region/Pool.
+AND
+GetFaction(_Guard,_GuardFaction)
+THEN
+DB_CRIME_GuardKillerCombatWitness(_Killer,_Guard,_GuardFaction,_Region,_Pool,_GuardIterator);
+IterateCharactersAround(_Guard,20.0,_GuardIterator,_GuardIterator);
+
+QRY
+QRY_CRIME_Guards_ValidGuardKillerWitnessTag((CHARACTER)_Witness)
+AND
+DB_CRIME_GuardKiller_WitnessTag(_Tag)
+AND
+IsTagged(_Witness,_Tag,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_GuardKillerExcludeWitness((CHARACTER)_Witness)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent((CHARACTER)_Witness,_GuardIterator)
+AND
+DB_CRIME_GuardKillerCombatWitness(_Killer,_Guard,_GuardFaction,_Region,_Pool,_GuardIterator)
+AND
+_Witness != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_Defeated(_Witness)
+AND
+GetFaction(_Witness,_WitnessFaction)
+AND
+GetRelationRaw(_WitnessFaction,_GuardFaction,_Relation)
+AND
+// Neutral or better
+_Relation >= 50
+AND
+// But not persistently neutral
+_Relation != 51
+AND
+IsPartyMember(_Witness,1,0)
+AND
+IsSummon(_Witness,0)
+AND
+QRY_CRIME_Guards_ValidGuardKillerWitnessTag(_Witness)
+AND
+NOT QRY_CRIME_Guards_GuardKillerExcludeWitness(_Witness)
+AND
+CanSee(_Witness,_Guard,1)
+THEN
+PROC_CRIME_GuardKillerSpotted_MaybeAD(_Witness,_Killer,_Guard);
+PROC_CRIME_GuardKiller_Noticed(_Witness,_Killer,_Guard,_Region,_Pool);
+
+IF
+EntityEvent(NULL_00000000-0000-0000-0000-000000000000,_GuardIterator)
+AND
+DB_CRIME_GuardKillerCombatWitness(_Killer,_Guard,_GuardFaction,_Region,_Pool,_GuardIterator)
+THEN
+NOT DB_CRIME_GuardKillerCombatWitness(_Killer,_Guard,_GuardFaction,_Region,_Pool,_GuardIterator);
+
+PROC
+PROC_CRIME_GuardKillerSpotted_MaybeAD((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard)
+THEN
+NOT DB_CRIME_GuardKillerSpottedAD(1);
+
+PROC
+PROC_CRIME_GuardKillerSpotted_MaybeAD((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard)
+AND
+NOT DB_CRIME_GuardKiller_Witness(_Witness,_,_,_,_,_)
+AND
+NOT DB_CRIME_GuardKiller_Witness(_,_,_Guard,_,_,_)
+THEN
+DB_CRIME_GuardKillerSpottedAD(1);
+PROC_CRIME_GuardKillerSpotted_TryLookAtKiller(_Witness,_Killer);
+PROC_TryStartAD((DIALOGRESOURCE)GEB_AD_WitnessedGuardKilling_b046259c-8b66-9b57-c4d2-3600ea8d5322,_Witness);
+
+PROC
+PROC_CRIME_GuardKillerSpotted_MaybeAD((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard)
+AND
+NOT DB_CRIME_GuardKillerSpottedAD(1)
+AND
+QRY_GetFairRand("CRIME_GuardKiller",5)
+AND
+DB_FairRand_ReturnVal(0)
+THEN
+PROC_CRIME_GuardKillerSpotted_TryLookAtKiller(_Witness,_Killer);
+PROC_TryStartAD((DIALOGRESOURCE)GEB_AD_WitnessedGuardKilling_b046259c-8b66-9b57-c4d2-3600ea8d5322,_Witness);
+
+PROC
+PROC_CRIME_GuardKillerSpotted_TryLookAtKiller((CHARACTER)_Witness,(CHARACTER)_Killer)
+AND
+NOT DB_CantMove(_Witness)
+THEN
+LookAtEntity(_Witness, _Killer);
+
+PROC
+PROC_CRIME_GuardKiller_Noticed((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool)
+AND
+GetBaseFaction(_Guard,_GuardFaction)
+AND
+NOT QRY_CRIME_GuardKiller_IsRecorded(_Witness,_Killer,_GuardFaction)
+THEN
+PROC_CRIME_GuardKiller_NewWitness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction);
+
+QRY
+QRY_CRIME_GuardKiller_IsRecorded((CHARACTER)_Witness,(CHARACTER)_Killer,(FACTION)_GuardFaction)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CRIME_GuardKiller(_Level,_Killer,_,_,_,_GuardFaction,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_GuardKiller_IsRecorded((CHARACTER)_Witness,(CHARACTER)_Killer,(FACTION)_GuardFaction)
+AND
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_,_,_,_GuardFaction)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CRIME_GuardKiller_NewWitness((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool,(FACTION)_GuardFaction)
+AND
+NOT DB_CRIME_GuardKiller_Witness(_Witness,_,_,_,_,_)
+THEN
+// UI feedback to indicate this NPC witnessed a guards killing, and you have to silence them
+// if you don't want them to report it
+ApplyStatus(_Witness,"GB_GUARDKILLER_WITNESS",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CRIME_GuardKiller_NewWitness((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool,(FACTION)_GuardFaction)
+AND
+DB_Is_InCombat(_Witness,_)
+THEN
+DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness);
+
+// Witness not in combat -> join/enter combat if possible, so player has chance to kill them before they report the killing
+PROC
+PROC_CRIME_GuardKiller_NewWitness((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool,(FACTION)_GuardFaction)
+AND
+NOT DB_Is_InCombat(_Witness,_)
+AND
+CanJoinCombat(_Witness,1)
+THEN
+PROC_SetRelationTemporaryHostile(_Killer,_Witness);
+DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness);
+
+PROC
+PROC_CRIME_GuardKiller_NewWitness((CHARACTER)_Witness,(CHARACTER)_Killer,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool,(FACTION)_GuardFaction)
+THEN
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction);
+DB_CRIME_GuardKiller_WitnessStatus(_Witness);
+
+IF
+LeftCombat((CHARACTER)_Witness,_ID)
+AND
+DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness)
+THEN
+NOT DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness);
+//END_REGION
+
+//REGION ADs during the fight when attacking
+IF
+DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness)
+AND
+DB_Is_InCombat(_Witness, _)
+THEN
+DB_NPCAttackAD(_Witness, (DIALOGRESOURCE)GEB_AD_WitnessedGuardKilling_Combat_ee09b454-ab6c-b597-46f8-436e3149bad8);
+
+IF
+DB_NPCAttackAD(_Witness, (DIALOGRESOURCE)GEB_AD_WitnessedGuardKilling_Combat_ee09b454-ab6c-b597-46f8-436e3149bad8)
+AND
+NOT DB_Is_InCombat(_Witness, _)
+THEN
+NOT DB_NPCAttackAD(_Witness, (DIALOGRESOURCE)GEB_AD_WitnessedGuardKilling_Combat_ee09b454-ab6c-b597-46f8-436e3149bad8);
+//END_REGION
+
+//REGION ADs during the fight when getting attacked
+IF
+AttackedBy((CHARACTER)_Guard,(CHARACTER)_PartyMember,_,_,_,_,_StoryActionID)
+AND
+DB_CRIME_Guards_RegionGuard(_,_,_Guard)
+AND
+DB_Is_InCombat(_Guard,_CombatID)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+QRY_IsEnemyToAnyPlayerInCombat(_Guard,_CombatID)
+AND
+IsTagged(_Guard,(TAG)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd,1)
+AND
+QRY_CRIME_GuardKiller_DoAttackedAD(_Guard)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GEB_AD_AttackedGuardInCombat_cf5ea1c7-4bd1-b71e-c3d8-1f797cb6c572,_Guard);
+
+
+QRY
+QRY_CRIME_GuardKiller_DoAttackedAD((CHARACTER)_Guard)
+AND
+DB_CRIME_GuardKiller_PlayedAttackedADInCombat(_Guard)
+AND
+NOT DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard)
+AND
+QRY_GetFairRand("CRIME_GuardKiller",5)
+AND
+DB_FairRand_ReturnVal(0)
+THEN
+DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard);
+
+QRY
+QRY_CRIME_GuardKiller_DoAttackedAD((CHARACTER)_Guard)
+AND
+NOT DB_CRIME_GuardKiller_PlayedAttackedADInCombat(_Guard)
+THEN
+DB_CRIME_GuardKiller_PlayedAttackedADInCombat(_Guard);
+DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard);
+
+IF
+TurnStarted((CHARACTER)_Guard)
+AND
+DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard)
+THEN
+NOT DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard);
+
+IF
+LeftCombat((CHARACTER)_Guard,_)
+AND
+DB_CRIME_GuardKiller_PlayedAttackedADInCombat(_Guard)
+THEN
+NOT DB_CRIME_GuardKiller_PlayedAttackedADInCombat(_Guard);
+
+IF
+LeftCombat((CHARACTER)_Guard,_)
+AND
+DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard)
+THEN
+NOT DB_CRIME_GuardKiller_PlayedAttackedADDuringTurn(_Guard);
+
+//END_REGION
+
+//REGION Interaction with crime system
+// Block characters that are trying to flee to report the guard murder from becoming investigators for the murder crime
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Murder")
+AND
+DB_CRIME_Guards_RegionGuard(_,_,_Victim)
+THEN
+DB_CRIME_GuardMurderCrime(_CrimeID,_Victim);
+
+// support regardless of the order in which DB_CRIME_GuardKiller_Witness and DB_CRIME_GuardMurderCrime are defined
+IF
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction)
+AND
+DB_CRIME_GuardMurderCrime(_CrimeID,_Guard)
+THEN
+CrimeIgnoreCrime(_CrimeID,_Witness);
+
+// Registering the crime and looking for killer witnesses should happen in the same frame
+// (when the guard dies), so as soon as processing of the murder crime starts, get rid of
+// the helper db
+IF
+CrimeProcessingStarted(_CrimeID,_)
+AND
+DB_CRIME_GuardMurderCrime(_CrimeID,_Victim)
+THEN
+NOT DB_CRIME_GuardMurderCrime(_CrimeID,_Victim);
+//END_REGION
+
+//REGION Clean up
+IF
+DB_CRIME_GuardKiller_WitnessStatus(_Witness)
+AND
+NOT DB_CRIME_GuardKiller_Witness(_Witness,_,_,_,_,_)
+THEN
+NOT DB_CRIME_GuardKiller_WitnessStatus(_Witness);
+RemoveStatus(_Witness,"GB_GUARDKILLER_WITNESS");
+
+PROC
+PROC_StateSet_PermaDefeated((GUIDSTRING)_Witness)
+AND
+DB_CRIME_GuardKiller_Witness((CHARACTER)_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction)
+THEN
+NOT DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction);
+
+PROC
+PROC_StateSet_PermaDefeated((GUIDSTRING)_Witness)
+AND
+DB_CRIME_GuardKiller_WaitForCombatEnd((CHARACTER)_Witness)
+THEN
+NOT DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness);
+//END_REGION
+
+//REGION NPC reports the killer to the authorities
+// Died events arrive before LeftCombat -> if anyone leaves the combat having noticed
+// the player killing a guard and not being incapacitated, they will relay that
+// information to other guards
+//
+// Checking on DB_CantMove also means that if they were knocked out, then they
+// will still perform the reporting when they get up again after a long rest.
+IF
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction)
+AND
+NOT DB_CRIME_GuardKiller_WaitForCombatEnd(_Witness)
+AND
+NOT DB_CantMove(_Witness)
+THEN
+SetFlag(GEB_FleeOutOfSight_f488cbb2-9aca-452f-9b8d-652e07561785,_Witness,0);
+
+IF
+EntityEvent((CHARACTER)_Witness,"GEB_NPCFledOutOfSight")
+AND
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction)
+AND
+DB_CurrentLevel(_Level)
+AND
+IsSubstring(_Region, _Level, 1)
+AND
+NOT DB_CRIME_GuardKiller(_Level,_Killer,_,_,_,_,_)
+AND
+QRY_CRIME_GuardKillerNeedsToBeReported(_Killer, _GuardFaction)
+THEN
+ApplyStatus(_Killer,"GB_GUARDKILLER",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EntityEvent((CHARACTER)_Witness,"GEB_NPCFledOutOfSight")
+AND
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction)
+AND
+DB_CurrentLevel(_Level)
+AND
+IsSubstring(_Region, _Level, 1)
+AND
+NOT DB_CRIME_GuardKiller(_Level,_Killer,_,_,_,_GuardFaction,_)
+AND
+QRY_CRIME_GuardKillerNeedsToBeReported(_Killer, _GuardFaction)
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+// Record this player now as hostile to the guard faction
+DB_CRIME_GuardKiller(_Level,_Killer,_Guard,_Region,_Pool,_GuardFaction,_CrimeID);
+// Only guards allied with _Guard will react to it, that's why we register it once per faction
+PROC_CharacterRegisterCrime(_Killer,"GuardKiller",NULL_00000000-0000-0000-0000-000000000000,_Guard,_CrimeID);
+
+QRY
+QRY_CRIME_GuardKillerNeedsToBeReported((CHARACTER)_Killer, (FACTION)_GuardFaction)
+AND
+GetFaction(_Killer, _KillerFaction)
+AND
+GetRelation(_GuardFaction, _KillerFaction, _Relation)
+AND
+_Relation > 0
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent((CHARACTER)_Witness,"GEB_NPCFledOutOfSight")
+AND
+DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction)
+THEN
+NOT DB_CRIME_GuardKiller_Witness(_Witness,_Killer,_Guard,_Region,_Pool,_GuardFaction);
+//END_REGION
+
+//REGION Make peace with a certain guard pool
+PROC
+PROC_CRIME_Guards_MakePeace((STRING)_Region,(STRING)_Pool)
+AND
+_Pool != ""
+AND
+DB_CRIME_GuardKiller(_Level,_Killer,_Guard,_Region,_Pool,_GuardFaction,_CrimeID)
+THEN
+CharacterStopCrimeWithID(_Killer,_CrimeID);
+NOT DB_CRIME_GuardKiller(_Level,_Killer,_Guard,_Region,_Pool,_GuardFaction,_CrimeID);
+PROC_CRIME_Guards_ClearGuardKiller(_Killer);
+
+PROC
+PROC_CRIME_Guards_MakePeace((STRING)_Region,"")
+AND
+DB_CRIME_GuardKiller(_Level,_Killer,_Guard,_Region,_Pool,_GuardFaction,_CrimeID)
+THEN
+CharacterStopCrimeWithID(_Killer,_CrimeID);
+NOT DB_CRIME_GuardKiller(_Level,_Killer,_Guard,_Region,_Pool,_GuardFaction,_CrimeID);
+PROC_CRIME_Guards_ClearGuardKiller(_Killer);
+
+PROC
+PROC_CRIME_Guards_ClearGuardKiller((CHARACTER)_Killer)
+AND
+NOT DB_CRIME_GuardKiller(_,_Killer,_,_,_,_,_)
+THEN
+RemoveStatus(_Killer,"GB_GUARDKILLER");
+
+IF
+FlagSet(_Flag,_,_)
+AND
+DB_CRIME_GuardKiller_MakePeaceFlag(_Region,_Pool,_Flag)
+THEN
+PROC_CRIME_Guards_MakePeace(_Region,_Pool);
+
+// if guards became permanently hostile we no longer need the status
+// killer faction in the DB will be Hero Companion X, but permanent relation will be set to Hero parent faction
+// so we check it instead
+IF
+RelationChanged(_GuardFaction, (FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360, 0, 1)
+AND
+DB_CRIME_GuardKiller(_,_,_,_Region,_,_GuardFaction,_)
+THEN
+PROC_CRIME_Guards_MakePeace(_Region, "");
+//END_REGION
+
+//REGION Conversion between player and non-player version of the crime
+// If an origin as NPC kills a guard, the crime will indeed not be registered
+// in the first place (because the ReportKiller infrastructure only handles
+// players)
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Player)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CRIME_GuardKiller(_Level,_Player,_Guard,_Region,_Pool,_GuardFaction,_CrimeID)
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+CharacterStopCrimeWithID(_Player,_CrimeID);
+PROC_CharacterRegisterCrime(_Player,"GuardKiller_NPC",NULL_00000000-0000-0000-0000-000000000000,_Guard,0);
+DB_CRIME_GuardKiller(_Level,_Player,_Guard,_Region,_Pool,_GuardFaction,_NewCrimeID);
+NOT DB_CRIME_GuardKiller(_Level,_Player,_Guard,_Region,_Pool,_GuardFaction,_CrimeID);
+
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)_NewMember,(CHARACTER)_)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CRIME_GuardKiller(_Level,_NewMember,_Guard,_Region,_Pool,_GuardFaction,_CrimeID)
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+CharacterStopCrimeWithID(_NewMember,_CrimeID);
+PROC_CharacterRegisterCrime(_NewMember,"GuardKiller",NULL_00000000-0000-0000-0000-000000000000,_Guard,_NewCrimeID);
+DB_CRIME_GuardKiller(_Level,_NewMember,_Guard,_Region,_Pool,_GuardFaction,_NewCrimeID);
+NOT DB_CRIME_GuardKiller(_Level,_NewMember,_Guard,_Region,_Pool,_GuardFaction,_CrimeID);
+//END_REGION
+
+//REGION Region swapping
+PROC
+PROC_LevelUnloading(_Level)
+AND
+DB_CRIME_GuardKiller(_Level,_Killer,_,_,_,_,_)
+THEN
+// May try to remove it more than once, but that's fine
+RemoveStatus(_Killer,"GB_GUARDKILLER");
+
+IF
+LevelLoaded(_Level)
+AND
+DB_CRIME_GuardKiller(_Level,_Killer,_,_,_,_,_)
+AND
+// Only apply the status once, even if wanted for multiple faction murders
+// (or don't apply at all if this is because of a savegame load)
+HasAppliedStatus(_Killer,"GB_GUARDKILLER",0)
+THEN
+ApplyStatus(_Killer,"GB_GUARDKILLER",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+// Continuous crimes are stored in the level cache and automatically resume when you come back
+// -> record any player <-> NPC switches in other levels and apply the appropriate conversion
+// when the old level becomes active again
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Player)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CRIME_GuardKiller(_OtherLevel,_Player,_Guard,_Region,_Pool,_GuardFaction,_CrimeID)
+AND
+_Level != _OtherLevel
+THEN
+DB_CRIME_GuardKiller_SwitchCrimeToNPCVersion(_OtherLevel,_Player,_Guard);
+
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)_NewMember,(CHARACTER)_)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CRIME_GuardKiller(_OtherLevel,_NewMember,_Guard,_Region,_Pool,_GuardFaction,_CrimeID)
+AND
+_Level != _OtherLevel
+THEN
+DB_CRIME_GuardKiller_SwitchCrimeToPlayerVersion(_OtherLevel,_NewMember,_Guard);
+
+IF
+DB_CRIME_GuardKiller_SwitchCrimeToNPCVersion(_Level,_Player,_Guard)
+AND
+DB_CRIME_GuardKiller_SwitchCrimeToPlayerVersion(_Level,_Player,_Guard)
+THEN
+NOT DB_CRIME_GuardKiller_SwitchCrimeToNPCVersion(_Level,_Player,_Guard);
+NOT DB_CRIME_GuardKiller_SwitchCrimeToPlayerVersion(_Level,_Player,_Guard);
+
+IF
+LevelLoaded(_Level)
+AND
+DB_CRIME_GuardKiller_SwitchCrimeToPlayerVersion(_Level,_Player,_Guard)
+THEN
+NOT DB_CRIME_GuardKiller_SwitchCrimeToPlayerVersion(_Level,_Player,_Guard);
+CharacterStopCrime(_Player,"GuardKiller_NPC",NULL_00000000-0000-0000-0000-000000000000);
+PROC_CharacterRegisterCrime(_Player,"GuardKiller",NULL_00000000-0000-0000-0000-000000000000,_Guard,0);
+
+IF
+LevelLoaded(_Level)
+AND
+DB_CRIME_GuardKiller_SwitchCrimeToNPCVersion(_Level,_Player,_Guard)
+THEN
+NOT DB_CRIME_GuardKiller_SwitchCrimeToNPCVersion(_Level,_Player,_Guard);
+CharacterStopCrime(_Player,"GuardKiller",NULL_00000000-0000-0000-0000-000000000000);
+PROC_CharacterRegisterCrime(_Player,"GuardKiller_NPC",NULL_00000000-0000-0000-0000-000000000000,_Guard,0);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

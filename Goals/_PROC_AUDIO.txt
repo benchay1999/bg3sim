@@ -1,0 +1,200 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Dani Rulz
+NOT DB_Audio_CurrentMusicState("");
+KBSECTION
+//REGION TrackedSoundEntity 
+
+//Handle savegames loading into a trigger doesn't call Trigger Enter 
+IF
+LevelLoaded(_)
+AND
+DB_Players(_Player)
+AND
+DB_Audio_TrackedSoundEntity((TRIGGER)_Region,(CHARACTER)_Character)
+AND
+DB_InRegion(_Player,_Region)
+AND
+IsDead(_Character,0)
+AND
+NOT DB_AddToTrackedSoundEntity_OncePerCharacter(_Region,_Character)
+THEN
+PROC_AddToTrackedSoundEntity(_Character,_Region);
+DB_AddToTrackedSoundEntity_OncePerCharacter(_Region,_Character);
+
+//Cleanup
+IF
+LevelLoaded(_)
+AND
+DB_AddToTrackedSoundEntity_OncePerCharacter(_Region,_Character)
+THEN
+NOT DB_AddToTrackedSoundEntity_OncePerCharacter(_Region,_Character);
+
+IF
+EnteredTrigger(_Player,_Region)
+AND
+DB_Audio_TrackedSoundEntity((TRIGGER)_Region,(CHARACTER)_Character)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(_Player, _Region)
+AND
+IsDead(_Character,0)
+THEN
+PROC_AddToTrackedSoundEntity(_Character,_Region);
+
+IF
+LeftTrigger(_Player,_Region)
+AND
+DB_Audio_TrackedSoundEntity(_Region,_Character)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(_Player, _Region)
+THEN
+PROC_RemoveFromTrackedSoundEntity(_Character);
+
+IF
+Died(_Character)
+AND
+DB_Audio_TrackedSoundEntity(_Region,_Character)
+THEN
+PROC_RemoveFromTrackedSoundEntity(_Character);
+
+IF
+WentOnStage((CHARACTER)_Character,0)
+AND
+DB_Audio_TrackedSoundEntity(_Region,_Character)
+THEN
+SetForceUpdate(_Character, 0);
+RemoveTrackedSoundEntity(_Character);
+
+PROC
+PROC_AddToTrackedSoundEntity((CHARACTER)_Character,(TRIGGER)_Region)
+THEN
+DB_Audio_TrackedSoundEntity(_Region,_Character);
+SetForceUpdate(_Character, 1);
+AddTrackedSoundEntity(_Character,"");
+
+PROC
+PROC_RemoveFromTrackedSoundEntity((CHARACTER)_Character)
+THEN
+SetForceUpdate(_Character, 0);
+RemoveTrackedSoundEntity(_Character);
+
+PROC
+PROC_RemoveFromTrackedSoundEntity((CHARACTER)_Character)
+AND
+DB_Audio_TrackedSoundEntity(_Region,_Character)
+THEN
+NOT DB_Audio_TrackedSoundEntity(_Region,_Character);
+//END_REGION
+
+//REGION Spell Vocal Localization
+
+PROC
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Speaker1)
+AND
+DialogIsAutomated(_Dialog, _IsAutomated)
+AND
+QRY_TryStartAD_CheckAutomated(_Dialog, _IsAutomated)
+AND
+_IsAutomated == 1
+AND
+StartDialog_Internal(_Dialog,1,_Speaker1,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,1,_InstanceID,1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Speaker1, (GUIDSTRING)_Speaker2)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Speaker1)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Speaker2)
+AND
+DialogIsAutomated(_Dialog, _IsAutomated)
+AND
+QRY_TryStartAD_CheckAutomated(_Dialog, _IsAutomated)
+AND
+_IsAutomated == 1
+AND
+StartDialog_Internal(_Dialog,1,_Speaker1,_Speaker2,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,1,_InstanceID,1)
+THEN
+DB_NOOP(1);
+
+//Vicious Mockery Cast
+IF
+UsingSpellOnTarget((CHARACTER)_Player,(CHARACTER)_Target, "Target_ViciousMockery",_,_,_)
+AND
+DB_IsOrWasInParty(_Player)
+THEN
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)GLO_SpellVocalComponent_ViciousMockery_Cast_6dafdccd-091d-c0f4-4543-1199bdcb46d6,_Player,_Target);
+
+//Vicious Mockery Preview
+IF
+StartedPreviewingSpell((CHARACTER)_Player,"Target_ViciousMockery",_, _)
+AND
+DB_IsOrWasInParty(_Player)
+THEN
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)GLO_SpellVocalComponent_ViciousMockery_Prepare_b523412d-1ea5-f3b0-ee9d-fa80cf72100a,_Player);
+
+//Cutting Words
+IF
+ReactionInterruptUsed((CHARACTER)_Player,"Interrupt_CuttingWords", _)
+AND
+DB_IsOrWasInParty(_Player)
+THEN
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)GLO_SpellVocalComponent_ViciousMockery_Cast_6dafdccd-091d-c0f4-4543-1199bdcb46d6,_Player);
+
+//Rogue Vicious Dirty Trick Cast
+IF
+UsingSpellOnTarget((CHARACTER)_Player,(CHARACTER)_Target, "Target_DirtyTrick_Vicious",_,_,_)
+AND
+DB_IsOrWasInParty(_Player)
+THEN
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)GLO_SpellVocalComponent_ViciousMockery_Cast_6dafdccd-091d-c0f4-4543-1199bdcb46d6,_Player,_Target);
+
+//Rogue Vicious Dirty Trick Preview
+IF
+StartedPreviewingSpell((CHARACTER)_Player,"Target_DirtyTrick_Vicious",_, _)
+AND
+DB_IsOrWasInParty(_Player)
+THEN
+PROC_TryStartSpellVocalAD((DIALOGRESOURCE)GLO_SpellVocalComponent_ViciousMockery_Prepare_b523412d-1ea5-f3b0-ee9d-fa80cf72100a,_Player);
+
+
+//END_REGION
+
+//REGION Keep music on reload
+
+PROC
+PROC_MusicPlayGeneral((STRING)_MusicState)
+AND
+NOT DB_Audio_CurrentMusicState(_MusicState)
+THEN
+PROC_MusicPlayGeneral_Clear();
+DB_Audio_CurrentMusicState(_MusicState);
+MusicPlayGeneral(_MusicState);
+
+PROC
+PROC_MusicPlayGeneral_Clear()
+AND
+DB_Audio_CurrentMusicState(_MusicState)
+THEN
+NOT DB_Audio_CurrentMusicState(_MusicState);
+
+IF
+SavegameLoaded()
+AND
+DB_Audio_CurrentMusicState(_MusicState)
+THEN
+MusicPlayGeneral(_MusicState);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

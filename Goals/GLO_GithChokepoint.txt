@@ -1,0 +1,295 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_GithMap((ITEM)S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011);
+DB_GiveItemToEventWithClear(S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011,PLA_GithChokepoint_Event_TakeMap_a30d444a-d792-4dce-8900-56e2b2f0b893);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027);
+DB_DropMutingStatussesDialog(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027);
+
+DB_HasItemEvent(S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011, GLO_GithChokePoint_State_HasGithCrecheMap_438cfd15-013a-480e-9410-1780c93d3f2b);
+KBSECTION
+//REGION Debug
+
+IF
+TextEvent("resetgithmap")
+AND
+GetHostCharacter(_Player)
+THEN
+Drop(S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011);
+TeleportTo(S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011,_Player);
+NOT DB_OnlyOnce("GLO_GithMap_AutoReadingOnPickUp");
+NOT DB_OnlyOnce("GLO_GithMap_LaezelReadIt");
+ClearFlag(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387,NULL_00000000-0000-0000-0000-000000000000);
+PROC_GLO_GithMap_ClearReader();
+
+IF
+TextEvent("resetgithmap")
+AND
+DB_Players(_Player)
+THEN
+ClearFlag(PLA_GithChokepoint_State_FailedReadingMap_b4843920-547e-81e1-67b2-421e8ed2001f,_Player);
+ClearFlag(PLA_GithChokepoint_Event_LostMapToLaezel_ed13e2a1-501c-fdbf-bee4-63c5dc04e32e,_Player);
+
+//END_REGION
+
+//REGION Using the map
+
+//--- If in combat or someone is already reading the map... can't use it
+PROC
+PROC_BlockUseOfItem((CHARACTER)_Player,(ITEM)_Map)
+AND
+DB_GLO_GithMap(_Map)
+AND
+DB_Players(_Player)
+AND
+QRY_GLO_GithMap_CantUse(_Player)
+THEN
+DB_CustomUseItemResponse(_Player,_Map,0);
+PROC_PlayCantUseItemAD(_Player);
+
+QRY
+QRY_GLO_GithMap_CantUse((CHARACTER)_Player)
+AND
+DB_GLO_GithMap_Reader(_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_GithMap_CantUse((CHARACTER)_Player)
+AND
+DB_Is_InCombat(_Player, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_GithMap_CantUse((CHARACTER)_Player)
+AND
+DB_InRegion(_Player, S_PLA_GithChokepoint_OngoingSceneArea_6f67dee0-2720-4617-a263-68a58da5681c)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_GithChokepoint_State_SceneDone_2fa4006f-12e5-4666-931b-e31dee737f2f)
+THEN
+DB_NOOP(1);
+
+
+//--- Reading it on pickup (only once this starts dialog) -- EDIT: Only once, the first time it's picked up. From then on, only on use.
+IF
+AddedTo((ITEM)_Map,(CHARACTER)_Player, _)
+AND
+DB_GLO_GithMap(_Map)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_GithMap_TryAutostartFirstTime")
+AND
+NOT QRY_GLO_GithMap_CantUse(_Player)
+THEN
+PROC_GLO_GithMap_PickUp((ITEM)_Map,(CHARACTER)_Player);
+PROC_GLO_GithMap_ProcessInteraction((CHARACTER)_Player);
+
+
+//--- Read it on use
+IF
+UseStarted(_Player,_Map)
+AND
+DB_GLO_GithMap(_Map)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_GLO_GithMap_CantUse(_Player)
+THEN
+PROC_GLO_GithMap_PickUp(_Map,_Player);
+PROC_GLO_GithMap_ProcessInteraction(_Player);
+
+
+//--- Try a VB on Lae'zel avatar (only once)
+PROC
+PROC_GLO_GithMap_PickUp((ITEM)_Map,(CHARACTER)_Player) 
+AND
+QRY_OnlyOnce("GLO_GithMap_AutoReadingOnPickUp")
+AND
+DB_InRegion(_Player, S_PLA_ChokepointControlSphere_ca3e6cb3-bd1e-456f-8e12-4b75be7f3fdb)
+THEN
+DB_GLO_GithMap_TryLaezelAvatarVB(1);
+
+//Move to inventory on use
+PROC
+PROC_GLO_GithMap_PickUp((ITEM)_Map,(CHARACTER)_Player)
+AND
+IsInInventoryOf(_Map,_Player,0)
+THEN
+ToInventory(_Map,_Player,1,1,1);
+
+
+//--- Register that the map is busy
+PROC
+PROC_GLO_GithMap_ProcessInteraction((CHARACTER)_Player)
+THEN
+DB_GLO_GithMap_Reader(_Player);
+
+//END_REGION
+
+//REGION Starting dialog
+
+
+
+//Lae'zel initiating dialog herself BEFORE map is deciphered - Laezel is put as Speaker 1, as that's the core branch of the dialog
+PROC
+PROC_GLO_GithMap_ProcessInteraction((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_OnlyOnce("GLO_GithMap_LaezelReadIt")
+AND
+NOT QRY_GLO_GithMap_LaezelStartsDialog(NULL_00000000-0000-0000-0000-000000000000)
+THEN
+PROC_GLO_GithMap_ClearReader();
+
+//Lae'zel initiating dialog herself AFTER map is deciphered - Laezel is put as Speaker 2, part of GROUP_Players, as the only node that plays is a narrator node and cinematics don't care whether it's Laezel or anyone else animated
+PROC
+PROC_GLO_GithMap_ProcessInteraction((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_OnlyOnce("GLO_GithMap_LaezelReadIt")
+AND
+QRY_StartDialog_Fixed(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027, NULL_00000000-0000-0000-0000-000000000000, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_GLO_GithMap_ClearReader();
+
+//Other characters
+PROC
+PROC_GLO_GithMap_ProcessInteraction((CHARACTER)_Player)
+AND
+_Player != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+AND
+NOT QRY_GLO_GithMap_LaezelTakesOver(_Player)
+AND
+NOT QRY_StartDialog_Fixed(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027, NULL_00000000-0000-0000-0000-000000000000, _Player)
+THEN
+PROC_GLO_GithMap_ClearReader();
+
+
+//Lae'zel taking it off someone elses hands
+QRY
+QRY_GLO_GithMap_LaezelTakesOver((CHARACTER)_Player)
+AND
+DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_OnlyOnce("GLO_GithMap_LaezelReadIt")
+AND
+NOT DB_GlobalFlag(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387)
+AND
+NOT DB_GlobalFlag(GLO_GithCreche_State_EverEnteredBefore_3ebdfeaa-4e83-4878-90db-01adb9fdf629)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+GetReservedUserID(_Player,_ID)
+AND
+GetReservedUserID(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,_ID) //Only if same user
+AND
+NOT QRY_GLO_GithMap_LaezelStartsDialog((CHARACTER)_Player)
+THEN
+PROC_GLO_GithMap_ClearReader();
+
+
+//Start with Lae'zel + (maybe) another player
+QRY
+QRY_GLO_GithMap_LaezelStartsDialog((CHARACTER)_Player)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetFlag(PLA_GithChokepoint_Event_LostMapToLaezel_ed13e2a1-501c-fdbf-bee4-63c5dc04e32e,_Player);
+
+QRY
+QRY_GLO_GithMap_LaezelStartsDialog((CHARACTER)_Player)
+AND
+QRY_StartDialog_Fixed(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Player)
+THEN
+DB_OnlyOnce("GLO_GithMap_LaezelReadIt");
+
+//END_REGION
+
+//REGION Dialog with map ends
+
+//--- Clear this to allow reading it again
+PROC
+PROC_GLO_GithMap_ClearReader()
+AND
+DB_GLO_GithMap_Reader(_Player)
+THEN
+NOT DB_GLO_GithMap_Reader(_Player);
+
+
+//--- Dialog ended
+IF
+DialogEnded(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027,_)
+THEN
+PROC_GLO_GithMap_ClearReader();
+
+IF
+DialogEnded(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+AND
+_Player != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+AND
+NOT DB_GlobalFlag(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387)
+THEN
+ClearFlag(PLA_GithChokepoint_Event_LostMapToLaezel_ed13e2a1-501c-fdbf-bee4-63c5dc04e32e,_Player);
+
+IF
+DialogEnded(PLA_GithChokepoint_ReadingMap_ede7afb2-7947-b6bf-1018-eff5ce02e027,_Inst)
+AND
+DB_GLO_GithMap_TryLaezelAvatarVB(1)
+THEN
+NOT DB_GLO_GithMap_TryLaezelAvatarVB(1);
+PROC_GLO_GithMap_TryStartLaezelAvatarVB(_Inst);
+
+PROC
+PROC_GLO_GithMap_TryStartLaezelAvatarVB((INTEGER)_Inst)
+AND
+DB_DialogPlayers(_Inst,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,_)
+AND
+DB_Avatars(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_InRegion(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_PLA_ChokepointControlSphere_ca3e6cb3-bd1e-456f-8e12-4b75be7f3fdb)
+AND
+NOT DB_GlobalFlag(GLO_GithCreche_State_EverEnteredBefore_3ebdfeaa-4e83-4878-90db-01adb9fdf629)
+AND
+QRY_CheckOtherPlayersInTrigger(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_PLA_ChokepointControlSphere_ca3e6cb3-bd1e-456f-8e12-4b75be7f3fdb)
+THEN
+StartVoiceBark(PLA_GithChokepoint_VB_LaezelReadMap_1835e2e8-76de-0611-08b1-76671c106f27,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+//END_REGION
+
+//REGION Updating name of map
+IF
+FlagSet(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+SetFlag(GLO_GithCreche_Knows_Location_ff285172-c1a0-698d-981f-1b0530e72464);
+
+IF
+FlagSet(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_GLO_GithMap(S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011)
+THEN
+SetStoryDisplayName(S_GLO_GithCrecheMap_480f350e-79ae-46f6-aee7-e7ab63d2a011, "PLA_GithCrecheMap");
+
+IF
+FlagSet(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387, _, _)
+AND
+DB_Players(_Player)
+THEN
+PROC_ShowMarker(_Player, "SCL_PathToCreche");
+PROC_ShowMarker(_Player, "WLD_PathToCreche");
+//END_REGION
+
+//REGION Cancelling GithChokepoint
+IF
+DB_GlobalFlag((FLAG)ORI_Laezel_Knows_CrecheLocation_696c423d-e6da-428e-a7fe-c083fffccad2)
+AND
+DB_CurrentLevel("CRE_Main_A")
+AND
+NOT DB_GlobalFlag((FLAG)PLA_GithChokepoint_State_SceneDone_2fa4006f-12e5-4666-931b-e31dee737f2f)
+THEN
+SetFlag((FLAG)PLA_GithChokepoint_State_Cancelled_125f66fd-d046-4daa-ac1c-eb4fc29cfb1c);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

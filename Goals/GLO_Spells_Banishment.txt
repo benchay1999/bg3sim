@@ -1,0 +1,27 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_LinkedCrimes( "Assault", "Assault_Banishment" );
+KBSECTION
+IF
+StatusApplied((CHARACTER)_NPC,"BANISHED",(CHARACTER)_PartyMember,_StoryActionID)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+DB_PartyMembers(_PartyMember)
+THEN
+DB_Banishment_Applied(_NPC,_PartyMember);
+PROC_CRIME_TryRegisterAssaultLikeCrime(_PartyMember,_NPC,_StoryActionID,"_Banishment");
+
+IF
+StatusRemoved((CHARACTER)_NPC,"BANISHED",_,_)
+AND
+DB_Banishment_Applied(_NPC,_PartyMember)
+AND
+GetPosition(_NPC,_X,_Y,_Z)
+THEN
+NOT DB_Banishment_Applied(_NPC,_PartyMember);
+PROC_CharacterRegisterCrimeWithPosition(_PartyMember,"Banishment_SelfReactOnEnd",NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_NPC,0);
+EXITSECTION
+
+ENDEXITSECTION

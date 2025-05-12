@@ -1,0 +1,49 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Betrayals
+// Gortash and Orin
+// - Siding with Gortash, then betraying him when speaking with Orin.
+IF
+FlagSet((FLAG)GLO_Orin_State_AgreedToKillGortash_39af75d8-2442-8667-551e-6a0dc699398b, _, _DialogID)
+AND
+DB_GlobalFlag((FLAG)WYR_KillDirectorGortash_State_AcceptedAlliance_92e647a6-4625-4a2b-a143-35cba456fe50)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+
+// - Siding with Orin, then betraying her when speaking with Gortash.
+IF
+FlagSet((FLAG)WYR_KillDirectorGortash_State_AcceptedAlliance_92e647a6-4625-4a2b-a143-35cba456fe50, _, _DialogID)
+AND
+DB_GlobalFlag((FLAG)GLO_Orin_State_AgreedToKillGortash_39af75d8-2442-8667-551e-6a0dc699398b)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+
+// Minsc:
+// - Promising to Jaheira they will help find Minsc, add him to list of protected NPCs.
+IF
+FlagSet((FLAG)ORI_Jaheira_State_PromisedFindMinsc_d8e6770d-d948-5a2a-8f17-324e4232ae30, _, _)
+THEN
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+
+// - Found and recruited him: remove from protected NPCs.
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba)
+THEN
+NOT DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+//END_REGION Betrayals
+
+PROC
+PROC_LevelLoadedOnce("END_Main")
+THEN
+GoalCompleted;
+EXITSECTION
+NOT DB_GLO_PaladinOathbreaker_ProtectedNPCs((TAG)PALADIN_CROWN_7efcadc0-9e88-4d0a-87b9-64a589e2df91, (CHARACTER)S_Player_Minsc_0de603c5-42e2-4811-9dad-f652de080eba);
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

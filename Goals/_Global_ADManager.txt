@@ -1,0 +1,99 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/* 
+AD manager, which prevents the same AD from repeating consecutively and from ADs overlapping in a busy area (typically a hub).
+Each region for ADs is registered with 
+DB_GLO_ADManager_Category((STRING)_AreaIdentifier,(FLAG)_GlobalBlockFlag, (INTEGER)_SilenceBase, (INTEGER)_SilenceVar)
+So that global flag GlobalBlockFlag is set after any AD in the area starts, which is then cleared after a period of time
+equal to _SilenceBase plus a random amount of time up to _SilenceVar, in microseconds.
+ADs for a region are registered with
+DB_GLO_ADManager_AD((STRING)_AreaIdentifier, (DIALOGRESOURCE)_Dialog,(FLAG)_Flag)
+with the area identifier the same as above, the _Dialog being the AD, and the _Flag a unique flag that prevents that AD from repeating.
+
+Behaviourscript, before playing such an AD, is expected to check that both these flags are false.
+The behaviour script GLO_ADManagerAD, if included in the character's behaviour, includes a function ADManager_TryAD
+which attempts to start an AD (with up to two other NPCs) and sets a variable ADManager_ADSuccess to 0 if it failed for any reason.
+*/
+KBSECTION
+//REGION Block one dialogue while the other is active
+IF
+DB_GLO_ADManager_Category((STRING)_Category,(FLAG)_, (INTEGER)_, (INTEGER)_)
+AND
+Concatenate("GLO_ADManager_AdBlockerTimer", _Category, _TimerName)
+THEN
+DB_GLO_ADManager_TimerName(_Category, _TimerName);
+
+IF
+DB_GLO_ADManager_TimerName(_Category, _TimerName)
+AND
+NOT DB_GLO_ADManager_Category(_Category,(FLAG)_, _, _)
+THEN
+NOT DB_GLO_ADManager_TimerName(_Category, _TimerName);
+
+IF
+AutomatedDialogStarted(_Dialog, _ID)
+AND
+DB_GLO_ADManager_AD((STRING)_Category, (DIALOGRESOURCE)_Dialog,(FLAG)_)
+AND
+DB_GLO_ADManager_Category(_Category,(FLAG)_Flag, _, _)
+THEN
+DB_GLO_ADManager_AD(_Category, _ID);
+SetFlag((FLAG)_Flag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+AutomatedDialogEnded(_, _ID)
+AND
+DB_GLO_ADManager_AD(_Category, _ID)
+THEN
+NOT DB_GLO_ADManager_AD(_Category, _ID);
+PROC_GLO_ADManager_CheckADsOver(_Category);
+
+PROC
+PROC_GLO_ADManager_CheckADsOver((STRING)_Category)
+AND
+NOT DB_GLO_ADManager_AD(_Category, _)
+AND
+DB_GLO_ADManager_Category(_Category,(FLAG)_, _SilenceBase, _SilenceVar)
+AND
+Random(_SilenceVar, _Random)
+AND
+IntegerSum(_SilenceBase, _Random, _Timer)
+AND
+DB_GLO_ADManager_TimerName(_Category, _TimerName)
+THEN
+TimerLaunch(_TimerName, _Timer);
+
+IF
+TimerFinished(_TimerName)
+AND
+DB_GLO_ADManager_TimerName(_Category, _TimerName)
+AND
+DB_GLO_ADManager_Category(_Category,(FLAG)_Flag, _, _)
+THEN
+ClearFlag((FLAG)_Flag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+//END_REGION
+
+//REGION Block each AD from repeating
+//Clear any blocking flags but the started AD's
+IF
+AutomatedDialogStarted(_Dialog, _)
+AND
+DB_GLO_ADManager_AD(_Category, _Dialog,(FLAG)_)
+AND
+DB_GLO_ADManager_AD(_Category, _OtherDialog,(FLAG)_Flag)
+AND
+_Dialog != _OtherDialog
+THEN
+ClearFlag((FLAG)_Flag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+AutomatedDialogStarted(_Dialog, _)
+AND
+DB_GLO_ADManager_AD(_Category, _Dialog,(FLAG)_Flag)
+THEN
+SetFlag((FLAG)_Flag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

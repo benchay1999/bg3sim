@@ -1,0 +1,694 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+//Use DB_AmbushTrigger(_AmbushTrigger,_DetectTrigger,_DetectDC) once to define an ambush site and add each ambusher to DB_AmbushTrigger_Ambusher((TRIGGER)_AmbushTrigger, (GUIDSTRING)_Ambusher, (INTEGER)_ManageInvisibility)
+//Normal use: Some enemies are hiding waiting to ambush the player that steps into _AmbushTrigger.
+//The ambushers get the AMBUSHING status and have their CanJoinCombat turned off.
+//If _ManageInvisibility == 1  the ambushers get the INVISIBLE status as well, and the ambush system will remove this status when required
+//If a player steps into the ambush trigger, they drop those statuses and set their CanJoinCombat back to on.
+//An optional larger _DetectTrigger allows the player that steps in to roll a perception skillcheck (DC = _DetectDC) to see through the ambush. This removes invisibility but keeps the enemies waiting in ambush thinking they are successfully hidden.
+//Everything is automatically added to a Scene so if you mess with an Ambusher, the ambush is cancelled and everyone is set visible and reacting.
+
+/*
+DB_AmbushTrigger((TRIGGER)_AmbushTrigger, (TRIGGER)_DetectTrigger,(DIFFICULTYCLASS)_DetectDC)
+	Defines an ambush.
+	_AmbushTrigger: ambush starts when player enters this zone.
+	_DetectTrigger: a check for ambush detection is rolled inside this zone.
+	_DetectDC: detection check difficulty.
+
+DB_AmbushTrigger_AdditionalAmbushTrigger((TRIGGER)_AmbushTrigger, (TRIGGER)_AdditionalAmbushTrigger)
+	Defines additional ambush triggers.
+	_AdditionalAmbushTrigger: build any form of ambush zone with this.
+
+DB_AmbushTrigger_Ambusher((TRIGGER)_AmbushTrigger, (GUIDSTRING)_Ambusher, (INTEGER)_ManageInvisibility)
+	Defines npcs taking part in the ambush.
+	_ManageInvisibility: 1 for letting the system set npc INVISIBLE and dropping the status when detected or on ambush start.
+
+DB_AmbushTrigger_Ambusher_Appear((TRIGGER)_Trigger,(CHARACTER)_Ambusher,(GUIDSTRING)_AppearAt,(INTEGER)_PlaySpawn,(ANIMATION)_Animation,(STRING)_AppearEvent)
+	Defines npcs taking part in the ambush, keeping them offstage and using appear animation when ambush starts.
+	Parameters are all the same as for AppearAt call.
+	NOTE1: PROC_CancelAmbush will cancel the ambush, but will NOT bring character onstage
+	NOTE2: offstage characters are not added to scene manager, so there's no way to set up scene interrupt for this case
+
+DB_AmbushTrigger_AmbusherDelay((TRIGGER)_Trigger, (INTEGER)_Delay)
+	Optionally define a delay between ambushers revealing themselves
+	_Delay is in milliseconds
+	First ambusher will appear with no delay. Delay is only applied to subsequent ambushers
+
+DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_Trigger,(STRING)_CustomStatus)
+	Optionally define a custom ambushing status that will be applied to and removed from the ambushers instead of AMBUSHING.
+
+DB_AmbushTrigger_CachedTrigger((TRIGGER)_Trigger, (STRING)_TriggerString)
+	After the ambush is initialized, we cache the UUID into DB so it would work without relying on the trigger being loaded
+*/
+NOT DB_AmbushTrigger_AmbushRevealAD((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_AmbushTrigger_AmbusherDelay((TRIGGER)NULL_00000000-0000-0000-0000-000000000000, 0);
+NOT DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,"");
+KBSECTION
+//REGION Initialisation
+
+IF
+DB_AmbushTrigger((TRIGGER)_AmbushTrigger, _,_)
+AND
+Exists(_AmbushTrigger,1)
+AND
+GetUUID(_AmbushTrigger,_TriggerString)
+AND
+NOT DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _TriggerString)
+THEN
+DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _TriggerString);
+
+IF
+DB_AmbushTrigger((TRIGGER)_AmbushTrigger, (TRIGGER)_DetectTrigger,(DIFFICULTYCLASS)_DetectDC)
+THEN
+PROC_TriggerRegisterForParty(_AmbushTrigger);
+
+IF
+DB_AmbushTrigger((TRIGGER)_AmbushTrigger, (TRIGGER)_DetectTrigger,(DIFFICULTYCLASS)_DetectDC)
+AND
+_DetectTrigger != NULL_00000000-0000-0000-0000-000000000000
+AND
+_AmbushTrigger != NULL_00000000-0000-0000-0000-000000000000
+AND
+Exists(_AmbushTrigger,1)
+AND
+GetUUID(_AmbushTrigger,_TriggerString)
+THEN
+DB_KnowledgeCheckTrigger(_TriggerString, _DetectTrigger,"Perception",_DetectDC);
+
+IF
+DB_AmbushTrigger_AdditionalAmbushTrigger((TRIGGER)_AmbushTrigger, (TRIGGER)_AdditionalAmbushTrigger)
+THEN
+PROC_TriggerRegisterForParty(_AdditionalAmbushTrigger);
+
+IF
+DB_AmbushTrigger_Ambusher((TRIGGER)_AmbushTrigger, (GUIDSTRING)_Ambusher, (INTEGER)_ManageInvisibility)
+AND
+Exists(_AmbushTrigger,1)
+AND
+GetUUID(_AmbushTrigger,_TriggerString) // not checking for cached trigger here in case the ambushers were set up before the ambush trigger
+THEN
+DB_SceneManager((CHARACTER)_Ambusher,_TriggerString);
+SetCanJoinCombat(_Ambusher,0);
+
+IF
+DB_AmbushTrigger_Ambusher((TRIGGER)_AmbushTrigger, (GUIDSTRING)_Ambusher, (INTEGER)_ManageInvisibility)
+AND
+NOT DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_AmbushTrigger,(STRING)_)
+THEN
+ApplyStatus(_Ambusher,"AMBUSHING",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_AmbushTrigger_Ambusher((TRIGGER)_AmbushTrigger, (GUIDSTRING)_Ambusher, (INTEGER)_ManageInvisibility)
+AND
+DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_AmbushTrigger,(STRING)_Status)
+THEN
+ApplyStatus(_Ambusher,_Status,-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_AmbushTrigger_Ambusher((TRIGGER)_AmbushTrigger, (GUIDSTRING)_Ambusher, 1)
+THEN
+ApplyStatus(_Ambusher,"INVISIBLE",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_AmbushTrigger_Ambusher_Appear((TRIGGER)_Trigger,(CHARACTER)_Ambusher,(GUIDSTRING)_AppearAt,(INTEGER)_PlaySpawn,(ANIMATION)_Animation,(STRING)_AppearEvent)
+THEN
+SetOnStage(_Ambusher,0);
+
+IF
+StatusApplied(_Ambusher, _Status, _Causee, _)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility)
+AND
+GetStatusType(_Status, "INVISIBLE")
+THEN
+DB_HiddenAmbushers(_Trigger, _Ambusher, _Status);
+
+IF
+StatusRemoved(_Ambusher, _Status, _Causee, _)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility)
+AND
+GetStatusType(_Status, "INVISIBLE")
+THEN
+NOT DB_HiddenAmbushers(_Trigger, _Ambusher, _Status);
+
+IF
+WentOnStage(_Ambusher,0)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_Trigger,(CHARACTER)_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent)
+THEN
+DB_HiddenAmbushers(_Trigger, _Ambusher, "");
+
+IF
+WentOnStage(_Ambusher,1)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_Trigger,(CHARACTER)_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent)
+THEN
+NOT DB_HiddenAmbushers(_Trigger, _Ambusher, "");
+//END_REGION
+
+//REGION Player detects ambush
+PROC
+PROC_GLO_KnowledgeCheckSuccess((CHARACTER)_Player, (STRING)_Identifier, _DetectTrigger)
+AND
+DB_AmbushTrigger((TRIGGER)_AmbushTrigger, (TRIGGER)_DetectTrigger,_)
+AND
+DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _Identifier)
+THEN
+PROC_RequestRevealAmbush(_DetectTrigger,_Player);
+//END_REGION
+
+//REGION Player detected in trigger
+IF
+StatusApplied(_Player, _Status, _, _)
+AND
+GetStatusType(_Status, "SNEAKING")
+THEN
+DB_HiddenCharacters(_Player, _Status);
+
+IF
+StatusApplied(_Player, _Status, _, _)
+AND
+IsStatusFromGroup(_Status, "SG_Invisible",1)
+THEN
+DB_HiddenCharacters(_Player, _Status);
+
+IF
+DB_HiddenCharacters(_Player, _)
+AND
+GetFlag(GLO_State_Hiding_ad57af70-2300-4c49-b713-ba0bd8e77ea3, _Player, 0)
+THEN
+SetFlag(GLO_State_Hiding_ad57af70-2300-4c49-b713-ba0bd8e77ea3, _Player);
+
+IF
+StatusRemoved(_Player, _Status, _, _)
+AND
+DB_HiddenCharacters(_Player, _Status)
+AND
+DB_HiddenCharacters(_Player, _Other)
+AND
+_Other != _Status
+THEN
+NOT DB_HiddenCharacters(_Player, _Status);
+
+IF
+StatusRemoved(_Player, _Status, _, _)
+AND
+DB_HiddenCharacters(_Player, _Status)
+THEN
+NOT DB_HiddenCharacters(_Player, _Status);
+ClearFlag(GLO_State_Hiding_ad57af70-2300-4c49-b713-ba0bd8e77ea3, _Player);
+
+IF
+DB_InRegion((CHARACTER)_Player, _Trigger)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_HiddenCharacters(_Player, _)
+AND
+NOT DB_Is_InconspicuousPartyMember(_Player)
+AND
+DB_AmbushTrigger(_Trigger, _, _)
+THEN
+PROC_RequestLaunchAmbush(_Trigger, _Player);
+
+IF
+DB_InRegion((CHARACTER)_Player, _Trigger)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_HiddenCharacters(_Player, _)
+AND
+NOT DB_Is_InconspicuousPartyMember(_Player)
+AND
+DB_AmbushTrigger_AdditionalAmbushTrigger(_AmbushTrigger, _Trigger)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _, _)
+THEN
+PROC_RequestLaunchAmbush(_AmbushTrigger, _Player);
+//END_REGION
+
+//REGION Ambush Triggered
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_AmbushTrigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _SceneName)
+THEN
+PROC_SceneOver(_SceneName);
+PROC_RemoveAmbushTriggers(_AmbushTrigger);
+
+PROC
+PROC_RemoveAmbushTriggers((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _SceneName)
+THEN
+NOT DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _SceneName);
+
+PROC
+PROC_RemoveAmbushTriggers((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_DC)
+THEN
+PROC_KnowledgeCheck_Clear(_DetectTrigger);
+PROC_TriggerUnregisterForParty(_AmbushTrigger);
+NOT DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_DC);
+
+PROC
+PROC_RemoveAmbushTriggers((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_AdditionalAmbushTrigger(_AmbushTrigger, _AdditionalAmbushTrigger)
+THEN
+PROC_TriggerUnregisterForParty(_AdditionalAmbushTrigger);
+NOT DB_AmbushTrigger_AdditionalAmbushTrigger(_AmbushTrigger, _AdditionalAmbushTrigger);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+NOT DB_AmbushSurpriseImmune(_Trigger, _)
+AND
+NOT QRY_Ambush_AmbusherSurprised((TRIGGER)_Trigger)
+AND
+IsInCombat(_Player, 0)
+THEN
+PROC_Ambush_SetPlayersSurprised(_Player);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _)
+THEN
+SetCanJoinCombat(_Ambusher,1);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+NOT DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_Trigger,(STRING)_)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _)
+THEN
+RemoveStatus(_Ambusher, "AMBUSHING");
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_AmbushTrigger,(STRING)_Status)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _)
+THEN
+RemoveStatus(_Ambusher, _Status);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, 0)
+THEN
+PROC_LaunchAmbushOnce(_Trigger,_Player);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, 1)
+AND
+HasActiveStatus(_Ambusher, "INVISIBLE", _HasStatus)
+THEN
+PROC_RequestLaunchAmbush(_Trigger, _Player, _Ambusher, _HasStatus);
+
+// this PROC saves us one call to HasActiveStatus (performance! :D )
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player, (GUIDSTRING)_Ambusher, 0)
+THEN
+PROC_LaunchAmbushOnce(_Trigger,_Player);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player, (GUIDSTRING)_Ambusher, 1)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility)
+AND
+NOT DB_AmbushTrigger_AmbusherDelay(_Trigger, _)
+THEN
+RemoveStatus(_Ambusher, "INVISIBLE");
+NOT DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility);
+DB_AmbushLaunchRequestedFor(_Ambusher,_Trigger,_Player);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player, (GUIDSTRING)_Ambusher, 1)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility)
+AND
+DB_AmbushTrigger_AmbusherDelay(_Trigger, _Delay)
+AND
+GUIDToString(_Trigger, _AmbushID)
+AND
+Concatenate(_AmbushID, "_Timer", _TimerID)
+AND
+QRY_OnlyOnce(_AmbushID)
+THEN
+RemoveStatus(_Ambusher, "INVISIBLE");
+NOT DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility);
+DB_AmbushLaunchRequestedFor(_Ambusher,_Trigger,_Player);
+DB_DelayedAmbushRequested(_AmbushId, _TimerID, _Player);
+ObjectTimerLaunch(_Trigger, _TimerID, _Delay);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_Trigger,_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent)
+AND
+NOT DB_AmbushTrigger_AmbusherDelay(_Trigger, _)
+THEN
+NOT DB_AmbushTrigger_Ambusher_Appear(_Trigger, _Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+DB_AmbushLaunchRequestedFor(_Ambusher,_Trigger,_Player);
+AppearAt(_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+
+PROC
+PROC_RequestLaunchAmbush((TRIGGER)_Trigger, (CHARACTER)_Player)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_Trigger,_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent)
+AND
+DB_AmbushTrigger_AmbusherDelay(_Trigger, _Delay)
+AND
+GUIDToString(_Trigger, _AmbushID)
+AND
+Concatenate(_AmbushID, "_Timer", _TimerID)
+AND
+QRY_OnlyOnce(_AmbushID)
+THEN
+NOT DB_AmbushTrigger_Ambusher_Appear(_Trigger, _Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+DB_AmbushLaunchRequestedFor(_Ambusher,_Trigger,_Player);
+AppearAt(_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+DB_DelayedAmbushRequested(_AmbushId, _TimerID, _Player);
+ObjectTimerLaunch(_Trigger, _TimerID, _Delay);
+
+// Clear DB_OnlyOnce so we can spawn a single ambusher per ObjectTimerFinished event
+IF
+ObjectTimerFinished(_Trigger, _TimerID)
+AND
+DB_DelayedAmbushRequested(_AmbushId, _TimerID, _Player)
+THEN
+NOT DB_OnlyOnce(_AmbushID);
+
+IF
+ObjectTimerFinished(_Trigger, _TimerID)
+AND
+DB_DelayedAmbushRequested(_AmbushId, _TimerID, _Player)
+AND
+DB_AmbushTrigger_Ambusher((TRIGGER)_Trigger, _Ambusher, _ManageInvisibility)
+AND
+DB_AmbushTrigger_AmbusherDelay(_Trigger, _Delay)
+AND
+QRY_OnlyOnce(_AmbushID)
+THEN
+RemoveStatus(_Ambusher, "INVISIBLE");
+NOT DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility);
+DB_AmbushLaunchRequestedFor(_Ambusher,_Trigger,_Player);
+ObjectTimerLaunch(_Trigger, _TimerID, _Delay);
+
+IF
+ObjectTimerFinished(_Trigger, _TimerID)
+AND
+DB_DelayedAmbushRequested(_AmbushId, _TimerID, _Player)
+AND
+DB_AmbushTrigger_Ambusher_Appear((TRIGGER)_Trigger, _Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent)
+AND
+DB_AmbushTrigger_AmbusherDelay(_Trigger, _Delay)
+AND
+QRY_OnlyOnce(_AmbushID)
+THEN
+NOT DB_AmbushTrigger_Ambusher_Appear(_Trigger, _Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+DB_AmbushLaunchRequestedFor(_Ambusher,_Trigger,_Player);
+AppearAt(_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+ObjectTimerLaunch(_Trigger, _TimerID, _Delay);
+
+IF
+StatusRemoved(_Ambusher,"INVISIBLE",_,_)
+AND
+DB_AmbushLaunchRequestedFor(_Ambusher,_AmbushTrigger,_Player)
+THEN
+NOT DB_AmbushLaunchRequestedFor(_Ambusher,_AmbushTrigger,_Player);
+PROC_LaunchAmbushOnce((TRIGGER)_AmbushTrigger,(CHARACTER)_Player);
+
+IF
+WentOnStage(_Ambusher,1)
+AND
+DB_AmbushLaunchRequestedFor(_Ambusher,_AmbushTrigger,_Player)
+THEN
+NOT DB_AmbushLaunchRequestedFor(_Ambusher,_AmbushTrigger,_Player);
+PROC_LaunchAmbushOnce((TRIGGER)_AmbushTrigger,(CHARACTER)_Player);
+
+// Ambushers are surprised
+QRY
+QRY_Ambush_AmbusherSurprised((TRIGGER)_Trigger)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, _ManageInvisibility)
+AND
+HasActiveStatus( _Ambusher,"SURPRISED",1)
+THEN
+DB_NOOP(1);
+
+// Invisibility is managed by pipeline and ambushers are revealed
+QRY
+QRY_Ambush_AmbusherSurprised((TRIGGER)_Trigger)
+AND
+DB_AmbushTrigger_Ambusher(_Trigger, _Ambusher, 1)
+AND
+NOT DB_HiddenAmbushers(_Trigger, _Ambusher, _)
+THEN
+DB_NOOP(1);
+
+// Ambush is revealed through perception check
+QRY
+QRY_Ambush_AmbusherSurprised((TRIGGER)_Trigger)
+AND
+DB_AmbushRevealed(_Trigger)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Ambush_SetPlayersSurprised((CHARACTER)_Player)
+AND
+DB_PartyMembers(_OtherPlayer)
+AND
+GetDistanceTo(_Player,_OtherPlayer,_Dist)
+AND
+_Dist < 15.0
+THEN
+PROC_MakeSurprised(_OtherPlayer);
+
+PROC
+PROC_LaunchAmbushOnce((TRIGGER)_AmbushTrigger,(CHARACTER)_Player)
+AND
+NOT DB_AmbushLaunched(_AmbushTrigger)
+THEN
+DB_AmbushLaunched(_AmbushTrigger);
+PROC_LaunchAmbush(_AmbushTrigger,_Player);
+
+PROC
+PROC_LaunchAmbush((TRIGGER)_AmbushTrigger,(CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Ambush Revealed
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_)
+AND
+DB_PartyMembers(_Player)
+THEN
+DB_AmbushSurpriseImmune(_AmbushTrigger, _Player);
+
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_)
+THEN
+PROC_TriggerUnregisterForPlayers(_DetectTrigger);
+
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_)
+AND
+NOT DB_AmbushTrigger_Ambusher(_AmbushTrigger, _, _)
+THEN
+PROC_RevealAmbushOnce(_DetectTrigger, _Player);
+
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, 0)
+THEN
+PROC_RevealAmbushOnce(_DetectTrigger,_Player);
+
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, 1)
+AND
+HasActiveStatus(_Ambusher, "INVISIBLE", _HasStatus)
+THEN
+PROC_RequestRevealAmbush(_DetectTrigger, _Player, _Ambusher, _HasStatus);
+
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player, (GUIDSTRING)_Ambusher, 0)
+THEN
+PROC_RevealAmbushOnce(_DetectTrigger,_Player);
+
+PROC
+PROC_RequestRevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player, (GUIDSTRING)_Ambusher, 1)
+AND
+DB_AmbushTrigger(_AmbushTrigger, _DetectTrigger,_)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _)
+THEN
+RemoveStatus(_Ambusher,"INVISIBLE");
+DB_AmbushRevealRequestedFor(_Ambusher,_DetectTrigger,_Player);
+
+IF
+StatusRemoved(_Ambusher,"INVISIBLE",_,_)
+AND
+DB_AmbushRevealRequestedFor(_Ambusher,_DetectTrigger,_Player)
+THEN
+PROC_RevealAmbushOnce(_DetectTrigger,_Player);
+
+IF
+StatusRemoved(_Ambusher,"INVISIBLE",_,_)
+AND
+DB_AmbushRevealRequestedFor(_Ambusher,_DetectTrigger,_Player)
+THEN
+NOT DB_AmbushRevealRequestedFor(_Ambusher,_DetectTrigger,_Player);
+
+PROC
+PROC_RevealAmbushOnce((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+NOT DB_AmbushRevealed(_DetectTrigger)
+THEN
+DB_AmbushRevealed(_DetectTrigger);
+PROC_RevealAmbush(_DetectTrigger);
+PROC_RevealAmbush(_DetectTrigger,_Player);
+PROC_StartAmbushRevealAD(_DetectTrigger,_Player);
+
+PROC
+PROC_StartAmbushRevealAD((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+DB_AmbushTrigger_AmbushRevealAD(_DetectTrigger, (DIALOGRESOURCE)_DetectionAD)
+THEN
+PROC_TryStartAD(_DetectionAD, _Player);
+
+PROC
+PROC_StartAmbushRevealAD((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+AND
+NOT DB_AmbushTrigger_AmbushRevealAD(_DetectTrigger, _)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_PAD_RevealedAmbush_fb8900bc-88f0-1af4-c5d7-40513b632938, _Player);
+
+PROC
+PROC_RevealAmbush((TRIGGER)_DetectTrigger)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_RevealAmbush((TRIGGER)_DetectTrigger,(CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Ambush interrupted
+
+PROC
+PROC_SceneInterrupted(_NPC,_AttackerOwner,_SceneName, _Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _NPC, _)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _AnyNPC, _)
+AND
+Exists(_AnyNPC,1)
+AND
+GetFaction(_AnyNPC, _Faction)
+THEN
+PROC_MakeSurprised(_AnyNPC);
+PROC_SetRelationToPlayers(_Faction, 0);
+
+PROC
+PROC_SceneInterrupted(_Ambusher,_,_,_)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _ManageInvisibility)
+THEN
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger);
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_CachedTrigger(_AmbushTrigger, _SceneName)
+THEN
+PROC_SceneOver(_SceneName);
+PROC_RemoveAmbushTriggers(_AmbushTrigger);
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, 1)
+AND
+Exists(_Ambusher,1)
+THEN
+RemoveStatus(_Ambusher,"INVISIBLE");
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _ManageInvisibility)
+AND
+Exists(_Ambusher,1)
+THEN
+SetCanJoinCombat(_Ambusher,1);
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+NOT DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_AmbushTrigger,(STRING)_)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _ManageInvisibility)
+AND
+Exists(_Ambusher,1)
+THEN
+RemoveStatus(_Ambusher,"AMBUSHING");
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_CustomAmbushStatus((TRIGGER)_AmbushTrigger,(STRING)_Status)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _ManageInvisibility)
+AND
+Exists(_Ambusher,1)
+THEN
+RemoveStatus(_Ambusher,_Status);
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _ManageInvisibility)
+THEN
+NOT DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Ambusher, _ManageInvisibility);
+
+PROC
+PROC_CancelAmbush((TRIGGER)_AmbushTrigger)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_AmbushTrigger,_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent)
+THEN
+NOT DB_AmbushTrigger_Ambusher_Appear(_AmbushTrigger,_Ambusher,_AppearAt,_PlaySpawn,_Animation,_AppearEvent);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

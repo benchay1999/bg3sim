@@ -1,0 +1,146 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Disable default dialogs while a character is reacting to a disturbance,
+// so they don't have their "*snore* *snore* I'm sleeping" dialog while
+// walking around and investigating a crime
+
+// Instead, override with an AD (GEB_AD_CantTalkNow_ae991ba1-8a2e-9cc7-b4c2-379af7f058c5 by default). Can customise per character with this DB.
+NOT DB_GEB_UnavailableDialog((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Set NPCs investigating or reacting to disturbances as "busy"
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_Investigator,_FromState,_ToState)
+AND
+NOT DB_CRIME_RestoreDialogAfterCrimeHandling(_,_Investigator)
+AND
+NOT DB_CRIME_HandlingCrime(_,_Investigator)
+AND
+_ToState != "Idle"
+AND
+CrimeGetTension(_CrimeID,_Tension)
+AND
+_Tension > 0
+AND
+NOT QRY_CRIME_KeepDialogDuringHandling(_CrimeID,_Investigator,_FromState,_ToState)
+THEN
+// Don't immediately block all dialogs, because if an NPC is in a dialog and story
+// starts a dialog on DialogEnded, this one should get priority over crime behaviour
+DB_CRIME_HandlingCrime(_CrimeID,_Investigator);
+
+// Don't use DB_InteractiveDialogSpeaker, because that one gets cleared in __AAA_FirstGoal, so it will trigger
+// before any story DialogEnded rules had a chance to react. DB_DialogNPCs/DB_AutomatedDialog are cleared in
+// ZZZ_LastGoal instead, so DialogEnded rules in regular story goals will trigger before this one.
+IF
+DB_CRIME_HandlingCrime(_CrimeID,_Investigator)
+AND
+NOT DB_DialogNPCs(_,_Investigator,_)
+THEN
+NOT DB_CRIME_HandlingCrime(_CrimeID,_Investigator);
+PROC_CRIME_CheckSetBusyDialog(_CrimeID,_Investigator);
+
+IF
+OnCrimeMergedWith(_CrimeID,_NewCrimeID)
+AND
+DB_CRIME_HandlingCrime(_CrimeID,_Investigator)
+THEN
+NOT DB_CRIME_HandlingCrime(_CrimeID,_Investigator);
+DB_CRIME_HandlingCrime(_NewCrimeID,_Investigator);
+
+IF
+DB_CRIME_HandlingCrime(_CrimeID,_Investigator)
+AND
+DB_DialogNPCs(_DialogID,_Investigator,_)
+AND
+DB_AutomatedDialog(_DialogID)
+THEN
+NOT DB_CRIME_HandlingCrime(_CrimeID,_Investigator);
+PROC_CRIME_CheckSetBusyDialog(_CrimeID,_Investigator);
+
+PROC
+PROC_CRIME_CheckSetBusyDialog((INTEGER)_CrimeID,(CHARACTER)_Investigator)
+AND
+GetHandlingCrimeID(_Investigator,_CrimeID)
+THEN
+DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator);
+
+IF
+OnCrimeMergedWith(_CrimeID,_NewCrimeID)
+AND
+DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator)
+THEN
+NOT DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator);
+DB_CRIME_RestoreDialogAfterCrimeHandling(_NewCrimeID,_Investigator);
+
+// Handle individual investigators stopping with reacting to this disturbance
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_Investigator,_,"Idle")
+AND
+DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator)
+THEN
+NOT DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator);
+
+// The OnCrimeInvestigatorSwitchedState("Idle") event for the primary investigator can arrive after
+// the OnCrimeResolved event, and script may already want to start a new dialog at that point ->
+// ensure it doesn't get blocked by this
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator)
+THEN
+NOT DB_CRIME_RestoreDialogAfterCrimeHandling(_CrimeID,_Investigator);
+
+QRY
+QRY_CRIME_KeepDialogDuringHandling((INTEGER)_CrimeID,(CHARACTER)_Investigator,(STRING)_FromState,(STRING)_ToState)
+AND
+CrimeHasProperty(_CrimeID,AllowStartingDialogs_eb59183a-7011-48c4-9cc5-6b9fd35e134a,1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Start the "busy" dialog when talked to while busy
+// Always succeed so the original dialog doesn't get started even if the AD failed.
+// That's not nice (click and nothing happens), but neither is starting their regular dialog
+// as if everything's normal.
+QRY
+QRY_SelectCrimeBusyDialog((GUIDSTRING)_Target, (GUIDSTRING)_Player)
+AND
+QRY_CharacterIsBusy((CHARACTER)_Target)
+THEN
+NOT DB_CRIME_StartedBusyDialog(1);
+PROC_CRIME_SelectBusyDialog((CHARACTER)_Target,(CHARACTER)_Player);
+
+PROC
+PROC_CRIME_SelectBusyDialog((CHARACTER)_Speaker1,(CHARACTER)_Player)
+AND
+DB_GEB_UnavailableDialog((CHARACTER)_Speaker1,_FallbackDialog)
+THEN
+DB_SelectedDialog(_FallbackDialog,_Speaker1,_Player);
+DB_CRIME_StartedBusyDialog(1);
+
+PROC
+PROC_CRIME_SelectBusyDialog((CHARACTER)_Speaker1,(CHARACTER)_Player)
+AND
+NOT DB_CRIME_StartedBusyDialog(1)
+AND
+IsTagged(_Speaker1,BEAST_890b5a2a-e773-48df-b191-c887d87bec16,_Beast)
+AND
+IsTagged(_Speaker1,MONSTER_90101158-141e-4896-8e60-f8db03f6dde3,_Monster)
+AND
+DB_LogicOr(_Beast,_Monster,1)
+THEN
+// Those are just generic grunts, so they always work
+DB_SelectedDialog((DIALOGRESOURCE)CMB_AD_CombatFallback_300686d9-9f7e-c18d-9d64-3f176c78b98b,_Speaker1,_Player);
+DB_CRIME_StartedBusyDialog(1);
+
+PROC
+PROC_CRIME_SelectBusyDialog((CHARACTER)_Speaker1,(CHARACTER)_Player)
+AND
+NOT DB_CRIME_StartedBusyDialog(1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)GEB_AD_CantTalkNow_ae991ba1-8a2e-9cc7-b4c2-379af7f058c5,_Speaker1,_Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

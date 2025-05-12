@@ -1,0 +1,47 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Level_InaccessibleAfterLoading("TUT_Avernus_C","WLD_Main_A");
+DB_Level_InaccessibleAfterLoading("SCL_Main_A","INT_Main_A");
+DB_Level_InaccessibleAfterLoading("INT_Main_A","BGO_Main_A");
+DB_Level_InaccessibleAfterLoading("BGO_Main_A","END_Main");
+DB_Level_InaccessibleAfterLoading("CTY_Main_A","END_Main");
+DB_Level_InaccessibleAfterLoading("IRN_Main_A","END_Main");
+DB_Level_InaccessibleAfterLoading("IRN_Submersible_A","END_Main");
+
+DB_Level_InaccessibleAfterFlagSet("WLD_Main_A",(FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3);
+DB_Level_InaccessibleAfterFlagSet("CRE_Main_A",(FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3);
+
+// Backup in case the Act2_PointOfNoReturnReached flag set gets skipped for whatever reason
+DB_Level_InaccessibleAfterLoading("WLD_Main_A","INT_Main_A");
+DB_Level_InaccessibleAfterLoading("CRE_Main_A","INT_Main_A");
+KBSECTION
+PROC
+PROC_LevelLoadedOnce(_NewLevel)
+AND
+DB_Level_InaccessibleAfterLoading(_OldLevel,_NewLevel)
+AND
+NOT QRY_LevelCache_BlockDelete(_OldLevel)
+THEN
+DeleteLevelCache(_OldLevel);
+
+IF
+FlagSet(_Flag,_,_)
+AND
+DB_Level_InaccessibleAfterFlagSet(_OldLevel,_Flag)
+AND
+NOT QRY_LevelCache_BlockDelete(_OldLevel)
+THEN
+DeleteLevelCache(_OldLevel);
+
+// Allow mods to override the defaults
+QRY
+QRY_LevelCache_BlockDelete((STRING)_OldLevel)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

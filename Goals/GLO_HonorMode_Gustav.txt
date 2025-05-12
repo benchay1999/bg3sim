@@ -1,0 +1,50 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_HonorMode_OneTimeUse_RestorationStations((ITEM)S_COL_RegenStation_16382bcc-bff9-419b-a66b-662d98c6abe2);
+KBSECTION
+//REGION Restoration stations one-time use
+
+IF
+DB_TUT_Misc_RestingStations((ITEM)_Station)
+THEN
+DB_GLO_HonorMode_OneTimeUse_RestorationStations((ITEM)_Station);
+
+IF
+DB_HonorMode_Enabled(1)
+AND
+DB_GLO_HonorMode_OneTimeUse_RestorationStations((ITEM)_Station)
+AND
+NOT DB_GLO_RestorationStation_OneTimeUse(_Station)
+AND
+Exists(_Station,1)
+THEN
+DB_GLO_RestorationStation_OneTimeUse(_Station);
+ObjectTimerCancel(_Station,"GLO_RestorationStation_Cooldown");
+
+IF
+DB_GLO_HonorMode_OneTimeUse_RestorationStations((ITEM)_Station)
+AND
+DB_GLO_RestorationStation_OneTimeUse(_Station)
+AND
+NOT DB_HonorMode_Enabled(1)
+THEN
+NOT DB_GLO_RestorationStation_OneTimeUse(_Station);
+DB_GLO_RestorationStation_FixOneTimeUseInLevel(_Station);
+
+IF
+DB_CurrentLevel((STRING)_NewLevel)
+AND
+DB_GLO_RestorationStation_FixOneTimeUseInLevel((ITEM)_Station)
+AND
+GetRegion(_Station,_NewLevel)
+THEN
+NOT DB_GLO_RestorationStation_FixOneTimeUseInLevel(_Station);
+RemoveTransforms(_Station);
+SetCanInteract((ITEM)_Station,1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

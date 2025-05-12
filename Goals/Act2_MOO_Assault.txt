@@ -1,0 +1,1930 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Situation: Assault on Moonrise.
+//Nightsong was freed from SHA and she's leading an assault on Moonrise.
+//Harpers and Flaming Fists are conditionally there
+
+//Characters that are killed during set-up will be set to the DB to handle ownership
+//DB_MOO_Assault_DeadCharacters((CHARACTER)_DeadChar);
+
+DB_MOO_Assault_CombatGroupDefeatFlags((FLAG)MOO_Assault_State_BazaarDefeated_8eb4ee26-a119-4520-8d5b-ab9aeeb04e80, "MOO_Assault_BazaarEnemies");
+DB_MOO_Assault_CombatGroupDefeatFlags(MOO_Assault_State_ThroneRoomDefeated_273c4470-055c-45cb-aa6b-eee08524a6c3, "MOO_Assault_ThroneRoomEnemies");
+DB_MOO_Assault_CombatGroupDefeatFlags(MOO_Assault_State_BossDoorDefeated_a6e59fdf-2b97-401a-bb69-d866d3c2d35e, "MOO_Assault_BossDoorEnemies");
+DB_MOO_Assault_CombatGroupDefeatFlags(MOO_Assault_State_RooftopDefeated_9cdb5021-a664-4172-8f6b-3eb46e99cac5, "MOO_Assault_RooftopEnemies");
+
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("MOO_Assault_PrisonEnemies",MOO_Assault_State_PrisonCombatDefeated_3ca7d513-98ff-4a47-9a7a-7fb8b2b42377);
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("MOO_Assault_HarperAlly",MOO_Assault_State_AllActiveFlamingFistDefeated_c0971579-7f0a-49ae-af62-1d3ee9235965);
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("MOO_Assault_FlamingFistAlly",MOO_Assault_State_AllActiveHarpersDefeated_93c03711-7efc-44fb-b4ae-736606afe843);
+
+DB_GLO_DefeatCounter_Target("MOO_Assault_PrisonSkeletons", 3);
+
+DB_MOO_Assault_BazaarTurnCount(0);
+DB_MOO_Assault_ThroneRoomTurnCount(0);
+
+DB_MOO_Assault_MainFloorDefeatFlags((FLAG)MOO_Assault_State_BazaarDefeated_8eb4ee26-a119-4520-8d5b-ab9aeeb04e80);
+DB_MOO_Assault_MainFloorDefeatFlags((FLAG)MOO_Assault_State_ThroneRoomDefeated_273c4470-055c-45cb-aa6b-eee08524a6c3);
+DB_HostileToPlayerGroupCancelFlag(MOO_Assault_Event_CancelJaheiraHostility_1c9a24cc-0b5a-3d12-43b7-08177fe0298a,ACT2_MOO_Assault_Ally_4d50d60d-85d1-4429-8a67-8e9faa19c3f4);
+
+DB_GlobalFlagReactionAfterDialog(ORI_DarkUrge_State_SpokeWithButlerMoonriseAssault_28e1c3c2-97f1-7914-785a-9f51bc340f86, MOO_Assault_DarkUrgeButlerReminder_6b10bb3e-0dad-222f-1534-a77ca1263660);
+DB_MOO_Assault_DarkUrgeButlerTriggers((TRIGGER)S_MOO_AssaultButlerPoint_001_889126fd-719a-499e-9abf-9fb78779bc21,(TRIGGER)S_MOO_AssaultButlerAppearBox_001_9222017e-9122-48c4-896c-1a38b9961a55,(TRIGGER)S_MOO_AssaultButlerSpotSphere_001_e35addb4-4707-4fa6-b76d-d9977bdcbc61);
+DB_MOO_Assault_DarkUrgeButlerTriggers((TRIGGER)S_MOO_AssaultButlerPoint_002_e01254b2-8101-4f15-84ae-bb1dd661eaf6,(TRIGGER)S_MOO_AssaultButlerAppearBox_002_aed89296-68d0-4b90-87e1-5d0e977e9738,(TRIGGER)S_MOO_AssaultButlerSpotSphere_002_c4546d07-6406-4d5e-bf10-67dd47e83926);
+
+PROC_MOO_Assault_GoalInit();
+DB_DEBUG_MOO_Assault_AssaultLoaded(1);
+
+DB_FlagReactionAfterDialog((FLAG)MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, (DIALOGRESOURCE)MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e);
+
+PROC_TriggerRegisterForPlayers(S_MOO_AssaultJaheiraWarningTrigger_60b3181f-a64d-4236-9bf4-c14c84d9f38f);
+PROC_TriggerRegisterForPlayers(S_MOO_AssaultJaheiraLeavingTrigger_3b3f070a-c43b-4f91-ab85-edf416f829fa);
+
+KBSECTION
+//REGION DEBUG
+IF
+TextEvent("mooassault_cleartower")
+AND
+DB_MOO_Assault_NeutralGroups("MOO_Assault_BazaarEnemies")
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_BazaarEnemies")
+THEN
+PROC_MOO_Assault_SwitchToHostileGroup("MOO_Assault_BazaarEnemies");
+PROC_MOO_Assault_SetFactions(_Char, "MOO_Assault_BazaarEnemies");
+
+IF
+TextEvent("mooassault_cleartower")
+AND
+DB_MOO_AssaultPositions(_Char, _Trigger, _Group)
+AND
+_Group != "MOO_Assault_RooftopEnemies"
+AND
+DB_MOO_Assault_EnemyGroups(_Group)
+THEN
+Die(_Char, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+
+IF
+DB_DEBUG_MOO_Assault_AssaultLoaded(1)
+AND
+DB_DEBUG_MOO_Assault_ReadyNightsong(1)
+THEN
+NOT DB_DEBUG_MOO_Assault_ReadyNightsong(1);
+PROC_NightsongPrison_FreeNightsong();
+//END_REGION
+//REGION Init
+
+//Act2_MOO_Preassault was goal completed, so make sure it's actually the assault and not Audience or Nightsong Death
+QRY
+QRY_MOO_Assault_Skipped()
+AND
+NOT DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Assault")
+THEN
+GoalCompleted;
+
+//Init section
+PROC
+PROC_MOO_Assault_GoalInit()
+AND
+NOT QRY_MOO_Assault_Skipped()
+THEN
+SetFlag(MOO_Assault_State_Started_60786c6f-0761-4035-a462-3b42a591fdc1);
+SetFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d);
+PROC_MOO_Execution_ForceResolve();
+PROC_TWN_MarchingArmy_RemoveArmyArrest();
+DB_DangerZone((TRIGGER)S_MOO_DangerZoneTrigger_31e89040-1673-46df-b12c-227f1714475a, "MOO_Assault_DangerZone");
+DB_DangerZone((TRIGGER)S_MOO_Prison_SUB_b262cbea-f40c-47da-9f34-ba8ce5bf782b, "MOO_Assault_DangerZone");
+PROC_MOO_Assault_ForceResolveFlamingSpy();
+PROC_MOO_Assault_PurgePrison(); 
+PROC_MOO_Assault_CheckSetupJaheira();
+PROC_MOO_Assault_CheckSetupFlamingFist();
+PROC_MOO_Assault_CheckSetupZrell(); 
+PROC_MOO_Assault_SetupMoonrise();
+PROC_MOO_Assault_ReadyPrisonSkeletons();
+PROC_MusicPlayGeneral("Moonrise_Tower_Assault");
+
+//In the case all the enemies from these groups were killed before the assault started
+PROC
+PROC_MOO_Assault_GoalInit()
+AND
+DB_MOO_Assault_CombatGroupDefeatFlags(_Flag, _Group)
+AND
+NOT QRY_MOO_Assault_AtLeastOneEnemyInGroup(_Group)
+THEN
+SetFlag(_Flag);
+NOT DB_MOO_Assault_CombatGroupDefeatFlags(_Flag, _Group);
+
+QRY
+QRY_MOO_Assault_AtLeastOneEnemyInGroup((STRING)_Group)
+AND
+DB_MOO_AssaultPositions(_Char, _Point, _Group)
+THEN
+DB_Noop(1);
+
+PROC
+PROC_MOO_Assault_PurgePrison()
+THEN
+PROC_MOO_Jailbreak_KillRemainingPrisoners();
+
+PROC
+PROC_MOO_Assault_PurgePrison()
+AND
+NOT DB_GlobalFlag(MOO_MintharaFate_State_ToCamp_4e0701b1-c16d-4017-8be6-5781c3c682f4) //She was not saved from Moonrise and Balthy is dead. Will appear in High Hall Underground in this case
+AND
+NOT DB_PartOfTheTeam((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+THEN
+PROC_Poof(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+PROC_RemoveDialog(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+
+//So he's not awkwardly hanging around Haven if the player decides to go back and kill Isobel during assault (ghoul should act as the fallback)
+PROC
+PROC_MOO_Assault_ForceResolveFlamingSpy()
+AND
+NOT DB_MOO_AssaultPositions((CHARACTER)S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, _, _)
+AND
+NOT DB_Defeated(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+THEN
+TeleportTo(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, S_MOO_FlamingSpyPoint_b0d9fc79-c5a5-4e43-9ed9-e27b0f528f52, "");
+SetOnStage(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, 1);
+NOT DB_GLO_CharacterCorpseDialog(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, (DIALOGRESOURCE)HAV_TakingIsobel_FlamingSpy_Dead_5736f474-6ded-5c0d-fe07-39eff92dc122);
+DB_GLO_CharacterCorpseDialog(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, (DIALOGRESOURCE)MOO_ZrellBriefing_FlamingSpy_Dead_a624c057-fbda-f54f-1c0d-1cf6eaa7d1cf);
+Die(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6);
+//END_REGION
+
+//REGION Setup - Jaheira / Init allies
+
+PROC
+PROC_MOO_Assault_CheckSetupJaheira()
+AND
+NOT DB_Defeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+SetFlag(MOO_Assault_State_JaheiraPresent_7d113d3f-aae7-40fe-9672-55094729f3dd);
+TriggerRegisterForCharacter(S_MOO_MainFloorInterior_SUB_429a55cc-58d2-4469-9577-852131e1fff3, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_FlagReactionAfterDialog((FLAG)OriginAddToParty_4870b2cd-210c-0fdc-9c58-4d0142bdae29, (DIALOGRESOURCE)MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e);
+PROC_MOO_Assault_AddJaheriaToAssault();
+PROC_MOO_Assault_SetUpHarpers();
+
+PROC
+PROC_MOO_Assault_CheckSetupJaheira()
+AND
+NOT DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _)
+THEN
+PROC_MOO_Assault_KillHarpers();
+PROC_MOO_Assault_KillAdditionalEnemies();
+
+PROC
+PROC_MOO_Assault_CheckSetupJaheira()
+AND
+DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _)
+THEN
+SetFlag(MOO_Assault_State_JaheiraOnly_251a3f08-c3b0-4a47-be1f-d694f7fade9e);
+
+PROC
+PROC_MOO_Assault_CheckSetupJaheira()
+AND
+NOT QRY_MOO_Assault_AnyHarpersWithJaheira()
+AND
+NOT QRY_MOO_Assault_CanFlamingFistJoin()
+THEN
+PROC_MOO_Assault_KillAdditionalEnemies();
+
+PROC
+PROC_MOO_Assault_CharTeleported((CHARACTER)_Jaheira)
+AND
+_Jaheira == S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a //So it's a bit less horizontially bloated
+THEN
+SetFlag(MOO_Assault_State_JaheiraJoined_2bea8f68-eac7-4734-9128-1b3f3c248da5);
+RemoveHarmfulStatuses(_Jaheira);
+PROC_RemoveDialog(_Jaheira);
+TriggerRegisterForCharacter(S_MOO_AssaultJaheiraFollowPoly_60b3181f-a64d-4236-9bf4-c14c84d9f38f, _Jaheira);
+TriggerRegisterForCharacter(S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73,_Jaheira); //used to move her to her recruit point after tower combat
+PROC_TriggerRegisterForPlayers(S_MOO_AssaultJaheiraFollowPoly_60b3181f-a64d-4236-9bf4-c14c84d9f38f);
+DB_Dialogs(_Jaheira, MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e); //Dialog handled here instead of DB_MOO_Assault_GenericDialog since it involves inclusions
+DB_SpotPlayers(_Jaheira, "MOO_Assault_JaheiraGreeting", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(_Jaheira, "MOO_Assault_JaheiraGreeting", S_MOO_AssaultIntroBox_288f3045-6158-42b9-b77b-ce9af981e586);
+ApplyStatus(_Jaheira, "TUT_RESTORATION", 6.0, 1, _Jaheira);
+
+PROC
+PROC_MOO_Assault_KillAdditionalEnemies()
+AND
+QRY_OnlyOnce("MOO_Assault_KillAdditionalEnemiesOnce")
+AND
+DB_MOO_Assault_NoHarpersDeadEnemies(_Char, _DeadPoint, _Group)
+AND
+DB_MOO_AssaultPositions(_Char, _AssaultPoint, _Group)
+AND
+NOT DB_PermaDefeated(_Char)
+THEN
+NOT DB_MOO_AssaultPositions(_Char, _AssaultPoint, _Group);
+DB_MOO_AssaultPositions(_Char, _DeadPoint, "MOO_Assault_DeadEnemy_Radiant");
+
+//END_REGION
+//REGION Setup / Cancel - Harpers
+//Live and dead harpers
+PROC
+PROC_MOO_Assault_SetUpHarpers()
+AND
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_HarperAlly")
+AND
+IsOnStage(_Char, 0)
+THEN
+PROC_SetOnStage(_Char, 1);
+
+PROC
+PROC_MOO_Assault_SetUpHarpers()
+AND
+DB_MOO_AssaultPositions(S_HAV_HavenOutcasts_FountainGuards_Melee_2_271478dd-7efb-4ca7-b40c-593bbea91a85, _, "MOO_Assault_HarperAlly")
+THEN
+CharacterGiveEquipmentSet(S_HAV_HavenOutcasts_FountainGuards_Melee_2_271478dd-7efb-4ca7-b40c-593bbea91a85, "EQP_Longbow");
+
+PROC
+PROC_MOO_Assault_KillHarpers()
+AND
+DB_MOO_AssaultPositions(_Harper, _Trigger, "MOO_Assault_HarperAlly")
+AND
+DB_MOO_Assault_AllyMainFloorPositions(_Harper, _TowerPoint)
+AND
+DB_MOO_Assault_AllyCombatReadyPositions(_Harper, _ReadyPoint)
+THEN
+NOT DB_MOO_AssaultPositions(_Harper, _Trigger, "MOO_Assault_HarperAlly");
+DB_MOO_AssaultPositions(_Harper, _Trigger, "MOO_Assault_DeadHarper");
+NOT DB_MOO_Assault_AllyMainFloorPositions(_Harper, _TowerPoint);
+NOT DB_MOO_Assault_AllyCombatReadyPositions(_Harper, _ReadyPoint);
+
+PROC
+PROC_MOO_Assault_KillHarpers()
+AND
+DB_MOO_AssaultPositions(_Harper,_Trigger, "MOO_Assault_HarperMerchant")
+THEN
+NOT DB_MOO_AssaultPositions(_Harper,_Trigger, "MOO_Assault_HarperMerchant");
+DB_MOO_AssaultPositions(_Harper, _Trigger, "MOO_Assault_DeadHarper");
+
+QRY
+QRY_MOO_Assault_AnyHarpersWithJaheira()
+AND
+DB_MOO_AssaultPositions(_Harper, _, "MOO_Assault_HarperAlly")
+AND
+_Harper != S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a
+THEN
+DB_NOOP(1);
+
+//END_REGION
+//REGION Setup - FlamingFist
+PROC
+PROC_MOO_Assault_CheckSetupFlamingFist()
+AND
+QRY_MOO_Assault_CanFlamingFistJoin()
+THEN
+SetFlag(MOO_Assault_State_FlamingFistSupport_5b8c3bb0-0147-4f6b-9268-6d0e5f9bc50b);
+PROC_MOO_Assault_SetUpFlamingFist();
+
+PROC
+PROC_MOO_Assault_CheckSetupFlamingFist()
+AND
+NOT QRY_MOO_Assault_CanFlamingFistJoin()
+THEN
+PROC_MOO_Assault_RemoveFlamingFist();
+
+QRY
+QRY_MOO_Assault_CanFlamingFistJoin()
+AND
+NOT DB_PermaDefeated(S_GLO_Desire_8b9fa503-7205-4ddd-bdfa-bfaa781d9ea9)
+AND
+DB_GlobalFlag(HAV_HavenOutcasts_State_FlamingFistsInHaven_f8e5cd60-867a-4584-8c50-1ff917357acc)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_MOO_Assault_SetUpFlamingFist()
+AND
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_FlamingFistAlly")
+AND
+IsOnStage(_Char, 0)
+THEN
+PROC_SetOnStage(_Char, 1);
+
+PROC
+PROC_MOO_Assault_RemoveFlamingFist()
+AND
+DB_MOO_AssaultPositions(_FlamingFist, _Trigger, "MOO_Assault_FlamingFistAlly")
+AND
+DB_MOO_Assault_PrisonDefenders(_FlamingFist, _DefenderPoint)
+THEN
+NOT DB_MOO_AssaultPositions(_FlamingFist, _Trigger, "MOO_Assault_FlamingFistAlly");
+NOT DB_MOO_Assault_PrisonDefenders(_FlamingFist, _DefenderPoint);
+SetOnStage(_FlamingFist, 0);
+//END_REGION
+//REGION Setup - Z'rell
+PROC
+PROC_MOO_Assault_CheckSetupZrell()
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+AND
+DB_GlobalFlag(MOO_Execution_Knows_Executioner_53052e40-df9b-90a0-ad65-f2c06f996666) //Started the execution dialog
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e) //Tower is not hostile before assault
+THEN
+NOT DB_MOO_Assault_EnemyGroups("MOO_Assault_BazaarEnemies");
+DB_MOO_Assault_NeutralGroups("MOO_Assault_BazaarEnemies");
+PROC_MOO_Assault_SetUpZrellScene();
+
+PROC
+PROC_MOO_Assault_CheckSetupZrell()
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+ApplyStatus(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84,"MIRROR_IMAGE_3",-1.0,1,S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84); //Combat statuses for Z'Rell when Assault starts
+ApplyStatus(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84,"MIRROR_IMAGE_2",-1.0,1,S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84);
+ApplyStatus(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84,"MIRROR_IMAGE_1",-1.0,1,S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84);
+ApplyStatus(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84,"FIRE_SHIELD_CHILL",-1.0,1,S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84);
+
+PROC
+PROC_MOO_Assault_CheckSetupZrell()
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+AND
+DB_Defeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+PROC_CharacterFullRestore(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84);
+
+//END_REGION
+
+//REGION Dark Urge
+//To handle the edge-case if the player avoided Haven
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_GlobalFlag((FLAG)GLO_Origin_PartOfTheTeam_DarkUrge_fbf4c4a8-99bb-4e62-a78c-cc9c115bd938)
+AND
+NOT DB_GlobalFlag(ORI_DarkUrge_Knows_MetIsobel_3d0f9043-157a-1e7d-11c4-0886d59e1280)
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)MOO_Assault_DarkUrgeButlerReminder_6b10bb3e-0dad-222f-1534-a77ca1263660, (TAG)DARK_URGE_fe825e69-1569-471f-9b3f-28fd3b929683, (DIALOGRESOURCE)MOO_Assault_DarkUrgeButlerReminder_AOM_3008cef4-cd17-8989-7f93-c01afb7dd2f8);
+PROC_MOO_Assault_ReadyDarkUrgeButler();
+
+PROC
+PROC_MOO_Assault_ReadyDarkUrgeButler()
+AND
+DB_MOO_Assault_DarkUrgeButlerTriggers(_, _AppearTrigger, _)
+THEN
+DB_OneShotPartyTrigger(_AppearTrigger);
+
+PROC
+PROC_OneShotTriggerEntered(_,_AppearTrigger)
+AND
+DB_MOO_Assault_DarkUrgeButlerTriggers(_Point, _AppearTrigger, _SpotTrigger)
+THEN
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Point);
+DB_SpotPlayers_SpotTrigger(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_ButlerAssaultSpot", _SpotTrigger);
+PROC_MOO_Assault_ClearDarkUrgeButlerTriggers();
+
+IF
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(S_MOO_AssaultButlerPoint_001_889126fd-719a-499e-9abf-9fb78779bc21)
+THEN
+SetFlag(MOO_DarkUrge_Butler_State_Trigger1_eb7f6329-b825-42f8-8017-bd36c1345d41);
+
+IF
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Point)
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_Defeated(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+NOT DB_GlobalFlag((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8)
+AND
+NOT DB_GlobalFlag(ORI_DarkUrge_State_ResistedIsobelKilling_74b3931f-2b6c-0b99-4c46-a191d54f4568)
+AND
+NOT DB_GlobalFlag((FLAG)HAV_Siege_State_NoProtection_2da0dbf1-88ca-4cab-9c8f-ee8921822958)
+AND
+NOT DB_Camp_NightMode(1)
+THEN
+TeleportTo(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, _Point, "MOO_Assault_DarkUrgeArrived", 0, 0, 0, 1, 1);
+
+IF
+EntityEvent(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_Assault_DarkUrgeArrived")
+THEN
+PROC_Foop(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, VFX_Script_DarkButler_Poof_01_2b59237f-69f1-003b-d44b-d7e31fb79be2);
+DB_Dialogs(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, (DIALOGRESOURCE)MOO_Assault_DarkUrgeButlerReminder_6b10bb3e-0dad-222f-1534-a77ca1263660);
+DB_SpotPlayers(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_ButlerAssaultSpot", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_Continuous(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_ButlerAssaultSpot");
+
+IF
+FlagSet((FLAG)HAV_Siege_State_NoProtection_2da0dbf1-88ca-4cab-9c8f-ee8921822958, _, _)
+AND
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Point)
+AND
+IsOnStage(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, 1)
+THEN
+NOT DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Point);
+PROC_MOO_Assault_ButlerLeaves();
+
+PROC
+PROC_MOO_Assault_ClearDarkUrgeButlerTriggers()
+AND
+DB_MOO_Assault_DarkUrgeButlerTriggers(_Point, _AppearTrigger, _SpotTrigger)
+THEN
+NOT DB_MOO_Assault_DarkUrgeButlerTriggers(_Point, _AppearTrigger, _SpotTrigger);
+PROC_RemoveOneShotTrigger(_AppearTrigger);
+
+IF
+DB_GlobalFlag((FLAG)MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+DB_Camp_NightMode(1)
+AND
+NOT DB_InteractiveDialogSpeaker(_, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger)
+AND
+IsOnStage(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, 1)
+AND
+NOT DB_Defeated(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+THEN
+NOT DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger);
+PROC_MOO_Assault_ButlerLeaves();
+
+IF
+DB_GlobalFlag(ORI_DarkUrge_State_ResistedIsobelKilling_74b3931f-2b6c-0b99-4c46-a191d54f4568)
+AND
+DB_Camp_NightMode(1)
+AND
+NOT DB_InteractiveDialogSpeaker(_, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger)
+AND
+IsOnStage(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, 1)
+AND
+NOT DB_Defeated(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+THEN
+NOT DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger);
+PROC_MOO_Assault_ButlerLeaves();
+
+IF
+DB_GlobalFlag((FLAG)NIGHT_DarkUrge_SparedIsobel_bc8b660e-33e9-44f7-9bc2-b869db5ac1f8)
+AND
+DB_Camp_NightMode(1)
+AND
+NOT DB_InteractiveDialogSpeaker(_, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+AND
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger)
+AND
+IsOnStage(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, 1)
+AND
+NOT DB_Defeated(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10)
+THEN
+NOT DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger);
+PROC_MOO_Assault_ButlerLeaves();
+
+PROC
+PROC_SpotPlayers_Spotted(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_ButlerAssaultSpot", _DarkUrge)
+AND
+DB_ORI_DarkUrge((CHARACTER)_DarkUrge)
+AND
+NOT DB_Defeated(_DarkUrge)
+AND
+QRY_StartDialog(MOO_Assault_DarkUrgeButlerReminder_6b10bb3e-0dad-222f-1534-a77ca1263660, S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, _DarkUrge)
+THEN
+PROC_SpotPlayers_StopSpotting(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_ButlerAssaultSpot");
+
+IF
+DialogEnded(MOO_Assault_DarkUrgeButlerReminder_AOM_3008cef4-cd17-8989-7f93-c01afb7dd2f8, _ID)
+AND
+DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger)
+THEN
+NOT DB_ORI_DarkUrge_ButlerExpectedAtMoonrise(_Trigger);
+PROC_MOO_Assault_ButlerLeaves();
+
+PROC
+PROC_MOO_Assault_ButlerLeaves()
+AND
+IsOnStage(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, 1)
+THEN
+PROC_Poof(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, VFX_Script_DarkButler_Poof_01_2b59237f-69f1-003b-d44b-d7e31fb79be2);
+
+PROC
+PROC_MOO_Assault_ButlerLeaves()
+THEN
+PROC_SpotPlayers_StopSpotting(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10, "MOO_ButlerAssaultSpot");
+PROC_ForceStopDialog(S_GLO_DarkUrge_Butler_f3486165-268f-4e41-9e0c-51485dfdff10);
+
+//END_REGION 
+
+//REGION Setup - Moonrise - Situational
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+THEN
+SetOnStage(S_MOO_DockShip_24dc4b34-a316-4edf-b302-e3ffb2967fff, 0); //In case the player hasn't triggered it's departure yet
+TriggerSetLighting(LTN_SCL_MoonriseDungeon_E_000_0950bb86-52bd-451e-ad71-28d9f46a768d,"18c19ed1-f5f0-0380-ec7c-943ad733f031");
+Open(S_MOO_MainTowerEntrance_c9007d4d-8dfe-4b1a-a8cd-7b489710d29e);
+PROC_Combat_CallingForHelp_CleanUp("MOO_KethericHoundHelp"); //Remove Ketheric's Hound call for help that's applied when she enters his room
+
+//If Zhent Quartermaster is alive (so her items are set on stage), set their suitcases off stage
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+NOT DB_Defeated(S_GOB_Quartermaster_646936f3-8d8d-484e-9361-cd1ed484c615)
+THEN
+SetOnStage(S_MOO_ZhentTravelChest_001_b3995121-1ccd-4d3d-83aa-ca2a30a2301c, 0);
+SetOnStage(S_MOO_ZhentTravelChest_002_c348fb67-38af-447d-9fff-b4ef34b7b9d9, 0);
+
+//If the Harpers and FF are not present, change all the enemy body death types to radiant
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+NOT DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,_,_)
+AND
+NOT DB_MOO_AssaultPositions((CHARACTER)S_MOO_AssaultFlamingFist_001_623d562f-937c-4863-97df-d836f6bf2c6a,_,_)
+THEN
+PROC_MOO_Assault_ChangeDeathsToRadiant();
+
+//HAV having no protection means no one shows up (except for Jaheria if she is alive)
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_GlobalFlag(HAV_Siege_State_NoProtection_2da0dbf1-88ca-4cab-9c8f-ee8921822958)
+THEN
+PROC_MOO_Assault_ChangeDeathsToRadiant();
+
+//Count the amount of dead enemies (character who were not killed before the assault), if a low enough threshhold has been reached, remove dead Harpers/FF
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadEnemy")
+THEN
+DB_MOO_Assault_DeadEnemyCount(_Char);
+
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadEnemy_Radiant")
+THEN
+DB_MOO_Assault_DeadEnemyCount(_Char);
+
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+SysCount("DB_MOO_Assault_DeadEnemyCount",1,_Count)
+AND
+_Count <= 6
+THEN
+PROC_MOO_Assault_ChangeDeathsToRadiant();
+PROC_MOO_Assault_RemoveDeadHarpers();
+PROC_MOO_Assault_RemoveDeadFlamingFist();
+
+PROC
+PROC_MOO_Assault_RemoveDeadHarpers()
+AND
+DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadHarper")
+THEN
+NOT DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadHarper");
+SetOnStage(_Char, 0);
+
+PROC
+PROC_MOO_Assault_RemoveDeadFlamingFist()
+AND
+DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadFlamingFist")
+THEN
+NOT DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadFlamingFist");
+SetOnStage(_Char, 0);
+
+PROC
+PROC_MOO_Assault_ChangeDeathsToRadiant()
+AND
+DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadEnemy")
+THEN
+NOT DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadEnemy");
+DB_MOO_AssaultPositions(_Char,_Trigger,"MOO_Assault_DeadEnemy_Radiant");
+//END_REGION
+//REGION Setup - Moonrise - Teleport
+
+// Teleport characters
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_AssaultPositions(_Char, _Trigger, _Group)
+AND
+NOT DB_Defeated(_Char)
+THEN
+PROC_MOO_Assault_TrySetupChar(_Char, _Trigger, _Group);
+
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (STRING)_)
+THEN
+SetOnStage(_Char, 0);
+
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, (TRIGGER)_Trigger, (STRING)_Group)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetOnStage(_Char, 1);
+PurgeOsirisQueue(_Char);
+TeleportTo(_Char, _Trigger);
+LookFromTrigger(_Char, _Trigger, 0);
+RemoveHarmfulStatuses(_Char);
+PROC_MOO_Assault_CharTeleported(_Char);
+PROC_MOO_Assault_UpdateIdlePoint(_Char, _Trigger);
+PROC_MOO_Assault_SetFactions(_Char, _Group);
+
+//TODO: A more comprehensive way to handle removing the ownership from items/characters for the tower during the assault. Maybe iterate through triggers for TriggerClearItemsOwner?
+QRY
+QRY_CorpseLooting_BlockMakeOwned(_Char)
+AND
+DB_MOO_AssaultPositions(_Char, _, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CorpseLooting_BlockMakeOwned(_Char)
+AND
+DB_MOO_Assault_DeadCharacters(_Char)
+THEN
+DB_NOOP(1);
+
+//Dead Enemies
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, _Trigger, "MOO_Assault_DeadEnemy")
+THEN
+NOT DB_MOO_AssaultPositions(_Char, _Trigger, "MOO_Assault_DeadEnemy");
+PROC_MOO_Assault_KillCharacter(_Char, DEATHTYPE.Physical);
+
+//Implied that they were killed by Nightsong
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, _Trigger, "MOO_Assault_DeadEnemy_Radiant")
+THEN
+NOT DB_MOO_AssaultPositions(_Char, _Trigger, "MOO_Assault_DeadEnemy_Radiant");
+PROC_MOO_Assault_KillCharacter(_Char, DEATHTYPE.Radiant);
+
+//Characters killed in prison (implied by skeletons)
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, _Trigger, "MOO_Assault_DeadPrison")
+THEN
+NOT DB_MOO_AssaultPositions(_Char, _Trigger, "MOO_Assault_DeadPrison");
+PROC_MOO_Assault_KillCharacter(_Char, DEATHTYPE.Physical);
+
+//Dead Allies
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, _Trigger, _Group)
+AND
+DB_MOO_Assault_DeadAllyGroups(_Group)
+THEN
+NOT DB_MOO_AssaultPositions(_Char, _Trigger, _Group);
+PROC_MOO_Assault_KillCharacter(_Char, DEATHTYPE.Physical);
+
+PROC
+PROC_MOO_Assault_KillCharacter((CHARACTER)_Char, (DEATHTYPE)_DeathType)
+THEN
+DB_MOO_Assault_DeadCharacters(_Char);
+SetOnStage(_Char, 1);
+Die(_Char, _DeathType, NULL_00000000-0000-0000-0000-000000000000, 1, 1, 0.0);
+
+//Manage when Throne Room joins depending on total turns, NOT # of characters
+PROC
+PROC_MOO_Assault_TrySetupChar(_Char, _, "MOO_Assault_BazaarEnemies")
+THEN
+PROC_MOO_Assault_BazaarTurnIncrease(_Char);
+
+//Not in swarm group
+PROC
+PROC_MOO_Assault_BazaarTurnIncrease((CHARACTER)_Char)
+AND
+NOT DB_MOO_Assault_SwarmGroup(_Char, _)
+AND
+DB_MOO_Assault_BazaarTurnCount(_PrevCount)
+AND
+IntegerSum(_PrevCount, 1, _NewCount)
+THEN
+DB_MOO_Assault_BazaarTurnGroups(_Char, "");
+NOT DB_MOO_Assault_BazaarTurnCount(_PrevCount);
+DB_MOO_Assault_BazaarTurnCount(_NewCount);
+
+//In swarm group
+PROC
+PROC_MOO_Assault_BazaarTurnIncrease((CHARACTER)_Char)
+AND
+DB_MOO_Assault_SwarmGroup(_Char, _SwarmGroup)
+AND
+QRY_MOO_Assault_NoneFromSwarmGroupInDB(_SwarmGroup)
+AND
+DB_MOO_Assault_BazaarTurnCount(_PrevCount)
+AND
+IntegerSum(_PrevCount, 1, _NewCount)
+THEN
+DB_MOO_Assault_BazaarTurnGroups(_Char, _SwarmGroup);
+NOT DB_MOO_Assault_BazaarTurnCount(_PrevCount);
+DB_MOO_Assault_BazaarTurnCount(_NewCount);
+
+//Swarm group already accounted for
+PROC
+PROC_MOO_Assault_BazaarTurnIncrease((CHARACTER)_Char)
+AND
+DB_MOO_Assault_SwarmGroup(_Char, _SwarmGroup)
+AND
+NOT QRY_MOO_Assault_NoneFromSwarmGroupInDB(_SwarmGroup)
+THEN
+DB_MOO_Assault_BazaarTurnGroups(_Char, _SwarmGroup);
+
+//Throne Room enemy count used to decide when to call them into the Bazaar (It is variable how many may be in throne room)
+PROC
+PROC_MOO_Assault_TrySetupChar(_Char, _, "MOO_Assault_ThroneRoomEnemies")
+AND
+DB_MOO_Assault_ThroneRoomTurnCount(_PrevCount)
+AND
+IntegerSum(_PrevCount, 1, _NewCount)
+THEN
+NOT DB_MOO_Assault_ThroneRoomTurnCount(_PrevCount);
+DB_MOO_Assault_ThroneRoomTurnCount(_NewCount);
+
+//If Marcus is part of the assault, switch him to his true form
+PROC
+PROC_MOO_Assault_TrySetupChar(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, _, _)
+THEN
+ApplyStatus(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6, "HAV_FLAMINGSPYDISGUISE", -1.0, 0, NULL_00000000-0000-0000-0000-000000000000);
+AddSpell((CHARACTER)S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6,"Target_HAV_TakingIsobel_SearingSmite_Marcus",0,0);
+AddSpell((CHARACTER)S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6,"Shout_HAV_FlamingSpy_VampiricShout",0,0);
+AddSpell((CHARACTER)S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6,"Projectile_HAV_TakingIsobel_Fly_Marcus",0,0);
+
+//Swarm Groups
+PROC
+PROC_MOO_Assault_TrySetupChar(_Char, _, _)
+AND
+DB_MOO_Assault_SwarmGroup(_Char, _Swarm)
+THEN
+RequestSetSwarmGroup(_Char, _Swarm);
+
+//END_REGION
+//REGION Setup - Moonrise - Configs
+PROC
+PROC_MOO_Assault_TrySetupChar(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, _, _)
+THEN
+PROC_SetAnubisConfig(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b, "DefaultCharacter"); 
+//She should be in combat for the duration of Assault, leaving after to COL
+
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, (TRIGGER)_, "MOO_Assault_HarperAlly")
+AND
+_Char != S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a
+THEN
+DB_GLO_DefeatCounter(_Char, "MOO_Assault_HarperAlly");
+NOT DB_OnlyOnce("MOO_Assault_AssignOneConfig");
+PROC_MOO_Assault_AssignHarperConfig(_Char);
+
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, (TRIGGER)_, "MOO_Assault_HarperMerchant")
+THEN
+PROC_SetAnubisConfig(_Char, "MOO_AssaultHarperMerchant");
+
+PROC
+PROC_MOO_Assault_TrySetupChar((CHARACTER)_Char, (TRIGGER)_, "MOO_Assault_FlamingFistAlly")
+THEN
+DB_GLO_DefeatCounter(_Char, "MOO_Assault_FlamingFistAlly");
+
+PROC
+PROC_MOO_Assault_AssignHarperConfig((CHARACTER)_Char)
+AND
+DB_MOO_Assault_HarperAnubisConfigs(_Config)
+AND
+NOT DB_OnlyOnce("MOO_Assault_AssignOneConfig")
+THEN
+NOT DB_MOO_Assault_HarperAnubisConfigs(_Config);
+DB_OnlyOnce("MOO_Assault_AssignOneConfig");
+PROC_SetAnubisConfig(_Char, _Config);
+
+//Update Generic Anubis Idle Point
+PROC
+PROC_MOO_Assault_UpdateIdlePoint((CHARACTER)_Char, (TRIGGER)_Point)
+THEN
+SetDualEntityEvent(_Char, _Point, "MOO_Assault_IdlePointChange", 1);
+//END_REGION
+//REGION Setup - Moonrise - Faction
+// -- Make Ally
+PROC
+PROC_MOO_Assault_SetFactions((CHARACTER)_Char, (STRING)_Group)
+AND
+DB_MOO_Assault_AllyGroups(_Group)
+THEN
+SetFaction(_Char, (FACTION)ACT2_MOO_Assault_Ally_4d50d60d-85d1-4429-8a67-8e9faa19c3f4);
+SetCombatGroupID(_Char, _Group);
+
+// -- Make Neutral
+PROC
+PROC_MOO_Assault_SetFactions((CHARACTER)_Char, (STRING)_Group)
+AND
+DB_MOO_Assault_NeutralGroups(_Group)
+THEN
+SetFaction(_Char, (FACTION)ACT2_MOO_Assault_Neutral_495e3f88-4e4d-47b0-b275-5daf3442430b);
+SetCombatGroupID(_Char, _Group);
+
+// -- Make Hostile
+PROC
+PROC_MOO_Assault_SetFactions((CHARACTER)_Char, (STRING)_Group)
+AND
+DB_MOO_Assault_EnemyGroups(_Group)
+THEN
+SetFaction(_Char, (FACTION)ACT2_MOO_Assault_Hostile_68597716-e217-4777-a391-026263f291b4);
+SetCombatGroupID(_Char, _Group);
+
+//Track their defeat
+PROC
+PROC_MOO_Assault_SetFactions((CHARACTER)_Char, (STRING)_Group)
+AND
+DB_MOO_Assault_EnemyDefeatCounterGroups(_Group)
+THEN
+PROC_MOO_Assault_AddToDefeatCounter(_Char, _Group);
+
+PROC
+PROC_MOO_Assault_AddToDefeatCounter((CHARACTER)_Char, (STRING)_Group)
+AND
+_Char != S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f //Ketheric does not die in MOO, so exclude him from the DB DefeatCounter
+AND
+NOT DB_GLO_DefeatCounter(_Char, _Group)
+THEN
+DB_GLO_DefeatCounter(_Char, _Group);
+
+IF
+DB_GLO_DefeatCounter(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Assault_RooftopEnemies")
+THEN
+NOT DB_GLO_DefeatCounter(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, "MOO_Assault_RooftopEnemies");
+
+// -- Switch Group to Hostile
+PROC
+PROC_MOO_Assault_SwitchToHostileGroup((STRING)_Group)
+AND
+NOT DB_MOO_Assault_EnemyGroups(_Group)
+THEN
+NOT DB_MOO_Assault_AllyGroups(_Group);
+NOT DB_MOO_Assault_NeutralGroups(_Group);
+DB_MOO_Assault_EnemyGroups(_Group);
+
+//END_REGION
+//REGION Setup - Moonrise - Items
+//TODO: Check for all edge cases (If the item can be picked up, make sure it's still at the location), check for any character (not just players), check for any object in trigger?
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_Assault_DynamicObject(_SourceItem, _NewItem)
+THEN
+PROC_MOO_Assault_SetDynamicObject((ITEM)_SourceItem, (ITEM)_NewItem);
+NOT DB_MOO_Assault_DynamicObject(_SourceItem, _NewItem); //No longer needed after assault set-up
+
+PROC
+PROC_MOO_Assault_SetDynamicObject((ITEM)_SourceItem, (ITEM)_NewItem)
+AND
+_SourceItem != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetOnStage(_SourceItem, 0);
+SetOnStage(_NewItem, 1);
+
+PROC
+PROC_MOO_Assault_SetDynamicObject((ITEM)NULL_00000000-0000-0000-0000-000000000000, (ITEM)_NewItem)
+THEN
+SetOnStage(_NewItem, 1);
+
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_Assault_DestroyItems(_Item)
+THEN
+Die((ITEM)_Item);
+//END_REGION
+//REGION Setup - Moonrise - Surfaces
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_Assault_FireSurfacePoints(_Trigger, _Radius)
+THEN
+CreateSurface(_Trigger, "SurfaceHolyFire", _Radius, -1.0);
+//END_REGION
+//REGION Setup - Moonrise - Dialog
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_AssaultPositions(_Char, _, _) //Only set on characters that are actually part of the assault
+AND
+DB_MOO_Assault_GenericDialog(_Char, _Dialog)
+THEN
+PROC_RemoveDialog(_Char);
+DB_Dialogs(_Char, _Dialog);
+//END_REGION
+//REGION Setup - Moonrise - Combat ADs
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_AssaultPositions(_Char, _, _) 
+AND
+DB_MOO_Assault_CombatAD(_Char, _AD)
+THEN
+DB_CombatReact_AD_OnTurn(_Char,_AD, 1);
+//END_REGION
+//REGION Setup - Clear Ownership
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+THEN
+ClearOwnership(S_MOO_BazaarPotion_319f9bc1-49ed-4eca-b3c5-3348ca2a3934);
+ClearOwnership(S_MOO_BazaarFlask_2de78691-766e-442a-8eee-93a2eaa8f6d8);
+ClearOwnership(S_MOO_BazaarVial_b8839cd6-0116-47f9-8f08-7790fbb6a82b);
+
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_Docks_Cargo(_Item)
+THEN
+ClearOwnership(_Item);
+
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+AND
+DB_MOO_ZhentVendor_AliveItems(_Item)
+THEN
+ClearOwnership(_Item);
+
+PROC
+PROC_MOO_Assault_SetupMoonrise()
+THEN
+PROC_FactionSetLootOwned((FACTION)ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, 0);
+PROC_FactionSetLootOwned((FACTION)ACT2_MOO_InfernalVendor_db3749fc-73d8-49cb-99f6-20710b440cf5, 0);
+PROC_FactionSetLootOwned((FACTION)ACT2_MOO_ZhentTraders_6a50a548-0174-4a7b-9e1f-8facdabcdef2, 0);
+//END_REGION
+//REGION Arrival - Jaheira
+//Jaheira
+PROC
+PROC_SpotPlayers_Spotted(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_JaheiraGreeting", (CHARACTER)_Player)
+AND
+QRY_StartDialog(MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e, _InstanceID)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_AllyReadyPositions_f0316e51-b885-472a-a8db-b5cf64aca732) //Flag is set when the player has entered the tower, moving everyone inside (so Nighsong is not seen flying around)
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID, S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e, _InstanceID)
+AND
+NOT DB_CantAct(S_HAV_HavenOutcasts_HarperQuartermaster_f769815c-d437-4a45-9ae4-aebd53ec8f7c)
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID, S_HAV_HavenOutcasts_HarperQuartermaster_f769815c-d437-4a45-9ae4-aebd53ec8f7c);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e, _InstanceID)
+AND
+DB_MOO_Assault_HarperArrivalSpeakers(_Harper)
+AND
+DB_Defeated((CHARACTER)_Harper)
+AND
+QRY_OnlyOnce_Reset("MOO_Assault_SelectFlamingFistReplacement")
+AND
+DB_MOO_AssaultFlamingFistReplacements(_NewHarper)
+AND
+QRY_OnlyOnce("MOO_Assault_SelectFlamingFistReplacement")
+THEN
+NOT DB_MOO_AssaultFlamingFistReplacements(_NewHarper);
+NOT DB_MOO_Assault_HarperArrivalSpeakers(_Harper);
+DB_MOO_Assault_HarperArrivalSpeakers(_NewHarper);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e, _InstanceID)
+AND
+DB_MOO_Assault_HarperArrivalSpeakers(_Harper)
+AND
+NOT DB_CantAct(_Harper)
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID, _Harper,0,1);
+
+IF
+DialogEnded(MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e, _ID)
+THEN
+NOT DB_SpotPlayers(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_JaheiraGreeting", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_SpotTrigger(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_JaheiraGreeting", S_MOO_AssaultIntroBox_288f3045-6158-42b9-b77b-ce9af981e586);
+
+//In the case the player bypassed Jaheira and entered the main floor already
+IF
+DB_GlobalFlag(MOO_Assault_State_AllyReadyPositions_f0316e51-b885-472a-a8db-b5cf64aca732)
+THEN
+NOT DB_SpotPlayers(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_JaheiraGreeting", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_SpotTrigger(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_JaheiraGreeting", S_MOO_AssaultIntroBox_288f3045-6158-42b9-b77b-ce9af981e586);
+
+//END_REGION
+
+
+//REGION Arrival - Z'rell
+PROC
+PROC_MOO_Assault_SetUpZrellScene()
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_BazaarEnemies")
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_Char);
+DB_SceneManager(_Char, "MOO_Assault_ZrellGreetingScene");
+
+PROC
+PROC_MOO_Assault_SetUpZrellScene()
+THEN
+PROC_TriggerRegisterForParty(S_MOO_ZrellAssaultGreetingPoly_057ca738-3d03-4077-a01a-fcb4dedd0e5b); //To handle Jaheira follower
+DB_SceneTriggerManager("MOO_Assault_ZrellGreetingScene", (TRIGGER)S_MOO_ZrellAssaultGreetingPoly_057ca738-3d03-4077-a01a-fcb4dedd0e5b);
+
+PROC
+PROC_SceneInterrupted((GUIDSTRING)_,(CHARACTER)_Player,"MOO_Assault_ZrellGreetingScene",(STRING)_Reason)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Reason)
+THEN
+PROC_SceneOver("MOO_Assault_ZrellGreetingScene");
+
+IF
+DB_Sees(_Char, _Player)
+AND
+DB_InRegion(_Player, S_MOO_ZrellAssaultGreetingPoly_057ca738-3d03-4077-a01a-fcb4dedd0e5b)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_BazaarEnemies")
+AND
+QRY_OnlyOnce("MOO_Assault_ZrellGreetingOnce")
+THEN
+PROC_MOO_Assault_TryStartZrellDialog((CHARACTER)_Player);
+PROC_TriggerUnregisterForPlayers(S_MOO_ZrellAssaultGreetingPoly_057ca738-3d03-4077-a01a-fcb4dedd0e5b);
+
+PROC
+PROC_MOO_Assault_TryStartZrellDialog((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+IsTagged(_Player, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+QRY_StartDialog(MOO_Assault_Executioner_d85920d4-073a-ccf2-68dd-c50697b2d1ad, S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _Player)
+THEN
+DB_MOO_Assault_ZrellDialogStarted(1);
+
+PROC
+PROC_MOO_Assault_TryStartZrellDialog((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+IsTagged(_Player, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 0)
+AND
+QRY_GetClosestAvailableCharacterTo(_Player, 0)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_ClosestAvatar, _Player, _Dist, 1)
+AND
+_Dist < 10.0
+AND
+QRY_StartDialog(MOO_Assault_Executioner_d85920d4-073a-ccf2-68dd-c50697b2d1ad, S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _ClosestAvatar)
+THEN
+DB_MOO_Assault_ZrellDialogStarted(1);
+
+PROC
+PROC_MOO_Assault_TryStartZrellDialog((CHARACTER)_Player)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_Players(_Player)
+AND
+QRY_GetClosestAvailableCharacterTo(_Player, 0)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_ClosestAvatar, _Player, _Dist, 1)
+AND
+_Dist < 10.0
+AND
+QRY_StartDialog(MOO_Assault_Executioner_d85920d4-073a-ccf2-68dd-c50697b2d1ad, S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84, _ClosestAvatar)
+THEN
+DB_MOO_Assault_ZrellDialogStarted(1);
+
+PROC
+PROC_MOO_Assault_TryStartZrellDialog((CHARACTER)_Player)
+AND
+NOT DB_MOO_Assault_ZrellDialogStarted(1)
+THEN
+PROC_SceneOver("MOO_Assault_ZrellGreetingScene");
+
+IF
+DialogEnded(MOO_Assault_Executioner_d85920d4-073a-ccf2-68dd-c50697b2d1ad, _)
+THEN
+PROC_SceneOver("MOO_Assault_ZrellGreetingScene");
+
+IF
+EnteredCombat(_Char, _ID)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_BazaarEnemies")
+AND
+QRY_OnlyOnce("MOO_Assault_ZrellHostile")
+THEN
+PROC_SceneOver("MOO_Assault_ZrellGreetingScene");
+
+PROC
+PROC_SceneOver("MOO_Assault_ZrellGreetingScene")
+THEN
+PROC_MOO_Assault_TrySetBazaarHostile();
+
+PROC
+PROC_MOO_Assault_TrySetBazaarHostile()
+AND
+NOT DB_OnlyOnce("MOO_Assault_BazaarSetHostile")
+THEN
+DB_OnlyOnce("MOO_Assault_BazaarSetHostile");
+PROC_MOO_Assault_SetBazaarHostile();
+
+PROC
+PROC_MOO_Assault_SetBazaarHostile()
+THEN
+DB_OnlyOnce("MOO_Assault_BazaarSetHostile");
+PROC_TriggerUnregisterForPlayers(S_MOO_ZrellAssaultGreetingPoly_057ca738-3d03-4077-a01a-fcb4dedd0e5b);
+PROC_MOO_Assault_SwitchToHostileGroup("MOO_Assault_BazaarEnemies");
+
+PROC
+PROC_MOO_Assault_SetBazaarHostile()
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char,(TRIGGER)_, "MOO_Assault_BazaarEnemies")
+THEN
+PROC_MOO_Assault_SetFactions(_Char, "MOO_Assault_BazaarEnemies");
+//END_REGION
+//REGION Main Floor Combat
+//If the player enters combat with any of the main floor enemies, any allies will also join.
+//This is to make sure allies always join with the player at the same time.
+IF
+EnteredCombat(_Enemy, _CombatID)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_MainFloorEnemiesDefeated_1016055f-387a-4564-b3f9-cac9d2735b9d)
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+QRY_MOO_Assault_IsFromMainFloorGroup((CHARACTER)_Enemy)
+THEN
+PROC_MOO_Assault_ForceAllyJoinCombat(_Enemy);
+
+QRY
+QRY_MOO_Assault_IsFromMainFloorGroup((CHARACTER)_Char)
+AND
+NOT DB_OnlyOnce("MOO_Assault_ForceJoinThroneRoom") //So allies enter combat with each group once
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_ThroneRoomEnemies")
+THEN
+DB_OnlyOnce("MOO_Assault_ForceJoinThroneRoom");
+
+QRY
+QRY_MOO_Assault_IsFromMainFloorGroup((CHARACTER)_Char)
+AND
+NOT DB_OnlyOnce("MOO_Assault_ForceJoinBazaar")
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_BazaarEnemies")
+THEN
+DB_OnlyOnce("MOO_Assault_ForceJoinBazaar");
+
+PROC
+PROC_MOO_Assault_ForceAllyJoinCombat((CHARACTER)_Enemy)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_HarperAlly")
+AND
+NOT DB_Is_InCombat(_Char, _)
+THEN
+PROC_EnterCombat(_Char, _Enemy);
+
+PROC
+PROC_MOO_Assault_ForceAllyJoinCombat((CHARACTER)_Enemy)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_FlamingFistAlly")
+AND
+NOT DB_Is_InCombat(_Char, _)
+THEN
+PROC_EnterCombat(_Char, _Enemy);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated(_Group)
+AND
+DB_MOO_Assault_CombatGroupDefeatFlags(_Flag, _Group)
+THEN
+NOT DB_MOO_Assault_CombatGroupDefeatFlags(_Flag, _Group);
+SetFlag(_Flag);
+PROC_MOO_Assault_ActiveTowerCheck();
+
+PROC
+PROC_MOO_Assault_ActiveTowerCheck()
+AND
+NOT DB_MOO_Assault_CombatGroupDefeatFlags(_, _)
+THEN
+PROC_MOO_Assault_Over();
+
+IF
+FlagSet(MOO_Assault_State_BossDoorDefeated_a6e59fdf-2b97-401a-bb69-d866d3c2d35e, _, _)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_RooftopDefeated_9cdb5021-a664-4172-8f6b-3eb46e99cac5)
+THEN
+DB_AutoSaveTrigger(S_MOO_BossDoorAutoSave_80aedea1-0383-4852-874c-f5f39906e77e);
+
+//When turn count reduces to a low enough threshold, call throne room into bazaar
+PROC
+PROC_StateSet_PermaDefeated(_Char)
+AND
+DB_MOO_Assault_BazaarTurnGroups((CHARACTER)_Char, _SwarmGroup)
+THEN
+PROC_MOO_Assault_SetTotalBazaarTurnCount(); 
+PROC_MOO_Assault_UpdateBazaarTurnCount(_Char, _SwarmGroup);
+
+PROC
+PROC_MOO_Assault_SetTotalBazaarTurnCount()
+AND
+NOT DB_MOO_Assault_BazaarTotalTurnCount(_)
+AND
+DB_MOO_Assault_BazaarTurnCount(_Count)
+THEN
+DB_MOO_Assault_BazaarTotalTurnCount(_Count);
+
+PROC
+PROC_MOO_Assault_UpdateBazaarTurnCount((CHARACTER)_Char,(STRING)_SwarmGroup)
+AND
+_SwarmGroup == ""
+AND
+DB_MOO_Assault_BazaarTurnCount(_PrevCount)
+AND
+IntegerSubtract(_PrevCount, 1, _NewCount)
+THEN
+NOT DB_MOO_Assault_BazaarTurnGroups(_Char, _SwarmGroup);
+NOT DB_MOO_Assault_BazaarTurnCount(_PrevCount);
+DB_MOO_Assault_BazaarTurnCount(_NewCount);
+PROC_MOO_Assault_TryThroneRoomJoinBazaar();
+
+PROC
+PROC_MOO_Assault_UpdateBazaarTurnCount((CHARACTER)_Char,(STRING)_SwarmGroup)
+AND
+_SwarmGroup != ""
+THEN
+NOT DB_MOO_Assault_BazaarTurnGroups(_Char, _SwarmGroup);
+PROC_MOO_Assault_VerifySwarmCount(_SwarmGroup);
+
+PROC
+PROC_MOO_Assault_VerifySwarmCount((STRING)_SwarmGroup)
+AND
+QRY_MOO_Assault_NoneFromSwarmGroupInDB(_SwarmGroup)
+AND
+DB_MOO_Assault_BazaarTurnCount(_PrevCount)
+AND
+IntegerSubtract(_PrevCount, 1, _NewCount)
+THEN
+NOT DB_MOO_Assault_BazaarTurnCount(_PrevCount);
+DB_MOO_Assault_BazaarTurnCount(_NewCount);
+PROC_MOO_Assault_TryThroneRoomJoinBazaar();
+
+QRY
+QRY_MOO_Assault_NoneFromSwarmGroupInDB((STRING)_SwarmGroup)
+AND
+NOT DB_MOO_Assault_BazaarTurnGroups(_, _SwarmGroup)
+THEN
+DB_Noop(1);
+
+PROC
+PROC_MOO_Assault_TryThroneRoomJoinBazaar()
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_ThroneRoomJoinedCombat_ccdc2710-a4f1-48b5-bd1c-de9171da9aa3)
+AND
+DB_MOO_Assault_BazaarTurnCount(_CurrentCount)
+AND
+DB_MOO_Assault_BazaarTotalTurnCount(_TotalCount)
+AND
+IntegerSubtract(_TotalCount,_CurrentCount, _Diff)
+AND
+DB_MOO_Assault_ThroneRoomTurnCount(_Threshold)
+AND
+_Threshold <= _Diff
+THEN
+SetFlag(MOO_Assault_State_ThroneRoomJoinedCombat_ccdc2710-a4f1-48b5-bd1c-de9171da9aa3);
+PROC_MOO_Assault_MoveThroneEnemiesToBazaar();
+
+PROC
+PROC_MOO_Assault_TryThroneRoomJoinBazaar()
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_ThroneRoomJoinedCombat_ccdc2710-a4f1-48b5-bd1c-de9171da9aa3)
+AND
+DB_MOO_Assault_BazaarTurnCount(_CurrentCount)
+AND
+DB_MOO_Assault_ThroneRoomTurnCount(_ThroneRoomCount)
+AND
+_ThroneRoomCount > _CurrentCount
+THEN
+SetFlag(MOO_Assault_State_ThroneRoomJoinedCombat_ccdc2710-a4f1-48b5-bd1c-de9171da9aa3);
+PROC_MOO_Assault_MoveThroneEnemiesToBazaar();
+
+IF
+EnteredCombat(_Char, _CombatID)
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_ThroneRoomEnemies")
+THEN
+PROC_MOO_Assault_TrySetBazaarHostile();
+PROC_MOO_Assault_BazaarJoinThroneRoom(_CombatID);
+
+PROC
+PROC_MOO_Assault_BazaarJoinThroneRoom((GUIDSTRING)_CombatID)
+AND
+DB_MOO_AssaultPositions(_Char, _, "MOO_Assault_BazaarEnemies")
+AND
+IsInCombat(_Char, 0) //So it's not iterating over characters already in combat
+AND
+DB_Players(_Player)
+AND
+IsInCombat(_Player, 1) 
+AND
+CombatGetGuidFor(_Player, _CombatID)
+THEN
+PROC_EnterCombat(_Char, _Player);
+
+PROC
+PROC_MOO_Assault_Over()
+THEN
+DB_Noop(1);
+//END_REGION
+//REGION Assault Movement
+//If there is already a MoveTo in the DB, replace it with the latest so they run directly to latest position when available
+PROC
+PROC_MOO_Assault_QueueMoveTo((CHARACTER)_Char,(TRIGGER)_NewPoint,(STRING)_NewSpeed,(STRING)_NewEvent,(INTEGER)_NewPriority)
+AND
+DB_MOO_Assault_QueueMoveTo(_Char, _OldPoint, _OldSpeed, _OldEvent, _OldPriority)
+AND
+_NewPriority >= _OldPriority //If priority is the same for whatever reason, use latest call
+THEN
+NOT DB_MOO_Assault_QueueMoveTo(_Char, _OldPoint, _OldSpeed, _OldEvent, _OldPriority);
+DB_MOO_Assault_QueueMoveTo(_Char, _NewPoint, _NewSpeed, _NewEvent, _NewPriority);
+
+PROC
+PROC_MOO_Assault_QueueMoveTo((CHARACTER)_Char,(TRIGGER)_Point,(STRING)_Speed,(STRING)_Event,(INTEGER)_Priority)
+AND
+QRY_MOO_Assault_CharacterNotInQueue(_Char)
+THEN
+DB_MOO_Assault_QueueMoveTo(_Char, _Point, _Speed, _Event, _Priority);
+
+QRY
+QRY_MOO_Assault_CharacterNotInQueue((CHARACTER)_Char)
+AND
+NOT DB_MOO_Assault_QueueMoveTo(_Char, _, _, _, _)
+THEN
+DB_Noop(1);
+
+//So if a player is in dialog with a character, they will wait to move till they are out of dialog
+IF
+DB_MOO_Assault_QueueMoveTo(_Char, _Point, _Speed, _Event, _Priority)
+AND
+NOT DB_CantMove(_Char)
+AND
+NOT DB_CantTalk(_Char)
+THEN
+PROC_ClearStoryMove(_Char); //So if they have already started to move to a point, cancel and move to the new point
+PROC_MOO_Assault_UpdateIdlePoint((CHARACTER)_Char, (TRIGGER)_Point);
+PROC_CharacterMoveTo(_Char, _Point, _Speed, _Event);
+NOT DB_MOO_Assault_QueueMoveTo(_Char, _Point, _Speed, _Event, _Priority);
+
+IF
+DB_GlobalFlag(_DefeatFlag)
+AND
+DB_MOO_Assault_MainFloorDefeatFlags(_DefeatFlag)
+THEN
+NOT DB_MOO_Assault_MainFloorDefeatFlags(_DefeatFlag);
+PROC_MOO_Assault_TryMainFloorClearedPositions();
+
+PROC
+PROC_MOO_Assault_TryMainFloorClearedPositions()
+AND
+NOT DB_MOO_Assault_MainFloorDefeatFlags(_)
+THEN
+SetFlag(MOO_Assault_State_MainFloorEnemiesDefeated_1016055f-387a-4564-b3f9-cac9d2735b9d);
+PROC_MOO_Assault_MoveCharactersIntoTower();
+PROC_MOO_Assault_MoveToDefendPrison();
+
+PROC
+PROC_MOO_Assault_MoveThroneEnemiesToBazaar()
+AND
+DB_MOO_AssaultPositions(_ThroneEnemy, _, "MOO_Assault_ThroneRoomEnemies")
+AND
+NOT DB_Defeated(_ThroneEnemy)
+AND
+DB_MOO_AssaultJoinBazaarPositions(_ThroneEnemy, _Point)
+THEN
+PROC_MOO_Assault_QueueMoveTo(_ThroneEnemy, _Point, "Sprint", "", 1);
+NOT DB_MOO_AssaultJoinBazaarPositions(_ThroneEnemy, _Point);
+
+//Allies move to combat ready position when they enter the tower
+IF
+EnteredTrigger(_Player, _SubTrigger)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_AllyReadyPositions_f0316e51-b885-472a-a8db-b5cf64aca732)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_ThroneRoomDefeated_273c4470-055c-45cb-aa6b-eee08524a6c3) //Skip over moving to battle positions if enemies are already dead
+AND
+DB_Players(_Player)
+AND
+DB_MOO_AssaultLocations(_SubTrigger)
+AND
+DB_MOO_Assault_AllyCombatReadyPositions(_Ally, _Point)
+THEN
+PROC_MOO_Assault_AllyMoveToCombatReady((CHARACTER)_Ally, (TRIGGER)_Point);
+
+PROC
+PROC_MOO_Assault_AllyMoveToCombatReady((CHARACTER)_Ally, (TRIGGER)_Point)
+THEN
+SetFlag(MOO_Assault_State_AllyReadyPositions_f0316e51-b885-472a-a8db-b5cf64aca732);
+PROC_MOO_Assault_QueueMoveTo(_Ally, _Point, "Run", "MOO_Assault_ArrivedAtEntrance", 1);
+
+IF
+EntityEvent(_Ally, "MOO_Assault_ArrivedAtEntrance")
+AND
+DB_MOO_Assault_AllyCombatReadyPositions(_Ally, _Point)
+THEN
+NOT DB_MOO_Assault_AllyCombatReadyPositions(_Ally, _Point);
+LookFromTrigger((CHARACTER)_Ally, _Point, 0);
+
+//Allies join after player enters combat on the main floor
+IF
+EnteredCombat(_Char, _)
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_BazaarEnemies")
+AND
+NOT DB_OnlyOnce("MOO_Assault_HarpersJoinedCombat")
+THEN
+DB_OnlyOnce("MOO_Assault_HarpersJoinedCombat");
+SetFlag(MOO_Assault_State_MainFloorCombatStarted_c64cb947-5b6c-4e8c-9ab4-6facffbd482d);
+
+PROC
+PROC_MOO_Assault_MoveCharactersIntoTower()
+AND
+DB_MOO_AssaultPositions(_Char, _, _) //So we are only moving characters that are in the assault (though they should already be removed from the MainFloorPositions DB)
+AND
+DB_MOO_Assault_AllyMainFloorPositions(_Char, _Point)
+THEN
+PROC_MOO_Assault_QueueMoveTo((CHARACTER)_Char, (TRIGGER)_Point, "Run", "MOO_Assault_ArrivedInTower", 2);
+
+PROC
+PROC_MOO_Assault_MoveCharactersIntoTower()
+AND
+DB_MOO_AssaultPositions(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _)
+AND
+NOT DB_Defeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_InRegion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_MainFloorInterior_SUB_429a55cc-58d2-4469-9577-852131e1fff3)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)MOO_Assault_AD_JaheiraMoveForward_bcbb2c10-a19c-e385-7350-46d35fb42edf, (CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+IF
+EntityEvent(_Char, "MOO_Assault_ArrivedInTower")
+AND
+DB_MOO_Assault_AllyMainFloorPositions(_Char, _Trigger)
+THEN
+NOT DB_MOO_Assault_AllyMainFloorPositions(_Char, _Trigger);
+LookFromTrigger((CHARACTER)_Char, (TRIGGER)_Trigger, 0);
+
+//Flaming Fist moves to Prison to hold back Skeletons
+PROC
+PROC_MOO_Assault_MoveToDefendPrison()
+AND
+DB_MOO_Assault_PrisonDefenders(_Char, _PrisonPoint)
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _Point, _OldCombatGroup)
+THEN
+NOT DB_MOO_AssaultPositions(_Char, _Point, _OldCombatGroup);
+DB_MOO_AssaultPositions(_Char, _Point, "MOO_Assault_PrisonDefenderAlly");
+SetCombatGroupID(_Char, "MOO_Assault_PrisonDefenderAlly");
+PROC_MOO_Assault_QueueMoveTo(_Char, _PrisonPoint, "Run", "MOO_Assault_FFArrived", 3);
+
+IF
+EntityEvent(_Char, "MOO_Assault_FFArrived")
+AND
+DB_MOO_Assault_PrisonDefenders((CHARACTER)_Char, _Point)
+THEN
+LookFromTrigger(_Char, _Point, 0);
+NOT DB_MOO_Assault_PrisonDefenders(_Char, _Point);
+
+IF
+DB_InRegion(_Player, S_MOO_Prison_SUB_b262cbea-f40c-47da-9f34-ba8ce5bf782b)
+AND
+DB_GlobalFlag(MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_PlayerEnteredPrison_ec01d521-37a8-4346-bcde-06072c25e141)
+THEN
+SetFlag(MOO_Assault_State_PlayerEnteredPrison_ec01d521-37a8-4346-bcde-06072c25e141);
+
+//END_REGION
+//REGION Kitchen Gnolls
+// Check if bazaar fight started then join
+IF
+DB_Is_InCombat(_Player, _Id)
+AND
+DB_MOO_AssaultPositions((CHARACTER)_Char, _, "MOO_Assault_BazaarEnemies")
+AND
+DB_Is_InCombat(_Char, _Id)
+AND
+NOT DB_OnlyOnce("MOO_Assault_GnollJoinedFight")
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_MOO_Assault_TryGetGnollAsAllies();
+DB_OnlyOnce("MOO_Assault_GnollJoinedFight");
+
+PROC
+PROC_MOO_Assault_TryGetGnollAsAllies()
+AND
+DB_MOO_AssaultPositions(_Gnoll, _, "MOO_Assault_GnollAlly")
+AND
+NOT DB_PermaDefeated(_Gnoll)
+THEN
+PROC_MOO_Assault_QueueMoveTo(_Gnoll, S_MOO_AssaultBazGnollPoint_64690095-8376-491e-b69e-be20d2d385af, "Run", "", 1);
+
+//Return to the kitchen once the main floor has been cleared of enemies
+IF
+DB_GlobalFlag(MOO_Assault_State_MainFloorEnemiesDefeated_1016055f-387a-4564-b3f9-cac9d2735b9d)
+AND
+DB_MOO_AssaultPositions(_Gnoll, _Point, "MOO_Assault_GnollAlly")
+AND
+NOT DB_PermaDefeated(_Gnoll)
+THEN
+PROC_MOO_Assault_QueueMoveTo(_Gnoll,_Point, "Walk", "", 2);
+//END_REGION
+//REGION Prison Necromites and Mistress of Souls
+
+//REGION Set max number of Necromites that can be summoned
+IF
+DB_Combat_DeathBloom_SpawnedNecromite((CHARACTER)_Necromite,_Obj)
+AND
+DB_Combat_DeathBloom(_Obj,_Summoner,_Faction,_CombatGroupID)
+AND
+DB_MOO_Assault_PrisonEnemies(_Summoner)
+THEN
+DB_MOO_Assault_PrisonEnemies_SummonedNecromites(_Necromite);
+PROC_MOO_Assault_PrisonEnemies_SummonedNecromites_CounterUpdate();
+
+IF
+EnteredLevel((CHARACTER)_Necromite,_,_)
+AND
+DB_MOO_Assault_PrisonEnemies_SummonedNecromites(_Necromite)
+THEN
+RequestSetSwarmGroup(_Necromite,"MOO_Assault_PrisonEnemies_SummonedNecromites");
+
+IF
+Died(_Necromite)
+AND
+DB_MOO_Assault_PrisonEnemies_SummonedNecromites(_Necromite)
+THEN
+NOT DB_MOO_Assault_PrisonEnemies_SummonedNecromites(_Necromite);
+PROC_MOO_Assault_PrisonEnemies_SummonedNecromites_CounterUpdate();
+
+PROC
+PROC_MOO_Assault_PrisonEnemies_SummonedNecromites_CounterUpdate()
+AND
+SysCount("DB_MOO_Assault_PrisonEnemies_SummonedNecromites", 1,_Count)
+AND
+_Count > 5
+THEN
+PROC_MOO_Assault_PrisonEnemies_BlockDeathBloomSpell();
+
+PROC
+PROC_MOO_Assault_PrisonEnemies_SummonedNecromites_CounterUpdate()
+AND
+SysCount("DB_MOO_Assault_PrisonEnemies_SummonedNecromites", 1,_Count)
+AND
+_Count <= 5
+THEN
+PROC_MOO_Assault_PrisonEnemies_AllowDeathBloomSpell();
+
+PROC
+PROC_MOO_Assault_PrisonEnemies_BlockDeathBloomSpell()
+AND
+DB_MOO_Assault_PrisonEnemies(_Char)
+AND
+HasSpell((CHARACTER)_Char,"Target_MOO_MasterOfSouls_SpawnDeathBloom",1)
+THEN
+ClearTag(_Char,(TAG)AI_USESPELL_A_33aa698c-aea0-43e2-bd16-582aa718fd3e);
+
+PROC
+PROC_MOO_Assault_PrisonEnemies_AllowDeathBloomSpell()
+AND
+DB_MOO_Assault_PrisonEnemies(_Char)
+AND
+HasSpell((CHARACTER)_Char,"Target_MOO_MasterOfSouls_SpawnDeathBloom",1)
+THEN
+SetTag(_Char,(TAG)AI_USESPELL_A_33aa698c-aea0-43e2-bd16-582aa718fd3e);
+
+//END_REGION
+
+PROC
+PROC_MOO_Assault_ReadyPrisonSkeletons()
+AND
+DB_MOO_Assault_PrisonEnemies(_Char)
+THEN
+PROC_SetOnStage(_Char,1);
+PROC_MOO_Assault_AddToDefeatCounter((CHARACTER)_Char, "MOO_Assault_PrisonEnemies");
+PROC_MOO_Assault_PrisonEnemies_AllowDeathBloomSpell();
+
+//Cleanup
+IF
+DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6) 
+THEN
+TriggerSetLighting(LTN_SCL_MoonriseDungeon_E_000_0950bb86-52bd-451e-ad71-28d9f46a768d,"d6507cd9-da9c-af88-0279-e8e7f63f7a3b");
+PROC_MOO_Assault_ClearSkeletons();
+
+PROC
+PROC_MOO_Assault_ClearSkeletons()
+AND
+DB_MOO_Assault_PrisonEnemies(_Char)
+THEN
+PROC_DisappearOutOfSight((CHARACTER)_Char,"Run",1,"");
+
+//END_REGION
+//REGION Jaheira Recruit
+
+
+//Follower Jaheira
+
+//REGION Jaheira Joins As Follower Logic
+
+//If you get her killed
+
+IF
+DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+PROC_RemovePartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+PROC
+PROC_FlagReactionAfterDialog((CHARACTER)_Player, MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613)
+THEN
+PROC_MOO_Assault_TryToAddJaheiraToParty(_Player);
+
+PROC
+PROC_MOO_Assault_TryToAddJaheiraToParty((CHARACTER)_Player)
+AND
+NOT DB_CantAct(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+SetFlag(MOO_Assault_State_JaheiraJoinedAsFollower_40586224-e041-4d22-b6b8-752c3ebf7a3b);
+RemoveSpell((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "Shout_Wildshape_Panther");
+AddSpell((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "Shout_WildShape");
+AddPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player);
+PROC_MOO_Assault_JaheiraFollowerDialog();
+PROC_MOO_Assault_ClearJaheriaFromAssault();
+
+PROC
+PROC_MOO_Assault_TryToAddJaheiraToParty((CHARACTER)_Player)
+AND
+DB_CantAct(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+ClearFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _Player, 0);
+
+PROC
+PROC_MOO_Assault_JaheiraFollowerDialog()
+AND
+DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e)
+THEN
+DB_FlagReactionAfterDialog(MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78, MOO_Assault_Jaheira_Following_3be32acc-2e9b-11a3-a0f1-fc4b57045f37);
+NOT DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e);
+PROC_RemoveDialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, MOO_Assault_Jaheira_Following_3be32acc-2e9b-11a3-a0f1-fc4b57045f37);
+NOT DB_FlagReactionAfterDialog((FLAG)MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, (DIALOGRESOURCE)MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e);
+
+PROC
+PROC_GLO_PostReassignFollowerHook(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (CHARACTER)_OldLeader, (CHARACTER)_NewLeader)
+THEN
+ClearFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _OldLeader);
+SetFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _NewLeader);
+
+//END_REGION 
+
+//REGION Jaheira Leaves As Follower Logic
+
+PROC
+PROC_FlagReactionAfterDialog((CHARACTER)_Player, MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78)
+AND
+CharacterGetOwner(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player)
+THEN
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty(_Player);
+
+PROC
+PROC_FlagReactionAfterDialog((CHARACTER)_Player, MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78)
+AND
+DB_GLO_Follower_Reassigning(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _Player)
+THEN
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty(_Player);
+
+PROC
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty((CHARACTER)_Player)
+AND
+NOT DB_CantAct(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+RemoveSpell((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "Shout_WildShape");
+AddSpell((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "Shout_Wildshape_Panther");
+PROC_RemovePartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+PROC_MOO_Assault_JaheiraNPCDialog();
+PROC_MOO_Assault_AddJaheriaToAssault();
+ClearFlag(MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78, _Player, 0);
+
+PROC
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty((CHARACTER)_Player)
+AND
+DB_CantAct(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+ClearFlag(MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78, _Player, 0);
+
+//Listen for the removal of dialog and after this (and if she needs to) Jaheira is safe to AD
+PROC
+PROC_RemoveDialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+DB_MOO_Jaheira_NeedsToAD(1)
+THEN
+PROC_TryStartAD(MOO_Assault_AD_JaheiraFollowerLeave_e0b2e173-54fc-372d-f5da-c80e1517e677, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+NOT DB_MOO_Jaheira_NeedsToAD(1);
+
+PROC
+PROC_MOO_Assault_JaheiraNPCDialog()
+AND
+DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, MOO_Assault_Jaheira_Following_3be32acc-2e9b-11a3-a0f1-fc4b57045f37)
+THEN
+DB_FlagReactionAfterDialog((FLAG)MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, (DIALOGRESOURCE)MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e);
+NOT DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, MOO_Assault_Jaheira_Following_3be32acc-2e9b-11a3-a0f1-fc4b57045f37);
+PROC_RemoveDialog((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e);
+NOT DB_FlagReactionAfterDialog(MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78, MOO_Assault_Jaheira_Following_3be32acc-2e9b-11a3-a0f1-fc4b57045f37);
+
+//All the leaving options following can't listen to the flag because it might be set on the wrong person - So instead we get it from the person who's her controller
+
+//Leaving Jaheira's right-way trigger (IE you're heading the wrong way - this prompts a warning if you leave but she's still happy to wander around)
+IF
+LeftTrigger(_Player, S_MOO_AssaultJaheiraWarningTrigger_60b3181f-a64d-4236-9bf4-c14c84d9f38f)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1)
+AND
+CharacterGetOwner(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player)
+THEN
+SetFlag(MOO_Assault_State_JaheiraWarnedPlayer_bef8e565-dc4c-4a09-a11a-41a5ecb1331a, _Player, 1);
+PROC_TryStartAD(MOO_Assault_AD_JaheiraFollowerLeave_e0b2e173-54fc-372d-f5da-c80e1517e677, S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+
+// If you go back into the trigger, it unsets the Jaheira warning flag
+IF
+EnteredTrigger(_Player, S_MOO_AssaultJaheiraWarningTrigger_60b3181f-a64d-4236-9bf4-c14c84d9f38f)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1)
+AND
+CharacterGetOwner(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player)
+THEN
+SetFlag(MOO_Assault_State_JaheiraWarnedPlayer_bef8e565-dc4c-4a09-a11a-41a5ecb1331a, _Player, 0);
+
+//Leaving Jaheira's point-of-no-return trigger (She's going too far away)
+IF
+LeftTrigger(_Player, S_MOO_AssaultJaheiraLeavingTrigger_3b3f070a-c43b-4f91-ab85-edf416f829fa)
+AND
+CharacterGetOwner(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1)
+THEN
+ClearFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _Player, 0);
+DB_MOO_Jaheira_NeedsToAD(1);
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty(_Player);
+
+//Also adding in a very rudimentary leaves-on-entering-the-dungeon one - Will likely need to revisit
+PROC
+PROC_BlockUseOfItem(_Player, S_MOO_StairsToPrison_78b1cd2c-0edb-441d-a389-6163ba7dba48)
+AND
+DB_Players(_Player)
+AND
+CharacterGetOwner(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _OwnerPlayer)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1)
+AND
+QRY_IsInRange(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player, 20.0)
+THEN
+DB_CustomUseItemResponse(_Player, S_MOO_StairsToPrison_78b1cd2c-0edb-441d-a389-6163ba7dba48, 0);
+ClearFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _Player, 0);
+DB_MOO_Jaheira_NeedsToAD(1);
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty(_OwnerPlayer);
+
+//If she isn't in range, then we just boot her anyway but let the processing go ahead
+PROC
+PROC_BlockUseOfItem(_Player, S_MOO_StairsToPrison_78b1cd2c-0edb-441d-a389-6163ba7dba48, _Int)
+AND
+DB_Players(_Player)
+AND
+IsPartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1)
+AND
+CharacterGetOwner(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _OwnerPlayer)
+AND
+NOT QRY_IsInRange(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _Player, 20.0)
+THEN
+DB_CustomUseItemResponse(_Player, S_MOO_StairsToPrison_78b1cd2c-0edb-441d-a389-6163ba7dba48, 0);
+ClearFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _Player, 0);
+DB_MOO_Jaheira_NeedsToAD(1);
+PROC_MOO_Assault_TryToRemoveJaheiraFromParty(_OwnerPlayer);
+PROC_ProcessUseOfItem(_Player, S_MOO_StairsToPrison_78b1cd2c-0edb-441d-a389-6163ba7dba48, _Int);
+
+
+PROC
+PROC_MOO_Assault_RemoveJaheiraFromParty()
+AND
+DB_Players(_Player)
+AND
+GetFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _Player, 1)
+THEN
+ClearFlag(MOO_Assault_State_JaheiraJoinedParty_6a6328d4-faab-4d97-9662-eba21c4dd613, _Player, 0);
+ClearFlag(MOO_Assault_State_JaheiraLeftParty_ba466ab9-fb7b-4821-8e31-36e57bab9d78, _Player, 0);
+PROC_RemovePartyFollower(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+//REGION Jaheira Recruit
+//Move Jaheira to her point on the roof
+PROC
+PROC_MOO_Assault_Over()
+AND
+DB_InRegion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+THEN
+PROC_MOO_Assault_RemoveJaheiraFromParty();
+PROC_MOO_Assault_ClearJaheriaFromAssault();
+PROC_CharacterMoveTo(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_JaheiraRoofRecruitPoint_fb63ebfd-99ac-4e09-a258-478cd5a2a073, "Walk", "MOO_Assault_JeheiraReachedRoofPoint");
+
+PROC
+PROC_MOO_Assault_Over()
+AND
+NOT DB_InRegion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+THEN
+PROC_MOO_Assault_RemoveJaheiraFromParty();
+PROC_MOO_Assault_ClearJaheriaFromAssault();
+PROC_DisappearOutOfSightTo((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_RoofIntermediatePoint_c9586639-f1b5-4b67-998b-a2efe790dd4f, "Run", 1, "MOO_Assault_LeftToRoof"); //
+//Play AD as well?
+
+IF
+DB_InRegion(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_Roof_SUB_77c94e75-2924-4ca3-b7bd-d631b18d6c73)
+AND
+DB_GlobalFlag(MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6)
+AND
+NOT DB_GlobalFlag(MOO_Assault_State_JaheiraWaitingOnRoof_3f57e1aa-6ed0-4c38-855d-fcf7ddadcffb)
+THEN
+PROC_MOO_Assault_RemoveJaheiraFromParty();
+PROC_MOO_Assault_ClearJaheriaFromAssault();
+PROC_CharacterMoveTo(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_JaheiraRoofRecruitPoint_fb63ebfd-99ac-4e09-a258-478cd5a2a073, "Walk", "MOO_Assault_JeheiraReachedRoofPoint");
+
+IF
+EntityEvent(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_LeftToRoof")
+THEN
+TeleportTo(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_RoofPos_1e79870f-d67e-4cf2-8472-2eb51d96ef7c);
+SetOnStage(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, 1);
+
+IF
+EntityEvent(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_JeheiraReachedRoofPoint")
+THEN
+SetFlag(MOO_Assault_State_JaheiraWaitingOnRoof_3f57e1aa-6ed0-4c38-855d-fcf7ddadcffb);
+LookFromTrigger(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_JaheiraRoofRecruitPoint_fb63ebfd-99ac-4e09-a258-478cd5a2a073, 0);
+PROC_RemoveDialog(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+DB_Dialogs(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, Jaheira_Recruitment_Moonrise_04443f0f-9c62-d474-a98a-3e13eec31c69);
+
+
+//END_REGION
+
+//Companion Jaheira
+
+PROC
+PROC_FlagReactionAfterDialog(_Jaheira, (FLAG)OriginAddToParty_4870b2cd-210c-0fdc-9c58-4d0142bdae29, MOO_Assault_Jaheira_7bbfbf28-6ff0-13e8-2010-d3de6a7f5e9e)
+THEN
+PROC_MOO_Assault_ClearJaheriaFromAssault();
+
+PROC
+PROC_MOO_Assault_ClearJaheriaFromAssault()
+AND
+DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _)
+THEN
+SetCombatGroupID(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "");
+NOT DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TRIGGER)S_MOO_AssaultJaheiraPoint_4987be17-39bd-4c8b-bf50-4c462bd5ac32, "MOO_Assault_HarperAlly");
+NOT DB_MOO_Assault_AllyCombatReadyPositions(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(TRIGGER)S_MOO_AssaultAllyReadyPoints_001_2eb86f25-a51b-45c3-9134-922a0d812b0d);
+NOT DB_MOO_Assault_AllyMainFloorPositions(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_AllyMainFloorPoint_007_b24b58a3-c030-4d23-94d0-43c4e0c8a7ea);
+
+PROC
+PROC_MOO_Assault_AddJaheriaToAssault()
+AND
+NOT DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, _, _)
+THEN
+SetCombatGroupID(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, "MOO_Assault_HarperAlly");
+DB_MOO_AssaultPositions((CHARACTER)S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, (TRIGGER)S_MOO_AssaultJaheiraPoint_4987be17-39bd-4c8b-bf50-4c462bd5ac32, "MOO_Assault_HarperAlly");
+DB_MOO_Assault_AllyCombatReadyPositions(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a,(TRIGGER)S_MOO_AssaultAllyReadyPoints_001_2eb86f25-a51b-45c3-9134-922a0d812b0d);
+DB_MOO_Assault_AllyMainFloorPositions(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a, S_MOO_AllyMainFloorPoint_007_b24b58a3-c030-4d23-94d0-43c4e0c8a7ea);
+
+PROC
+PROC_MOO_Assault_AddJaheriaToAssault()
+AND
+DB_Defeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+AND
+NOT DB_PermaDefeated(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a)
+THEN
+PROC_CharacterFullRestore(S_Player_Jaheira_91b6b200-7d00-4d62-8dc9-99e8339dfa1a);
+
+//END_REGION
+
+//END_REGION
+
+//REGION Cleanup
+PROC
+PROC_LevelBecameUnreachable("SCL_Main_A")
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+SysClear("DB_MOO_AssaultPositions",1);
+SysClear("DB_MOO_Assault_AllyCombatReadyPositions",2);
+SysClear("DB_MOO_Assault_AllyMainFloorPositions",2);
+ENDEXITSECTION
+ParentTargetEdge "Act2_MOO_PreAssault"

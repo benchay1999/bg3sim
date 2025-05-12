@@ -1,0 +1,70 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Summon logic
+
+IF
+TemplateAddedTo(UNI_COL_Us_Summon_Brain_dbc5b484-26d6-41f3-bd50-dc74b8f9cc9b,_,_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+AddSpell(_Player,"Target_ConjureIntellectDevour",1,1);
+
+IF
+TemplateRemovedFrom(UNI_COL_Us_Summon_Brain_dbc5b484-26d6-41f3-bd50-dc74b8f9cc9b,_,_Player)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+RemoveSpell(_Player,"Target_ConjureIntellectDevour",1);
+
+IF
+UsingSpell(_,"Target_ConjureIntellectDevour",_,_,_)
+THEN
+PROC_GLO_Us_Summon_Dismiss();
+
+IF
+DB_PlayerSummons(_Summon)
+AND
+GetTemplate(_Summon,Intellect_Devourer_PlayerWildshape_27b9089b-9aef-44e9-aaf7-100e3e320823)
+//players will no longer be able to wildshape into an int dev and the root will be used only for the Us summon
+THEN
+DB_GLO_Us_Summoned((GUIDSTRING)_Summon);
+DB_Dialogs(_Summon,GLO_Us_Summon_7e34566d-ff87-f435-b050-0bc514bce084);
+SetTag(_Summon,(TAG)CAT_a7d28634-e3bf-40c3-8d8c-e1daf4acad74);
+
+PROC
+PROC_GLO_Us_Summon_Dismiss()
+AND
+DB_GLO_Us_Summoned((GUIDSTRING)_Summon)
+THEN
+Die(_Summon, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 0, 0.0);
+NOT DB_GLO_Us_Summoned(_Summon);
+
+IF
+DB_GLO_Us_Summoned((GUIDSTRING)_Summon)
+AND
+DB_GlobalFlag((FLAG)TUT_Lab_State_LobotomizedBrain_d303b55f-b9b1-4acc-b052-26622a337867)
+THEN
+ApplyStatus(_Summon,"LOBOTOMIZED_US",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_GLO_Us_Summoned((GUIDSTRING)_Summon)
+AND
+NOT DB_GlobalFlag((FLAG)TUT_Lab_State_LobotomizedBrain_d303b55f-b9b1-4acc-b052-26622a337867)
+THEN
+ApplyStatus(_Summon,"NORMAL_US",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+CharacterLeftParty(_Summon)
+AND
+DB_GLO_Us_Summoned(_Summon)
+THEN
+NOT DB_GLO_Us_Summoned(_Summon);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

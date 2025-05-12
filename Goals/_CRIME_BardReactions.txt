@@ -1,0 +1,605 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Public API
+// QRY_Bard_GetPerformSpell(_Character, _SongName)
+// - Returns in DB_QRY_RTN_Bard_GetPerformSpell() the name of the perform spell to cast so that _Character
+//   plays _SongName on the instrument they currently have equipped or in their inventory
+// - Valid values for _SongName are:
+//  - "Bard_Perform_ThePower": dynamic, energetic
+//  - "Bard_Perform_Stargazing": mellow, emotive
+//  - "Bard_Perform_BardDance": traditional pub music
+//  - "Bard_Perform_MainTheme": DLC song #1
+//  - "Bard_Perform_SingForMe": DLC song #2
+//  - "Bard_Perform_QueensHighSeas": DLC song #3
+
+// Private stuff
+
+// min NPCs - DC to get an "excellent performance" award
+DB_CRIME_MusicalPerformance_DC(8, (DIFFICULTYCLASS)Act1_NearlyImpossible_ea049218-36a8-4440-a3fc-f3019a57c86b);
+DB_CRIME_MusicalPerformance_DC(6, (DIFFICULTYCLASS)Act1_VeryHard_8986db4d-09af-46ee-9781-ac88ec10fa0e);
+DB_CRIME_MusicalPerformance_DC(4, (DIFFICULTYCLASS)Act1_Hard_831e1fbe-428d-4f4d-bd17-4206d6efea35);
+DB_CRIME_MusicalPerformance_DC(2, (DIFFICULTYCLASS)Act1_Medium_fa621d38-6f83-4e42-a55c-6aa651a75d46);
+DB_CRIME_MusicalPerformance_DC(1, (DIFFICULTYCLASS)Act1_VeryEasy_8d398021-34e0-40b9-b7b2-0445f38a4c0b);
+
+// You sing as well as I do
+// - Continuous reaction (goblins keep throwing stones)
+DB_CRIME_MusicalPerformance_Status("PERFORM_NEGATIVE","MusicalPerformance_Bad","OnStatusApply");
+// - oneshot reactions (other just comment once, and then ignore you)
+DB_CRIME_MusicalPerformance_Status("PERFORM_NEGATIVE","MusicalPerformance_Bad_OneShot","OnStatusApply");
+// You sing as well as Nightingale MacFinch
+// - regular plebs falling all over themselves in adoration
+DB_CRIME_MusicalPerformance_Status("PERFORM_POSITIVE","MusicalPerformance_Good","OnStatusApply");
+// Bards joining in on the fun
+DB_CRIME_MusicalPerformance_Status("PERFORM_POSITIVE", "MusicalPerformance_Good_BardNPC", "OnMainPerformerStart");
+
+DB_CRIME_MusicalPerformance_SoundNames("PERFORM_NEGATIVE","Amb_Walla_BardReactions_CrowdBooing","Amb_Walla_BardReactions_CrowdBooing_Stop");
+DB_CRIME_MusicalPerformance_SoundNames("PERFORM_POSITIVE","Amb_Walla_BardReactions_CrowdCheering","Amb_Walla_BardReactions_CrowdCheering_Stop");
+
+DB_Bard_InstrumentRootToSpell((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,"_Whistle");
+DB_Bard_InstrumentRootToSpell((ITEMROOT)TOOL_GEN_Music_Drum_Small_B_76944b2f-1e79-4c22-8d9a-e6c30e5194e0,"_Drum");
+DB_Bard_InstrumentRootToSpell((ITEMROOT)TOOL_GEN_Music_Flute_A_848ad8dc-59f3-464b-b8b2-95eab6022446,"_Flute");
+DB_Bard_InstrumentRootToSpell((ITEMROOT)TOOL_GEN_Music_Guitar_Lute_A_8f98a7e7-c773-4b58-9127-5cf79b9206e9,"_Lute");
+DB_Bard_InstrumentRootToSpell((ITEMROOT)TOOL_GEN_Music_Lyre_A_13739f15-7366-4d7f-9926-991e98b9e964,"_Lyre");
+DB_Bard_InstrumentRootToSpell((ITEMROOT)TOOL_GEN_Music_Violin_A_aca5d144-773b-42ba-aca1-6903c60c418c,"_Violin");
+
+// Mapping proper song names to technical names from the stats
+DB_Bard_DLC_SongsMapping("Bard_Perform_MainTheme", "Bard_Perform_DOS2_1");
+DB_Bard_DLC_SongsMapping("Bard_Perform_SingForMe", "Bard_Perform_DOS2_2");
+DB_Bard_DLC_SongsMapping("Bard_Perform_QueensHighSeas", "Bard_Perform_DOS2_3");
+KBSECTION
+//REGION Trigger the perform disturbance
+IF
+StatusApplied(_Performer,_Status,_,_)
+AND
+DB_PartyMembers((CHARACTER)_Performer)
+AND
+NOT DB_Is_InCombat(_Performer,_)
+AND
+NOT DB_CRIME_MusicalPerformance(_,_Performer,_)
+AND
+DB_CRIME_MusicalPerformance_Status(_Status,_DisturbanceName,"OnStatusApply")
+AND
+CrimeGetNewID(_ID)
+THEN
+DB_CRIME_MusicalPerformance(_ID,_Performer,_DisturbanceName);
+PROC_CharacterRegisterCrime(_Performer,_DisturbanceName,_Performer,NULL_00000000-0000-0000-0000-000000000000,_ID);
+
+IF
+StatusRemoved(_Performer,_Status,_,_)
+AND
+DB_CRIME_MusicalPerformance_Status(_Status,_DisturbanceName,_)
+AND
+DB_CRIME_MusicalPerformance(_ID,(CHARACTER)_Performer,_DisturbanceName)
+THEN
+PROC_CRIME_MusicalPerformance_TriggerFlourishes(_ID);
+DB_CRIME_MusicalPerformance_WaitForFlourishesToStop(_ID);
+
+IF
+DB_CRIME_MusicalPerformance_WaitForFlourishesToStop(_ID)
+AND
+NOT DB_CRIME_MusicalPerformance_Flourish(_ID,(CHARACTER)_,(CHARACTER)_)
+THEN
+NOT DB_CRIME_MusicalPerformance_WaitForFlourishesToStop(_ID);
+PROC_CRIME_StopForAllCriminals(_ID);
+//END_REGION
+
+//REGION Cancel when entering combat
+IF
+EnteredCombat(_Performer,_)
+AND
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,(CHARACTER)_Performer)
+THEN
+ObjectTimerCancel(_NPC,"CRIME_BardReactions_Flourish_Timer");
+NOT DB_CRIME_MusicalPerformance_WaitForFlourishesToStop(_ID);
+NOT DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer);
+
+IF
+EnteredCombat(_Performer,_)
+AND
+DB_CRIME_MusicalPerformance(_ID,(CHARACTER)_Performer,_DisturbanceName)
+THEN
+PROC_CRIME_StopForAllCriminals(_ID);
+//END_REGION
+
+//REGION Crowd cheering/booing
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,_,"Confronting")
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,_DisturbanceName)
+AND
+DB_CRIME_MusicalPerformance_Status(_Status,_DisturbanceName,"OnStatusApply")
+AND
+DB_CRIME_MusicalPerformance_SoundNames(_Status,_SoundStartEvent,_SoundStopEvent)
+THEN
+PROC_CRIME_MusicalPerformance_MaybeStartWalla(_Performer,_SoundStartEvent,_SoundStopEvent);
+DB_CRIME_MusicalPerformance_Listener(_ID,_Performer,_NPC);
+
+PROC
+PROC_CRIME_MusicalPerformance_MaybeStartWalla((CHARACTER)_Performer,(STRING)_SoundStartEvent,(STRING)_SoundStopEvent)
+AND
+NOT DB_CRIME_MusicalPerformance_Listener(_,_Performer,_)
+THEN 
+DB_CRIME_MusicalPerformance_SoundStarted(_Performer,_SoundStopEvent);
+PlaySound(_Performer,_SoundStartEvent);
+
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,"Confronting",_)
+AND
+DB_CRIME_MusicalPerformance_Listener(_ID,_Performer,_NPC)
+THEN
+NOT DB_CRIME_MusicalPerformance_Listener(_ID,_Performer,_NPC);
+PROC_CRIME_MusicalPerformance_MaybeStopWalla(_Performer);
+
+PROC
+PROC_CRIME_MusicalPerformance_MaybeStopWalla((CHARACTER)_Performer)
+AND
+NOT DB_CRIME_MusicalPerformance_Listener(_,_Performer,_)
+AND
+DB_CRIME_MusicalPerformance_SoundStarted(_Performer,_SoundStopEvent)
+THEN
+NOT DB_CRIME_MusicalPerformance_SoundStarted(_Performer,_SoundStopEvent);
+PlaySound(_Performer,_SoundStopEvent);
+
+//END_REGION
+
+//REGION Ignore good/bad performances for 5 minutes after reacting to one
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,_,"Confronting")
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,_DisturbanceName)
+AND
+// Don't ignore if this is for a bard joining in the performance
+NOT DB_CRIME_MusicalPerformance_Status(_,_DisturbanceName,"OnMainPerformerStart")
+THEN
+DB_CRIME_MusicalPerformance_Confronted(_ID,_NPC,_DisturbanceName);
+
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,"Confronting",_NotConfronting)
+AND
+// Can't use DB_CRIME_MusicalPerformance here, because this can trigger after PROC_CRIME_Finished()
+DB_CRIME_MusicalPerformance_Confronted(_ID,_NPC,_DisturbanceName)
+AND
+Concatenate("CRIME_MusicalPerformance_Ignore_",_DisturbanceName,_TimerName)
+THEN
+NOT DB_CRIME_MusicalPerformance_Confronted(_ID,_NPC,_DisturbanceName);
+// Can't use PROC_CharacterDisable/EnableCrime, because that may conflict
+// with manual enabling/disabling in between
+DB_CRIME_MusicalPerformance_NPCIgnoring(_NPC,_DisturbanceName,_TimerName);
+// 5 minutes
+PROC_CRIME_MusicalPerformance_NPCIgnoring_LaunchTimer(_NPC,_TimerName);
+
+PROC
+PROC_CRIME_MusicalPerformance_NPCIgnoring_LaunchTimer((CHARACTER)_NPC,(STRING)_TimerName)
+AND
+NOT DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1)
+THEN
+// may still be running if the reaction got interrupted by the toincoss
+ObjectTimerCancel(_NPC,_TimerName);
+ObjectTimerLaunch(_NPC,_TimerName,300000);
+
+PROC
+PROC_CRIME_MusicalPerformance_NPCIgnoring_LaunchTimer((CHARACTER)_NPC,(STRING)_TimerName)
+AND
+DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1)
+THEN
+// may still be running if the reaction got interrupted by the toincoss
+ObjectTimerCancel(_NPC,_TimerName);
+ObjectTimerLaunch(_NPC,_TimerName,2000);
+
+IF
+ObjectTimerFinished(_NPC,_TimerName)
+AND
+DB_CRIME_MusicalPerformance_NPCIgnoring((CHARACTER)_NPC,_DisturbanceName,_TimerName)
+THEN
+NOT DB_CRIME_MusicalPerformance_NPCIgnoring(_NPC,_DisturbanceName,_TimerName);
+
+PROC
+PROC_CRIME_CrimeTriggers_GetSilentWitnessesForCrime((INTEGER)_CrimeID,(CHARACTER)_Perpetrator,(STRING)_DisturbanceName,(GUIDSTRING)_Evidence,(CHARACTER)_Victim)
+AND
+DB_CRIME_MusicalPerformance_NPCIgnoring(_NPC,_DisturbanceName,_)
+THEN
+DB_CRIME_CrimeTriggers_SilentWitnessesForCrime(_NPC);
+//END_REGION
+
+//REGION Good performance: check whether it's excellent
+// One turn (6 seconds) into the performance, count the number of reacting NPCs
+// to roll the skill check
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,_,"Confronting")
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,"MusicalPerformance_Good")
+AND
+NOT DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_)
+THEN
+PROC_CRIME_MusicalPerformance_Good_LaunchTimer(_Performer);
+
+// Count reacting NPCs
+// Logic: more NPCs -> higher DC to get an "excellent" performance score (which results in NPCs tipping you)
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,_,"Confronting")
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,"MusicalPerformance_Good")
+AND
+NOT DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC)
+THEN
+DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC);
+PROC_ObjectCountHelper(_Performer,"CRIME_MusicalPerformance_NPCs");
+
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,"Confronting",_NotConfronting)
+AND
+DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC)
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,_Disturbance)
+THEN
+NOT DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC);
+PROC_ObjectCountHelper(_Performer,"CRIME_MusicalPerformance_NPCs",-1);
+
+PROC
+PROC_CRIME_MusicalPerformance_Good_LaunchTimer((CHARACTER)_Performer)
+AND
+NOT DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1)
+THEN
+ObjectTimerLaunch(_Performer,"CRIME_MusicalPeformance_Good", 6000);
+
+PROC
+PROC_CRIME_MusicalPerformance_Good_LaunchTimer((CHARACTER)_Performer)
+AND
+DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1)
+THEN
+ObjectTimerLaunch(_Performer,"CRIME_MusicalPeformance_Good", 500);
+
+IF
+TextEvent("bard_quickperformance")
+THEN
+DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1);
+
+IF
+TextEvent("bard_quickperformance_clear")
+THEN
+NOT DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1);
+
+// DC based on number of reacting NPCs
+IF
+ObjectTimerFinished(_Performer,"CRIME_MusicalPeformance_Good")
+AND
+DB_CRIME_MusicalPerformance(_ID,(CHARACTER)_Performer,"MusicalPerformance_Good")
+AND
+DB_ObjectCountHelper(_Performer,"CRIME_MusicalPerformance_NPCs",_NPCCount)
+AND
+QRY_OnlyOnce_Reset("CRIME_MusicalPerformance_DC")
+AND
+DB_CRIME_MusicalPerformance_DC(_MinNPC,_DC)
+AND
+_NPCCount >= _MinNPC
+AND
+QRY_OnlyOnce("CRIME_MusicalPerformance_DC")
+THEN
+RequestPassiveRoll((CHARACTER)_Performer,_Performer,"SkillCheck","Performance",_DC,0,"CRIME_MusicalPerformance_PerformanceCheck");
+
+// Temporary workaround for the fact that NPC inventories don't get loaded until you traded with or pickpocketed them,
+// so if we only do this if the NPC has gold, most NPCs won't do this
+IF
+RollResult("CRIME_MusicalPerformance_PerformanceCheck",_Performer,_Performer,1,_, _)
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,_DisturbanceName)
+AND
+DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC)
+AND
+IsTagged(_NPC,(TAG)HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8,1)
+/*
+// This would mean you almost never get gold in the city, as vignette and crowd characters never have gold...
+AND
+GetGold(_NPC,_Amount)
+AND
+_Amount > 0
+*/
+THEN
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer);
+
+IF
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer)
+AND
+DB_CRIME_MusicalPerformance_DEBUG_QuickPerformanceTimer(1)
+THEN
+PROC_CRIME_MusicalPerformance_Flourish_LaunchTimer(_NPC);
+
+PROC
+PROC_CRIME_MusicalPerformance_TriggerFlourishes((INTEGER)_ID)
+AND
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer)
+THEN
+PROC_CRIME_MusicalPerformance_Flourish_LaunchTimer((CHARACTER)_NPC);
+
+// Don't wait too long, since they're still playing their listening animation
+PROC
+PROC_CRIME_MusicalPerformance_Flourish_LaunchTimer((CHARACTER)_NPC)
+AND
+Random(200,_Rand)
+AND
+IntegerSum(100,_Rand,_Delay)
+THEN
+ObjectTimerLaunch(_NPC,"CRIME_BardReactions_Flourish_Timer",_Delay);
+
+// Start reacting to a different disturbance -> no money
+IF
+OnCrimeInvestigatorSwitchedState(_,_NPC,"Idle",_)
+AND
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer)
+THEN
+NOT DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer);
+ObjectTimerCancel(_NPC,"CRIME_BardReactions_Flourish_Timer");
+
+IF
+ObjectTimerFinished((CHARACTER)_NPC,"CRIME_BardReactions_Flourish_Timer")
+AND
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer)
+AND
+NOT DB_CantAct(_NPC)
+AND
+NOT DB_CantMove(_NPC)
+AND
+// Avoid throwing to the other side of the map if the performer meanwhile teleported out
+QRY_IsInRange(_NPC,_Performer,10.0)
+AND
+QRY_Helper_GetAnyRandomPositionInArea(_NPC,_Performer)
+AND
+DB_Helper_GetAnyRandomPositionInArea_Result(_X,_Y,_Z)
+THEN
+UseSpellAtPosition(_NPC,"Projectile_GEB_Perform_TossCoin",_X,_Y,_Z);
+DB_CRIME_MusicalPerformance_TossCoin((CHARACTER)_NPC,(CHARACTER)_Performer);
+
+IF
+CastSpellFailed(_NPC,"Projectile_GEB_Perform_TossCoin",_,_,_)
+AND
+DB_CRIME_MusicalPerformance_TossCoin((CHARACTER)_NPC,(CHARACTER)_Performer)
+THEN
+NOT DB_CRIME_MusicalPerformance_TossCoin((CHARACTER)_NPC,(CHARACTER)_Performer);
+
+IF
+CastedSpell(_NPC,"Projectile_GEB_Perform_TossCoin",_,_,_)
+AND
+DB_CRIME_MusicalPerformance_TossCoin((CHARACTER)_NPC,(CHARACTER)_Performer)
+THEN
+NOT DB_CRIME_MusicalPerformance_TossCoin((CHARACTER)_NPC,(CHARACTER)_Performer);
+PROC_CRIME_MusicalPerformance_TossedCoin((CHARACTER)_NPC,(CHARACTER)_Performer);
+
+PROC
+PROC_CRIME_MusicalPerformance_TossedCoin((CHARACTER)_,(CHARACTER)_)
+THEN
+DB_NOOP(1); //for Gustav story compilation
+
+IF
+ObjectTimerFinished((CHARACTER)_NPC,"CRIME_BardReactions_Flourish_Timer")
+AND
+DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer)
+THEN
+NOT DB_CRIME_MusicalPerformance_Flourish(_ID,_NPC,_Performer);
+
+IF
+CastedSpell(_NPC,"Projectile_GEB_Perform_TossCoin",_,_,_)
+AND
+GetGold(_NPC,_Amount)
+AND
+_Amount > 0
+THEN
+// Asserts if not enough gold, so don't call unconditionally
+AddGold(_NPC,-1);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_ID)
+AND
+DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC)
+THEN
+NOT DB_CRIME_MusicalPerformance_NPCs(_ID,_Performer,_NPC);
+
+
+PROC
+PROC_CRIME_Finished((INTEGER)_ID)
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,"MusicalPerformance_Good")
+THEN
+ObjectTimerCancel(_Performer,"CRIME_MusicalPeformance_Good");
+PROC_ObjectCountHelperReset(_Performer,"CRIME_MusicalPerformance_NPCs");
+//END_REGION
+
+//REGION NPC bard reactions to playing well
+IF
+MainPerformerStarted(_BardPlayer,_SpellInfix)
+AND
+DB_Players(_BardPlayer)
+AND
+DB_CRIME_MusicalPerformance(_ID,_BardPlayer,_DisturbanceName)
+AND
+DB_CRIME_MusicalPerformance_Status("PERFORM_POSITIVE",_DisturbanceName,"OnStatusApply")
+AND
+DB_CRIME_MusicalPerformance_Status("PERFORM_POSITIVE",_NPCJoningDisturbance,"OnMainPerformerStart")
+AND
+QRY_CRIME_MusicalPerformance_CorrectSpellInfix(_SpellInfix)
+AND
+DB_QRYRTN_CRIME_MusicalPerformance_CorrectedSpellInfix(_CorrectedSpellInfix)
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+DB_CRIME_MusicalPerformanceSpell(_CrimeID,_CorrectedSpellInfix);
+DB_CRIME_MusicalPerformance(_CrimeID,_BardPlayer,_NPCJoningDisturbance);
+PROC_CharacterRegisterCrime(_BardPlayer,_NPCJoningDisturbance,_BardPlayer,NULL_00000000-0000-0000-0000-000000000000,_CrimeID);
+
+QRY
+QRY_CRIME_MusicalPerformance_CorrectSpellInfix((STRING)_SpellInfix)
+AND
+DB_QRYRTN_CRIME_MusicalPerformance_CorrectedSpellInfix(_OldSpellInfix)
+THEN
+NOT DB_QRYRTN_CRIME_MusicalPerformance_CorrectedSpellInfix(_OldSpellInfix);
+
+QRY
+QRY_CRIME_MusicalPerformance_CorrectSpellInfix((STRING)_SpellInfix)
+AND
+DB_Bard_DLC_SongsMapping(_SpellInfix, _UpdatedSpellInfix)
+THEN
+DB_QRYRTN_CRIME_MusicalPerformance_CorrectedSpellInfix(_UpdatedSpellInfix);
+
+QRY
+QRY_CRIME_MusicalPerformance_CorrectSpellInfix((STRING)_SpellInfix)
+AND
+NOT DB_QRYRTN_CRIME_MusicalPerformance_CorrectedSpellInfix(_)
+THEN
+DB_QRYRTN_CRIME_MusicalPerformance_CorrectedSpellInfix(_SpellInfix);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_MusicalPerformanceSpell(_CrimeID,_SpellInfix)
+THEN
+NOT DB_CRIME_MusicalPerformanceSpell(_CrimeID,_SpellInfix);
+
+IF
+CharacterOnCrimeSensibleActionNotification(_Bard,_,_CrimeID,"CRIME_OsirisBardPerformWellReaction",_Dialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_)
+AND
+NOT DB_CantAct(_Bard)
+AND
+NOT HasActiveStatus(_Bard,"SILENCED",1)
+AND
+NOT DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_,_)
+THEN
+PROC_CRIME_MusicalPerformance_BardJoins(_Bard,_Criminal1,_CrimeID);
+
+PROC
+PROC_CRIME_MusicalPerformance_BardJoins((CHARACTER)_Bard,(CHARACTER)_Criminal,(INTEGER)_CrimeID)
+AND
+DB_CRIME_MusicalPerformanceSpell(_CrimeID,_SpellInfix)
+AND
+QRY_Bard_GetPerformSpell(_Bard,_SpellInfix)
+AND
+DB_QRY_RTN_Bard_GetPerformSpell(_Spell)
+THEN
+DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_Criminal,_CrimeID);
+EndRepose(_Bard);
+UseSpell(_Bard,_Spell,_Bard,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+CharacterOnCrimeSensibleActionNotification(_Bard,_,_CrimeID,"CRIME_OsirisBardPerformWellReaction",_Dialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_)
+AND
+NOT DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_,_CrimeID)
+THEN
+CrimeConfrontationDone(_CrimeID,_Bard);
+
+IF
+CastSpellFailed((CHARACTER)_Bard,_,_,_,_)
+AND
+DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_Criminal,_CrimeID)
+THEN
+NOT DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_Criminal,_CrimeID);
+CrimeConfrontationDone(_CrimeID,_Bard);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_Criminal,_CrimeID)
+THEN
+NOT DB_CRIME_BardNPCPerformingWithPlayers(_Bard,_Criminal,_CrimeID);
+
+QRY
+QRY_Bard_GetPerformSpell((CHARACTER)_Bard,(STRING)_SpellInfix)
+AND
+Concatenate("Shout_",_SpellInfix,_SpellPrefix)
+AND
+QRY_Bard_GetPerformSpellIntern((CHARACTER)_Bard,_SpellPrefix)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Bard_GetPerformSpellIntern((CHARACTER)_Bard,(STRING)_SpellPrefix)
+AND
+DB_QRY_RTN_Bard_GetPerformSpell(_Spell)
+THEN
+NOT DB_QRY_RTN_Bard_GetPerformSpell(_Spell);
+
+// Based on equipped instrument
+QRY
+QRY_Bard_GetPerformSpellIntern((CHARACTER)_Bard,(STRING)_SpellPrefix)
+AND
+// Fails if nothing is equipped in that slot
+GetEquippedItem(_Bard,"MusicalInstrument",_Item)
+AND
+GetTemplate(_Item,_Root)
+AND
+DB_Bard_InstrumentRootToSpell((ITEMROOT)_Root,_SpellSuffix)
+AND
+Concatenate(_SpellPrefix,_SpellSuffix,_Spell)
+THEN
+DB_QRY_RTN_Bard_GetPerformSpell(_Spell);
+
+// Fallback: check if they have an instrument in their inventory (like Alfira)
+QRY
+QRY_Bard_GetPerformSpellIntern((CHARACTER)_Bard,(STRING)_SpellPrefix)
+AND
+NOT DB_QRY_RTN_Bard_GetPerformSpell(_)
+AND
+DB_Bard_InstrumentRootToSpell(_InstrumentRoot,_SpellSuffix)
+AND
+NOT DB_QRY_RTN_Bard_GetPerformSpell(_)
+AND
+_InstrumentRoot != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetItemByTemplateInInventory(_InstrumentRoot,_Bard,_)
+AND
+Concatenate(_SpellPrefix,_SpellSuffix,_Spell)
+THEN
+DB_QRY_RTN_Bard_GetPerformSpell(_Spell);
+
+QRY
+QRY_Bard_GetPerformSpellIntern((CHARACTER)_Bard,(STRING)_SpellPrefix)
+AND
+NOT DB_QRY_RTN_Bard_GetPerformSpell(_)
+AND
+DB_Bard_InstrumentRootToSpell((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,_SpellSuffix)
+AND
+Concatenate(_SpellPrefix,_SpellSuffix,_Spell)
+THEN
+DB_QRY_RTN_Bard_GetPerformSpell(_Spell);
+//END_REGION
+
+//REGION Helpers
+PROC
+PROC_CRIME_MusicalPerformance_DisableBadReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_MusicalPerformance_Status("PERFORM_NEGATIVE",_Disturbance,_)
+THEN
+PROC_CharacterDisableCrime(_NPC,_Disturbance);
+
+PROC
+PROC_CRIME_MusicalPerformance_EnableBadReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_MusicalPerformance_Status("PERFORM_NEGATIVE",_Disturbance,_)
+THEN
+PROC_CharacterEnableCrime(_NPC,_Disturbance);
+
+PROC
+PROC_CRIME_MusicalPerformance_DisableAllReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_MusicalPerformance_Status(_,_Disturbance,_)
+THEN
+PROC_CharacterDisableCrime(_NPC,_Disturbance);
+
+PROC
+PROC_CRIME_MusicalPerformance_EnableAllReactions((CHARACTER)_NPC)
+AND
+DB_CRIME_MusicalPerformance_Status(_,_Disturbance,_)
+THEN
+PROC_CharacterEnableCrime(_NPC,_Disturbance);
+//END_REGION
+
+//REGION Final cleanup
+PROC
+PROC_CRIME_Finished((INTEGER)_ID)
+AND
+DB_CRIME_MusicalPerformance(_ID,_Performer,_DisturbanceName)
+THEN
+NOT DB_CRIME_MusicalPerformance(_ID,_Performer,_DisturbanceName);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

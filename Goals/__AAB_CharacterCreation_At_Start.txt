@@ -1,0 +1,163 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_PredefinedStartOrigin((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Origins_UnavailableForRandom((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+// Started character creation -> this goal is irrelevant
+IF
+DB_CharacterCreationStarted(1)
+THEN
+GoalCompleted;
+
+// Skipping character creation ->
+// select a random starting origin and remove the others
+// Needs to happen at the start, because starting a region will also initialise the origin recruitment
+// dialogs etc, which would be cleared again by PROC_PlayersSelected() if this happened
+// at the end
+
+// Direct teleport to a level from the main menu from the game
+PROC
+PROC_SelectRandomStartOrigin()
+AND
+DB_Origins((CHARACTER)_Org)
+THEN
+PurgeOsirisQueue(_Org);
+
+PROC
+PROC_SelectRandomStartOrigin()
+AND
+NOT DB_PredefinedStartOrigin(_)
+AND
+NOT DB_RandomizeStartOrigin(1)
+THEN
+PROC_SetAsStartOrigin((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+
+PROC
+PROC_SelectRandomStartOrigin()
+AND
+NOT DB_PredefinedStartOrigin(_)
+AND
+DB_RandomizeStartOrigin(1)
+AND
+DB_Origins(_Origin)
+AND
+NOT DB_Origins_UnavailableForRandom(_Origin)
+THEN
+DB_Origins_Random(_Origin);
+
+PROC
+PROC_SelectRandomStartOrigin()
+AND
+NOT DB_PredefinedStartOrigin(_)
+AND
+DB_RandomizeStartOrigin(1)
+AND
+QRY_GetRandom("DB_Origins_Random",1,"DB_RandomStartOrigin")
+AND
+DB_RandomStartOrigin((CHARACTER)_RandomStartOrigin)
+THEN
+NOT DB_RandomStartOrigin(_RandomStartOrigin);
+PROC_SetAsStartOrigin(_RandomStartOrigin);
+
+PROC
+PROC_SelectRandomStartOrigin()
+AND
+DB_Origins_Random(_Origin)
+THEN
+NOT DB_Origins_Random(_Origin);
+
+PROC
+PROC_SelectRandomStartOrigin()
+AND
+DB_PredefinedStartOrigin(_Origin)
+THEN
+NOT DB_PredefinedStartOrigin(_Origin);
+PROC_SetAsStartOrigin(_Origin);
+
+IF
+CharacterJoinedParty(_Dummy)
+AND
+NOT DB_CharacterCreation_FirstDummy(_)
+AND
+DB_CharacterCreationDummy(_Dummy)
+THEN
+DB_CharacterCreation_FirstDummy(_Dummy);
+
+//Code algorithm decides whether to teleport the CharacterCreation Dummy to the local level or not.
+//If it was teleported and active in the local level we can use one of the campaign origins.
+//If not, the developer will have to place their own player characters.
+PROC
+PROC_SetAsStartOrigin((CHARACTER)_Origin)
+AND
+Exists(_Origin,1)
+AND
+DB_CharacterCreation_FirstDummy(_Dummy)
+AND
+GetRegion(_Dummy,_Region)
+AND
+DB_CurrentLevel(_Region)
+THEN
+SetOnStage(_Origin,1);
+SetTag(_Origin, (TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+PurgeOsirisQueue(_Origin);
+TeleportTo(_Origin,_Dummy,"ChosenPlayerTeleported",1);
+MakePlayer(_Origin, NULL_00000000-0000-0000-0000-000000000000);
+DB_Players(_Origin);
+DB_Avatars(_Origin);
+DB_ChosenOriginWaitingForTeleport(_Origin);
+MakePlayerActive(_Origin);
+RequestAutoLevel(_Origin);
+
+IF
+EntityEvent((CHARACTER)_Player,"ChosenPlayerTeleported")
+AND
+DB_ChosenOriginWaitingForTeleport(_Player)
+AND
+DB_CurrentLevel(_Level)
+THEN
+NOT DB_ChosenOriginWaitingForTeleport(_Player);
+PROC_GLO_Origins_SetupRecruitment(_Level);
+
+IF
+LevelLoaded(_Lvl)
+AND
+IsGameLevel(_Lvl,1)
+THEN
+PROC_SkippedCC();
+
+PROC
+PROC_SkippedCC()
+AND
+NOT DB_StoryReloaded(1)
+AND
+DB_PredefinePartyPreset_Loaded(_)
+THEN
+DB_CharacterCreationStarted(0);
+
+PROC
+PROC_SkippedCC()
+AND
+NOT DB_StoryReloaded(1)
+AND
+NOT DB_PredefinePartyPreset_Loaded(_)
+THEN
+// First select random start origin, because DB_CharacterCreationStarted(0) triggers
+// PROC_Shared_CharacterCreationFinished, which in turn initialises the Act 1 origin
+// goals (which check DB_Players to know whether they should perform the NPC recruitment
+// setup)
+PROC_SelectRandomStartOrigin();
+DB_CharacterCreationStarted(0);
+DB_GLO_PlayerCharactersSetup(1);
+PROC_PlayersSelected("Initial");
+NOT DB_GLO_PlayerCharactersSetup(1);
+
+PROC
+PROC_SkippedCC()
+THEN
+NotifyCharacterCreationSkipped();
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

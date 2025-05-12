@@ -1,0 +1,213 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Balthazar's Secrets
+SetOnStage(S_MOO_HeartKey_12303d80-c793-4fea-93f0-73e57d57e56f, 0);
+
+SetCanInteract(S_MOO_HeartBox_93307c10-c4ac-4b05-aa8e-bc1436f21bb3, 0);
+
+DB_BookFlags(S_MOO_BalthazarSecretBook_8f90de22-6a7c-4579-a966-73c0d80d7a54,MOO_BalthazarsSecrets_Knows_NightsongSecret_3599ecf9-382d-46b7-8c72-c7d99303d7c4);
+
+/*
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_DecapitedHead_A_06fb21d6-d53d-4f97-9d1f-3598191618bc);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_DecapitedHead_B_fc6a7f8a-f673-4126-9441-4aae62ae48ba);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_DecapitedHead_C_72f8dff6-076c-4ff4-b53b-75cde0fde28e);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)LOOT_BODYPART_HeadElfFemale_05a9cbf9-cc11-4f48-b3ad-ef04f6723fc0);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_HeadFemale_A_80469bc6-d30e-4f96-b483-58245ef92b6f);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_HeadFemale_A_Githyanki_73a92602-a779-47c3-9c92-408d2225daf6);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_HeadFemale_A_Tiefling_afe2be1f-d8c6-4615-8cef-c7106086daf0);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_HeadMale_A_d691066b-8592-49a4-8e94-a32b6433997c);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_HeadMale_A_Githyanki_03d94b9b-3926-4570-a95f-cfb2da22678d);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)DEC_GEN_Corpse_Body_Part_HeadMale_A_Tiefling_5f18ac06-e4df-488b-97c7-162bdb522555);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)LOOT_GEN_Heart_A_ce6d496d-f5f3-4e21-8ca6-1255824078de);
+DB_MOO_BalthazarsSecrets_ValidPart((ITEMROOT)UNI_UND_MyconidRevenge_NereHead_6acd3cfa-3dcc-4b42-ad25-ca898ce237f7);
+*/
+
+DB_MOO_BalthazarsSecrets_TrapBooks((ITEM) S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94);
+DB_MOO_BalthazarsSecrets_TrapBooks(S_MOO_TrapBook_002_55f57258-967e-4137-95a3-be396121a308);
+DB_MOO_BalthazarsSecrets_TrapBooks(S_MOO_TrapBook_003_760c687e-1412-4845-9060-9b7eba5f5f01);
+DB_MOO_BalthazarsSecrets_TrapBooks(S_MOO_TrapBook_004_02691ba1-8698-4b61-ab35-47f2bd5bb3f1);
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_MOO_NecroDiscoverBox_5cdda27f-d3ce-4e6d-b6d0-e08499aa9fe6);
+
+DB_MOO_BalthazarsSecrets_Spikes((ITEM)S_BookSpikes_001_e32a8860-c9e0-4b8b-ad3b-7da437929c16);
+DB_MOO_BalthazarsSecrets_Spikes((ITEM)S_BookSpikes_002_b9372af3-bbcb-4783-b617-1a70bf0181a3);
+
+PlayAnimation(S_BookSpikes_001_e32a8860-c9e0-4b8b-ad3b-7da437929c16, OBJ_Use_Deactivate_01_bb1e8405-8773-46d1-92c8-9f42d900922b, "");
+PlayAnimation(S_BookSpikes_002_b9372af3-bbcb-4783-b617-1a70bf0181a3, OBJ_Use_Deactivate_01_bb1e8405-8773-46d1-92c8-9f42d900922b, "");
+//END_REGION
+
+DB_OneShotPlayerTrigger((TRIGGER)S_MOO_Necromancer_Chamber_Daisy_3040403d-cd2c-4312-8045-6e06efe74dcf);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("balthsecrets_openbookdoor")
+THEN
+SetFlag(MOO_BalthazarsSecrets_State_BookcaseOpened_f24ceb4a-5095-4509-8daa-406dbf8f8685);
+
+IF
+TextEvent("balthsecrets_allowdoors")
+THEN
+PROC_MOO_BalthazarsSecrets_AllowDoors();
+
+IF
+FlagSet(Debug_MOO_BalthazarsSecrets_AddBook_1f0cb439-fab0-4ecf-9c70-7072304588bf, _Player, _)
+THEN
+ClearFlag(Debug_MOO_BalthazarsSecrets_AddBook_1f0cb439-fab0-4ecf-9c70-7072304588bf, _Player);
+ToInventory(S_MOO_BalthazarSecretBook_8f90de22-6a7c-4579-a966-73c0d80d7a54,_Player,1,0,1);
+
+IF
+TextEvent("balthsecrets_getheartkey")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_ToInventoryAndOnStage(S_MOO_HeartKey_79c71f06-0999-48b3-bed8-eca4e1e8c1a1, _Player, 1, 0, 1);
+
+IF
+FlagSet(Debug_MOO_BalthazarsSecrets_AddBook_1f0cb439-fab0-4ecf-9c70-7072304588bf, _Player, _)
+THEN
+ClearFlag(Debug_MOO_BalthazarsSecrets_AddBook_1f0cb439-fab0-4ecf-9c70-7072304588bf, _Player);
+ToInventory(S_MOO_BalthazarSecretBook_8f90de22-6a7c-4579-a966-73c0d80d7a54,_Player,1,0,1);
+//END_REGION
+//REGION Lever Door
+IF
+EntityEvent(S_MOO_BalthazarLever_40f9b074-b09e-423f-973f-75b62a0e9af0, "MOO_BalthazarLever_Unlock")
+THEN
+PROC_ItemUnlockAndOpen(S_MOO_NecroRoomDoor_003_99432bb0-3ca4-4d42-ae2d-648cbb63edff);
+
+IF
+EntityEvent(S_MOO_BalthazarLever_40f9b074-b09e-423f-973f-75b62a0e9af0, "MOO_BalthazarLever_Lock")
+THEN
+PROC_ItemCloseAndLock(S_MOO_NecroRoomDoor_003_99432bb0-3ca4-4d42-ae2d-648cbb63edff, "STORYLOCK");
+//END_REGION
+//REGION Allowing access
+//When Z'rell gives the mission to find Balthazar and allows players to search his room
+PROC
+PROC_MOO_BalthazarsSecrets_AllowDoors()
+AND
+NOT DB_Destroyed(S_MOO_NecroRoomDoor_001_fa33a896-363c-49a0-8618-7d9555bafaae)
+THEN
+ClearOwnership(S_MOO_NecroRoomDoor_001_fa33a896-363c-49a0-8618-7d9555bafaae);
+//END_REGION
+//REGION Perception Book Levers
+//3 of the 4 books have thier perception distance at 0, so the character should only roll for the one,
+//but apply that result for all. 
+PROC
+PROC_HiddenPerceptionCheckSucceeded(_,(CHARACTER)_Player,S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94)
+AND
+QRY_OnlyOnce("MOO_BalthazarsSecrets_BookPerceptionAD")
+THEN
+PROC_MOO_BalthazarsSecrets_HiddenCheckAllBooks(_Player,S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94, 1);
+
+PROC 
+PROC_RollResult("GLO_HiddenItemCheck", _Player, S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94, 0)
+AND
+NOT DB_PerceptionSkillCheck((CHARACTER)_Player,(ITEM)S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94,_)
+THEN
+PROC_MOO_BalthazarsSecrets_HiddenCheckAllBooks(_Player,S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94, 0);
+
+PROC
+PROC_MOO_BalthazarsSecrets_HiddenCheckAllBooks((CHARACTER)_Player, (ITEM)_RevealedBook, (INTEGER)_Succeeded)
+AND
+DB_MOO_BalthazarsSecrets_TrapBooks(_Book)
+AND
+_Book != _RevealedBook
+THEN
+DB_PerceptionSkillCheck(_Player,_Book, _Succeeded);
+
+PROC
+PROC_MOO_BalthazarsSecrets_HiddenCheckAllBooks((CHARACTER)_Player, (ITEM)_RevealedBook, 1)
+AND
+DB_MOO_BalthazarsSecrets_TrapBooks(_Book)
+AND
+_Book != _RevealedBook
+THEN
+SetEntityEvent(_Book,"StoryReveal");
+//END_REGION
+//REGION Balthazar's Secrets - Traps
+IF
+DualEntityEvent( _, S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94, "MOO_BalthazarsSecrets_ActivateHeartBox")
+AND
+NOT DB_GlobalFlag(MOO_BalthazarsSecrets_State_HeartBoxActive_23f22a42-3fc4-491b-aefd-4a4b52257735)
+THEN
+PROC_PlayPerceptionRevealEffect(S_MOO_HeartBox_93307c10-c4ac-4b05-aa8e-bc1436f21bb3, "MOO_BalthazarsSecrets_HeartBoxVFX");
+SetFlag(MOO_BalthazarsSecrets_State_HeartBoxActive_23f22a42-3fc4-491b-aefd-4a4b52257735);
+
+PROC
+PROC_BlockUseOfItem(_Player, S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94)
+AND
+DB_GlobalFlag(MOO_BalthazarsSecrets_State_HeartBoxActive_23f22a42-3fc4-491b-aefd-4a4b52257735)
+THEN
+DB_CustomUseItemResponse(_Player, S_MOO_TrapBook_001_bb48a971-aad4-4c10-8907-addb6d32ba94, 0);
+PROC_TryStartAD((DIALOGRESOURCE)GEN_AD_ItemBlocked_a4eb2e7b-809a-a9e4-94da-955a8ac9b8c6, _Player);
+
+IF
+DualEntityEvent(_, S_MOO_TrapBook_003_760c687e-1412-4845-9060-9b7eba5f5f01, "MOO_BalthazarsSecrets_Spikes")
+AND
+DB_MOO_BalthazarsSecrets_Spikes((ITEM)_Spike)
+THEN
+PlayAnimation(_Spike, OBJ_Use_Activate_01_42c02cc0-0503-4ca9-9ea0-45564bd0e5d4, "");
+UseSpell(_Spike, "Projectile_MOO_BookSpikeTrap", _Spike);
+
+IF
+EntityEvent(_Spike, "MOO_BalthazarsSecrets_SpikesOff")
+AND
+DB_MOO_BalthazarsSecrets_Spikes((ITEM)_Spike)
+THEN
+PlayAnimation(_Spike, OBJ_Use_Deactivate_01_bb1e8405-8773-46d1-92c8-9f42d900922b, "");
+//END_REGION
+//REGION Balthazar's Secrets - Spike Altar
+IF
+FlagSet(MOO_BalthazarsSecrets_State_HeartBoxActive_23f22a42-3fc4-491b-aefd-4a4b52257735, _, _)
+THEN
+SetCanInteract(S_MOO_HeartBox_93307c10-c4ac-4b05-aa8e-bc1436f21bb3, 1);
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_MechanicalClick_fc8d3dc5-b947-6354-3aa9-d1f02fd51af4,S_MOO_HeartBox_93307c10-c4ac-4b05-aa8e-bc1436f21bb3);
+
+IF
+Combined(S_MOO_HeartBox_93307c10-c4ac-4b05-aa8e-bc1436f21bb3,_BodyPart,_,_,_,_Player,_)
+THEN
+SetFlag(MOO_BalthazarsSecrets_State_BookcaseOpened_f24ceb4a-5095-4509-8daa-406dbf8f8685);
+PlayEffect(S_MOO_PlacedBodypartPoint_efe932f9-13d0-4034-84e2-98d4abdc67ef, (EFFECTRESOURCE)VFX_Script_DestroyAction_BodyPart_01_3f8410a6-f5c8-02f5-4c2a-2da18df8728b);
+PROC_TryStartAD(GLO_PerceptionSuccess_48825dbe-a320-7c4c-fe3e-372b717d5bc9, _Player); //Some reactivity to the door opening
+
+//END_REGION
+//REGION Balthazar's Secrets - Bookcase Door
+IF
+FlagSet(MOO_BalthazarsSecrets_State_BookcaseOpened_f24ceb4a-5095-4509-8daa-406dbf8f8685, _, _)
+THEN
+Open(S_MOO_BookcaseDoor_e6f5e44f-dda9-4a92-9d39-d8675b31af67);
+//END_REGION
+//REGION Secret Book Dialog
+PROC
+PROC_BookFlags_FlagSet((ITEM)S_MOO_BalthazarSecretBook_8f90de22-6a7c-4579-a966-73c0d80d7a54,(FLAG)MOO_BalthazarsSecrets_Knows_NightsongSecret_3599ecf9-382d-46b7-8c72-c7d99303d7c4,(CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(SHA_Nightsong_HasMet_6b56f4b8-8bb3-5393-de12-d320fbb55218) //No point in this dialog if the player met Nightsong
+THEN
+DB_MOO_BalthazarsSecrets_ReadyVB(_Player);
+
+IF
+DB_MOO_BalthazarsSecrets_ReadyVB((CHARACTER)_Player)
+AND
+NOT DB_CantAct(_Player)
+AND
+QRY_OnlyOnce("MOO_BalthazarsSecrets_NightsongInfoVB")
+THEN
+StartVoiceBark(MOO_BalthazarsSectrets_VB_NightsongInfo_05767661-c649-6b6d-c0c8-7be13cabb470, _Player);
+NOT DB_MOO_BalthazarsSecrets_ReadyVB((CHARACTER)_Player);
+//END_REGION
+
+PROC
+PROC_OneShotTriggerEntered(_Player,(TRIGGER)S_MOO_Necromancer_Chamber_Daisy_3040403d-cd2c-4312-8045-6e06efe74dcf)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)COL_Necromancer_DaisyAD_Balthazar_b2437b3c-8491-c1e9-9e60-04592903e367);
+
+PROC
+PROC_COL_TeleportPartiesToColony(_)
+THEN
+NOT DB_OneShotPlayerTrigger((TRIGGER)S_MOO_Necromancer_Chamber_Daisy_3040403d-cd2c-4312-8045-6e06efe74dcf);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

@@ -1,0 +1,237 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Public interface
+
+// QRY_CRIME_KeepingAnEyeOut_Block((CHARACTER)_NPC, (INTEGER)_ID)
+//   Override and return true if you don't want to start a keeping an eye out disturbance for original disturbance _ID (may no longer exist at this point)
+
+// PROC_CRIME_KeepingAnEyeOut_Stop((CHARACTER)_Investigator)
+//   Immediately stop any ongoing KeepingAnEyeOut disturbances, if any (can call even if there are none)
+KBSECTION
+// After reacting as lead or as victim to a non-zero tension disturbance,
+// keep an eye on the perpetrator for a while (if not MONSTER/BEAST)
+IF
+OnCrimeConfrontationDone(_ID, _Investigator, _WasLead, _Criminal1, _Criminal2, _Criminal3, _Criminal4)
+AND
+DB_PartyMembers(_Criminal1)
+AND
+NOT DB_CantAct(_Investigator)
+AND
+CrimeHasProperty(_ID, BackgroundReaction_db918cfb-a484-437c-93bb-8bc36fe98a9c, 0)
+AND
+CrimeHasProperty(_ID, NoKeepingAnEyeOut_8a7650eb-da48-4597-89a5-76b2c0cddb78, 0)
+AND
+CrimeGetVictim(_ID, _Victim)
+AND
+QRY_CRIME_KeepingAnEyeOut_WasLeadOrVictim(_WasLead, _Investigator, _Victim)
+AND
+QRY_CRIME_IsEnabled(_Investigator, "KeepAnEyeOnMe")
+AND
+IsTagged(_Investigator, (TAG)HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8, 1)
+AND
+NOT QRY_CRIME_KeepingAnEyeOut_Block(_Investigator, _ID)
+AND
+CrimeGetTension(_ID, _OldTension)
+AND
+IntegerDivide(_OldTension, 10, _RepeatCount)
+AND
+IntegerMax(_RepeatCount, 5, _CappedRepeatCount)
+AND
+_CappedRepeatCount > 0
+THEN
+PROC_CRIME_KeepingAnEyeOut_Start(_Investigator, _Criminal1, _CappedRepeatCount);
+PROC_CRIME_KeepingAnEyeOut_Start(_Investigator, _Criminal2, _CappedRepeatCount);
+PROC_CRIME_KeepingAnEyeOut_Start(_Investigator, _Criminal3, _CappedRepeatCount);
+PROC_CRIME_KeepingAnEyeOut_Start(_Investigator, _Criminal4, _CappedRepeatCount);
+
+QRY
+QRY_CRIME_KeepingAnEyeOut_WasLeadOrVictim(0, (CHARACTER)_Investigator, (CHARACTER)_Victim)
+AND
+_Investigator == _Victim
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_KeepingAnEyeOut_WasLeadOrVictim(1, (CHARACTER)_Investigator, (CHARACTER)_Victim)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CRIME_KeepingAnEyeOut_Start((CHARACTER)_Investigator, (CHARACTER)_Criminal, (INTEGER)_RepeatCount)
+AND
+_Criminal != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_CRIME_KeepingAnEyeOut(_OldRepeatCount, _Investigator, _ID)
+AND
+_OldRepeatCount < _RepeatCount
+THEN
+NOT DB_CRIME_KeepingAnEyeOut(_OldRepeatCount, _Investigator, _ID);
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID);
+
+PROC
+PROC_CRIME_KeepingAnEyeOut_Start((CHARACTER)_Investigator, (CHARACTER)_Criminal, (INTEGER)_RepeatCount)
+AND
+_Criminal != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_CRIME_KeepingAnEyeOut(_OtherRepeatCount, _Investigator, _ID)
+AND
+// will fail if they're already a criminal for this crime
+CrimeAddCriminal(_ID, _Criminal, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CRIME_KeepingAnEyeOut_Start((CHARACTER)_Investigator, (CHARACTER)_Criminal, (INTEGER)_RepeatCount)
+AND
+_Criminal != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CRIME_KeepingAnEyeOut(_, _Investigator, _)
+AND
+CrimeGetNewID(_NewID)
+THEN
+PROC_CharacterRegisterCrime(_Criminal, "KeepAnEyeOnMe", NULL_00000000-0000-0000-0000-000000000000, _Investigator, _NewID);
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _NewID);
+
+// Keep an eye out for a while (the KeepingAnEyeOut Anubis behaviour does not loop,
+// but "KeepAnEyeOnMe" is a continuous disturbance with a delay of 0.1 seconds, so
+// so it will trigger again immediately if we don't stop it.
+IF
+OnCrimeConfrontationDone(_ID, _Investigator, 1, _Criminal1, _, _, _)
+AND
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID)
+AND
+NOT QRY_CRIME_KeepingAnEyeOut_Continue(_ID)
+THEN
+CharacterStopCrimeWithID(_Criminal1, _ID);
+
+QRY
+QRY_CRIME_KeepingAnEyeOut_Continue((INTEGER)_ID)
+AND
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID)
+AND
+NOT QRY_CRIME_KeepingAnEyeOut_Block(_Investigator, _ID)
+AND
+IntegerSubtract(_RepeatCount, 1, _NewRepeatCount)
+AND
+_NewRepeatCount >= 0
+THEN
+NOT DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID);
+DB_CRIME_KeepingAnEyeOut(_NewRepeatCount, _Investigator, _ID);
+
+// Started reacting to a different crime -> cancel
+IF
+CharacterSelectedAsBestUnavailableFallbackLead(_Investigator,_,_KeepingAnEyeOutID,_)
+AND
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _KeepingAnEyeOutID)
+THEN
+PROC_CRIME_KeepingAnEyeOut_Stop(_Investigator);
+
+// Clean up
+PROC
+PROC_CRIME_KeepingAnEyeOut_Stop((CHARACTER)_Investigator)
+AND
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID)
+THEN
+NOT DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID);
+PROC_CRIME_StopForAllCriminals(_ID);
+
+PROC
+PROC_LongRest()
+AND
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID)
+THEN
+PROC_CRIME_KeepingAnEyeOut_Stop(_Investigator);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_ID)
+AND
+DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID)
+THEN
+NOT DB_CRIME_KeepingAnEyeOut(_RepeatCount, _Investigator, _ID);
+
+// If an NPC is going to do something different, stop keeping an eye out
+// as it probably may not make sense anymore (and it's not a big deal
+// if it gets cancelled a bit prematurely)
+PROC
+PROC_ReadyToMoveOn((CHARACTER)_NPC,(STRING)_Identifier)
+THEN
+PROC_CRIME_KeepingAnEyeOut_Stop(_NPC);
+
+//REGION Public hook for blocking
+QRY
+QRY_CRIME_KeepingAnEyeOut_Block((CHARACTER)_Investigator, (INTEGER)_ID)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Hook trespassing cleanup/permanent allowing
+PROC
+PROC_CRIME_CleanUpTrespass((INTEGER)_CrimeID,(TRIGGER)_TrespassTrigger)
+THEN
+DB_CRIME_KeepingAnEyeOut_Block_Trespass(_CrimeID);
+
+QRY
+QRY_CRIME_KeepingAnEyeOut_Block((CHARACTER)_Investigator, (INTEGER)_CrimeID)
+AND
+DB_CRIME_KeepingAnEyeOut_Block_Trespass(_CrimeID)
+THEN
+DB_NOOP(1);
+
+// Clean up
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_KeepingAnEyeOut_Block_Trespass(_ID)
+THEN
+NOT DB_CRIME_KeepingAnEyeOut_Block_Trespass(_ID);
+//END_REGION
+
+//REGION Track whether we should keep an eye out (depending on whether we know who did it)
+// Not noticed -> don't keep an eye out by default
+IF
+CrimeProcessingStarted(_CrimeID, 0)
+THEN
+DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID);
+
+// Guilty party found during an interrogation -> do keep an eye out
+IF
+FlagSet((FLAG)CRIME_FoundGuiltyPlayer_1b28f6ce-09ad-9664-9865-6ed4eb69a0b7,_NPC,_)
+AND
+GetHandlingCrimeID((CHARACTER)_NPC,_CrimeID)
+AND
+DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID)
+THEN
+NOT DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID);
+
+// Guilty party confronted later (investigate -> react flow) and can see the criminal -> also keep an eye out
+IF
+CharacterOnCrimeSensibleActionNotification(_NPC,_,_CrimeID,_,_,_Criminal1,_,_,_,_)
+AND
+DB_PartyMembers(_Criminal1)
+AND
+QRY_CRIME_CanSeeCriminal(_NPC,_Criminal1)
+THEN
+NOT DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID);
+
+QRY
+QRY_CRIME_KeepingAnEyeOut_Block((CHARACTER)_Investigator, (INTEGER)_CrimeID)
+AND
+DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID)
+THEN
+DB_NOOP(1);
+
+// Clean up
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID)
+THEN
+NOT DB_CRIME_KeepingAnEyeOut_BlockForAll(_CrimeID);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

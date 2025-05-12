@@ -1,0 +1,545 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation of this can be found here: [Link Redacted]
+//REGION Act definitions
+DB_Debug_LevelToAct("TUT_Avernus_C","Act0");
+
+DB_Debug_LevelToAct("WLD_Main_A","Act1");
+
+DB_Debug_LevelToAct("CRE_Main_A","Act1b");
+
+DB_Debug_LevelToAct("SCL_Main_A","Act2");
+
+DB_Debug_LevelToAct("INT_Main_A","Act2b");
+
+DB_Debug_LevelToAct("BGO_Main_A","Act3");
+DB_Debug_LevelToAct("CTY_Main_A","Act3b");
+DB_Debug_LevelToAct("IRN_Main_A","Act3b");	//consider iron throne part of 3b?
+DB_Debug_LevelToAct("END_Main","Act3c");
+
+//these chain together, so no need to specify all of them
+DB_Debug_PreviousActs("Act1", "Act0");
+DB_Debug_PreviousActs("Act1b", "Act1");
+DB_Debug_PreviousActs("Act2", "Act1b");
+DB_Debug_PreviousActs("Act2b", "Act2");
+DB_Debug_PreviousActs("Act3", "Act2b");
+DB_Debug_PreviousActs("Act3b", "Act3");
+DB_Debug_PreviousActs("Act3c", "Act3b");
+//END_REGION
+//REGION act Osiris goals 
+DB_Debug_ActStoryParents("Act0", "Tutorial");
+
+DB_Debug_ActStoryParents("Act1", "Act1");
+DB_Debug_ActStoryParents("Act1", "Act1_NOT_EA");
+
+DB_Debug_ActStoryParents("Act1b", "Act1b");
+
+DB_Debug_ActStoryParents("Act2", "Act2");
+
+DB_Debug_ActStoryParents("Act2b", "Act2b");	
+
+DB_Debug_ActStoryParents("Act3", "Act3");	
+
+DB_Debug_ActStoryParents("Act3b", "Act3b");	
+DB_Debug_ActStoryParents("Act3b", "Act3i");
+
+DB_Debug_ActStoryParents("Act3c", "Act3c");	
+
+//END_REGION
+//REGION important Act flag definitions
+//these flags will be checked at the start of the act. Any flags that are not part of this DB are ignored
+//use "GLO" as your act string for global flags  that always need to be checked
+//(STRING)_Act, (FLAG)_GlobalFlag
+NOT DB_Debug_ActFlag("",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+//REGION important object flags tied to act flags defined in DB_Debug_ActFlag
+//(FLAG)_GlobalFlag, (FLAG)_ObjectFlag, (GUIDSTRING)_ObjectOrNull,(INTEGER)_OnlyOnce
+//_GlobalFlag is the flag from DB_Debug_ActFlag
+//use NULL for _ObjectOrNull to indicate that the flag needs to be set on the party
+//_OnlyOnce indicates that only 1 player should get this flag. Only takes effect if _ObjectOrNull is NULL.
+NOT DB_Debug_ActObjectFlags((FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, 0);
+//END_REGION
+//REGION waypoint management for our acts
+//These waypoints are enabled for our acts when restoring, unless the act is blocking them
+//STRING)_WaypointID
+NOT DB_Debug_ActWaypoints("");
+
+//Block these waypoints when restoring in a certain act. This is to enforce "point of no return" behaviour
+//these chain together
+//(STRING)_RestoringAct, (STRING)_ActToBlock
+NOT DB_BlockActWaypoints("","");
+
+
+//END_REGION
+KBSECTION
+//REGION Act fetching
+QRY
+QRY_Debug_GetActForLevel(_)
+AND
+DB_QRYRTN_Debug_GetActForLevel(_Act)
+THEN
+NOT DB_QRYRTN_Debug_GetActForLevel(_Act);
+
+QRY
+QRY_Debug_GetActForLevel((STRING)_Level)
+AND
+DB_Debug_LevelToAct(_Level,_Act)
+THEN
+DB_QRYRTN_Debug_GetActForLevel(_Act);
+
+QRY
+QRY_Debug_GetPreviousActs(_)
+AND
+DB_QRYRTN_GetPreviousActs((STRING)_Prev)
+THEN
+NOT DB_QRYRTN_GetPreviousActs(_Prev);
+
+QRY
+QRY_Debug_GetPreviousActs((STRING)_Act)
+THEN
+PROC_Debug_GetPreviousActs(_Act);
+
+QRY
+QRY_Debug_GetPreviousActs(_)
+THEN
+PROC_Debug_ReverseActDatabase();
+
+QRY
+QRY_Debug_GetPreviousActs(_)
+AND
+DB_Temp_GetPreviousActs(_Act)
+THEN
+NOT DB_Temp_GetPreviousActs(_Act);
+
+PROC
+PROC_Debug_GetPreviousActs((STRING)_Act)
+AND
+DB_Debug_PreviousActs(_Act,_PrevAct)
+THEN
+DB_Temp_GetPreviousActs(_PrevAct);
+PROC_Debug_GetPreviousActs(_PrevAct);
+
+//END_REGION
+//REGION Flag Processing
+IF
+FlagLoadedInPresetEvent(_Object, _Flag)
+THEN
+DB_Debug_PresetFlags(_Object,_Flag);
+
+IF
+AllLoadedFlagsInPresetReceivedEvent()
+THEN
+DB_Debug_PresetFlagsLoaded(1);
+
+IF
+DB_Debug_PresetFlagsLoaded(1)
+AND
+DB_CurrentLevel(_Level)
+AND
+IsGameLevel(_Level,1)
+THEN
+PROC_Debug_TryProcessStoryState();
+
+PROC
+PROC_Debug_TryProcessStoryState()
+AND
+QRY_Debug_GetStateLevel()
+AND
+DB_QRYRTN_GetStateLevel(_Level)
+AND
+QRY_Debug_GetActForLevel(_Level)
+AND
+DB_QRYRTN_Debug_GetActForLevel(_Act)
+THEN
+DB_Debug_RestoringState(1);
+PROC_Debug_ProcessFlagsForPreviousAct(_Act);
+PROC_Debug_ProcessGlobalFlags();
+PROC_Debug_TeleportToAct(_Act);
+PROC_ItemEventCheck(0);
+PROC_Debug_RestoreWaypoints(_Act);
+PROC_Debug_StoryStateRestored_Hook();
+PROC_Debug_StoryStateHasBeenRestored();
+
+//Use this hook to restore state after everything has been loaded and reactivated. (You can still loop over DB_Debug_PresetFlags)
+PROC
+PROC_Debug_StoryStateRestored_Hook()
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Debug_ProcessGlobalFlags()
+AND
+DB_Debug_ActFlag("GLO",_Flag)
+AND
+DB_Debug_PresetFlags(_Object,_Flag)
+THEN
+SetFlag(_Flag,_Object,0);
+PROC_Debug_FlagRestoredFromState(_Flag,_Object);
+PROC_Debug_SetObjectFlagsForActFlag(_Flag);
+
+PROC
+PROC_Debug_ProcessFlagsForPreviousAct((STRING)_Act)
+AND
+QRY_Debug_GetPreviousActs(_Act)
+AND
+DB_QRYRTN_GetPreviousActs(_PrevAct)
+THEN
+PROC_Debug_ActivateActScripting(_PrevAct);
+PROC_Debug_NotfiyActLoad(_PrevAct);
+PROC_Debug_SetActFlags(_PrevAct);
+PROC_Debug_ActSkipped(_PrevAct);
+PROC_Debug_NotifyActUnload(_PrevAct);
+
+PROC
+PROC_Debug_SetActFlags((STRING)_Act)
+AND
+DB_Debug_ActFlag(_Act,_Flag)
+AND
+DB_Debug_PresetFlags(_Object,_Flag)
+THEN
+SetFlag(_Flag,_Object,0);
+PROC_Debug_FlagRestoredFromState(_Flag,_Object);
+PROC_Debug_SetObjectFlagsForActFlag(_Flag);
+
+PROC
+PROC_Debug_SetObjectFlagsForActFlag((FLAG)_Flag)
+AND
+DB_Debug_ActObjectFlags(_Flag, _ObjectFlag,_Object,_OnlyOnce)
+THEN
+PROC_Debug_SetObjectFlag(_ObjectFlag,_Object,_OnlyOnce);
+
+PROC
+PROC_Debug_SetObjectFlag((FLAG)_ObjectFlag,(GUIDSTRING)_Object,(INTEGER)_OnlyOnce)
+AND
+_Object != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetFlag(_ObjectFlag,_Object,0);
+PROC_Debug_FlagRestoredFromState(_ObjectFlag,_Object);
+
+PROC
+PROC_Debug_SetObjectFlag((FLAG)_ObjectFlag,NULL_00000000-0000-0000-0000-000000000000,0)
+AND
+DB_Players(_Player)
+THEN
+SetFlag(_ObjectFlag,_Player,0);
+PROC_Debug_FlagRestoredFromState(_ObjectFlag,_Player);
+
+PROC
+PROC_Debug_SetObjectFlag((FLAG)_ObjectFlag,NULL_00000000-0000-0000-0000-000000000000,1)
+AND
+QRY_OnlyOnce_Reset("DEBUG_Flag_PartyProcess")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEBUG_Flag_PartyProcess")
+THEN
+SetFlag(_ObjectFlag,_Player,0);
+PROC_Debug_FlagRestoredFromState(_ObjectFlag,_Player);
+
+//END_REGION
+//REGION Act scripting
+PROC
+PROC_Debug_ActivateActScripting((STRING)_Act)
+AND
+DB_Debug_ActStoryParents(_Act,_Goal)
+THEN
+SysCompleteGoal(_Goal);	//yes this will assert like crazy....
+//END_REGION
+//REGION Current debug level tracking
+IF
+PartyPresetLoaded(_,_)
+AND
+DB_Debug_PartyPreset_Level(_Level)
+THEN
+NOT DB_Debug_PartyPreset_Level(_Level);
+
+IF
+PartyPresetLoaded(_,_Level)
+THEN
+DB_Debug_PartyPreset_Level(_Level);
+
+IF
+AllLoadedFlagsInPresetReceivedEvent()
+AND
+DB_Debug_PartyPreset_Level(_Level)
+THEN
+NOT DB_Debug_PartyPreset_Level(_Level);
+
+QRY
+QRY_Debug_GetStateLevel()
+AND
+DB_QRYRTN_GetStateLevel(_Level)
+THEN
+NOT DB_QRYRTN_GetStateLevel(_Level);
+
+QRY
+QRY_Debug_GetStateLevel()
+AND
+DB_Debug_PartyPreset_Level(_Level)
+THEN
+DB_QRYRTN_GetStateLevel(_Level);
+
+QRY
+QRY_Debug_GetStateLevel()
+AND
+NOT DB_Debug_PartyPreset_Level(_)
+AND
+DB_CurrentLevel(_Level)
+THEN
+DB_QRYRTN_GetStateLevel(_Level);
+
+PROC
+PROC_Debug_TeleportToAct((STRING)_Act)
+AND
+QRY_OnlyOnce_Reset("DEBUG_Flag_TeleportToAct")
+AND
+DB_Debug_LevelToAct(_Level,_Act)
+AND
+DB_CurrentLevel(_CurrentLevel)
+AND
+_CurrentLevel != _Level
+AND
+QRY_OnlyOnce("DEBUG_Flag_TeleportToAct")
+THEN
+TeleportPartiesToLevelWithMovie(_Level, "", "");
+DB_Debug_RestoringAct(_Act,_Level);
+
+PROC
+PROC_Debug_NotifyActUnload((STRING)_Act)
+AND
+DB_Debug_LevelToAct(_Level,_Act)
+THEN
+PROC_LevelUnloading(_Level);
+
+PROC
+PROC_Debug_NotfiyActLoad((STRING)_Act)
+AND
+DB_Debug_LevelToAct(_Level,_Act)
+THEN
+DB_LevelLoadedOnce(_Level);
+PROC_LevelLoadedOnce(_Level);
+
+IF
+LevelGameplayStarted(_Level,_)
+AND
+DB_Debug_RestoringAct(_Act,_Level)
+THEN
+NOT DB_Debug_RestoringAct(_Act,_Level);
+PROC_Debug_ActRestored(_Act, _Level);
+NOT DB_Debug_RestoringState(1);
+
+//END_REGION
+//REGION Restore hook that waits for LevelGameplayStarted if needed.
+PROC
+PROC_Debug_StoryStateHasBeenRestored()
+AND
+NOT DB_Debug_RestoringAct(_, _)
+THEN
+PROC_Debug_StoryStateRestoredAndLevelLoaded_Hook();
+
+PROC
+PROC_Debug_StoryStateHasBeenRestored()
+AND
+DB_Debug_RestoringAct(_, _)
+THEN
+DB_Debug_WaitForLevelToLoad(1);
+
+IF
+DB_Debug_WaitForLevelToLoad(1)
+AND
+NOT DB_Debug_RestoringState(1)
+THEN
+NOT DB_Debug_WaitForLevelToLoad(1);
+PROC_Debug_StoryStateRestoredAndLevelLoaded_Hook();
+
+//Hook that is always called after finishing restoring the save. Will wait for LevelGameplayStarted if needed. DB_Debug_PresetFlags might be empty.
+PROC
+PROC_Debug_StoryStateRestoredAndLevelLoaded_Hook()
+THEN
+DB_NOOP(1);
+//END_REGION
+//REGION Debug hooks and queries that scripters can use to do extra setup for these flags
+
+QRY 
+QRY_Debug_RestoringState()
+AND
+DB_Debug_RestoringState(1)
+THEN
+DB_NOOP(1);
+
+//called when a flag that came from our state file is actually set (but before the FlagSet event is received)
+PROC
+PROC_Debug_FlagRestoredFromState((FLAG)_Flag, (GUIDSTRING)_Object)
+THEN
+DB_NOOP(1);
+
+//called after we restored all flags from a previous act
+PROC
+PROC_Debug_ActSkipped((STRING)_Act)
+THEN
+DB_NOOP(1);
+
+//called when our destination level for our act has fully loaded
+PROC
+PROC_Debug_ActRestored((STRING)_Act, (STRING)_Level)
+THEN
+DB_NOOP(1);
+//END_REGION
+//REGION automatic tracking of certain important flags
+IF
+DB_CampNight((FLAG)_Flag,(INTEGER)_)
+THEN
+DB_Debug_ActFlag("GLO",_Flag);
+
+IF
+DB_DeadOnceFlag(_,_Flag)
+THEN
+DB_Debug_ActFlag("GLO",_Flag);
+
+IF
+DB_DeadStateFlag(_,_Flag)
+THEN
+DB_Debug_ActFlag("GLO",_Flag);
+
+IF
+DB_PermaDefeatedFlag(_,_Flag)
+THEN
+DB_Debug_ActFlag("GLO",_Flag);
+
+IF
+DB_DefeatedOnceFlag(_,_Flag)
+THEN
+DB_Debug_ActFlag("GLO",_Flag);
+
+IF
+DB_DefeatedStateFlag(_,_Flag)
+THEN
+DB_Debug_ActFlag("GLO",_Flag);
+
+//END_REGION
+//REGION Systemic handling of state
+PROC
+PROC_Debug_FlagRestoredFromState(_Flag, _)
+AND
+DB_DeadOnceFlag(_Obj,_Flag)
+THEN
+DB_Dead(_Obj);	//manually enter in case the object is unknown
+Die(_Obj, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1);
+
+PROC
+PROC_Debug_FlagRestoredFromState(_Flag, _)
+AND
+DB_PermaDefeatedFlag(_Obj,_Flag)
+THEN
+DB_PermaDefeated(_Obj);
+PROC_StateSet_PermaDefeated(_Obj);
+
+PROC
+PROC_Debug_FlagRestoredFromState(_Flag, _)
+AND
+DB_DefeatedStateFlag(_Obj,_Flag)
+THEN
+DB_Defeated(_Obj);
+PROC_StateSet_Defeated(_Obj);
+//END_REGION
+//REGION Cleanup, keep this last
+PROC
+PROC_Debug_TryProcessStoryState()
+THEN
+NOT DB_Debug_PresetFlagsLoaded(1);
+
+PROC
+PROC_Debug_TryProcessStoryState()
+AND
+DB_Debug_PresetFlags(_Obj, _Flag)
+THEN
+NOT DB_Debug_PresetFlags(_Obj, _Flag);
+//END_REGION
+//REGION Misc helpers
+PROC
+PROC_Debug_ClearFlagOnParty((FLAG)_Flag)
+AND
+DB_Players(_Player)
+THEN
+ClearFlag(_Flag, _Player, 0);
+
+PROC
+PROC_Debug_ReverseActDatabase()
+AND
+SysCount("DB_Temp_GetPreviousActs", 1,_Count)
+THEN
+PROC_Debug_DoReverseActDatabase(_Count);
+
+//TODO: we probably want to add support to SysFactAtIndex for not clearing the output DB to make this easier and generic
+PROC
+PROC_Debug_DoReverseActDatabase((INTEGER)_CurrentIndex)
+AND
+_CurrentIndex  > 0
+AND
+SysFactAtIndex("DB_Temp_GetPreviousActs", 1, _CurrentIndex, "DB_Temp_PreviousAct")
+AND
+IntegerSubtract(_CurrentIndex, 1, _NewIndex)
+AND
+DB_Temp_PreviousAct((STRING)_Entry)
+THEN
+DB_QRYRTN_GetPreviousActs(_Entry);
+NOT DB_Temp_PreviousAct(_Entry);
+PROC_Debug_DoReverseActDatabase(_NewIndex);
+//END_REGION
+
+//REGION Waypoints
+
+PROC
+PROC_Debug_FindBlockedWaypointActs((STRING)_Act)
+AND
+DB_BlockActWaypoints(_Act,_PrevAct)
+THEN
+DB_Debug_BlockedWaypointAct(_PrevAct);
+
+//chain to our next act to build the complete list
+PROC
+PROC_Debug_FindBlockedWaypointActs((STRING)_Act)
+AND
+DB_Debug_PreviousActs( _Act,_PrevAct)
+THEN
+PROC_Debug_FindBlockedWaypointActs(_PrevAct);
+
+PROC
+PROC_Debug_RestoreWaypoints((STRING)_Act)
+THEN
+SysClear("DB_Debug_BlockedWaypointAct",1);
+PROC_Debug_FindBlockedWaypointActs(_Act);
+PROC_Debug_ExecuteRestoreWaypoints(_Act);
+
+PROC
+PROC_Debug_ExecuteRestoreWaypoints((STRING)_Act)
+AND
+DB_Debug_PreviousActs( _Act,_PrevAct)
+THEN
+PROC_Debug_DoRestoreWaypoints(_PrevAct);
+
+PROC
+PROC_Debug_DoRestoreWaypoints((STRING)_CheckAct)
+AND
+NOT DB_Debug_BlockedWaypointAct(_CheckAct)
+AND
+GetHostCharacter(_Host)
+AND
+DB_Debug_ActWaypoints(_WaypointName)
+AND
+DB_WaypointInfo(_CheckAct,_WaypointName,_,_WaypointTrigger)
+THEN
+UnlockWaypoint(_WaypointName,_WaypointTrigger,_Host);
+
+PROC
+PROC_Debug_DoRestoreWaypoints((STRING)_CheckAct)
+THEN
+PROC_Debug_ExecuteRestoreWaypoints(_CheckAct);
+
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

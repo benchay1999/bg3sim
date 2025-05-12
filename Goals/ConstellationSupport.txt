@@ -1,0 +1,48 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Specify a custom "sender" parameter for the socket event sent when a use gets blocked from story due to the
+// BLOCK_USE_FROM_CONSTELLATION tag.
+// If not specified, the user is also specified as the sender
+NOT DB_Constellation_UseBlockedFromStorySender((ITEM)NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Blocking use of constellation item from story
+PROC
+PROC_BlockUseOfItem((CHARACTER)_PartyMember,(ITEM)_Item)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+IsTagged(_Item,(TAG)BLOCK_USE_FROM_CONSTELLATION_89a63758-d622-41cd-81f9-baceffc12618,1)
+AND
+QRY_Constellation_UseBlockedGetSender(_PartyMember,_Item)
+AND
+DB_QRY_RTN_Constellation_UseBlockedGetSender(_Sender)
+THEN
+DB_CustomUseItemResponse(_PartyMember,_Item,0);
+ConstellationTriggerInputSocket(_Item,"UseBlockedFromStory",_Sender,_PartyMember);
+
+QRY
+QRY_Constellation_UseBlockedGetSender((CHARACTER)_User,(ITEM)_Item)
+AND
+DB_QRY_RTN_Constellation_UseBlockedGetSender(_Result)
+THEN
+NOT DB_QRY_RTN_Constellation_UseBlockedGetSender(_Result);
+
+QRY
+QRY_Constellation_UseBlockedGetSender((CHARACTER)_User,(ITEM)_Item)
+AND
+DB_Constellation_UseBlockedFromStorySender(_Item,_Sender)
+THEN
+DB_QRY_RTN_Constellation_UseBlockedGetSender(_Sender);
+
+QRY
+QRY_Constellation_UseBlockedGetSender((CHARACTER)_User,(ITEM)_Item)
+AND
+NOT DB_QRY_RTN_Constellation_UseBlockedGetSender(_)
+THEN
+DB_QRY_RTN_Constellation_UseBlockedGetSender(_User);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

@@ -1,0 +1,126 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_NPCAttackAD((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Interrupt repeated automated dialogs for characters entering combat
+// Enter combat while in repeating AD -> stop AD
+IF
+EnteredCombat(_Participant, _CombatID)
+AND
+DB_DialogNPCs(_DialogID,_Participant,_)
+AND
+DB_DialogName(_DialogName, _DialogID)
+AND
+DialogGetCategory(_DialogID,"Repeated automated NPC Dialog")
+THEN
+PROC_ForceStopDialog(_Participant);
+
+IF
+CombatStarted(_CombatID)
+THEN
+DB_CombatDialogs_CombatStarted(_CombatID);
+
+IF
+CombatEnded(_CombatID)
+THEN
+NOT DB_CombatDialogs_CombatStarted(_CombatID);
+
+// Special case: AD was started more or less at the same time as the combat
+// (e.g. from Anubis behaviour after interactive dialog ended that also
+//  initiates combat) -> immediately stop it when we get the AutomatedDialgStarted
+// event to cut off the first line asap (or ideally prevent it from showing at all)
+IF
+AutomatedDialogStarted(_, _DialogID)
+AND
+DB_DialogNPCs(_DialogID, _Participant, _)
+AND
+// Got EnteredCombat event, but no CombatStarted yet
+DB_Is_InCombat(_Participant, _CombatID)
+AND
+NOT DB_CombatDialogs_CombatStarted(_CombatID)
+AND
+DB_DialogName(_DialogName, _DialogID)
+AND
+DialogGetCategory(_DialogID,"Repeated automated NPC Dialog")
+THEN
+PROC_ForceStopDialog(_Participant);
+//END_REGION
+
+//REGION Combat ADs
+IF
+StartAttack(_, _, _NPC, _StoryActionID)
+AND
+_NPC != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_NPC, 1)
+THEN
+PROC_TryStartNPCAttackAD((CHARACTER)_NPC, _StoryActionID);
+
+IF
+StartAttackPosition(_, _, _, _, _NPC, _StoryActionID)
+AND
+_NPC != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_NPC, 1)
+THEN
+PROC_TryStartNPCAttackAD((CHARACTER)_NPC, _StoryActionID);
+
+PROC
+PROC_TryStartNPCAttackAD((CHARACTER)_NPC, (INTEGER)_StoryActionID)
+AND
+NOT DB_NPCAttackAD_StoryActionHandled(_NPC, _StoryActionID)
+AND
+DB_NPCAttackAD(_NPC, _Dialog)
+AND
+NOT DB_CantTalk_IgnoreCombat(_NPC)
+AND
+// Don't do this if the NPC is already in an AD
+NOT DB_DialogNPCs(_, _NPC, _)
+AND
+DB_Is_InCombat(_NPC, _CombatGUID)
+AND
+NOT DB_NPCAttackAD_Timer(_CombatGUID, _)
+AND
+QRY_GetFairRand("GLO_NPCAttackAD", 10)
+AND
+DB_FairRand_ReturnVal(0)
+AND
+GUIDToString(_CombatGUID, _CombatGUIDString)
+AND
+Concatenate("GLO_NPCAttackAD_Timer_", _CombatGUIDString, _TimerName)
+THEN
+DB_NPCAttackAD_Timer(_CombatGUID, _TimerName);
+TimerLaunch(_TimerName, 45000);
+// Don't play more than once even if we hit multiple targets with the same attack
+// (although the timer will generally catch that too, depending on how long it is
+//  and how long the animations take)
+DB_NPCAttackAD_StoryActionHandled(_NPC, _StoryActionID);
+PROC_TryStartAD(_Dialog, _NPC);
+
+IF
+TimerFinished(_TimerName)
+AND
+DB_NPCAttackAD_Timer(_CombatGUID, _TimerName)
+THEN
+NOT DB_NPCAttackAD_Timer(_CombatGUID, _TimerName);
+
+// Clean up
+IF
+TurnStarted(_NPC)
+AND
+DB_NPCAttackAD_StoryActionHandled((CHARACTER)_NPC, _StoryActionID)
+THEN
+NOT DB_NPCAttackAD_StoryActionHandled(_NPC, _StoryActionID);
+
+IF
+LeftCombat(_NPC, _)
+AND
+DB_NPCAttackAD_StoryActionHandled((CHARACTER)_NPC, _StoryActionID)
+THEN
+NOT DB_NPCAttackAD_StoryActionHandled(_NPC, _StoryActionID);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

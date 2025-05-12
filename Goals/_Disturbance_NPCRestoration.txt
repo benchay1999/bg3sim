@@ -1,0 +1,215 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//DB_SelfHealing_ImportantResources(_ResourceName,_Level)
+//If these resources are depleted on a character with self-healing enabled, they will self-heal
+DB_SelfHealing_ImportantResources("SpellSlot",1);
+DB_SelfHealing_ImportantResources("SpellSlot",2);
+DB_SelfHealing_ImportantResources("SpellSlot",3);
+DB_SelfHealing_ImportantResources("SpellSlot",4);
+DB_SelfHealing_ImportantResources("SpellSlot",5);
+DB_SelfHealing_ImportantResources("SpellSlot",6);
+DB_SelfHealing_ImportantResources("SpellSlot",7);
+DB_SelfHealing_ImportantResources("SpellSlot",8);
+DB_SelfHealing_ImportantResources("SpellSlot",9);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",1);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",2);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",3);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",4);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",5);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",6);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",7);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",8);
+DB_SelfHealing_ImportantResources("WarlockSpellSlot",9);
+DB_SelfHealing_ImportantResources("WildShape",0);
+DB_SelfHealing_ImportantResources("ChannelDivinity",0);
+DB_SelfHealing_ImportantResources("SuperiorityDie",0);
+DB_SelfHealing_ImportantResources("KiPoint",0);
+DB_SelfHealing_ImportantResources("SuperiorityDie",0);
+DB_SelfHealing_ImportantResources("WeaponActionPoint",0);
+DB_SelfHealing_ImportantResources("ChannelOath",0);
+DB_SelfHealing_ImportantResources("Rage",0);
+DB_SelfHealing_ImportantResources("BardicInspiration",0);
+DB_SelfHealing_ImportantResources("SorceryPoint",0);
+DB_SelfHealing_ImportantResources("WarPriestActionPoint",0);
+DB_SelfHealing_ImportantResources("LayOnHandsCharge",0);
+KBSECTION
+//REGION Set lower HP on init (-> block self-healing)
+PROC
+PROC_SetHitpointsPercentage_BlockSelfHealing((CHARACTER)_Char, (REAL)_Percentage)
+THEN
+SetHitpointsPercentage(_Char, _Percentage);
+PROC_SelfHealing_Disable(_Char);
+
+PROC
+PROC_SetHitpoints_BlockSelfHealing((CHARACTER)_Char, (INTEGER)_HP)
+THEN
+SetHitpoints(_Char, _HP);
+PROC_SelfHealing_Disable(_Char);
+
+PROC
+PROC_SelfHealing_Disable((CHARACTER)_Char)
+THEN
+PROC_CharacterDisableCrime(_Char, "SelfHealing");
+//NOT DB_SelfHealing_Perform(_Char);
+
+PROC
+PROC_SelfHealing_Enable((CHARACTER)_Char)
+THEN
+PROC_CharacterEnableCrime(_Char, "SelfHealing");
+PROC_SelfHealing_Check(_Char);
+
+QRY
+QRY_SelfHealing_IsEnabled((CHARACTER)_Char)
+AND
+QRY_CRIME_IsEnabled((CHARACTER)_Char, "SelfHealing")
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Trigger self-healing
+// Entering combat
+IF
+EnteredCombat((GUIDSTRING)_NPC, _)
+AND
+IsCharacter(_NPC, 1)
+AND
+QRY_CRIME_IsEnabled((CHARACTER)_NPC,"SelfHealing")
+AND
+IsPartyMember(_NPC,1,0)
+AND
+DB_SelfHealing_ImportantResources(_Resource,_Level)
+AND
+GetActionResourceValuePersonal(_NPC,_Resource,_Level,_Amount)
+AND
+_Amount > 0.001
+THEN
+DB_SelfHealing_ImportantResources_OriginalValues(_NPC,_Resource,_Level,_Amount);
+
+// Leaving combat
+IF
+LeftCombat((GUIDSTRING)_NPC, _)
+AND
+IsCharacter(_NPC, 1)
+AND
+QRY_CRIME_IsEnabled((CHARACTER)_NPC,"SelfHealing")
+AND
+IsPartyMember(_NPC,1,0)
+AND
+NOT DB_PermaDefeated(_NPC)
+THEN
+PROC_SelfHealing_Check((CHARACTER)_NPC);
+
+IF
+LeftCombat((GUIDSTRING)_NPC,_)
+AND
+DB_SelfHealing_ImportantResources_OriginalValues((CHARACTER)_NPC,_Resource,_Level,_OriginalAmount)
+THEN
+NOT DB_SelfHealing_ImportantResources_OriginalValues(_NPC,_Resource,_Level,_OriginalAmount);
+
+// Hitpoints changed
+IF
+HitpointsChanged((CHARACTER)_NPC,_Amount)
+AND
+NOT DB_Is_InCombat(_NPC,_)
+AND
+IsCharacter(_NPC,1)
+THEN
+PROC_SelfHealing_Check(_NPC);
+
+PROC
+PROC_SelfHealing_Check((CHARACTER)_NPC)
+AND
+NOT DB_PartyMembers(_NPC)
+AND
+NOT DB_PermaDefeated(_NPC)
+AND
+QRY_CRIME_IsEnabled(_NPC,"SelfHealing")
+AND
+IsTagged(_NPC, (TAG)CROWDSYS_NPC_1274ffab-2fa2-4d6f-801e-751664ceb771, 0)
+AND
+QRY_SelfHealing_ShouldSelfHeal(_NPC)
+THEN
+PROC_Disturbance_PerformWhenAvailable(_NPC,"SelfHealing",NULL_00000000-0000-0000-0000-000000000000,_NPC,1);
+
+QRY
+QRY_SelfHealing_ShouldSelfHeal((CHARACTER)_NPC)
+AND
+GetHitpointsPercentage(_NPC,_Percentage)
+AND
+// Checking for IsDead does not work (in case this was triggered by HitpointsChanged)
+// because of the deferred death system
+_Percentage > 0.0
+AND
+_Percentage < 100.0
+THEN
+DB_QRY_RTN_ShouldSelfHeal(_NPC);
+
+QRY
+QRY_SelfHealing_ShouldSelfHeal((CHARACTER)_NPC)
+AND
+DB_SelfHealing_ImportantResources_OriginalValues(_NPC,_Resource,_Level,_OriginalAmount)
+AND
+NOT DB_QRY_RTN_ShouldSelfHeal(_NPC) //prevents further code calls
+AND
+GetActionResourceValuePersonal(_NPC,_Resource,_Level,_CurrentAmount)
+AND
+_CurrentAmount < _OriginalAmount
+THEN
+DB_QRY_RTN_ShouldSelfHeal(_NPC);
+
+QRY
+QRY_SelfHealing_ShouldSelfHeal((CHARACTER)_NPC)
+AND
+DB_QRY_RTN_ShouldSelfHeal(_NPC)
+THEN
+NOT DB_QRY_RTN_ShouldSelfHeal(_NPC);
+
+//END_REGION
+
+//REGION React to the self-healing spell cast from anubis
+// Can't do this in stats, because there is no functor to restore the HP to the max
+IF
+CastedSpell(_NPC, "Shout_RegainHP_Peace_NPC", _, _, _)
+AND
+_NPC != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_NPC,1)
+THEN
+PROC_SelfHealing_Casted((CHARACTER)_NPC);
+
+PROC
+PROC_SelfHealing_Casted((CHARACTER)_NPC)
+THEN
+SetHitpointsPercentage(_NPC,100.0);
+
+PROC
+PROC_SelfHealing_Casted((CHARACTER)_NPC)
+AND
+GetHandlingCrimeID(_NPC, _DisturbanceID)
+THEN
+DB_SelfHealing_Finished(_NPC, _DisturbanceID);
+
+IF
+StatusApplied((CHARACTER)_NPC, "REGAINHP_PEACE_NPC", _, _)
+THEN
+PROC_SelfHealing_Casted(_NPC);
+
+QRY
+QRY_Disturbance_PerformWhenAvailable_Retry((CHARACTER)_NPC,"SelfHealing",(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_DisturbanceID)
+AND
+NOT DB_SelfHealing_Finished(_NPC, _DisturbanceID)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_DisturbanceID)
+AND
+DB_SelfHealing_Finished(_NPC, _DisturbanceID)
+THEN
+NOT DB_SelfHealing_Finished(_NPC, _DisturbanceID);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

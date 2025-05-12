@@ -1,0 +1,3156 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Debug
+DB_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110);
+DB_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110);
+//END_REGION
+
+//REGION Autosaves
+DB_AutoSaveTrigger((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33);
+//END_REGION
+
+//REGION Narrative Combat
+DB_GLO_NarrativeCombat_Region("IRN_IronThrone",(TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33);
+//END_REGION
+
+//REGION Danger/Suppresion Zone
+DB_DangerZone((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, "IRN_IronThrone");
+DB_PartyDialogSuppressionZone((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33);
+//END_REGION
+
+//REGION States
+DB_State_Current(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "Arrival");
+
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "Arrival", 0);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing", 1000);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished", 2000);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackAtDocks", 3000);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "WaveservantsAttack", 3500);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackInBasement", 3800);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "Finished", 4000);
+DB_State_Priority(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "DestroyedInSteelwatch", 10000);
+//END_REGION
+
+//REGION Main Logic
+DB_IRN_IronThrone_TotalTurnsDifficultySetting("EASY", 8);
+DB_IRN_IronThrone_TotalTurnsDifficultySetting("MEDIUM", 6);
+DB_IRN_IronThrone_TotalTurnsDifficultySetting("HARD", 5);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_LeftWithoutEntering_9530d1e4-8740-423b-a989-d7912a5de9bc, (DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5);
+DB_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, (DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5);
+
+DB_Dialogs(S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158, (DIALOGRESOURCE)IRN_IronThrone_EscapingHostage_ec6d3692-8996-e897-7d6d-2bc64ceadb1c);
+
+DB_DialogBlockTradeButton((DIALOGRESOURCE)IRN_IronThrone_MainConsole_31bed982-f026-7a39-37af-2381f2d03ac7);
+
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5, (TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, 1, 1, 1, 1);
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)IRN_IronThrone_OmeluumMindMeld_bf35642e-33ed-d4a4-7eb6-6b1d44eceabf, (TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, 1, 1, 1, 1);
+
+PROC_TriggerRegisterForParty((TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, (CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_IRN_OmeluumMindMeldArea_42125c12-4ddc-4554-8692-c9afe5a0c4a0);
+PROC_TriggerRegisterForParty((TRIGGER)S_IRN_EnterMainLevelArea_a05b86cb-f8ef-446c-92af-91fda2d11feb);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_IRN_RavengardRoomArea_472fb1d8-a2ab-46a0-99d5-13e3d45288de);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_IRN_SubmersibleInteriorArea_4a6d5106-21ea-4d8c-8625-8f061452ff34);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_SubmersibleInteriorArea_4a6d5106-21ea-4d8c-8625-8f061452ff34, (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_IRN_IronThrone_LobbyArea_cf8b1e83-1afc-4345-a58d-3a19c4275919);
+
+PROC_SetOnStage((CHARACTER)S_IRN_GortashDummy_d0a28d11-c7fc-4ab1-9412-9832f52281db, 0);
+
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5);
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a);
+DB_DialogStarted_IgnoreStopConditions((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a);
+
+//END_REGION
+
+//REGION Prisoners
+DB_Singleton("IRN_PrisonerCount",0);
+
+DB_IRN_IronThrone_FreeDelay(3000);
+
+DB_IRN_Hostages_AddedFreeDelay(S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, 500);
+DB_IRN_Hostages_AddedFreeDelay(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 500);
+
+//Doors - DB_IRN_PrisonerGroup_Door(_GroupId, _Door)
+DB_IRN_PrisonerGroup_Door(1, (ITEM)S_IRN_PrisonerGroup1_Door_7b424243-b943-45d5-a985-af95d97ea702);
+DB_IRN_PrisonerGroup_Door(2, (ITEM)S_IRN_PrisonerGroup2_Door_d0d51fc2-5d0c-49ad-be9e-6530c8dc8080);
+DB_IRN_PrisonerGroup_Door(3, (ITEM)S_IRN_PrisonerGroup3_Door_7821bfb8-a284-4831-b7e6-608862c7f284);
+DB_IRN_PrisonerGroup_Door(5, (ITEM)S_IRN_PrisonerGroup5_Door_2c2544a4-4e04-4d17-a355-06364b21b1f0);
+DB_IRN_PrisonerGroup_Door(6, (ITEM)S_IRN_TortureRoom_Door_0dfdc805-25d4-45b5-b3bc-491b228c37b9);
+DB_IRN_PrisonerGroup_Door(7, (ITEM)S_IRN_PrisonerGroup7_Door_46e6577c-5b5b-4e42-b13f-5f56037d2f51);
+DB_IRN_PrisonerGroup_Door(10, (ITEM)S_IRN_PrisonerGroup10_Door_78bac0e7-31fc-4366-940f-dc3b4675f289);
+
+DB_IRN_TortureBeds((CHARACTER)S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, (ITEM)S_IRN_PrisonerGroup5_TortureBed_1e276f9b-3668-41b4-aa8d-0c817f6ed6ec, (TRIGGER)S_GLO_IronThrone_Group4_Prisoner1_BeforeRescuePos_13cea424-18e5-4db7-aee5-492910fa5a0e);
+DB_IRN_TortureBeds((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (ITEM)S_IRN_PrisonerGroup9_TortureBed_490436d8-ffda-4f32-bd50-0c602de79e4d, (TRIGGER)S_IRN_Omeluum_Pos_470314b5-cee5-47c4-ac80-9c5d19718886);
+
+//Levers - DB_IRN_DoorsLevers(_Door, _Lever)
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerGroup1_Door_7b424243-b943-45d5-a985-af95d97ea702, (ITEM)S_IRN_PrisonerGroup1_Lever_e2cbb1ea-7f8e-467a-9736-ce5f5b696299);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerGroup2_Door_d0d51fc2-5d0c-49ad-be9e-6530c8dc8080, (ITEM)S_IRN_PrisonerGroup2_Lever_bec95432-e2c4-4b26-85d2-c0bc0bacfde5);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerGroup3_Door_7821bfb8-a284-4831-b7e6-608862c7f284, (ITEM)S_IRN_PrisonerGroup3_Lever_6ba0cbe2-09e7-4e24-9036-c97ae91f2722);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerGroup5_Door_2c2544a4-4e04-4d17-a355-06364b21b1f0, (ITEM)S_IRN_PrisonerGroup5_Lever_f9b5a10b-8b21-4b56-9f20-3c14df80c1d2);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerGroup7_Door_46e6577c-5b5b-4e42-b13f-5f56037d2f51, (ITEM)S_IRN_PrisonerGroup7_Lever_4192a7e4-7f33-4ffd-9f86-b5aac73c2a6b);
+DB_IRN_DoorsLevers((ITEM)S_IRN_OmeluumRoom_Door_6835ebd2-276a-491d-b055-e9555bcefa39, (ITEM)S_IRN_OmeluumRoom_Lever_22db60cd-b212-4763-aaa9-fb833b5f63a9);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerGroup10_Door_78bac0e7-31fc-4366-940f-dc3b4675f289, (ITEM)S_IRN_PrisonerGroup10_Lever_22374072-7f93-412c-aecb-c621c37a9a1d);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PrisonerRoomTreasure_Door_94a40c67-94e1-4f4e-97e1-8dd4283610eb, (ITEM)S_IRN_PrisonerRoomTreasure_Lever_508c7240-7932-4a42-b5b1-1014485cad69);
+DB_IRN_DoorsLevers((ITEM)S_IRN_TreasureCorridor_Door1_0cb56490-149e-40db-af44-bb75fa5c1b4e, (ITEM)S_IRN_TreasureCorridor_Lever1_26bf4292-5e3f-4435-a339-5f6ea6467da2);
+DB_IRN_DoorsLevers((ITEM)S_IRN_TreasureCorridor_Door2_dceb075d-4178-44ff-83e9-a6623c5e16ad, (ITEM)S_IRN_TreasureCorridor_Lever2_fcd540bf-ca44-4eea-a655-d2ec344ad036);
+DB_IRN_DoorsLevers((ITEM)S_IRN_TortureRoom_Door_0dfdc805-25d4-45b5-b3bc-491b228c37b9, (ITEM)S_IRN_TortureRoom_Lever_43ca0f6b-e3ea-4c8b-ac68-479a7f6490c4);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PowerRoomDoor01_5657fbd6-9651-405b-9585-23489376474e, (ITEM)S_IRN_PowerRoomDoor01_Lever_63866e22-d36c-4f64-9545-1c31ccf2453e);
+DB_IRN_DoorsLevers((ITEM)S_IRN_PowerRoomDoor02_99d72ee0-927a-4341-9052-9b0273161813, (ITEM)S_IRN_PowerRoomDoor02_Lever_e0cce399-5ca2-46ad-ad0e-5de413650b29);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorWestInnerDoor_a09ff0ad-d560-4fdf-a24c-97ad9d9a12a8, (ITEM)S_IRN_Airlock_01_Lever_908b0287-38e6-4f37-bd32-a65b4ec33628);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorWestOuterDoor_609871e3-f5f9-4e4a-9b49-a462da4d6742, (ITEM)S_IRN_Airlock_02_Lever_3000d549-751e-4312-9706-b5f19c42ae5d);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorEastInnerDoor_4f9fece8-10ff-41dd-b651-9718c71f5ad8, (ITEM)S_IRN_CorridorEastInnerDoor_Lever_806b2a56-4e70-42e8-a61d-7e971fae270f);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorEastOuterDoor_9adb4e5f-2f6d-414f-a816-efbd37f11115, (ITEM)S_IRN_CorridorEastOuterDoor_Lever_e781d20d-9c91-4afb-a198-b222dd74fa61);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorSouthInnerDoor_4894a255-b4be-41cf-b0f2-1d7a1d83f754, (ITEM)S_IRN_CorridorSouthInnerDoor_Lever_10775da5-8382-401b-b3fa-a512866421ec);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorSouthOuterDoor_08dc3965-af82-49c9-8863-9f5e51332aca, (ITEM)S_IRN_CorridorSouthOuterDoor_Lever_79ed2714-8ffe-4154-825e-a7465d7df66f);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorNorthInnerDoor_130a6bce-82cd-4910-bf3d-a2f7c321bd3f, (ITEM)S_IRN_CorridorNorthInnerDoor_Lever_f89a6436-4f8d-4d96-9c4b-1fc1abb2d806);
+DB_IRN_DoorsLevers((ITEM)S_IRN_CorridorNorthOuterDoor_b958c0b0-4ec2-4339-b3e0-58c5fb8081f0, (ITEM)S_IRN_CorridorNorthOuterDoor_Lever_b4e08484-e99e-48d9-b1f2-d1e31e311f4a);
+
+//Prisoner Groups - DB_IRN_PrisonerGroup(_GroupID, _Prisoner)
+DB_IRN_PrisonerGroup(1, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392);
+DB_IRN_PrisonerGroup(1, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb);
+DB_IRN_PrisonerGroup(1, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+DB_IRN_PrisonerGroup(2, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37);
+DB_IRN_PrisonerGroup(2, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c);
+DB_IRN_PrisonerGroup(2, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693);
+DB_IRN_PrisonerGroup(3, (CHARACTER)S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8);
+DB_IRN_PrisonerGroup(3, (CHARACTER)S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4);
+DB_IRN_PrisonerGroup(4, (CHARACTER)S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5);
+DB_IRN_PrisonerGroup(5, (CHARACTER)S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55);
+DB_IRN_PrisonerGroup(6, (CHARACTER)S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf);
+DB_IRN_PrisonerGroup(7, (CHARACTER)S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e);
+DB_IRN_PrisonerGroup(8, (CHARACTER)S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158);
+//Ravengard and Omeluum added conditionally at region arrival
+
+//PrisonerEscapeAds play when the hostage is freed - DB_IRN_PrisonerEscapeAD(_Hostage, _AD)
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1_5b46786f-909d-6092-1098-8c811fa3851b);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2_cfd83391-28d0-1eea-4239-735b123bb618);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3_a3c5e94c-2f9e-15c8-4a4c-c31f57466e4f);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4_1be16fed-9705-94c6-5f2a-4961c8cef154);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup5_771f23a2-0691-f28a-e542-a754729da01f);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup6_67a091a7-546e-ed86-3886-a4cd0781c224);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup7_d978f369-ce27-33b2-71f8-3aa270762693);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158, (DIALOGRESOURCE)IRN_IronThrone_AD_EscapingHostageInLobby_98cbbf82-07ed-f449-af89-dc2becc45455);
+DB_IRN_PrisonerEscapeAD((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (DIALOGRESOURCE)IRN_IronThrone_AD_OmeluumFreed_3349047d-3503-7acb-d946-5065a5855317);
+
+//PrisonerNearbyADs play when the player gets inside the specified trigger - DB_IRN_PrisonerNearbyAD(_Hostage, _AD, _Area)
+DB_IRN_PrisonerNearbyAD((CHARACTER)S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1Nearby_1299ee2f-944a-a91e-5bfc-d15e612b28e7, (TRIGGER)S_IRN_PrisonGroup1_NearbyADArea_b01589b2-d038-444f-b29a-ca018589fcbc);
+DB_IRN_PrisonerNearbyAD((CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2Nearby_b2264cdc-3071-361f-dee1-487424fc3434, (TRIGGER)S_IRN_PrisonGroup2_NearbyADArea_c6410519-22e8-4c2d-8f98-d039f8b9d1c6);
+DB_IRN_PrisonerNearbyAD((CHARACTER)S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup5Nearby_3be2a782-7539-776a-30b8-68fca2ad4f74, (TRIGGER)S_IRN_PrisonGroup5_NearbyADArea_19982b0c-ed1b-46a4-95f6-c8a243fece1a);
+DB_IRN_PrisonerNearbyAD((CHARACTER)S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup6Nearby_f84e27e1-2c46-b732-33dd-5f429d3b2f73, (TRIGGER)S_IRN_PrisonGroup6_NearbyADArea_3a0ac677-e6e7-4f40-91dc-7cf2491f79eb);
+DB_IRN_PrisonerNearbyAD((CHARACTER)S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup7Nearby_4fb29b35-755c-67eb-6d20-48cb24e86546, (TRIGGER)S_IRN_PrisonGroup7_NearbyADArea_87456294-7382-4c1a-a8e6-7651856a1352);
+
+//DB_GLO_SetupForAct_FlagChecks("IRN_Main_A", (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496, 1);
+
+DB_DefeatedStateFlag(S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158, IRN_IronThrone_State_FundangosDaughterDefeated_e4080664-1771-46d5-8a8b-b0c0c7815cc2);
+DB_PermaDefeatedFlag(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53,(FLAG)IRN_IronThrone_State_Omeluum_PermaDefeated_5ec9f178-39d8-4c26-897b-72eb5b34f122);
+//END_REGION
+
+//REGION Guards
+//Reinforcements spawn on the specified turn in  this DB - DB_IRN_IronThrone_Reinforcements(_TurnToSpawn, _Enemy)
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave01_01_cb0e1f31-c487-40a8-987d-d22d5a8dee31);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave01_02_919838ea-f224-491d-99b0-4b7a8b17f8a5);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave02_01_43a81ca4-c9d0-4b9b-8bc8-081965c3c732);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave02_02_d6ca5ba7-5388-498f-95c5-4e13b09b19d3);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave02_03_02170afd-90be-49bc-8193-c52769ee92ed);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave03_01_90416aba-3810-4ab3-b5a3-2b68c7aebcc6);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave03_02_50a3be42-96e3-4300-920c-f709f1eec24c);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave03_03_e400207c-27cb-41aa-9788-02a8fb303a3a);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_01_7b95b406-ddaa-4cab-94b7-057cbb6d0fbc);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_02_a7557f4a-e73d-4ffc-ba48-2c7184c577a3);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_03_61f3fce2-6585-4c9e-8220-6dbafe563ecb);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_04_ccbbf867-5d1b-4d40-ac0b-4675edad6173);
+DB_IRN_IronThrone_Reinforcements((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_05_0cdba699-112a-427d-85c9-81c809250e48);
+
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Patrolling01_86c3e221-01a8-4c0b-8898-cd519843c8f9);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Patrolling02_d5190939-376b-4fca-ab06-fadad1fe9725);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Patrolling03_6c99f33c-8c74-4ab4-929e-b06b1641e613);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Patrolling04_7987b367-c378-446b-bffa-69f1bd5d8ebf);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Patrolling05_17e0e960-3bbe-4f51-9610-705361eea133);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Stationary_01_0ad72372-8a41-421f-b0cf-30e98bbc6bf3);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Stationary_03_28820688-22e3-4057-8a58-0089e67dec62);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Stationary_04_9fac5572-f9ea-44a4-abaf-7d5fffdd6378);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_EscapingHostageGuard_68f4635f-40d3-4135-8519-4c62dadd26ef);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave01_01_cb0e1f31-c487-40a8-987d-d22d5a8dee31);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave01_02_919838ea-f224-491d-99b0-4b7a8b17f8a5);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave02_01_43a81ca4-c9d0-4b9b-8bc8-081965c3c732);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave02_02_d6ca5ba7-5388-498f-95c5-4e13b09b19d3);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave02_03_02170afd-90be-49bc-8193-c52769ee92ed);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave03_01_90416aba-3810-4ab3-b5a3-2b68c7aebcc6);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave03_02_50a3be42-96e3-4300-920c-f709f1eec24c);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave03_03_e400207c-27cb-41aa-9788-02a8fb303a3a);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_01_7b95b406-ddaa-4cab-94b7-057cbb6d0fbc);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_02_a7557f4a-e73d-4ffc-ba48-2c7184c577a3);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_03_61f3fce2-6585-4c9e-8220-6dbafe563ecb);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_04_ccbbf867-5d1b-4d40-ac0b-4675edad6173);
+DB_IRN_IronThrone_Guards((CHARACTER)S_IRN_Guard_Reinforcements_Wave04_05_0cdba699-112a-427d-85c9-81c809250e48);
+
+//Reinforcements spawn areas - at the start of each turn, the first few of those are picked depending on number of reinforcements in wave
+//Then, a random position in these areas is picked for the enemies to start spawning in
+//DB_IRN_IronThrone_ReinforcementSpawnPositions (_OrderOfUse, _BoxTrigger)
+DB_IRN_IronThrone_ReinforcementSpawnPositions(1, (TRIGGER)S_IRN_ReinforcementSpawnPos01_d1feb753-e78f-4e74-bc5e-eb82bd6633ac);
+DB_IRN_IronThrone_ReinforcementSpawnPositions(2, (TRIGGER)S_IRN_ReinforcementSpawnPos02_813727fd-4e3e-4f61-97ca-d0bd74e57bc5);
+DB_IRN_IronThrone_ReinforcementSpawnPositions(3, (TRIGGER)S_IRN_ReinforcementSpawnPos03_f1e35b72-05df-438e-a22c-b7af5d7cfdee);
+
+//Reinforcement clamp
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesTotal(15);
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(5);
+DB_IRN_IronThrone_Reinforcements_ClampZones((TRIGGER)S_IRN_GuardClampZone01_715632b9-b21e-4f2e-8eca-ca72746fa3d8);
+DB_IRN_IronThrone_Reinforcements_ClampZones((TRIGGER)S_IRN_GuardClampZone02_626ebfac-44e9-422b-bbc8-0217aab49fd2);
+DB_IRN_IronThrone_Reinforcements_ClampZones((TRIGGER)S_IRN_GuardClampZone03_c3a5e94f-7d5d-49d5-ad69-3bfdfd22b449);
+//END_REGION
+
+//REGION Security Cameras
+DB_IRN_IronThrone_SecurityCameras((ITEM)S_IRN_SecurityCameras01_879e9015-cf35-4f45-a9aa-e2365d486cc6);
+DB_IRN_IronThrone_SecurityCameras((ITEM)S_IRN_SecurityCameras02_8d7fbd66-eaf9-4ec6-9f81-fc9b77e2abee);
+//END_REGION
+
+//REGION Map Markers info
+
+DB_IRN_MapMarkers("IRN_Hostage1", (CHARACTER)S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392);
+DB_IRN_MapMarkers("IRN_Hostage2", (CHARACTER)S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb);
+DB_IRN_MapMarkers("IRN_Hostage3", (CHARACTER)S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+DB_IRN_MapMarkers("IRN_Hostage4", (CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37);
+DB_IRN_MapMarkers("IRN_Hostage5", (CHARACTER)S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c);
+DB_IRN_MapMarkers("IRN_Hostage6", (CHARACTER)S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693);
+DB_IRN_MapMarkers("IRN_Hostage7", (CHARACTER)S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8);
+DB_IRN_MapMarkers("IRN_Hostage8", (CHARACTER)S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4);
+DB_IRN_MapMarkers("IRN_Hostage9", (CHARACTER)S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5);
+DB_IRN_MapMarkers("IRN_Hostage10", (CHARACTER)S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55);
+DB_IRN_MapMarkers("IRN_Hostage11", (CHARACTER)S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf);
+DB_IRN_MapMarkers("IRN_Hostage12", (CHARACTER)S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e);
+DB_IRN_MapMarkers("IRN_EscapingHostage", (CHARACTER)S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158);
+DB_IRN_MapMarkers("IRN_SubmarineEscape", NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Environmental Hazards
+/*
+//Floods -  Sets positons for floods to happen on a specified turn: DB_IRN_Hazards_FloodPositions((INTEGER)_Turn, (ITEM)_InvisibleHelper) 
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_01_fd40df19-c980-4da1-8638-de9c3da3e621);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_02_2b00ef27-8635-4ca7-bac8-fbea687d8f98);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_03_80bc3590-4645-41b5-b7de-e2ba016d5310);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_04_26750c4d-6f4b-4466-879d-a3fdcbec7437);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_05_a886c1d0-3509-4b08-9904-a3a4b1ab13ab);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_06_66094aac-3ad3-49e0-8c75-6187fab7b387);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_07_ed9c9f3c-62b2-4a8f-9e5e-4d5a0202f6a9);
+DB_IRN_Hazards_FloodPositions(6, (ITEM)S_IRN_Hazards_FloodPos_08_dbd835bf-6c25-4cda-9245-e624fc4e8285);
+*/
+//Corridor info
+//DB_IRN_Hazards_Corridors(_CorridorStringIdentifier, _HeatDetector1, HeatDetector2, _Door1, _Door2)
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_WestCorridor", (ITEM)S_IRN_CorridorWestInnerDoor_a09ff0ad-d560-4fdf-a24c-97ad9d9a12a8);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_WestCorridor", (ITEM)S_IRN_CorridorWestOuterDoor_609871e3-f5f9-4e4a-9b49-a462da4d6742);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_EastCorridor", (ITEM)S_IRN_CorridorEastInnerDoor_4f9fece8-10ff-41dd-b651-9718c71f5ad8);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_EastCorridor", (ITEM)S_IRN_CorridorEastOuterDoor_9adb4e5f-2f6d-414f-a816-efbd37f11115);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_SouthCorridor",(ITEM)S_IRN_CorridorSouthInnerDoor_4894a255-b4be-41cf-b0f2-1d7a1d83f754);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_SouthCorridor",(ITEM)S_IRN_CorridorSouthOuterDoor_08dc3965-af82-49c9-8863-9f5e51332aca);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_NorthCorridor",(ITEM)S_IRN_CorridorNorthInnerDoor_130a6bce-82cd-4910-bf3d-a2f7c321bd3f);
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_NorthCorridor",(ITEM)S_IRN_CorridorNorthOuterDoor_b958c0b0-4ec2-4339-b3e0-58c5fb8081f0);
+
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_WestCorridor", (ITEM)S_IRN_Hazards_HeatDetector01_d991dc30-12dd-4d60-8d26-3ef8c1df1c90);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_WestCorridor", (ITEM)S_IRN_Hazards_HeatDetector02_a6dc4a2a-2ec2-42b7-ac59-779a5bac587a);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_EastCorridor", (ITEM)S_IRN_Hazards_HeatDetector03_b6fe852b-a5ee-4e2b-859a-f498143d153f);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_EastCorridor", (ITEM)S_IRN_Hazards_HeatDetector04_ca9ed7ce-36fa-4b52-88d1-665ea5ffc2cf);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_SouthCorridor",(ITEM)S_IRN_Hazards_HeatDetector05_569d2311-c98e-4e00-8926-fc0e607542e2);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_SouthCorridor",(ITEM)S_IRN_Hazards_HeatDetector06_637a9577-1787-46a3-902f-2e2bf37bf13a);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_NorthCorridor",(ITEM)S_IRN_Hazards_HeatDetector07_6e905dfb-b507-42d4-8af8-4df75255583e);
+DB_IRN_Hazards_Corridors_HeatDetectors("IRN_HeatDetectors_NorthCorridor",(ITEM)S_IRN_Hazards_HeatDetector08_3241c4b6-fd88-4818-a831-ade1b5502355);
+
+DB_IRN_AirlockCorridorADs((DIALOGRESOURCE)IRN_IronThrone_AD_PhoenixHittingDoor_b326a760-e3c4-1c4e-fbcd-2b768791399d, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37);
+DB_IRN_AirlockCorridorADs((DIALOGRESOURCE)IRN_IronThrone_AD_OgroHittingDoor_b4721537-0831-9707-c036-8f77a573854b, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+
+//END_REGION
+
+//REGION Dialogs
+DB_DoNotFaceDialog(S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, (DIALOGRESOURCE)IRN_IronThrone_AD_BeastmasterInSubmersible_63cd798d-f309-68d4-dd40-3278dd6fb92e);
+
+//DB_IRN_CombatAD_OnDeath(_PrisonerGroupID, _OnDeathDialog)
+DB_IRN_CombatAD_OnDeathCustom(1, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1OnDeath_aa12a052-da09-59c7-f0e5-dc409a300ca8);
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1OnDeath_aa12a052-da09-59c7-f0e5-dc409a300ca8, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb, (CHARACTER)S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+DB_IRN_CombatAD_OnDeathCustom(2, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2OnDeath_3897bbc8-f4ca-7556-3010-5a73bccc96eb);
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2OnDeath_3897bbc8-f4ca-7556-3010-5a73bccc96eb, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c, (CHARACTER)S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693);
+DB_IRN_CombatAD_OnDeathCustom(3, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3OnDeath_856816af-755e-fbc2-a7e6-40edb77b9e34);
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3OnDeath_856816af-755e-fbc2-a7e6-40edb77b9e34, (CHARACTER)S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8, (CHARACTER)S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4, NULL_00000000-0000-0000-0000-000000000000);
+DB_IRN_CombatAD_OnDeathCustom(4, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4OnDeath_b8d91068-8467-f1c7-11e5-13d551df000f);
+DB_IRN_CombatAD_OnDeathCustom(5, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4OnDeath_b8d91068-8467-f1c7-11e5-13d551df000f); //Affecting both Group 4 and 5
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList((DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4OnDeath_b8d91068-8467-f1c7-11e5-13d551df000f, (CHARACTER)S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, (CHARACTER)S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55, NULL_00000000-0000-0000-0000-000000000000); //Affecting both Group 4 and 5
+
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1TurnOne_4aecdcd7-a916-cde2-b173-9379ab6370c6, 1);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1TurnTwo_60b0a77a-264c-61c5-6be8-5fb90d10537c, 2);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2TurnOne_f379f249-e456-abaa-a54a-506177f852ad, 1);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2TurnTwo_026e65d1-fe59-9355-04c6-880d78242205, 2);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3TurnOne_d63b95d7-7bbc-d517-6ce7-7b4f23443c23, 1);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3TurnTwo_41a0e1d2-bbc1-d5a6-0f82-133418872da4, 2);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4TurnOne_87913696-4388-e87f-e736-ee0f717afae6, 1);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup5TurnTwo_02a62637-1c26-442e-234f-2d1f73146831, 2);
+DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup6TurnOne_84119ebb-49da-8353-cef6-76f112eb05ff, 1);
+
+DB_CombatReact_AD_OnTurn(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (DIALOGRESOURCE)IRN_IronThrone_AD_OmeluumTurnOne_7abe7844-3f28-c09d-3575-0ae3285e6c87, 1);
+//END_REGION
+
+DB_GLO_SetupForAct_Character("IRN_Main_A", (CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1);
+
+//REGION Enable new lever logic
+//If the goal initiates a player, they should use the new logic
+//If they have already initiated the goal and are loading a save where it's initiated, use the old logic
+DB_IRN_UseNewLeverLogic(1);
+
+//END_REGION
+KBSECTION
+IF
+LevelLoaded("IRN_Main_A")
+THEN
+SetFlag((FLAG)CURRENTREGION_IRN_Main_A_3b31600d-6416-4a37-962c-4c36c06fb41f,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_GlobalSetFlagAndCache((FLAG)VISITEDREGION_IRN_Main_A_62108742-0548-49f5-a277-7bb34ee9c31c);
+
+IF
+LevelUnloading("IRN_Main_A")
+THEN
+ClearFlag((FLAG)CURRENTREGION_IRN_Main_A_3b31600d-6416-4a37-962c-4c36c06fb41f,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//REGION Debug Dialog Sequence
+IF
+TextEvent("irn_dialogs")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_DEBUG_IRN_IronThrone_StartDebugDialogSequence((CHARACTER)_Player);
+
+IF
+EntityEvent(_Player, "IRN_Debug_StartDialogSequence")
+AND
+QRY_OnlyOnce("IRN_Debug_StartDialogSequence")
+THEN
+PROC_DEBUG_IRN_IronThrone_StartDebugDialogSequence((CHARACTER)_Player);
+
+PROC
+PROC_DEBUG_IRN_IronThrone_StartDebugDialogSequence((CHARACTER)_Player)
+THEN
+ClearFlag((FLAG)LOW_SteelWatchFoundry_State_AgreedToHelpGondians_5acaf88a-ea7d-3e0d-ef62-c33e8b4203d1);
+ClearFlag((FLAG)LOW_SteelWatchFoundry_Knows_GondianFamiliesTaken_57a82e5f-8d8d-9a3b-0759-f4292ff57eab, _Player);
+ClearFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+ClearFlag((FLAG)LOW_TheLodge_State_OmeluumIsMissing_3595c99e-922b-4ca5-aaf5-5aea14603c07);
+ClearFlag((FLAG)Debug_IRN_DialogSequenceSkipGameplay_94705540-0d6b-4e2b-8beb-bdf0a2ccbdda);
+ClearFlag((FLAG)LOW_SteelWatchFoundry_State_MajorityIronThronePrisonersDead_6c40a75d-32ae-4402-a54c-062805f7ee7d);
+ClearFlag((FLAG)LOW_SteelWatchFoundry_State_AnyIronThronePrisonersDead_5d6c4329-ee56-4084-8220-d627b716ac87);
+ClearFlag((FLAG)LOW_SteelWatchFoundry_State_AllIronThronePrisonersDead_4fefe27f-7cd6-44b1-9322-a57b22246271);
+ClearFlag((FLAG)IRN_Ravengard_State_Saved_f48872ec-e70f-4d95-b61f-c59211dd1d21);
+ClearFlag((FLAG)IRN_Omeluum_State_Saved_7d16ff95-92f4-4d4a-a866-b428765e6c7f);
+ClearFlag((FLAG)GLO_Gortash_State_Defeated_7ba6ad38-bb7b-41cc-a71f-15b12c988858);
+ClearFlag((FLAG)GLO_Gortash_State_PermaDefeated_74dd56ff-7e00-42a6-a0f3-0d122f364769);
+ClearFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c);
+
+PROC
+PROC_DEBUG_IRN_IronThrone_StartDebugDialogSequence((CHARACTER)_)
+THEN
+DB_Debug_IRN_DebugDialogSequenceOngoing(1);
+
+PROC
+PROC_DEBUG_IRN_IronThrone_StartDebugDialogSequence((CHARACTER)_Player)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110, _Player, 0, 0, 0 ,0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+DB_GlobalFlag((FLAG)Debug_IRN_DialogSequenceFirstTime_441fd963-5285-4104-ac06-2fe55a6a382b)
+AND
+DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)IRN_IronThrone_LeaveDockWarehouse_4e5abec5-400a-786e-37e6-dcec1b4686f5, _Player, 0, 0, 0 ,0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)IRN_IronThrone_LeaveDockWarehouse_4e5abec5-400a-786e-37e6-dcec1b4686f5, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5, (CHARACTER)S_IRN_Spectator_0f0f7c6c-3f02-4fbf-901d-bf8ad41078ac, _Player, 0, 0, 0 ,0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110, _Player, 0, 0, 0 ,0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)Debug_IRN_DialogSequenceFirstTime_441fd963-5285-4104-ac06-2fe55a6a382b)
+AND
+DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Player, 0, 0, 0 ,0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)IRN_IronThrone_Return_09c71cbf-c72c-d810-3bba-c1b9fc81770e, _Player, 0, 0, 0 ,0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)IRN_IronThrone_Return_09c71cbf-c72c-d810-3bba-c1b9fc81770e, _Id)
+AND
+DialogGetInvolvedPlayer(_Id, 1, _Player)
+AND
+DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+QRY_OnlyOnce_Reset("IRN_Debug_StartDialogSequence")
+THEN
+NOT DB_Debug_IRN_DebugDialogSequenceOngoing(1);
+ClearFlag((FLAG)Debug_IRN_StartDialogSequence_70cfdfd6-6a9a-42d1-8bb3-e23785c53cbb);
+//END_REGION Debug Dialog Sequence
+
+//REGION Debug
+IF
+TextEvent("irn_setupdialog")
+AND
+GetHostCharacter(_Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("irn_saveallhostages")
+AND
+DB_IRN_PrisonerGroup(_, _Hostage)
+AND
+NOT DB_Defeated(_Hostage)
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, _Hostage);
+
+//Kill all guards
+IF
+TextEvent("irn_killguards")
+AND
+DB_IRN_IronThrone_Guards(_Guard)
+THEN
+Die(_Guard, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+
+IF
+TextEvent("irn_levelload_disable")
+THEN
+DB_IRN_Debug_PreventLoadingCTY(1);
+
+IF
+TextEvent("irn_levelload_enable")
+THEN
+NOT DB_IRN_Debug_PreventLoadingCTY(1);
+
+IF
+TextEvent("irn_playdestruction")
+AND
+QRY_OnlyOnce_Reset("IRN_Debug_PlayDestructionDialog")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("IRN_Debug_PlayDestructionDialog")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Player)
+THEN
+DB_IRN_Debug_PreventLoadingCTY(1);
+
+//Debug state progress
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_CountdownOngoing_03ea8ea9-c7da-4dd4-b2f2-8d2c504b9bc4)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_CountdownOngoing")
+THEN
+PROC_TeleportPartiesTo((TRIGGER)S_IRN_Debug_StartCountdownPos_66dd9741-ba35-4e0f-bc97-b0e2f0f301c0, "DEBUG_IronThrone_Teleported_CountdownOngoing");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_CountdownOngoing")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_CountdownOngoing")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_CountdownOngoing_03ea8ea9-c7da-4dd4-b2f2-8d2c504b9bc4);
+
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_CountdownFinished_d448c691-e09e-4e8e-9403-10a5c7200d63)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_CountdownFinished")
+THEN
+PROC_TeleportPartiesTo((TRIGGER)S_IRN_Debug_StartCountdownPos_66dd9741-ba35-4e0f-bc97-b0e2f0f301c0, "DEBUG_IronThrone_Teleported_CountdownFinished");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_CountdownFinished")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_CountdownFinished")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_CountdownFinished_d448c691-e09e-4e8e-9403-10a5c7200d63);
+
+//State: BackAtDocks - All hostages were saved
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_MajoritySaved_1a52a283-3e07-4d8f-acb6-5b963d8c99fe)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_BackAtDocks_MajoritySaved")
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_DockWarehouse_ReturnFromIronThronePos_d1a59a82-8b4b-4f0a-a382-14a997888333, "DEBUG_IronThrone_Teleported_BackAtDocks_MajoritySaved");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_BackAtDocks_MajoritySaved")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_BackAtDocks_MajoritySaved")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackAtDocks");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_1a52a283-3e07-4d8f-acb6-5b963d8c99fe);
+
+//State: BackAtDocks - Majority Dead
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_MajorityDead_38c21a66-a63a-4df8-9db2-623768674798)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_BackAtDocks_MajorityDead")
+THEN
+Die(S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_MajorityIronThronePrisonersDead_6c40a75d-32ae-4402-a54c-062805f7ee7d);
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_DockWarehouse_ReturnFromIronThronePos_d1a59a82-8b4b-4f0a-a382-14a997888333, "DEBUG_IronThrone_Teleported_BackAtDocks_MajorityDead");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_BackAtDocks_MajorityDead")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_BackAtDocks_MajorityDead")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackAtDocks");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_1a52a283-3e07-4d8f-acb6-5b963d8c99fe);
+
+//State: BackAtDocks - All but one hostages died
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_AllButOne_8dd3929c-0c53-41c2-b795-879a1bef3240)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_BackAtDocks_AllButOne")
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_AllButOneIronThronePrisonersDead_d41e3f87-aeed-4b23-8649-261d1e6a063b);
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_DockWarehouse_ReturnFromIronThronePos_d1a59a82-8b4b-4f0a-a382-14a997888333, "DEBUG_IronThrone_Teleported_BackAtDocks_AllButOne");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_BackAtDocks_AllButOne")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_BackAtDocks_AllButOne")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackAtDocks");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_1a52a283-3e07-4d8f-acb6-5b963d8c99fe);
+
+//State: BackAtDocks - All hostages died
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_AllDead_1edf6e8d-64da-443d-b762-750c28bc5e9d)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_BackAtDocks_AllDead")
+THEN
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_AllIronThronePrisonersDead_4fefe27f-7cd6-44b1-9322-a57b22246271);
+Die(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+Die(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_DockWarehouse_ReturnFromIronThronePos_d1a59a82-8b4b-4f0a-a382-14a997888333, "DEBUG_IronThrone_Teleported_BackAtDocks_AllDead");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_BackAtDocks_AllDead")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_BackAtDocks_AllDead")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackAtDocks");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_1a52a283-3e07-4d8f-acb6-5b963d8c99fe);
+
+//State: BackAtDocks - Spokesperson died, other hostages alive
+PROC
+PROC_DEBUG_IRN_ChangeState((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_SpokespersonDead_107bdd2a-d5ff-4aee-8638-268876cff74e)
+AND
+QRY_OnlyOnce_Reset("DEBUG_IronThrone_Teleported_BackAtDocks_SpokespersonDead")
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group1_Prisoner3_c8b6ebf5-e505-4dbd-bd85-dbf82684cbfb);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group2_Prisoner3_d4f52268-f641-406e-b725-0ebf31193693);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+Die(S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_AnyIronThronePrisonersDead_5d6c4329-ee56-4084-8220-d627b716ac87);
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_DockWarehouse_ReturnFromIronThronePos_d1a59a82-8b4b-4f0a-a382-14a997888333, "DEBUG_IronThrone_Teleported_BackAtDocks_SpokespersonDead");
+
+IF
+EntityEvent(_Player, "DEBUG_IronThrone_Teleported_BackAtDocks_SpokespersonDead")
+AND
+QRY_OnlyOnce("DEBUG_IronThrone_Teleported_BackAtDocks_SpokespersonDead")
+THEN
+PROC_State_Progress((ITEM)S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "BackAtDocks");
+ClearFlag((FLAG)Debug_IRN_IronThrone_StateChange_BackAtDocks_1a52a283-3e07-4d8f-acb6-5b963d8c99fe);
+
+//If the skip gameplay option was selected in the DebugBook dialog, sets a DB that will alter the sequence of dialogs played
+IF
+DialogEnded((DIALOGRESOURCE)DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea, _)
+AND
+DB_GlobalFlag((FLAG)Debug_IRN_DialogSequenceSkipGameplay_94705540-0d6b-4e2b-8beb-bdf0a2ccbdda)
+THEN
+DB_Debug_IRN_DebugDialogSequenceOngoing(1);
+
+PROC
+PROC_FlagReactionAfterDialog(_Player, (FLAG)Debug_IRN_PartyPreset1_399838c9-7a2e-4676-8888-52821d0b73a8, (DIALOGRESOURCE)DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea)
+THEN
+ObjectTimerLaunch(_Player, "Debug_LoadPartyPresetAndTeleport", 500);
+
+PROC
+PROC_FlagReactionAfterDialog(_Player, (FLAG)Debug_IRN_PartyPreset2_Wyll_b7c5cde2-47d4-47a9-b0b7-fd89bced4afb, (DIALOGRESOURCE)DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea)
+THEN
+ObjectTimerLaunch(_Player, "Debug_LoadPartyPresetAndTeleport", 500);
+//END_REGION Debug
+
+//REGION Setup
+IF
+FlagSet((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, _, _)
+THEN
+PROC_IRN_IronThrone_SetTotalTurns();
+PROC_IRN_SetupCharacters();
+SetCanInteract((ITEM)S_LOW_SubmersibleInteriorHatch_041d9477-219c-49a1-b2ec-9e5aab4441ff, 1);
+
+PROC
+PROC_IRN_IronThrone_SetTotalTurns()
+AND
+DB_IRN_IronThrone_TotalTurnsDifficultySetting(_Difficulty, _TotalTurns)
+AND
+CheckRulesetModifierString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,_Difficulty,1)
+THEN
+DB_IRN_IronThrone_TotalTurns(_TotalTurns);
+
+//Get number of prisoners in the facility, needed for the Steel Watch Foundry as it needs to determine outcomes based on percentage of hostages saved
+//Number of prisoners can be referenced with DB_Singleton("IRN_PrisonerCount", _PrisonerCount)
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+_GroupId < 9
+AND
+QRY_LoopCounter_GetCount("IRN_PrisonerCount")
+THEN
+DB_GLO_DefeatCounter(_Prisoner, "IRN_Prisoners");
+TriggerRegisterForCharacter((TRIGGER)S_IRN_PrisonersEscapeArea_409e1c06-a6b2-41ec-b707-0d1b491b8a6d, _Prisoner);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_HostagesInnerDoorArea_83f7face-c488-462a-a106-f6ee1a6b22c6, _Prisoner);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_HostagesOuterDoorArea_0a0f9ebc-4ae9-4b50-a993-a39c281865a6, _Prisoner);
+AiAddInterestingItem(_Prisoner, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62);
+AddPreferredAiTargetTag(_Prisoner, (TAG)ACT3_LOW_IRONTHRONE_SWARMTARGET_HATCH_905c6c3b-22b3-4fa0-a8df-c0a7095bd897);
+CharacterDisableAllCrimes(_Prisoner);
+SetTag(_Prisoner, (TAG)IGNORE_COMBAT_LATE_JOIN_PENALTY_6d60bed7-10cc-4b52-8fb7-baa75181cd49);
+
+//Force activate all characters on the level to make them seen from a distance
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_IRN_IronThrone_Guards(_Guard)
+THEN
+SetForceUpdate(_Guard, 1);
+DB_IgnoreAssault(_Guard);
+
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_IRN_IronThrone_Guards(_Guard)
+AND
+NOT DB_IRN_IronThrone_Reinforcements(_Guard)
+THEN
+DB_IRN_IronThrone_EnemiesAlive((CHARACTER)_Guard);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, _Guard);
+
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_IRN_PrisonerGroup(_, _Prisoner)
+THEN
+//DB_GLO_NarrativeCombat_GenericExceptionParticipant("IRN_IronThrone",(GUIDSTRING)_Prisoner);
+SetCanJoinCombat(_Prisoner, 0);
+SetForceUpdate(_Prisoner, 1);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88, (CHARACTER)_Prisoner);
+
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+THEN
+SetForceUpdate(_Door, 1);
+SetForceUpdate(_Lever, 1);
+
+//Prevents crimes for registering for any of the prisoner doors
+QRY
+QRY_CRIME_BlockRegisterCrime(_, _, _UnlockTarget, _, _)
+AND
+DB_IRN_PrisonerGroup_Door(_, (ITEM)_UnlockTarget)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("IRN_GetPrisonerCount")
+AND
+DB_Singleton("IRN_PrisonerCount", _PrisonerCount)
+AND
+IntegerToString(_PrisonerCount, _CountString)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, _CountString);
+
+PROC
+PROC_GLO_DefeatCounter_Notify("IRN_Prisoners", _, _DefeatedPrisoners, _PermaDefeatedPrisoners)
+AND
+IntegerSum(_DefeatedPrisoners, _PermaDefeatedPrisoners, _TotalDefeatedPrisoners)
+AND
+_TotalDefeatedPrisoners!=0
+AND
+NOT DB_GlobalFlag(LOW_SteelWatchFoundry_State_AnyIronThronePrisonersDead_5d6c4329-ee56-4084-8220-d627b716ac87)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)LOW_SteelWatchFoundry_State_AnyIronThronePrisonersDead_5d6c4329-ee56-4084-8220-d627b716ac87);
+
+PROC
+PROC_GLO_DefeatCounter_Notify("IRN_Prisoners", _PrisonerCount, _DefeatedPrisoners, _PermaDefeatedPrisoners)
+AND
+IntegerSum(_DefeatedPrisoners, _PermaDefeatedPrisoners, _TotalDefeatedPrisoners)
+AND
+_TotalDefeatedPrisoners!=0
+AND
+IntegerDivide(_PrisonerCount, 2, _Threshold)
+AND
+_TotalDefeatedPrisoners >= _Threshold
+AND
+NOT DB_GlobalFlag(LOW_SteelWatchFoundry_State_MajorityIronThronePrisonersDead_6c40a75d-32ae-4402-a54c-062805f7ee7d)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)LOW_SteelWatchFoundry_State_MajorityIronThronePrisonersDead_6c40a75d-32ae-4402-a54c-062805f7ee7d);
+
+PROC
+PROC_GLO_DefeatCounter_Notify("IRN_Prisoners", _PrisonerCount, _DefeatedPrisoners, _PermaDefeatedPrisoners)
+AND
+IntegerSum(_DefeatedPrisoners, _PermaDefeatedPrisoners, _TotalDefeatedPrisoners)
+AND
+_TotalDefeatedPrisoners!=0
+AND
+IntegerSubtract(_PrisonerCount, _TotalDefeatedPrisoners, _RemainingPrisoners)
+AND
+_RemainingPrisoners == 1
+AND
+NOT DB_GlobalFlag(LOW_SteelWatchFoundry_State_AllButOneIronThronePrisonersDead_d41e3f87-aeed-4b23-8649-261d1e6a063b)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)LOW_SteelWatchFoundry_State_AllButOneIronThronePrisonersDead_d41e3f87-aeed-4b23-8649-261d1e6a063b);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("IRN_Prisoners")
+THEN
+SetFlag((FLAG)LOW_SteelWatchFoundry_State_AllIronThronePrisonersDead_4fefe27f-7cd6-44b1-9322-a57b22246271);
+
+IF
+FlagSet((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, _, _)
+THEN
+PROC_DisableShroud();
+
+IF
+FlagSet((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, _, _)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_LeftWithoutEntering_9530d1e4-8740-423b-a989-d7912a5de9bc)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+_GroupId < 9
+THEN
+AiAddInterestingItem(_Prisoner, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62);
+//END_REGION Setup
+
+//REGION Map Markers
+//Show initial submersible escape position
+IF
+DB_InRegion(_Player, (TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33)
+AND
+DB_Players(_Player)
+AND
+DB_IRN_MapMarkers(_Marker, _)
+THEN
+PROC_ShowMarker(_Player, _Marker);
+
+//END_REGION
+
+//REGION State Start: Arrival
+//Starts the initial dialogs upon arrival, using the first available player for now.
+IF
+LevelLoaded("IRN_Main_A")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("IRN_StartDialogs")
+THEN
+PROC_IRN_StartDialogs(_Player);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5, (INTEGER)_DialogInstanceID)
+THEN
+SetLevelStartingDialog(_DialogInstanceID, 1);
+
+//If the debug dialog has already played in the Dock Warehouse, skip directly into the first dialog of the scene
+PROC
+PROC_IRN_StartDialogs((CHARACTER)_Player)
+AND
+NOT DB_Debug_IRN_DebugDialogSequenceOngoing(1) //A separate dialog flow is triggered if the DebugDialogSequence is ongoing
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5, (CHARACTER)S_IRN_Spectator_0f0f7c6c-3f02-4fbf-901d-bf8ad41078ac, _Player)
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Arrival_76172178-657d-57f0-2337-d33f5f60f6d5, _Id)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Gortash_State_Defeated_7ba6ad38-bb7b-41cc-a71f-15b12c988858)
+THEN
+Transform((CHARACTER)S_IRN_GortashDummy_d0a28d11-c7fc-4ab1-9412-9832f52281db, S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac,(SHAPESHIFTRULE)Physical_4acc6277-6dcd-4110-9450-b9379beaedac); 
+PROC_DialogAddSpeakingActor(_Id, S_IRN_GortashDummy_d0a28d11-c7fc-4ab1-9412-9832f52281db, 0, 1);
+
+//If players choose to go back, they return back to CTY_Main_A
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_LeftWithoutEntering_9530d1e4-8740-423b-a989-d7912a5de9bc)
+AND
+NOT DB_Debug_IRN_DebugDialogSequenceOngoing(1) //Don't do the teleport if debug sequence is active
+AND
+QRY_OnlyOnce_Reset("IRN_StartDialogs")
+THEN
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_DockWarehouse_ReturnFromIronThronePos_d1a59a82-8b4b-4f0a-a382-14a997888333, "IRN_IronThrone_LeftWithoutEntering");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+THEN
+PROC_TeleportPartiesTo((TRIGGER)S_IRN_StartPositionInSubmersible_6f9cd1bc-391b-4321-87ca-94aa829d8fba, "");
+AutoSave();
+
+IF
+EnteredTrigger(_Player, S_IRN_IronThrone_LobbyArea_cf8b1e83-1afc-4345-a58d-3a19c4275919)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("IRN_IronThrone_CountdownStarted")
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f)
+THEN
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing");
+
+/////////////-- Omeluum Mind Meld Dialog --//////////////
+//If Omeluum is present, the Omeluum Mind Meld dialog triggers when players go further in, prioritizing nearby avatar first
+IF
+EnteredTrigger(_Player, (TRIGGER)S_IRN_IronThrone_LobbyArea_cf8b1e83-1afc-4345-a58d-3a19c4275919)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f)
+AND
+QRY_State_IsBeforeState(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+AND
+QRY_OnlyOnce("IRN_OmeluumMindMeld_DialogStarted")
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)IRN_IronThrone_OmeluumMindMeld_bf35642e-33ed-d4a4-7eb6-6b1d44eceabf, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, _Player)
+THEN
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing");
+
+// Starts LOW_SaveOmeluum quest
+IF
+DialogEnded((DIALOGRESOURCE)IRN_IronThrone_OmeluumMindMeld_bf35642e-33ed-d4a4-7eb6-6b1d44eceabf,_)
+THEN
+QuestUpdate("LOW_SaveOmeluum","MindmeldOmeluumInIRN");
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing");
+
+IF
+DialogRequestFailed((DIALOGRESOURCE)IRN_IronThrone_OmeluumMindMeld_bf35642e-33ed-d4a4-7eb6-6b1d44eceabf,_)
+THEN
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing");
+
+/////////////-- Security Cameras Dialog --//////////////
+IF
+UseFinished(_Player, _SecurityCamerasObject, 1)
+AND
+DB_IRN_IronThrone_SecurityCameras(_SecurityCamerasObject)
+AND
+QRY_SelectAndStartDialog(S_IRN_MainConsole_879e9015-cf35-4f45-a9aa-e2365d486cc6, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SelectCustomDialog(S_IRN_MainConsole_879e9015-cf35-4f45-a9aa-e2365d486cc6, _Player)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)IRN_IronThrone_MainConsole_31bed982-f026-7a39-37af-2381f2d03ac7, (ITEM)S_IRN_MainConsole_879e9015-cf35-4f45-a9aa-e2365d486cc6, _Player, 0, 0, 0, 0)
+THEN
+DB_NOOP(1);
+//END_REGION State End: Arrival
+
+//REGION State Start: Countdown Ongoing
+PROC
+PROC_State_Changed(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+THEN
+PROC_IRN_IronThrone_PlayAlarmSFX();
+
+PROC
+PROC_IRN_IronThrone_PlayAlarmSFX()
+AND
+QRY_OnlyOnce_Reset("IRN_IronThrone_AlarmSFX_Loop")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("IRN_IronThrone_AlarmSFX_Loop")
+THEN
+PlayHUDSound(_Player, "SE_IRN_Flood_AlarmSound_Start");
+TimerLaunch("IRN_IronThrone_AlarmSFX_LoopSound", 30000);
+
+IF
+TimerFinished("IRN_IronThrone_AlarmSFX_LoopSound")
+AND
+DB_State_Current(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+THEN
+PROC_IRN_IronThrone_PlayAlarmSFX();
+
+PROC
+PROC_State_Changed(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+THEN
+PROC_IRN_IronThrone_StartGlobalCountdown();
+
+/////////////-- Countdown Logic --//////////////
+PROC
+PROC_IRN_IronThrone_StartGlobalCountdown()
+THEN
+PROC_GLO_NarrativeCombat_StartCombat("IRN_IronThrone");
+
+PROC
+PROC_IRN_IronThrone_StartGlobalCountdown()
+AND
+DB_Players(_Players)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", _Players);
+
+IF
+FlagSet((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, _, _)
+THEN
+Open((ITEM)S_IRN_HatchToMainFloor_54437df4-227f-4bd3-a900-b20b399deaf8);
+SetCanInteract((ITEM)S_IRN_HatchToMainFloor_54437df4-227f-4bd3-a900-b20b399deaf8, 0);
+
+PROC
+PROC_IRN_IronThrone_StartGlobalCountdown()
+THEN
+DB_IRN_IronThrone_CurrentTurn(0);
+PROC_IRN_CountdownTick(0);
+PROC_IRN_PrisonerGroupFreed_Instant(8); //Obelia Tobin is freed right away and joins the combat with you, running away and boarding the sub
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantJoined("IRN_IronThrone", _Player)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+RealtimeObjectTimerLaunch(_Player, "IRN_IronThrone_TurnBasedTimerDelay", 500);
+
+IF
+ObjectTimerFinished(_Player, "IRN_IronThrone_TurnBasedTimerDelay")
+AND
+QRY_OnlyOnce("IRN_IronThrone_ShowTurnBasedTimer")
+AND
+DB_IRN_IronThrone_TotalTurns(_TotalTurns)
+AND
+IntegerProduct(_TotalTurns, 6000, _TotalTurnsNumber)
+THEN
+TurnBasedTimerLaunch(_Player, "IRN_DestructionTimer", "IRN_IronThrone_DestructionTimer", _TotalTurnsNumber);
+
+IF
+DB_Players(_Player)
+AND
+DB_GLO_NarrativeCombat_Participant("IRN_IronThrone", _, _Player)
+THEN
+DB_IRN_PlayersInCombat(_Player);
+
+IF
+DB_IRN_PlayersInCombat(_Player)
+AND
+NOT DB_GLO_NarrativeCombat_Participant("IRN_IronThrone", _, _Player)
+THEN
+NOT DB_IRN_PlayersInCombat(_Player);
+
+IF
+TurnStarted(_Player)
+AND
+DB_ActiveLevel("IRN_Main_A")
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_IRN_PlayerTurnStarted(_Player);
+PROC_IRN_CheckNewTurn();
+
+PROC
+PROC_IRN_CheckNewTurn()
+AND
+SysCount("DB_IRN_PlayerTurnStarted", 1, _EntryCount)
+AND
+_EntryCount == 1
+THEN
+PROC_IRN_CountdownTick(1);
+
+PROC
+PROC_IRN_CheckNewTurn()
+AND
+SysCount("DB_IRN_PlayerTurnStarted", 1, _EntryCount)
+AND
+SysCount("DB_IRN_PlayersInCombat", 1, _PlayersInCombat)
+AND
+_EntryCount == _PlayersInCombat
+AND
+DB_IRN_PlayerTurnStarted(_AllPlayerTurns)
+THEN
+NOT DB_IRN_PlayerTurnStarted(_AllPlayerTurns);
+
+PROC
+PROC_IRN_CountdownTick((INTEGER)_TickAmount)
+AND
+DB_IRN_IronThrone_CurrentTurn(_CurrentTurn)
+AND
+IntegerSum(_CurrentTurn, _TickAmount, _NewTurn)
+THEN
+NOT DB_IRN_IronThrone_CurrentTurn(_CurrentTurn);
+DB_IRN_IronThrone_CurrentTurn(_NewTurn);
+PROC_IRN_TurnStarted(_NewTurn);
+
+//Hook for events happening on turn start
+PROC
+PROC_IRN_TurnStarted((INTEGER)_NewTurn)
+AND
+GetHostCharacter(_Player)
+AND
+IntegerToString(_NewTurn, _NewTurnString)
+AND
+Concatenate("Turn: ", _NewTurnString, _DisplayTurn)
+THEN
+DebugText(_Player, _DisplayTurn);
+
+PROC
+PROC_IRN_TurnStarted((INTEGER)_NewTurn)
+AND
+DB_IRN_IronThrone_TotalTurns(_TotalTurns)
+AND
+IntegerSubtract(_TotalTurns, _NewTurn, _RemainingTurns)
+AND
+_RemainingTurns <= 1
+AND
+QRY_OnlyOnce("IRN_EnteredFinalTurns")
+THEN
+PROC_IRN_EnteredFinalCountdownStage();
+
+PROC
+PROC_IRN_EnteredFinalCountdownStage()
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_EnteredFinalTurns_4cb05568-302e-47f0-937a-128eef73c38b);
+
+PROC
+PROC_IRN_EnteredFinalCountdownStage()
+AND
+DB_Players(_Player)
+THEN
+PROC_EmperorAD(_Player, (DIALOGRESOURCE)IRN_IronThrone_EmperorAD_FinalPhaseWarning_9bc29fa0-ff36-6c76-7f8f-b7445b298220);
+
+PROC
+PROC_IRN_TurnStarted(_NewTurn)
+AND
+DB_IRN_IronThrone_TotalTurns(_TotalTurns)
+AND
+_NewTurn > _TotalTurns
+THEN
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished");
+
+IF
+UseFinished(_Player, (ITEM)S_IRN_SubmersibleWheel_a98df4a1-6ea9-4e56-9630-46931647f971, 1)
+AND
+DB_Players(_Player)
+AND
+QRY_State_IsBeforeState(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished")
+THEN
+ReadyCheckGlobal("LOW_IronThrone_ToDockWarehouse_ReadyCheck", "LOW_IronThrone_ToDockWarehouse_ReadyCheck", 1, (CHARACTER)_Player);
+
+//Fallback timer - If something messes up with the logic below, players should be teleported out
+IF
+ReadyCheckPassed("LOW_IronThrone_ToDockWarehouse_ReadyCheck")
+THEN
+TimerLaunch("IRN_LeavingIronThrone_FallbackTimer", 15000);
+
+IF
+TimerFinished("IRN_LeavingIronThrone_FallbackTimer")
+THEN
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished");
+
+IF
+ReadyCheckPassed("LOW_IronThrone_ToDockWarehouse_ReadyCheck")
+AND
+NOT QRY_Ravengard_WaitingToBeRescued()
+THEN
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished");
+
+IF
+ReadyCheckPassed("LOW_IronThrone_ToDockWarehouse_ReadyCheck")
+AND
+QRY_Ravengard_WaitingToBeRescued()
+THEN
+DB_IRN_CountdownFinished_WaitingForRavengard(1);
+
+QRY
+QRY_Ravengard_WaitingToBeRescued()
+AND
+DB_IRN_MizoraKeepsRavengardAlive(1)
+AND
+NOT DB_InRegion((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03,(TRIGGER)S_IRN_SubmersibleInteriorArea_4a6d5106-21ea-4d8c-8625-8f061452ff34)
+THEN
+PROC_IRN_Mizora_EmergencyRescue(1);
+
+QRY
+QRY_Ravengard_WaitingToBeRescued()
+AND
+DB_IRN_MizoraKeepsRavengardAlive(1)
+AND
+DB_Defeated(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03)
+THEN
+PROC_IRN_Mizora_EmergencyRescue(1);
+
+IF
+DB_IRN_CountdownFinished_WaitingForRavengard(1)
+AND
+DB_IRN_CountdownFinished_RavengardReady(1)
+THEN
+NOT DB_IRN_CountdownFinished_WaitingForRavengard(1);
+NOT DB_IRN_CountdownFinished_RavengardReady(1);
+NOT DB_IRN_MizoraKeepsRavengardAlive(1);
+PROC_State_Progress(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished");
+
+//Backup rescue
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_MizoraKeepsRavengardAlive(1)
+AND
+NOT DB_InRegion((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03,(TRIGGER)S_IRN_SubmersibleInteriorArea_4a6d5106-21ea-4d8c-8625-8f061452ff34)
+THEN
+PROC_IRN_Mizora_EmergencyRescue(1);
+
+PROC
+PROC_IRN_Mizora_EmergencyRescue(1)
+AND
+GetPosition(S_IRN_SubmersibleInterior_RavengardPos_cae20467-b32b-4cdf-a160-8d2ce73f65a9, _RavengardX, _RavengardY, _RavengardZ)
+AND
+GetPosition(S_IRN_SubmersibleInterior_MizoraPos_514a21c3-8cc9-4358-af02-44d127209ee1, _MizoraX, _MizoraY, _MizoraZ)
+AND
+QRY_OnlyOnce("IRN_MizoraEmergencyRescue")
+THEN
+PROC_GLO_MizoraAppear((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, _RavengardX, _RavengardY, _RavengardZ, "IRN_IronThrone_AppearedInSub");
+PROC_GLO_MizoraAppear((CHARACTER)S_GLO_Wyll_Cambion_491a7686-3081-405b-983c-289ec8781e0a, _MizoraX, _MizoraY, _MizoraZ, "IRN_IronThrone_AppearedInSub");
+
+PROC
+PROC_IRN_MizoraLeaves()
+THEN
+DB_IRN_CountdownFinished_RavengardReady(1);
+
+/////////////-- Enemy Entering Combat Logic --//////////////////
+IF
+DB_Sees(_Sahuagin, _Prisoner)
+AND
+DB_IRN_IronThrone_Guards(_Sahuagin)
+AND
+DB_IRN_PrisonerGroup(_, _Prisoner)
+AND
+DB_Is_InCombat(_Prisoner, _)
+AND
+NOT DB_GLO_NarrativeCombat_Participant("IRN_IronThrone", _, _Sahuagin)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", (GUIDSTRING)_Sahuagin);
+
+IF
+DB_Sees(_Sahuagin, _OtherSahuagin)
+AND
+DB_IRN_IronThrone_Guards(_Sahuagin)
+AND
+DB_IRN_IronThrone_Guards(_OtherSahuagin)
+AND
+DB_Is_InCombat(_OtherSahuagin, _)
+AND
+_Sahuagin != _OtherSahuagin
+AND
+NOT DB_GLO_NarrativeCombat_Participant("IRN_IronThrone", _, _Sahuagin)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", (GUIDSTRING)_Sahuagin);
+
+IF
+DB_Sees(_Sahuagin, _PartyMember)
+AND
+DB_IRN_IronThrone_Guards(_Sahuagin)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_GLO_NarrativeCombat_Participant("IRN_IronThrone", _, _Sahuagin)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", (GUIDSTRING)_Sahuagin);
+
+/////////////-- Doors Logic --//////////////////
+PROC
+PROC_BlockUseOfItem(_PartyMember, _Door)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+THEN
+DB_CustomUseItemResponse(_PartyMember, _Door, 0);
+PROC_TryStartAD((DIALOGRESOURCE)IRN_IronThrone_PAD_StuckDoors_361a79b6-0fb1-3c56-78c6-4b0a152aa7ee, _PartyMember);
+
+//Doors logic
+//Old Logic - only active if goal and levers have already been iniatlized
+IF
+UseFinished(_, _Lever, 1)
+AND
+NOT DB_IRN_UseNewLeverLogic(1)
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+AND
+IsOpened(_Door, 1)
+AND
+NOT DB_IRN_DoorTransitioning(_Door)
+THEN
+PROC_ItemCloseAndLock(_Door, "NOKEY");
+DB_IRN_DoorTransitioning(_Door);
+
+//New logic - active if the goal and levers initialize after the new logic is added
+IF
+DualEntityEvent(_, (ITEM)_Lever, "IRN_LeverUsed")
+AND
+DB_IRN_UseNewLeverLogic(1)
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+AND
+IsOpened(_Door, 1)
+AND
+NOT DB_IRN_DoorTransitioning(_Door)
+THEN
+PROC_ItemCloseAndLock(_Door, "NOKEY");
+DB_IRN_DoorTransitioning(_Door);
+
+IF
+Closed(_Door)
+AND
+DB_IRN_DoorTransitioning(_Door)
+THEN
+NOT DB_IRN_DoorTransitioning(_Door);
+
+//Old Logic - only active if goal and levers have already been iniatlized
+IF
+UseFinished(_, _Lever, 1)
+AND
+NOT DB_IRN_UseNewLeverLogic(1)
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+AND
+IsOpened(_Door, 0)
+AND
+NOT DB_IRN_DoorTransitioning(_Door)
+THEN
+PROC_ItemUnlockAndOpen(_Door);
+DB_IRN_DoorTransitioning(_Door);
+
+//New logic - active if the goal and levers initialize after the new logic is added
+IF
+DualEntityEvent(_, (ITEM)_Lever, "IRN_LeverUsed")
+AND
+DB_IRN_UseNewLeverLogic(1)
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+AND
+IsOpened(_Door, 0)
+AND
+NOT DB_IRN_DoorTransitioning(_Door)
+THEN
+PROC_ItemUnlockAndOpen(_Door);
+DB_IRN_DoorTransitioning(_Door);
+
+IF
+Unlocked(_Door, _, _)
+AND
+DB_IRN_DoorsLevers(_Door, _)
+AND
+NOT DB_IRN_DoorTransitioning(_Door)
+THEN
+PROC_ItemUnlockAndOpen(_Door);
+
+IF
+Opened(_Door)
+AND
+DB_IRN_DoorTransitioning(_Door)
+THEN
+NOT DB_IRN_DoorTransitioning(_Door);
+
+//Hatch teleporter logic for Party Followers Omeluum and Ravengard
+PROC
+PROC_BlockUseOfItem((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (ITEM)S_LOW_SubmersibleInteriorHatch_041d9477-219c-49a1-b2ec-9e5aab4441ff)
+AND
+QRY_State_IsBeforeState(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished")
+THEN
+DB_CustomUseItemResponse(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (ITEM)S_LOW_SubmersibleInteriorHatch_041d9477-219c-49a1-b2ec-9e5aab4441ff, 0);
+TeleportTo(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, S_IRN_SubmersibleToLobbyTeleportPos_36f8b882-01dc-4ba7-bdc4-5887e9cdd03f, "", 0, 0, 0, 0, 1);
+
+PROC
+PROC_BlockUseOfItem((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (ITEM)S_LOW_SubmersibleInteriorHatch_041d9477-219c-49a1-b2ec-9e5aab4441ff)
+AND
+QRY_State_IsBeforeState(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished")
+THEN
+DB_CustomUseItemResponse((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (ITEM)S_LOW_SubmersibleInteriorHatch_041d9477-219c-49a1-b2ec-9e5aab4441ff, 0);
+TeleportTo(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (TRIGGER)S_IRN_SubmersibleToLobbyTeleportPos_36f8b882-01dc-4ba7-bdc4-5887e9cdd03f, "", 0, 0, 0, 0, 1);
+
+PROC
+PROC_BlockUseOfItem((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62)
+AND
+QRY_State_IsBeforeState(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished")
+THEN
+DB_CustomUseItemResponse(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62, 0);
+TeleportTo(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, TeleportTrigger_InteriorSub_8a42ecf8-c460-481d-8a3d-0c69c697c57b, "", 0, 0, 0, 0, 1);
+
+PROC
+PROC_BlockUseOfItem((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62)
+AND
+QRY_State_IsBeforeState(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownFinished")
+THEN
+DB_CustomUseItemResponse((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (ITEM)S_IRN_SubmersibleLadder_afb21fb3-7663-44da-87dd-d48c7ef2aa62, 0);
+TeleportTo(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, TeleportTrigger_InteriorSub_8a42ecf8-c460-481d-8a3d-0c69c697c57b, "", 0, 0, 0, 0, 1);
+
+
+/////////////-- Prisoners Logic --//////////////
+//Logic for freeing the hostages
+//ToDo: See if anything else is needed to cover edge cases (eg. player somehow teleporting them in and out)
+IF
+DestroyedBy(_UnlockTarget, _FreeingCharacter, _, _)
+AND
+DB_IRN_PrisonerGroup_Door(_GroupId, _UnlockTarget)
+AND
+NOT DB_IRN_PrisonerGroupFreed(_GroupId)
+THEN
+DB_IRN_PrisonerGroupFreed_FreedBy(_GroupId, _FreeingCharacter);
+PROC_IRN_PrisonerGroupFreed_Started(_GroupId);
+
+IF
+Unlocked(_UnlockTarget, _FreeingCharacter, _)
+AND
+DB_IRN_PrisonerGroup_Door(_GroupId, (ITEM)_UnlockTarget)
+AND
+NOT DB_IRN_PrisonerGroupFreed(_GroupId)
+THEN
+DB_IRN_PrisonerGroupFreed_FreedBy(_GroupId, _FreeingCharacter);
+PROC_IRN_PrisonerGroupFreed_Started(_GroupId);
+
+//Torture beds logic
+//Hostages sit in torture chairs, start on low HP and not heal
+IF
+FlagSet((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c, _, _)
+AND
+DB_IRN_TortureBeds(S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, _TortureBed, _)
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, 80.0);
+Use(S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, _TortureBed, 1, 0, "");
+
+IF
+TextEvent("irn_testbed")
+AND
+DB_IRN_TortureBeds(_Hostage, _TortureBed, _)
+THEN
+Use(_Hostage, _TortureBed, 1, 0, "");
+
+IF
+UseStarted(_Hostage, _TortureBed)
+AND
+DB_IRN_TortureBeds((CHARACTER)_Hostage, (ITEM)_TortureBed, _)
+AND
+DB_IRN_PrisonerGroup(_GroupID, (CHARACTER)_Hostage)
+AND
+NOT DB_IRN_PrisonerGroupFreed(_GroupId)
+THEN
+ApplyStatus(_Hostage, "IRN_IRONTHRONE_TIEDTOTORTUREBED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+SetCanInteract(_TortureBed, 0);
+
+IF
+StatusRemoved(_Hostage, "IRN_IRONTHRONE_TIEDTOTORTUREBED", _FreeingCharacter, _)
+AND
+DB_State_Current(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+AND
+DB_IRN_PrisonerGroup(_GroupID, (CHARACTER)_Hostage)
+THEN
+EndRepose(_Hostage);
+DB_IRN_PrisonerGroupFreed_FreedBy(_GroupId, (CHARACTER)_FreeingCharacter);
+PROC_IRN_PrisonerGroupFreed_Instant(_GroupId);
+
+/*
+IF
+ReposeRemoved(_Hostage,_)
+AND
+DB_IRN_TortureBeds((CHARACTER)_Hostage, _, _StandUpTrigger)
+AND
+HasActiveStatus(_Hostage, "IRN_IRONTHRONE_TIEDTOTORTUREBED", 1)
+THEN
+RemoveStatus(_Hostage, "IRN_IRONTHRONE_TIEDTOTORTUREBED");
+TeleportTo(_Hostage, _StandUpTrigger, "IRN_IronThrone_HostageStoodUp", 0, 0, 0, 0, 1);
+
+IF
+AnimationEvent(_Hostage, "ScriptAnimationFinish", _)
+AND
+DB_IRN_TortureBeds((CHARACTER)_Hostage, _, _StandUpTrigger)
+THEN
+TeleportTo(_Hostage, _StandUpTrigger, "IRN_IronThrone_HostageStoodUp", 0, 0, 0, 0, 1);
+
+IF
+EntityEvent(_Hostage, "IRN_IronThrone_HostageStoodUp")
+AND
+DB_IRN_TortureBeds((CHARACTER)_Hostage, _, _)
+AND
+NOT DB_PermaDefeated(_Hostage)
+AND
+DB_IRN_PrisonerGroup(_GroupID, (CHARACTER)_Hostage)
+THEN
+PROC_IRN_PrisonerGroupFreed_Instant(_GroupId);
+*/
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Started((INTEGER) _GroupId)
+THEN
+DB_IRN_PrisonerGroupFreed(_GroupId);
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Instant((INTEGER) _GroupId)
+AND
+DB_IRN_PrisonerGroup(_GroupID, _Hostage)
+AND
+DB_IRN_PrisonerEscapeAD(_Hostage, _AD)
+AND
+GUIDToString(_AD, _ADString)
+AND
+QRY_OnlyOnce(_ADString)
+THEN
+PROC_ForceStopDialog(_Hostage); //Cancel ongoing NearbyAD if playing
+SetEntityEvent(_Hostage, "IRN_IronThrone_FreedADPlayed", 1);
+SetEntityEventReal(_Hostage, "GLO_CombatWait", 5.0, 1);
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Instant((INTEGER) _GroupId)
+THEN
+DB_IRN_PrisonerGroupFreed(_GroupId);
+PROC_IRN_PrisonerGroupFreed_Complete(_GroupId);
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Started((INTEGER) _GroupId)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+THEN
+SetEntityEvent(_Prisoner, "IRN_IronThrone_PrisonerFreed", 1); //Sets the IndividualPrisonerFree flag in Anubis once the animation finishes
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Started((INTEGER) _GroupId)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+NOT DB_IRN_Hostages_AddedFreeDelay(_Prisoner, _)
+AND
+DB_IRN_IronThrone_FreeDelay(_DelayTime)
+AND
+IntegerToString(_GroupId, _GroupIdString)
+AND
+Concatenate("IRN_IronThrone_PrisonerFreed_WaitForAnimTimer_", _GroupIdString, _TimerString)
+THEN
+DB_IRN_IronThrone_WaitForAnimTimer(_TimerString, _GroupId);
+TimerLaunch(_TimerString, _DelayTime);
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Started((INTEGER) _GroupId)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+DB_IRN_Hostages_AddedFreeDelay(_Prisoner, _AddedDelay)
+AND
+DB_IRN_IronThrone_FreeDelay(_BaseDelay)
+AND
+IntegerSum(_BaseDelay, _AddedDelay, _DelayTime)
+AND
+IntegerToString(_GroupId, _GroupIdString)
+AND
+Concatenate("IRN_IronThrone_PrisonerFreed_WaitForAnimTimer_", _GroupIdString, _TimerString)
+THEN
+DB_IRN_IronThrone_WaitForAnimTimer(_TimerString, _GroupId);
+TimerLaunch(_TimerString, _DelayTime);
+
+//Give enough time for animations to stop playing in anubis
+IF
+TimerFinished(_TimerString)
+AND
+DB_IRN_IronThrone_WaitForAnimTimer(_TimerString, _GroupId)
+THEN
+NOT DB_IRN_IronThrone_WaitForAnimTimer(_TimerString, _GroupId);
+PROC_IRN_PrisonerGroupFreed_Complete(_GroupId);
+
+//Setting flags
+PROC
+PROC_IRN_PrisonerGroupFreed_Complete((INTEGER) _GroupId)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+NOT DB_Defeated(_Prisoner)
+THEN
+SetFlag(IRN_IronThrone_State_IndividualPrisonerFree_4c120f58-ad6c-438a-b35b-1bb3d4ed5e87, _Prisoner);
+
+PROC
+PROC_IRN_PrisonerGroupFreed_Complete((INTEGER) _GroupId)
+AND
+_GroupId < 9 //Only for Gondian hostages
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+NOT DB_Defeated(_Prisoner)
+THEN
+ApplyStatus(_Prisoner, "LOW_IRONTHRONE_HOSTAGESPEEDBOOST", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+//Specific prisoner group logic
+//Prisoner Group 7 - drinks Speed potion before joining combat
+PROC
+PROC_IRN_PrisonerGroupFreed_Complete(7)
+AND
+GetItemByTemplateInInventory((ITEMROOT)CONS_Potion_Speed_ad9f3f24-d755-48b6-aa7b-c34da068209f, S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e, _SpeedPotion)
+THEN
+Use((CHARACTER)S_GLO_IronThrone_Group7_Prisoner1_06d864d4-924a-4595-8155-d96df5b5f97e, _SpeedPotion, 1, 0, "");
+
+IF
+FlagSet((FLAG)IRN_IronThrone_State_IndividualPrisonerFree_4c120f58-ad6c-438a-b35b-1bb3d4ed5e87, _Prisoner, _)
+AND
+DB_IRN_PrisonerGroup(_GroupId, (CHARACTER)_Prisoner)
+THEN
+SetCanJoinCombat(_Prisoner, 1);
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", _Prisoner);
+
+IF
+DB_InRegion(_Prisoner, (TRIGGER)S_IRN_PrisonersEscapeArea_409e1c06-a6b2-41ec-b707-0d1b491b8a6d)
+THEN
+PROC_GLO_NarrativeCombat_LeaveCombat("IRN_IronThrone", _Prisoner);
+SetCanJoinCombat(_Prisoner, 0);
+TeleportTo(_Prisoner, S_IRN_SubmersibleInterior_EnterPos_56c885e5-5510-4282-b7cd-6b4dc62d9cd3, "IRN_PrisonerEnteredSub", 0, 0, 0, 1, 1); 
+
+IF
+EntityEvent(_Prisoner, "IRN_PrisonerEnteredSub")
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerReachedSubmersible_7b066fa3-0aa3-44f0-86a3-40b38df48774, _Prisoner);
+ObjectTimerLaunch(_Prisoner, "IRN_PrisonerSubmersibleState_ClearPeaceReturnDelay", 100);
+
+IF
+FlagSet(IRN_IronThrone_State_IndividualPrisonerReachedSubmersible_7b066fa3-0aa3-44f0-86a3-40b38df48774, _Prisoner, _)
+AND
+DB_IRN_MapMarkers(_Marker, (CHARACTER)_Prisoner)
+AND
+DB_Players(_Player)
+THEN
+PROC_HideMarker(_Player, _Marker);
+
+//Needed to prevent them from trying to go back to their original position
+IF
+ObjectTimerFinished(_Prisoner, "IRN_PrisonerSubmersibleState_ClearPeaceReturnDelay")
+THEN
+SetEntityEvent(_Prisoner, "ClearPeaceReturn", 1);
+
+//Makes Omeluum and Ravengard join the party as followers if freed
+PROC
+PROC_IRN_PrisonerGroupFreed_Complete(_GroupId)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Character)
+AND
+_GroupId >= 9
+AND
+NOT DB_Defeated(_Character)
+THEN
+PROC_IRN_AddFollower(_Character);
+
+//Add to whoever freed them if they are part of DB_Players
+PROC
+PROC_IRN_AddFollower((CHARACTER)_Character)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Character)
+AND
+DB_IRN_PrisonerGroupFreed_FreedBy(_GroupId, _FreeingCharacter)
+AND
+DB_Players(_FreeingCharacter)
+AND
+NOT DB_IRN_AddedPartyFollower(_Character)
+THEN
+AddPartyFollower((CHARACTER)_Character, _FreeingCharacter);
+DB_IRN_AddedPartyFollower((CHARACTER)_Character);
+
+//Find  the player owner if they were freed by a summon or something else
+PROC
+PROC_IRN_AddFollower((CHARACTER)_Character)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Character)
+AND
+DB_IRN_PrisonerGroupFreed_FreedBy(_GroupId, _FreeingCharacter)
+AND
+NOT DB_Players(_FreeingCharacter)
+AND
+CharacterGetOwner(_FreeingCharacter, _Player)
+AND
+NOT DB_IRN_AddedPartyFollower(_Character)
+THEN
+AddPartyFollower((CHARACTER)_Character, _Player);
+DB_IRN_AddedPartyFollower((CHARACTER)_Character);
+
+//Add to the first available player if no other valid candidates were found
+PROC
+PROC_IRN_AddFollower((CHARACTER)_Character)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_IRN_AddedPartyFollower(_Character)
+THEN
+AddPartyFollower((CHARACTER)_Character, _Player);
+DB_IRN_AddedPartyFollower((CHARACTER)_Character);
+
+IF
+CharacterJoinedParty((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53)
+THEN
+QuestUpdate("LOW_SaveOmeluum","FreedOmeluumInIRN");
+
+//Removes Omeluum and Ravengard from party followers after the Iron Throne
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_AddedPartyFollower(_Character)
+THEN
+PROC_RemovePartyFollower(_Character);
+
+IF
+DB_Defeated(_Character)
+AND
+DB_IRN_AddedPartyFollower((CHARACTER)_Character)
+THEN
+PROC_RemovePartyFollower(_Character);
+
+//Hostage ADs
+PROC
+PROC_IRN_PrisonerGroupFreed_Started(_GroupID)
+AND
+DB_IRN_PrisonerGroup(_GroupID, _Hostage)
+AND
+DB_IRN_PrisonerEscapeAD(_Hostage, _AD)
+AND
+GUIDToString(_AD, _ADString)
+AND
+QRY_OnlyOnce(_ADString)
+THEN
+PROC_ForceStopDialog(_Hostage); //Cancel ongoing NearbyAD if playing
+SetEntityEvent(_Hostage, "IRN_IronThrone_FreedADPlayed", 1);
+SetEntityEventReal(_Hostage, "GLO_CombatWait", 5.0, 1);
+
+IF
+AutomatedDialogEnded(_AD, _)
+AND
+DB_IRN_PrisonerEscapeAD(_Hostage, _AD)
+THEN
+SetEntityEventReal(_Hostage, "GLO_CombatWait", 0.0, 1);
+
+IF
+DB_IRN_PrisonerNearbyAD(_, _, _Trigger)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+IF
+DB_InRegion(_PartyMember, _Trigger)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+DB_IRN_PrisonerNearbyAD(_Hostage, _NearbyAD, _Trigger)
+AND
+GUIDToString(_NearbyAD, _ADString)
+AND
+QRY_OnlyOnce(_ADString)
+THEN
+SetEntityEvent(_Hostage, "IRN_IronThrone_NearbyADPlayed", 1);
+
+//Combat ADs support logic
+IF
+DB_Defeated(_Prisoner)
+AND
+DB_IRN_PrisonerGroup(_GroupID, (CHARACTER)_Prisoner)
+AND
+DB_IRN_CombatAD_OnDeathCustom(_GroupID, _OnDeathAD)
+THEN
+PROC_IRN_SetOnDeathSpeakers(_OnDeathAD);
+PROC_IRN_PlayOnDeathAD(_OnDeathAD);
+
+PROC
+PROC_IRN_SetOnDeathSpeakers((DIALOGRESOURCE)_OnDeathAD)
+AND
+DB_IRN_CombatAD_OnDeathCustom(_GroupID, _OnDeathAD)
+AND
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList(_OnDeathAD, _Speaker1, _Speaker2, _Speaker3)
+THEN
+DB_IRN_OnDeathCustomAD_Speaker1(_OnDeathAD, _Speaker1);
+DB_IRN_OnDeathCustomAD_Speaker2(_OnDeathAD, _Speaker2);
+DB_IRN_OnDeathCustomAD_Speaker3(_OnDeathAD, _Speaker3);
+
+PROC
+PROC_IRN_SetOnDeathSpeakers((DIALOGRESOURCE)_OnDeathAD)
+AND
+DB_IRN_OnDeathCustomAD_Speaker1(_OnDeathAD, _Speaker1)
+AND
+DB_Defeated(_Speaker1)
+THEN
+NOT DB_IRN_OnDeathCustomAD_Speaker1(_OnDeathAD, _Speaker1);
+DB_IRN_OnDeathCustomAD_Speaker1(_OnDeathAD, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_IRN_SetOnDeathSpeakers((DIALOGRESOURCE)_OnDeathAD)
+AND
+DB_IRN_OnDeathCustomAD_Speaker2(_OnDeathAD, _Speaker2)
+AND
+DB_Defeated(_Speaker2)
+THEN
+NOT DB_IRN_OnDeathCustomAD_Speaker2(_OnDeathAD, _Speaker2);
+DB_IRN_OnDeathCustomAD_Speaker2(_OnDeathAD, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_IRN_SetOnDeathSpeakers((DIALOGRESOURCE)_OnDeathAD)
+AND
+DB_IRN_OnDeathCustomAD_Speaker3(_OnDeathAD, _Speaker3)
+AND
+DB_Defeated(_Speaker3)
+THEN
+NOT DB_IRN_OnDeathCustomAD_Speaker3(_OnDeathAD, _Speaker3);
+DB_IRN_OnDeathCustomAD_Speaker3(_OnDeathAD, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_IRN_PlayOnDeathAD((DIALOGRESOURCE)_OnDeathAD)
+AND
+DB_IRN_CombatAD_OnDeathCustom(_GroupID, _OnDeathAD)
+AND
+DB_IRN_CombatAD_OnDeathCustom_SpeakerList(_OnDeathAD, _, _, _)
+AND
+DB_IRN_OnDeathCustomAD_Speaker1(_OnDeathAD, _Speaker1)
+AND
+DB_IRN_OnDeathCustomAD_Speaker2(_OnDeathAD, _Speaker2)
+AND
+DB_IRN_OnDeathCustomAD_Speaker3(_OnDeathAD, _Speaker3)
+AND
+IntegerToString(_GroupID, _GroupIDString)
+AND
+Concatenate("IRN_IronThrone_OnDeathAD_Group", _GroupIDString, _OnlyOnceString)
+AND
+NOT DB_OnlyOnce(_OnlyOnceString)
+AND
+QRY_StartDialog_Fixed(_OnDeathAD, _Speaker1, _Speaker2, _Speaker3)
+THEN
+DB_OnlyOnce(_OnlyOnceString);
+DB_IRN_OnDeathAD_Started(_Speaker1, _OnDeathAD);
+SetEntityEventReal(_Speaker1, "GLO_CombatWait", 5.0, 1);
+
+IF
+AutomatedDialogEnded(_OnDeathAD, _)
+AND
+DB_IRN_OnDeathAD_Started(_OtherPrisoner, _OnDeathAD)
+THEN
+NOT DB_IRN_OnDeathAD_Started(_OtherPrisoner, _OnDeathAD);
+SetEntityEventReal(_OtherPrisoner, "GLO_CombatWait", 0.0, 1);
+
+//END_REGION State End: Countdown Ongoing
+
+//REGION State Start: Countdown Finished
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_MapMarkers(_Marker, _)
+AND
+DB_Players(_Player)
+THEN
+PROC_HideMarker(_Player, _Marker);
+
+//Hostages escape flags
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_PrisonerGroup(_GroupID, _Prisoner)
+AND
+_GroupID < 9 //Only Gondian Prisoners
+AND
+NOT DB_Defeated(_Prisoner)
+AND
+NOT DB_InRegion(_Prisoner, (TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+AND
+GetFlag(IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, _Prisoner, 0)
+THEN
+SetFlag(IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, _Prisoner);
+RemoveStatus(_Prisoner, "LOW_IRONTHRONE_HOSTAGESPEEDBOOST", NULL_00000000-0000-0000-0000-000000000000);
+RemoveStatus(_Prisoner, "HASTE", NULL_00000000-0000-0000-0000-000000000000);
+PROC_RestoreAttitudeToPartyIfLower((CHARACTER)_Prisoner, 50);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+THEN
+NOT DB_IRN_CombatAD_OnDeathCustom(1, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1OnDeath_aa12a052-da09-59c7-f0e5-dc409a300ca8);
+NOT DB_IRN_CombatAD_OnDeathCustom(2, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2OnDeath_3897bbc8-f4ca-7556-3010-5a73bccc96eb);
+NOT DB_IRN_CombatAD_OnDeathCustom(3, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3OnDeath_856816af-755e-fbc2-a7e6-40edb77b9e34);
+NOT DB_IRN_CombatAD_OnDeathCustom(4, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4OnDeath_b8d91068-8467-f1c7-11e5-13d551df000f);
+NOT DB_IRN_CombatAD_OnDeathCustom(5, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4OnDeath_b8d91068-8467-f1c7-11e5-13d551df000f);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group1_Prisoner1_18991627-0e38-44d0-a8ac-31e1105d5392, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1TurnOne_4aecdcd7-a916-cde2-b173-9379ab6370c6, 1);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group1_Prisoner2_ced0a558-b5ed-4493-a499-1890ec48fbfb, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup1TurnTwo_60b0a77a-264c-61c5-6be8-5fb90d10537c, 2);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group2_Prisoner1_aede3e82-f02b-4d6c-a92f-e9418b1b0e37, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2TurnOne_f379f249-e456-abaa-a54a-506177f852ad, 1);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group2_Prisoner2_ec0de12d-4a2f-4683-bb11-91473ec3577c, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup2TurnTwo_026e65d1-fe59-9355-04c6-880d78242205, 2);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group3_Prisoner1_bbf324dd-8840-4d7d-a097-1937016ae4b8, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3TurnOne_d63b95d7-7bbc-d517-6ce7-7b4f23443c23, 1);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group3_Prisoner2_926d2515-b22a-4b51-8737-42a6c1ebd4f4, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup3TurnTwo_41a0e1d2-bbc1-d5a6-0f82-133418872da4, 2);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group4_Prisoner1_a1831c84-e443-4ba9-95b2-49758d576bf5, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup4TurnOne_87913696-4388-e87f-e736-ee0f717afae6, 1);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group5_Prisoner1_08ed18ea-c679-4845-93ab-a88fe73a2e55, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup5TurnTwo_02a62637-1c26-442e-234f-2d1f73146831, 2);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_IronThrone_Group6_Prisoner1_5377cb38-731d-4582-9396-98529856cdbf, (DIALOGRESOURCE)IRN_IronThrone_AD_PrisonerGroup6TurnOne_84119ebb-49da-8353-cef6-76f112eb05ff, 1);
+NOT DB_CombatReact_AD_OnTurn(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (DIALOGRESOURCE)IRN_IronThrone_AD_OmeluumTurnOne_7abe7844-3f28-c09d-3575-0ae3285e6c87, 1);
+
+//Ravengard escape flag
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+AND
+NOT DB_Defeated(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03)
+AND
+NOT DB_InRegion((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+THEN
+SetFlag(IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+RemoveStatus(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "HASTE", NULL_00000000-0000-0000-0000-000000000000);
+PROC_RestoreAttitudeToPartyIfLower((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 50);
+
+//Omeluum escape flag
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f)
+AND
+NOT DB_Defeated(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53)
+AND
+NOT DB_InRegion((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+THEN
+SetFlag(IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+RemoveStatus(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "HASTE", NULL_00000000-0000-0000-0000-000000000000);
+PROC_RestoreAttitudeToPartyIfLower((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 50);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+THEN
+NOT DB_OnlyOnce("IRN_IronThrone_StartDestructionDialog");
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+NOT QRY_IRN_IronThrone_AtLeastOnePlayerMadeItOut()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)IRN_IronThrone_State_NoPlayersEscaped_41939631-a0e4-4fa1-8220-e080e468afee);
+
+QRY
+QRY_IRN_IronThrone_AtLeastOnePlayerMadeItOut()
+AND
+DB_Players(_Player)
+AND
+NOT DB_InRegion(_Player, S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_PlayerEscaped_7fe897ce-3c2e-441d-b9b8-b4c092f3f08a, _Player);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+THEN
+PROC_IRN_MarkUnescapedCharacters();
+
+//Any party member who is not in the submersible room when the countdown finishes is killed
+PROC
+PROC_IRN_MarkUnescapedCharacters()
+AND
+DB_InRegion(_Player, S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+AND
+DB_Players(_Player)
+THEN
+DB_IRN_PlayerDead(_Player);
+SetTag(_Player, (TAG)ACT3_LOW_IRONTHRONE_DEADPLAYER_656bc31a-5949-4c9b-9690-334dd3d5bfe8);
+DB_IRN_MarkUnescapedCharacters_PlayerGettingTagged((CHARACTER)_Player);
+
+PROC
+PROC_IRN_MarkUnescapedCharacters()
+AND
+DB_Players(_Player)
+AND
+NOT DB_IRN_PlayerDead(_Player)
+AND
+DB_Defeated(_Player)
+THEN
+SetTag(_Player, (TAG)ACT3_LOW_IRONTHRONE_DEADPLAYER_656bc31a-5949-4c9b-9690-334dd3d5bfe8); //Only set the tag for cinematic purposes
+DB_IRN_MarkUnescapedCharacters_PlayerGettingTagged((CHARACTER)_Player);
+
+PROC
+PROC_IRN_MarkUnescapedCharacters()
+AND
+DB_Players(_Player)
+AND
+NOT DB_InRegion(_Player, S_IRN_SubmersibleInteriorArea_4a6d5106-21ea-4d8c-8625-8f061452ff34)
+AND
+DB_Defeated(_Player)
+THEN
+DB_IRN_PlayerDead(_Player);
+
+PROC
+PROC_IRN_MarkUnescapedCharacters()
+THEN
+DB_IRN_MarkUnescapedCharacters_FinalizeMarking(1);
+
+IF
+TagSet(_Player, ACT3_LOW_IRONTHRONE_DEADPLAYER_656bc31a-5949-4c9b-9690-334dd3d5bfe8)
+AND
+DB_IRN_MarkUnescapedCharacters_PlayerGettingTagged((CHARACTER)_Player)
+THEN
+NOT DB_IRN_MarkUnescapedCharacters_PlayerGettingTagged((CHARACTER)_Player);
+PROC_IRN_MarkUnescapedCharacters_RecheckTagFinished();
+
+PROC
+PROC_IRN_MarkUnescapedCharacters()
+AND
+NOT DB_IRN_MarkUnescapedCharacters_PlayerGettingTagged(_)
+THEN
+PROC_IRN_MarkUnescapedCharacters_RecheckTagFinished();
+
+PROC
+PROC_IRN_MarkUnescapedCharacters_RecheckTagFinished()
+AND
+NOT DB_IRN_MarkUnescapedCharacters_PlayerGettingTagged(_)
+THEN
+DB_IRN_MarkUnescapedCharacters_TaggingFinished(1);
+
+IF
+DB_IRN_MarkUnescapedCharacters_FinalizeMarking(1)
+AND
+DB_IRN_MarkUnescapedCharacters_TaggingFinished(1)
+THEN
+PROC_IRN_MarkUnescapedCharacters_Finished();
+
+PROC
+PROC_IRN_MarkUnescapedCharacters_Finished()
+AND
+QRY_IRN_IronThrone_Destruciton_FindMainSpeaker()
+AND
+DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_Player)
+AND
+QRY_OnlyOnce("IRN_IronThrone_StartDestructionDialog")
+AND
+NOT QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Player, 0, 0, 0, 0)
+THEN
+PROC_IRN_ReturnToCTY();
+
+//Any prisoner who hasn't escaped yet dies at the end of the countdown
+PROC
+PROC_IRN_KillUnescapedCharacters()
+AND
+DB_IRN_PrisonerGroup(_GroupID, _Prisoner)
+AND
+DB_InRegion(_Prisoner, (TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+THEN
+Die(_Prisoner, DEATHTYPE.Physical, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+
+QRY
+QRY_IRN_IronThrone_Destruciton_FindMainSpeaker()
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_NoPlayersEscaped_41939631-a0e4-4fa1-8220-e080e468afee)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_)
+THEN
+DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_Player);
+
+QRY
+QRY_IRN_IronThrone_Destruciton_FindMainSpeaker()
+AND
+DB_InRegion(_Player ,(TRIGGER)S_IRN_IronThrone_LobbyArea_cf8b1e83-1afc-4345-a58d-3a19c4275919)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_)
+THEN
+DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_Player);
+
+QRY
+QRY_IRN_IronThrone_Destruciton_FindMainSpeaker()
+AND
+DB_InRegion(_Player ,(TRIGGER)S_IRN_SubmersibleInteriorArea_4a6d5106-21ea-4d8c-8625-8f061452ff34)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_)
+THEN
+DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_Player);
+
+QRY
+QRY_IRN_IronThrone_Destruciton_FindMainSpeaker()
+AND
+DB_Players(_Player)
+AND
+NOT DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_)
+THEN
+DB_QRYRTN_IRN_IronThrone_Destruction_FindMainSpeaker(_Player);
+
+//Set all hostages not visible for the Destruction cinematic to avoid them showing up in there without adding them as speakers
+IF
+DialogStarted((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _)
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+_GroupId < 8 //Only valid for generic prisoners, not Obelia, Omeluum and Ravengard
+THEN
+SetVisible(_Prisoner, 0);
+
+//Adds EscapingHostage if they escaped, otherwise adds NULL so that cinematics can branch off if needed based on SpeakerIsPresent
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158, 1)
+THEN
+PROC_DialogAddSpeakingActor(_Id, S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_IronThrone_EscapingHostage_614ceeec-24a5-4491-98b3-a83ab235f158, 0)
+THEN
+PROC_DialogAddSpeakingActor(_Id, NULL_00000000-0000-0000-0000-000000000000);
+
+//Adds Ravengard if he escaped, otherwise adds NULL so that cinematics can branch off if needed based on SpeakerIsPresent
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 1)
+THEN
+PROC_DialogAddSpeakingActor(_Id, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 0)
+THEN
+PROC_DialogAddSpeakingActor(_Id, NULL_00000000-0000-0000-0000-000000000000);
+
+//Adds Omeluum if they escaped, otherwise adds NULL so that cinematics can branch off if needed based on SpeakerIsPresent
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 1)
+THEN
+PROC_DialogAddSpeakingActor(_Id, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 0)
+THEN
+PROC_DialogAddSpeakingActor(_Id, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _Id)
+AND
+DB_Players(_Player)
+THEN
+PROC_DialogAddSpeakingActor(_Id, _Player);
+
+QRY
+QRY_IRN_IronThrone_PlayerShouldAppearInDestruction((CHARACTER)_Player)
+AND
+NOT DB_IRN_PlayerDead(_Player)
+AND
+NOT DB_Defeated(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogRequestFailed((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _)
+THEN
+PROC_IRN_ReturnToCTY();
+
+IF
+DialogEnded((DIALOGRESOURCE)IRN_IronThrone_Destruction_d553518a-30ec-e6f9-48b1-3b2fafa41b0a, _)
+THEN
+PROC_IRN_ReturnToCTY();
+
+PROC
+PROC_IRN_ReturnToCTY()
+THEN
+PROC_GLO_NarrativeCombat_EndCombat("IRN_IronThrone");
+PROC_EnableShroud();
+
+PROC
+PROC_IRN_ReturnToCTY()
+AND
+DB_Players(_Player)
+THEN
+ClearTag(_Player, (TAG)ACT3_LOW_IRONTHRONE_DEADPLAYER_656bc31a-5949-4c9b-9690-334dd3d5bfe8);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+THEN
+TurnBasedTimerCancel(_Player, "IRN_DestructionTimer");
+
+PROC
+PROC_IRN_ReturnToCTY()
+THEN
+PROC_IRN_KillUnescapedCharacters();
+
+PROC
+PROC_IRN_KillUnescapedCharacters()
+AND
+DB_InRegion(_PartyMember, S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88)
+AND
+DB_PartyMembers(_PartyMember)
+THEN
+PROC_DieImmediate(_PartyMember, DEATHTYPE.DoT, 0);
+
+//Clear ForceUpdate from characters and items
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_IronThrone_Guards(_Guard)
+THEN
+SetForceUpdate(_Guard, 0);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_PrisonerGroup(_, _Prisoner)
+THEN
+SetForceUpdate(_Prisoner, 0);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_DoorsLevers(_Door, _Lever)
+THEN
+SetForceUpdate(_Door, 0);
+SetForceUpdate(_Lever, 0);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+THEN
+SetForceUpdate(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 0);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f)
+THEN
+SetForceUpdate(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 0);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+THEN
+SetCanInteract((ITEM)S_IRN_SubmersibleWheel_a98df4a1-6ea9-4e56-9630-46931647f971, 0);
+SetCanInteract((ITEM)S_LOW_SubmersibleInteriorHatch_041d9477-219c-49a1-b2ec-9e5aab4441ff, 0);
+
+PROC
+PROC_IRN_ReturnToCTY()
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_NoPlayersEscaped_41939631-a0e4-4fa1-8220-e080e468afee)
+AND
+NOT DB_Debug_IRN_DebugDialogSequenceOngoing(1)
+AND
+NOT DB_IRN_Debug_PreventLoadingCTY(1)
+THEN
+SetFlag((FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9);
+SetFlag((FLAG)IRN_IronThrone_State_Left_d9898e95-1c80-4b8f-8907-93274086ebcf);
+PROC_IRN_TeleportPlayersOut();
+
+PROC
+PROC_IRN_TeleportPlayersOut()
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+_GroupId < 8 //Only valid for generic prisoners, not Obelia, Omeluum and Ravengard
+THEN
+SetVisible(_Prisoner, 1);
+
+PROC
+PROC_IRN_TeleportPlayersOut()
+AND
+DB_Players(_Player)
+AND
+NOT DB_IRN_PlayerDead(_Player)
+THEN
+RemoveStatus(_Player, "HASTE", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_IRN_TeleportPlayersOut()
+AND
+DB_Players(_Player)
+AND
+NOT DB_IRN_PlayerDead(_Player)
+AND
+QRY_OnlyOnce("IRN_TeleportOut")
+THEN
+PrepareLevelStartingDialog(1);
+PROC_TeleportPartiesTo((TRIGGER)S_LOW_IronThrone_SubmersibleInteriorReturnPos_6fc62c85-7c7f-4651-ba4c-1105ce2c86d3, "IRN_ReturnFromIronThrone");
+//END_REGION State End: Countdown Finished
+
+//State: BackAtDocks is located in Act3b_LOW_IronThrone_Return goal as it happens in CTY_Main_A
+
+//REGION Omeluum
+//Debug add Omeluum
+IF
+TextEvent("IRN_SetupOmeluum")
+AND
+QRY_OnlyOnce("IRN_Debug_SetupOmeluum")
+THEN
+PROC_IRN_SetupOmeluum();
+
+//Debug save Omeluum for final dialog
+IF
+TextEvent("irn_saveomeluum")
+AND
+QRY_OnlyOnce("IRN_Debug_SaveOmeluum")
+THEN
+PROC_IRN_SetupOmeluum();
+PROC_IRN_PrisonerGroupFreed_Instant(9);
+TeleportTo(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, S_IRN_SubmersibleInterior_EnterPos_56c885e5-5510-4282-b7cd-6b4dc62d9cd3);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)LOW_TheLodge_State_OmeluumIsMissing_3595c99e-922b-4ca5-aaf5-5aea14603c07, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110)
+AND
+QRY_OnlyOnce("IRN_Debug_SetupOmeluum")
+THEN
+PROC_IRN_SetupOmeluum();
+
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_GlobalFlag((FLAG)LOW_TheLodge_State_OmeluumIsMissing_3595c99e-922b-4ca5-aaf5-5aea14603c07)
+THEN
+PROC_IRN_SetupOmeluum();
+
+PROC
+PROC_IRN_SetupOmeluum()
+THEN
+TeleportTo(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, S_IRN_Omeluum_Pos_470314b5-cee5-47c4-ac80-9c5d19718886, "", 0, 0, 0, 0, 1);
+PROC_SetOnStage(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 1);
+SetFlag((FLAG)IRN_IronThrone_State_OmeluumPresent_ea0d5354-ea67-4518-b885-df0105230f9f);
+DB_IRN_PrisonerGroup(9, (CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+DB_IRN_MapMarkers("IRN_HostageOmeluum", (CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88, (CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+DB_Dialogs((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (DIALOGRESOURCE)IRN_IronThrone_Omeluum_26f2208c-177d-b640-fb5a-0594b84f305a);
+SetFaction((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (FACTION)ACT3_LOW_IronThrone_Omeluum_8f848a43-3e4e-403f-be71-41860b5127cc);
+SetTag(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (TAG)IGNORE_COMBAT_LATE_JOIN_PENALTY_6d60bed7-10cc-4b52-8fb7-baa75181cd49);
+SetTag(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, (TAG)NO_LEVELTEMPLATE_TRANSFER_577229d7-a806-40c9-81fc-3e843d1955c0); //Temporary added since the submersible is a persistent template and causes issues when loading between IRN_Main_A and CTY_Main_A
+RemoveSpell((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "Shout_UND_SocietyOfBrilliance_Teleportation", 0);
+AddSpell((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "Target_LOW_IronThrone_Omeluum_Teleport", 0, 0);
+SetForceUpdate(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 1);
+PROC_IRN_IronThrone_Omeluum_SitOnTortureBed();
+
+PROC
+PROC_IRN_SetupCharacters()
+THEN
+PROC_SetOnStage(S_GLO_OmeluumConfiscatedItemsBag_edf56d0a-8a8d-4986-bed3-2df35bb10ec4, 0);
+PROC_IRN_Omeluum_SetupBag(); //Added for frame delay as it was causing issues where the item is put first on stage and then off stage
+
+PROC
+PROC_IRN_Omeluum_SetupBag()
+AND
+DB_GlobalFlag((FLAG)LOW_TheLodge_State_OmeluumIsMissing_3595c99e-922b-4ca5-aaf5-5aea14603c07)
+THEN
+PROC_SetOnStage(S_GLO_OmeluumConfiscatedItemsBag_edf56d0a-8a8d-4986-bed3-2df35bb10ec4, 1);
+IterateInventory(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "IRN_IronThrone_OmeluumInventory", "IRN_IronThrone_OmeluumInventory_Complete");
+
+IF
+EntityEvent(_Item,"IRN_IronThrone_OmeluumInventory")
+AND
+IsItem(_Item,1)
+THEN
+ToInventory(_Item, (ITEM)S_GLO_OmeluumConfiscatedItemsBag_edf56d0a-8a8d-4986-bed3-2df35bb10ec4, 1, 0, 1);
+
+PROC
+PROC_IRN_IronThrone_Omeluum_SitOnTortureBed()
+AND
+DB_IRN_TortureBeds(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, _TortureBed, _)
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, 80.0);
+
+//Omeluum Teleport to Submersible logic
+IF
+UsingSpellOnTarget(S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, _Character, "Target_LOW_IronThrone_Omeluum_Teleport", _, _, _)
+AND
+GetPosition(_Character, _X, _Y, _Z)
+AND
+GetPosition((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, _OmeluumX, _OmeluumY, _OmeluumZ)
+THEN
+PlayEffectAtPosition(VFX_Spells_Cast_Intent_Utility_DimensionDoor_Root_01_7a4c033f-4128-31c0-fc04-951f8b7f2242, _X, _Y, _Z, 1.0);
+PlayEffectAtPosition(VFX_Spells_Cast_Intent_Utility_DimensionDoor_Root_01_7a4c033f-4128-31c0-fc04-951f8b7f2242, _OmeluumX, _OmeluumY, _OmeluumZ, 1.0);
+
+IF
+StatusApplied(_Hostage, "LOW_IRONTHRONE_OMELUUMTELEPORTTARGET", _, _)
+AND
+DB_IRN_PrisonerGroup(_GroupID, (CHARACTER)_Hostage)
+AND
+_GroupID <= 8
+THEN
+LeaveCombat(_Hostage);
+SetCanJoinCombat(_Hostage, 0);
+
+IF
+StatusApplied(_Character, "LOW_IRONTHRONE_OMELUUMTELEPORTTARGET", _, _)
+THEN
+PlayEffect(_Character, VFX_Spells_Cast_Intent_Utility_DimensionDoor_BodyFX_Textkey_01_f4de2ffb-353f-a215-3311-f729bd8de1d6);
+RealtimeObjectTimerLaunch(_Character, "IRN_IronThrone_OmeluumTeleport_Delay", 600);
+
+IF
+ObjectTimerFinished(_Character, "IRN_IronThrone_OmeluumTeleport_Delay")
+THEN
+TeleportTo(_Character, S_IRN_SubmersibleInterior_EnterPos_56c885e5-5510-4282-b7cd-6b4dc62d9cd3, "IRN_OmeluumTeleportedToSub", 0, 0, 0, 0, 1);
+RemoveStatus(_Character, "LOW_IRONTHRONE_OMELUUMTELEPORTTARGET", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EntityEvent(_Character, "IRN_OmeluumTeleportedToSub")
+THEN
+SetEntityEvent(_Character, "PrisonerEnteredSub", 1);
+
+//Target VFX handling
+IF
+EntityEvent(_Character, "IRN_OmeluumTeleportedToSub")
+AND
+GetPosition(_Character, _X, _Y, _Z)
+THEN
+PlayEffectAtPosition(VFX_Spells_Cast_Intent_Utility_DimensionDoor_Root_01_7a4c033f-4128-31c0-fc04-951f8b7f2242, _X, _Y, _Z, 1.0);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_IRN_PrisonerGroup(9, (CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53)
+THEN
+AddSpell((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "Shout_UND_SocietyOfBrilliance_Teleportation", 0, 0);
+RemoveSpell((CHARACTER)S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53, "Target_LOW_IronThrone_Omeluum_Teleport", 0);
+
+//END_REGION Omeluum
+
+//REGION Ravengard
+IF
+TextEvent("IRN_SetupRavengard")
+AND
+QRY_OnlyOnce("IRN_Debug_SetupRavengard")
+THEN
+PROC_IRN_SetupRavengard();
+
+//Debug save Ravengard for final dialog
+IF
+TextEvent("irn_saveravengard")
+AND
+QRY_OnlyOnce("IRN_Debug_SaveRavengard")
+THEN
+PROC_IRN_SetupRavengard();
+PROC_IRN_PrisonerGroupFreed_Instant(10);
+TeleportTo(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, S_IRN_SubmersibleInterior_EnterPos_56c885e5-5510-4282-b7cd-6b4dc62d9cd3);
+
+//Mizora should appear if her Pact scene played already, otherwise she has already killed Ravengard and the resolution is handled in the Pact scene
+QRY
+QRY_IRN_MizoraShouldAppear()
+AND
+DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllReleasedFromPact_79a90490-b009-507c-e0d3-f79b0bdd4cb6)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_Ravengard_State_Resurrected_86c9572d-84e7-b407-0ce6-84fd263418a1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IRN_MizoraShouldAppear()
+AND
+DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllEternalPact_8da8b1fb-5aa9-8cf5-8b45-6f8ca31a1227)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_Ravengard_State_Resurrected_86c9572d-84e7-b407-0ce6-84fd263418a1)
+THEN
+DB_NOOP(1);
+
+//Debug add Ravengard
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496, (DIALOGRESOURCE)TEST_IRN_IronThrone_SetupParameters_f5a70361-5874-c8dd-dd54-d48221c56110)
+AND
+QRY_OnlyOnce("IRN_Debug_SetupRavengard")
+THEN
+PROC_IRN_SetupRavengard();
+
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllReleasedFromPact_79a90490-b009-507c-e0d3-f79b0bdd4cb6) //Using DB_GlobalFlag instead of FlagSet because this goal file will not be active when the flag is set, but should set the MizoraEnemy flag to true as soon as it becomes active
+AND
+NOT DB_GlobalFlag((FLAG)WYR_Ravengard_State_Resurrected_86c9572d-84e7-b407-0ce6-84fd263418a1)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)IRN_IronThrone_State_MizoraEnemy_bfbf3d9c-2db7-443e-aceb-784bb45bc4ff);
+
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllEternalPact_8da8b1fb-5aa9-8cf5-8b45-6f8ca31a1227)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_Ravengard_State_Resurrected_86c9572d-84e7-b407-0ce6-84fd263418a1)
+THEN
+DB_IRN_MizoraKeepsRavengardAlive(1);
+
+//If the Gortash Coronation ceremony is finished, Ravengard is teleported to the Iron Throne
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+THEN
+PROC_IRN_SetupRavengard();
+
+PROC
+PROC_IRN_SetupRavengard()
+THEN
+DB_DoNotFaceDialog(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (DIALOGRESOURCE)IRN_IronThrone_PAD_PlayersSeeRavengard_964b9c39-9ab3-8258-0fc3-dd3a33df3834);
+NOT DB_CanBeResurrected(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+SetFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+TeleportTo(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, S_IRN_Ravengard_Pos_3d27f038-b773-4abd-bf3f-f569e0d93d28, "", 0, 0, 0, 0, 1);
+ApplyStatus(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "IRN_PRISONER_RAVENGARD", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+PROC_IRN_Ravengard_DestroyPreviousEquipment();
+CharacterGiveEquipmentSet((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "IRN_Ravengard");
+PROC_SetOnStage(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 1);
+DB_IRN_PrisonerGroup(10, (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_DestructionArea_d122293f-621c-4085-85af-5c1eb70cbf88, (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+DB_IRN_MapMarkers("IRN_HostageRavengard", (CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+DB_Dialogs(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, IRN_IronThrone_Ravengard_5f8aa534-4bfc-cfd1-0c6d-f2c0a40fe96a);
+SetFaction((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (FACTION)ACT3_LOW_IronThrone_Ravengard_d884141d-e554-4ab8-a209-cad8c8fbdad7);
+SetTag(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (TAG)IGNORE_COMBAT_LATE_JOIN_PENALTY_6d60bed7-10cc-4b52-8fb7-baa75181cd49);
+SetTag(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (TAG)NO_LEVELTEMPLATE_TRANSFER_577229d7-a806-40c9-81fc-3e843d1955c0); //Temporary added since the submersible is a persistent template and causes issues when loading between IRN_Main_A and CTY_Main_A
+PROC_SetHitpointsPercentage_BlockSelfHealing((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 25.0);
+SetForceUpdate(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 1);
+SetCanFight(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 1);
+
+//Ravengard's previous items are destroyed so players can't loot them off his body if he dies - the items are restored when he is returned to camp by giving him the old equipment set again
+PROC
+PROC_IRN_Ravengard_DestroyPreviousEquipment()
+AND
+DB_EquippedItemSlots(_Slot)
+AND
+GetEquippedItem((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, _Slot, _EquippedItem)
+THEN
+RequestDelete(_EquippedItem);
+
+//When Mizora appears as Ally
+PROC
+PROC_IRN_SetupRavengard()
+AND
+QRY_IRN_MizoraShouldAppear()
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_MizoraEnemy_bfbf3d9c-2db7-443e-aceb-784bb45bc4ff)
+THEN
+PROC_IRN_SetupMizora();
+
+//Needed because TeleportToPosition does not work if teleporting a global character from another level
+PROC
+PROC_IRN_SetupMizora()
+THEN
+SetTag(S_GLO_Wyll_Cambion_491a7686-3081-405b-983c-289ec8781e0a, (TAG)IGNORE_COMBAT_LATE_JOIN_PENALTY_6d60bed7-10cc-4b52-8fb7-baa75181cd49); //Setup since Mizora can potentially enter the persistent submersible template and she shouldn't be added to it
+TeleportTo((CHARACTER)S_GLO_Wyll_Cambion_491a7686-3081-405b-983c-289ec8781e0a, S_IRN_MizoraHelpingAppearPos_5294db96-7009-4b3c-960c-ff77714f1e2b, "", 0, 0, 0, 0, 1);
+PROC_SetOnStage(S_GLO_Wyll_Cambion_491a7686-3081-405b-983c-289ec8781e0a, 0);
+DB_PreventPermaDefeated(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+
+//If Mizora is set to appear and the pact is broken, she will have charmed Ravengard already when players arrive
+PROC
+PROC_IRN_SetupRavengard()
+AND
+QRY_IRN_MizoraShouldAppear()
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_MizoraEnemy_bfbf3d9c-2db7-443e-aceb-784bb45bc4ff)
+THEN
+ApplyStatus(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "LOW_IRONTHRONE_MIZORA_FIENDISHCHARM", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+SetTag(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (TAG)ACT3_LOW_IRONTHRONE_RAVENGARDTARGET_6953dce2-8f2f-4ff4-bb29-78cbb3dc5638);
+
+//If the Mizora Pact scene hasn't played, players will find Ravengard dead already
+PROC
+PROC_IRN_SetupRavengard()
+AND
+NOT QRY_IRN_MizoraShouldAppear()
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+THEN
+PROC_IRN_KillRavengard();
+
+//AD when seeing Ravengard
+IF
+DB_InRegion(_Player, (TRIGGER)S_IRN_RavengardRoomArea_472fb1d8-a2ab-46a0-99d5-13e3d45288de)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496)
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerFree_4c120f58-ad6c-438a-b35b-1bb3d4ed5e87, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 0)
+AND
+QRY_OnlyOnce("IRN_IronThrone_PlayersSawRavengard")
+THEN
+PROC_IRN_PlayersSeeRavengardAD(_Player);
+SetFlag((FLAG)ORI_Wyll_Quest_RescueRavengardIRN_7d1d8a98-90ce-8f10-2ad9-1a0ebbf7298a);
+
+//Prioritize playing AD on Wyll first
+PROC
+PROC_IRN_PlayersSeeRavengardAD((CHARACTER) _Player)
+AND
+DB_Players((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+QRY_SpeakerIsAvailable(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, 1, 0)
+AND
+GetDistanceTo(_Player, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, _Dist)
+AND
+_Dist <= 12.0
+AND
+NOT DB_OnlyOnce("IRN_IronThrone_PlayersSawRavengard_DialogStarted")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)IRN_IronThrone_PAD_PlayersSeeRavengard_964b9c39-9ab3-8258-0fc3-dd3a33df3834, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03)
+THEN
+DB_OnlyOnce("IRN_IronThrone_PlayersSawRavengard_DialogStarted");
+
+//Plays on the player who entered the room otherwise
+PROC
+PROC_IRN_PlayersSeeRavengardAD((CHARACTER) _Player)
+AND
+NOT DB_OnlyOnce("IRN_IronThrone_PlayersSawRavengard_DialogStarted")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)IRN_IronThrone_PAD_PlayersSeeRavengard_964b9c39-9ab3-8258-0fc3-dd3a33df3834, _Player, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03)
+THEN
+DB_OnlyOnce("IRN_IronThrone_PlayersSawRavengard_DialogStarted");
+
+IF
+KilledBy((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, _, _PartyMember, _)
+AND
+DB_State_Current(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+AND
+_PartyMember != S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d
+THEN
+SetFlag((FLAG)IRN_Ravengard_State_KilledByPlayer_289b160c-1225-4b86-9cc8-ddbd00fb1ef9); //Set even if Companion Wyll is the killer
+
+//Wyll turns hostile if Ravengard is killed by a player other than Companion Wyll
+IF
+KilledBy((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, _, _PartyMember, _)
+AND
+DB_State_Current(S_GLO_IronThrone_StateProgressHelper_954459bd-8fc3-4c16-8224-0343cacb1a01, "IRN_IronThrone", "CountdownOngoing")
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+AND
+DB_Players((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+_PartyMember != S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d
+THEN
+PROC_Origins_CompanionLeavePermanently((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, "CompanionHostile");
+PROC_IRN_IronThrone_WyllTurnedHostile();
+
+PROC
+PROC_IRN_IronThrone_WyllTurnedHostile()
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("IRN_Wyll_TurnedHostile")
+THEN
+PROC_GLO_PartyMembers_TransferStoryItems((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, (CHARACTER)_Player);
+PROC_SetRelationToPlayers((FACTION)Origin_Wyll_ca92900a-f1b8-443f-885b-c64c1047a423, 0);
+PROC_TryStartAD((DIALOGRESOURCE)IRN_IronThrone_AD_WyllReactsToPlayerKillingRavengard_b00ab024-731a-ce45-c459-f22a51177372, (CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+
+//If Ravengard escaped in the sub, he would be present as an optional speaker in the Destruction dialog
+IF
+FlagSet((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, _)
+THEN
+SetFlag(IRN_Ravengard_State_Saved_f48872ec-e70f-4d95-b61f-c59211dd1d21);
+RemoveStatus((CHARACTER)S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, "LOW_IRONTHRONE_MIZORA_FIENDISHCHARM", NULL_00000000-0000-0000-0000-000000000000);
+ClearTag(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, (TAG)ACT3_LOW_IRONTHRONE_RAVENGARDTARGET_6953dce2-8f2f-4ff4-bb29-78cbb3dc5638);
+NOT DB_PreventPermaDefeated(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03);
+SetCanJoinCombat(S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 1);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "CountdownFinished")
+AND
+DB_GlobalFlag((FLAG)ORI_Wyll_Quest_RescueRavengardIRN_7d1d8a98-90ce-8f10-2ad9-1a0ebbf7298a) //Used to track if players know Ravengard was in the Iron Throne
+AND
+GetFlag((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, 0)
+THEN
+SetFlag((FLAG)GLO_Ravengard_Knows_KilledDuringIRNDestruction_479fc5e6-daa9-4e82-b1c4-3dd282e130de);
+
+//END_REGION Ravengard
+
+//REGION Beastmaster
+PROC
+PROC_GLO_SetupForAct("IRN_Main_A", (CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, 1)
+AND
+DB_GlobalFlag((FLAG)LOW_BellyOfTheBeast_State_PlayersWentToIronThroneWithBeastmaster_61dd108a-9a51-4edc-b070-3da42574d0d9)
+THEN
+PROC_GLO_SetupForAct_Place(
+	(CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, 
+	(TRIGGER)S_IRN_BeastmasterSubmersiblePosition_efa8cea9-71ca-4ac1-92bc-7bc9ecdeb474, 
+	(FACTION)ACT3_LOW_BellyOfTheBeast_Beastmaster_df47ddde-7444-42e9-a50f-3371a7b21cb8, 
+	(DIALOGRESOURCE)IRN_IronThrone_AD_BeastmasterInSubmersible_63cd798d-f309-68d4-dd40-3278dd6fb92e);
+PROC_SetAnubisConfig((CHARACTER)S_GLO_Beastmaster_d999308c-8a20-4c31-b9e2-f89ff3ee1cd1, "IRN_IronThrone_Beastmaster");
+
+//END_REGION
+
+//REGION Sahuagin Reinforcements
+IF
+DB_IRN_IronThrone_Reinforcements(_ReinforcementGuard)
+THEN
+PROC_SetOnStage(_ReinforcementGuard, 0);
+
+PROC
+PROC_IRN_TurnStarted(_NewTurn)
+AND
+_NewTurn > 0
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_EnteredFinalTurns_4cb05568-302e-47f0-937a-128eef73c38b)
+AND
+QRY_IRN_IronThrone_Reinforcements_ShouldSpawnSahuagin()
+AND
+QRY_IRN_IronThrone_Reinforcements_GetSpawnCount()
+AND
+DB_QRYRTN_IRN_GetSahuaginReinforcementsSpawnCount(_SpawnCount)
+THEN
+NOT DB_QRYRTN_IRN_GetSahuaginReinforcementsSpawnCount(_SpawnCount);
+PROC_IRN_IronThrone_Reinforcements_SpawnReinforcements(_SpawnCount);
+
+PROC
+PROC_IRN_IronThrone_Reinforcements_SpawnReinforcements((INTEGER)_SpawnCount)
+AND
+QRY_DoNTimes(_SpawnCount)
+AND
+DB_QRY_RTN_DoNTimes(_Index)
+AND
+DB_IRN_IronThrone_ReinforcementSpawnPositions(_Index, _SpawnPos)
+AND
+GetPosition(_SpawnPos, _X, _Y, _Z)
+AND
+CreateAt((ROOT)QUEST_IRN_IronThrone_ReinforcementsMarker_9be48133-7a5d-4515-ad2d-fbbce695c25c,_X, _Y, _Z, 1, 0, "", _RipplesObject)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", _RipplesObject);
+DB_IRN_IronThrone_RipplesObjects(_RipplesObject, _SpawnPos);
+ApplyStatus(_RipplesObject, "IRN_REINFORCEMENTSMARKER_VFX", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+SetForceUpdate(_RipplesObject, 1);
+DB_IRN_IronThrone_EnemiesAlive((CHARACTER)_RipplesObject);
+
+IF
+TurnStarted(_RipplesObject)
+AND
+DB_IRN_IronThrone_RipplesObjects(_RipplesObject, _SpawnPos)
+AND
+QRY_OnlyOnce_Reset("IRN_IronThrone_Reinforcements_EnemySpawned")
+AND
+DB_IRN_IronThrone_Reinforcements(_Enemy) //Takes random enemy from the pool in the current wave
+AND
+QRY_OnlyOnce("IRN_IronThrone_Reinforcements_EnemySpawned")
+THEN
+NOT DB_IRN_IronThrone_Reinforcements(_Enemy);
+TriggerRegisterForCharacter((TRIGGER)S_IRN_IronThrone_SUB_559c1c28-b3b7-49fb-8897-36272a2d6f33, _Enemy);
+TeleportTo(_Enemy, _SpawnPos, "", 0, 0, 0, 0, 1);
+AppearAt(_Enemy, _SpawnPos, 1, UTIL_Spawn_01_510ff37e-0618-40e4-8ce0-236e3dc9c291, "", 0);
+PROC_Foop(_Enemy, VFX_Script_IRN_ReinforcementsMarker_Spawn_01_39e95fda-abf8-380e-bde9-d396d8b97867);
+DB_IRN_IronThrone_EnemiesAlive(_Enemy);
+PROC_GLO_NarrativeCombat_JoinCombat("IRN_IronThrone", _Enemy);
+SetEntityEventReal(_Enemy, "GLO_CombatWait", 5.0, 1);
+RealtimeObjectTimerLaunch(_Enemy, "IRN_EnemySpawned", 1500); //Used to catch and cancel the combat camera wait event
+DB_IRN_SpawnedEnemyInfo(_RipplesObject, _Enemy);
+
+IF
+ObjectTimerFinished(_Enemy, "IRN_EnemySpawned")
+AND
+DB_IRN_SpawnedEnemyInfo(_RipplesObject, (CHARACTER)_Enemy)
+THEN
+SetEntityEventReal(_Enemy, "GLO_CombatWait", 0.0, 1);
+Die(_RipplesObject, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1, 0.0);
+
+//Clamping Sahuagin Numbers
+//Tracking down current total number of living enemies
+IF
+DB_IRN_IronThrone_EnemiesAlive(_Sahuagin)
+AND
+DB_IRN_IronThrone_Reinforcements_ClampZones(_ClampZone)
+THEN
+TriggerRegisterForCharacter((TRIGGER)_ClampZone, (CHARACTER)_Sahuagin);
+
+IF
+DB_PermaDefeated(_Sahuagin)
+AND
+DB_IRN_IronThrone_EnemiesAlive((CHARACTER)_Sahuagin)
+AND
+DB_IRN_IronThrone_Reinforcements_ClampZones(_ClampZone)
+THEN
+NOT DB_IRN_IronThrone_EnemiesAlive((CHARACTER)_Sahuagin);
+TriggerUnregisterForCharacter((TRIGGER)_ClampZone, (CHARACTER)_Sahuagin);
+
+//Record enemies alive in each zone
+//Zone 1
+IF
+EnteredTrigger((CHARACTER)_Sahuagin, (TRIGGER)S_IRN_GuardClampZone01_715632b9-b21e-4f2e-8eca-ca72746fa3d8)
+AND
+DB_IRN_IronThrone_EnemiesAlive(_Sahuagin)
+THEN
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone1((CHARACTER)_Sahuagin);
+
+IF
+DB_PermaDefeated(_Sahuagin)
+AND
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone1((CHARACTER)_Sahuagin)
+THEN
+NOT DB_IRN_IronThrone_Reinforcements_EnemyCountInZone1((CHARACTER)_Sahuagin);
+
+IF
+LeftTrigger(_Sahuagin, (TRIGGER)S_IRN_GuardClampZone01_715632b9-b21e-4f2e-8eca-ca72746fa3d8)
+AND
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone1((CHARACTER)_Sahuagin)
+THEN
+NOT DB_IRN_IronThrone_Reinforcements_EnemyCountInZone1((CHARACTER)_Sahuagin);
+
+//Zone 2
+IF
+EnteredTrigger((CHARACTER)_Sahuagin, (TRIGGER)S_IRN_GuardClampZone02_626ebfac-44e9-422b-bbc8-0217aab49fd2)
+AND
+DB_IRN_IronThrone_EnemiesAlive(_Sahuagin)
+THEN
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2((CHARACTER)_Sahuagin);
+
+IF
+DB_PermaDefeated(_Sahuagin)
+AND
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2((CHARACTER)_Sahuagin)
+THEN
+NOT DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2((CHARACTER)_Sahuagin);
+
+IF
+LeftTrigger(_Sahuagin, (TRIGGER)S_IRN_GuardClampZone02_626ebfac-44e9-422b-bbc8-0217aab49fd2)
+AND
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2((CHARACTER)_Sahuagin)
+THEN
+NOT DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2((CHARACTER)_Sahuagin);
+
+//Zone 3
+IF
+EnteredTrigger((CHARACTER)_Sahuagin, (TRIGGER)S_IRN_GuardClampZone03_c3a5e94f-7d5d-49d5-ad69-3bfdfd22b449)
+AND
+DB_IRN_IronThrone_EnemiesAlive(_Sahuagin)
+THEN
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone3((CHARACTER)_Sahuagin);
+
+IF
+DB_PermaDefeated(_Sahuagin)
+AND
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone3((CHARACTER)_Sahuagin)
+THEN
+NOT DB_IRN_IronThrone_Reinforcements_EnemyCountInZone3((CHARACTER)_Sahuagin);
+
+IF
+LeftTrigger(_Sahuagin, S_IRN_GuardClampZone03_c3a5e94f-7d5d-49d5-ad69-3bfdfd22b449)
+AND
+DB_IRN_IronThrone_Reinforcements_EnemyCountInZone3((CHARACTER)_Sahuagin)
+THEN
+NOT DB_IRN_IronThrone_Reinforcements_EnemyCountInZone3((CHARACTER)_Sahuagin);
+
+//Query returns number of sahuagin reinforcements to spawn
+//Ideally tries to spawn 3, but will clamp it to not exceed the Total Enemy Count and Clamp Zone 2's max count (they spawn only in this zone) 
+QRY
+QRY_IRN_IronThrone_Reinforcements_GetSpawnCount()
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2", 1, _Zone2Count)
+AND
+IntegerSubtract(_MaxEnemiesPerZone, _Zone2Count, _RemainingSlotsInZone2)
+AND
+_RemainingSlotsInZone2 >= 3
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesTotal(_MaxEnemiesTotal)
+AND
+SysCount("DB_IRN_IronThrone_EnemiesAlive", 1, _TotalEnemiesAlive)
+AND
+IntegerSubtract(_MaxEnemiesTotal, _TotalEnemiesAlive, _RemainingTotal)
+AND
+_RemainingTotal >= 3
+THEN
+DB_QRYRTN_IRN_GetSahuaginReinforcementsSpawnCount(3);
+
+QRY
+QRY_IRN_IronThrone_Reinforcements_GetSpawnCount()
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2", 1, _Zone2Count)
+AND
+IntegerSubtract(_MaxEnemiesPerZone, _Zone2Count, _RemainingSlotsInZone2)
+AND
+_RemainingSlotsInZone2 >= 3
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesTotal(_MaxEnemiesTotal)
+AND
+SysCount("DB_IRN_IronThrone_EnemiesAlive", 1, _TotalEnemiesAlive)
+AND
+IntegerSubtract(_MaxEnemiesTotal, _TotalEnemiesAlive, _RemainingTotal)
+AND
+_RemainingTotal < 3
+THEN
+DB_QRYRTN_IRN_GetSahuaginReinforcementsSpawnCount((INTEGER)_RemainingTotal);
+
+QRY
+QRY_IRN_IronThrone_Reinforcements_GetSpawnCount()
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2", 1, _Zone2Count)
+AND
+IntegerSubtract(_MaxEnemiesPerZone, _Zone2Count, _RemainingSlotsInZone2)
+AND
+_RemainingSlotsInZone2 < 3
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesTotal(_MaxEnemiesTotal)
+AND
+SysCount("DB_IRN_IronThrone_EnemiesAlive", 1, _TotalEnemiesAlive)
+AND
+IntegerSubtract(_MaxEnemiesTotal, _TotalEnemiesAlive, _RemainingTotal)
+AND
+_RemainingTotal >= _RemainingSlotsInZone2
+THEN
+DB_QRYRTN_IRN_GetSahuaginReinforcementsSpawnCount((INTEGER)_RemainingSlotsInZone2);
+
+QRY
+QRY_IRN_IronThrone_Reinforcements_GetSpawnCount()
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2", 1, _Zone2Count)
+AND
+IntegerSubtract(_MaxEnemiesPerZone, _Zone2Count, _RemainingSlotsInZone2)
+AND
+_RemainingSlotsInZone2 < 3
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesTotal(_MaxEnemiesTotal)
+AND
+SysCount("DB_IRN_IronThrone_EnemiesAlive", 1, _TotalEnemiesAlive)
+AND
+IntegerSubtract(_MaxEnemiesTotal, _TotalEnemiesAlive, _RemainingTotal)
+AND
+_RemainingTotal < _RemainingSlotsInZone2
+THEN
+DB_QRYRTN_IRN_GetSahuaginReinforcementsSpawnCount((INTEGER)_RemainingTotal);
+
+//Query checking if it's valid to spawn reinforcements
+QRY
+QRY_IRN_IronThrone_Reinforcements_ShouldSpawnSahuagin()
+AND
+NOT QRY_IRN_IronThrone_Reinforcements_ExceedingMaxEnemyTotal()
+AND
+NOT QRY_IRN_IronThrone_Reinforcements_ZoneLimitReached()
+AND
+NOT DB_GlobalFlag((FLAG)IRN_IronThrone_State_EnteredFinalTurns_4cb05568-302e-47f0-937a-128eef73c38b)
+THEN
+DB_NOOP(1);
+
+//Query checking that the total number of guards in the level is less than the maximum
+QRY
+QRY_IRN_IronThrone_Reinforcements_ExceedingMaxEnemyTotal()
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesTotal(_MaxEnemiesTotal)
+AND
+SysCount("DB_IRN_IronThrone_EnemiesAlive", 1, _TotalEnemiesAlive)
+AND
+IntegerSubtract(_MaxEnemiesTotal, _TotalEnemiesAlive, _RemainingTotal)
+AND
+_RemainingTotal <= 0
+THEN
+DB_NOOP(1);
+
+//Query checking that the limit for each zone isn't reached
+QRY
+QRY_IRN_IronThrone_Reinforcements_ZoneLimitReached()
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone1", 1, _Count)
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+_Count >= _MaxEnemiesPerZone
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IRN_IronThrone_Reinforcements_ZoneLimitReached()
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone2", 1, _Count)
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+_Count >= _MaxEnemiesPerZone
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IRN_IronThrone_Reinforcements_ZoneLimitReached()
+AND
+SysCount("DB_IRN_IronThrone_Reinforcements_EnemyCountInZone3", 1, _Count)
+AND
+DB_IRN_IronThrone_Reinforcements_MaxEnemiesPerZone(_MaxEnemiesPerZone)
+AND
+_Count >= _MaxEnemiesPerZone
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Traps and environment hazards
+//General events
+/*
+//Floods
+PROC
+PROC_IRN_TurnStarted(_TurnCount)
+AND
+DB_IRN_Hazards_FloodPositions(_StartingTurn, _FloodPos)
+AND
+IntegerSubtract(_StartingTurn, 1, _AiHelperTurn)
+AND
+_TurnCount == _AiHelperTurn
+THEN
+ApplyStatus((ITEM)_FloodPos, "AI_HELPER_AVOIDAREA_RADIUS6", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_IRN_TurnStarted(_TurnCount)
+AND
+DB_IRN_Hazards_FloodPositions(_StartingTurn, _FloodPos)
+AND
+_TurnCount == _StartingTurn
+THEN
+RemoveStatus((ITEM)_FloodPos, "AI_HELPER_AVOIDAREA_RADIUS6");
+CreateProjectileStrikeAt(_FloodPos, "ProjectileStrike_IRN_IronThrone_FloodStrike");
+*/
+
+//Airlock Corridor
+IF
+DB_Destroyed(_HeatDetector)
+AND
+DB_IRN_Hazards_Corridors_HeatDetectors(_CorridorString, _HeatDetector)
+AND
+DB_IRN_Hazards_Corridors_HeatDetectors(_CorridorString, _OtherHeatDetector)
+AND
+_HeatDetector != _OtherHeatDetector
+AND
+Concatenate(_CorridorString, "_ADPlayed", _OnlyOnceString)
+AND
+QRY_OnlyOnce(_OnlyOnceString) //When either heat detectors in a corridor gets destroyed, the lock is triggered and cannot be triggered again
+THEN
+SetDualEntityEvent(NULL_00000000-0000-0000-0000-000000000000, _OtherHeatDetector, "Disarm", 1);
+
+IF
+DB_Destroyed(_HeatDetector)
+AND
+DB_IRN_Hazards_Corridors_HeatDetectors(_CorridorString, _HeatDetector)
+AND
+Concatenate(_CorridorString, "_DoorsLocked", _OnlyOnceString)
+AND
+QRY_OnlyOnce(_OnlyOnceString) //When either heat detectors in a corridor gets destroyed, the lock is triggered and cannot be triggered again
+AND
+DB_IRN_Hazards_Corridors_Doors(_CorridorString, _Door)
+THEN
+PROC_ItemCloseAndLock(_Door, "NoKey");
+
+
+//Locked corridor AD lines
+PROC
+PROC_IRN_TurnStarted(_)
+AND
+QRY_OnlyOnce_Reset("IRN_HostageHittindDoor_ADPlayedThisTurn")
+THEN
+DB_NOOP(1);
+
+IF
+AttackedBy((ITEM)_Door, _, (CHARACTER)_Prisoner, _, _, "Attack", _)
+AND
+DB_IRN_Hazards_Corridors_Doors("IRN_HeatDetectors_WestCorridor", _Door)
+AND
+DB_IRN_AirlockCorridorADs(_AD, _Prisoner)
+AND
+NOT DB_OnlyOnce("IRN_HostageHittindDoor_ADPlayedThisTurn")
+AND
+QRY_StartDialogCustom_Fixed(_AD, _Prisoner, 0, 0 ,0 ,0)
+THEN
+DB_OnlyOnce("IRN_HostageHittindDoor_ADPlayedThisTurn");
+SetEntityEventReal(_Prisoner, "GLO_CombatWait", 5.0, 1);
+DB_IRN_AirlockCorridor_CurrentlyPlaying(_AD, _Prisoner);
+
+IF
+AutomatedDialogEnded(_AD, _)
+AND
+DB_IRN_AirlockCorridor_CurrentlyPlaying(_AD, _Prisoner)
+THEN
+SetEntityEventReal(_Prisoner, "GLO_CombatWait", 0.0, 1);
+NOT DB_IRN_AirlockCorridor_CurrentlyPlaying(_AD, _Prisoner);
+
+//Turn 1
+PROC
+PROC_IRN_TurnStarted(1)
+AND
+GetHostCharacter(_Player)
+THEN
+DB_NOOP(1);
+
+//Turn 2
+PROC
+PROC_IRN_TurnStarted(2)
+AND
+GetHostCharacter(_Player)
+THEN
+DB_NOOP(1);
+
+//Turn 3
+PROC
+PROC_IRN_TurnStarted(3)
+AND
+GetHostCharacter(_Player)
+THEN
+DB_NOOP(1);
+
+//Turn 4
+PROC
+PROC_IRN_TurnStarted(4)
+AND
+GetHostCharacter(_Player)
+THEN
+DB_NOOP(1);
+
+//Turn 5
+PROC
+PROC_IRN_TurnStarted(5)
+AND
+GetHostCharacter(_Player)
+THEN
+DB_NOOP(1);
+
+//Turn 6
+PROC
+PROC_IRN_TurnStarted(6)
+AND
+GetHostCharacter(_Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Sahuagin beach attack
+
+IF
+DB_Is_InCombat(_Sahuagin,_CombatId)
+AND
+DB_IRN_IronThrone_Guards((CHARACTER)_Sahuagin)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_Is_InCombat(_Character,_CombatId)
+AND
+NOT DB_GlobalFlag(LOW_SahuaginAttack_HasMet_AnySahuagin_6f3016f4-8f4f-48e1-88f5-7105b0e03006)
+THEN
+SetFlag(LOW_SahuaginAttack_HasMet_AnySahuagin_6f3016f4-8f4f-48e1-88f5-7105b0e03006);
+
+//END_REGION
+
+//REGION Journal
+PROC
+PROC_IRN_SetupCharacters()
+AND
+DB_IRN_PrisonerGroup(_GroupId, _Prisoner)
+AND
+_GroupId < 9
+THEN
+DB_IronThrone_PrisonersToFree(_Prisoner);
+
+IF
+DB_Defeated(_Prisoner)
+AND
+DB_IronThrone_PrisonersToFree((CHARACTER)_Prisoner)
+THEN
+NOT DB_IronThrone_PrisonersToFree(_Prisoner);
+PROC_CheckRemainingPrisonersToFree();
+
+IF
+FlagSet((FLAG)IRN_IronThrone_State_IndividualPrisonerEscaped_a09945e7-6436-40e7-908e-22a699ef296e, _Prisoner, _)
+AND
+DB_IronThrone_PrisonersToFree((CHARACTER)_Prisoner)
+THEN
+NOT DB_IronThrone_PrisonersToFree(_Prisoner);
+PROC_CheckRemainingPrisonersToFree();
+
+PROC
+PROC_CheckRemainingPrisonersToFree()
+AND
+NOT DB_IronThrone_PrisonersToFree(_)
+THEN
+SetFlag(IRN_IronThrone_State_AllLivingGondiansSaved_5eb35e89-7bad-468c-9fc7-e2ecee1d7386);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3i"

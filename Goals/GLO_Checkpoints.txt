@@ -1,0 +1,595 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/* Uses the databases
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, (STRING)_ID, (FLAG)_PassFlag, _Crime, _OutTrigger)
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, (STRING)_ID, (FLAG)_PassFlag, _Crime)
+and
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, (STRING)_ID, (FLAG)_PassFlag)
+for a checkpoint with two warnings. In Trigger 1, Guard 1 warns the player, and typically offers them the option to earn the right to pass
+the checkpoint, getting the _Flag. In Trigger 2, Guard 2 gives the player a final warning.
+In Trigger 3, the player (if they don't have the _Flag) counts as Trespassing. This can be left as NULL if there's no crime (e.g. if there's a teleporter).
+
+The optional _Crime parameter allows you to register a custom crime rather than the default Trespassing crime.
+The optional _OutTrigger parameter makes it possible for the player to choose the "leave" option when confronted with their trespassing.
+
+By adding a trigger to
+DB_CheckPointPassTrigger((STRING)_ID, (STRING)_ID2, (TRIGGER)_PassTrigger)
+you can add another trigger. If the player enters it and is seen by either guard, they are treated as having passed the checkpoint.
+This is used to treat characters who bypassed the checkpoint and then approached it from the back - NPCs then assume that they
+entered legitimately through some other path and don't harass the player.
+The _ID should be the same as the checkpoint's.
+The _ID2 must be different from the checkpoint, otherwise spot restarting won't work correctly.
+
+For checkpoints followed by teleporters, register
+DB_CheckpointTeleporter((ITEM_Teleporter, (CHARACTER)_Guard, (TRIGGER)_BeforeTrigger, (TRIGGER)_PastTrigger, (STRING)_CheckpointID).
+The Checkpoint ID is the same string as above, the _Teleporter is the teleporter (stairs, door, etc.), and the
+_Guard are the NPCs. If a party member teleports from the BeforeTrigger to the PastTrigger (which should be placed around the
+teleporter and the target trigger), guards will follow through the _Teleporter, wander around, then return. If the guards spot an enemy, they
+will instead enter combat.
+The Guards need to have the GLO_TeleporterGuard behaviour script, or one that inherits from it. Override the State_Guarding state
+for custom behaviour when not chasing the character.
+*/
+
+// If set for a checkpoint ID, the trespass trigger will allow persuading/bribing the character to grant permanent access/
+// Disabled by default since normally the checkpoint dialogues handle this.
+NOT DB_Checkpoint_AllowTrespassPermaAccess("");
+KBSECTION
+//REGION Database registering
+IF
+DB_CheckPoint((CHARACTER)_PrimaryGuard, (CHARACTER)_WarningGuard, (TRIGGER)_PrimarySpotTrigger, (TRIGGER)_WarningSpotTrigger, (TRIGGER)_TrespassTrigger, (STRING)_ID, (FLAG)_PassFlag)
+THEN
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, (STRING)_ID, (FLAG)_PassFlag, "Trespassing");
+
+IF
+DB_CheckPoint((CHARACTER)_PrimaryGuard, (CHARACTER)_WarningGuard, (TRIGGER)_PrimarySpotTrigger, (TRIGGER)_WarningSpotTrigger, (TRIGGER)_TrespassTrigger, (STRING)_Identifier, (FLAG)_PassFlag, (STRING)_Crime)
+THEN
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, (STRING)_Identifier, (FLAG)_PassFlag, _Crime, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_CheckPoint((CHARACTER)_PrimaryGuard, (CHARACTER)_WarningGuard, (TRIGGER)_PrimarySpotTrigger, (TRIGGER)_WarningSpotTrigger, (TRIGGER)_TrespassTrigger, (STRING)_Identifier, (FLAG)_PassFlag, (STRING)_Crime, (TRIGGER)_OutTrigger)
+AND
+_PrimaryGuard != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_CheckPointGuard(_PrimaryGuard, _PrimarySpotTrigger, (STRING)_Identifier);
+
+IF
+DB_CheckPoint((CHARACTER)_PrimaryGuard, (CHARACTER)_WarningGuard, (TRIGGER)_PrimarySpotTrigger, (TRIGGER)_WarningSpotTrigger, (TRIGGER)_TrespassTrigger, (STRING)_Identifier, (FLAG)_PassFlag, (STRING)_Crime, (TRIGGER)_OutTrigger)
+AND
+_WarningGuard != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_CheckPointGuard(_WarningGuard, _WarningSpotTrigger, (STRING)_Identifier);
+
+IF
+DB_CheckPointGuard(_Guard, _Trigger, (STRING)_ID)
+AND
+DB_CheckPoint(_, _, _, _, _, (STRING)_ID, _, _, _)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_SpotPlayers((CHARACTER)_Guard, _ID, NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger_ManualRegistering((TRIGGER)_Trigger);
+DB_SpotPlayers_SpotTrigger((CHARACTER)_Guard, (STRING)_ID, (TRIGGER)_Trigger);
+DB_SpotPlayers_Continuous((CHARACTER)_Guard, (STRING)_ID);
+PROC_TriggerRegisterForPlayers(_Trigger);
+DB_SpotPlayers_IncludeWildshapedPlayers(_Guard, _ID);
+DB_SpotPlayers_TargetIgnoreCantTalk(_Guard, _ID);
+
+IF
+DB_CheckPoint(_, _, _, _, _TrespassTrigger, _, _, _Crime, _OutTrigger)
+AND
+_TrespassTrigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_TrespassTrigger(_TrespassTrigger, _OutTrigger, _Crime);
+
+IF
+DB_Checkpoint(_, _, _, _, _TrespassTrigger, _ID, _, _, _)
+AND
+NOT DB_Checkpoint_AllowTrespassPermaAccess(_ID)
+THEN
+DB_CRIME_TrespassNoPermanentAccess(_TrespassTrigger);
+
+IF
+DB_CRIME_TrespassNoPermanentAccess(_TrespassTrigger)
+AND
+DB_Checkpoint(_, _, _, _, _TrespassTrigger, _ID, _, _, _)
+AND
+DB_Checkpoint_AllowTrespassPermaAccess(_ID)
+THEN
+NOT DB_CRIME_TrespassNoPermanentAccess(_TrespassTrigger);
+
+IF
+FlagSet(_PassFlag, _, _)
+AND
+DB_CheckPoint(_, _, _, _, _, _ID, _PassFlag, _, _)
+AND
+DB_CheckPointGuard(_Guard, _, _ID)
+AND
+GetFaction(_Guard, _Faction)
+AND
+DB_HostileToPlayerGroup(_Faction, _Player)
+THEN
+NOT DB_HostileToPlayerGroup(_Faction, _Player);
+PROC_HostileToPlayerGroupCancelFlag_TryCancel((CHARACTER)_Player, (FACTION)_Faction);
+
+//END_REGION
+
+//REGION General Logic with Guards addressing player
+IF
+DB_CheckPointGuard(_Guard, _Trigger, _)
+AND
+_Guard != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk(_Guard)
+AND
+GetFlag((FLAG)GLO_CP_WarningSomeone_038aa41c-c4e4-4892-99de-84b7f20ff045, _Guard, 1)
+THEN
+ClearFlag((FLAG)GLO_CP_WarningSomeone_038aa41c-c4e4-4892-99de-84b7f20ff045, _Guard, 0);
+
+IF
+LeftCombat(_Guard, _)
+AND
+DB_CheckPointGuard((CHARACTER)_Guard, _, _ID)
+AND
+DB_CheckPoint(_, _, _, _, _, _ID, _PassFlag, _, _)
+AND
+NOT DB_GlobalFlag(_PassFlag)
+THEN
+PROC_SpotPlayers_RestartSpotting(_Guard, _ID);
+
+IF
+DB_InRegion(_Player, _Trigger)
+AND
+DB_CheckPointGuard(_, _Trigger, _)
+AND
+NOT DB_Defeated(_Player)
+THEN
+DB_AliveInCheckpointTrigger(_Player, _Trigger);
+
+IF
+DB_AliveInCheckpointTrigger(_Player, _Trigger)
+AND
+DB_Defeated(_Player)
+THEN
+NOT DB_AliveInCheckpointTrigger(_Player, _Trigger);
+
+IF
+DB_AliveInCheckpointTrigger(_Player, _Trigger)
+AND
+NOT DB_InRegion(_Player, _Trigger)
+THEN
+NOT DB_AliveInCheckpointTrigger(_Player, _Trigger);
+
+IF
+DB_CheckPointGuard(_Guard, _Trigger, _ID)
+AND
+NOT DB_AliveInCheckpointTrigger(_, _Trigger)
+AND
+NOT DB_CantTalk(_Guard)
+AND
+DB_CheckPoint(_, _, _, _, _, _ID, _PassFlag, _, _)
+AND
+NOT DB_GlobalFlag(_PassFlag)
+THEN
+PROC_SpotPlayers_RestartSpotting(_Guard, _ID);
+
+IF
+DB_SpotPlayers_Spotted(_WarningGuard, _ID, _Player)
+AND
+NOT DB_Is_InconspicuousPartyMember(_Player)
+AND
+DB_CheckPoint(_, _WarningGuard, _, _WarningSpotTrigger, _, _ID, _, _, _)
+AND
+NOT DB_CantTalk(_WarningGuard)
+THEN
+PROC_SpotPlayers_StopSpotting(_WarningGuard, _ID);
+SetFlag((FLAG)GLO_CP_WarningSomeone_038aa41c-c4e4-4892-99de-84b7f20ff045, _WarningGuard, 0); // flagType: Object
+PROC_CheckPointDialogue(_Player, _WarningGuard);
+
+IF
+DB_SpotPlayers_Spotted(_PrimaryGuard, _ID, _Player)
+AND
+NOT DB_Is_InconspicuousPartyMember(_Player)
+AND
+DB_CheckPoint(_PrimaryGuard, _, _PrimarySpotTrigger, _, _, _ID, _, _, _)
+AND
+NOT DB_CantTalk(_PrimaryGuard)
+AND
+GetFlag((FLAG)GLO_CP_WarningSomeone_038aa41c-c4e4-4892-99de-84b7f20ff045, _PrimaryGuard, 0) // flagType: Object
+THEN
+PROC_SpotPlayers_StopSpotting(_PrimaryGuard, _ID);
+SetFlag((FLAG)GLO_CP_WarningSomeone_038aa41c-c4e4-4892-99de-84b7f20ff045, _PrimaryGuard, 0); // flagType: Object
+PROC_CheckPointDialogue(_Player, _PrimaryGuard);
+
+IF
+FlagSet(_PassFlag, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_CheckPoint(_, _, _, _, _TrespassTrigger, _ID, _PassFlag, _, _OutTrigger)
+AND
+DB_CheckPointGuard(_Guard, _, _ID)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)_Guard, _ID);
+PROC_RemoveDBTrespassTrigger((TRIGGER)_TrespassTrigger,(TRIGGER)_OutTrigger);
+
+PROC
+PROC_CheckPointDialogue((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+
+//REGION Starting a checkpoint dialogue helper
+
+QRY
+QRY_StartCheckpointWarningDialog((STRING)_Identifier, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, (GUIDSTRING)_Player)
+AND
+NOT QRY_CheckpointWarningDialogFailed(_Dialog, _Guard, _Player)
+THEN
+DB_CheckpointWarningDialog(1);
+
+QRY
+QRY_CheckpointWarningDialogFailed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, (GUIDSTRING)_Player)
+AND
+QRY_TemporarilyMuted(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CheckpointWarningDialogFailed((DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, (GUIDSTRING)_Player)
+AND
+NOT QRY_TemporarilyMuted(_Player)
+AND
+NOT QRY_StartDialog_Fixed(_Dialog, _Guard, _Player)
+AND
+NOT DB_QRYRTN_StartDialog_FailReason(_) //If an override happened, don't also use the fallback.
+THEN
+DB_NOOP(1);
+
+// If you fail on the primary character, see if there's anyone else to warn.
+QRY
+QRY_StartCheckpointWarningDialog((STRING)_Identifier, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, _)
+AND
+DB_CheckPointGuard((CHARACTER)_Guard, _Trigger, (STRING)_Identifier)
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player, _Trigger)
+AND
+NOT DB_CheckpointWarningDialog(1)
+AND
+NOT QRY_CheckpointWarningDialogFailed(_Dialog, _Guard, _Player)
+THEN
+DB_CheckpointWarningDialog(1);
+
+// First warning
+QRY
+QRY_StartCheckpointWarningDialog((STRING)_Identifier, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, _Player)
+AND
+NOT DB_CheckpointWarningDialog(1)
+AND
+DB_CheckPoint(_PrimaryGuard, _, _, _, _, (STRING)_Identifier, _, _, _)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GEB_GetOutOfHere1_01d8d9e1-bde1-0792-688b-a11f04c440dd, _Guard, _Player)
+THEN
+DB_CheckpointWarningDialog(1);
+
+// Second warning
+QRY
+QRY_StartCheckpointWarningDialog((STRING)_Identifier, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, _Player)
+AND
+NOT DB_CheckpointWarningDialog(1)
+AND
+DB_CheckPoint(_, _WarningGuard, _, _, _, (STRING)_Identifier, _, _, _)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GEB_GetOutOfHere2_b239f9f3-d00e-9c9d-3df3-68bdf48f846f, _Guard, _Player)
+THEN
+DB_CheckpointWarningDialog(1);
+
+// If you fail on the primary character, see if there's anyone else to warn.
+QRY
+QRY_StartCheckpointWarningDialog((STRING)_Identifier, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_Guard, _Player)
+AND
+DB_CheckpointWarningDialog(1)
+THEN
+NOT DB_CheckpointWarningDialog(1);
+
+QRY
+QRY_SpeakerIsAvailableForDialogSlot(_Guard, GEB_GetOutOfHere1_01d8d9e1-bde1-0792-688b-a11f04c440dd, 2, _, _Speaker)
+AND
+QRY_SpeakerIsInDialogRange(_Guard, _Speaker)
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SpeakerIsAvailableForDialogSlot(_Guard, (DIALOGRESOURCE)GEB_GetOutOfHere2_b239f9f3-d00e-9c9d-3df3-68bdf48f846f, 2, _, _Speaker)
+AND
+QRY_SpeakerIsInDialogRange(_Guard, _Speaker)
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Speaker)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+
+//REGION Pass Triggers
+IF
+DB_CheckPointPassTrigger((STRING)_ID,(STRING)_ID, (TRIGGER)_)
+AND
+Concatenate("There is a checkpoint trigger using the same identifier both for its regular spotting and its pass trigger. This will lead to bugs. ID: ", _ID, _Message)
+THEN
+DebugBreak(_Message);
+
+IF
+DB_CheckPointPassTrigger((STRING)_ID, _ID2, (TRIGGER)_PassTrigger)
+AND
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _, _, _, _ID, _, _, _)
+THEN
+DB_SpotPlayers((CHARACTER)_PrimaryGuard, _ID2, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)_PrimaryGuard, _ID2, (TRIGGER)_PassTrigger);
+DB_SpotPlayers_Continuous((CHARACTER)_PrimaryGuard, _ID2);
+DB_SpotPlayers((CHARACTER)_WarningGuard, _ID2, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)_WarningGuard, _ID2, (TRIGGER)_PassTrigger);
+DB_SpotPlayers_Continuous((CHARACTER)_WarningGuard, _ID2);
+
+IF
+DB_SpotPlayers_Spotted(_Guard, _ID2, _Player)
+AND
+NOT DB_Is_InconspicuousPartyMember(_Player)
+AND
+DB_CheckPointPassTrigger(_ID,  _ID2, (TRIGGER)_PassTrigger)
+AND
+DB_InRegion(_Player, _PassTrigger)
+AND
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _, _, _, _ID, (FLAG)_PassFlag, _, _)
+AND
+NOT QRY_Checkpoint_Hostile((STRING)_ID, (CHARACTER)_Player)
+THEN
+SetFlag(_PassFlag, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+FlagSet(_PassFlag, _, _)
+AND
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _, _, _, _ID, (FLAG)_PassFlag, _, _)
+AND
+DB_CheckPointPassTrigger(_ID, _ID2, (TRIGGER)_PassTrigger)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)_PrimaryGuard, _ID2);
+PROC_SpotPlayers_StopSpotting((CHARACTER)_WarningGuard, _ID2);
+
+//END_REGION
+
+//REGION Player goes through the checkpoint while the guards are in combat
+
+IF
+Teleported(_Character, _, _X, _Y, _Z, _NewX, _NewY, _NewZ, _Reason) //Checking on the Use of the Teleporter is insufficient because it does not mark following characters as having bypassed the checkpoint.
+AND
+_Reason != "RegionSwap"
+AND
+IsPartyMember(_Character, 1, 1)
+AND
+NOT QRY_CharacterIsHidden(_Character)
+AND
+DB_CheckpointTeleporter((ITEM)_Teleporter,(CHARACTER)_Guard, (TRIGGER)_BeforeTrigger,(TRIGGER)_PastTrigger, (STRING)_CheckpointID)
+AND
+DB_CheckPoint(_, _, _, _, _, _CheckpointID, _Flag, _, _)
+AND
+NOT DB_GlobalFlag(_Flag)
+AND
+NOT DB_Defeated(_Guard)
+AND
+PositionIsInTrigger(_X, _Y, _Z, _BeforeTrigger, 1)
+AND
+PositionIsInTrigger(_NewX, _NewY, _NewZ, _PastTrigger, 1)
+AND
+QRY_RegisterGuardedTeleporterUse(_Guard, _Character)
+AND
+GetFaction(_Guard, _GuardFaction)
+THEN
+PROC_Checkpoint_IllegalTeleport(_Guard, _Character, _Teleporter);
+DB_HostileToPlayerGroup(_GuardFaction, _Character);
+
+QRY
+QRY_RegisterGuardedTeleporterUse(_Guard, _Character)
+AND
+DB_Is_InCombat(_Guard, _ID)
+AND
+DB_Is_InCombat(_Character, _ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_RegisterGuardedTeleporterUse((CHARACTER)_Guard, (CHARACTER)_Character)
+AND
+CanSee(_Guard, _Character, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Checkpoint_IllegalTeleport((CHARACTER)_Guard, (CHARACTER)_Character, (ITEM)_Teleporter)
+AND
+GetFlag(GLO_TeleporterGuard_State_Investigating_be11f0db-6727-481d-aadd-20dbbcd59209, _Guard, 0)
+THEN
+SetDualEntityEvent(_Guard, _Teleporter, "GLO_TeleportGuard_InvestigateTeleporter");
+
+PROC
+PROC_Checkpoint_IllegalTeleport((CHARACTER)_Guard, (CHARACTER)_Character, (ITEM)_Teleporter)
+AND
+NOT DB_CheckpointTeleporter_Investigating(_Guard)
+THEN
+DialogRequestStop(_Guard);
+SetHasDialog(_Guard, 0);
+SetForceUpdate(_Guard, 1);
+DB_CheckpointTeleporter_Investigating(_Guard);
+
+IF
+EntityEvent(_Guard, "GLO_TeleportGuard_DoneInvestigating")
+THEN
+SetForceUpdate((CHARACTER)_Guard, 0);
+
+IF
+EntityEvent(_Guard, "GLO_TeleportGuard_DoneInvestigating")
+AND
+DB_CheckpointTeleporter_Investigating((CHARACTER)_Guard)
+THEN
+SetHasDialog(_Guard, 1);
+SetForceUpdate(_Guard, 0);
+NOT DB_CheckpointTeleporter_Investigating(_Guard);
+
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_CheckPoint(_, _, _, _, _, _CheckpointID, _Flag, _, _)
+AND
+DB_CheckpointTeleporter(_Teleporter, _Guard, _BeforeTrigger, _PastTrigger, (STRING)_CheckpointID)
+THEN
+ClearOwnership(_Teleporter);
+
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_CheckPoint(_, _, _, _, _, _CheckpointID, _Flag, _, _)
+THEN
+PROC_CheckpointTeleporter_CancelHostility(_CheckpointID);
+
+PROC
+PROC_CheckpointTeleporter_CancelHostility((STRING)_CheckpointID)
+THEN
+NOT DB_OnlyOnce("GLO_CheckpointTeleporter_Cancel");
+
+PROC
+PROC_CheckpointTeleporter_CancelHostility((STRING)_CheckpointID)
+AND
+DB_CheckpointTeleporter(_, (CHARACTER)_Guard, _, _, _CheckpointID)
+AND
+NOT DB_OnlyOnce("GLO_CheckpointTeleporter_Cancel")
+AND
+DB_CheckpointTeleporter_Investigating(_Guard)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GEB_Checkpoints_AD_CancelFollow_dc278a9a-8333-7cd8-5f0d-9555ac73fffb, _Guard)
+THEN
+DB_OnlyOnce("GLO_CheckpointTeleporter_Cancel");
+
+PROC
+PROC_CheckpointTeleporter_CancelHostility((STRING)_CheckpointID)
+AND
+DB_CheckpointTeleporter(_, (CHARACTER)_Guard, _, _, _CheckpointID)
+AND
+DB_CheckpointTeleporter_Investigating(_Guard)
+THEN
+SetEntityEvent(_Guard, "GLO_TeleporterGuard_CancelHostility");
+
+//END_REGION
+
+//REGION Player goes through the checkpoint backwards (and is therefore assumed to have belonged on the other side)
+IF
+Teleported(_Character, _, _OldX, _OldY, _OldZ, _NewX, _NewY, _NewZ, _Reason)
+AND
+_Reason != "RegionSwap"
+AND
+IsPartyMember(_Character, 1, 1)
+AND
+NOT QRY_CharacterIsHidden(_Character)
+AND
+DB_CheckpointTeleporter(_Teleporter, _Guard, _BeforeTrigger, _PastTrigger, (STRING)_CheckpointID)
+AND
+DB_CheckPoint(_, _, _, _, _, _CheckpointID, _Flag, _, _)
+AND
+NOT DB_GlobalFlag(_Flag)
+AND
+PositionIsInTrigger(_OldX, _OldY, _OldZ, _PastTrigger, 1)
+AND
+PositionIsInTrigger(_NewX, _NewY, _NewZ, _BeforeTrigger, 1)
+AND
+NOT QRY_Checkpoint_Hostile(_CheckpointID, _Character)
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+
+
+QRY
+QRY_CRIME_BlockRegisterCrime(_Player,_Crime,_Trigger, _, _)
+AND
+DB_CheckPoint(_, _, _, _, (TRIGGER)_Trigger,_CheckpointID ,(FLAG)_Flag, _Crime, _)
+AND
+DB_GlobalFlag(_Flag) 
+THEN
+DB_NOOP(0);
+
+QRY
+QRY_Checkpoint_Hostile((STRING)_CheckpointID, (CHARACTER)_Character)
+AND
+DB_CheckPointGuard(_Guard, _, _CheckpointID)
+AND
+IsEnemy(_Guard, _Character, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Cancel checkpoint
+PROC
+PROC_CancelCheckpoint((STRING)_CheckpointID)
+AND
+DB_CheckPoint(_, _, _SpotTrigger, _, _TrespassTrigger, _CheckpointID, _, _, _OutTrigger)
+AND
+DB_CheckPointGuard(_Guard, _, _CheckpointID)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)_Guard, _CheckpointID);
+PROC_RemoveDBTrespassTrigger((TRIGGER)_TrespassTrigger,(TRIGGER)_OutTrigger);
+
+PROC
+PROC_CancelCheckpoint((STRING)_CheckpointID)
+AND
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _SpotTrigger, _, _, _CheckpointID, _, _, _)
+AND
+DB_CheckPointPassTrigger(_CheckpointID, _ID2, (TRIGGER)_PassTrigger)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)_PrimaryGuard, _ID2);
+PROC_SpotPlayers_StopSpotting((CHARACTER)_WarningGuard, _ID2);
+
+PROC
+PROC_CancelCheckpoint((STRING)_CheckpointID)
+AND
+DB_CheckPoint(_, _, _, _, _, _CheckpointID, _, _, _)
+AND
+DB_CheckPointGuard(_Guard, _, _CheckpointID)
+AND
+GetFaction(_Guard, _Faction)
+AND
+DB_HostileToPlayerGroup(_Faction, _Player)
+THEN
+NOT DB_HostileToPlayerGroup(_Faction, _Player);
+PROC_HostileToPlayerGroupCancelFlag_TryCancel((CHARACTER)_Player, (FACTION)_Faction);
+
+PROC
+PROC_CancelCheckpoint((STRING)_CheckpointID)
+AND
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, _CheckpointID, _Flag, _Crime, _OutTrigger)
+THEN
+NOT DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, _CheckpointID, _Flag, _Crime, _OutTrigger);
+
+PROC
+PROC_CancelCheckpoint((STRING)_CheckpointID)
+AND
+DB_Checkpoint_AllowTrespassPermaAccess(_CheckpointID)
+THEN
+NOT DB_Checkpoint_AllowTrespassPermaAccess(_CheckpointID);
+//END_REGION
+
+//REGION Gain permanent access to a trespass area
+PROC
+PROC_CRIME_CleanUpTrespass((INTEGER)_CrimeID,(TRIGGER)_TrespassTrigger)
+AND
+DB_CheckPoint(_PrimaryGuard, _WarningGuard, _PrimarySpotTrigger, _WarningSpotTrigger, _TrespassTrigger, _CheckpointID, _Flag, _Crime, _OutTrigger)
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+PROC_CancelCheckpoint(_CheckpointID);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

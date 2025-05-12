@@ -1,0 +1,225 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//The 'At Death's Door' status (aka 'thorn status') can be obtained by 1 player from Nettie in WLD_Main_A (goal Act1_DEN_Apprentice)
+//The status will likely be cured as soon as possible in Act1, but it can in theory remain for the rest of the game.
+KBSECTION
+//REGION Debug options
+//--- Test thorn status
+IF
+TextEvent("applythorn1")
+AND
+GetHostCharacter(_Player)
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player, "DEN_APPRENTICE_THORN_1", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("applythorn2")
+AND
+GetHostCharacter(_Player)
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player, "DEN_APPRENTICE_THORN_2", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("applythorn3")
+AND
+GetHostCharacter(_Player)
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player, "DEN_APPRENTICE_THORN_3", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("progressthorn")
+AND
+GetHostCharacter(_Player)
+AND
+DB_Players(_Player)
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_CurrentThornStatus)
+AND
+DB_DEN_Apprentice_ThornStatus(_CurrentStage,_CurrentThornStatus)
+AND
+IntegerSum(_CurrentStage, 1, _NextStage)
+THEN
+PROC_DEN_Apprentice_ProgressThornStatus(_Player,_NextStage);
+
+//END_REGION
+
+//REGION Init
+
+//When Nettie poisons someone
+PROC
+PROC_DEN_Apprentice_InitiatePoison((CHARACTER)_Player)
+THEN
+DB_DEN_Apprentice_ThornStatus(1, "DEN_APPRENTICE_THORN_1");
+DB_DEN_Apprentice_ThornStatus(2, "DEN_APPRENTICE_THORN_2");
+DB_DEN_Apprentice_ThornStatus(3, "DEN_APPRENTICE_THORN_3");
+SetFlag(DEN_Apprentice_State_SomeoneGotPoisoned_35ce5ccc-aa41-48f4-aae2-cf0d64572740, NULL_00000000-0000-0000-0000-000000000000);
+ApplyStatus(_Player, "DEN_APPRENTICE_THORN_1", -1.0, 1, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+//END_REGION
+
+//REGION Status applied
+
+//Initiating/updating the DB
+IF
+StatusApplied((CHARACTER)_Player,_ThornStatus,_,_)
+AND
+DB_DEN_Apprentice_ThornStatus(_,_ThornStatus)
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_PreviousThornStatus)
+AND
+_ThornStatus != _PreviousThornStatus
+THEN
+NOT DB_DEN_Apprentice_Poisoned(_Player,_PreviousThornStatus);
+DB_DEN_Apprentice_Poisoned(_Player,_ThornStatus);
+
+IF
+StatusApplied((CHARACTER)_Player,_ThornStatus,_,_)
+AND
+DB_DEN_Apprentice_ThornStatus(_,_ThornStatus)
+AND
+NOT DB_DEN_Apprentice_Poisoned(_Player,_)
+THEN
+DB_DEN_Apprentice_Poisoned(_Player,_ThornStatus);
+
+//END_REGION
+
+//REGION Status cured
+IF
+StatusRemoved((CHARACTER)_Player,_ThornStatus,_,_)
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_ThornStatus)
+AND
+DB_DEN_Apprentice_ThornStatus(_Stage,_ThornStatus)
+AND
+IsDead(_Player, 0)
+AND
+NOT QRY_DEN_Apprentice_ApplyingNextStatus(_Player,_ThornStatus)
+THEN
+NOT DB_DEN_Apprentice_Poisoned(_Player,_ThornStatus);
+SetFlag(DEN_Apprentice_State_CuredThornStatus_2baaa180-2041-4e21-8072-e43193d333c9,NULL_00000000-0000-0000-0000-000000000000);
+PROC_DEN_Apprentice_ThornCured(_Player,_Stage);
+PROC_DEN_Apprentice_CheckReactToLostAntidote();
+
+QRY
+QRY_DEN_Apprentice_ApplyingNextStatus((CHARACTER)_Player,(STRING)_ThornStatus)
+AND
+DB_DEN_Apprentice_ThornStatus(_,_NextStatus)
+AND
+_ThornStatus != _NextStatus
+AND
+HasAppliedStatus(_Player,_NextStatus,1)
+THEN
+DB_NOOP(1);
+
+// PAD: relieved to have the status removed after at least one long rest
+PROC
+PROC_DEN_Apprentice_ThornCured((CHARACTER)_Player,(INTEGER)_Stage)
+AND
+_Stage > 1
+AND
+NOT DB_CantTalk(_Player)
+THEN
+PROC_TryStartAD(DEN_Apprentice_PAD_Relieved_71f2d41c-a061-3fe7-b412-34f7b3c7623f,_Player);
+
+//END_REGION
+
+//REGION Long rest: status worsens
+PROC
+PROC_LongRest_Player((CHARACTER)_Player,(INTEGER)_IsFullRest)
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_CurrentThornStatus)
+AND
+DB_DEN_Apprentice_ThornStatus(_CurrentStage,_CurrentThornStatus)
+AND
+IntegerSum(_CurrentStage, 1, _NextStage)
+THEN
+PROC_DEN_Apprentice_ProgressThornStatus(_Player,_NextStage);
+
+//Last stage: death after PAD
+PROC
+PROC_DEN_Apprentice_ProgressThornStatus((CHARACTER)_Player,(INTEGER)_NextStage)
+AND
+_NextStage > 3
+THEN
+ObjectTimerLaunch(_Player, "DEN_Apprentice_DieFromThorn", 2000);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player,"DEN_Apprentice_DieFromThorn")
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_)
+AND
+NOT QRY_StartDialog_Fixed(DEN_Apprentice_PAD_Dying_3116adff-15f3-9c6c-f2c6-19d95068eb6f,_Player)
+THEN
+Die(_Player,DEATHTYPE.Necrotic, 0);
+
+IF
+AutomatedDialogEnded(DEN_Apprentice_PAD_Dying_3116adff-15f3-9c6c-f2c6-19d95068eb6f,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+AND
+DB_DEN_Apprentice_Poisoned((CHARACTER)_Player,_) //not cured during the AD
+THEN
+Die(_Player,DEATHTYPE.Necrotic, 0);
+
+//Next stage: gets worse
+PROC
+PROC_DEN_Apprentice_ProgressThornStatus((CHARACTER)_Player,(INTEGER)_NextStage)
+AND
+_NextStage <= 3
+AND
+DB_DEN_Apprentice_ThornStatus(_NextStage,_NextThornStatus)
+THEN
+ApplyStatus(_Player, _NextThornStatus, -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+ObjectTimerLaunch(_Player, "DEN_Apprentice_ReactToSickness", 2000);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player,"DEN_Apprentice_ReactToSickness")
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_)
+THEN
+PROC_TryStartAD(DEN_Apprentice_PAD_FeelingSick_c9324512-fb12-1a6a-112f-6ad547167a6a,_Player);
+
+//END_REGION
+
+//REGION Revived: starts at stage 1
+IF
+Resurrected(_Player)
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_)
+THEN
+ApplyStatus(_Player, "DEN_APPRENTICE_THORN_1", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//--- Status avoided
+PROC
+PROC_DEN_Apprentice_CheckThornAvoided()
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_State_SomeoneGotPoisoned_35ce5ccc-aa41-48f4-aae2-cf0d64572740)
+THEN
+GoalCompleted;
+
+
+//--- Status cured
+IF
+FlagSet(DEN_Apprentice_State_CuredThornStatus_2baaa180-2041-4e21-8072-e43193d333c9,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_DEN_Apprentice_ThornStatus(_Stage, _Status)
+THEN
+NOT DB_DEN_Apprentice_ThornStatus(_Stage, _Status);
+
+IF
+FlagSet(DEN_Apprentice_State_CuredThornStatus_2baaa180-2041-4e21-8072-e43193d333c9,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

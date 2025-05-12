@@ -1,0 +1,2076 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// DB_CRIME_Guards_RegionInfo((STRING)_Region,(STRING)_Pool,(FLAG)_BlockGuardsGlobalFlag)
+//   _Region: crime region
+//   _Pool: user-defined identifier (e.g. if you have a two guard houses, and they can be destroyed/disabled independently -> you can disable the pools independently)
+//   _BlockGuardsGlobalFlag: name of global flag that when set, prevents any summoning of guards from this pool
+
+// DB_CRIME_Guards_RegionGuard((STRING)_Region,(STRING)_Pool,(CHARACTER)_Guard)
+//   _Region: crime region
+//   _Pool: See DB_CRIME_Guards_RegionInfo
+//   _Guard: a guard that's part of the guard pool that can be summoned
+
+// DB_CRIME_Guards_RegionSpawnPool((STRING)_Region,(STRING)_Pool,(GUIDSTRING)_HomeBaseLocation,(ITEM)_LostAndFoundChest,(INTEGER)_Max,(INTEGER)_InUse)
+//   _Region: crime region
+//   _Pool: user-defined identifier (e.g. if you have a two guard houses, and they can be destroyed/disabled independently -> you can disable the pools independently)
+//   _Max: maximum number of guards that can be spawned/killed from this pool over the course of a single game (guards that survive their intervention don't count against this maximum)
+//   _InUse: currently spawned + died guards from this guard pool (initialise to 0)
+NOT DB_CRIME_Guards_RegionSpawnPool("","",NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000,0,0);
+
+// DB_CRIME_Guards_RegionSpawnPoolGroupTemplate((STRING)_Region,(STRING)_Pool,(CHARACTERROOT)_Template1,(CHARACTERROOT)_Template2,(CHARACTERROOT)_Template3,(CHARACTERROOT)_Template4)
+//   _Region: crime region
+//   _Pool: user-defined identifier (e.g. if you have a two guard houses, and they can be destroyed/disabled independently -> you can disable the pools independently)
+//   _AppearDirection: direction from which the spawned guards should appear (e.g. guardhouse location)
+//   _TemplateX: templates used to spawn guards (some can be null)
+NOT DB_CRIME_Guards_RegionSpawnPoolGroupTemplate("","",(CHARACTERROOT)NULL_00000000-0000-0000-0000-000000000000,(CHARACTERROOT)NULL_00000000-0000-0000-0000-000000000000,(CHARACTERROOT)NULL_00000000-0000-0000-0000-000000000000,(CHARACTERROOT)NULL_00000000-0000-0000-0000-000000000000);
+
+// DB_CRIME_Guards_RegionReinforcements((STRING)_Region, (INTEGER)_ReinforcementAmount)
+//	 _Region: crime region
+//	 _ReinforcementAmount: number of times the call guard logic will attempt to pull close guards to accompany the main called investigator.
+
+// DB_CRIME_Guards_NPCInterrogation((CHARACTER)_Guard, (DIALOGRESOURCE)_NPCInterrogationAD);
+//   _Guard: the guard for which to define the custom interrogation AD 
+//   _NPCInterrogationAD: AD used by the guard when interrogation an NPC. Speaker one is the guard, speaker two GROUP_Civilians.
+//       If not defined, a generic AD is used (should be a custom one though). Base on GEB_AD_GuardNPCInterrogation
+
+// DB_CRIME_Guards_PatrolInterrogation((CHARACTER)_Guard, (DIALOGRESOURCE)_PatrolInterrogationDialog)
+//   _Guard: the guard for which to define the custom (interactive) player interrogation dialog
+//      for the fallback "patrol" crime, which gets triggered if a guard cannot react to the crime
+//      for which they were summoned
+//   _PatrolInterrogationDialog: the interactive dialog to use
+
+// DB_CRIME_Guards_NoSummonBy(_NPC)
+//   NPC will never summon guards from a guard pool (can still transfer handling to nearby guard)
+
+//DB_CRIME_Guards_BlockPrisonerDialog((CHARACTER)_Guard)
+//   Dialogue with this guard, while the requesting player is a prisoner, will be blocked, and NGB_PrisonerTalksToGuard will be played instead
+
+// QRY
+// QRY_CRIME_Guards_NoSummonForCrime((INTEGER)_CrimeID,(CHARACTER)_Victim,(CHARACTER)_Criminal)
+//   Can override to prevent guard spawning depending on any of the parameters (crime _CrimeID against
+//   _Victim by _Criminal)
+
+// DB_CRIME_Guards_PatrolGroup((STRING)_PatrolID, (INTEGER)_LeaderPriority, (CHARACTER)_Member)
+// 	 Use to set up groups of guards patrolling an area using the escort behaviours.
+// 	 _PatrolID: name of the patrol
+//	 _Member: character part of the patrol.
+//	 _LeaderPriority: defines the priorities for who will be the leader of the patrol. The first leader will be tha character with the highest one. 
+//		If set to -1 that character will never become a leader.
+//	 After setting up the DB for the patrol call PROC_CRIME_Guards_SetPatrolLeader(_PatrolID) or the leader will never be set up.
+//		Make sure that the characters have the GEN_Escort behaviour or a custom one with escort capabilities.
+NOT DB_CRIME_Guards_PatrolGroup("", (CHARACTER)NULL_00000000-0000-0000-0000-000000000000, 0);
+
+// DB_CRIME_RegionGuardsKey(_Region, _Pool, _TrackingTag, _HasKeyFlag)
+//   Keys used by region guards. This is used to know if the guard should be ignored when finding an investigator.
+//   This is useful for cases where you have locked rooms and a key is needed to access these rooms, so you want to only search for guards
+//   that have access to those rooms. Enter a _TrackingTag if there is mutliple valid keys that share the same tag. 
+NOT DB_CRIME_RegionGuardsKey("","","",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_CRIME_Guards_Called(0,0,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,"","",0.0,0.0,0.0);
+
+NOT DB_CRIME_Guards_Relocating((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000, 0);
+
+NOT DB_CRIME_Guards_NoSummonBy((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_CRIME_Guards_RegionGuard("","",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_CRIME_Guards_RegionInfo("","",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_CRIME_Guards_RegionReinforcements("", 0);
+
+NOT DB_CRIME_Guards_NPCInterrogation((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_CRIME_Guards_PatrolInterrogation((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+DB_CRIME_Guards_NPCInterrogation("Murder", "Guard_NPCInterrogate_Murder", (FLAG)GEB_NPCInterrogation_State_Murder_1693e3c1-5d5e-4c07-b287-62d0700b6b7b);
+DB_CRIME_Guards_NPCInterrogation("Assault", "Guard_NPCInterrogate_Assault", (FLAG)GEB_NPCInterrogation_State_Assault_a6ae9ba4-d5fe-4ed7-9eeb-d974571f2493);
+DB_CRIME_Guards_NPCInterrogation("Theft", "Guard_NPCInterrogate_Theft", (FLAG)GEB_NPCInterrogation_State_Theft_ba40739c-1bc1-493e-8617-846c625496db);
+// Fallback
+DB_CRIME_Guards_NPCInterrogation("","Guard_NPCInterrogate_Fallback", (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+KBSECTION
+//REGION Map crime family to custom/generic guard-NPC interrogation disturbance
+// Overload if you if you also overload QRY_CRIME_SetupGuardNPCInterrogation_Custom and set flags there that
+// are not in DB_CRIME_Guards_NPCInterrogation
+QRY
+QRY_CRIME_ClearSetupGuardNPCInterrogation((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_NPCInterrogation(_,_,_Flag)
+AND
+_Flag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+ClearFlag(_Flag,_Guard);
+
+QRY
+QRY_CRIME_ClearSetupGuardNPCInterrogation((CHARACTER)_Guard)
+AND
+DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_InterrogationType)
+THEN
+NOT DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_InterrogationType);
+
+// Set flags on guard to influence the NPC interrogation dialog
+// Return the Guard_NPCInterrogate_* disturbance variant in DB_QRYRTN_CRIME_SetupGuardNPCInterrogation()
+QRY
+QRY_CRIME_SetupGuardNPCInterrogation((STRING)_DisturbanceType,(CHARACTER)_Guard,(CHARACTER)_Caller)
+AND
+QRY_CRIME_ClearSetupGuardNPCInterrogation(_Guard)
+AND
+// Custom intercept
+QRY_CRIME_SetupGuardNPCInterrogation_Custom(_DisturbanceType,_Guard,_Caller)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_SetupGuardNPCInterrogation((STRING)_DisturbanceType,(CHARACTER)_Guard,(CHARACTER)_Caller)
+AND
+NOT DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_)
+AND
+QRY_CRIME_GetCrimeFamily(_DisturbanceType)
+AND
+DB_QRYRTN_CRIME_GetCrimeFamily(_Family)
+AND
+DB_CRIME_Guards_NPCInterrogation(_Family,_InterrogationType,_Flag)
+THEN
+SetFlag(_Flag,_Guard);
+DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_InterrogationType);
+
+QRY
+QRY_CRIME_SetupGuardNPCInterrogation((STRING)_DisturbanceType,(CHARACTER)_Guard,(CHARACTER)_Caller)
+AND
+NOT DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_)
+AND
+DB_CRIME_Guards_NPCInterrogation("",_InterrogationType,_)
+THEN
+DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_InterrogationType);
+
+QRY
+QRY_CRIME_SetupGuardNPCInterrogation_Custom((STRING)_DisturbanceType,(CHARACTER)_Guard,(CHARACTER)_Caller)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Anubis asks to summon a guard
+IF
+EntityEvent((CHARACTER)_Char,"CRIME_StoryCallGuardsArrest")
+AND
+GetHandlingCrimeID(_Char,_CrimeID)
+AND
+// Make sure we didn't switch to handling a different crime in the mean time
+GetVarInteger(_Char,"CRIME_ArrestCrime",_CrimeID)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_Char,_,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Guards_Call(_CrimeID,_Char,"Arrest");
+
+IF
+EntityEvent((CHARACTER)_Char,"CRIME_StoryCallGuardsAttack")
+AND
+GetHandlingCrimeID(_Char,_CrimeID)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_Char,_,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Guards_Call(_CrimeID,_Char,"Attack");
+
+IF
+EntityEvent((CHARACTER)_Char,"CRIME_StoryCallGuardsArrest_WithReinforcements")
+AND
+GetHandlingCrimeID(_Char,_CrimeID)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_Char,_,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Guards_Call(_CrimeID,_Char,"Arrest");
+PROC_CRIME_Guards_CallReinforcements(_CrimeID);
+
+IF
+EntityEvent((CHARACTER)_Char,"CRIME_StoryCallGuardsAttack_WithReinforcements")
+AND
+GetHandlingCrimeID(_Char,_CrimeID)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_Char,_,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Guards_Call(_CrimeID,_Char,"Attack");
+PROC_CRIME_Guards_CallReinforcements(_CrimeID);
+//END_REGION
+
+//REGION Summon a guard if one is available
+PROC
+PROC_CRIME_Guards_Call((INTEGER)_CrimeID,(CHARACTER)_Caller,(STRING)_Action)
+AND
+GetVarObject(_Caller,"Criminal1",_Criminal1)
+AND
+GetVarObject(_Caller,"Criminal2",_Criminal2)
+AND
+GetVarObject(_Caller,"Criminal3",_Criminal3)
+AND
+GetVarObject(_Caller,"Criminal4",_Criminal4)
+THEN
+PROC_CRIME_Guards_FindGuardToCall(_Caller,_CrimeID,(CHARACTER)_Criminal1,_Action);
+PROC_CRIME_Guards_FindGuardToCall(_Caller,_CrimeID,(CHARACTER)_Criminal2,_Action);
+PROC_CRIME_Guards_FindGuardToCall(_Caller,_CrimeID,(CHARACTER)_Criminal3,_Action);
+PROC_CRIME_Guards_FindGuardToCall(_Caller,_CrimeID,(CHARACTER)_Criminal4,_Action);
+PROC_CRIME_Guards_CallFoundGuard(_Caller,_CrimeID,_Action);
+
+QRY
+QRY_CRIME_GuardStopDialogs((CHARACTER)_Guard)
+AND
+NOT DB_DialogNPCs(_,_Guard,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_GuardStopDialogs((CHARACTER)_Guard)
+AND
+DB_DialogNPCs(_ID,_Guard,_)
+AND
+DB_AutomatedDialog(_ID)
+THEN
+DialogRequestStop(_Guard);
+
+QRY
+QRY_CRIME_GuardStopDialogs((CHARACTER)_Guard)
+AND
+DB_DialogNPCs(_ID,_Guard,_)
+AND
+NOT DB_AutomatedDialog(_ID)
+AND
+DialogIsCrimeDialog(_ID,0)
+AND
+QRY_TryStopDialogFor(_Guard)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_GuardAvailable((CHARACTER)_Guard)
+AND
+NOT DB_CRIME_Guards_Called(_,_,_,_Guard,_,_,_,_,_,_)
+AND
+NOT DB_CRIME_Guards_CalledReinforcement(_,_,_,_Guard,_,_,_,_,_,_)
+AND
+NOT DB_CantAct(_Guard)
+AND
+NOT DB_CantMove(_Guard)
+AND
+// TODO: add fallback so they can also help if SILENCED
+NOT DB_CantTalk(_Guard)
+AND
+// TODO: not new crime reactions blocked (needs new code call, or updating of CharacterCanReactToCrime)
+NOT DB_SceneManager(_Guard,_)
+AND
+NOT DB_CharacterAllCrimesDisabled(_Guard)
+AND
+NOT QRY_CRIME_GuardDisabled(_Guard)
+AND
+QRY_CRIME_GuardStopDialogs(_Guard)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_GuardDisabled((CHARACTER)_Guard)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_GuardDisabled((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_RegionGuard(_Region, _Pool, _Guard)
+AND
+DB_CRIME_RegionGuardsKey(_Region, _Pool, _Tag, _HasKeyFlag)
+AND
+ItemTagIsInInventory(_Tag,_Guard,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_InvestigationRelocationPos((CHARACTER)_Guard, (CHARACTER)_Caller)
+AND
+QRY_CRIME_Guards_ClearInvestigationRelocationPos()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_ClearInvestigationRelocationPos()
+AND
+DB_QRYRTN_CRIME_Guards_InvestigationRelocationPos((CHARACTER)_Guard, (TRIGGER)_RelocationPos)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_InvestigationRelocationPos(_Guard, _RelocationPos);
+
+QRY
+QRY_CRIME_Guards_NoCancelFlag((FLAG)_CancelGuardsGlobalFlag)
+AND
+_CancelGuardsGlobalFlag != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetFlag(_CancelGuardsGlobalFlag,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_NoCancelFlag((FLAG)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_GetClosestGuard_Reset()
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard,_Dist,_Pool,_SpawnState)
+THEN
+NOT DB_QRYRTN_Guards_GetClosestGuard(_Guard,_Dist,_Pool,_SpawnState);
+
+QRY
+QRY_CRIME_Guards_GetClosestGuard((STRING)_Region,(CHARACTER)_Criminal,(INTEGER)_IncludeSpawnPools)
+AND
+QRY_CRIME_Guards_GetClosestGuard_Reset()
+THEN
+DB_NOOP(1);
+
+// Spawn pools
+QRY
+QRY_CRIME_Guards_GetClosestGuard((STRING)_Region,(CHARACTER)_Criminal,1)
+AND
+DB_CRIME_Guards_RegionInfo(_Region,_Pool,_CancelGuardsGlobalFlag)
+AND
+QRY_CRIME_Guards_NoCancelFlag(_CancelGuardsGlobalFlag)
+AND
+DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_InUse)
+AND
+_InUse < _Max
+AND
+GetDistanceTo(_HomeBaseLocation,_Criminal,_Distance)
+AND
+// Take into account the fact that they need to appear from out-of-sight
+RealSum(_Distance,20.0,_AdjustedDistance)
+THEN
+DB_QRYRTN_Guards_GetClosestGuard((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,_AdjustedDistance,_Pool,"Spawn");
+
+// Real guards
+QRY
+QRY_CRIME_Guards_GetClosestGuard((STRING)_Region,(CHARACTER)_Criminal,(INTEGER)_IncludeSpawnPools)
+AND
+DB_CRIME_Guards_RegionInfo(_Region,_Pool,_CancelGuardsGlobalFlag)
+AND
+QRY_CRIME_Guards_NoCancelFlag(_CancelGuardsGlobalFlag)
+AND
+DB_CRIME_Guards_RegionGuard(_Region,_Pool,_Guard)
+AND
+QRY_CRIME_GuardAvailable(_Guard)
+AND
+// This won't take into account teleporters and the like, but it's the best we can do
+GetDistanceTo(_Criminal,_Guard,_Dist)
+THEN
+DB_QRYRTN_Guards_GetClosestGuard(_Guard,_Dist,_Pool,"Local");
+
+// For local/local and spawn/spawn guards (guard pools), only keep the closest
+IF
+DB_QRYRTN_Guards_GetClosestGuard(_Guard1,_Dist1,_Pool1,_SpawnState)
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard2,_Dist2,_Pool2,_SpawnState)
+AND
+_Guard2 != _Guard1
+AND
+_Dist2 >= _Dist1
+THEN
+NOT DB_QRYRTN_Guards_GetClosestGuard(_Guard2,_Dist2,_Pool2,_SpawnState);
+
+// Allow spawned guards to come to the aid of a nearby local guard, but
+// don't have a far-away local guard come running after a squad of
+// spawned guards already arrived on the scene
+IF
+DB_QRYRTN_Guards_GetClosestGuard(_Guard1,_Dist1,_Pool1,"Spawn")
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard2,_Dist2,_Pool2,"Local")
+AND
+_Dist2 >= _Dist1
+THEN
+NOT DB_QRYRTN_Guards_GetClosestGuard(_Guard2,_Dist2,_Pool2,"Local");
+
+// If the main guard is a local one, explicitly mark that the spawned
+// ones are all reinforcements.
+IF
+DB_QRYRTN_Guards_GetClosestGuard(_Guard1,_Dist1,_Pool1,"Spawn")
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard2,_Dist2,_Pool2,"Local")
+AND
+_Dist2 < _Dist1
+THEN
+NOT DB_QRYRTN_Guards_GetClosestGuard(_Guard1,_Dist1,_Pool1,"Spawn");
+DB_QRYRTN_Guards_GetClosestGuard(_Guard1,_Dist1,_Pool1,"SpawnReinforcement");
+
+
+// Overridable hook to prevent guards from spawning for certain crimes
+QRY
+QRY_CRIME_Guards_NoSummonForCrime((INTEGER)_CrimeID,(CHARACTER)_Caller,(CHARACTER)_Criminal)
+AND
+DB_CRIME_Guards_NoSummonBy(_Caller)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_HomePos((CHARACTER)_Guard)
+AND
+DB_QRYRTN_CRIME_Guards_HomePos(_HomeX,_HomeY,_HomeZ)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_HomePos(_HomeX,_HomeY,_HomeZ);
+
+QRY
+QRY_CRIME_Guards_HomePos((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ)
+THEN
+DB_QRYRTN_CRIME_Guards_HomePos(_HomeX,_HomeY,_HomeZ);
+
+QRY
+QRY_CRIME_Guards_HomePos((CHARACTER)_Guard)
+AND
+NOT DB_QRYRTN_CRIME_Guards_HomePos(_,_,_)
+AND
+GetPosition(_Guard,_X,_Y,_Z)
+THEN
+DB_QRYRTN_CRIME_Guards_HomePos(_X,_Y,_Z);
+
+PROC
+PROC_CRIME_Guards_FindGuardToCall((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Action)
+AND
+_Criminal != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_CantTalk(_Caller)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_Caller,_,_,_,_,_,_,_)
+AND
+NOT QRY_CRIME_Guards_NoSummonForCrime(_CrimeID,_Caller,_Criminal)
+AND
+CharacterGetCrimeRegion(_Criminal,_Region)
+AND
+QRY_CRIME_Guards_GetClosestGuard(_Region,_Criminal,1)
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard,_,_Pool,_SpawnState)
+THEN
+PROC_CRIME_Guards_SummonFoundGuard(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,_SpawnState);
+
+PROC
+PROC_CRIME_Guards_SummonFoundGuard((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Action,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool,"Local")
+AND
+_Guard != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_CRIME_Guards_DefineMainGuard(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region);
+
+PROC
+PROC_CRIME_Guards_SummonFoundGuard((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Action,(CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool,_SpawnType)
+AND
+_SpawnType != "Local"
+THEN
+PROC_CRIME_Guards_SpawnGuards(_Caller,_CrimeID,_Criminal,_Action,_Region,_Pool,_SpawnType);
+
+PROC
+PROC_CRIME_Guards_DefineMainGuard((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Action,(CHARACTER)_Guard,(STRING)_Region)
+AND
+QRY_CRIME_Guards_HomePos(_Guard)
+AND
+DB_QRYRTN_CRIME_Guards_HomePos(_X,_Y,_Z)
+AND
+QRY_CRIME_CrimeTypeResolveSourceInvestigation(_CrimeID)
+AND
+DB_QRYRTN_CRIME_CrimeTypeResolveSourceInvestigation(_DisturbanceType)
+AND
+QRY_CRIME_SetupGuardNPCInterrogation(_DisturbanceType,_Guard,_Caller)
+AND
+DB_QRYRTN_CRIME_SetupGuardNPCInterrogation(_InterrogationType)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+AND
+CrimeGetNewID(_InterrogationCrimeID)
+THEN
+// In case it was still set and reused by QRY_CRIME_Guards_HomePos
+NOT DB_CRIME_Guards_Leaving(_Guard,_X,_Y,_Z);
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z);
+DB_CRIME_Guards_Victim(_Guard,_Victim);
+
+//Guard didn't have to relocate
+PROC
+PROC_CRIME_Guards_CallFoundGuard((CHARACTER)_Caller,(INTEGER)_CrimeID,(STRING)_Action)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+NOT QRY_CRIME_Guards_InvestigationRelocationPos(_Guard, _Caller)
+THEN
+PROC_ClearStoryMove(_Guard);
+PROC_CancelDisappearOutOfSight(_Guard);
+// Suspend the original crime now, since otherwise it may time out by the time the guard arrives at the scene
+CrimeSuspend(_CrimeID);
+PROC_CRIME_Guards_CallActivateGuard(_Caller,_CrimeID,_Guard);
+
+//Guard has to relocate
+PROC
+PROC_CRIME_Guards_CallFoundGuard((CHARACTER)_Caller,(INTEGER)_CrimeID,(STRING)_Action)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_QRYRTN_CRIME_Guards_InvestigationRelocationPos(_Guard, _RelocationPosition)
+THEN
+PROC_ClearStoryMove(_Guard);
+PROC_CancelDisappearOutOfSight(_Guard);
+CrimeSuspend(_CrimeID);
+DB_CRIME_Guards_Relocating(_Guard,_RelocationPosition,_Caller,_CrimeID);
+PROC_DisappearOutOfSightTo(_Guard,_RelocationPosition,"Run",1,"CRIME_Guards_Relocated");
+
+// if no guard available or transfer failed, tell NPC they are out of luck
+PROC
+PROC_CRIME_Guards_CallFoundGuard((CHARACTER)_Caller,(INTEGER)_CrimeID,(STRING)_Action)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_Caller,_,_,_,_,_,_,_)
+AND
+NOT DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_,_,_,_,_,_)
+THEN
+SetVarString(_Caller, "GuardSummonFailedReaction", _Action);
+SetEntityEvent(_Caller, "CRIME_CallGuardsFailed",1);
+
+// Relocating guard
+IF
+WentOnStage((CHARACTER)_Guard, 0)
+AND
+DB_CRIME_Guards_Relocating(_Guard,_RelocationPosition,_Caller,_CrimeID)
+THEN
+PROC_AppearOutOfSightTo(_Guard,_Caller,_RelocationPosition,"CRIME_Guards_CallRelocatedGuard");
+
+IF
+WentOnStage((CHARACTER)_Guard, 1)
+AND
+DB_CRIME_Guards_Relocating(_Guard,_RelocationPosition,_Caller,_CrimeID)
+THEN
+NOT DB_CRIME_Guards_Relocating(_Guard,_RelocationPosition,_Caller,_CrimeID);
+PROC_CRIME_Guards_CallActivateGuard(_Caller,_CrimeID,_Guard);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_CRIME_Guards_Relocating(_Guard,_RelocationPosition,_Caller,_CrimeID)
+THEN
+NOT DB_CRIME_Guards_Relocating(_Guard,_RelocationPosition,_Caller,_CrimeID);
+
+// Register the guard interrogation crime only after the guard has become active,
+// as otherwise they can't react to it
+PROC
+PROC_CRIME_Guards_CallActivateGuard((CHARACTER)_Caller,(INTEGER)_OriginalCrimeID,(CHARACTER)_Guard)
+THEN
+SetForceUpdate(_Guard,1);
+
+PROC
+PROC_CRIME_Guards_CallActivateGuard((CHARACTER)_Caller,(INTEGER)_OriginalCrimeID,(CHARACTER)_Guard)
+AND
+IsActive(_Guard,1)
+AND
+DB_CRIME_Guards_Called(_OriginalCrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+PROC_CRIME_Guards_CallFoundGuardDelayed(_Caller,_OriginalCrimeID,_Guard);
+
+PROC
+PROC_CRIME_Guards_CallActivateGuard((CHARACTER)_Caller,(INTEGER)_OriginalCrimeID,(CHARACTER)_Guard)
+AND
+IsActive(_Guard,0)
+AND
+DB_CRIME_Guards_Called(_OriginalCrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+DB_CRIME_Guards_WaitForGuardActivation(_Guard,_InterrogationCrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_CRIME_Guards_WaitForGuardActivation(_Guard,_InterrogationCrimeID)
+THEN
+NOT DB_CRIME_Guards_WaitForGuardActivation(_Guard,_InterrogationCrimeID);
+
+IF
+Activated((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_WaitForGuardActivation(_Guard,_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_Called(_OriginalCrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_Guards_WaitForGuardActivation(_Guard,_InterrogationCrimeID);
+PROC_CRIME_Guards_CallFoundGuardDelayed(_Caller,_OriginalCrimeID,_Guard);
+
+//Guard had to relocate or activate.
+PROC
+PROC_CRIME_Guards_CallFoundGuardDelayed((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+GetPosition(_Caller,_CallerX,_CallerY,_CallerZ)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+THEN
+PROC_CRIME_Shapeshift_WitnessTrackCriminal("CRIME_CallGuards",_Guard,_Criminal);
+// Make sure the NPC can be seen by the called guards in case it's a crowd/simple character
+PROC_StartNPCSightEvents(_Caller);
+DB_CRIME_Guards_NPCSightEventsStarted(_Caller,_CrimeID);
+// Register the crime at the guard's position so they can react to it
+PROC_CharacterRegisterCrimeWithPosition(_Caller,_InterrogationType,NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ,_Guard,_InterrogationCrimeID);
+// Tell them to investigate at the caller's position...
+DB_CRIME_CrimeInvestigationPos(_InterrogationCrimeID,_CallerX,_CallerY,_CallerZ);
+// ... and to not start walking around playing the investigation AD if the caller is unavailable for dialog
+DB_CRIME_InvestigationNoWalkingTalking(_InterrogationCrimeID);
+
+QRY
+QRY_CRIME_Interrogation_ForceInterrogation((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (CHARACTER)_Suspect)
+AND
+DB_CRIME_ShapeshiftTracker_Known("CRIME_CallGuards",_Witness,_Interrogator,_,0)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CrimeSetupWarning_Custom((STRING)_CrimeRegion,(INTEGER)_InterrogationCrimeID,(CHARACTER)_Guard,(CHARACTER)_Caller,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_WarningDialog)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+// Check the original victim so we can check for GEB_Crime_IsVictim in the interrogation dialog (NPC can say "I was assaulted" or "there's been an assault")
+CrimeGetVictim(_CrimeID,_Caller)
+THEN
+SetFlag((FLAG)GEB_Crime_IsVictim_5e9f6262-7bab-4e25-894e-32ee674208b2,_Caller);
+
+// Stop sight explicit events for the caller when the original crime is resolved one way or another
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_Guards_NPCSightEventsStarted(_Caller,_CrimeID)
+THEN
+PROC_StopNPCSightEvents(_Caller);
+NOT DB_CRIME_Guards_NPCSightEventsStarted(_Caller,_CrimeID);
+
+// When the guard-NPC interrogation crime ends, stop force-updating the guard
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+SetForceUpdate(_Guard,0);
+
+// Wait until the CrimeSuspend removed the caller as investigator from the old crime
+// before registering the new one (otherwise they won't react to it)
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_Caller,_,"Idle")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+NOT DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_)
+AND
+CrimeGetNewID(_WaitingCallingForGuardsCrimeID)
+THEN
+// Custom behaviour for the NPC while waiting for the guard (so they don't continue their idle routine)
+PROC_CharacterRegisterCrime(_Criminal,"WaitingForCalledGuard",NULL_00000000-0000-0000-0000-000000000000,_Caller,_WaitingCallingForGuardsCrimeID);
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID);
+DB_CRIME_Guards_InterrogtionCrimeActive(_InterrogationCrimeID);
+PROC_CRIME_Guards_MaybeStartCriminalSpotting(_CrimeID,_Guard,_Criminal,_Caller,_InterrogationCrimeID);
+
+PROC
+PROC_CRIME_Guards_MaybeStartCriminalSpotting((INTEGER)_OriginalCrimeID,(CHARACTER)_Guard,(CHARACTER)_Criminal,(CHARACTER)_Caller,(INTEGER)_InterrogationCrimeID)
+AND
+QRY_CRIME_CanSeeCriminal(_Caller,_Criminal)
+AND
+CrimeHasProperty(_OriginalCrimeID,(DISTURBANCEPROPERTY)VictimDoesNotKnowCriminal_e06ae30a-89e7-4244-b1ba-eaedf05ff4b1,0)
+THEN
+// Guard starts spotting for the caller and the criminal. If the guard can see both at the same time,
+// immediately let the guard react
+// Do not rely on any spotting by the caller, because if it's a crowd NPC then it can't see
+DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+DB_SpotPlayers_IncludeExtra(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Criminal);
+DB_SpotPlayers_IncludeExtra(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Caller);
+DB_SpotPlayers_IncludeDefeated(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+DB_SpotPlayers_IncludeWildshapedPlayers(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+DB_SpotPlayers_TargetIgnoreCantTalk(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+DB_SpotPlayers_Continuous(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+DB_SpotPlayers_IncludeInconspicuous(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+DB_SpotPlayers(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",(FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+// Cleanup db
+DB_CRIME_Guards_StopSpottingOnFinished(_InterrogationCrimeID,_Caller,_Guard,_Criminal);
+
+// Player became unhidden in sight of guard while interrogating -> confront immediately (it's suspicious to appear out of nowhere)
+IF
+FlagCleared((FLAG)GLO_State_Hiding_ad57af70-2300-4c49-b713-ba0bd8e77ea3,(CHARACTER)_Criminal,_)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_CRIME_Guards_InterrogtionCrimeActive(_InterrogationCrimeID)
+AND
+// Not using regular spotting logic, because initially player was not visible to NPC
+NOT DB_CRIME_Guards_StopSpottingOnFinished(_InterrogationCrimeID,_,_,_)
+AND
+CanSee(_Guard,_Criminal,1)
+THEN
+PROC_CRIME_Guard_SawCallerAndCriminalOnTheWay(_CrimeID,_Caller,_Guard,_Criminal,_InterrogationCrimeID);
+
+// When the guard confronts the caller for the NPC interrogation, stop the caller's waiting crime
+IF
+OnCrimeInvestigatorSwitchedState(_InterrogationCrimeID,_Guard,_,"Confronting")
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+NOT DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID);
+CrimeConfrontationDone(_WaitingCallingForGuardsCrimeID,_Caller);
+//END_REGION
+
+//REGION Summon reinforcements to join the primary guard if some are available
+
+//Check if the crime region permits reinforcements.
+PROC
+PROC_Crime_Guards_CallReinforcements((INTEGER)_CrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_CRIME_Guards_RegionGuard(_Region,_Pool,_Guard)
+AND
+DB_CRIME_Guards_RegionReinforcements(_Region, _ReinforcementAmount)
+THEN
+PROC_Crime_Guards_TryFindReinforcements(_Caller,_CrimeID,_Criminal,_ReinforcementAmount,_Region);
+PROC_CRIME_Guards_CallFoundReinforcements(_Caller,_CrimeID);
+
+//Look for reinforcement guards that will help the primary called guard, then call them.
+PROC
+PROC_Crime_Guards_TryFindReinforcements((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(INTEGER)_Amount,(STRING)_Region)
+THEN
+PROC_CRIME_Guards_FindReinforcementToCall(_Caller,_CrimeID,_Criminal,_Region);
+
+//Try to summon more reinforcements
+PROC
+PROC_Crime_Guards_TryFindReinforcements((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(INTEGER)_Amount,(STRING)_Region)
+AND
+IntegerSubtract(_Amount, 1, _NewAmount)
+AND
+_NewAmount > 0
+THEN
+PROC_Crime_Guards_TryFindReinforcements(_Caller,_CrimeID,_Criminal,_NewAmount,_Region);
+
+PROC
+PROC_CRIME_Guards_FindReinforcementToCall((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Region)
+AND
+QRY_CRIME_Guards_GetClosestGuard(_Region,_Criminal,0)
+AND
+DB_QRYRTN_Guards_GetClosestGuard(_Guard,_,_,_)
+THEN
+PROC_CRIME_Guards_DefineReinforcement(_Caller,_CrimeID,_Criminal,_Region,_Guard);
+
+PROC
+PROC_CRIME_Guards_DefineReinforcement((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Region,(CHARACTER)_Guard)
+AND
+QRY_CRIME_Guards_HomePos(_Guard)
+AND
+DB_QRYRTN_CRIME_Guards_HomePos(_X,_Y,_Z)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+AND
+CrimeGetNewID(_InvestigateCrimeID)
+THEN
+NOT DB_CRIME_Guards_Leaving(_Guard,_X,_Y,_Z);
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,"Guard_Reinforcement",_Region,_X,_Y,_Z);
+DB_CRIME_Guards_Victim(_Guard,_Victim);
+
+PROC
+PROC_CRIME_Guards_CallFoundReinforcements((CHARACTER)_Caller,(INTEGER)_CrimeID)
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_InvestigationType,_Region,_X,_Y,_Z)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+GetPosition(_Caller,_CallerX,_CallerY,_CallerZ)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+THEN
+PROC_ClearStoryMove(_Guard);
+PROC_CancelDisappearOutOfSight(_Guard);
+PROC_CharacterRegisterCrimeWithPosition(_Caller,_InvestigationType,NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ,_Guard,_InvestigateCrimeID);
+DB_CRIME_CrimeInvestigationPos(_InvestigateCrimeID,_CallerX,_CallerY,_CallerZ);
+DB_CRIME_Guards_ReRegisterOnFinish(_InvestigateCrimeID,_Guard,_Caller,_Guard,_InvestigationType,1);
+SetForceUpdate(_Guard,1);
+
+PROC
+PROC_ReadyToMoveOn(_Guard,"CRIME_Guards_GoHome")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_ReinformentInvestigateCrimeID,_,_ReinforcementGuard,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Guards_UnsummonReinforcement(_ReinforcementGuard);
+
+// Also if main guard dead
+PROC
+PROC_ReadyToMoveOn_Failed(_Guard,"CRIME_Guards_GoHome")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_ReinformentInvestigateCrimeID,_,_ReinforcementGuard,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Guards_UnsummonReinforcement(_ReinforcementGuard);
+
+PROC
+PROC_CRIME_Guards_UnsummonReinforcement((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_PatrolCrimeID,_Guard,_Criminal,_Guard,_PatrolType,_Count)
+THEN
+NOT DB_CRIME_Guards_ReRegisterOnFinish(_PatrolCrimeID,_Guard,_Criminal,_Guard,_PatrolType,_Count);
+
+PROC
+PROC_CRIME_Guards_UnsummonReinforcement((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_InvestigationType,_Region,_HomeX,_HomeY,_HomeZ)
+THEN
+SetForceUpdate(_Guard,0);
+PROC_CRIME_StopForAllCriminals(_InvestigateCrimeID);
+PROC_NotifyWhenReadyToMoveOn(_Guard,"CRIME_Guards_GoHome_Reinforcement");
+
+PROC
+PROC_ReadyToMoveOn(_Guard, "CRIME_Guards_GoHome_Reinforcement")
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_InvestigationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+DB_CRIME_Guards_Victim(_Guard,_Victim)
+AND
+GetDistanceToPosition(_Guard,_HomeX,_HomeY,_HomeZ,_Dist)
+THEN
+NOT DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_InvestigationType,_Region,_HomeX,_HomeY,_HomeZ);
+NOT DB_CRIME_Guards_Victim(_Guard,_Victim);
+PROC_CRIME_Guards_ReturnHome(_Guard,_HomeX,_HomeY,_HomeZ,_Dist);
+
+PROC
+PROC_ReadyToMoveOn_Failed(_Guard, "CRIME_Guards_GoHome_Reinforcement")
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_InvestigationType,_Region,_HomeX,_HomeY,_HomeZ)
+THEN
+PROC_CRIME_Guards_CleanUp(_Guard);
+
+// Main guard becomes hostile -> reinforcements as well
+PROC
+PROC_CRIME_SetRelationTemporaryHostile((INTEGER)_CrimeID,(INTEGER)_DialogInstance,(CHARACTER)_MainGuard,(CHARACTER)_Criminal)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_MainGuard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_,_,_ReinforcementGuard,_,_,_,_,_,_)
+AND
+NOT DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_ReinforcementGuard)
+THEN
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_MainGuard);
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_ReinforcementGuard);
+PROC_CRIME_SetRelationTemporaryHostile(_CrimeID,_DialogInstance,_ReinforcementGuard,_Criminal);
+
+// Reinforcement becomes hostile -> Main guard as well
+PROC
+PROC_CRIME_SetRelationTemporaryHostile((INTEGER)_CrimeID,(INTEGER)_DialogInstance,(CHARACTER)_ReinforcementGuard,(CHARACTER)_Criminal)
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_,_,_ReinforcementGuard,_,_,_,_,_,_)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_MainGuard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+NOT DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_MainGuard)
+THEN
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_MainGuard);
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_ReinforcementGuard);
+PROC_CRIME_SetRelationTemporaryHostile(_CrimeID,_DialogInstance,_MainGuard,_Criminal);
+
+IF
+EnterCombatFailed(_Guard,_)
+AND
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,(CHARACTER)_Guard)
+THEN
+NOT DB_CRIME_Guards_GuardMadeHostile(_CrimeID,(CHARACTER)_Guard);
+
+IF
+EnteredCombat(_Guard,_)
+AND
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,(CHARACTER)_Guard)
+THEN
+NOT DB_CRIME_Guards_GuardMadeHostile(_CrimeID,(CHARACTER)_Guard);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_MainGuard)
+THEN
+NOT DB_CRIME_Guards_GuardMadeHostile(_CrimeID,_MainGuard);
+//END_REGION
+
+//REGION Spotting logic
+// Caller and Guard both see the criminal, and the caller also sees the guard -> react immediately
+// (looks weird for caller and guard to have an AD about the criminal player while he's standing
+//  next to them)
+IF
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+NOT DB_Defeated(_Caller)
+AND
+DB_SpotPlayers_Spotted(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Caller)
+AND
+DB_SpotPlayers_Spotted(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Criminal)
+AND
+DB_CRIME_ShapeshiftTracker_Known("CRIME_CallGuards",_Guard,_Criminal,_,1)
+THEN
+PROC_CRIME_Guard_SawCallerAndCriminalOnTheWay(_CrimeID,_Caller,_Guard,_Criminal,_InterrogationCrimeID);
+
+// Caller was defeated before the guard arrived, and guard sees them -> cancel interrogation
+// (no one to interrogate)
+IF
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_Defeated(_Caller)
+AND
+DB_SpotPlayers_Spotted(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Caller)
+THEN
+DB_CRIME_Guards_DefeatedCaller(_Caller, _InterrogationCrimeID);
+PROC_CRIME_StopForAllCriminals(_InterrogationCrimeID);
+
+/*
+xxxxxxxxxxxx
+when summoned guard Guard_Reinforcement crime finishes while not leaving, check what to do (may be because they're starting a patrol,
+because their anubis got interrupted, or because they started handling a different crime). Only if interrupted, we should start it again
+xxxxxxxxxxxxx
+*/
+
+// Guard already confronting NPC -> NPC no longer waiting, and stop NPC - guard confrontation
+// (which will then resume the original crime ("End of guard-NPC interrogation -> resume original crime" region)
+PROC
+PROC_CRIME_Guard_SawCallerAndCriminalOnTheWay((INTEGER)_OriginalCrimeID,(CHARACTER)_Caller,(CHARACTER)_Guard,(CHARACTER)_Criminal,(INTEGER)_InterrogationCrimeID)
+AND
+NOT DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_)
+THEN
+PROC_ForceStopDialog(_Guard);
+CrimeConfrontationDone(_InterrogationCrimeID,_Guard);
+
+// NPC still waiting: stop "confrontation" stage of waiting NPC (playing ADs),
+// and cancel the summoning disturbance for the guard (they're not yet confronting)
+// -> explicitly resume the original crime, since normally that happens automatically
+// when the guard stops confronting the NPC during the interrogation crime
+PROC
+PROC_CRIME_Guard_SawCallerAndCriminalOnTheWay((INTEGER)_OriginalCrimeID,(CHARACTER)_Caller,(CHARACTER)_Guard,(CHARACTER)_Criminal,(INTEGER)_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+THEN
+PROC_ForceStopDialog(_Caller);
+CrimeConfrontationDone(_WaitingCallingForGuardsCrimeID,_Caller);
+NOT DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID);
+PROC_CRIME_StopForAllCriminals(_InterrogationCrimeID);
+PROC_CRIME_Guards_ResumeOriginalCrime(_OriginalCrimeID,_Caller,_Guard,_Criminal);
+
+// Clean up spotting when the interrogation disturbance finishes
+PROC
+PROC_CRIME_Finished((INTEGER)_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_StopSpottingOnFinished(_InterrogationCrimeID,_Caller,_Guard,_Criminal)
+THEN
+NOT DB_CRIME_Guards_StopSpottingOnFinished(_InterrogationCrimeID,_Caller,_Guard,_Criminal);
+PROC_SpotPlayers_StopSpotting(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+NOT DB_SpotPlayers(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",(FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+NOT DB_SpotPlayers_IncludeExtra(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Caller);
+NOT DB_SpotPlayers_IncludeDefeated(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+NOT DB_SpotPlayers_IncludeExtra(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller",_Criminal);
+NOT DB_SpotPlayers_IncludeWildshapedPlayers(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+NOT DB_SpotPlayers_IncludeInconspicuous(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+NOT DB_SpotPlayers_Continuous(_Guard,"CRIME_Guards_CanSeeCriminalAndCaller");
+
+//END_REGION
+
+//REGION Custom Guard interrogation dialogs
+// Guard - NPC
+QRY
+QRY_CrimeGetCustomInterrogationDialog((STRING)_RegionID,(INTEGER)_InterrogationCrimeID,(CHARACTER)_Guard,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_Dialog)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_CRIME_Guards_NPCInterrogation(_Guard,_InterrogationDialog)
+THEN
+DB_CrimeInterrogationDialog(_InterrogationDialog);
+
+// Guard - Player during patrol
+QRY
+QRY_CrimeGetCustomInterrogationDialog((STRING)_RegionID,(INTEGER)_PatrolCrimeID,(CHARACTER)_Guard,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_Dialog)
+AND
+DB_CRIME_Guards_Patrolling(_Guard,_PatrolCrimeID)
+AND
+DB_CRIME_Guards_PatrolInterrogation(_Guard,_CustomDialog)
+THEN
+DB_CrimeInterrogationDialog(_CustomDialog);
+//END_REGION
+
+//REGION End of guard-NPC interrogation -> resume original crime
+// When the guard wants to interrogate the NPC but they've been defeated in the mean time,
+// immediately switch to the fallback patrol and cancel the original crime (since we'll
+// never resume it again)
+IF
+OnCrimeInvestigatorSwitchedState(_InterrogationCrimeID,_Guard,"Investigation","LookingForSuspectsToInterrogate")
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_Defeated(_Caller)
+THEN
+CharacterStopCrimeWithID(_Guard, _InterrogationCrimeID);
+// Will trigger the rules in "Cleaning up and interruptions of NPC interrogation" when the crime finishes
+
+// Wanted to look for someone else to interrogate -> stop
+IF
+OnCrimeInvestigatorSwitchedState(_InterrogationCrimeID,_Guard,"Confronting","LookingForSuspectsToInterrogate")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+CharacterStopCrimeWithID(_Caller,_InterrogationCrimeID);
+
+// Resume original crime regardless of whether we were going to the Idle state or looking for someone else to interrogate
+IF
+OnCrimeInvestigatorSwitchedState(_InterrogationCrimeID,_Guard,"Confronting",_)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+PROC_CRIME_Guards_ResumeOriginalCrime(_CrimeID,_Caller,_Guard,_Criminal);
+
+PROC
+PROC_CRIME_Guards_ResumeOriginalCrime((INTEGER)_CrimeID,(CHARACTER)_Caller,(CHARACTER)_Guard,(CHARACTER)_Criminal)
+AND
+IsInCombat(_Guard,0)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+DB_CRIME_ShapeshiftTracker_Known("CRIME_CallGuards",_Guard,_Criminal,_,_Known)
+AND
+DB_Negate(_Known,_ForceInvestigation)
+THEN
+// Let the caller ignore the crime, since they already reacted to it (they called the guard)
+CrimeIgnoreCrime(_CrimeID,_Caller);
+// Resume at guard's position so they're sure to notice it
+CrimeResumeWithPosition(_CrimeID,_GuardX,_GuardY,_GuardZ,_ForceInvestigation);
+DB_CRIME_Guards_ResumedCrime(_CrimeID,_Guard);
+
+PROC
+PROC_CRIME_Guards_ResumeOriginalCrime((INTEGER)_CrimeID,(CHARACTER)_Caller,(CHARACTER)_Guard,(CHARACTER)_Criminal)
+AND
+IsInCombat(_Guard,1)
+THEN
+PROC_CRIME_StopForAllCriminals(_CrimeID);
+PROC_SetRelationTemporaryHostile(_Guard,_Criminal);
+
+//END_REGION
+
+//REGION Handle a reinforcement's support disturbance ending (patrolling, or they start reacting to a different disturbance while waiting for the main guard to handle the NPC interrogation)
+// Not just PROC_CRIME_Finsihed(_ReinforcementDisturbance), because they may have performed a secondary reaction to
+// a disturbance that's still being handled
+IF
+OnCrimeInvestigatorSwitchedState(_ReinforcementDisturbance,_Guard,_,"Idle")
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+THEN
+PROC_Guards_ReinforcementFinished(_ReinforcementDisturbance,_Guard,_Count);
+
+// Also handle them being unable to react to it at all
+IF
+CharacterSelectedAsBestUnavailableFallbackLead(_Guard,_,_ReinforcementDisturbance,_)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+THEN
+PROC_Guards_ReinforcementFinished(_ReinforcementDisturbance,_Guard,_Count);
+
+IF
+OnCrimeRemoved(_ReinforcementDisturbance,_,_,_,_,_)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+THEN
+PROC_Guards_ReinforcementFinished(_ReinforcementDisturbance,_Guard,_Count);
+
+PROC
+PROC_Guards_ReinforcementFinished((INTEGER)_ReinforcementDisturbance,(CHARACTER)_Guard,(INTEGER)_Count)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+AND
+// Limit to prevent guards that stick around forever due to a bug/unhandled edge case
+_Count >= 5
+THEN
+PROC_CRIME_Guards_UnsummonReinforcement(_Guard);
+
+PROC
+PROC_Guards_ReinforcementFinished((INTEGER)_ReinforcementDisturbance,(CHARACTER)_Guard,(INTEGER)_Count)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+AND
+_Count < 5
+AND
+QRY_CRIME_Guards_GetHandlingNonBackgroundDisturbance(_Guard)
+AND
+DB_QRYRTN_Guards_GetHandlingNonBackgroundDisturbance(_CurrentHandlingDisturbanceID)
+THEN
+PROC_CRIME_Guards_RestartOrWaitAgain(_ReinforcementDisturbance,_CurrentHandlingDisturbanceID);
+
+PROC
+PROC_CRIME_Guards_RestartOrWaitAgain((INTEGER)_ReinforcementDisturbance,-1)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+CrimeGetNewID(_NewCrimeID)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_DisturbanceType,NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ,_Victim,_NewCrimeID);
+DB_CRIME_Guards_ReRegisterOnFinish(_NewCrimeID,_Guard,_Criminal,_Victim,_DisturbanceType,_NewCount);
+
+PROC
+PROC_CRIME_Guards_RestartOrWaitAgain((INTEGER)_ReinforcementDisturbance,(INTEGER)_CurrentHandlingDisturbanceID)
+AND
+_CurrentHandlingDisturbanceID != -1
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_ReinforcementDisturbance,_Guard,_Criminal,_Victim,_DisturbanceType,_Count)
+THEN
+// Retry when this disturbance finishes (if not unsummoned before)
+DB_CRIME_Guards_ReRegisterOnFinish(_CurrentHandlingDisturbanceID,_Guard,_Criminal,_Victim,_DisturbanceType,_Count);
+
+QRY
+QRY_CRIME_Guards_GetHandlingNonBackgroundDisturbance((CHARACTER)_Guard)
+AND
+DB_QRYRTN_Guards_GetHandlingNonBackgroundDisturbance(_Result)
+THEN
+NOT DB_QRYRTN_Guards_GetHandlingNonBackgroundDisturbance(_Result);
+
+QRY
+QRY_CRIME_Guards_GetHandlingNonBackgroundDisturbance((CHARACTER)_Guard)
+AND
+GetHandlingCrimeID(_Guard,_NewCrime)
+AND
+CrimeHasProperty(_NewCrime,(DISTURBANCEPROPERTY)BackgroundReaction_db918cfb-a484-437c-93bb-8bc36fe98a9c,0)
+THEN
+DB_QRYRTN_Guards_GetHandlingNonBackgroundDisturbance(_NewCrime);
+
+QRY
+QRY_CRIME_Guards_GetHandlingNonBackgroundDisturbance((CHARACTER)_Guard)
+AND
+NOT DB_QRYRTN_Guards_GetHandlingNonBackgroundDisturbance(_)
+THEN
+DB_QRYRTN_Guards_GetHandlingNonBackgroundDisturbance(-1);
+
+// There can be only one
+IF
+DB_CRIME_Guards_ReRegisterOnFinish(_InvestigateCrimeID,_Guard,_Criminal,_Victim,_InvestigationType,_NewCount)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_OldInvestigateCrimeID,_Guard,_OldCriminal,_OldVictim,_OldInvestigationType,_OldCount)
+AND
+_InvestigateCrimeID != _OldInvestigateCrimeID
+THEN
+NOT DB_CRIME_Guards_ReRegisterOnFinish(_OldInvestigateCrimeID,_Guard,_OldCriminal,_OldVictim,_OldInvestigationType,_OldCount);
+
+IF
+DB_CRIME_Guards_ReRegisterOnFinish(_InvestigateCrimeID,_Guard,_Criminal,_Victim,_InvestigationType,_NewCount)
+AND
+DB_CRIME_Guards_ReRegisterOnFinish(_OldInvestigateCrimeID,_Guard,_OldCriminal,_OldVictim,_OldInvestigationType,_OldCount)
+AND
+_NewCount != _OldCount
+THEN
+NOT DB_CRIME_Guards_ReRegisterOnFinish(_OldInvestigateCrimeID,_Guard,_OldCriminal,_OldVictim,_OldInvestigationType,_OldCount);
+//END_REGION
+
+//REGION Guard reaction to resumed crime
+// Can be either interrogation or reaction -- we don't care, just that anyone reacted to the resumed crime
+// (doesn't even have to be the summoned guard, could be another nearby guard)
+IF
+OnCrimeInvestigatorSwitchedState(_OriginalCrimeID,_Anyone,_,"Confronting")
+AND
+DB_CRIME_Guards_ResumedCrime(_OriginalCrimeID,_Guard)
+THEN
+// We did our job, can leave once this crime gets resolved
+NOT DB_CRIME_Guards_ResumedCrime(_OriginalCrimeID,_Guard);
+
+// The resumed crime finished without the guard reacting -> do some standard patrolling
+PROC
+PROC_CRIME_Finished((INTEGER)_OriginalCrimeID)
+AND
+DB_CRIME_Guards_ResumedCrime(_OriginalCrimeID,_Guard)
+AND
+QRY_CRIME_Guards_GetOriginalCrimePatrolType(_OriginalCrimeID)
+AND
+DB_QRYRTN_CRIME_Guards_GetOriginalCrimePatrolType(_PatrolType)
+THEN
+NOT DB_CRIME_Guards_ResumedCrime(_OriginalCrimeID,_Guard);
+PROC_CRIME_Guards_LeaveAfterStandardPatrol(_Guard,_OriginalCrimeID,_PatrolType);
+
+QRY
+QRY_CRIME_Guards_GetOriginalCrimePatrolType((INTEGER)_OriginalCrimeID)
+AND
+DB_QRYRTN_CRIME_Guards_GetOriginalCrimePatrolType(_PatrolType)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_GetOriginalCrimePatrolType(_PatrolType);
+
+QRY
+QRY_CRIME_Guards_GetOriginalCrimePatrolType((INTEGER)_OriginalCrimeID)
+AND
+CrimeHasProperty(_OriginalCrimeID,(DISTURBANCEPROPERTY)VictimDoesNotKnowCriminal_e06ae30a-89e7-4244-b1ba-eaedf05ff4b1,0)
+THEN
+DB_QRYRTN_CRIME_Guards_GetOriginalCrimePatrolType("Guard_ArrestPatrol");
+
+QRY
+QRY_CRIME_Guards_GetOriginalCrimePatrolType((INTEGER)_OriginalCrimeID)
+AND
+NOT DB_QRYRTN_CRIME_Guards_GetOriginalCrimePatrolType(_)
+THEN
+DB_QRYRTN_CRIME_Guards_GetOriginalCrimePatrolType("Guard_Patrolling");
+
+PROC
+PROC_CRIME_Finished((INTEGER)_PatrolCrimeID)
+AND
+DB_CRIME_Guards_Patrolling(_Guard,_PatrolCrimeID)
+THEN
+NOT DB_CRIME_Guards_Patrolling(_Guard,_PatrolCrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_PatrolCrimeID)
+AND
+DB_CRIME_Guards_Patrolling_OriginalCrimeType(_PatrolCrimeID,_OriginalCrimeType)
+THEN
+NOT DB_CRIME_Guards_Patrolling_OriginalCrimeType(_PatrolCrimeID,_OriginalCrimeType);
+
+//END_REGION
+
+//REGION Standard patrol/investigation crime helper
+PROC
+PROC_CRIME_Guards_LeaveAfterStandardPatrol((CHARACTER)_Guard,(INTEGER)_OriginalCrimeID,(STRING)_PatrolType)
+AND
+DB_CRIME_Guards_Called(_OriginalCrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+CrimeGetNewID(_PatrolCrimeID)
+AND
+QRY_CRIME_CrimeTypeResolveSourceInvestigation(_OriginalCrimeID)
+AND
+DB_QRYRTN_CRIME_CrimeTypeResolveSourceInvestigation(_OriginalCrimeType)
+THEN
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_PatrolType,NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ,_Guard,_PatrolCrimeID);
+DB_CRIME_Guards_Patrolling(_Guard,_PatrolCrimeID);
+DB_CRIME_Guards_Patrolling_OriginalCrimeType(_PatrolCrimeID,_OriginalCrimeType);
+// Unsummon the guard after the patrol crime finishes (instead of after the original crime)
+NOT DB_CRIME_Guards_Called(_OriginalCrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z);
+DB_CRIME_Guards_Called(_PatrolCrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z);
+// Make sure the reinforcements (if any) do the same
+PROC_CRIME_Guards_SwitchReinforcementsToPatrol(_OriginalCrimeID,_PatrolCrimeID,_PatrolType);
+
+PROC
+PROC_CRIME_Guards_SwitchReinforcementsToPatrol((INTEGER)_OldOriginalCrimeID,(INTEGER)_MainGuardPatrolCrimeID,(STRING)_PatrolType)
+AND
+DB_CRIME_Guards_CalledReinforcement(_OldOriginalCrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_ReinforcementCrimeType,_Region,_X,_Y,_Z)
+AND
+GetPosition(_Guard,_GuardX,_GuardY,_GuardZ)
+AND
+CrimeGetNewID(_PatrolCrimeID)
+THEN
+PROC_CRIME_StopForAllCriminals(_InvestigateCrimeID);
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_PatrolType,NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ,_Guard,_PatrolCrimeID);
+NOT DB_CRIME_Guards_CalledReinforcement(_OldOriginalCrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_ReinforcementCrimeType,_Region,_X,_Y,_Z);
+DB_CRIME_Guards_CalledReinforcement(_MainGuardPatrolCrimeID,_PatrolCrimeID,_Caller,_Guard,_Criminal,_ReinforcementCrimeType,_Region,_X,_Y,_Z);
+DB_CRIME_Guards_ReRegisterOnFinish(_PatrolCrimeID,_Guard,_Criminal,_Guard,_PatrolType,1);
+
+// Prevent all of the patrollers interrogating all player characters for exactly the same thing
+// Main guard interrogated -> reinforcements as well
+PROC
+PROC_CRIME_Interrogation_InterrogatedSuspect((INTEGER)_MainGuardPatrolCrimeID, (CHARACTER)_Suspect)
+AND
+DB_CRIME_Guards_Called(_MainGuardPatrolCrimeID,_,_,_,_,_,_,_,_,_)
+AND
+DB_CRIME_Guards_CalledReinforcement(_MainGuardPatrolCrimeID,_PatrolCrimeID,_,_,_,_,_,_,_,_)
+THEN
+DB_CRIME_Interrogation_InterrogatedSuspect(_PatrolCrimeID,_Suspect);
+
+// Reinforcement interrogated -> Main guard and other reinforcements as well
+PROC
+PROC_CRIME_Interrogation_InterrogatedSuspect((INTEGER)_ReinforcementPatrolCrimeID, (CHARACTER)_Suspect)
+AND
+DB_CRIME_Guards_CalledReinforcement(_MainGuardPatrolCrimeID,_ReinforcementPatrolCrimeID,_,_,_,_,_,_,_,_)
+THEN
+PROC_CRIME_Interrogation_InterrogatedSuspect(_MainGuardPatrolCrimeID,_Suspect);
+//END_REGION
+
+//REGION Cleaning up and interruptions of NPC interrogation 
+// Guard gets interrupted on their way to interrogating the caller, or caller does not become available in time,
+// or guard doesn't react to interrogation crime for some reason (we check for availability in advance, but may
+// miss one, or something may have happened in the frame in between)
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+NOT GetHandlingCrimeID(_Caller,_WaitingCallingForGuardsCrimeID)
+THEN
+// Not yet reacting -> cancel
+PROC_CRIME_StopForAllCriminals(_WaitingCallingForGuardsCrimeID);
+
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+GetHandlingCrimeID(_Caller,_WaitingCallingForGuardsCrimeID)
+THEN
+// Reacting -> stop confronation -> automatically finishes
+CrimeConfrontationDone(_WaitingCallingForGuardsCrimeID,_Caller);
+
+// Pathfinding failed for main summoned guard -> abort waiting for them and report that calling guards failed
+IF
+EntityEvent((CHARACTER)_Guard,"GEB_Investigation_SceneUnreachable")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+PROC_CRIME_StopForAllCriminals(_InterrogationCrimeID);
+
+// Pathfinding failed for a reinforcement -> abort only for reinforcement
+IF
+EntityEvent((CHARACTER)_Guard,"GEB_Investigation_SceneUnreachable")
+AND
+DB_CRIME_Guards_CalledReinforcement(_CrimeID,_InvestigateCrimeID,_Caller,_Guard,_Criminal,_,_Region,_X,_Y,_Z)
+THEN
+PROC_CRIME_Guards_UnsummonReinforcement(_Guard);
+
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+NOT DB_CRIME_Guards_DefeatedCaller(_Caller, _InterrogationCrimeID)
+THEN
+SetEntityEvent(_Caller, "CRIME_CallGuardsFailed",1);
+// Won't be able to resume this crime anymore
+PROC_CRIME_StopForAllCriminals(_CrimeID);
+// Start a patrol if we're close to the caller when this happens (not if we got stuck halfway somehow)
+PROC_CRIME_Guards_StartPatrolIfCloseTo(_Guard,_CrimeID,_Caller);
+
+//The interrogation crime can't switch state because it has ended as a result of the defeated caller. Resume the original crime manually and let the guard react to it when they arrive at the scene.
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+AND
+DB_CRIME_Guards_DefeatedCaller(_Caller, _InterrogationCrimeID)
+THEN
+NOT DB_CRIME_Guards_DefeatedCaller(_Caller, _InterrogationCrimeID);
+PROC_CRIME_Guards_ResumeOriginalCrime(_CrimeID,_Caller,_Guard,_Criminal);
+
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_InterrogtionCrimeActive(_InterrogationCrimeID)
+THEN
+NOT DB_CRIME_Guards_InterrogtionCrimeActive(_InterrogationCrimeID);
+
+PROC
+PROC_CRIME_Guards_StartPatrolIfCloseTo((CHARACTER)_Guard,(INTEGER)_CrimeID,(CHARACTER)_Caller)
+AND
+GetDistanceTo(_Guard,_Caller,_Dist)
+AND
+_Dist <= 13.0
+THEN
+PROC_CRIME_Guards_LeaveAfterStandardPatrol(_Guard,_CrimeID,"Guard_Patrolling");
+
+PROC
+PROC_CRIME_Finished(_InterrogationCrimeID)
+AND
+DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID)
+THEN
+NOT DB_CRIME_Guards_WaitingForGuardID(_InterrogationCrimeID,_WaitingCallingForGuardsCrimeID);
+//END_REGION
+
+//REGION Return to original position after being summoned
+PROC
+PROC_CRIME_Guards_UnsummonGuard((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+THEN
+PROC_NotifyWhenReadyToMoveOn(_Guard,"CRIME_Guards_GoHome");
+
+PROC
+PROC_ReadyToMoveOn(_Guard,"CRIME_Guards_GoHome")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+DB_CRIME_Guards_Victim(_Guard,_Victim)
+AND
+GetDistanceToPosition(_Guard,_HomeX,_HomeY,_HomeZ,_Dist)
+THEN
+NOT DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ);
+PROC_CRIME_Shapeshift_WitnessStopTrackingCriminal("CRIME_CallGuards",_Guard,_Criminal);
+NOT DB_CRIME_Guards_Victim(_Guard,_Victim);
+PROC_CRIME_Guards_ReturnHome(_Guard,_HomeX,_HomeY,_HomeZ,_Dist);
+
+PROC
+PROC_ReadyToMoveOn_Failed(_Guard,"CRIME_Guards_GoHome")
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+THEN
+PROC_CRIME_Guards_CleanUp(_Guard);
+
+PROC
+PROC_CRIME_Guards_ReturnHome((CHARACTER)_Guard,(REAL)_HomeX,(REAL)_HomeY,(REAL)_HomeZ,(REAL)_Dist)
+THEN
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ);
+SetEntityEvent(_Guard, "ClearPeaceReturn",1);
+
+PROC
+PROC_CRIME_Guards_ReturnHome((CHARACTER)_Guard,(REAL)_HomeX,(REAL)_HomeY,(REAL)_HomeZ,(REAL)_Dist)
+AND
+DB_CRIME_Guards_SpawnedGuard(_Guard,_,_)
+THEN
+// Code doesn't (currently) remove summons for deleted characters, so they'll stick around with an invalid owner
+// if we don't remove them manually
+RemoveSummons(_Guard,0);
+
+PROC
+PROC_CRIME_Guards_ReturnHome((CHARACTER)_Guard,(REAL)_HomeX,(REAL)_HomeY,(REAL)_HomeZ,(REAL)_Dist)
+AND
+NOT DB_CRIME_Guards_SpawnedGuard(_Guard,_,_)
+AND
+_Dist < 30.0
+THEN
+PROC_CharacterMoveToPosition(_Guard,_HomeX,_HomeY,_HomeZ,"Walk","CRIME_Guards_BackHome");
+
+PROC
+PROC_CRIME_Guards_ReturnHome((CHARACTER)_Guard,(REAL)_HomeX,(REAL)_HomeY,(REAL)_HomeZ,(REAL)_Dist)
+AND
+DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool)
+AND
+_Dist < 30.0
+AND
+DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_,_,_)
+THEN
+PROC_DisappearOutOfSightTo(_Guard,_HomeBaseLocation,"Walk",0,"CRIME_Guards_ReturnHomeDisappeared");
+
+PROC
+PROC_CRIME_Guards_ReturnHome((CHARACTER)_Guard,(REAL)_HomeX,(REAL)_HomeY,(REAL)_HomeZ,(REAL)_Dist)
+AND
+_Dist >= 30.0
+THEN
+PROC_DisappearOutOfSight(_Guard,"Walk",0,"CRIME_Guards_ReturnHomeDisappeared");
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_ReturnHomeDisappeared")
+AND
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ)
+AND
+NOT DB_CRIME_Guards_SpawnedGuard(_Guard,_,_)
+THEN
+AppearOutOfSightToPosition(_Guard,_HomeX,_HomeY,_HomeZ,NULL_00000000-0000-0000-0000-000000000000,0,NULL_00000000-0000-0000-0000-000000000000,"CRIME_Guards_ReturnHomeAppeared");
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_ReturnHomeDisappeared")
+AND
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ)
+AND
+DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool)
+THEN
+NOT DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ);
+PROC_CRIME_Guards_RecoverSpawnedGuard(_Guard,_Region,_Pool);
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_ReturnHomeAppeared")
+AND
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ)
+THEN
+PROC_CharacterMoveToPosition(_Guard,_HomeX,_HomeY,_HomeZ,"Walk","CRIME_Guards_BackHome");
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_BackHome")
+AND
+DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ)
+THEN
+NOT DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ);
+//END_REGION
+
+//REGION Clean up
+// Walk off after the original crime is finished
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_,_,_)
+THEN
+PROC_CRIME_Guards_UnsummonGuard(_Guard);
+
+// Clean up guard being perma-defeated
+PROC
+PROC_StateSet_PermaDefeated(_Guard)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,(CHARACTER)_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+THEN
+PROC_CRIME_Guards_CleanUp(_Guard);
+
+PROC
+PROC_CRIME_Guards_CleanUp((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,(CHARACTER)_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+AND
+NOT DB_CRIME_Guards_Leaving(_Guard,_,_,_)
+THEN
+SetEntityEvent(_Caller, "CRIME_CallGuardsFailed",1);
+
+PROC
+PROC_CRIME_Guards_CleanUp((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,(CHARACTER)_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ)
+THEN
+NOT DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_HomeX,_HomeY,_HomeZ);
+PROC_CRIME_Shapeshift_WitnessStopTrackingCriminal("CRIME_CallGuards",_Guard,_Criminal);
+NOT DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ);
+
+PROC
+PROC_CRIME_Guards_CleanUp((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Victim(_Guard,_Victim)
+THEN
+NOT DB_CRIME_Guards_Victim(_Guard,_Victim);
+
+PROC
+PROC_CRIME_Guards_CleanUp((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool)
+THEN
+NOT DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool);
+
+PROC
+PROC_CRIME_Guards_CleanUp((CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_Leaving((CHARACTER)_Guard,_HomeX,_HomeY,_HomeZ)
+THEN
+NOT DB_CRIME_Guards_Leaving(_Guard,_HomeX,_HomeY,_HomeZ);
+//END_REGION
+
+//REGION Define guard pools to spawn guards from
+// Adding a new DB_CRIME_Guards_RegionSpawnPoolGroupTemplate entry -> update begin and end indices
+// of all entries for this Region/Pool combo. Will be used to randomly select a group of templates
+// when spawning new guards
+
+// Update End index and Count when adding a new entry.
+IF
+DB_CRIME_Guards_RegionSpawnPoolGroupTemplate((STRING)_Region,(STRING)_Pool,(CHARACTERROOT)_Template1,(CHARACTERROOT)_Template2,(CHARACTERROOT)_Template3,(CHARACTERROOT)_Template4)
+THEN
+PROC_CRIME_Guards_NewRegionSpawnPoolGroupTemplate(_Region,_Pool);
+
+PROC
+PROC_CRIME_Guards_NewRegionSpawnPoolGroupTemplate((STRING)_Region,(STRING)_Pool)
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_CurrentEndIndex)
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,_Count)
+AND
+SysCount("DB_CRIME_Guards_RegionSpawnPoolGroupTemplate",6,_NewEndIndex)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+PROC_CRIME_Guards_CheckSpawnPoolTemplatesResorting(_Region,_Pool,_CurrentEndIndex,_NewEndIndex);
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_CurrentEndIndex);
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_NewEndIndex);
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,_Count);
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,_NewCount);
+
+// We will select a random template set by picking a random entry between the begin and end index,
+// so all entries for a particular Region/Pool combination must be contiguous. If not, sort them.
+PROC
+PROC_CRIME_Guards_CheckSpawnPoolTemplatesResorting((STRING)_Region,(STRING)_Pool,(INTEGER)_OldEndIndex,(INTEGER)_NewEndIndex)
+AND
+NOT IntegerSum(_OldEndIndex,1,_NewEndIndex)
+THEN
+// Avoid resorting it multiple times in a row when multiple entries are added in the same frame.
+TimerCancel("CRIME_Guards_ResortSpawnPoolTemplateDB");
+TimerLaunch("CRIME_Guards_ResortSpawnPoolTemplateDB",0);
+
+// First DB_CRIME_Guards_RegionSpawnPoolGroupTemplate -> define Begin and Count as well
+IF
+DB_CRIME_Guards_RegionSpawnPoolGroupTemplate((STRING)_Region,(STRING)_Pool,(CHARACTERROOT)_Template1,(CHARACTERROOT)_Template2,(CHARACTERROOT)_Template3,(CHARACTERROOT)_Template4)
+AND
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Begin(_Region,_Pool,_)
+AND
+SysCount("DB_CRIME_Guards_RegionSpawnPoolGroupTemplate",6,_Count)
+THEN
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Begin(_Region,_Pool,_Count);
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_Count);
+// Could calculate it dynamically, but avoids some boiler plate code later
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,1);
+//END_REGION
+
+//REGION Spawn guards from a spawn pool
+// Select a random entry from the guard template sets available for this region
+QRY
+QRY_CRIME_Guards_GetSpawnTemplateGroup((STRING)_Region,(STRING)_Pool)
+AND
+DB_QRYRTN_CRIME_Guards_GetSpawnTemplateGroup(_Template1,_Template2,_Template3,_Template4)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_GetSpawnTemplateGroup(_Template1,_Template2,_Template3,_Template4);
+
+QRY
+QRY_CRIME_Guards_GetSpawnTemplateGroup((STRING)_Region,(STRING)_Pool)
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Begin(_Region,_Pool,_Begin)
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_End)
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,_Count)
+AND
+Random(_Count,_IndexOffset)
+AND
+IntegerSum(_Begin,_IndexOffset,_Index)
+AND
+SysFactAtIndex("DB_CRIME_Guards_RegionSpawnPoolGroupTemplate",6,_Index,"DB_CRIME_Guards_SelectedSpawnTemplates")
+AND
+DB_CRIME_Guards_SelectedSpawnTemplates((STRING)_Region,(STRING)_Pool,(CHARACTERROOT)_Template1,(CHARACTERROOT)_Template2,(CHARACTERROOT)_Template3,(CHARACTERROOT)_Template4)
+THEN
+NOT DB_CRIME_Guards_SelectedSpawnTemplates((STRING)_Region,(STRING)_Pool,(CHARACTERROOT)_Template1,(CHARACTERROOT)_Template2,(CHARACTERROOT)_Template3,(CHARACTERROOT)_Template4);
+DB_QRYRTN_CRIME_Guards_GetSpawnTemplateGroup(_Template1,_Template2,_Template3,_Template4);
+
+// Spawn a guard based on a selected template
+QRY
+QRY_CRIME_Guards_SpawnGuard((STRING)_Region,(STRING)_Pool,(CHARACTER)_Criminal,(CHARACTERROOT)_Template,(STRING)_SpawnEvent)
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard);
+
+QRY
+QRY_CRIME_Guards_SpawnGuard((STRING)_Region,(STRING)_Pool,(CHARACTER)_Criminal,(CHARACTERROOT)_Template,(STRING)_SpawnEvent)
+AND
+_Template != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_InUse)
+AND
+_InUse < _Max
+AND
+CreateOutOfSightAtDirectionFromObject(_Template,_Criminal,_HomeBaseLocation,1,0,_SpawnEvent,_Guard)
+AND
+IntegerSum(_InUse,1,_NewInUse)
+THEN
+DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard);
+NOT DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_InUse);
+DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_NewInUse);
+
+QRY
+QRY_CRIME_Guards_SpawnGuard((STRING)_Region,(STRING)_Pool,(CHARACTER)_Criminal,(CHARACTERROOT)_Template,(STRING)_SpawnEvent)
+AND
+NOT DB_QRYRTN_CRIME_Guards_SpawnGuard(_)
+THEN
+// Can happen for null templates (e.g. a DB_CRIME_Guards_RegionSpawnPoolGroupTemplate group that only defines three templates),
+// or in case the pool is full after summoning two out of four guards
+DB_QRYRTN_CRIME_Guards_SpawnGuard(NULL_00000000-0000-0000-0000-000000000000);
+
+// Spawn a new group of guards for a criminal from a region/pool
+QRY
+QRY_CRIME_Guards_SpawnGuardGroup((STRING)_Region,(STRING)_Pool,(CHARACTER)_Criminal,(STRING)_SpawnedEvent)
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard);
+
+QRY
+QRY_CRIME_Guards_SpawnGuardGroup((STRING)_Region,(STRING)_Pool,(CHARACTER)_Criminal,(STRING)_SpawnedEvent)
+AND
+QRY_CRIME_Guards_GetSpawnTemplateGroup(_Region,_Pool)
+AND
+DB_QRYRTN_CRIME_Guards_GetSpawnTemplateGroup(_Template1,_Template2,_Template3,_Template4)
+AND
+QRY_CRIME_Guards_SpawnGuard(_Region,_Pool,_Criminal,_Template1,_SpawnedEvent)
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard1)
+AND
+QRY_CRIME_Guards_SpawnGuard(_Region,_Pool,_Criminal,_Template2,_SpawnedEvent)
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard2)
+AND
+QRY_CRIME_Guards_SpawnGuard(_Region,_Pool,_Criminal,_Template3,_SpawnedEvent)
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard3)
+AND
+QRY_CRIME_Guards_SpawnGuard(_Region,_Pool,_Criminal,_Template4,_SpawnedEvent)
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuard(_Guard4)
+THEN
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard1);
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard2);
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard3);
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard4);
+
+IF
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(NULL_00000000-0000-0000-0000-000000000000)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_CRIME_Guards_SpawnGuardGroup((STRING)_Region,(STRING)_Pool,(CHARACTER)_Criminal,(STRING)_SpawnedEvent)
+AND
+DB_CRIME_Guards_Intern_SpawningGuard(_Criminal,NULL_00000000-0000-0000-0000-000000000000,_SpawnedEvent)
+THEN
+NOT DB_CRIME_Guards_Intern_SpawningGuard(_Criminal,NULL_00000000-0000-0000-0000-000000000000,_SpawnedEvent);
+
+PROC
+PROC_CRIME_Guards_SpawnGuards((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Action,(STRING)_Region,(STRING)_Pool,(STRING)_SpawnType)
+AND
+QRY_CRIME_Guards_SpawnGuardGroup(_Region,_Pool,_Criminal,"CRIME_Guards_SpawnedGuard")
+AND
+DB_QRYRTN_CRIME_Guards_SpawnGuardGroup(_Guard)
+THEN
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,_SpawnType);
+DB_CRIME_Guards_SpawnGuards_SpawningReinforcements(_Caller,_CrimeID);
+
+// Only one guard can be the main one, the rest are reinforcements
+IF
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard1,_Region,_Pool,"Spawn")
+THEN
+PROC_CRIME_Guards_CheckIfReinforcement(_Caller,_CrimeID,_Criminal,_Action,_Guard1,_Region,_Pool);
+
+PROC
+PROC_CRIME_Guards_CheckIfReinforcement((CHARACTER)_Caller,(INTEGER)_CrimeID,(CHARACTER)_Criminal,(STRING)_Action,(GUIDSTRING)_Guard1,(STRING)_Region,(STRING)_Pool)
+AND
+QRY_OnlyOnce_Reset("DB_CRIME_Guards_SpawnGuards_WaitForSpawn")
+AND
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard2,_Region,_Pool,"Spawn")
+AND
+_Guard2 != _Guard1
+AND
+QRY_OnlyOnce("DB_CRIME_Guards_SpawnGuards_WaitForSpawn")
+THEN
+NOT DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard1,_Region,_Pool,"Spawn");
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard1,_Region,_Pool,"SpawnReinforcement");
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_SpawnedGuard")
+AND
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,_SpawnType)
+THEN
+DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool);
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_SpawnedGuard")
+AND
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,"Spawn")
+THEN
+PROC_CRIME_Guards_DefineMainGuard(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region);
+PROC_CRIME_Guards_CallFoundGuard(_Caller,_CrimeID,_Action);
+NOT DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,"Spawn");
+
+IF
+EntityEvent((CHARACTER)_Guard,"CRIME_Guards_SpawnedGuard")
+AND
+DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,"SpawnReinforcement")
+THEN
+DB_CRIME_Guards_AtLeastOneReinforcement(_Caller,_CrimeID);
+PROC_CRIME_Guards_DefineReinforcement(_Caller,_CrimeID,_Criminal,_Region,_Guard);
+NOT DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_Criminal,_Action,_Guard,_Region,_Pool,"SpawnReinforcement");
+
+IF
+DB_CRIME_Guards_AtLeastOneReinforcement(_Caller,_CrimeID)
+AND
+NOT DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_,_,_,_,_,_)
+THEN
+NOT DB_CRIME_Guards_AtLeastOneReinforcement(_Caller,_CrimeID);
+PROC_CRIME_Guards_CallFoundReinforcements((CHARACTER)_Caller,(INTEGER)_CrimeID);
+
+IF
+DB_CRIME_Guards_SpawnGuards_SpawningReinforcements(_Caller,_CrimeID)
+AND
+NOT DB_CRIME_Guards_SpawnGuards_WaitForSpawn(_Caller,_CrimeID,_,_,_,_,_,_)
+THEN
+NOT DB_CRIME_Guards_SpawnGuards_SpawningReinforcements(_Caller,_CrimeID);
+
+PROC
+PROC_CRIME_Guards_RecoverSpawnedGuard((CHARACTER)_Guard,(STRING)_Region,(STRING)_Pool)
+AND
+DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_InUse)
+AND
+IntegerSubtract(_InUse,1,_NewInUse)
+THEN
+NOT DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_InUse);
+DB_CRIME_Guards_RegionSpawnPool(_Region,_Pool,_HomeBaseLocation,_LostAndFoundChest,_Max,_NewInUse);
+PROC_CRIME_Guards_TransferSpawnedGuardItems(_Guard,_LostAndFoundChest);
+NOT DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool);
+RequestDeleteTemporary(_Guard);
+//END_REGION
+
+//REGION Track story items and non-items added to spawned guard inventory so we can recover them later
+IF
+AddedTo(_Object,(CHARACTER)_Guard,_)
+AND
+DB_CRIME_Guards_SpawnedGuard(_Guard,_Region,_Pool)
+AND
+Exists(_Object,1)
+AND
+IsItem(_Object,_IsItem)
+THEN
+PROC_CRIME_Guards_SpawnedGuardAdded(_Object,_Guard,_IsItem);
+
+PROC
+PROC_CRIME_Guards_SpawnedGuardAdded((GUIDSTRING)_Object,(CHARACTER)_Guard,1)
+AND
+IsStoryItem((ITEM)_Object,1)
+THEN
+DB_CRIME_Guards_SpawnedGuard_AddedObject(_Guard,(GUIDSTRING)_Object);
+
+PROC
+PROC_CRIME_Guards_SpawnedGuardAdded((GUIDSTRING)_Object,(CHARACTER)_Guard,0)
+THEN
+DB_CRIME_Guards_SpawnedGuard_AddedObject(_Guard,_Object);
+
+IF
+RemovedFrom(_Object,(CHARACTER)_Guard)
+AND
+DB_CRIME_Guards_SpawnedGuard_AddedObject(_Guard,_Object)
+THEN
+NOT DB_CRIME_Guards_SpawnedGuard_AddedObject(_Guard,_Object);
+
+PROC
+PROC_CRIME_Guards_TransferSpawnedGuardItems((CHARACTER)_Guard,(GUIDSTRING)_LostAndFoundChest)
+AND
+DB_CRIME_Guards_SpawnedGuard_AddedObject(_Guard,_Object)
+THEN
+NOT DB_CRIME_Guards_SpawnedGuard_AddedObject(_Guard,_Object);
+// TODO: remove (ITEM) typecast once new inventory system and signatures are active
+ToInventory((ITEM)_Object,_LostAndFoundChest,-1,0,1);
+//END_REGION
+
+//REGION Resorting templates DB
+// Orange box: sort so that all templates for a particular region/pool combo are successive
+// again so that the begin/end indices can be used correctly for selecting a random entry
+// Mainly important for supporting the addition of extra entries from different goals (modding)
+IF
+TimerFinished("CRIME_Guards_ResortSpawnPoolTemplateDB")
+THEN
+PROC_CRIME_InternGuards_SortSpawnPoolResort();
+
+// Copy everything to another DB grouped by region/pool, then copy everything back
+PROC
+PROC_CRIME_InternGuards_SortSpawnPoolResort()
+AND
+DB_CRIME_Guards_RegionSpawnPoolGroupTemplate(_Region,_Pool,_,_,_,_)
+AND
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Sorted(_Region,_Pool,_,_,_,_)
+THEN
+PROC_CRIME_InternGuards_SortSpawnPoolGroupTemplates(_Region,_Pool);
+
+PROC
+PROC_CRIME_InternGuards_SortSpawnPoolGroupTemplates((STRING)_Region,(STRING)_Pool)
+AND
+DB_CRIME_Guards_RegionSpawnPoolGroupTemplate(_Region,_Pool,_Template1,_Template2,_Template3,_Template4)
+THEN
+NOT DB_CRIME_Guards_RegionSpawnPoolGroupTemplate(_Region,_Pool,_Template1,_Template2,_Template3,_Template4);
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Sorted(_Region,_Pool,_Template1,_Template2,_Template3,_Template4);
+
+// Reset indices and counts before copying back, so they'll be recalculated from scratch
+PROC
+PROC_CRIME_InternGuards_SortSpawnPoolResort()
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Begin(_Region,_Pool,_Index)
+THEN
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Begin(_Region,_Pool,_Index);
+
+PROC
+PROC_CRIME_InternGuards_SortSpawnPoolResort()
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_Index)
+THEN
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_End(_Region,_Pool,_Index);
+
+PROC
+PROC_CRIME_InternGuards_SortSpawnPoolResort()
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,_Count)
+THEN
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Count(_Region,_Pool,_Count);
+
+// Copy back
+PROC
+PROC_CRIME_InternGuards_SortSpawnPoolResort()
+AND
+DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Sorted(_Region,_Pool,_Template1,_Template2,_Template3,_Template4)
+THEN
+NOT DB_CRIME_InternGuards_SpawnPoolGroupTemplate_Sorted(_Region,_Pool,_Template1,_Template2,_Template3,_Template4);
+DB_CRIME_Guards_RegionSpawnPoolGroupTemplate(_Region,_Pool,_Template1,_Template2,_Template3,_Template4);
+
+//END_REGION
+
+//REGION Some guards won't talk to prisoners
+
+QRY
+QRY_SelectCustomDialog(_Guard, _Player)
+AND
+DB_CRIME_Guards_BlockPrisonerDialog((CHARACTER)_Guard)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(IsInPrison_c9b75b21-6eba-065e-7680-fc9a0c5838e4, _Player, 1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)NGB_PrisonerTalksToGuard_1bdc2606-3ab5-e753-4e4b-5ed1275eaa08, _Guard, _Player);
+
+//END_REGION
+
+//REGION Guard escort groups
+//HACK UNTIL ESCORTING SUPPORTS GROUP ACTIVATION
+IF
+Activated((CHARACTER)_Patroller)
+AND
+DB_CRIME_Guards_PatrolGroup(_Group, _Patroller, _Id)
+AND 
+DB_CRIME_Guards_PatrolGroup(_Group, _Other, _OtherId)
+AND
+_Id != _OtherId
+THEN
+TeleportTo(_Other,_Patroller);
+
+IF
+DB_CRIME_Guards_PatrolGroup(_PatrolID,  _Char,  _)
+THEN
+EscortAddCharacter(_Char, _PatrolID);
+
+IF
+DB_CRIME_Guards_PatrolGroup(_PatrolID, _Char, _Priority)
+AND
+_Priority > -1
+THEN
+EscortSetLeaderPriority(_Char, _PatrolID, _Priority);
+
+PROC
+PROC_CRIME_Guards_SetPatrolLeader((STRING)_PatrolID)
+AND
+QRY_CRIME_Guards_GetPatrolLeader(_PatrolID)
+AND
+DB_QRYRTN_CRIME_Guards_GetPatrolLeader_Leader(_Leader)
+THEN
+EscortSetLeader(_Leader, _PatrolID);
+
+QRY
+QRY_CRIME_Guards_GetPatrolLeader((STRING)_PatrolID)
+AND
+DB_QRYRTN_CRIME_Guards_GetPatrolLeader_Leader(_Leader)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_GetPatrolLeader_Leader(_Leader);
+
+QRY
+QRY_CRIME_Guards_GetPatrolLeader((STRING)_PatrolID)
+THEN
+DB_CRIME_Guards_PotentialLeader((CHARACTER) NULL_00000000-0000-0000-0000-000000000000, -1);
+
+QRY
+QRY_CRIME_Guards_GetPatrolLeader((STRING)_PatrolID)
+AND
+DB_CRIME_Guards_PatrolGroup(_PatrolID, _NewLeader, _Priority)
+AND
+DB_CRIME_Guards_PotentialLeader(_PreviousLeader, _PrevPriority)
+AND
+_Priority > _PrevPriority
+THEN
+NOT DB_CRIME_Guards_PotentialLeader(_PreviousLeader, _PrevPriority);
+DB_CRIME_Guards_PotentialLeader(_NewLeader, _Priority);
+
+// No leader found
+QRY
+QRY_CRIME_Guards_GetPatrolLeader((STRING)_PatrolID)
+AND
+DB_CRIME_Guards_PotentialLeader((CHARACTER) NULL_00000000-0000-0000-0000-000000000000, -1)
+THEN
+NOT DB_CRIME_Guards_PotentialLeader((CHARACTER) NULL_00000000-0000-0000-0000-000000000000, -1);
+
+QRY
+QRY_CRIME_Guards_GetPatrolLeader((STRING)_PatrolID)
+AND
+DB_CRIME_Guards_PotentialLeader(_Leader, _Priority)
+THEN
+NOT DB_CRIME_Guards_PotentialLeader(_Leader, _Priority);
+DB_QRYRTN_CRIME_Guards_GetPatrolLeader_Leader(_Leader);
+//END_REGION Patrols escort setup
+
+//REGION No bribing/persuading guards if you did something to an allied guard
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Guard,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+IsTagged(_Guard,(TAG)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd,1)
+AND
+QRY_CRIME_Guards_GetRealVictim(_CrimeID)
+AND
+DB_QRYRTN_CRIME_Guards_GetRealVictim(_Victim)
+AND
+_Victim != _Guard
+AND
+IsTagged(_Victim,(TAG)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd,1)
+AND
+IsAlly(_Guard,_Victim,1)
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom("no");
+
+QRY
+QRY_CRIME_Guards_GetRealVictim((INTEGER)_CrimeID)
+AND
+DB_QRYRTN_CRIME_Guards_GetRealVictim(_Victim)
+THEN
+NOT DB_QRYRTN_CRIME_Guards_GetRealVictim(_Victim);
+
+QRY
+QRY_CRIME_Guards_GetRealVictim((INTEGER)_CrimeID)
+AND
+DB_CRIME_Guards_Patrolling(_Guard,_CrimeID)
+AND
+DB_CRIME_Guards_Victim(_Guard,_Victim)
+THEN
+DB_QRYRTN_CRIME_Guards_GetRealVictim(_Victim);
+
+QRY
+QRY_CRIME_Guards_GetRealVictim((INTEGER)_CrimeID)
+AND
+NOT DB_QRYRTN_CRIME_Guards_GetRealVictim(_)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+THEN
+DB_QRYRTN_CRIME_Guards_GetRealVictim(_Victim);
+//END_REGION
+
+//REGION Original crime type override for patrolling
+QRY
+QRY_CRIME_CrimeTypeResolveSourceInvestigation_Custom((INTEGER)_CrimeID)
+AND
+DB_CRIME_Guards_Patrolling_OriginalCrimeType(_CrimeID,_OriginalCrimeType)
+THEN
+DB_QRYRTN_CRIME_CrimeTypeResolveSourceInvestigation(_OriginalCrimeType);
+//END_REGION
+
+//REGION Force interrogation if unknown shapesift
+IF
+DB_CRIME_ShapeshiftTracker_Known("CRIME_CallGuards",_Guard,_Criminal,_,0)
+AND
+DB_CRIME_Guards_Called(_CrimeID,_InterrogationCrimeID,_Caller,_Guard,_Criminal,_InterrogationType,_Region,_X,_Y,_Z)
+THEN
+DB_CRIME_InvestigateForceCriminalInterrogate(_CrimeID,_Guard,_Criminal);
+DB_CRIME_Guards_ForcingInterrogation(_CrimeID,_Guard,_Criminal);
+
+IF
+DB_CRIME_Guards_ForcingInterrogation(_CrimeID,_Guard,_Criminal)
+AND
+DB_CRIME_ShapeshiftTracker_Known("CRIME_CallGuards",_Guard,_Criminal,_,1)
+THEN
+NOT DB_CRIME_Guards_ForcingInterrogation(_CrimeID,_Guard,_Criminal);
+NOT DB_CRIME_InvestigateForceCriminalInterrogate(_CrimeID,_Guard,_Criminal);
+
+IF
+DB_CRIME_Guards_ForcingInterrogation(_CrimeID,_Guard,_Criminal)
+AND
+NOT DB_CRIME_Guards_Called(_CrimeID,_,_,_Guard,_Criminal,_,_,_,_,_)
+THEN
+NOT DB_CRIME_Guards_ForcingInterrogation(_CrimeID,_Guard,_Criminal);
+NOT DB_CRIME_InvestigateForceCriminalInterrogate(_CrimeID,_Guard,_Criminal);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

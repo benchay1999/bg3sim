@@ -1,0 +1,534 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// When attacked by an enemy that an NPC can't see/enter combat with,
+// make a skill check and either investigate the enemy's location
+// (success), or your own (failure)
+
+//                           animal   monster
+DB_CRIME_FindSourceInvestigators(0,   0,           "Assault_FindSourceInvestigators");
+DB_CRIME_FindSourceInvestigators(0,   1,           "Assault_FindSourceInvestigators_Monster");
+DB_CRIME_FindSourceInvestigators(1,   0,           "Assault_FindSourceInvestigators_Beast");
+DB_CRIME_FindSourceInvestigators(1,   1,           "Assault_FindSourceInvestigators_Beast");
+DB_CRIME_SourceInvestigation_Discovered(0, 0,     "Assault_SourceInvestigation_Discovered");
+DB_CRIME_SourceInvestigation_Discovered(0, 1,     "Assault_SourceInvestigation_Discovered_Monster");
+DB_CRIME_SourceInvestigation_Discovered(1, 0,     "Assault_SourceInvestigation_Discovered_Beast");
+DB_CRIME_SourceInvestigation_Discovered(1, 1,     "Assault_SourceInvestigation_Discovered_Beast");
+DB_CRIME_SourceInvestigation_NotDiscovered(0, 0,  "Assault_SourceInvestigation_NotDiscovered");
+DB_CRIME_SourceInvestigation_NotDiscovered(0, 1,  "Assault_SourceInvestigation_NotDiscovered_Monster");
+DB_CRIME_SourceInvestigation_NotDiscovered(1, 0,  "Assault_SourceInvestigation_NotDiscovered_Beast");
+DB_CRIME_SourceInvestigation_NotDiscovered(1, 1,  "Assault_SourceInvestigation_NotDiscovered_Beast");
+
+// Debug support for QA to force the player stealth check to fail when attacking (via oe attackinvestigation_forcefailstealth)
+DB_CRIME_SourceInvestigationRollStealthFail(0);
+DB_CRIME_SourceInvestigationRollStealthFail(2);
+KBSECTION
+//REGION Attack-investigation-related disturbances
+QRY
+QRY_CRIME_Is_AttackInvestigation((STRING)_CrimeType)
+AND
+DB_CRIME_FindSourceInvestigators(_,_,_CrimeType)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Is_AttackInvestigation((STRING)_CrimeType)
+AND
+DB_CRIME_SourceInvestigation_Discovered(_,_,_CrimeType)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Is_AttackInvestigation((STRING)_CrimeType)
+AND
+DB_CRIME_SourceInvestigation_NotDiscovered(_,_,_CrimeType)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Record crime - story action ID link to pass on to newly created crimes
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+THEN
+DB_CRIME_AttackInvestigation_CrimeStoryActionLink(_CrimeID,_StoryActionID);
+
+// Cleanup happens at end of this goal
+//END_REGION
+
+//REGION Hostile NPC reactions while not in combat
+// Attack hostile NPC (-> by default, no reaction)
+// This one is only called if you're not already in combat with the NPC
+PROC
+PROC_CrimeRegisterAssault((CHARACTER)_Assailant,(CHARACTER)_NPC,(STRING)_Suffix,(INTEGER)_StoryActionID)
+AND
+IsEnemy(_NPC,_Assailant, 1)
+AND
+NOT QRY_CRIME_StoryActionHandled(_Assailant,"Assault",_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_NPC,-1)
+THEN
+PROC_CRIME_FindAssaultSourceInvestigators(_NPC,_Assailant,-1,"NoOriginalCrime",_StoryActionID);
+
+PROC
+PROC_CRIME_OneshotMurder_Fallback((CHARACTER)_Attacker,(CHARACTER)_NPC,(INTEGER)_StoryActionID)
+AND
+NOT QRY_CRIME_StoryActionHandled(_Attacker,"Murder",_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_NPC,-1)
+THEN
+PROC_CRIME_FindAssaultSourceInvestigators(_NPC,_Attacker,-1,"NoOriginalCrime",_StoryActionID);
+//END_REGION
+
+//REGION Non-hostile NPCs whose crime reaction failed
+// If a regular assault reaction can handle things,
+// let it. If it fails, an IncapacitatedAssault reaction
+// will be triggered instead. We react to that one.
+//
+// This hardcoded crime name is not very nice. OTOH, it can
+// be extended easily by mods by overloading this query
+QRY
+QRY_CRIME_InvestigateAttackCrime("IncapacitatedAssault")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_InvestigateAttackCrime((STRING)_CrimeType)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Murder")
+AND
+NOT QRY_CRIME_TreatAsAssaultMurderWithInvestigation(_CrimeType)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_GetOriginalAttackCrime((INTEGER)_CrimeID)
+AND
+DB_QRYRTN_CRIME_GetOriginalAttackCrime(_Type)
+THEN
+NOT DB_QRYRTN_CRIME_GetOriginalAttackCrime(_Type);
+
+QRY
+QRY_CRIME_GetOriginalAttackCrime((INTEGER)_CrimeID)
+AND
+DB_Crime_IncapacitatedOriginalAssaultType(_CrimeID,_AssaultType)
+THEN
+DB_QRYRTN_CRIME_GetOriginalAttackCrime(_AssaultType);
+
+QRY
+QRY_CRIME_GetOriginalAttackCrime((INTEGER)_CrimeID)
+AND
+NOT DB_QRYRTN_CRIME_GetOriginalAttackCrime(_)
+AND
+CrimeGetType(_CrimeID,_Type)
+THEN
+DB_QRYRTN_CRIME_GetOriginalAttackCrime(_Type);
+
+// Attacked non-hostile NPC, but it didn't see you or it died, so no Assault reaction
+IF
+CrimeProcessingStarted(_CrimeID,0)
+AND
+DB_CRIME_AttackInvestigation_CrimeStoryActionLink(_CrimeID,_StoryActionID)
+AND
+CrimeGetType(_CrimeID,_Type)
+AND
+QRY_CRIME_InvestigateAttackCrime(_Type)
+AND
+QRY_CRIME_GetOriginalAttackCrime(_CrimeID)
+AND
+DB_QRYRTN_CRIME_GetOriginalAttackCrime(_OriginalType)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+AND
+CrimeGetCriminal(_CrimeID,1,_Criminal)
+// Ignore whether player is dead: the victim doesn't know that (since they didn't see you)
+AND
+NOT DB_DiedInCombat(_Victim, _)
+THEN
+PROC_CRIME_FindAssaultSourceInvestigators(_Victim,_Criminal,_CrimeID,_OriginalType,_StoryActionID);
+
+//Died in combat management
+IF
+LeftCombat(_Combatant, _ID)
+AND
+QRY_IsExistingCharacter(_Combatant,1)
+AND
+IsDead((CHARACTER)_Combatant, 1)
+THEN
+DB_DiedInCombat(_Combatant, _ID);
+//END_REGION
+
+//REGION Register the initial crime to see who can react
+// The victim may be dead or incapacitated, so we first need to find people who can react
+PROC
+PROC_CRIME_FindAssaultSourceInvestigators((CHARACTER)_Victim,(CHARACTER)_Criminal,(INTEGER)_PreviousCrimeID,(STRING)_PreviousCrimeType,(INTEGER)_StoryActionID)
+AND
+GetPosition(_Criminal,_CX,_CY,_CZ)
+AND
+GetPosition(_Victim,_X,_Y,_Z)
+AND
+RealSum(_Y,1.0,_Yup)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+IsTagged(_Victim,(TAG)BEAST_890b5a2a-e773-48df-b191-c887d87bec16,_Beast)
+AND
+IsTagged(_Victim,(TAG)MONSTER_90101158-141e-4896-8e60-f8db03f6dde3,_Monster)
+AND
+DB_CRIME_FindSourceInvestigators(_Beast,_Monster,_AssailantFindType)
+THEN
+DB_CRIME_InvestigateAssaultSourceLocation(_CrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID);
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType);
+// Avoid our investigation getting blocked by the fact that there was already a (failed) crime reaction to the assault crime
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_PreviousCrimeID);
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_AssailantFindType,_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_X,_Yup,_Z,_Victim,_CrimeID);
+//END_REGION
+
+//REGION No one available to either react directly (did not see killer), or to react as source investigator
+// register investigation version of the murder or assault crime, if any
+// This will seldom do anything for assault, since
+//  1) assault with investigation won't create a crime scene
+//  2) most NPCs that can react to assault with investigation can also react as source investigator
+// However, it will do something in case there are only crowd NPCs available: to prevent their reactions
+// stopping any others, they only react as a last resort to "assault with investigation" (calling guards or fleeing)
+IF
+CrimeProcessingStarted(_CrimeID,0)
+AND
+DB_CRIME_InvestigateAssaultSourceLocation(_CrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID)
+AND
+CrimeGetType(_CrimeID,_FindSourceInvestigatorsType)
+AND
+DB_CRIME_FindSourceInvestigators(_,_,_FindSourceInvestigatorsType)
+AND
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType)
+AND
+QRY_CRIME_TreatAsAssaultMurder(_PreviousCrimeType)
+THEN
+PROC_CRIME_RegisterAssaultMurderFallback(_Criminal,_Victim,_CrimeID,_PreviousCrimeType,_StoryActionID);
+
+PROC
+PROC_CRIME_RegisterAssaultMurderFallback((CHARACTER)_Criminal,(CHARACTER)_Victim,(INTEGER)_OldCrimeID,(STRING)_PreviousCrimeType,(INTEGER)_StoryActionID)
+AND
+QRY_OnlyOnce_Reset("CRIME_AssaultMurderFallback")
+AND
+// Not every assault/murder type has an investigation version, e.g. KilledAnimal
+QRY_CRIME_GetAssaultMurderWithInvestigationVariant(_PreviousCrimeType)
+AND
+DB_QRYRTN_CRIME_GetAssaultMurderWithInvestigationVariant(_PreviousCrimeWithInvestigation)
+AND
+QRY_OnlyOnce("CRIME_AssaultMurderFallback")
+THEN
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_OldCrimeID);
+PROC_CRIME_RegisterAssaultMurderWithInvestigation(_Criminal,_Victim,_OldCrimeID,_PreviousCrimeWithInvestigation,_StoryActionID);
+
+// If there was no scene version of the murder, register the scene version of the attack investigation instead (not for assault,
+// that never leaves a crime scene)
+PROC
+PROC_CRIME_RegisterAssaultMurderFallback((CHARACTER)_Criminal,(CHARACTER)_Victim,(INTEGER)_OldCrimeID,(STRING)_PreviousCrimeType,(INTEGER)_StoryActionID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_PreviousCrimeType,"Murder")
+AND
+QRY_OnlyOnce("CRIME_AssaultMurderFallback")
+AND
+IsTagged(_Victim,(TAG)BEAST_890b5a2a-e773-48df-b191-c887d87bec16,_Beast)
+AND
+IsTagged(_Victim,(TAG)MONSTER_90101158-141e-4896-8e60-f8db03f6dde3,_Monster)
+AND
+DB_CRIME_SourceInvestigation_NotDiscovered(_Beast,_Monster,_CrimeType)
+AND
+Concatenate(_CrimeType,"_WithCrimeScene",_CrimeTypeWithScene)
+AND
+GetPosition(_Victim,_X,_Y,_Z)
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_OldCrimeID);
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_CrimeTypeWithScene,_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Victim,_NewCrimeID);
+DB_InvestigatingAssaultSource(_NewCrimeID,_Victim);
+
+PROC
+PROC_CRIME_RegisterAssaultMurderWithInvestigation((CHARACTER)_Criminal,(CHARACTER)_Victim,(INTEGER)_OldCrimeID,(STRING)_PreviousCrimeWithInvestigation,(INTEGER)_StoryActionID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_PreviousCrimeWithInvestigation,"Murder")
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_OldCrimeID);
+PROC_CrimeCreateMurder(_Criminal,_Victim,_NewCrimeID,_PreviousCrimeWithInvestigation,_StoryActionID);
+
+PROC
+PROC_CRIME_RegisterAssaultMurderWithInvestigation((CHARACTER)_Criminal,(CHARACTER)_Victim,(INTEGER)_OldCrimeID,(STRING)_PreviousCrimeWithInvestigation,(INTEGER)_StoryActionID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_PreviousCrimeWithInvestigation,"Assault")
+THEN
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_OldCrimeID);
+PROC_CrimeRegisterAssaultType(_Criminal,_Victim,_PreviousCrimeWithInvestigation,_StoryActionID);
+//END_REGION
+
+//REGION Incapacitated with investigation handling
+QRY
+QRY_CrimeIncapacitatedAssaultGetCrimeTypeCustom((CHARACTER)_Assailant,(CHARACTER)_Victim,(STRING)_AssaultType,(REAL)_X,(REAL)_Y,(REAL)_Z,(INTEGER)_PreviousAssaultCrimeID)
+AND
+QRY_CRIME_TreatAsAssaultMurderWithInvestigation(_AssaultType)
+THEN
+DB_QRYRTN_CrimeIncapacitatedAssaultGetCrimeType("IncapacitatedAssault_WithInvestigation");
+//END_REGION
+
+//REGION Primary investigator performs a skill check to see whether he can find the source
+QRY
+QRY_InvestigateAssaultSourceAdvantage((CHARACTER)_Investigator)
+AND
+DB_CRIME_AttackInvestigation_Attentive(_Investigator)
+THEN
+NOT DB_QRYRTN_InvestigateAssaultSourceAdvantage(0);
+DB_QRYRTN_InvestigateAssaultSourceAdvantage(1);
+
+QRY
+QRY_InvestigateAssaultSourceAdvantage((CHARACTER)_Investigator)
+AND
+NOT DB_CRIME_AttackInvestigation_Attentive(_Investigator)
+THEN
+DB_QRYRTN_InvestigateAssaultSourceAdvantage(0);
+NOT DB_QRYRTN_InvestigateAssaultSourceAdvantage(1);
+
+IF
+CharacterOnCrimeSensibleActionNotification(_Investigator,_Region,_CrimeID,"CRIME_OsirisAssaultFindSourceInvestigators",_Dialog,_,_,_,_,1)
+AND
+DB_CRIME_InvestigateAssaultSourceLocation(_CrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID)
+AND
+QRY_InvestigateAssaultSourceAdvantage(_Investigator)
+AND
+DB_QRYRTN_InvestigateAssaultSourceAdvantage(_InvestigatorAdvantage)
+THEN
+// Investigator's (active) perception vs. criminal's (passive) stealth
+RequestPassiveRollVersusSkill(_Criminal,_Investigator,"RawAbility","Stealth","Perception",-1,_InvestigatorAdvantage,"CRIME_InvestigateAssaultSource");
+
+// Criminal failed check or check aborted -> start combat, call help or flee
+IF
+RollResult("CRIME_InvestigateAssaultSource",_Criminal,(CHARACTER)_Investigator,_RollResult,_, _)
+THEN
+NOT DB_CRIME_AttackInvestigation_HandledRoll(1);
+
+IF
+RollResult("CRIME_InvestigateAssaultSource",_Criminal,(CHARACTER)_Investigator,_RollResult,_, _)
+AND
+DB_CRIME_SourceInvestigationRollStealthFail(_RollResult)
+AND
+DB_CRIME_InvestigateAssaultSourceLocation(_FindSourceInvestigatorsCrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID)
+AND
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_FindSourceInvestigatorsCrimeID,_PreviousCrimeType)
+AND
+GetPosition(_Investigator,_X,_Y,_Z)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+IsTagged(_Victim,(TAG)BEAST_890b5a2a-e773-48df-b191-c887d87bec16,_Beast)
+AND
+IsTagged(_Victim,(TAG)MONSTER_90101158-141e-4896-8e60-f8db03f6dde3,_Monster)
+AND
+DB_CRIME_SourceInvestigation_Discovered(_Beast,_Monster,_AssailantDiscoveredType)
+AND
+DB_CurrentLevel(_Region)
+AND
+QRY_TryStopDialogFor(_Investigator)
+THEN
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_FindSourceInvestigatorsCrimeID);
+CrimeConfrontationDone(_FindSourceInvestigatorsCrimeID,_Investigator);
+// Crime itself gets registered at the investigator's location, so that the investigator is guaranteed to see it
+// (if they can't they won't react)
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_AssailantDiscoveredType,_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Victim,_CrimeID);
+DB_InvestigatingAssaultSource(_CrimeID,_Victim);
+DB_CRIME_AttackInvestigation_HandledRoll(1);
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType);
+
+// Criminal succeeeded check -> investigators flee (find cover)
+IF
+RollResult("CRIME_InvestigateAssaultSource",_Criminal,(CHARACTER)_Investigator,_RollResult,_, _)
+AND
+NOT DB_CRIME_SourceInvestigationRollStealthFail(_RollResult)
+AND
+DB_CRIME_InvestigateAssaultSourceLocation(_FindSourceInvestigatorsCrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID)
+AND
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_FindSourceInvestigatorsCrimeID,_PreviousCrimeType)
+AND
+GetPosition(_Investigator,_X,_Y,_Z)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+IsTagged(_Victim,(TAG)BEAST_890b5a2a-e773-48df-b191-c887d87bec16,_Beast)
+AND
+IsTagged(_Victim,(TAG)MONSTER_90101158-141e-4896-8e60-f8db03f6dde3,_Monster)
+AND
+DB_CRIME_SourceInvestigation_NotDiscovered(_Beast,_Monster,_AssailantNotDiscoveredType)
+AND
+DB_CurrentLevel(_Region)
+AND
+QRY_TryStopDialogFor(_Investigator)
+THEN
+PROC_CRIME_StoryActionHandled_Reset(_StoryActionID,_FindSourceInvestigatorsCrimeID);
+CrimeConfrontationDone(_FindSourceInvestigatorsCrimeID,_Investigator);
+PROC_CharacterRegisterCrimeWithPosition(_Criminal,_AssailantNotDiscoveredType,_StoryActionID,NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Victim,_CrimeID);
+DB_CRIME_InvestigationCriminalLocation(_CrimeID,_CX,_CY,_CZ);
+DB_InvestigatingAssaultSource(_CrimeID,_Victim);
+DB_CRIME_AssaultSourceMarker(_CrimeID,_Criminal);
+PROC_LoopEffectAtPosition((EFFECTRESOURCE)VFX_UI_LastKnownPosition_01_a9beedc7-c45a-67b2-a14c-b16ae56ba413,_Criminal,"CRIME_AssaultSourceInvestigation",_CX,_CY,_CZ,_Region);
+DB_CRIME_AttackInvestigation_HandledRoll(1);
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType);
+
+// CIVILIAN and KID have ForceInvestigationSceneReact instead of ForceSceneReact for Assault_SourceInvestigation_NotDiscovered*
+// disturbances because otherwise they get priority over the Guard (which has ForceInvestigateSuspectReact). The reason is that
+// immediate reactions always trump investigation behaviours regardless of the priority value. However, we don't want them to start
+// wandering around, so block their investigation walking (-> net effect is more or less the same as ForceSceneReact).
+QRY
+QRY_CRIME_BlockGenericInvestigation(_Character)
+AND
+GetHandlingCrimeID(_Character,_CrimeID)
+AND
+CrimeGetType(_CrimeID,_CrimeType)
+AND
+DB_CRIME_SourceInvestigation_NotDiscovered(_,_,_CrimeType)
+AND
+QRY_CRIME_Guards_IsCivilianOrKid(_Character)
+THEN
+SetEntityEvent(_Character, "CRIME_StartLookingForInterrogationSuspects");
+
+QRY
+QRY_CRIME_Guards_IsCivilianOrKid((CHARACTER)_Character)
+AND
+IsTagged(_Character,(TAG)CIVILIAN_71120d5d-3853-46e4-9762-33f59aa6b4ae,1)
+AND
+IsTagged(_Character,(TAG)BADASSCIVILIAN_91f4b379-63a2-40e9-a509-7b9b2f90e4c8,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Guards_IsCivilianOrKid((CHARACTER)_Character)
+AND
+IsTagged(_Character,(TAG)KID_ee978587-6c68-4186-9bfc-3b3cc719a835,1)
+THEN
+DB_NOOP(1);
+
+
+
+// Failed to stop dialog for investigator -> clean up
+IF
+RollResult("CRIME_InvestigateAssaultSource",_Criminal,(CHARACTER)_Investigator,_RollResult,_, _)
+AND
+NOT DB_CRIME_AttackInvestigation_HandledRoll(1)
+AND
+DB_CRIME_InvestigateAssaultSourceLocation(_FindSourceInvestigatorsCrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID)
+THEN
+CrimeConfrontationDone(_FindSourceInvestigatorsCrimeID,_Investigator);
+
+// Stop effect when the investigator confronts the criminal
+IF
+CharacterOnCrimeSensibleActionNotification(_,_,_CrimeID,_,_,_Criminal,_,_,_,1)
+AND
+DB_CRIME_AssaultSourceMarker(_CrimeID,_Criminal)
+THEN
+NOT DB_CRIME_AssaultSourceMarker(_CrimeID,_Criminal);
+PROC_StopLoopEffect(_Criminal,"CRIME_AssaultSourceInvestigation");
+
+// Fallback
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_CRIME_AssaultSourceMarker(_CrimeID,_Criminal)
+THEN
+NOT DB_CRIME_AssaultSourceMarker(_CrimeID,_Criminal);
+PROC_StopLoopEffect(_Criminal,"CRIME_AssaultSourceInvestigation");
+
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_CRIME_InvestigateAssaultSourceLocation(_CrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID)
+THEN
+NOT DB_CRIME_InvestigateAssaultSourceLocation(_CrimeID,_Criminal,_CX,_CY,_CZ,_Victim,_StoryActionID);
+
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_InvestigatingAssaultSource(_CrimeID,_Victim)
+THEN
+NOT DB_InvestigatingAssaultSource(_CrimeID,_Victim);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType)
+THEN
+NOT DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType);
+
+IF
+TextEvent("attackinvestigation_forcefailstealth")
+THEN
+DB_CRIME_SourceInvestigationRollStealthFail(1);
+
+IF
+TextEvent("attackinvestigation_noforcefailstealth")
+THEN
+NOT DB_CRIME_SourceInvestigationRollStealthFail(1);
+//END_REGION
+
+//REGION Record looking for the source of an assault
+// For the next 5 rounds, pay extra attention when getting attacked (-> advantage in check)
+IF
+CharacterOnCrimeSensibleActionNotification(_Investigator,_Region,_CrimeID,"CRIME_OsirisAssaultFindSourceInvestigators",_Dialog,_,_,_,_,_)
+THEN
+DB_CRIME_AttackInvestigation_Attentive(_Investigator);
+ObjectTimerCancel(_Investigator,"CRIME_AttackInvestigation_Attentive");
+ObjectTimerLaunch(_Investigator,"CRIME_AttackInvestigation_Attentive",30000);
+
+IF
+ObjectTimerFinished((CHARACTER)_Investigator,"CRIME_AttackInvestigation_Attentive")
+THEN
+NOT DB_CRIME_AttackInvestigation_Attentive(_Investigator);
+
+IF
+EnteredCombat((CHARACTER)_Investigator,_)
+AND
+DB_CRIME_AttackInvestigation_Attentive(_Investigator)
+THEN
+NOT DB_CRIME_AttackInvestigation_Attentive(_Investigator);
+ObjectTimerCancel(_Investigator,"CRIME_AttackInvestigation_Attentive");
+//END_REGION
+
+//REGION If one of the investigators enters combat while moving to the attack source, stop the crime
+IF
+EnteredCombat(_Investigator,_)
+AND
+IsCharacter(_Investigator,1)
+AND
+GetHandlingCrimeID((CHARACTER)_Investigator,_CrimeID)
+AND
+DB_InvestigatingAssaultSource(_CrimeID,_)
+AND
+CrimeGetCriminal(_CrimeID,1,_Criminal)
+THEN
+CharacterStopCrimeWithID(_Criminal,_CrimeID);
+//END_REGION
+
+//REGION Clean up DB_CRIME_AttackInvestigation_CrimeStoryActionLink
+IF
+CrimeProcessingStarted(_CrimeID,_)
+AND
+DB_CRIME_AttackInvestigation_CrimeStoryActionLink(_CrimeID,_StoryActionID)
+THEN
+NOT DB_CRIME_AttackInvestigation_CrimeStoryActionLink(_CrimeID,_StoryActionID);
+//END_REGION
+
+//REGION Combat fallbacks in case the investigator cannot reach the criminal
+IF
+DB_CRIME_SourceInvestigation_Discovered(_,_,_CrimeType)
+THEN
+DB_CRIME_SceneUnreachableCombat(_CrimeType);
+//END_REGION
+
+//REGION Get original crime type for which an assault sourceinvestigation is running
+QRY
+QRY_CRIME_CrimeTypeResolveSourceInvestigation_Custom((INTEGER)_CrimeID)
+AND
+DB_CRIME_AttackInvestigation_OriginalCrimeType(_CrimeID,_PreviousCrimeType)
+THEN
+DB_QRYRTN_CRIME_CrimeTypeResolveSourceInvestigation(_PreviousCrimeType);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

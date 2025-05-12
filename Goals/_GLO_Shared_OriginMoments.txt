@@ -1,0 +1,1007 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+//Origin Moment Usage:
+//DB_DoubleOriginMoment(MainDialog, TAG of primary origin, TAG of reacting origin,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog ,  Priority)
+//
+//Optional DBs:
+//DB_OriginMoment_ExtraNPCs(_OMDialog,NPC) If an origin moment has more than 1 NPC, add the extra NPCs at their reserved speakerslot.
+//DB_OriginMoment_MaxDistance(_OMDialog,_Distance) Overwrite the maximum distance (default 10m) to start an OM.
+//DB_OriginDialogTrigger(_OMDialog, (TRIGGER)_Trigger) Trigger the players must be in to start an OM.
+//DB_OriginMoment_IgnoreCombat(_OMDialog) Allow an origin moment to play in combat 
+//DB_OriginMoment_PartnerDateExclusive(_OMDialog): OOMs are skipped, COMs can only start with partner or date
+//
+//Optional QRY:
+//QRY_OriginMoment_PreventRelaunchDialog(_OriginDialog,_MainNPC,_Player) If this query is overridden, it will determine what dialogue is launched after the origin moment is completed
+
+NOT DB_OriginMoment_ExtraNPCs((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_OriginMoment_MaxDistance((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,0.0);
+NOT DB_OriginMoment_DontAutoClearOriginMoment((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_OriginDialogTrigger((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_OriginMoment_IgnoreCombat((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_OriginMoment_PartnerDateExclusive((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Origin Moment Definitions & Default Parameters
+PROC
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(DIALOGRESOURCE)_OriginDialog)
+THEN
+DB_DoubleOriginMoment(_Dialog,_OriginTag,(TAG)NULL_00000000-0000-0000-0000-000000000000,_OriginDialog,_OriginDialog,_OriginDialog,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(DIALOGRESOURCE)_OriginDialog,(INTEGER)_Priority)
+THEN
+DB_DoubleOriginMoment(_Dialog,_OriginTag,(TAG)NULL_00000000-0000-0000-0000-000000000000,_OriginDialog,_OriginDialog,_OriginDialog,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,_Priority);
+
+PROC
+PROC_DefineSingleOriginMoment((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(DIALOGRESOURCE)_AOM_OriginDialog,(DIALOGRESOURCE)_COM_OriginDialog,(DIALOGRESOURCE)_OOM_OriginDialog)
+THEN
+DB_DoubleOriginMoment(_Dialog,_OriginTag,(TAG)NULL_00000000-0000-0000-0000-000000000000,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,0);
+//END_REGION
+
+//REGION Clearing an Origin Moment
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_AOM_OriginDialog)
+AND
+_AOM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_COM_OriginDialog)
+AND
+_COM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_OOM_OriginDialog)
+AND
+_OOM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_ACM_OriginDialog)
+AND
+_ACM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_CAM_OriginDialog)
+AND
+_CAM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_CCM_OriginDialog)
+AND
+_CCM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+
+PROC
+PROC_ClearOriginMoment((DIALOGRESOURCE)_OCM_OriginDialog)
+AND
+_OCM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority)
+THEN
+NOT DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_COM_OriginDialog,_OOM_OriginDialog,_ACM_OriginDialog,_CAM_OriginDialog,_CCM_OriginDialog,_OCM_OriginDialog,_Priority);
+//END_REGION
+
+//REGION Entry Hook
+QRY
+QRY_PlayOriginMoment((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+_MainNPC != _Player
+AND
+DB_DoubleOriginMoment(_Dialog,_,_,_,_,_,_,_,_,_,_)
+AND
+NOT DB_OriginMoment_LoopCatcher(_Dialog)
+AND
+QRY_OM_FindValidOriginMoment(_Dialog,_MainNPC,_Player)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment(_OriginDialog,_OriginTag,_OriginTag2,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type)
+THEN
+DB_OriginMoment_LoopCatcher(_OriginDialog);
+PROC_ExecuteOriginMoment(_Dialog,_OriginDialog,_OriginTag,_OriginTag2,_Origin,_Reactor,_Avatar,_MainNPC,(FLAG)_OM_Type,_Player);
+NOT DB_OriginMoment_LoopCatcher(_OriginDialog);
+//END_REGION
+
+//REGION Decision Algorithm - Main Loop (Compares Origin Moments)
+//Clean up return value
+QRY
+QRY_OM_FindValidOriginMoment((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment(_OriginDialog,_OriginTag,_OriginTag2,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type)
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment(_OriginDialog,_OriginTag,_OriginTag2,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type);
+
+//Reset temp values to 0
+QRY
+QRY_OM_FindValidOriginMoment((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+THEN
+DB_OM_FindValidOriginMoment_HighestPriority((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,(TAG)NULL_00000000-0000-0000-0000-000000000000,(TAG)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Main loop over all different origin moment. Return the origin moment with the highest total priority ( 10 * Origin Moment Priority + Type Priority)
+QRY
+QRY_OM_FindValidOriginMoment((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_OriginReactionTag,_,_,_,_,_,_,_,_OriginMomentPriority)
+AND
+DB_OM_FindValidOriginMoment_HighestPriority(_OldOriginDialog,_OldOriginTag,_OldOriginReactionTag,_OldOrigin,_OldReactor,_OldAvatar,(FLAG)_OldOM_Type,_CurrentHighestPriority)
+AND
+QRY_OM_FindValidOriginMoment_Type(_Dialog,_OriginTag,_OriginReactionTag,_MainNPC,_Player)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type((INTEGER)_TypePriority,(FLAG)_OM_Type,_Origin,_Reactor,_Avatar,_OriginDialog)
+AND
+IntegerProduct(_OriginMomentPriority,10,_OriginMomentPriority10)
+AND
+IntegerSum(_OriginMomentPriority10,_TypePriority,_TotalPriority)
+AND
+_TotalPriority > _CurrentHighestPriority
+THEN
+NOT DB_OM_FindValidOriginMoment_HighestPriority(_OldOriginDialog,_OldOriginTag,_OldOriginReactionTag,_OldOrigin,_OldReactor,_OldAvatar,(FLAG)_OldOM_Type,_CurrentHighestPriority);
+DB_OM_FindValidOriginMoment_HighestPriority(_OriginDialog,_OriginTag,_OriginReactionTag,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type,_TotalPriority);
+
+//Fill in the return value with the highest priority origin moment
+QRY
+QRY_OM_FindValidOriginMoment((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+DB_OM_FindValidOriginMoment_HighestPriority(_OriginDialog,_OriginTag,_OriginReactionTag,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type,_Priority)
+AND 
+_Priority > 0
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment(_OriginDialog,_OriginTag,_OriginReactionTag,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type);
+
+//Clean up temp values
+QRY
+QRY_OM_FindValidOriginMoment((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+DB_OM_FindValidOriginMoment_HighestPriority(_OriginDialog,_OriginTag,_OriginReactionTag,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type,_Priority)
+THEN
+NOT DB_OM_FindValidOriginMoment_HighestPriority(_OriginDialog,_OriginTag,_OriginReactionTag,_Origin,_Reactor,_Avatar,(FLAG)_OM_Type,_Priority);
+//END_REGION
+
+//REGION Decision Algorithm - Sub Loop (Compares Origin Moment Types)
+//Cleanup
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type((INTEGER)_TypePriority,(FLAG)_OM_Type,(GUIDSTRING)_Origin,(GUIDSTRING)_Reactor,(GUIDSTRING)_Avatar,(DIALOGRESOURCE)_OriginDialog)
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_TypePriority,(FLAG)_OM_Type,_Origin,_Reactor,_Avatar,_OriginDialog);
+
+//ACM
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_OriginTag2,_,_,_,_ACM_OriginDialog,_,_,_,_)
+AND
+_ACM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_IsTaggedForOM(_Companion,(TAG)_OriginTag2,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Companion,(CHARACTER)_Player)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_IsTaggedForOM(_Avatar,_OriginTag,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,_Player)
+AND
+QRY_OM_CheckAllNPCsAvailable(_ACM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _ACM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _ACM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_ACM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,_MainNPC,_ACM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(7,(FLAG)ACM_c7125760-be83-711a-f842-c57da678c74d,_Avatar,_Companion,NULL_00000000-0000-0000-0000-000000000000,_ACM_OriginDialog);
+
+//AOM
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_AOM_OriginDialog,_,_,_,_,_,_,_)
+AND
+_AOM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_OriginMoment_PartnerDateExclusive(_AOM_OriginDialog)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+QRY_IsTaggedForOM(_Avatar,_OriginTag,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,(CHARACTER)_Player)
+AND
+QRY_OM_CheckAllNPCsAvailable(_AOM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _AOM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_AOM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(6,(FLAG)AOM_794d7d9a-4e15-849c-7c0d-6e6cdb67cdcb,_Avatar,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,_AOM_OriginDialog);
+
+//CAM
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_,_,_,_CAM_OriginDialog,_,_,_)
+AND
+_CAM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_UsersValidForOM(_Dialog,_Companion,(CHARACTER)_Player)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_IsTaggedForOM(_Avatar,(TAG)_OriginTag2,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,(CHARACTER)_Player)
+AND
+QRY_OM_CheckAllNPCsAvailable(_CAM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _CAM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _CAM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_CAM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,_MainNPC,_CAM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(5,(FLAG)CAM_45d0d0ad-d157-0b62-4b9c-52a5f0537227,_Companion,_Avatar,NULL_00000000-0000-0000-0000-000000000000,_CAM_OriginDialog);
+
+//CCM Direct
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Companion)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_,_,_,_,_CCM_OriginDialog,_,_)
+AND
+_CCM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_Avatars((CHARACTER)_Companion)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+DB_Players(_ReactionCompanion)
+AND
+NOT DB_Avatars(_ReactionCompanion)
+AND
+QRY_IsTaggedForOM(_ReactionCompanion,(TAG)_OriginTag2,1)
+AND
+QRY_UsersValidForOM(_Dialog,_ReactionCompanion,_Companion)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,(CHARACTER)_Companion)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _CCM_OriginDialog)
+AND
+QRY_OM_CheckAllNPCsAvailable(_CCM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _CCM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_ReactionCompanion, _CCM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_CCM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,_MainNPC,_CCM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_ReactionCompanion,_MainNPC,_CCM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(9,(FLAG)CCM_a6203a00-0d8c-e1ad-bc5c-307f4c5715b2,_Companion,_ReactionCompanion,_Avatar,_CCM_OriginDialog);
+
+//CCM Referred
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_,_,_,_,_CCM_OriginDialog,_,_)
+AND
+_CCM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Companion,(CHARACTER)_Player)
+AND
+DB_Players(_ReactionCompanion)
+AND
+NOT DB_Avatars(_ReactionCompanion)
+AND
+QRY_IsTaggedForOM(_ReactionCompanion,(TAG)_OriginTag2,1)
+AND
+QRY_UsersValidForOM(_Dialog,_ReactionCompanion,_Player)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,_Player)
+AND
+QRY_OM_CheckAllNPCsAvailable(_CCM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _CCM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _CCM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_ReactionCompanion, _CCM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_CCM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,_MainNPC,_CCM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_ReactionCompanion,_MainNPC,_CCM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(4,(FLAG)CCM_a6203a00-0d8c-e1ad-bc5c-307f4c5715b2,_Companion,_ReactionCompanion,_Avatar,_CCM_OriginDialog);
+
+//COM Direct
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Companion)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_COM_OriginDialog,_,_,_,_,_,_)
+AND
+_COM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_Avatars((CHARACTER)_Companion)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,_Companion)
+AND
+NOT QRY_OriginMoment_PartnerDateProblem(_Avatar,_Companion,_COM_OriginDialog)
+AND
+QRY_OM_CheckAllNPCsAvailable(_COM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _COM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _COM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_COM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,_MainNPC,_COM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(8,(FLAG)COM_7075ec1a-70ad-bd25-3111-0a955cf07585,_Companion,NULL_00000000-0000-0000-0000-000000000000,_Avatar,_COM_OriginDialog);
+
+//COM Referred
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_COM_OriginDialog,_,_,_,_,_,_)
+AND
+_COM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Companion,(CHARACTER)_Player)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_UsersValidForOM(_Dialog,_Avatar,_Player)
+AND
+NOT QRY_OriginMoment_PartnerDateProblem(_Avatar,_Companion,_COM_OriginDialog)
+AND
+QRY_OM_CheckAllNPCsAvailable(_COM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Avatar, _COM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _COM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Avatar,(CHARACTER)_MainNPC,_COM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,_MainNPC,_COM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(3,(FLAG)COM_7075ec1a-70ad-bd25-3111-0a955cf07585,_Companion,NULL_00000000-0000-0000-0000-000000000000,_Avatar,_COM_OriginDialog);
+
+QRY
+QRY_OriginMoment_PartnerDateProblem((CHARACTER)_Avatar,(CHARACTER)_Companion,(DIALOGRESOURCE)_COM_OriginDialog)
+AND
+DB_OriginMoment_PartnerDateExclusive(_COM_OriginDialog)
+AND
+NOT DB_ORI_Partnered(_Avatar,_Companion)
+AND
+NOT DB_ORI_Dating(_Avatar,_Companion)
+THEN
+DB_NOOP(1);
+
+//OCM
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_,_,_,_,_,_OCM_OriginDialog,_)
+AND
+_OCM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Companion,(CHARACTER)_Player)
+AND
+DB_Players(_ReactionCompanion)
+AND
+NOT DB_Avatars(_ReactionCompanion)
+AND
+QRY_IsTaggedForOM(_ReactionCompanion,(TAG)_OriginTag2,1)
+AND
+QRY_UsersValidForOM(_Dialog,_ReactionCompanion,_Player)
+AND
+QRY_OM_CheckAllNPCsAvailable(_OCM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _OCM_OriginDialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_ReactionCompanion, _OCM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,(CHARACTER)_MainNPC,_OCM_OriginDialog,_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_ReactionCompanion,_MainNPC,_OCM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(2,(FLAG)OCM_abf87202-7ac0-90a4-1672-be494a0cbb5e,_Companion,_ReactionCompanion,NULL_00000000-0000-0000-0000-000000000000,_OCM_OriginDialog);
+
+//OOM
+QRY
+QRY_OM_FindValidOriginMoment_Type((DIALOGRESOURCE)_Dialog,(TAG)_OriginTag,(TAG)_OriginTag2,_MainNPC,_Player)
+AND
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_,_,_,_,_,_)
+AND
+DB_DoubleOriginMoment(_Dialog,_OriginTag,_Origin2Tag,_,_,_OOM_OriginDialog,_,_,_,_,_)
+AND
+_OOM_OriginDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_OriginMoment_PartnerDateExclusive(_OOM_OriginDialog)
+AND
+QRY_IsTaggedForOM(_Companion,_OriginTag,1)
+AND
+QRY_UsersValidForOM(_Dialog,_Companion,(CHARACTER)_Player)
+AND
+QRY_OM_CheckAllNPCsAvailable(_OOM_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OriginMoment_OutsideCOMTrigger(_Companion, _OOM_OriginDialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange(_Companion,(CHARACTER)_MainNPC,_OOM_OriginDialog,_Dialog)
+THEN
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(1,(FLAG)OOM_018ab052-38df-6d2c-117f-8d7c1e56b061,_Companion,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,_OOM_OriginDialog);
+
+//In case of multiple avatar candidates (that have no origin-role in this dialogue) : Prefer Avatar who is in an exclusive or dating relationship with one of the companions, else keep avatar with highest approval rating
+IF
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar,_OriginDialog)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog)
+AND
+_Avatar != _Avatar2
+AND
+DB_ORI_Partnered((CHARACTER)_Avatar,(CHARACTER)_Companion)
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog);
+
+IF
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar,_OriginDialog)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog)
+AND
+_Avatar != _Avatar2
+AND
+DB_ORI_Partnered((CHARACTER)_Avatar,(CHARACTER)_ReactionCompanion)
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog);
+
+IF
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar,_OriginDialog)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog)
+AND
+_Avatar != _Avatar2
+AND
+DB_ORI_Dating((CHARACTER)_Avatar,(CHARACTER)_Companion)
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog);
+
+IF
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar,_OriginDialog)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog)
+AND
+_Avatar != _Avatar2
+AND
+DB_ORI_Dating((CHARACTER)_Avatar,(CHARACTER)_ReactionCompanion)
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog);
+
+
+IF
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar,_OriginDialog)
+AND
+DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog)
+AND
+_Avatar != _Avatar2
+AND
+DB_ApprovalRating((CHARACTER)_Companion,(CHARACTER)_Avatar,_Rating)
+AND
+DB_ApprovalRating((CHARACTER)_Companion,(CHARACTER)_Avatar2,_Rating2)
+AND
+_Rating2 <= _Rating
+THEN
+NOT DB_QRY_RTN_OM_FindValidOriginMoment_Type(_Prior,_Flag,_Companion,_ReactionCompanion,_Avatar2,_OriginDialog);
+//END_REGION
+
+//REGION Starting the Origin Moment
+PROC
+PROC_ExecuteOriginMoment(_,(DIALOGRESOURCE)_OriginDialog,_,_,_,_,_,_,_,_)
+THEN
+DB_DropMutingStatussesDialog(_OriginDialog);
+
+//Start SOM (Non-corpse)
+PROC
+PROC_ExecuteOriginMoment((DIALOGRESOURCE)_InitialDialog,(DIALOGRESOURCE)_OriginDialog,(TAG)_OriginTag,(TAG)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)_Origin,(GUIDSTRING)_Reactor,(GUIDSTRING)_Avatar,(GUIDSTRING)_MainNPC,(FLAG)_OM_Type,(GUIDSTRING)_Player)
+AND
+NOT DB_GLO_CharacterCorpseDialog(_, _InitialDialog)
+AND
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Origin,_OriginTag)
+AND
+QRY_OriginMoment_QueueMoment(_OriginDialog, _Origin, _OM_Type)
+AND
+QRY_StartDialogCustom_Fixed(_OriginDialog,_MainNPC,_Origin,_Avatar,1,1,0,1)
+THEN
+SetFlag((FLAG)_OM_Type, _MainNPC, 0); // flagType: Object
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type);
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player);
+DB_OriginDialog((CHARACTER)_Origin,_OriginDialog);
+
+//Start DOM (Non-corpse)
+PROC
+PROC_ExecuteOriginMoment((DIALOGRESOURCE)_InitialDialog,(DIALOGRESOURCE)_OriginDialog,(TAG)_OriginTag,(TAG)_OriginTag2,(GUIDSTRING)_Origin,(GUIDSTRING)_Reactor,(GUIDSTRING)_Avatar,(GUIDSTRING)_MainNPC,(FLAG)_OM_Type,(GUIDSTRING)_Player)
+AND
+_OriginTag2 != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_GLO_CharacterCorpseDialog(_, _InitialDialog)
+AND
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Origin,_OriginTag)
+AND
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Reactor,_OriginTag2)
+AND
+QRY_OriginMoment_QueueMoment(_OriginDialog, _Origin, _OM_Type)
+AND
+QRY_StartDialogCustom_Fixed(_OriginDialog,_MainNPC,_Origin,_Reactor,_Avatar,1,1,0,1)
+THEN
+SetFlag((FLAG)_OM_Type, _MainNPC, 0); // flagType: Object
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type);
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player);
+DB_OriginDialog((CHARACTER)_Origin,_OriginDialog);
+DB_OriginDialog((CHARACTER)_Reactor,_OriginDialog);
+
+//Start SOM (Corpse)
+PROC
+PROC_ExecuteOriginMoment((DIALOGRESOURCE)_InitialDialog,(DIALOGRESOURCE)_OriginDialog,(TAG)_OriginTag,(TAG)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)_Origin,(GUIDSTRING)_Reactor,(GUIDSTRING)_Avatar,(GUIDSTRING)_MainNPC,(FLAG)_OM_Type,(GUIDSTRING)_Player)
+AND
+DB_GLO_CharacterCorpseDialog(_, _InitialDialog)
+AND
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Origin,_OriginTag)
+AND
+QRY_OriginMoment_QueueMoment(_OriginDialog, _Origin, _OM_Type)
+AND
+QRY_StartDialogCustom_Fixed(_OriginDialog, _MainNPC, _Origin, _Avatar,1,1,0,1)
+THEN
+SetTag(_MainNPC, (TAG)CORPSE_SPOKEN_249ba319-6652-47ec-9f31-ef5be55429c3);
+SetFlag(_OM_Type, _MainNPC, 0); // flagType: Object
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,_OM_Type);
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player);
+DB_OriginDialog((CHARACTER)_Origin,_OriginDialog);
+
+//Start DOM (Corpse)
+PROC
+PROC_ExecuteOriginMoment((DIALOGRESOURCE)_InitialDialog,(DIALOGRESOURCE)_OriginDialog,(TAG)_OriginTag,(TAG)_OriginTag2,(GUIDSTRING)_Origin,(GUIDSTRING)_Reactor,(GUIDSTRING)_Avatar,(GUIDSTRING)_MainNPC,(FLAG)_OM_Type,(GUIDSTRING)_Player)
+AND
+DB_GLO_CharacterCorpseDialog(_, _InitialDialog)
+AND
+_OriginTag2 != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Origin,_OriginTag)
+AND
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Reactor,_OriginTag2)
+AND
+QRY_FreeAvailableInclusionSpeakers(_MainNPC, _Origin, _Reactor, _Avatar, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_OriginMoment_QueueMoment(_OriginDialog, _Origin, _OM_Type)
+AND
+QRY_StartDialogCustom_Fixed(_OriginDialog, _MainNPC, _Origin, _Reactor, _Avatar,1,1,0,1)
+THEN
+SetTag(_MainNPC, (TAG)CORPSE_SPOKEN_249ba319-6652-47ec-9f31-ef5be55429c3);
+SetFlag((FLAG)_OM_Type, _MainNPC, 0); // flagType: Object
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type);
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player);
+DB_OriginDialog((CHARACTER)_Origin,_OriginDialog);
+DB_OriginDialog((CHARACTER)_Reactor,_OriginDialog);
+
+QRY
+QRY_OriginMoment_QueueMoment((DIALOGRESOURCE)_OriginDialog, (CHARACTER)_Origin, (FLAG)_OM_Type)
+AND
+DB_OriginMoment_QueuedMoment(_OldData, _Origin, _Old_OM_Type)
+THEN
+NOT DB_OriginMoment_QueuedMoment(_OldData, _Origin, _Old_OM_Type);
+
+QRY
+QRY_OriginMoment_QueueMoment((DIALOGRESOURCE)_OriginDialog, (CHARACTER)_Origin, (FLAG)_OM_Type)
+THEN
+DB_OriginMoment_QueuedMoment((DIALOGRESOURCE)_OriginDialog, (CHARACTER)_Origin, (FLAG)_OM_Type);
+
+// we need this DB to be present till the end of the dialog
+IF
+DialogEnded(_OriginDialog, _)
+AND
+DB_OriginMoment_QueuedMoment(_OriginDialog, _Origin, _OM_Type)
+THEN
+NOT DB_OriginMoment_QueuedMoment(_OriginDialog, _Origin, _OM_Type);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_OriginDialog,(INTEGER)_Inst)
+AND
+DB_OriginMoment_ExtraNPCs((DIALOGRESOURCE)_OriginDialog,(GUIDSTRING)_NPC)
+THEN
+PROC_DialogAddSpeakingActor(_Inst,_NPC,0,1);
+
+IF
+DialogStarted(_OriginDialog,_ID)
+AND
+DB_OM_Type_Flag(_,_OriginDialog,_,_)
+THEN
+PROC_OM_TryTempDisableTrade(_OriginDialog,_ID,1);
+
+PROC
+PROC_OM_TryTempDisableTrade((DIALOGRESOURCE)_OriginDialog,(INTEGER)_ID,(INTEGER)_Index)
+AND
+NOT QRY_OM_BlockDisablingTrade(_OriginDialog,_ID,_Index)
+AND
+DialogGetInvolvedNPC(_ID,_Index,_NPC)
+AND
+IntegerSum(_Index,1,_Increment)
+THEN
+PROC_OM_TempDisableTrade(_OriginDialog,_NPC);
+PROC_OM_TryTempDisableTrade(_OriginDialog,_ID,_Increment);
+
+QRY
+QRY_OM_BlockDisablingTrade((DIALOGRESOURCE)_OriginDialog,(INTEGER)_ID,(INTEGER)_Index)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_OM_TempDisableTrade((DIALOGRESOURCE)_OriginDialog,(GUIDSTRING)_NPC)
+AND
+IsCharacter(_NPC, 1)
+AND
+CanTrade((CHARACTER)_NPC,1)
+THEN
+SetCanTrade(_NPC,0);
+DB_OriginMomentTradeTempDisabled(_OriginDialog,_NPC);
+//END_REGION
+
+//REGION Cleanup
+//Reenable trade if it was disabled
+IF
+DialogEnded(_OriginDialog,_)
+AND
+DB_OriginMomentTradeTempDisabled(_OriginDialog,_NPC)
+THEN
+NOT DB_OriginMomentTradeTempDisabled(_OriginDialog,_NPC);
+SetCanTrade((CHARACTER)_NPC,1);
+
+//Prevent Chaining
+IF
+FlagSet(OM_BlockChaining_9b8c01fc-8cc8-40d5-a8df-59a725a578c9, _NPC, _) // flagType: Object
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_NPC,_Player)
+THEN
+NOT DB_OM_OriginalSpeakers(_OriginDialog,_NPC,_Player);
+
+IF
+FlagSet(OM_BlockChaining_9b8c01fc-8cc8-40d5-a8df-59a725a578c9, _NPC, _) // flagType: Object
+THEN
+ClearFlag((FLAG)OM_BlockChaining_9b8c01fc-8cc8-40d5-a8df-59a725a578c9, _NPC, 0); // flagType: Object
+
+//IF Chaining is allowed, wait one second and relaunch the dialog.
+IF
+DialogEnded(_OriginDialog,_ID)
+AND
+NOT DB_DialogRequestFailed(_OriginDialog,_)
+AND
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type)
+AND
+NOT DB_GLO_CharacterCorpseDialog(_, _InitialDialog)
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player)
+THEN
+ObjectTimerLaunch(_MainNPC,"OM_Relaunch_Dialog",1000);
+
+//IF Chaining is allowed, wait one second and relaunch the dialog.
+IF
+DialogEnded(_OriginDialog,_ID)
+AND
+NOT DB_DialogRequestFailed(_OriginDialog,_)
+AND
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type)
+AND
+DB_GLO_CharacterCorpseDialog(_, _InitialDialog)
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player)
+THEN
+ObjectTimerLaunch(_MainNPC,"OM_Relaunch_Dialog_SwD",1000);
+
+QRY
+QRY_OriginMoment_PreventRelaunchDialog((DIALOGRESOURCE)_OriginDialog,(GUIDSTRING)_MainNPC,(GUIDSTRING)_Player)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished(_MainNPC,"OM_Relaunch_Dialog")
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player)
+AND
+NOT QRY_OriginMoment_PreventRelaunchDialog(_OriginDialog,_MainNPC,_Player)
+AND
+QRY_SelectAndStartDialog(_MainNPC,_Player)
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished(_MainNPC,"OM_Relaunch_Dialog_SwD")
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player)
+AND
+NOT QRY_OriginMoment_PreventRelaunchDialog(_OriginDialog,_MainNPC,_Player)
+AND
+DB_GLO_CharacterCorpseDialog((CHARACTER)_MainNPC, _SwDDialog)
+AND
+QRY_FreeAvailableInclusionSpeakers(_MainNPC, _Player,  NULL_00000000-0000-0000-0000-000000000000,  NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_StartDialogCustom_Fixed(_SwDDialog, _MainNPC,_Player,1,1,0,1)
+THEN
+SetTag(_MainNPC, (TAG)CORPSE_SPOKEN_249ba319-6652-47ec-9f31-ef5be55429c3);
+
+IF
+ObjectTimerFinished(_MainNPC,"OM_Relaunch_Dialog")
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player)
+THEN
+NOT DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player);
+
+IF
+ObjectTimerFinished(_MainNPC,"OM_Relaunch_Dialog_SwD")
+AND
+DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player)
+THEN
+NOT DB_OM_OriginalSpeakers(_OriginDialog,_MainNPC,_Player);
+
+//Once OM is succesfully completed, remove it so it doesn't trigger again.
+IF
+DialogEnded(_OriginDialog,_ID)
+AND
+NOT DB_DialogRequestFailed(_OriginDialog,_)
+AND
+DB_OM_Type_Flag(_,_OriginDialog,_,_)
+AND
+NOT DB_OriginMoment_DontAutoClearOriginMoment(_OriginDialog)
+THEN
+PROC_ClearOriginMoment(_OriginDialog);
+
+//Clear the OM type flag
+IF
+DialogEnded(_OriginDialog,_)
+AND
+DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type)
+THEN
+ClearFlag((FLAG)_OM_Type, _MainNPC, 1); // flagType: Object
+NOT DB_OM_Type_Flag(_InitialDialog,_OriginDialog,_MainNPC,(FLAG)_OM_Type);
+
+//END_REGION
+
+//REGION Helperfunctions
+QRY
+QRY_OriginMoments_GetMaxDistance((DIALOGRESOURCE)_COMDialog)
+AND
+DB_QRYRTN_OriginMoments_GetMaxDistance(_Distance)
+THEN
+NOT DB_QRYRTN_OriginMoments_GetMaxDistance(_Distance);
+
+QRY
+QRY_OriginMoments_GetMaxDistance((DIALOGRESOURCE)_COMDialog)
+AND
+NOT DB_OriginMoment_MaxDistance(_COMDialog,(REAL)_)
+THEN
+DB_QRYRTN_OriginMoments_GetMaxDistance(20.0);
+
+QRY
+QRY_OriginMoments_GetMaxDistance((DIALOGRESOURCE)_COMDialog)
+AND
+DB_OriginMoment_MaxDistance(_COMDialog,_Distance)
+THEN
+DB_QRYRTN_OriginMoments_GetMaxDistance(_Distance);
+
+QRY
+QRY_OriginMoments_SpeakerIsAvailable((DIALOGRESOURCE)_OMDialog,(GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog)
+AND
+DB_OriginMoment_IgnoreCombat(_OMDialog)
+AND
+QRY_SpeakerIsAvailable(_NPC,1,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginMoments_SpeakerIsAvailable((DIALOGRESOURCE)_OMDialog,(GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_OriginMoment_IgnoreCombat(_OMDialog)
+AND
+QRY_SpeakerIsAvailable(_NPC,0,1)
+THEN
+DB_NOOP(1);
+
+//For OMs with SwD dialogues, they can be dead.
+QRY
+QRY_OriginMoments_SpeakerIsAvailable((DIALOGRESOURCE)_OMDialog,(GUIDSTRING)_NPC,(DIALOGRESOURCE)_Dialog)
+AND
+DB_GLO_CharacterCorpseDialog((CHARACTER)_NPC, _Dialog)
+AND
+IsDead(_NPC, 1)
+AND
+IsSpeakerReserved(_NPC, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginMoments_SpeakerIsAvailableAndInDialogRange((CHARACTER)_Origin,(CHARACTER)_NPC,(DIALOGRESOURCE)_COMDialog,(DIALOGRESOURCE)_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailable(_COMDialog,_Origin,_Dialog)
+AND
+QRY_OriginMoments_GetMaxDistance(_COMDialog)
+AND
+DB_QRYRTN_OriginMoments_GetMaxDistance(_MaxDistance)
+AND
+GetDistanceTo(_Origin,_NPC,_Dist)
+AND
+_Dist < _MaxDistance
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginMoment_OutsideCOMTrigger((CHARACTER)_Character, (DIALOGRESOURCE)_Dialog)
+AND
+DB_OriginDialogTrigger(_Dialog, (TRIGGER)_Trigger)
+AND
+IsInTrigger(_Character, _Trigger, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SameUser((CHARACTER)_Avatar,(CHARACTER)_Companion)
+AND
+GetReservedUserID(_Avatar,_ID)
+AND
+GetReservedUserID(_Companion,_ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_UsersValidForOM((DIALOGRESOURCE)_Dialog,(CHARACTER)_Avatar,(CHARACTER)_Companion)
+AND
+QRY_SameUser(_Avatar,_Companion)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsTaggedForOM((CHARACTER)_Player,(TAG)_Tag,(INTEGER)_Value)
+AND
+_Tag != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsTagged(_Player,_Tag,_Value)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsTaggedForOM((CHARACTER)_Player,(TAG)_Tag,(INTEGER)_Value)
+AND
+DB_OriginTagsAppearance((CHARACTER)_Origin,(TAG)_Tag)
+AND
+DB_OriginReallyTags(_Origin,(TAG)_ReallyTag)
+AND
+IsTagged(_Player,_ReallyTag,_Value)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Player,(TAG)_Tag)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginMomentPolymorphDrop((CHARACTER)_Player,(TAG)_Tag)
+AND
+DB_OriginTagsAppearance(_Origin,_Tag)
+AND
+DB_OriginReallyTags(_Origin,_ReallyTag)
+AND
+IsTagged(_Player,_Tag,0)
+AND
+IsTagged(_Player,_ReallyTag,1)
+THEN
+PROC_RemoveAllPolymorphs(_Player);
+
+QRY
+QRY_OM_CheckAllNPCsAvailable((DIALOGRESOURCE)_OriginDialog,(GUIDSTRING)_MainNPC,(DIALOGRESOURCE)_Dialog)
+AND
+QRY_OriginMoments_SpeakerIsAvailable(_OriginDialog,_MainNPC,_Dialog)
+AND
+NOT QRY_OM_CheckAllNPCsAvailable_InvertedExtraNPCs(_OriginDialog,_Dialog)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OM_CheckAllNPCsAvailable_InvertedExtraNPCs((DIALOGRESOURCE)_OriginDialog,(DIALOGRESOURCE)_Dialog)
+AND
+DB_OriginMoment_ExtraNPCs(_OriginDialog,_NPC)
+AND
+NOT QRY_OriginMoments_SpeakerIsAvailable(_OriginDialog,_NPC,_Dialog)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

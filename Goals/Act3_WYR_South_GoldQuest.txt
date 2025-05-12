@@ -1,0 +1,196 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(S_WYR_South_GoldGuard_00_cb395bd9-d894-4187-8593-629a6f3e081c,WYR_South_GoldGuard_00_d395109c-be21-21c5-31f5-6de018848684);
+DB_Dialogs(S_WYR_South_GoldGuard_01_0797d0f6-db97-49d2-8606-40793025556d,WYR_South_GoldGuard_01_78878a28-aafa-caa0-2499-8ebed8dd9070);
+
+// Gnome head
+DB_HasItemEvent(S_WYR_WulbrenHead_2e02bb20-3619-44d2-b1be-cca9697dfc01,WYR_Ironhand_WulbrenHead_Has_9fc84be0-71e4-41d5-81a4-3f3fb43eb29b);
+DB_GiveItemToEvent(S_WYR_WulbrenHead_2e02bb20-3619-44d2-b1be-cca9697dfc01,WYR_Ironhand_WulbrenHead_Transfer_cc5cc951-639b-4330-8422-1e699ceb6b38);
+
+DB_GLO_HeadRemoval((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, (CHARACTERROOT)UNI_WYR_Wulbren_Beheaded_e6e93b8a-6972-4338-a4af-64deb67ecf98, (ITEM)S_WYR_WulbrenHead_2e02bb20-3619-44d2-b1be-cca9697dfc01);
+
+//REGION Journal
+DB_QuestDef_State_ConditionalFlag((FLAG)WYR_South_Event_GotTaskToTrackGnomes_717dceb3-3a0d-427d-b07d-77537a22439d, "WYR_GnomeHeads", "Accepted", 0, WYR_Ironhand_State_PlayerSawGnomes_d2378ff6-22b2-4f31-aa4e-947408de5cdc);
+DB_QuestDef_State_ConditionalFlag((FLAG)WYR_South_Event_GotTaskToTrackGnomes_717dceb3-3a0d-427d-b07d-77537a22439d, "WYR_GnomeHeads", "AcceptedKnows", 1, WYR_Ironhand_State_PlayerSawGnomes_d2378ff6-22b2-4f31-aa4e-947408de5cdc);
+DB_QuestDef_State((FLAG)WYR_Ironhand_WulbrenHead_Has_9fc84be0-71e4-41d5-81a4-3f3fb43eb29b, "WYR_GnomeHeads", "TookHead");
+DB_QuestDef_PermaDefeatedState("WYR_GnomeHeads", "FistPermaDefeated", S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+DB_QuestDef_State((FLAG)END_General_State_Started_a0fd5f91-e4b3-4d01-84d3-9ff484139e99, "WYR_GnomeHeads", "ReachedEnd");
+DB_QuestDef_State((FLAG)LOW_SteelWatchFoundry_State_Outcome_WulbrenLeft_498c6f1b-871e-4c2a-9c23-a85df85cfe5c, "WYR_GnomeHeads", "NoHead");
+DB_QuestDef_State_ConditionalFlag((FLAG)WYR_South_GoldReward_Transfer_64073914-d602-42d5-b6c7-c47d7e0df5d9, "WYR_GnomeHeads", "RewardedGenerously", 1, WYR_South_GoldReward_Generous_da077223-256b-4322-939a-9c7c65857fac);
+DB_QuestDef_State_ConditionalFlag((FLAG)WYR_South_GoldReward_Transfer_64073914-d602-42d5-b6c7-c47d7e0df5d9, "WYR_GnomeHeads", "Rewarded", 0, WYR_South_GoldReward_Generous_da077223-256b-4322-939a-9c7c65857fac);
+//END_REGION
+KBSECTION
+//REGION Setup
+QRY
+QRY_GLO_SetupForAct_CustomBlock("BGO_Main_A",(CHARACTER)S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45)
+AND
+NOT DB_GlobalFlag(WYR_Ironhand_InAct3_Wulbren_3097cdd8-33eb-4ca0-956b-b2826bb01f8a)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_SetupForAct("BGO_Main_A",(CHARACTER)S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,1)
+THEN
+SetOnStage(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,1);
+DB_Dialogs(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,WYR_South_GoldQuestGiver_cbf9928e-d7b7-ac9b-2a9b-aa4e295c19d0);
+//DB_WYR_South_Panic(500,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+DB_WYR_South_GuardPos(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,S_WYR_South_GoldQuestGiver_Pos_37e30c59-1dbb-43b2-9901-2041bd801026);
+DB_WYR_South_GuardGoingToLook(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,S_WYR_South_GuardsRunTo_002_8df585d7-14b0-43b1-b834-5bd3bd7f5785);
+DB_ItemOwnerShipTriggers("BGO_Main_A",S_WYR_South_OwnershipZone_c39415a4-dd6d-4821-aa78-3a04a0cdc178,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+AddGold(S_WYR_South_GoldStash_678f62f0-a84d-4c11-802e-f5591d5b6037, 3000);
+PROC_WYR_South_CheckGoldStash();
+
+PROC
+PROC_GLO_SetupForAct("BGO_Main_A",(CHARACTER)S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0)
+AND
+GetGold(S_WYR_South_GoldStash_678f62f0-a84d-4c11-802e-f5591d5b6037,_Gold)
+AND
+IntegerProduct(_Gold,-1,_MinusGold)
+THEN
+SetOnStage(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0);
+AddGold(S_WYR_South_GoldStash_678f62f0-a84d-4c11-802e-f5591d5b6037,_MinusGold);
+PROC_WYR_South_CheckGoldStash();
+PROC_RemoveAllDialogEntriesForSpeaker(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+//NOT DB_WYR_South_Panic(500,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+NOT DB_WYR_South_GuardPos(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,S_WYR_South_GoldQuestGiver_Pos_37e30c59-1dbb-43b2-9901-2041bd801026);
+NOT DB_WYR_South_GuardGoingToLook(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,S_WYR_South_GuardsRunTo_002_8df585d7-14b0-43b1-b834-5bd3bd7f5785);
+NOT DB_ItemOwnerShipTriggers("BGO_Main_A",S_WYR_South_OwnershipZone_c39415a4-dd6d-4821-aa78-3a04a0cdc178,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+//END_REGION
+
+//REGION Gold stash
+PROC
+PROC_WYR_South_CheckGoldStash()
+AND
+GetGold(S_WYR_South_GoldStash_678f62f0-a84d-4c11-802e-f5591d5b6037,_Amount)
+THEN
+DB_WYR_South_GoldReward(_Amount);
+
+IF
+AddedTo(_,S_WYR_South_GoldStash_678f62f0-a84d-4c11-802e-f5591d5b6037,_)
+THEN
+PROC_WYR_South_CheckGoldStash();
+
+IF
+RemovedFrom(_,S_WYR_South_GoldStash_678f62f0-a84d-4c11-802e-f5591d5b6037)
+THEN
+PROC_WYR_South_CheckGoldStash();
+
+IF
+DB_WYR_South_GoldReward(_NewAmount)
+AND
+DB_WYR_South_GoldReward(_OldAmount)
+AND
+_NewAmount != _OldAmount
+THEN
+NOT DB_WYR_South_GoldReward(_OldAmount);
+
+IF
+DB_WYR_South_GoldReward(_Amount)
+AND
+_Amount > 0
+THEN
+SetFlag(WYR_South_GoldReward_Has_78cd1bf6-feb2-4b16-87a7-314fb2c8361c,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+
+IF
+DB_WYR_South_GoldReward(0)
+THEN
+ClearFlag(WYR_South_GoldReward_Has_78cd1bf6-feb2-4b16-87a7-314fb2c8361c,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45);
+
+IF
+DB_WYR_South_GoldReward(_Amount)
+AND
+_Amount >= 10000
+THEN
+SetFlag(WYR_South_GoldReward_Generous_da077223-256b-4322-939a-9c7c65857fac);
+
+IF
+DB_WYR_South_GoldReward(_Amount)
+AND
+_Amount < 10000
+THEN
+ClearFlag(WYR_South_GoldReward_Generous_da077223-256b-4322-939a-9c7c65857fac);
+//END_REGION
+
+//REGION Reward announcement
+IF
+EntityEvent(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,"WYR_South_GuardRunsToCheck")
+THEN
+SetFlag(WYR_South_State_AnouncingReward_d611fa14-a0ce-4da2-8f4b-617b50cff635,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0);
+
+IF
+DialogActorLeft(WYR_South_GoldQuestGiver_cbf9928e-d7b7-ac9b-2a9b-aa4e295c19d0,_DialogID,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,_)
+AND
+DB_WYR_South_GuardPos(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,_Pos)
+THEN
+ClearFlag(WYR_South_State_AnouncingReward_d611fa14-a0ce-4da2-8f4b-617b50cff635,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0);
+SetFlag(WYR_South_GoldQuestGiver_GoInside_80f84ddc-0422-4160-aed2-a7dacaeaecde,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0);
+PROC_CharacterMoveTo(S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,_Pos,"Walk","");
+
+// AD if gnomes scene was skipped
+PROC
+PROC_WYR_Ironhand_SkipScene()
+AND
+NOT DB_WYR_South_NoCalling(1)
+THEN
+SetFlag(WYR_South_CallingAD_b9fd347c-3cf8-4af6-b8a5-2c2c08a21329,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0);
+
+IF
+DialogStarted(WYR_South_GoldQuestGiver_cbf9928e-d7b7-ac9b-2a9b-aa4e295c19d0,_)
+THEN
+DB_WYR_South_NoCalling(1);
+ClearFlag(WYR_South_CallingAD_b9fd347c-3cf8-4af6-b8a5-2c2c08a21329,S_WYR_South_GoldQuestGiver_ad4a43f4-a86c-4946-a696-43a4ba4e6b45,0);
+//END_REGION
+
+//REGION Journal
+IF
+DB_GlobalFlag(WYR_South_Event_GotTaskToTrackGnomes_717dceb3-3a0d-427d-b07d-77537a22439d)
+THEN
+DB_GLO_HeadRemoval_InaccessibleIfOffstage(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf);
+
+QRY
+QRY_GLO_HeadRemoval_Block((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+AND
+NOT DB_GlobalFlag(WYR_South_Event_GotTaskToTrackGnomes_717dceb3-3a0d-427d-b07d-77537a22439d)
+THEN
+DB_NOOP(1);
+
+IF
+DB_InRegion(_Player, (TRIGGER)S_WYR_Ironhand_SUB_55832d9c-360c-483f-977a-bb6c4beb4eb0)
+AND
+NOT DB_WYR_South_GoldQuest_UpdatedEntering(1)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("WYR_GnomeHeads", "AcceptedKnows")
+THEN
+DB_WYR_South_GoldQuest_UpdatedEntering(1); // to avoid log spamming
+QuestUpdate("WYR_GnomeHeads", "FoundHideout");
+
+IF
+RelationChanged((FACTION)ACT3_WYR_South_GateFlamingFists_4b772c61-c34d-4898-9ca7-45fba09b4d47, (FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360, 0, 1)
+THEN
+QuestUpdate("WYR_GnomeHeads", "TurnedPermaHostile");
+
+IF
+DB_Dead((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+AND
+NOT DB_GLO_HeadRemoval_HeadInaccessible(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+THEN
+QuestUpdate("WYR_GnomeHeads", "KilledGnomes");
+
+IF
+DB_GLO_HeadRemoval_HeadInaccessible(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+THEN
+QuestUpdate("WYR_GnomeHeads", "NoHead");
+PROC_GlobalSetFlagAndCache((FLAG)WYR_Ironhand_State_HeadInaccessible_953499fd-7a01-bafb-0a76-ed4ec25b548e);
+
+// Debug
+IF
+TextEvent("WYR_Ironhand_TestGnomeHeadsQuest")
+THEN
+QuestUpdate("WYR_GnomeHeads","Accepted");
+PROC_GlobalSetFlagAndCache(WYR_South_Event_GotTaskToTrackGnomes_717dceb3-3a0d-427d-b07d-77537a22439d);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

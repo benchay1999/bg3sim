@@ -1,0 +1,57 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Explicit show/hide map marker with player tracking
+PROC
+PROC_ShowMarker((CHARACTER)_Player,(STRING)_Marker)
+AND
+NOT DB_ActivePlayerMarker(_Player,_Marker)
+THEN
+DB_ActivePlayerMarker(_Player,_Marker);
+ShowMapMarker(_Player,_Marker,1);
+
+PROC
+PROC_HideMarker((CHARACTER)_Player,(STRING)_Marker)
+AND
+DB_ActivePlayerMarker(_Player,_Marker)
+THEN
+NOT DB_ActivePlayerMarker(_Player,_Marker);
+ShowMapMarker(_Player,_Marker,0);
+//END_REGION
+
+//REGION Unlock a party-wide marker, and hide it when getting near
+PROC
+PROC_UnlockPartyMarker((STRING)_MarkerID, (TRIGGER)_MarkerBoxTrigger)
+AND
+// Can't reuse triggers for multiple markers -> fail early (on showing) rather than late
+// (when unregistering the trigger for all possible markers after reaching one of them)
+NOT DB_PartyMarker_HasBeenActivated(_MarkerBoxTrigger, _)
+THEN
+DB_PartyMarker_HasBeenActivated(_MarkerBoxTrigger, _MarkerID);
+PROC_TriggerRegisterForPlayers(_MarkerBoxTrigger);
+PROC_ShowMarker(NULL_00000000-0000-0000-0000-000000000000, _MarkerID);
+
+IF
+EnteredTrigger(_Player, _MarkerBoxTrigger)
+AND
+DB_PartyMarker_HasBeenActivated(_MarkerBoxTrigger, _MarkerID)
+THEN
+PROC_HideMarker(NULL_00000000-0000-0000-0000-000000000000, _MarkerID);
+PROC_TriggerUnregisterForPlayers(_MarkerBoxTrigger);
+// Keep DB so it won't be re-activated again in the future
+
+PROC
+PROC_UnlockPartyMarker((STRING)_MarkerID)
+THEN
+PROC_ShowMarker(NULL_00000000-0000-0000-0000-000000000000, _MarkerID);
+
+PROC
+PROC_HidePartyMarker((STRING)_MarkerID)
+THEN
+PROC_HideMarker(NULL_00000000-0000-0000-0000-000000000000, _MarkerID);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

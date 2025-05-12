@@ -1,0 +1,450 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Shapeshifting_Inconspicuous_TagExpression_Default("CAT_a7d28634-e3bf-40c3-8d8c-e1daf4acad74 | RAVEN_ccf8ba00-8e00-4f74-b146-598f46c97e9a | RAT_9568e56b-27a2-45fc-92c5-fa33eeb6f54c | FROG_0976fc05-da0e-43ea-8978-5accef445e0f | CRAB_757ee779-e15e-4663-8a56-ab8929f56c02 | (SUMMON_26c78224-a4c1-43e4-b943-75e7fa1bfa41 & SPIDER_8c8932c5-45f7-4d45-8f62-182db82ddcb0) | GASEOUS_FORM_22d7c29e-28d8-4126-ab03-8a7adbf98850 | WYR_CIRCUS_CHEESE_6c06f5e4-d4fa-498a-91b9-e1ed98773e92 | INTELLECT_DEVOURER_69901347-23cb-4f60-abf3-527f23cdf0db");
+// Custom inconspicuous form in a particular region
+NOT DB_Shapeshifting_Inconspicuous_CustomTriggerExpr((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,"");
+
+// Used for tracking characters with shapeshift statuses that should block dialogues
+DB_Shapeshifting_BlockDialogues("GASEOUS_FORM");
+KBSECTION
+//REGION Inconspicuous forms
+IF
+DB_Shapeshifting_Inconspicuous_CustomTriggerExpr((TRIGGER)_Trigger,_)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+// Custom trigger -> use its expression
+IF
+DB_PartyMembers(_PartyMember)
+AND
+DB_InRegion(_PartyMember,_Trigger)
+AND
+DB_Shapeshifting_Inconspicuous_CustomTriggerExpr(_Trigger,_Expr)
+THEN
+PROC_Shapeshifting_UpdateInconspicuousTagExpr(_PartyMember,_Expr);
+
+PROC
+PROC_Shapeshifting_UpdateInconspicuousTagExpr((CHARACTER)_PartyMember,(STRING)_Expr)
+AND
+DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_OldExpr)
+THEN
+// Avoid the default rule below triggering because none is defined anymore.
+// We don't first define the new and then clear the old so that external
+// pure DB rules triggering on DB_Shapeshifting_Inconspicuous_TagExpr won't
+// then iterate over both entries
+DB_Shapeshifting_Inconspicuous_Updating(1);
+NOT DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_OldExpr);
+
+PROC
+PROC_Shapeshifting_UpdateInconspicuousTagExpr((CHARACTER)_PartyMember,(STRING)_Expr)
+THEN
+DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_Expr);
+NOT DB_Shapeshifting_Inconspicuous_Updating(1);
+
+// Otherwise use default
+IF
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_Shapeshifting_Inconspicuous_Updating(1)
+AND
+NOT DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_)
+AND
+DB_Shapeshifting_Inconspicuous_TagExpression_Default(_Expr)
+THEN
+DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_Expr);
+
+// Leaving custom trigger -> check if we went to a new trigger, or fall back to default
+IF
+LeftTrigger(_PartyMember,_Trigger)
+AND
+DB_Shapeshifting_Inconspicuous_CustomTriggerExpr(_Trigger,_Expr)
+AND
+DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_Expr)
+THEN
+NOT DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_Expr);
+
+// Clean up
+IF
+DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_Expr)
+AND
+NOT DB_PartyMembers(_PartyMember)
+THEN
+NOT DB_Shapeshifting_Inconspicuous_TagExpr(_PartyMember,_Expr);
+//END_REGION
+
+PROC
+PROC_RemoveAllPolymorphs((GUIDSTRING)_Char)
+THEN
+PROC_RemoveStatusGroupPlaySound((CHARACTER)_Char,"SG_Polymorph");
+RemoveStatusesWithGroup(_Char,"SG_Polymorph");
+
+PROC
+PROC_RemoveMutingPolymorphs((GUIDSTRING)_Char)
+THEN
+PROC_RemoveStatusGroupPlaySound((CHARACTER)_Char,"SG_Polymorph_BeastShape");
+RemoveStatusesWithGroup(_Char,"SG_Polymorph_BeastShape");
+
+PROC
+PROC_RemoveMutingStatusses((GUIDSTRING)_Target)
+AND
+IsCharacter(_Target,1)
+THEN
+// Should only play a sound if we have a beast shape; SG_DropForNonMutingDialog contains more than that
+PROC_PlayRemoveStatusGroupSound((CHARACTER)_Target,"SG_Polymorph_BeastShape");
+
+PROC
+PROC_RemoveMutingStatusses((GUIDSTRING)_Target)
+THEN
+RemoveStatusesWithGroup(_Target,"SG_DropForNonMutingDialog");
+
+PROC
+PROC_RemoveMutingStatusesWithRestore((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Character)
+THEN
+DB_MutingStatuses_RemovalRequested(_Dialog,_Character);
+
+// Wait until all ongoing restoring operations are finished, as well as any ongoing attempts
+IF
+DB_MutingStatuses_RemovalRequested(_Dialog,_Character)
+AND
+NOT DB_MutingStatuses_Restoring(_Character,_,_)
+AND
+NOT DB_AttemptingMutingStatuses(_Character,_,_)
+THEN
+NOT DB_MutingStatuses_RemovalRequested(_Dialog,_Character);
+PROC_RemoveMutingStatusesWithRestore_Intern(_Dialog,_Character);
+
+PROC
+PROC_RemoveMutingStatusesWithRestore_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Character)
+AND
+NOT DB_Dialogs_DialogBlockRestoreMutingStatuses(_Dialog, _Character)
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+DB_CurrentMutingStatuses(_Character,_Status,_Causee)
+AND
+GetStatusCurrentLifetime(_Character,_Status,_Duration)
+THEN
+DB_RemovedMutingStatusRestoreInfo((GUIDSTRING)_Character,_Status,_Duration,_Causee);
+
+PROC
+PROC_RemoveMutingStatusesWithRestore_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Character)
+AND
+QRY_HasMutingStatusRestoreInfo(_Character)
+AND
+GetHitpointsPercentage(_Character,_HPPercentage)
+THEN
+DB_RemovedMutingStatusHPRestoreInfo(_Character,_HPPercentage);
+
+QRY
+QRY_HasMutingStatusRestoreInfo((GUIDSTRING)_Character)
+AND
+DB_RemovedMutingStatusRestoreInfo(_Character,_,_,_)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_RemoveMutingStatusesWithRestore_Intern((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Character)
+THEN
+PROC_RemoveMutingStatusses(_Character);
+
+PROC
+PROC_RestoreMutingStatuses((GUIDSTRING)_Character)
+AND
+DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee)
+AND
+QRY_RestoreMutingStatuses_CauseeStillExists(_Causee)
+THEN
+DB_MutingStatuses_Restoring(_Character,_Status,_Causee);
+ApplyStatus(_Character,_Status,_Duration,1,_Causee);
+PlaySound(_Character,"Spell_Cast_Buff_WildShapeDismiss_L1to3");
+
+PROC
+PROC_RestoreMutingStatuses((GUIDSTRING)_Character)
+AND
+DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee)
+AND
+NOT DB_MutingStatuses_Restoring(_Character,_Status,_Causee)
+THEN
+NOT DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee);
+
+QRY
+QRY_RestoreMutingStatuses_CauseeStillExists((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+// E.g. silence gets applied by a summoned helper, which stops existing after it gets destroyed
+//   1) status should not get re-applied
+//   2) if we try to apply it anyway with a non-existing cause, we will get NULL in the StatusApplied event
+//      and will never clean up DB_MutingStatuses_Restoring because of the _Causee mismatch
+QRY
+QRY_RestoreMutingStatuses_CauseeStillExists((GUIDSTRING)_Causee)
+AND
+_Causee != NULL_00000000-0000-0000-0000-000000000000
+AND
+Exists(_Causee,1)
+THEN
+DB_NOOP(1);
+
+IF
+StatusApplied(_Character,_Status,_Causee,_)
+AND
+DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee)
+AND
+DB_RemovedMutingStatusHPRestoreInfo(_Character,_HPPercentage)
+AND
+DB_MutingStatuses_Restoring(_Character,_Status,_Causee)
+THEN
+SetHitpointsPercentage(_Character,_HPPercentage,"Guaranteed",1);
+NOT DB_RemovedMutingStatusHPRestoreInfo(_Character,_HPPercentage);
+
+IF
+StatusApplied(_Character,_Status,_Causee,_)
+AND
+DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee)
+THEN
+NOT DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee);
+
+IF
+StatusApplied(_Character,_Status,_Causee,_)
+AND  
+DB_MutingStatuses_Restoring(_Character,_Status,_Causee)
+THEN
+NOT DB_MutingStatuses_Restoring(_Character,_Status,_Causee);
+
+// Even on failure, throw away everything because otherwise we may wait forever
+IF
+StatusAttemptFailed(_Character,_Status,_Causee,_)
+AND
+DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee)
+THEN
+NOT DB_RemovedMutingStatusRestoreInfo(_Character,_Status,_Duration,_Causee);
+
+IF
+StatusAttemptFailed(_Character,_Status,_Causee,_)
+AND
+DB_MutingStatuses_Restoring(_Character,_Status,_Causee)
+THEN
+NOT DB_MutingStatuses_Restoring(_Character,_Status,_Causee);
+
+IF
+ShapeshiftChanged(_Char,_,_,_)
+AND
+DB_PolymorphedInto(_Char,_Race,_Gender,_Status)
+THEN
+NOT DB_PolymorphedInto(_Char,_Race,_Gender,_Status);
+
+IF
+ShapeshiftChanged(_Char,_Race,_Gender,_Status)
+AND
+_Status != ""
+THEN
+DB_PolymorphedInto(_Char,_Race,_Gender,_Status);
+SetFlag((FLAG)GLO_Polymorphed_ff4902e1-37b6-4fef-aa98-6f4eaa32720b, _Char); // flagType: Object
+
+IF
+ShapeshiftChanged(_Char,_,_,_Status)
+AND
+_Status != ""
+THEN
+SetTag(_Char,(TAG)GENERIC_730e82f3-c067-44a4-985b-0dfe079d4fea);
+
+IF
+ShapeshiftChanged(_Char,_,_,"")
+THEN
+ClearTag(_Char,(TAG)GENERIC_730e82f3-c067-44a4-985b-0dfe079d4fea);
+
+IF 
+ShapeshiftChanged(_Char,_,_,"")
+THEN
+ClearFlag((FLAG)GLO_Polymorphed_ff4902e1-37b6-4fef-aa98-6f4eaa32720b, _Char); // flagType: Object
+
+//REGION Remove Poly in Dialog
+
+IF
+TextEvent("addpolyflag")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag((FLAG)GLO_Polymorphed_ff4902e1-37b6-4fef-aa98-6f4eaa32720b, _Player); // flagType: Object
+
+
+IF
+FlagSet(GLO_RemovePolymorph_ac08aa18-f4b8-4a5e-ae4e-f788811fa149, (CHARACTER)_Player, _) // flagType: Object
+THEN
+PROC_RemoveAllPolymorphs(_Player);
+ClearFlag((FLAG)GLO_RemovePolymorph_ac08aa18-f4b8-4a5e-ae4e-f788811fa149, _Player); // flagType: Object
+
+//END_REGION
+
+//REGION Get current polymorph status for _Char (even if none)
+// Returns it in DB_GLOBAL_Shapeshifting_PolymorphStatus(_Race). In case not polymorphed, _Race is an empty string
+QRY
+QRY_GLOBAL_Shapeshifting_GetPolymorphStatus((CHARACTER)_Char)
+AND
+DB_GLOBAL_Shapeshifting_PolymorphStatus(_Race)
+THEN
+NOT DB_GLOBAL_Shapeshifting_PolymorphStatus(_Race);
+
+QRY
+QRY_GLOBAL_Shapeshifting_GetPolymorphStatus((CHARACTER)_Char)
+AND
+DB_PolymorphedInto(_Char,_,_,_Status)
+THEN
+DB_GLOBAL_Shapeshifting_PolymorphStatus(_Status);
+
+QRY
+QRY_GLOBAL_Shapeshifting_GetPolymorphStatus((CHARACTER)_Char)
+AND
+NOT DB_PolymorphedInto(_Char,_,_,_)
+THEN
+DB_GLOBAL_Shapeshifting_PolymorphStatus("");
+//END_REGION
+
+IF
+TextEvent("getrace")
+AND
+GetHostCharacter(_Player)
+AND
+GetRace(_Player,0,_TrueRace)
+THEN
+DebugText(_Player,_TrueRace);
+
+//REGION Keeping track of true race
+IF
+DB_Players(_Player)
+AND
+NOT DB_Origins(_Player)
+THEN
+ObjectTimerLaunch(_Player, "GLO_SetGameStartTags",0);
+
+IF
+DB_Origins(_Origin)
+THEN
+ObjectTimerLaunch(_Origin, "GLO_SetGameStartTags",0);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "GLO_SetGameStartTags")
+THEN
+PROC_GLO_SetGameStartTags(_Player);
+
+PROC
+PROC_GLO_SetGameStartTags((CHARACTER)_Player)
+AND
+DB_RaceTags((TAG)_TrueRace, (TAG)_Tag)
+AND
+IsTagged(_Player, _TrueRace, 1)
+THEN
+SetTag(_Player, _Tag);
+//END_REGION
+
+//REGION Remove wildshape on combat end
+IF
+DB_Is_InCombat(_Character, _)
+AND
+HasActiveStatusWithGroup(_Character, "SG_Polymorph_BeastShape_NPC", 1)
+THEN
+DB_GLO_WasWildshapedBeforeCombat(_Character);
+
+PROC
+PROC_LeftCombat(_Character, _)
+AND
+NOT DB_GLO_WasWildshapedBeforeCombat(_Character)
+AND
+NOT DB_PartyMembers((CHARACTER)_Character)
+AND
+HasActiveStatusWithGroup(_Character, "SG_Polymorph_BeastShape_NPC", 1)
+THEN
+RemoveStatusesWithGroup(_Character, "SG_Polymorph_BeastShape_NPC", _Character);
+PlaySound(_Character,"Spell_Cast_Buff_WildShapeDismiss_L1to3");
+
+PROC
+PROC_LeftCombat(_Character, _)
+AND
+DB_GLO_WasWildshapedBeforeCombat(_Character)
+THEN
+NOT DB_GLO_WasWildshapedBeforeCombat(_Character);
+
+//END_REGION
+
+//REGION Sound 
+//In Case we Teleport to Camp
+PROC
+PROC_Camp_DropAllPolymorphs()
+AND
+DB_Players(_Player)
+AND
+NOT DB_RemoveStatusGroupPlaySound_TriggerOnHUD(_Player)
+THEN
+DB_RemoveStatusGroupPlaySound_TriggerOnHUD((CHARACTER)_Player);
+
+PROC
+PROC_Camp_ClearDisruptiveStatusses()
+AND
+DB_Players(_Player)
+AND
+NOT DB_RemoveStatusGroupPlaySound_TriggerOnHUD(_Player)
+THEN
+DB_RemoveStatusGroupPlaySound_TriggerOnHUD((CHARACTER)_Player);
+
+PROC
+PROC_RemoveStatusGroupPlaySound((CHARACTER)_Char,(STRING)_Group)
+THEN
+PROC_PlayRemoveStatusGroupSound((CHARACTER)_Char,(STRING)_Group);
+
+PROC
+PROC_PlayRemoveStatusGroupSound((CHARACTER)_Char,(STRING)_Group)
+AND
+HasActiveStatusWithGroup(_Char,_Group,1)
+THEN
+PROC_RemoveStatusGroupPlaySound_Internal((CHARACTER)_Char);
+
+
+PROC
+PROC_RemoveStatusGroupPlaySound_Internal((CHARACTER)_Char)
+AND 
+DB_RemoveStatusGroupPlaySound_TriggerOnHUD(_Char)
+THEN
+PlayHUDSound(_Char,"Spell_Cast_Buff_WildShapeDismiss_L1to3HUD");
+
+PROC
+PROC_RemoveStatusGroupPlaySound_Internal((CHARACTER)_Char)
+AND 
+NOT DB_RemoveStatusGroupPlaySound_TriggerOnHUD(_Char)
+THEN
+PlaySound(_Char,"Spell_Cast_Buff_WildShapeDismiss_L1to3");
+
+IF
+TeleportedToCamp(_Char)
+AND
+DB_RemoveStatusGroupPlaySound_TriggerOnHUD(_Char)
+THEN
+NOT DB_RemoveStatusGroupPlaySound_TriggerOnHUD(_Char);
+
+//END_REGION
+
+//REGION Blocking dialog statuses
+IF
+StatusApplied(_Entity, _Status, _, _)
+AND
+DB_Shapeshifting_BlockDialogues(_Status)
+THEN
+DB_Shapeshifting_DialoguesBlocked(_Entity, _Status);
+
+IF
+StatusRemoved(_Entity, _Status, _, _)
+AND
+DB_Shapeshifting_BlockDialogues(_Status)
+THEN
+NOT DB_Shapeshifting_DialoguesBlocked(_Entity, _Status);
+PROC_Shapeshifting_RemovedDialoguesBlocked(_Entity, _Status);
+
+PROC
+PROC_Shapeshifting_RemovedDialoguesBlocked((GUIDSTRING)_Entity, (STRING)_Status)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

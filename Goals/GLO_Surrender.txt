@@ -1,0 +1,577 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+//Surrender functions:
+// PROC_Surrender((CHARACTER)_NPC,(CHARACTER)_Cause):
+// Applies the SURRENDERED status to an NPC and makes them neutral.
+// If the character is in combat, it also gives all other members of the same
+// combat group the SURRENDERED status, but does not make them neutral, so it's
+// easy to distinguish which one is the leader of the surrendered group.
+// _Cause is the player that should be interpreted as the cause for the surrendering.
+// You can use QRY_Surrender_GetSurrenderCause to get a reasonable default if you don't know
+// (make sure to define DB_SurrenderManually() if you call PROC_Surrender yourself if you
+//  want to use QRY_Surrender_GetSurrenderCause)
+//
+// PROC_Surrender((CHARACTER)_NPC,(CHARACTER)_Cause,(DIALOGRESOURCE)_SurrenderDialog):
+// As above, but tries to start _SurrenderDialog with just that NPC as the speaker
+// at the end of the combat. It also assigns that dialogue to the NPC.
+//
+// PROC_Surrender_FoundSurrenderTarget(_Player, _NPC, _CombatID):
+// If the character was in combat when they surrendered, this is called for
+// the nearest available player character in 20 metres at the end of the combat.
+// If a dialogue has been defined, it is automatically started. If one wasn't,
+// use this function to define custom behaviour.
+//
+// Set when you may call PROC_Surrender manually for a character, so the pipeline
+// will cache attacks to provide a sensible cause of the surrender
+NOT DB_SurrenderManually((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+// PROC_Surrender_Fled puts characters into DB_PermaDefeated, which may not make sense for the situation
+// as the player facing behaviour does not appear as if they are defeated
+NOT DB_Surrender_BlockPermaDefeatedOnFlee((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+KBSECTION
+//REGION Track most likely cause for surrendering
+IF
+AttackedBy(_NPC,_Player,_,_,_,_,_)
+AND
+DB_SurrenderManually((CHARACTER)_NPC)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_SurrenderCachedCause(_NPC,_Player);
+
+IF
+DB_SurrenderCachedCause(_NPC,_Player)
+AND
+DB_SurrenderCachedCause(_NPC,_OldPlayer)
+AND
+_Player != _OldPlayer
+THEN
+NOT DB_SurrenderCachedCause(_NPC,_OldPlayer);
+//END_REGION
+
+//REGION Prevent characters that should surrender when beaten from getting knocked out
+IF
+DB_SurrenderOnKnockedOutDialog((CHARACTER)_NPC,(DIALOGRESOURCE)_)
+THEN
+DB_Intern_HasCustomKnockedOutDialog(_NPC);
+ApplyStatus(_NPC,"PREVENT_KNOCKED_OUT",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_Intern_HasCustomKnockedOutDialog(_NPC)
+AND
+NOT DB_SurrenderOnKnockedOutDialog(_NPC,_)
+THEN
+NOT DB_Intern_HasCustomKnockedOutDialog(_NPC);
+RemoveStatus(_NPC,"PREVENT_KNOCKED_OUT");
+
+// Attempt instead of applied, because characters with a DB_SurrenderOnKnockedOutDialog will
+// have the PREVENT_KNOCKED_OUT status that blocks them getting KNOCKED_OUT
+IF
+StatusAttempt((CHARACTER)_NPC,"KNOCKED_OUT",_Causee, _)
+AND
+DB_SurrenderOnKnockedOutDialog(_NPC,_KnockedOutDialog)
+AND
+HasActiveStatus(_NPC,"PREVENT_KNOCKED_OUT",1)
+THEN
+// Block crime reactions, because between the blocked KNOCKED_OUT status and the applied SURRENDERED
+// status, they could still react to crimes
+BlockNewCrimeReactions(_NPC,1);
+DB_Surrender_BlockedCrimeReactions(_NPC);
+// These have an invisible status that will block KNOCKED_OUT, so we can make them surrender instead
+PROC_Surrender(_NPC,_Causee,_KnockedOutDialog);
+
+IF
+StatusApplied((CHARACTER)_NPC, "SURRENDERED", _, _)
+AND
+DB_Surrender_BlockedCrimeReactions(_NPC)
+THEN
+NOT DB_Surrender_BlockedCrimeReactions(_NPC);
+// Avoid problems in case they un-surrender. The SURRENDERED status itself takes care of it at this point.
+BlockNewCrimeReactions(_NPC,0);
+//END_REGION
+
+//REGION Find a reasonable default as the cause of an NPC surrendering
+// Prefer players over non-player party members
+PROC
+PROC_Surrender_MaybeSetSurrenderCause((CHARACTER)_PartyMember)
+AND
+DB_QRYRTN_Surrender_GetSurrenderCause(_Result)
+AND
+NOT DB_Players(_Result)
+AND
+DB_Players(_PartyMember)
+THEN
+NOT DB_QRYRTN_Surrender_GetSurrenderCause(_Result);
+DB_QRYRTN_Surrender_GetSurrenderCause(_PartyMember);
+
+PROC
+PROC_Surrender_MaybeSetSurrenderCause((CHARACTER)_PartyMember)
+AND
+NOT DB_QRYRTN_Surrender_GetSurrenderCause(_)
+THEN
+DB_QRYRTN_Surrender_GetSurrenderCause(_PartyMember);
+
+QRY
+QRY_Surrender_GetSurrenderCause((CHARACTER)_NPC)
+AND
+DB_QRYRTN_Surrender_GetSurrenderCause(_Result)
+THEN
+NOT DB_QRYRTN_Surrender_GetSurrenderCause(_Result);
+
+QRY
+QRY_Surrender_GetSurrenderCause((CHARACTER)_NPC)
+AND
+DB_SurrenderCachedCause(_NPC,_Player)
+THEN
+DB_QRYRTN_Surrender_GetSurrenderCause(_Player);
+
+QRY
+QRY_Surrender_GetSurrenderCause((CHARACTER)_NPC)
+AND
+DB_Is_InCombat(_NPC,_CombatID)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+DB_Is_InCombat(_PartyMember,_CombatID)
+THEN
+PROC_Surrender_MaybeSetSurrenderCause(_PartyMember);
+
+QRY
+QRY_Surrender_GetSurrenderCause((CHARACTER)_NPC)
+AND
+DB_Was_InCombat(_NPC,_CombatID)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+QRY_GLO_IsOrWasInCombat(_PartyMember,_CombatID)
+THEN
+PROC_Surrender_MaybeSetSurrenderCause(_PartyMember);
+
+// Fallback. It doesn't really matter that much, since it's only to ensure that
+// the XP gets awarded (and and XP is shared across the party)
+QRY
+QRY_Surrender_GetSurrenderCause((CHARACTER)_NPC)
+AND
+NOT DB_QRYRTN_Surrender_GetSurrenderCause(_)
+THEN
+DB_QRYRTN_Surrender_GetSurrenderCause(NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Surrendered NPC starts a normal dialogue after the combat is over; PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause, (DIALOGRESOURCE)_SurrenderDialog)
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause,(DIALOGRESOURCE)_SurrenderDialog)
+THEN
+PROC_Surrender(_NPC,_Cause);
+
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause,(DIALOGRESOURCE)_SurrenderDialog)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_NPC);
+
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause,(DIALOGRESOURCE)_SurrenderDialog)
+AND
+_SurrenderDialog != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_SurrenderOnKnockedOutDialog(_NPC, _SurrenderDialog);
+
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause,(DIALOGRESOURCE)_SurrenderDialog)
+AND
+DB_Is_InCombat(_NPC,_CombatID)
+THEN
+DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog);
+
+PROC
+PROC_UnSurrender((CHARACTER)_NPC,(DIALOGRESOURCE)_NewDialog)
+AND
+DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog)
+THEN
+NOT DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog);
+
+PROC
+PROC_UnSurrender((CHARACTER)_NPC,(DIALOGRESOURCE)_NewDialog)
+AND
+DB_Surrendered(_NPC)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_NPC);
+SetHasDialog(_NPC, 0);
+
+PROC
+PROC_UnSurrender((CHARACTER)_NPC,(DIALOGRESOURCE)_NewDialog)
+AND
+DB_Surrendered(_NPC)
+AND
+_NewDialog != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_Dialogs(_NPC, _NewDialog);
+
+PROC
+PROC_UnSurrender((CHARACTER)_NPC,(DIALOGRESOURCE)_NewDialog)
+AND
+DB_Surrendered(_NPC)
+AND
+// This status stacks with KNOCKED_OUT, so it may no longer be applied
+HasAppliedStatus(_NPC, "SURRENDERED", 0)
+THEN
+PROC_Surrendered_Removed(_NPC);
+
+PROC
+PROC_UnSurrender((CHARACTER)_NPC,(DIALOGRESOURCE)_NewDialog)
+AND
+DB_Surrendered(_NPC)
+AND
+HasAppliedStatus(_NPC, "SURRENDERED", 1)
+THEN
+RemoveStatus(_NPC, "SURRENDERED");
+// cleanup will happen by __AAA_FirstGoal when the StatusRemoved("SURRENDERED") event arrives
+
+IF
+StatusRemoved(_NPC, "SURRENDERED", _, _)
+AND
+DB_SurrenderCachedCause((CHARACTER)_NPC,_Player)
+THEN
+NOT DB_SurrenderCachedCause(_NPC,_Player);
+
+IF
+DB_Surrendered(_NPC)
+AND
+DB_SurrenderOnKnockedOutDialog(_NPC, _SurrenderDialog)
+THEN
+SetHasDialog(_NPC, 1);
+DB_Dialogs(_NPC, _SurrenderDialog);
+
+//END_REGION
+
+
+//REGION Non-Dialog surrender logic
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+AND
+DB_Is_InCombat(_NPC,_CombatID)
+AND
+DB_Is_InCombat(_Enemy,_CombatID)
+AND
+_NPC != _Enemy
+AND
+NOT DB_Defeated(_Enemy)
+AND
+GetCombatGroupID(_NPC, _ID)
+AND
+GetCombatGroupID(_Enemy, _ID)
+AND
+_ID != ""
+AND
+IsCharacter(_Enemy,1)
+AND
+IsPartyMember((CHARACTER)_Enemy, 1, 0)
+AND
+NOT QRY_CustomSurrenderReaction(_Enemy)
+THEN
+PROC_SetSurrendered(_Enemy,_Cause);
+
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+AND
+NOT DB_Surrender_PreSurrenderFaction(_NPC, _)
+AND
+GetFaction(_NPC, _Faction)
+THEN
+DB_Surrender_PreSurrenderFaction(_NPC, _Faction);
+
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+THEN
+PROC_SetSurrendered(_NPC,_Cause);
+
+PROC
+PROC_Surrender((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+AND
+DB_Is_InCombat(_NPC,_CombatID)
+THEN
+DB_Surrender_SurrenderAfterCombat(_CombatID,_NPC);
+
+PROC
+PROC_SetSurrendered((CHARACTER)_Enemy,(GUIDSTRING)_Cause)
+THEN
+DB_Surrender_SelfHealBlocked(0);
+
+PROC
+PROC_SetSurrendered((CHARACTER)_Enemy,(GUIDSTRING)_Cause)
+AND
+NOT QRY_SelfHealing_IsEnabled(_Enemy)
+THEN
+NOT DB_Surrender_SelfHealBlocked(0);
+DB_Surrender_SelfHealBlocked(1);
+
+PROC
+PROC_SetSurrendered((CHARACTER)_Enemy,(GUIDSTRING)_Cause)
+AND
+_Cause != NULL_00000000-0000-0000-0000-000000000000
+THEN
+ApplyStatus(_Enemy,"SURRENDERED",-1.0,1,_Cause);
+
+PROC
+PROC_SetSurrendered((CHARACTER)_Enemy,(GUIDSTRING)_Cause)
+AND
+_Cause == NULL_00000000-0000-0000-0000-000000000000
+AND
+// If we don't specify a party member as cause, no XP will be awarded
+GetHostCharacter(_Player)
+THEN
+ApplyStatus(_Enemy,"SURRENDERED",-1.0,1,_Player);
+
+PROC
+PROC_SetSurrendered((CHARACTER)_Enemy,(GUIDSTRING)_Cause)
+AND
+CanFight(_Enemy, _CouldFight)
+AND
+CanJoinCombat(_Enemy, _CouldJoinCombat)
+AND
+DB_Surrender_SelfHealBlocked(_HadBlockRegen)
+THEN
+PROC_SetCanFight(_Enemy,0);
+SetCanJoinCombat(_Enemy,0);
+SetHasDialog(_Enemy,0);
+PROC_SelfHealing_Disable(_Enemy);
+DB_NoLowAttitudeDialog(_Enemy);
+DB_Surrender_FightStats(_Enemy,_HadBlockRegen,_CouldFight,_CouldJoinCombat);
+
+PROC
+PROC_SetSurrendered((CHARACTER)_Enemy,(GUIDSTRING)_Cause)
+AND
+NOT DB_NoLowAttitudeDialog(_Enemy)
+THEN
+DB_NoLowAttitudeDialog(_Enemy);
+DB_Surrender_NoLowAttitudeDialog(_Enemy);
+
+IF
+StatusRemoved((CHARACTER)_NPC,"KNOCKED_OUT",_,_)
+AND
+DB_Surrendered(_NPC)
+THEN
+ApplyStatus(_NPC,"SURRENDERED",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_CustomSurrenderReaction((GUIDSTRING)_Enemy)
+AND
+1 == 0 
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Surrendered NPC caching
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_FightStats(_NPC,0,_CouldFight,_CouldJoinCombat)
+THEN
+PROC_SelfHealing_Enable(_NPC);
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_FightStats(_NPC,_HadBlockRegen,1,_CouldJoinCombat)
+THEN
+PROC_SetCanFight(_NPC,1);
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_FightStats(_NPC,_HadBlockRegen,_CouldFight,1)
+THEN
+SetCanJoinCombat(_NPC,1);
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_NoLowAttitudeDialog(_Enemy)
+THEN
+NOT DB_Surrender_NoLowAttitudeDialog(_Enemy);
+NOT DB_NoLowAttitudeDialog(_Enemy);
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_PreSurrenderFaction(_NPC, _Faction)
+THEN
+SetFaction(_NPC, _Faction);
+NOT DB_Surrender_PreSurrenderFaction(_NPC, _Faction);
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_FightStats(_NPC,_HadBlockRegen,_CouldFight,_CouldJoinCombat)
+THEN
+NOT DB_Surrender_FightStats(_NPC,_HadBlockRegen,_CouldFight,_CouldJoinCombat);
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+AND
+DB_Surrender_DisabledIncapacitatedAssault(_NPC)
+THEN
+NOT DB_Surrender_DisabledIncapacitatedAssault(_NPC);
+PROC_CharacterEnableCrime(_NPC, "IncapacitatedAssault");
+
+PROC
+PROC_Surrender_Restore((CHARACTER)_NPC)
+THEN
+PROC_Surrender_Restored(_NPC);
+
+PROC
+PROC_Surrender_Restored((CHARACTER)_NPC)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Play dialog once Combat is over.
+IF
+CombatEnded(_CombatID)
+AND
+DB_Surrender_SurrenderAfterCombat(_CombatID,_NPC)
+AND
+QRY_GetClosestAvailableCharacterTo(_NPC,0)
+AND
+DB_ClosestAvailableCharacterTo(_Player,_NPC,_Dist)
+AND
+_Dist < 20.0
+THEN
+PROC_Surrender_FoundSurrenderTarget(_Player, _NPC, _CombatID);
+
+PROC
+PROC_Surrender_FoundSurrenderTarget((CHARACTER)_Player, (CHARACTER)_NPC, (GUIDSTRING)_CombatID)
+AND
+NOT QRY_Surrender_StartCustomDialogAfterCombat(_Player, _NPC, _CombatID)
+AND
+DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog)
+AND
+_SurrenderDialog != NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_StartDialog(_SurrenderDialog, _NPC, _Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Surrender_FoundSurrenderTarget((CHARACTER)_Player, (CHARACTER)_NPC, (GUIDSTRING)_CombatID)
+AND
+DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog)
+AND
+_SurrenderDialog == NULL_00000000-0000-0000-0000-000000000000
+AND
+QRY_SelectAndStartDialog(_NPC, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Surrender_StartCustomDialogAfterCombat((CHARACTER)_Player, (CHARACTER)_NPC, (GUIDSTRING)_CombatID)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_Surrender_SurrenderAfterCombat(_CombatID,_NPC)
+THEN
+NOT DB_Surrender_SurrenderAfterCombat(_CombatID,_NPC);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog)
+THEN
+NOT DB_Surrender_StartDialogAfterCombat(_CombatID,_NPC,_SurrenderDialog);
+
+//END_REGION
+
+/*
+//REGION Flee if attacked
+IF
+AttackedBy(_NPC, _AttackerOwner, _Attacker, _DamageType, _DamageAmount, _DamageCause, _StoryActionID)
+AND
+DB_Surrendered((CHARACTER)_NPC)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+THEN
+//Make Flee a little once we have the flee-feature
+//END_REGION
+*/
+
+//REGION Flee on next Long Rest
+
+PROC
+PROC_Surrendered((CHARACTER)_NPC,(GUIDSTRING)_)
+THEN
+DB_Surrendered_CleanUp((CHARACTER)_NPC);
+
+PROC
+PROC_Surrendered_Removed((CHARACTER)_NPC)
+THEN
+NOT DB_Surrendered_CleanUp((CHARACTER)_NPC);
+
+IF
+DB_Surrendered_CleanUp((CHARACTER)_NPC)
+AND
+NOT DB_Surrendered(_NPC) //just to be sure
+THEN
+NOT DB_Surrendered_CleanUp((CHARACTER)_NPC);
+
+PROC
+PROC_LongRest()
+AND
+DB_Surrendered_CleanUp(_NPC)
+THEN
+NOT DB_Surrendered_CleanUp(_NPC);
+DB_ExecuteWhenObjectInCurrentLevel("Surrender_FleeAfterLongRest",_NPC);
+
+PROC
+PROC_ExecuteWhenObjectInCurrentLevel("Surrender_FleeAfterLongRest",_NPC)
+THEN
+ScatterStoryItems(_NPC);
+PROC_Surrender_Restore((CHARACTER)_NPC);
+PurgeOsirisQueue(_NPC);
+SetOnStage(_NPC,0);
+PROC_Surrender_Fled(_NPC);
+
+PROC
+PROC_Surrender_Fled((CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Open loot UI
+IF
+FlagSet((FLAG)OpenLoot_9b6bf8e7-d173-2d92-9dc2-53d05d0e78d6,_NPC,_ID)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+THEN
+DB_OpenLootAfterDialog(_ID,_Player,_NPC);
+ClearFlag((FLAG)OpenLoot_9b6bf8e7-d173-2d92-9dc2-53d05d0e78d6,_NPC,_ID);
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_OpenLootAfterDialog(_ID,_Player,_NPC)
+AND
+OpenCharacterLootUI((CHARACTER)_Player,(CHARACTER)_NPC,_)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_OpenLootAfterDialog(_ID,_Player,_NPC)
+THEN
+NOT DB_OpenLootAfterDialog(_ID,_Player,_NPC);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

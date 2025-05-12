@@ -1,0 +1,90 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_FlagReactionAfterDialog((FLAG)GLO_BookOfRestoredGods_Event_GotScroll_4e550249-a360-aecd-9087-57f9aed890ae, GLO_BookOfRestoredGods_466309d6-c4c1-3f49-9238-7c0f9e505a45);
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)GLO_BookOfRestoredGods_466309d6-c4c1-3f49-9238-7c0f9e505a45);
+DB_GlobalFlagReactionAfterDialog((FLAG)GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f, (DIALOGRESOURCE)GLO_BookOfRestoredGods_466309d6-c4c1-3f49-9238-7c0f9e505a45);
+ 
+KBSECTION
+// Players can open this book anywhere, set the script as global
+IF
+Unlocked((ITEM)S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f)
+THEN
+SetFlag(GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f)
+AND
+IsLocked((ITEM)S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d, 1)
+THEN
+PROC_ForceStopDialog(S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d);
+Unlock((ITEM)S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d);
+
+IF
+FlagSet(GLO_BookOfRestoredGods_Event_FailedToOpenTheBook_b83f0498-4de8-d5c2-4615-14e719f908e0, _Player, _)
+THEN
+DB_GLO_BookOfRestoredGods_TriedToOpenBook(_Player);
+
+IF
+FlagSet(GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f, _, _)
+AND
+DB_GLO_BookOfRestoredGods_TriedToOpenBook(_Player)
+THEN
+NOT DB_GLO_BookOfRestoredGods_TriedToOpenBook(_Player);
+ClearFlag(GLO_BookOfRestoredGods_Event_FailedToOpenTheBook_b83f0498-4de8-d5c2-4615-14e719f908e0, _Player);
+
+PROC
+PROC_BlockUseOfItem(_Player, S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d)
+AND
+NOT DB_GlobalFlag(GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f)
+THEN
+PROC_GLO_BookOfGods_TryStartDialog(_Player);
+DB_CustomUseItemResponse(_Player, S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d, 0);
+
+PROC
+PROC_GLO_BookOfGods_TryStartDialog((CHARACTER)_Player)
+AND
+IsTagged(_Player, (TAG)HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8, 1)
+AND
+QRY_StartDialog_Fixed(GLO_BookOfRestoredGods_466309d6-c4c1-3f49-9238-7c0f9e505a45, S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d, _Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_FlagReactionAfterDialog(_Player, GLO_BookOfRestoredGods_Event_GotScroll_4e550249-a360-aecd-9087-57f9aed890ae)
+THEN
+TemplateAddTo(LOOT_SCROLL_RayOfEnfeeblement_cd1da9c5-c9ea-4d2a-93ce-e201c97eded9, _Player, 1);
+SetFlag(GLO_BookOfRestoredGods_State_ScrollTakenFromBook_58373ac4-1e81-41ed-9429-a21c6695f98b, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+GameBookInterfaceClosed((ITEM)S_CHA_Crypt_BookOfRestoredGods_a480a240-b8ea-4e6a-b4b9-a8edc8fd4a3d,_Player)
+AND
+DB_GlobalFlag(GLO_BookOfRestoredGods_State_BookOpened_4f33a346-8ae4-47a9-8787-79126046827f)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_BookOfRestoredGods_State_ScrollTakenFromBook_58373ac4-1e81-41ed-9429-a21c6695f98b)
+THEN
+TemplateAddTo(LOOT_SCROLL_RayOfEnfeeblement_cd1da9c5-c9ea-4d2a-93ce-e201c97eded9, _Player, 1);
+SetFlag(GLO_BookOfRestoredGods_State_ScrollTakenFromBook_58373ac4-1e81-41ed-9429-a21c6695f98b, NULL_00000000-0000-0000-0000-000000000000);
+
+// Force
+QRY
+QRY_GLO_BookOfGods_OptionsLeft((CHARACTER)_Player)
+AND
+GetFlag(GLO_BookofRestoredGods_TriedForce_ba2408b3-e843-dd04-5718-13208e4ca960, _Player, 0)
+THEN
+DB_NOOP(1);
+
+// Magic
+QRY
+QRY_GLO_BookOfGods_OptionsLeft((CHARACTER)_Player)
+AND
+GetFlag(GLO_BookOfRestoredGods_TriedMagic_39d5024e-ae47-ef46-cd44-d4150d19e538, _Player, 0)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

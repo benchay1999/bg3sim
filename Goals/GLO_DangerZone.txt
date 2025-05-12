@@ -1,0 +1,285 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation On Confluence: [Link Redacted]
+/* 	The ID is the "danger zone". Multiple triggers can be the same danger zone.
+	The event PROC_CharacterEnteredDangerZone is sent when the danger zone is entered, so more than one trigger could overlap without sending multiple events.
+*/
+//DB_DangerZone((TRIGGER)_Trigger,(STRING)_DangerZoneID);
+//DB_DangerZone_SafeOnDefeated((STRING)_DangerZoneID);
+//DB_DangerZone_SafeOnGlobalFlagSet((STRING)_DangerZoneID, (FLAG)_Flag);
+//DB_DangerZone_SafeBubble((TRIGGER)_Trigger);
+
+// When a defeatcounter with the same ID as a dangerzone reports that everyone inside is PermaDefeated,
+// it will mark itself as safe. If this DB is defined, it also will do so when everyone is normally defeated.
+NOT DB_DangerZone_SafeOnDefeated("");
+// Make danger zone as safe once global flag gets set
+NOT DB_DangerZone_SafeOnGlobalFlagSet("", (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Registering
+IF
+DB_DangerZone((TRIGGER)_Trigger,(STRING)_ID)
+THEN
+DB_DangerZone_DATADOUBLE((TRIGGER)_Trigger,(STRING)_ID);
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_DangerZone_SafeBubble((TRIGGER)_Trigger)
+THEN
+DB_DangerZone_SafeBubble_DATADOUBLE((TRIGGER)_Trigger);
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_DangerZone_SafeBubble_DATADOUBLE((TRIGGER)_Trigger)
+AND
+NOT DB_DangerZone_SafeBubble((TRIGGER)_Trigger)
+THEN
+PROC_DangerZone_MarkPlayersDirty(_Trigger);
+NOT DB_DangerZone_SafeBubble_DATADOUBLE((TRIGGER)_Trigger);
+
+
+IF
+DB_DangerZone_DATADOUBLE((TRIGGER)_Trigger,(STRING)_ID)
+AND
+NOT DB_DangerZone(_Trigger,_ID)
+THEN
+PROC_DangerZone_MarkPlayersDirty(_Trigger);
+NOT DB_DangerZone_DATADOUBLE((TRIGGER)_Trigger,(STRING)_ID);
+
+PROC
+PROC_DangerZone_MarkPlayersDirty((TRIGGER)_Trigger)
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player,_Trigger)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+PROC
+PROC_DangerZone_Safe((STRING)_ID)
+AND
+DB_InDangerZone(_Player,_ID)
+AND
+NOT QRY_DangerZone_IsInDangerZoneTrigger(_Player, _ID)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+QRY
+QRY_DangerZone_IsInDangerZoneTrigger((CHARACTER)_Player, (STRING)_ID)
+AND
+DB_DangerZone(_Trigger,_ID)
+AND
+DB_InRegion(_Player, _Trigger)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DangerZone_Safe((STRING)_ID)
+AND
+DB_DangerZone(_Trigger,_ID)
+THEN
+NOT DB_DangerZone(_Trigger,_ID);
+//END_REGION
+
+//REGION Entering/Leaving
+IF
+DB_DangerZone((TRIGGER)_Trigger,(STRING)_ID)
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player,_Trigger)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+IF
+DB_DangerZone_SafeBubble((TRIGGER)_Trigger)
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player,_Trigger)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+IF
+LeftTrigger(_Player,_Trigger)
+AND
+DB_DangerZone((TRIGGER)_Trigger,(STRING)_ID)
+AND
+DB_Players(_Player)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+IF
+LeftTrigger(_Player,_Trigger)
+AND
+DB_DangerZone_SafeBubble((TRIGGER)_Trigger)
+AND
+DB_Players(_Player)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+//If dismissing a companion in a danger zone
+IF
+DB_InDangerZone(_Player,_ID)
+AND
+NOT DB_Players(_Player)
+THEN
+PROC_DangerZone_Dirty(_Player);
+//END_REGION
+
+//REGION Check if Player is in Danger Zone
+PROC
+PROC_DangerZone_Dirty((CHARACTER)_Player)
+AND
+DB_DangerZone_PlayerInDZ_Temp(_Player,_ID)
+THEN
+NOT DB_DangerZone_PlayerInDZ_Temp(_Player,_ID);
+
+PROC
+PROC_DangerZone_Dirty((CHARACTER)_Player)
+AND
+DB_InRegion(_Player,_Trigger)
+AND
+DB_DangerZone(_Trigger,_ID)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_DangerZone_IsInSafeBubble(_Player)
+THEN
+DB_DangerZone_PlayerInDZ_Temp(_Player,_ID);
+
+PROC
+PROC_DangerZone_Dirty((CHARACTER)_Player)
+AND
+DB_InDangerZone(_Player,_ID)
+AND
+NOT DB_DangerZone_PlayerInDZ_Temp(_Player,_ID)
+THEN
+NOT DB_InDangerZone(_Player,_ID);
+PROC_CharacterLeftDangerZone(_Player,(STRING)_ID);
+
+PROC
+PROC_DangerZone_Dirty((CHARACTER)_Player)
+AND
+DB_DangerZone_PlayerInDZ_Temp(_Player,_ID)
+AND
+NOT DB_InDangerZone(_Player,_ID)
+THEN
+DB_InDangerZone(_Player,_ID);
+PROC_CharacterEnteredDangerZone(_Player,(STRING)_ID);
+
+PROC
+PROC_DangerZone_Dirty((CHARACTER)_Player)
+AND
+NOT DB_InDangerZone(_Player,_)
+THEN
+SetIsInDangerZone(_Player,0);
+
+PROC
+PROC_DangerZone_Dirty((CHARACTER)_Player)
+AND
+DB_InDangerZone(_Player,_ID)
+THEN
+SetIsInDangerZone(_Player,1);
+
+QRY
+QRY_DangerZone_IsInSafeBubble((CHARACTER)_Player)
+AND
+DB_InRegion(_Player,_Trigger)
+AND
+DB_DangerZone_SafeBubble((TRIGGER)_Trigger)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Links with defeat counters and faction tagging
+QRY
+QRY_DangerZone_ValidID((STRING)_ID)
+AND
+DB_DangerZone(_,_ID)
+THEN
+DB_NOOP(1);
+
+// (Perma)Defeatcounter finished Danger Zone ID -> zone is safe
+PROC
+PROC_GLO_DefeatCounter_AllDefeated(_ID)
+AND
+DB_DangerZone_SafeOnDefeated(_ID)
+THEN
+PROC_DangerZone_Safe(_ID);
+PROC_CorpseLooting_ClearRedOutlinesForDefeatCounter(_ID);
+
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated(_ID)
+AND
+QRY_DangerZone_ValidID(_ID)
+THEN
+PROC_DangerZone_Safe(_ID);
+PROC_CorpseLooting_ClearRedOutlinesForDefeatCounter(_ID);
+
+// Faction group defeated with Danger Zone ID -> zone is safe
+// (no need to clear red outlines, since already done by caller)
+PROC
+PROC_CorpseLooting_LootOwnershipCleared((STRING)_ID,_)
+AND
+QRY_DangerZone_ValidID(_ID)
+THEN
+PROC_DangerZone_Safe(_ID);
+
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_DangerZone_SafeOnGlobalFlagSet(_ID,_Flag)
+THEN
+PROC_DangerZone_Safe(_ID);
+// Can't change any red outlines here, since no list of affected characters
+
+//END_REGION
+
+//REGION HACK TO DISABLE DANGERZONES
+QRY
+QRY_DangerZone_IsInSafeBubble((CHARACTER)_Player)
+AND
+DB_HACK_TO_DISABLE_DANGERZONES(1)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("danger")
+THEN
+NOT DB_HACK_TO_DISABLE_DANGERZONES(1);
+
+IF
+TextEvent("danger")
+AND
+DB_Players(_Player)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+IF
+TextEvent("nodanger")
+THEN
+DB_HACK_TO_DISABLE_DANGERZONES(1);
+
+IF
+TextEvent("nodanger")
+AND
+DB_Players(_Player)
+THEN
+PROC_DangerZone_Dirty(_Player);
+
+//REGION External events
+PROC
+PROC_CharacterEnteredDangerZone((CHARACTER)_Char,(STRING)_ID)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CharacterLeftDangerZone((CHARACTER)_Char,(STRING)_ID)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

@@ -1,0 +1,156 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Positions
+//Use when a dialog with a timeline trigger can be started from many positions by the player, when we need multiple greeting nodes for the establishing shot.
+//Always keep one default flagless position in your dialog; if the player isn't in any trigger, the default will play.
+//Use 'area' triggers (box, sphere or poly). Triggers don't have to be registered. Triggers can overlap, the one defined first will have priority.
+//Create _Event_ global flags to match with the triggers. The flags will be cleared when the dialog ends.
+//When the dialog is starting, it will check if the first player is in any of those triggers and will set the flag.
+
+//--- DB_GLO_Cinematic_PositionedDialog: the dialog, with a ID to make the next DB less wide
+//--- DB_GLO_Cinematic_PositionFlags: each special positions, with a trigger and a matching flag
+DB_GLO_Cinematic_PositionedDialog((DIALOGRESOURCE)Dialog_00000000-0000-0000-0000-000000000000,"GLO_ID");
+DB_GLO_Cinematic_PositionFlags("GLO_ID",(TRIGGER)Trigger_00000000-0000-0000-0000-000000000000,(FLAG)GlobalEventFlag_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_Cinematic_PositionedDialog((DIALOGRESOURCE)Dialog_00000000-0000-0000-0000-000000000000,"GLO_ID");
+NOT DB_GLO_Cinematic_PositionFlags("GLO_ID",(TRIGGER)Trigger_00000000-0000-0000-0000-000000000000,(FLAG)GlobalEventFlag_00000000-0000-0000-0000-000000000000);
+//END_REGION
+KBSECTION
+//REGION Positions - initiate flag setup
+
+// One speaker
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1)
+AND
+DB_GLO_Cinematic_PositionedDialog(_Dialog,_ID)
+AND
+DB_Players((CHARACTER)_Speaker1)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker1);
+
+// Two or more speakers
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2)
+AND
+DB_GLO_Cinematic_PositionedDialog(_Dialog,_ID)
+AND
+QRY_GLO_Cinematic_FindPlayerPosition(_Dialog,_ID,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3)
+AND
+DB_GLO_Cinematic_PositionedDialog(_Dialog,_ID)
+AND
+QRY_GLO_Cinematic_FindPlayerPosition(_Dialog,_ID,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4)
+AND
+DB_GLO_Cinematic_PositionedDialog(_Dialog,_ID)
+AND
+QRY_GLO_Cinematic_FindPlayerPosition(_Dialog,_ID,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3,(CHARACTER)_Speaker4,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5)
+AND
+DB_GLO_Cinematic_PositionedDialog(_Dialog,_ID)
+AND
+QRY_GLO_Cinematic_FindPlayerPosition(_Dialog,_ID,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3,(CHARACTER)_Speaker4,(CHARACTER)_Speaker5,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Speaker1,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4,(GUIDSTRING)_Speaker5,(GUIDSTRING)_Speaker6)
+AND
+DB_GLO_Cinematic_PositionedDialog(_Dialog,_ID)
+AND
+QRY_GLO_Cinematic_FindPlayerPosition(_Dialog,_ID,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3,(CHARACTER)_Speaker4,(CHARACTER)_Speaker5,(CHARACTER)_Speaker6)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+//REGION Positions - queries find player(s)
+QRY
+QRY_GLO_Cinematic_FindPlayerPosition((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_Speaker1,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_)
+AND
+DB_Players(_Speaker1)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker1);
+
+QRY
+QRY_GLO_Cinematic_FindPlayerPosition((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_,(CHARACTER)_Speaker2,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_)
+AND
+DB_Players(_Speaker2)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker2);
+
+QRY
+QRY_GLO_Cinematic_FindPlayerPosition((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_Speaker3,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_)
+AND
+DB_Players(_Speaker3)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker3);
+
+QRY
+QRY_GLO_Cinematic_FindPlayerPosition((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_Speaker4,(CHARACTER)_,(CHARACTER)_)
+AND
+DB_Players(_Speaker4)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker4);
+
+QRY
+QRY_GLO_Cinematic_FindPlayerPosition((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_Speaker5,(CHARACTER)_)
+AND
+DB_Players(_Speaker5)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker5);
+
+QRY
+QRY_GLO_Cinematic_FindPlayerPosition((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_,(CHARACTER)_Speaker6)
+AND
+DB_Players(_Speaker6)
+THEN
+PROC_GLO_Cinematic_SetPositionFlag(_Dialog,_ID,_Speaker6);
+
+//END_REGION
+//REGION Positions - setting flag
+
+PROC
+PROC_GLO_Cinematic_SetPositionFlag((DIALOGRESOURCE)_Dialog,(STRING)_ID,(CHARACTER)_Player)
+AND
+DB_GLO_Cinematic_PositionFlags(_ID,(TRIGGER)_Trigger,(FLAG)_GlobalFlag)
+AND
+NOT DB_GLO_Cinematic_PositionedDialogHandled(_Dialog,_ID)
+AND
+IsInTrigger(_Player,_Trigger,1)
+THEN
+DB_GLO_Cinematic_PositionedDialogHandled(_Dialog,_ID);
+PROC_GlobalSetFlagAndCache(_GlobalFlag);
+
+IF
+DialogEnded(_Dialog,_)
+AND
+DB_GLO_Cinematic_PositionedDialogHandled(_Dialog,_ID)
+THEN
+NOT DB_GLO_Cinematic_PositionedDialogHandled(_Dialog,_ID);
+PROC_GLO_Cinematic_ClearPositionFlags(_ID);
+
+PROC
+PROC_GLO_Cinematic_ClearPositionFlags((STRING)_ID)
+AND
+DB_GLO_Cinematic_PositionFlags(_ID,_,_GlobalFlag)
+AND
+DB_GlobalFlag(_GlobalFlag)
+THEN
+PROC_GlobalClearFlagAndCache(_GlobalFlag);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

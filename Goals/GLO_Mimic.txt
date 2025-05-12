@@ -1,0 +1,440 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// [Link Redacted]
+// This is a scripting hack for the mimic transform
+// Define a mimic with its item form and the character
+// Third item is the mimic chest item at the location of the timeline scene trigger - this is a hack but hey, it works!
+// - Should usually be the same item as the first parameter
+NOT DB_Mimic((ITEM)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000);
+// Filled after mimic transforms
+NOT DB_MimicTransformed((ITEM)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+// First mimic encounter plays a cinematic
+DB_MimicPlayCine(1);
+
+// VFX and appear animation for mimic transformation
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)GLO_CINE_MimicWakeUp_c267e8fd-8eef-6677-521c-8354179098ba);
+KBSECTION
+//REGION Preparations
+
+IF
+DualEntityEvent(_ItemMimic,_Mimic,"GLO_Mimic_Init")
+AND
+IsItem(_ItemMimic,1)
+AND
+IsCharacter(_Mimic,1)
+THEN
+DB_Mimic((ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_ItemMimic);
+
+IF
+DB_Mimic(_Item,_Mimic,(ITEM)_)
+AND
+GetFaction(_Mimic,_InitFaction)
+THEN
+SetOnStage(_Mimic,0);
+SetOnStage(_Item,1);
+ApplyStatus(_Mimic,"GLO_MIMIC_WAKING",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+DB_Mimic_SavedCombatInfo(_Mimic,_InitFaction);
+SetFaction(_Mimic,GLO_Mimic_Waking_Neutral_7131bb49-4879-4a4f-a79e-6dc02eb8b56a);
+DB_PerceptionSkillCheckADBlocked(_Item);
+PROC_CharacterDisableAllCrimes(_Mimic);
+
+//END_REGION Preparations
+
+
+//REGION Transformation
+
+// Through cinematic
+PROC
+PROC_GLO_Mimic_TransformCine((CHARACTER)_Player,(GUIDSTRING)_ItemMimic)
+AND
+DB_Mimic((ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_CineMimicItem)
+THEN
+SetDualEntityEvent(_Player, _ItemMimic, "GLO_Mimic_TransformDelay");
+
+PROC
+PROC_GLO_Mimic_TransformCine((CHARACTER)_Player,(GUIDSTRING)_Mimic)
+AND
+DB_Mimic((ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_CineMimicItem)
+THEN
+SetDualEntityEvent(_Player, _ItemMimic, "GLO_Mimic_TransformDelay"); //One frame to see if it gets destroyed or damaged
+
+IF
+DestroyedBy(_ItemMimic, _Player, _, _)
+AND
+DB_Mimic((ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_CineMimicItem)
+THEN
+Die(_Mimic, DEATHTYPE.Physical, _Player, 1, 1, -1.0);
+PROC_GLO_Mimic_Transform_Inner((ITEM)_ItemMimic,(CHARACTER)_Mimic);
+
+IF
+DualEntityEvent(_Player, _ItemMimic, "GLO_Mimic_TransformDelay")
+AND
+NOT DB_Defeated(_ItemMimic)
+AND
+DB_Mimic((ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_CineMimicItem)
+THEN
+PROC_GLO_Mimic_TransformCine_Inner((CHARACTER)_Player,_ItemMimic,_Mimic,(ITEM)_CineMimicItem);
+
+PROC
+PROC_GLO_Mimic_TransformCine_Inner((CHARACTER)_Player,(ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+AND
+NOT DB_MimicPlayCine(_)
+THEN
+PROC_GLO_Mimic_Transform_Inner(_ItemMimic,_Mimic);
+
+PROC
+PROC_GLO_Mimic_TransformCine_Inner((CHARACTER)_Player,(ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_CineMimicItem)
+AND
+DB_MimicPlayCine(1)
+AND
+NOT QRY_GLO_Mimic_StartDialog(_Mimic,_Player,_CineMimicItem,_ItemMimic)
+THEN
+PROC_GLO_Mimic_Transform_Inner(_ItemMimic,_Mimic);
+
+PROC
+PROC_GLO_Mimic_TransformCine_Inner((CHARACTER)_Player,(ITEM)_ItemMimic,(CHARACTER)_Mimic,(ITEM)_CineMimicItem)
+AND
+DB_MimicPlayCine(1)
+THEN
+NOT DB_MimicPlayCine(1);
+
+QRY
+QRY_GLO_Mimic_StartDialog((CHARACTER)_Mimic,(CHARACTER)_Player,(ITEM)_CineMimicItem,(ITEM)_ItemMimic)
+AND
+QRY_StartDialog_Fixed(GLO_CINE_MimicWakeUp_c267e8fd-8eef-6677-521c-8354179098ba,_Mimic,_Player,_CineMimicItem)
+THEN
+DB_Mimic_CinematicDelay(_Player,_ItemMimic,_Mimic);
+
+IF
+DialogEnded((DIALOGRESOURCE)GLO_CINE_MimicWakeUp_c267e8fd-8eef-6677-521c-8354179098ba,_)
+AND
+DB_Mimic_CinematicDelay((CHARACTER)_Player,(ITEM)_ItemMimic,(CHARACTER)_Mimic)
+THEN
+NOT DB_Mimic_CinematicDelay(_Player,_ItemMimic,_Mimic);
+PROC_Poof(_ItemMimic,VFX_Enemies_Mimic_Transition_02_de5bba94-f95a-6b65-9897-fdeba72bcad1);
+TeleportTo(_Mimic,_ItemMimic,"GLO_Mimic_ToCinematic",0,0,0,1,1);
+DB_Mimic_AfterTeleport(_Player,_Mimic);
+
+IF
+EntityEvent(_Mimic,"GLO_Mimic_ToCinematic")
+AND
+DB_Mimic_AfterTeleport((CHARACTER)_,(CHARACTER)_Mimic)
+THEN
+SetOnStage(_Mimic,1);
+
+IF
+WentOnStage(_Mimic,1)
+AND
+DB_Mimic_AfterTeleport(_Player,(CHARACTER)_Mimic)
+THEN
+NOT DB_Mimic_AfterTeleport(_Player,_Mimic);
+PROC_GLO_Mimic_Cine_AfterTeleport(_Player,_Mimic);
+
+PROC
+PROC_GLO_Mimic_Cine_AfterTeleport((CHARACTER)_Player,(CHARACTER)_Mimic)
+AND
+DB_Mimic(_ItemMimic,_Mimic,(ITEM)_)
+THEN
+PROC_GLO_Mimic_Transform_StoreHP(_ItemMimic,_Mimic);
+RealtimeObjectTimerLaunch(_Mimic,"GLO_Mimic_Transformed_DelayForCineStart",500);
+
+IF
+ObjectTimerFinished(_Mimic,"GLO_Mimic_Transformed_DelayForCineStart")
+THEN
+SetEntityEvent(_Mimic,"GLO_Mimic_Transformed");
+
+
+// In-world
+PROC
+PROC_GLO_Mimic_Transform_Inner((ITEM)_ItemMimic,(CHARACTER)_Mimic)
+AND
+GetPosition(_ItemMimic,_X,_Y,_Z)
+THEN
+PROC_GLO_Mimic_Transform_StoreHP(_ItemMimic,_Mimic);
+PlayEffectAtPosition(VFX_Enemies_Mimic_Transition_01_be4c9332-269a-0e45-8406-96409500e841,_X,_Y,_Z,1.0);
+PlayEffect(_ItemMimic,VFX_Enemies_Mimic_Transition_OverlayMaterial_01_f851811a-e574-8c88-973f-4c1440831b2b,"",1.0);
+RealtimeObjectTimerLaunch(_ItemMimic,"Timer_GLO_Mimic_TransformVFXDelay",500);
+
+PROC
+PROC_GLO_Mimic_Transform_StoreHP((ITEM)_ItemMimic,(CHARACTER)_Mimic)
+AND
+NOT DB_Mimic_SetHPTo(_Mimic,_)
+AND
+GetHitpointsPercentage(_ItemMimic,_Percentage)
+THEN
+DB_Mimic_SetHPTo(_Mimic,_Percentage);
+
+
+IF
+ObjectTimerFinished(_ItemMimic,"Timer_GLO_Mimic_TransformVFXDelay")
+AND
+DB_Mimic((ITEM)_ItemMimic,_Mimic,(ITEM)_)
+THEN
+PROC_Poof(_ItemMimic,VFX_Enemies_Mimic_Transition_02_de5bba94-f95a-6b65-9897-fdeba72bcad1);
+SetOnStage(_Mimic,1);
+TeleportTo(_Mimic,_ItemMimic,"GLO_Mimic_Transformed",0,0,0,1,1);
+PlayEffect(_Mimic,VFX_Enemies_Mimic_Transition_OverlayMaterial_02_49d3875c-35ab-c511-4d1b-e93a800e3ad3,"",1.0);
+
+IF
+EntityEvent(_Mimic,"GLO_Mimic_Transformed")
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+THEN
+DB_MimicTransformed(_ItemMimic,_Mimic);
+RemoveStatus(_Mimic,"GLO_MIMIC_WAKING",NULL_00000000-0000-0000-0000-000000000000);
+PROC_GLO_Mimic_Transformed(_ItemMimic,_Mimic);
+PROC_CharacterEnableAllCrimes(_Mimic);
+
+IF
+StatusRemoved(_Mimic,"GLO_MIMIC_WAKING",_,_)
+AND
+DB_Mimic_SavedCombatInfo((CHARACTER)_Mimic,_InitFaction)
+THEN
+SetFaction(_Mimic,_InitFaction);
+NOT DB_Mimic_SavedCombatInfo((CHARACTER)_Mimic,_InitFaction);
+
+IF
+EnteredCombat(_Mimic,_CombatID)
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+AND
+DB_DialogNPCs(_,_Mimic,_)
+THEN
+PauseCombat(_CombatID);
+
+IF
+DialogActorLeft(_,_,_Mimic,1)
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+AND
+DB_Is_InCombat(_Mimic,_CombatID)
+THEN
+ResumeCombat(_CombatID);
+
+IF
+EntityEvent(_Mimic,"GLO_Mimic_Transformed")
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+AND
+DB_Mimic_SetHPTo(_Mimic,_Percentage)
+THEN
+SetHitpointsPercentage(_Mimic,_Percentage);
+
+IF
+EntityEvent(_Mimic,"GLO_Mimic_Transformed")
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+AND
+DB_Mimic_SetHPTo(_Mimic,_Percentage)
+AND
+_Percentage == 0
+AND
+DB_Mimic_AttackedBy_Info(_Mimic,_Attacker,_DmgType,_DmgAmount)
+THEN
+ApplyDamage(_Mimic,_DmgAmount,_DmgType,_Attacker);
+
+IF
+EntityEvent(_Mimic,"GLO_Mimic_Transform")
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+THEN
+PROC_GLO_Mimic_Transform_Inner(_ItemMimic,_Mimic);
+
+IF
+EntityEvent(_ItemMimic,"GLO_Mimic_Transform")
+AND
+DB_Mimic((ITEM)_ItemMimic,_Mimic,(ITEM)_)
+THEN
+PROC_GLO_Mimic_Transform_Inner(_ItemMimic,_Mimic);
+
+//END_REGION Transformation
+
+
+//REGION Handle/block interactions
+
+IF
+ForceMoveStarted(_Character, _ItemMimic, _)
+AND
+DB_Mimic((ITEM)_ItemMimic, _Mimic,(ITEM)_)
+THEN
+DB_Mimic_Moving(_ItemMimic, _Mimic);
+PROC_Mimic_SetTransformCause(_Mimic, (CHARACTER)_Character);
+
+IF
+ForceMoveEnded(_, _ItemMimic, _)
+AND
+DB_Mimic_Moving((ITEM)_ItemMimic, _Mimic)
+AND
+DB_Mimic_TransformCausee(_Mimic, (CHARACTER)_Character)
+THEN
+DB_Mimic_NoSurprise(_ItemMimic,_Mimic);
+PROC_GLO_Mimic_TransformCine(_Character,_Mimic);
+
+IF
+ForceMoveEnded(_, _ItemMimic, _)
+AND
+DB_Mimic_Moving((ITEM)_ItemMimic, _Mimic)
+THEN
+NOT DB_Mimic_Moving(_ItemMimic, _Mimic);
+
+PROC
+PROC_BlockUseOfItem(_Character,_ItemMimic)
+AND
+NOT DB_Mimic_Moving(_ItemMimic, _)
+AND
+DB_Mimic(_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_CustomUseItemResponse(_Character,_ItemMimic,0);
+PROC_Mimic_SetTransformCause(_Mimic, _Character);
+PROC_GLO_Mimic_TransformCine(_Character,_Mimic);
+
+PROC
+PROC_BlockMoveOfItem(_Character,_ItemMimic)
+AND
+NOT DB_Mimic_Moving(_ItemMimic, _)
+AND
+DB_Mimic(_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_CustomMoveItemResponse(_Character,_ItemMimic,0);
+PROC_Mimic_SetTransformCause(_Mimic, _Character);
+PROC_GLO_Mimic_TransformCine(_Character,_Mimic);
+
+PROC
+PROC_BlockPickupOfItem(_Character,_ItemMimic)
+AND
+NOT DB_Mimic_Moving(_ItemMimic, _)
+AND
+DB_Mimic(_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_CustomPickupItemResponse(_Character,_ItemMimic,0);
+PROC_Mimic_SetTransformCause(_Mimic, _Character);
+PROC_GLO_Mimic_TransformCine(_Character,_Mimic);
+
+PROC
+PROC_BlockLockpickItem(_Character,_ItemMimic)
+AND
+NOT DB_Mimic_Moving(_ItemMimic, _)
+AND
+DB_Mimic(_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_CustomLockpickItemResponse(_Character,_ItemMimic,0);
+PROC_Mimic_SetTransformCause(_Mimic, _Character);
+PROC_GLO_Mimic_TransformCine(_Character,_Mimic);
+
+PROC
+PROC_BlockCombineItem(_Character,_ItemMimic)
+AND
+NOT DB_Mimic_Moving((ITEM)_ItemMimic, _)
+AND
+DB_Mimic(_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_CustomCombineItemResponse(_Character,_ItemMimic,0);
+PROC_Mimic_SetTransformCause(_Mimic, _Character);
+PROC_GLO_Mimic_TransformCine(_Character,_Mimic);
+
+IF
+AttackedBy(_ItemMimic,_AttackerOwner,_Attacker,_DmgType,_DmgAmount,_DmgCause,_StoryID)
+AND
+NOT DB_Mimic_Moving((ITEM)_ItemMimic, _)
+AND
+DB_Mimic((ITEM)_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_Mimic_AttackedBy_Info(_Mimic,_Attacker,_DmgType,_DmgAmount);
+DB_Mimic_NoSurprise(_ItemMimic,_Mimic);
+DB_Mimic_TransformCausee_Distance(_ItemMimic,_Mimic,(CHARACTER)_AttackerOwner);
+PROC_GLO_Mimic_TransformCine((CHARACTER)_AttackerOwner,_Mimic);
+
+IF
+StatusApplied(_ItemMimic,_Status,_Causee,_)
+AND
+NOT DB_Mimic_Moving((ITEM)_ItemMimic, _)
+AND
+DB_Mimic((ITEM)_ItemMimic,_Mimic,(ITEM)_)
+AND
+IsCharacter(_Causee,1)
+THEN
+PROC_Mimic_SetTransformCause(_Mimic, (CHARACTER)_Causee);
+DB_Mimic_TransformCausee_Distance(_ItemMimic,_Mimic,(CHARACTER)_Causee);
+PROC_GLO_Mimic_TransformCine(_Causee,_Mimic);
+
+IF
+DB_Mimic_TransformCausee_Distance((ITEM)_ItemMimic,(CHARACTER)_Mimic,(CHARACTER)_Player)
+AND
+GetDistanceTo(_ItemMimic,_Player,_Distance)
+AND
+_Distance >= 8.0
+THEN
+SetFlag(GLO_Mimic_WakeFromFar_b7e3d436-f1fa-4a0a-ba91-c9684300474c,_Mimic);
+
+PROC
+PROC_Mimic_SetTransformCause((CHARACTER)_Mimic, (CHARACTER)_Character)
+AND
+NOT DB_Mimic_TransformCausee(_Mimic, _)
+THEN
+DB_Mimic_TransformCausee(_Mimic,_Character);
+
+//END_REGION Handle/block interactions
+
+
+//REGION Perception and SURPRISED
+
+PROC
+PROC_RollResult("GLO_HiddenItemCheck", _Player, _ItemMimic, 1)
+AND
+DB_Mimic((ITEM)_ItemMimic,_Mimic,(ITEM)_)
+THEN
+DB_Mimic_NoSurprise(_ItemMimic,_Mimic);
+PROC_TryStartAD(GLO_PAD_Mimic_Revealed_55471c86-3b69-ccae-d0e3-e8749cf41d9e,_Player);
+PROC_GLO_Mimic_Revealed(_Player,_ItemMimic,_Mimic,1);
+
+PROC
+PROC_RollResult("GLO_HiddenItemCheck", _Player, _ItemMimic, _Result)
+AND
+_Result != 1
+AND
+DB_Mimic((ITEM)_ItemMimic,_Mimic,(ITEM)_)
+THEN
+PROC_GLO_Mimic_Revealed(_Player,_ItemMimic,_Mimic,0);
+
+
+IF
+DB_Is_InCombat(_Mimic,_CombatID)
+AND
+DB_Mimic(_ItemMimic,(CHARACTER)_Mimic,(ITEM)_)
+AND
+DB_Mimic_TransformCausee(_Mimic,_Causee)
+AND
+DB_Is_InCombat(_Causee,_CombatID)
+AND
+NOT DB_Mimic_NoSurprise(_,(CHARACTER)_Mimic)
+THEN
+PROC_MakeSurprised(_Causee,1,1);
+PROC_GLO_Mimic_SurprisedPAD(_Causee);
+
+PROC
+PROC_GLO_Mimic_SurprisedPAD((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+THEN
+PROC_TryStartAD(GLO_PAD_Mimic_Surprised_cb5f94c8-ee5b-c17a-959c-64bc6f88b417,_Player);
+//END_REGION Perception and SURPRISED
+
+IF
+DB_MimicTransformed(_ItemMimic,_Mimic)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_Mimic_Transformed((ITEM)_ItemMimic,(CHARACTER)_Mimic)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_Mimic_Revealed((CHARACTER)_Player,(ITEM)_ItemMimic,(CHARACTER)_Mimic,(INTEGER)_RevealedResult)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

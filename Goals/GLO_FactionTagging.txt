@@ -1,0 +1,348 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// [Link Redacted]
+NOT DB_FactionTagging_TrackTag("","",(FACTION)NULL_00000000-0000-0000-0000-000000000000,(TAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_FactionTagging_FactionTagged("",(FACTION)NULL_00000000-0000-0000-0000-000000000000,(TAG)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Helpers
+// Helper DBs for quick checking
+IF
+DB_FactionTagging_TrackTag(_Level,_Identifier,_Faction,_Tag)
+THEN
+DB_FactionTagging_InternalTrackingTag(_Tag);
+
+IF
+DB_FactionTagging_InternalTrackingTag(_Tag)
+AND
+NOT DB_FactionTagging_TrackTag(_,_,_,_Tag)
+THEN
+NOT DB_FactionTagging_InternalTrackingTag(_Tag);
+
+IF
+DB_FactionTagging_TrackTag(_Level,_Identifier,_Faction,_Tag)
+THEN
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag);
+
+IF
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+AND
+NOT DB_FactionTagging_TrackTag(_Level,_,_,_Tag)
+THEN
+NOT DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag);
+
+IF
+DB_FactionTagging_TrackTag(_Level,_Identifier,_Faction,_Tag)
+THEN
+DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag);
+
+IF
+DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag)
+AND
+NOT DB_FactionTagging_TrackTag(_Level,_,_Faction,_Tag)
+THEN
+NOT DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag);
+
+// Checks whether _Character can be accessed by script in a level where we
+// track _Tag (global, or it is inside that level).
+QRY
+QRY_FactionTagging_CharacterExistsInTrackedLevel((CHARACTER)_Character,(TAG)_Tag)
+AND
+GetRegion(_Character,_Level)
+AND
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_FactionTagging_CharacterExistsInTrackedLevel((CHARACTER)_Character,(TAG)_Tag)
+AND
+IsGlobal(_Character,1)
+AND
+DB_FactionTagging_InternalTrackingTag(_Tag)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_FactionTagging_CheckRemovedFactionMember((CHARACTER)_Character,(FACTION)_Faction,(STRING)_Reason)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+AND
+// Can be either because we're not tracking _Faction, or because
+// _Faction was not fully tagged. In both cases we need to check:
+//   - not tracking _Faction: a parent faction could be tracked
+//   - _Faction was not fully tagged: now that this character left,
+//     it may be fully tagged
+NOT DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag)
+AND
+IsTagged(_Character,_Tag,0)
+AND
+QRY_FactionTagging_CharacterExistsInTrackedLevel(_Character,_Tag)
+THEN
+// Check as if a member of this faction got the tag set (since we removed one without the tag)
+PROC_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"Set");
+
+PROC
+PROC_FactionTagging_CheckAddedFactionMember((CHARACTER)_Character,(FACTION)_Faction,(STRING)_Reason)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+AND
+QRY_OnlyOnce_Reset("GLO_FactionTagging_CheckedTag")
+AND
+// If no faction has been tagged yet with this tag, they can't become untagged either.
+// Do not match _Faction, here, because it could be a parent faction that was fully
+// tagged and needs to be cleared.
+DB_FactionTagging_FactionTagged(_Level,_,_Tag)
+AND
+QRY_OnlyOnce("GLO_FactionTagging_CheckedTag")
+AND
+IsTagged(_Character,_Tag,0)
+AND
+QRY_FactionTagging_CharacterExistsInTrackedLevel(_Character,_Tag)
+THEN
+// Check as if a member of this faction got the tag cleared (since we added one without the tag)
+PROC_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"Cleared");
+
+PROC
+PROC_FactionTagging_QueueTagChanged((FACTION)_Faction,(TAG)_Tag,(STRING)_Reason,(STRING)_Operation)
+THEN
+DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,_Operation);
+// Especially when loading/switching levels, this will allow us to merge several entries
+// because of multiple faction changes for characters of the same faction
+TimerCancel("GLO_FactionTagging_Process");
+TimerLaunch("GLO_FactionTagging_Process",0);
+//END_REGION
+
+//REGION Track factions getting tagged
+IF
+TagSet((GUIDSTRING)_Character,_Tag)
+AND
+DB_FactionTagging_InternalTrackingTag(_Tag)
+AND
+IsCharacter(_Character,1)
+AND
+QRY_FactionTagging_CharacterExistsInTrackedLevel((CHARACTER)_Character,_Tag)
+AND
+GetBaseFaction(_Character,_Faction)
+THEN
+PROC_FactionTagging_QueueTagChanged(_Faction,_Tag,"TagSet","Set");
+
+IF
+TimerFinished("GLO_FactionTagging_Process")
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"Set")
+AND
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+THEN
+NOT DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"Set");
+PROC_FactionTagging_CheckTagSet(_Level,_Faction,_Tag,_Reason);
+
+// Tracking this faction -> check if the tag is now set on all members, and then
+// recursively check the parent faction if the current faction was fully tagged (since
+// (if it's not, then the parent faction by definition cannot be fully tagged)
+PROC
+PROC_FactionTagging_CheckTagSet((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag)
+AND
+FactionIsTagged(_Faction,LQUANT.ALL,_Tag,_Success)
+THEN
+PROC_FactionTagging_HandleTaggedResult(_Level,_Faction,_Tag,_Reason,_Success);
+
+// Not tracking this faction -> recursively check whether the parent factions are
+// tracked and adjust those.
+PROC
+PROC_FactionTagging_CheckTagSet((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+NOT DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag)
+AND
+FactionGetParentFaction(_Faction,1,_ParentFaction)
+THEN
+PROC_FactionTagging_CheckTagSet(_Level,_ParentFaction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_HandleTaggedResult((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason,1)
+AND
+DB_FactionTagging_TrackTag(_Level,_Identifier,_Faction,_Tag)
+THEN
+DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag);
+PROC_FactionTagging_TagSet(_Level,_Identifier,_Faction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_HandleTaggedResult((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason,1)
+AND
+FactionGetParentFaction(_Faction,1,_ParentFaction)
+THEN
+PROC_FactionTagging_CheckTagSet(_Level,_ParentFaction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_TagSet((STRING)_Level,(STRING)_Identifier,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Track faction getting untagged
+IF
+TagCleared((GUIDSTRING)_Character,_Tag)
+AND
+DB_FactionTagging_InternalTrackingTag(_Tag)
+AND
+IsCharacter(_Character,1)
+AND
+QRY_FactionTagging_CharacterExistsInTrackedLevel((CHARACTER)_Character,_Tag)
+AND
+GetBaseFaction(_Character,_Faction)
+THEN
+PROC_FactionTagging_QueueTagChanged(_Faction,_Tag,"TagCleared","Cleared");
+
+IF
+TimerFinished("GLO_FactionTagging_Process")
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"Cleared")
+AND
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+THEN
+NOT DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"Cleared");
+PROC_FactionTagging_ProcessTagCleared(_Level,_Faction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_ProcessTagCleared((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+NOT DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag)
+AND
+FactionGetParentFaction(_Faction,1,_ParentFaction)
+THEN
+PROC_FactionTagging_ProcessTagCleared(_Level,_ParentFaction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_ProcessTagCleared((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag)
+AND
+FactionGetParentFaction(_Faction,1,_ParentFaction)
+THEN
+PROC_FactionTagging_ProcessTagCleared(_Level,_ParentFaction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_ProcessTagCleared((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag)
+AND
+DB_FactionTagging_TrackTag(_Level,_Identifier,_Faction,_Tag)
+THEN
+NOT DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag);
+PROC_FactionTagging_TagCleared(_Level,_Identifier,_Faction,_Tag,_Reason);
+
+PROC
+PROC_FactionTagging_TagCleared((STRING)_Identifier,(STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+
+//REGION Process rechecking whether or not a faction that was tagged, is no longer completely tagged
+IF
+TimerFinished("GLO_FactionTagging_Process")
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"CheckCleared")
+AND
+DB_FactionTagging_InternalTrackingLevelTag(_Level,_Tag)
+THEN
+NOT DB_FactionTagging_QueueTagChanged(_Faction,_Tag,_Reason,"CheckCleared");
+PROC_FactionTagging_CheckTagCleared(_Level,_Faction,_Tag,_Reason);
+
+// Not tracked -> check parent faction
+PROC
+PROC_FactionTagging_CheckTagCleared((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+NOT DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag)
+AND
+FactionGetParentFaction(_Faction,1,_ParentFaction)
+THEN
+PROC_FactionTagging_CheckTagCleared(_Level,_ParentFaction,_Tag,_Reason);
+
+// Marked as tagged, but no longer tagged -> switch to regular clearing
+PROC
+PROC_FactionTagging_CheckTagCleared((STRING)_Level,(FACTION)_Faction,(TAG)_Tag,(STRING)_Reason)
+AND
+DB_FactionTagging_FactionTagged(_Level,_Faction,_Tag)
+AND
+FactionIsTagged(_Faction,LQUANT.ALL,_Tag,0)
+THEN
+PROC_FactionTagging_ProcessTagCleared(_Level,_Faction,_Tag,_Reason);
+//END_REGION
+
+//REGION Changing faction -> update tagged state
+IF
+BaseFactionChanged(_Character,_OldFaction,_NewFaction)
+THEN
+PROC_FactionTagging_CheckRemovedFactionMember(_Character,_OldFaction,"BaseFactionChanged");
+
+IF
+BaseFactionChanged(_Character,_OldFaction,_NewFaction)
+THEN
+PROC_FactionTagging_CheckAddedFactionMember(_Character,_NewFaction,"BaseFactionChanged");
+//END_REGION
+
+//REGION Entering/Leaving level -> updated tagged state
+IF
+EnteredLevel(_Character,_,_)
+AND
+QRY_IsExistingCharacter(_Character,1)
+AND
+GetFaction((CHARACTER)_Character,_Faction)
+THEN
+PROC_FactionTagging_CheckAddedFactionMember(_Character,_Faction,"EnteredLevel");
+
+IF
+LeftLevel(_Character,_)
+AND
+QRY_IsExistingCharacter(_Character,1)
+AND
+GetFaction((CHARACTER)_Character,_Faction)
+THEN
+PROC_FactionTagging_CheckRemovedFactionMember(_Character,_Faction,"LeftLevel");
+//END_REGION
+
+//REGION Recheck on switching levels
+IF
+LevelLoaded(_Level)
+AND
+NOT DB_FactionTagging_PreviousLevelActive(_Level)
+AND
+DB_Factiontagging_InternalTrackingLevelFactionTag(_Level,_Faction,_Tag)
+THEN
+// Check if any factions for which we track tags are fully tagged
+PROC_FactionTagging_QueueTagChanged(_Faction,_Tag,"LevelLoaded","Set");
+// Check if any factions for which we track tags were previously tagged, but are
+// not so anymore (can happen if we previously visited this level, switched to a
+// new one, teleported a character from the new level back to this level, and then
+// switched back to this level)
+PROC_FactionTagging_QueueTagChanged(_Faction,_Tag,"LevelLoaded","CheckIfCleared");
+
+// Be able to distinguish savegame loads from level swapping
+IF
+LevelLoaded(_Level)
+AND
+DB_FactionTagging_PreviousLevelActive(_PreviousLevel)
+THEN
+NOT DB_FactionTagging_PreviousLevelActive(_PreviousLevel);
+
+IF
+LevelLoaded(_Level)
+THEN
+DB_FactionTagging_PreviousLevelActive(_Level);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

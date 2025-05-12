@@ -1,0 +1,44 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/* Disabled until we can fix bugs - this transform breaks explanatory passives in tooltips and breaks stacking
+DB_GLO_HarvestablePlant(CONS_Herbs_Daggeroot_Plant_A_374c2898-cea4-43c9-9687-6d99a0c92ad7, "HERB_DAGGEROOT_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Autumncrocus_Plant_A_691da3f8-0fca-4aa9-b5cd-89bc96e3cc74, "HERB_AUTUMNCROCUS_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Balsam_Plant_A_9a524608-1ad1-4d01-ae99-76fb3c513b3c, "HERB_BALSAM_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Belladonna_Plant_A_1a7d3387-3c57-4ae7-9e7a-eb0eb0199dc3, "HERB_BELLADONNA_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Mergrass_Plant_A_3e518433-1923-43f5-856f-848028ac3bad, "HERB_MERGRASS_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Mugwort_Plant_A_e03b8342-3c50-4cec-b34c-c50ce1968bc3, "HERB_MUGWORT_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Weavemoss_Plant_A_35878644-f61a-47c5-9256-d724ac88217c, "HERB_WEAVEMOSS_WILD");
+DB_GLO_HarvestablePlant(CONS_Herbs_Wispweed_Plant_A_7b8e0fa5-8f8d-4679-b42a-800f5e703bdb, "HERB_WISPWEED_WILD");
+
+*/
+KBSECTION
+/* Disabled until we can fix bugs - this transform breaks explanatory passives in tooltips and breaks stacking
+
+PROC
+PROC_BlockPickupOfItem(_Character, _Item)
+AND
+GetTemplate(_Item, _Template)
+AND
+DB_GLO_HarvestablePlant(_Template, _Status)
+AND
+HasActiveStatus(_Item, _Status, 0)
+THEN
+ApplyStatus(_Item, _Status, -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+
+//This won't stack well, but it's a necessary fallback.
+IF
+TemplateAddedTo(_Template,_Item,_, _)
+AND
+DB_GLO_HarvestablePlant(_Template, _Status)
+AND
+Exists(_Item,1)
+AND
+HasActiveStatus(_Item, _Status, 0)
+THEN
+ApplyStatus(_Item, _Status, -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+*/
+EXITSECTION
+
+ENDEXITSECTION

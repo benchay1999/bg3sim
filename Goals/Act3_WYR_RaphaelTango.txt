@@ -1,0 +1,797 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_SetupForAct_Character("BGO_Main_A", S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297);
+DB_GLO_SetupForAct_Character("BGO_Main_A", S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+DB_GLO_SetupForAct_Character("BGO_Main_A", S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+// Raphael
+DB_WYR_RaphaelTango_DealDialogs((DIALOGRESOURCE)WYR_RaphaelTango_Raphael_SoloScene_e95ac422-e05d-f119-68fd-e382d71f7c79);
+DB_WYR_RaphaelTango_DealDialogs((DIALOGRESOURCE)WYR_RaphaelTango_Raphael_a1f66273-7c21-13d2-2888-4cb082e5f9ac);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)WYR_RaphaelTango_Raphael_SoloScene_e95ac422-e05d-f119-68fd-e382d71f7c79);
+
+DB_WYR_RaphaelTango_PlayedAsssaultAD(0);
+
+// Voss states
+DB_State_Priority(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "AwaitingSetup", 100);
+DB_State_Priority(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "RaphaelTango", 200);
+DB_State_Flags(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "RaphaelTango", WYR_RaphaelTango_Voss_State_TangoInProgress_2228d775-30ff-45b6-a711-e2865b704b51);
+DB_State_Priority(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting", 300);
+DB_State_Priority(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomTalked", 400);
+DB_State_Priority(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "Left", 600);
+DB_State_Flags(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "Left", WYR_RaphaelTango_Voss_State_Left_946e15d2-1ef0-455e-88a0-e8ca0e2653d6);
+DB_State_Priority(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "PermaDefeated", 2000);
+
+DB_State_Current(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "AwaitingSetup");
+
+DB_CharacterInRegionFlag(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, S_WYR_RaphaelTango_VossTaproomArea_d8429450-66ad-4094-a4c8-9883357f6ce6, WYR_RaphaelTango_State_VossInTaproom_bcff9e30-220f-44e8-93d2-b6bef5e69646);
+
+// Emperor dialog after Raphael teleport
+DB_Dialog_AddAllNearbyPlayersAtStart(WYR_RaphaelTango_Emperor_AfterRaphael_2359ffb0-7fbf-c94c-1d7e-d0f0d29f805b);
+DB_TriggerEvents_AllPlayersLeft(S_WYR_RaphaelTango_RoomAreaOutside_984fbd85-301e-420e-92c1-de5dd6dec423, "WYR_Raphael_EmperorSpeaksToPlayer_LastLeft");
+
+// Raphael's stuff
+TemplateAddTo((ITEMROOT)BOOK_UNI_LOW_RaphaelsDiary3_50240e03-01ca-4e2a-bc28-3d72ca074c60,S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8,1,0);
+SetOnStage(S_WYR_RaphaelTango_RaphaelsMessenger_1029999e-41d0-4f10-88c1-fa2f5718a609,0); // we no longer need them, forever staged off guy
+
+// Korrilla's notes
+PROC_SetOnStage(S_WYR_RaphaelTango_WarlockRecords_aa42c2a0-2ddd-400e-9cb2-32a7f5f796b6, 0);
+DB_BookFlags(S_WYR_RaphaelTango_WarlockRecords_aa42c2a0-2ddd-400e-9cb2-32a7f5f796b6, (FLAG)LOW_DevilsFee_Knows_HelsikWayHoH_6beeb7f7-53ec-c6dc-0261-95b8d7c2fb4e);
+KBSECTION
+//REGION Warlock
+PROC
+PROC_StartDialog_AddExtraSpeakers(WYR_RaphaelTango_Warlock_0c6d3ba7-7e9e-c35f-35b6-ea6905a00ba5, _InstanceID)
+AND
+DB_DialogRequestCache_SpeakerList_Players(WYR_RaphaelTango_Warlock_0c6d3ba7-7e9e-c35f-35b6-ea6905a00ba5, _Inst, _Player, 1)
+AND
+GetFlag((FLAG)WYR_RaphaelTango_HasMet_Warlock_a57c8ade-2dd8-ebaf-f33e-b1f395731f8f, _Player, 0)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_WYR_SharessCaress_Bartender_ab24945c-268d-4f90-b8ea-bbb11cd50157, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297)
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID, S_WYR_SharessCaress_Bartender_ab24945c-268d-4f90-b8ea-bbb11cd50157);
+
+// Reaction on Raphael leaving
+IF
+FlagSet(WYR_RaphaelTango_State_RetreatedAfterAssault_36233fc0-0f9a-439a-95a7-a693b0527f2d,_,_)
+AND
+DB_GlobalFlag((FLAG)GLO_Warlock_State_InSharessCaress_e3682219-f9b6-482f-9419-cc2adaf037c0)
+THEN
+PROC_GLO_Warlock_TeleportOut();
+
+// AD after talking to Raphael
+IF
+FlagSet((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198,_,_)
+AND
+QRY_State_IsBeforeState(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", "GLO_Warlock_LeftBaldursGate")
+AND
+NOT DB_PermaDefeated(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297)
+THEN
+DB_SpotPlayers(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_RaphaelTango_WarlockSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SpotPlayers_Spotted(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_RaphaelTango_WarlockSpotting", _)
+AND
+QRY_State_IsBeforeState(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", "GLO_Warlock_LeftBaldursGate")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)WYR_RaphaelTango_AD_WarlockAfterRaphael_d893f21a-0714-46b2-45ba-e5c53658e837, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297);
+
+PROC
+PROC_State_Changed(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", _,_)
+AND
+NOT QRY_State_IsBeforeState(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", "GLO_Warlock_LeftBaldursGate")
+THEN
+PROC_SpotPlayers_StopSpotting(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "WYR_RaphaelTango_WarlockSpotting");
+
+IF
+DB_State_Current(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, "GLO_Warlock", "GLO_Warlock_InviteToRaphael")
+THEN
+DB_ExecuteWhenObjectInCurrentLevel("GLO_Warlock_RemoveWarlockRecords",S_WYR_RaphaelTango_WarlockRecords_aa42c2a0-2ddd-400e-9cb2-32a7f5f796b6);
+
+PROC
+PROC_ExecuteWhenObjectInCurrentLevel("GLO_Warlock_RemoveWarlockRecords",S_WYR_RaphaelTango_WarlockRecords_aa42c2a0-2ddd-400e-9cb2-32a7f5f796b6)
+AND
+IsInInventoryOf(S_WYR_RaphaelTango_WarlockRecords_aa42c2a0-2ddd-400e-9cb2-32a7f5f796b6, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 0)
+THEN
+PROC_ToInventoryAndOnStage(S_WYR_RaphaelTango_WarlockRecords_aa42c2a0-2ddd-400e-9cb2-32a7f5f796b6, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297);
+
+//END_REGION
+
+//REGION Raphael setup
+IF
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+THEN
+DB_GlobalFlagReactionAfterDialog(GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc, _Dialog);
+DB_GlobalFlagReactionAfterDialog(WYR_Raphael_Event_TeleportOut_45e8b74d-184f-c3f4-ea72-c93319cf004f, _Dialog);
+DB_GlobalFlagReactionAfterDialog(WYR_RaphaelTango_Knows_WantsCrown_bb036e77-187b-f44d-9b26-8abc004bd9f6, _Dialog);
+DB_FlagReactionAfterDialog(WYR_RaphaelTango_Event_GiveHammer_7408e967-2e91-320b-d2b8-266cfaecde41, _Dialog); 
+
+PROC
+PROC_GLO_SetupForAct("BGO_Main_A", S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 1)
+AND
+QRY_State_IsBeforeState(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress")
+THEN
+PROC_GLO_SetupForAct_Place(
+	S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 
+	S_WYR_RaphaelTango_RaphaelSpot_80a733a3-50db-4892-9991-4c902bab77cc,
+	NULL_00000000-0000-0000-0000-000000000000,
+	WYR_RaphaelTango_Raphael_SoloScene_e95ac422-e05d-f119-68fd-e382d71f7c79,
+	"WYR_RaphaelTango_Raphael_Init");
+PROC_SceneDialogOnly("WYR_RaphaelTango_SoloScene_SceneDialogOnly", S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, S_WYR_RaphaelTango_SceneOnlyDialogArea_86e23280-b3da-4c27-adf8-854805643179);
+PROC_State_Progress(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress");
+
+// Raphael leaves
+PROC
+PROC_LongRestOrLevelUnloading("BGO_Main_A")
+AND
+DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+AND
+DB_GlobalFlag(WYR_RaphaelTango_State_Present_ab3e98bb-550d-42e1-bbcb-42e880a9fbfc)
+THEN
+PROC_State_Progress(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_LeftSharess");
+PROC_SetOnStage(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 0);
+
+PROC
+PROC_State_Changed(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", _, "GLO_Monitor_LeftSharess")
+THEN
+PurgeOsirisQueue(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+PROC_GLO_Monitor_Poof();
+
+IF
+DialogStarted(_Dialog, _)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+AND
+NOT DB_GlobalFlag(WYR_SharessCaress_Knows_RaphaelInSharess_63e92afc-0fad-0d53-fa28-b995cadf9d68)
+THEN
+NOT DB_QuestDef_State_ConditionalFlag((FLAG)WYR_SharessCaress_Knows_RaphaelInSharess_63e92afc-0fad-0d53-fa28-b995cadf9d68, "GLO_RaphaelDeal", "GotMamzellInvitation", 0, (FLAG)WYR_RaphaelTango_Warlock_State_Talked_07639773-0bcd-8536-53ca-d025c1a6988a);
+PROC_GlobalSetFlagAndCache((FLAG)WYR_SharessCaress_Knows_RaphaelInSharess_63e92afc-0fad-0d53-fa28-b995cadf9d68);
+
+//END_REGION
+
+//REGION Raphael assault handling
+// The player tries to attack Raphael, who's immortal
+
+QRY
+QRY_CRIME_BlockRegisterCrime(_PartyMember, _Crime, _, S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, _CrimeID)
+AND
+DB_State_Current(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress")
+AND
+DB_WYR_RaphaelTango_RaphaelHandlingAssault(1)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Assault")
+THEN
+PROC_WYR_RaphaelTango_RaphaelHandledAssault();
+
+QRY
+QRY_CRIME_BlockRegisterCrime(_PartyMember, _Crime, _, S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, _CrimeID)
+AND
+NOT DB_WYR_RaphaelTango_RaphaelHandlingAssault(1)
+AND
+DB_State_Current(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress")
+AND
+DB_PartyMembers(_PartyMember)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Assault")
+AND
+GetHitpointsPercentage(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, _Percentage)
+AND
+_Percentage > 50.0 // If >50% hp, he teleports the player out of the room
+THEN
+DB_WYR_RaphaelTango_RaphaelHandlingAssault(1);
+PROC_WYR_RaphaelTango_TryPlayAssaultAD();
+
+PROC
+PROC_WYR_RaphaelTango_TryPlayAssaultAD()
+AND
+DB_WYR_RaphaelTango_PlayedAsssaultAD(_Current)
+AND
+_Current < 2
+AND
+NOT QRY_StartDialog_Fixed(WYR_RaphaelTango_AD_RaphaelAttacked_0e567b14-9d59-8923-50d5-568700569a76, S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8)
+THEN
+PROC_WYR_RaphaelTango_RaphaelHandledAssault();
+
+PROC
+PROC_WYR_RaphaelTango_TryPlayAssaultAD()
+AND
+DB_WYR_RaphaelTango_PlayedAsssaultAD(_Current)
+AND
+_Current >= 2
+THEN
+PROC_WYR_RaphaelTango_RetreatAD();
+
+IF
+AutomatedDialogEnded(WYR_RaphaelTango_AD_RaphaelAttacked_0e567b14-9d59-8923-50d5-568700569a76, _)
+AND
+DB_WYR_RaphaelTango_PlayedAsssaultAD(_Current)
+AND
+IntegerSum(_Current, 1, _NewNum)
+THEN
+NOT DB_WYR_RaphaelTango_PlayedAsssaultAD(_Current);
+DB_WYR_RaphaelTango_PlayedAsssaultAD(_NewNum);
+
+IF
+AutomatedDialogEnded(WYR_RaphaelTango_AD_RaphaelAttacked_0e567b14-9d59-8923-50d5-568700569a76, _)
+AND
+DB_WYR_RaphaelTango_RaphaelHandlingAssault(1)
+THEN
+PROC_WYR_RaphaelTango_RaphaelHandledAssault();
+
+IF
+AutomatedDialogForceStopping(WYR_RaphaelTango_AD_RaphaelAttacked_0e567b14-9d59-8923-50d5-568700569a76, _)
+AND
+DB_WYR_RaphaelTango_RaphaelHandlingAssault(1)
+THEN
+PROC_WYR_RaphaelTango_RaphaelHandledAssault();
+
+IF
+AutomatedDialogRequestFailed(WYR_RaphaelTango_AD_RaphaelAttacked_0e567b14-9d59-8923-50d5-568700569a76, _)
+AND
+DB_WYR_RaphaelTango_RaphaelHandlingAssault(1)
+THEN
+PROC_WYR_RaphaelTango_RaphaelHandledAssault();
+
+PROC
+PROC_WYR_RaphaelTango_RaphaelHandledAssault()
+THEN
+NOT DB_WYR_RaphaelTango_RaphaelHandlingAssault(1);
+SetHasDialog((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 1);
+PROC_WYR_RaphaelTango_TeleportPlayersOutOfRoom();
+
+IF
+DB_WYR_RaphaelTango_RaphaelHandlingAssault(1)
+THEN
+SetHasDialog((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 0);
+
+// If below 50%, he teleports out to HoH
+IF
+HitpointsChanged(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, _Percentage)
+AND
+NOT DB_WYR_RaphaelTango_RaphaelHandlingLowHP(1)
+AND
+_Percentage <= 50.0
+AND
+DB_State_Current(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress")
+THEN
+SetHasDialog((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 0);
+DB_WYR_RaphaelTango_RaphaelHandlingLowHP(1);
+PROC_ForceStopDialog(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+PROC_WYR_RaphaelTango_RetreatAD();
+
+IF
+AutomatedDialogEnded(WYR_RaphaelTango_AD_RaphaelRetreats_c175c73b-bc4e-8afc-eaf8-a1368eb57bab, _)
+THEN
+PROC_WYR_RaphaelTango_Retreat();
+
+IF
+AutomatedDialogForceStopping(WYR_RaphaelTango_AD_RaphaelRetreats_c175c73b-bc4e-8afc-eaf8-a1368eb57bab, _)
+THEN
+PROC_WYR_RaphaelTango_Retreat();
+
+IF
+AutomatedDialogRequestFailed(WYR_RaphaelTango_AD_RaphaelRetreats_c175c73b-bc4e-8afc-eaf8-a1368eb57bab, _)
+THEN
+PROC_WYR_RaphaelTango_Retreat();
+
+PROC
+PROC_WYR_RaphaelTango_Retreat()
+THEN
+NOT DB_WYR_RaphaelTango_RaphaelHandlingLowHP(1);
+PROC_GlobalSetFlagAndCache(WYR_RaphaelTango_State_RetreatedAfterAssault_36233fc0-0f9a-439a-95a7-a693b0527f2d);
+PROC_State_Progress(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_LeftSharess");
+SetHasDialog((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 1);
+
+// Also retreats if the player makes him join combat
+IF
+TurnStarted(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8)
+AND
+DB_Is_InCombat(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, _CombatID)
+AND
+DB_State_Current(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress")
+AND
+QRY_IsEnemyToAnyPlayerInCombat(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, _CombatID)
+THEN
+DB_WYR_RaphaelTango_CombatWithRaphaelPaused(_CombatID);
+PauseCombat(_CombatID);
+PROC_WYR_RaphaelTango_RetreatAD();
+
+PROC
+PROC_WYR_RaphaelTango_RetreatAD()
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+AND
+NOT QRY_StartDialog_Fixed(WYR_RaphaelTango_AD_RaphaelRetreats_c175c73b-bc4e-8afc-eaf8-a1368eb57bab, S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8)
+THEN
+PROC_WYR_RaphaelTango_Retreat();
+
+PROC
+PROC_WYR_RaphaelTango_RetreatAD()
+AND
+DB_GlobalFlag((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc)
+THEN
+PROC_WYR_RaphaelTango_Retreat();
+
+
+PROC
+PROC_WYR_RaphaelTango_Retreat()
+AND
+DB_WYR_RaphaelTango_CombatWithRaphaelPaused(_CombatID)
+THEN
+ResumeCombat(_CombatID);
+//END_REGION
+
+//REGION Voss
+// Setting up Voss for Act 3
+PROC
+PROC_GLO_SetupForAct("BGO_Main_A", S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 1)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_HouseOfHope_State_VisitedHouseOfHope_c8889a79-8277-48e9-afa0-e14f6359ea10)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_AgreedWithVossInAct2_63f1a107-a2af-46ec-ac49-a10d0166ac2e)
+THEN
+PROC_GLO_SetupForAct_Place(
+	S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 
+	S_WYR_RaphaelTango_IntroPoint_beeff8fd-373e-408d-af9a-1bce83eacd2e,
+	NULL_00000000-0000-0000-0000-000000000000,
+	WYR_RaphaelTango_Voss_140953a8-5d79-c6d0-d691-52694b875bc2,
+	"WYR_RaphaelTango_Voss_Init");
+DB_WYR_RaphaelTango_PartOfScene((CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+DB_WYR_RaphaelTango_PartOfScene((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+DB_AssaultFamilyIgnoreFor((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "RaphaelTango");
+
+PROC
+PROC_GLO_SetupForAct("BGO_Main_A", S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 0)
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "PermaDefeated");
+
+IF
+DB_WYR_RaphaelTango_PartOfScene((CHARACTER)_Character)
+THEN
+DB_SceneManager(_Character, "WYR_RaphaelTango_VossScene"); 
+DB_SceneTriggerManager("WYR_RaphaelTango_VossScene", S_WYR_RaphaelTango_SceneSpotArea_25f2d5e0-fde2-4f77-b388-b199a2dfc20b);
+DB_SpotPlayers(_Character, "WYR_RaphaelTango_VossScene", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(_Character, "WYR_RaphaelTango_VossScene", S_WYR_RaphaelTango_SceneSpotArea_25f2d5e0-fde2-4f77-b388-b199a2dfc20b);
+
+// Intro scene in Raphael-s room
+PROC
+PROC_SpotPlayers_Spotted(_, "WYR_RaphaelTango_VossScene", _Player)
+AND
+DB_State_Current(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "RaphaelTango")
+AND
+DB_WYR_RaphaelTango_PartOfScene(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+DB_WYR_RaphaelTango_PartOfScene(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8)
+AND
+QRY_StartDialog(
+	WYR_RaphaelTango_ThreeWay_VossScene_3500e60b-d165-934d-e96d-a3c9591f0133,
+	S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8,
+	S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,
+	_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics((CHARACTER)_NPC, _Player)
+AND
+DB_WYR_RaphaelTango_PartOfScene(_NPC)
+AND
+DB_State_Current(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "RaphaelTango")
+AND
+DB_WYR_RaphaelTango_PartOfScene(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+AND
+DB_WYR_RaphaelTango_PartOfScene(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8)
+THEN
+DB_SelectedDialog(
+	WYR_RaphaelTango_ThreeWay_VossScene_3500e60b-d165-934d-e96d-a3c9591f0133,
+	S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8,
+	S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,
+	_Player);
+
+// Auto-starting Raphael's solo dialog after Voss is done
+IF
+DialogEnded(WYR_RaphaelTango_ThreeWay_VossScene_3500e60b-d165-934d-e96d-a3c9591f0133,_Instance)
+AND
+DB_DialogPlayers(_Instance, _Player, 1)
+AND
+QRY_StartDialog_Fixed(
+	WYR_RaphaelTango_Raphael_SoloScene_e95ac422-e05d-f119-68fd-e382d71f7c79,
+	S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8,
+	_Player)
+THEN
+DB_NOOP(1);
+
+// Ending the scene
+IF
+DialogEnded(WYR_RaphaelTango_ThreeWay_VossScene_3500e60b-d165-934d-e96d-a3c9591f0133,_)
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting");
+
+PROC
+PROC_SceneInterrupted(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, _Player, "WYR_RaphaelTango_VossScene", _Interruption)
+AND
+DB_GLO_GenericSceneManager_ViolenceReason(_Interruption)
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting");
+
+PROC
+PROC_State_Changed(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "RaphaelTango", _)
+THEN
+PROC_SceneOver("WYR_RaphaelTango_VossScene");
+
+PROC
+PROC_State_Changed(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting")
+THEN
+PROC_SceneOver("WYR_RaphaelTango_VossScene");
+
+PROC
+PROC_State_Changed(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, "GLO_Monitor", "GLO_Monitor_SharessCaress", _)
+THEN
+PROC_SceneOver("WYR_RaphaelTango_VossScene");
+PROC_SceneOver("WYR_RaphaelTango_SoloScene_SceneDialogOnly");
+
+PROC
+PROC_SceneOver("WYR_RaphaelTango_VossScene")
+AND
+DB_WYR_RaphaelTango_PartOfScene(_Character)
+THEN
+NOT DB_WYR_RaphaelTango_PartOfScene(_Character);
+
+// Talked to Voss
+IF
+FlagSet((FLAG)WYR_RaphaelTango_Voss_State_Pissed_736469c5-30d9-3a36-63e6-afb1dd63cc10,_,_)
+AND
+DB_State_Current(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting")
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomTalked");
+
+IF
+FlagSet((FLAG)WYR_RaphaelTango_Voss_State_Happy_672c4ce5-c6ba-09ee-0039-1781f7e6ead6,_,_)
+AND
+DB_State_Current(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting")
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomTalked");
+
+// Voss disappears after talking to him in Sharess Caress
+PROC
+PROC_State_Changed(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", _, "TaproomTalked")
+THEN
+PROC_NotifyWhenReadyToMoveOn(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnightDisappear_Notify");
+
+PROC
+PROC_ReadyToMoveOn(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnightDisappear_Notify")
+THEN
+PROC_DisappearOutOfSightTo(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, (TRIGGER)S_WYR_RaphaelTango_Voss_LeavePos_d0dff966-0171-4230-ba99-fc501cee4adc, "Stroll", 0, "WYR_RaphaelTango_GithKnightDisappear_Left");
+
+IF
+EntityEvent(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnightDisappear_Left")
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "Left");
+
+// Voss leaves if the player visited HoH
+IF
+FlagSet((FLAG)LOW_HouseOfHope_State_VisitedHouseOfHope_c8889a79-8277-48e9-afa0-e14f6359ea10,_,_)
+AND
+QRY_State_IsBeforeState(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting") //Only disappears if you haven't talked to him at all, otherwise he remains there
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "Left");
+DB_GLO_Voss_VossLeftSCWithoutMeetingPlayer(1);
+
+PROC
+PROC_State_Changed(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", _, "Left")
+AND
+QRY_OnlyOnce("WYR_RaphaelTango_VossLeftTaproom")
+THEN
+PROC_SceneOver("WYR_RaphaelTango_VossScene");
+PROC_CancelDisappearOutOfSight((CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+PROC_SetOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 0);
+
+// if Perma-defeated
+PROC
+PROC_StateSet_PermaDefeated(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea)
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "PermaDefeated");
+//END_REGION
+
+//REGION Signing contract with Raphael
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_Raphael_Event_TeleportOut_45e8b74d-184f-c3f4-ea72-c93319cf004f, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_Raphael_Event_TeleportOut_45e8b74d-184f-c3f4-ea72-c93319cf004f, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+THEN
+PROC_WYR_RaphaelTango_TeleportPlayersOutOfRoom();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_RaphaelTango_Knows_WantsCrown_bb036e77-187b-f44d-9b26-8abc004bd9f6, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+THEN
+PROC_WYR_RaphaelTango_EndSoloScene();
+
+PROC
+PROC_WYR_RaphaelTango_EndSoloScene()
+THEN
+PROC_SceneOver("WYR_RaphaelTango_SoloScene_SceneDialogOnly");
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+DB_Dialogs(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, WYR_RaphaelTango_Raphael_a1f66273-7c21-13d2-2888-4cb082e5f9ac);
+
+PROC
+PROC_FlagReactionAfterDialog((CHARACTER)_Player, (FLAG)WYR_RaphaelTango_Event_GiveHammer_7408e967-2e91-320b-d2b8-266cfaecde41, _Dialog)
+AND
+DB_WYR_RaphaelTango_DealDialogs(_Dialog)
+THEN
+ToInventory((ITEM)S_GLO_OrphicHammer_9013ef0d-c6ee-4137-b17a-c1934079e10d, _Player, 1, 1, 1);
+ClearFlag(WYR_RaphaelTango_Event_GiveHammer_7408e967-2e91-320b-d2b8-266cfaecde41, _Player, 0);
+
+PROC
+PROC_WYR_RaphaelTango_TeleportPlayersOutOfRoom()
+AND
+DB_PartyMembers(_PartyMember)
+AND
+IsInTrigger(_PartyMember, S_WYR_Raphael_TheRoom_f0e79982-9e74-4c85-9f7b-46012cc79f26, 1)
+THEN
+PROC_TryStopDialogFor(_PartyMember);
+PlayEffect(_PartyMember, VFX_Script_FairyRing_Teleport_01_4af1c68d-79ee-ced0-4484-8e2b3b1fc95c, "", 1.0); // TODO
+TeleportTo(_PartyMember, S_WYR_Raphael_TeleportOutSpot_17c364f5-0a57-4554-9900-14be9c249a9d, "WYR_RaphaelTango_Event_TeleportedOut", 0,0,0,1,1);
+
+PROC
+PROC_WYR_RaphaelTango_TeleportPlayersOutOfRoom()
+AND
+NOT QRY_IsCloseding(DOOR_Dungeon_Shar_Temple_Door_Single_B_006_bb5e14d4-5a47-4dc3-af1e-e6e6da1f0bff)
+THEN
+Close(DOOR_Dungeon_Shar_Temple_Door_Single_B_006_bb5e14d4-5a47-4dc3-af1e-e6e6da1f0bff);
+
+//END_REGION
+
+//REGION Emperor response to being disconnected
+IF
+DialogEnded((DIALOGRESOURCE)WYR_RaphaelTango_Raphael_SoloScene_e95ac422-e05d-f119-68fd-e382d71f7c79, _)
+AND
+QRY_OnlyOnce("WYR_RaphaelTango_RegisterExitRoomOnlyOnce")
+THEN
+PROC_TriggerRegisterForPlayers(S_WYR_RaphaelTango_RoomAreaOutside_984fbd85-301e-420e-92c1-de5dd6dec423);
+DB_RaphaelTango_EmperorShouldAppear(1);
+
+// Play Emperor response when player leaves trigger
+IF
+LeftTrigger(_Player, S_WYR_RaphaelTango_RoomAreaOutside_984fbd85-301e-420e-92c1-de5dd6dec423)
+AND
+QRY_WYR_RaphaelTango_EmperorShouldAppear(_Player)
+THEN
+DB_NOOP(1);
+
+// Play Emperor response when player tries to waypoint out
+QRY
+QRY_GLO_BlockTeleportToWaypoint(_Player, _Waypoint)
+AND
+QRY_WYR_RaphaelTango_EmperorShouldAppear(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WYR_RaphaelTango_EmperorShouldAppear((CHARACTER)_Player)
+AND
+DB_RaphaelTango_EmperorShouldAppear(1)
+AND
+DB_Avatars(_Player)
+AND
+DB_GlobalFlag((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198)
+AND
+NOT DB_OnlyOnce("WYR_Raphael_EmperorSpeaksToPlayer")
+AND
+QRY_StartDialog_Fixed(WYR_RaphaelTango_Emperor_AfterRaphael_2359ffb0-7fbf-c94c-1d7e-d0f0d29f805b, NULL_00000000-0000-0000-0000-000000000000, _Player)
+THEN
+DB_OnlyOnce("WYR_Raphael_EmperorSpeaksToPlayer");
+
+// Dialog started successfully, clean up
+IF
+DialogStarted(WYR_RaphaelTango_Emperor_AfterRaphael_2359ffb0-7fbf-c94c-1d7e-d0f0d29f805b, _)
+AND
+QRY_OnlyOnce("WYR_Raphael_EmperorSpeaksToPlayer_Cleanup")
+THEN
+NOT DB_RaphaelTango_EmperorShouldAppear(1);
+PROC_TriggerUnregisterForPlayers(S_WYR_RaphaelTango_RoomAreaOutside_984fbd85-301e-420e-92c1-de5dd6dec423);
+
+// Everyone has left without dialog starting successfully, clean up
+IF
+EntityEvent(_, "WYR_Raphael_EmperorSpeaksToPlayer_LastLeft")
+AND
+QRY_OnlyOnce("WYR_Raphael_EmperorSpeaksToPlayer_Cleanup")
+THEN
+PROC_TriggerUnregisterForPlayers(S_WYR_RaphaelTango_RoomAreaOutside_984fbd85-301e-420e-92c1-de5dd6dec423);
+NOT DB_RaphaelTango_EmperorShouldAppear(1);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("WYR_RaphaelTango_ResetVossDead")
+THEN
+PROC_RaphaelTango_DebugResetAllVossDead();
+
+IF
+TextEvent("WYR_RaphaelTango_ResetVossAlive")
+THEN
+PROC_RaphaelTango_DebugResetAllVossAlive();
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_ResetVossAlive_c2900dff-6ea6-49bf-9ca1-72b399adebc1,_,_)
+THEN
+PROC_GlobalClearFlagAndCache(Debug_WYR_RaphaelTango_ResetVossAlive_c2900dff-6ea6-49bf-9ca1-72b399adebc1);
+PROC_RaphaelTango_DebugResetAllVossAlive();
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_ResetVossDead_3cfec8e3-b212-4e73-aa49-7265e44c214d,_,_)
+THEN
+PROC_GlobalClearFlagAndCache(Debug_WYR_RaphaelTango_ResetVossDead_3cfec8e3-b212-4e73-aa49-7265e44c214d);
+PROC_RaphaelTango_DebugResetAllVossDead();
+
+// Voss alive
+PROC
+PROC_RaphaelTango_DebugResetAllVossAlive()
+AND
+IsDead(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,1)
+THEN
+Resurrect(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+NOT DB_Dead(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+NOT DB_PermaDefeated(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+PROC
+PROC_RaphaelTango_DebugResetAllVossAlive()
+THEN
+PROC_RaphaelTango_DebugResetTangoScene();
+PROC_RaphaelTango_DebugResetWarlock();
+
+PROC
+PROC_RaphaelTango_DebugResetAllVossAlive()
+AND
+DB_WYR_RaphaelTango_PartOfScene(_Character)
+THEN
+PROC_SpotPlayers_RestartSpotting(_Character, "WYR_RaphaelTango_VossScene");
+
+// Voss dead
+PROC
+PROC_RaphaelTango_DebugResetAllVossDead()
+AND
+IsDead(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea,0)
+THEN
+SetOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 0);
+Die(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+DB_Dead(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+PROC
+PROC_RaphaelTango_DebugResetAllVossDead()
+THEN
+PROC_RaphaelTango_DebugResetTangoScene();
+PROC_RaphaelTango_DebugResetWarlock();
+
+// internal reset calls
+PROC
+PROC_RaphaelTango_DebugResetTangoScene()
+THEN
+PROC_RaphaelTango_DebugResetTangoScene(1);
+
+PROC
+PROC_RaphaelTango_DebugResetTangoScene(_)
+AND
+DB_WYR_RaphaelTango_PartOfScene(_Character)
+AND
+DB_SpotPlayers(_Character, "WYR_RaphaelTango_VossScene", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000) 
+THEN
+PROC_SpotPlayers_StopSpotting(_Character, "WYR_RaphaelTango_VossScene");
+NOT DB_SpotPlayers(_Character, "WYR_RaphaelTango_VossScene", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_RaphaelTango_DebugResetTangoScene(_)
+AND
+DB_WYR_RaphaelTango_PartOfScene(_Character)
+THEN
+NOT DB_WYR_RaphaelTango_PartOfScene(_Character);
+
+PROC
+PROC_RaphaelTango_DebugResetTangoScene(_)
+THEN
+PROC_SceneOver("WYR_RaphaelTango_VossScene");
+PROC_SceneOver("WYR_RaphaelTango_SoloScene_SceneDialogOnly");
+PROC_SetOnStage(S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8, 0);
+PROC_SetOnStage(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, 0);
+PROC_GLO_Monitor_DebugStateReset();
+PROC_WYR_RaphaelTango_Voss_DebugStateReset();
+
+PROC
+PROC_RaphaelTango_DebugResetTangoScene(1)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198);
+PROC_GlobalClearFlagAndCache((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc);
+PROC_GlobalClearFlagAndCache((FLAG)WYR_RaphaelTango_State_RetreatedAfterAssault_36233fc0-0f9a-439a-95a7-a693b0527f2d);
+
+PROC
+PROC_RaphaelTango_DebugResetTangoScene(_)
+THEN
+PROC_GLO_SetupForAct_DebugRerun("BGO_Main_A", (CHARACTER)S_GLO_Monitor_f65becd6-5cd7-4c88-b85e-6dd06b60f7b8);
+PROC_GLO_SetupForAct_DebugRerun("BGO_Main_A", (CHARACTER)S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea);
+
+PROC
+PROC_RaphaelTango_DebugResetTangoScene(1)
+AND
+QRY_OnlyOnce_Reset("DB_WYR_Raphael_EmperorSpeaksToPlayer")
+AND
+QRY_OnlyOnce_Reset("WYR_RaphaelTango_RegisterRoomOnlyOnce")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_RaphaelTango_DebugResetWarlock()
+THEN
+PROC_SetOnStage(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 0);
+PROC_GlobalClearFlagAndCache((FLAG)WYR_RaphaelTango_State_WarlockInTaproom_e3682219-f9b6-482f-9419-cc2adaf037c0);
+PROC_GLO_SetupForAct_DebugRerun("BGO_Main_A", (CHARACTER)S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297);
+
+// Skip Voss, deal variants
+IF
+TextEvent("WYR_RaphaelTango_AgreedDeal")
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)Debug_WYR_RaphaelTango_VossInTaproom_AgreedDeal_b5ee8571-335d-4320-a01a-300f259e743f);
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_VossInTaproom_AgreedDeal_b5ee8571-335d-4320-a01a-300f259e743f, _, _)
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GLO_Monitor_State_MadeDeal_86f40f63-0bfa-4ab6-b3b0-d01475c3cbdc);
+PROC_GlobalSetFlagAndCache((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198);
+ToInventory((ITEM)S_GLO_OrphicHammer_9013ef0d-c6ee-4137-b17a-c1934079e10d, _Player, 1, 1, 1);
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_VossInTaproom_AgreedDeal_b5ee8571-335d-4320-a01a-300f259e743f, _, _)
+AND
+QRY_State_IsBeforeState(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "Left")
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting");
+TeleportTo(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, S_WYR_RaphaelTango_Voss_TaproomPos_b12f8da4-f190-4736-b5fc-f66c37c63759);
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_VossInTaproom_AgreedDeal_b5ee8571-335d-4320-a01a-300f259e743f, _, _)
+THEN
+PROC_GlobalSetFlagAndCache(Debug_WYR_RaphaelTango_VossInTaproom_AgreedDeal_b5ee8571-335d-4320-a01a-300f259e743f);
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_VossInTaproom_NoDeal_67388d7c-0a89-4776-8dba-98d71b67f135, _, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_RaphaelTango_State_DiscussedDeal_9896c94b-431e-4b0e-90ce-80293ffb1198);
+
+IF
+FlagSet(Debug_WYR_RaphaelTango_VossInTaproom_NoDeal_67388d7c-0a89-4776-8dba-98d71b67f135, _, _)
+AND
+QRY_State_IsBeforeState(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "Left")
+THEN
+PROC_State_Progress(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", "TaproomWaiting");
+TeleportTo(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, S_WYR_RaphaelTango_Voss_TaproomPos_b12f8da4-f190-4736-b5fc-f66c37c63759);
+
+PROC
+PROC_WYR_RaphaelTango_Voss_DebugStateReset()
+AND
+DB_State_Current(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight", _CurrentState)
+THEN
+PROC_State_Changed(S_GLO_GithKnight_2adce2df-0799-49dc-b867-ba7ca21e9aea, "WYR_RaphaelTango_GithKnight",_CurrentState,"AwaitingSetup");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

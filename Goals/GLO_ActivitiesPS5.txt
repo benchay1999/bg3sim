@@ -1,0 +1,183 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//DB_GLO_ActivitiesPS5_ActivityDependencies(_Current, _Preceding);
+DB_GLO_ActivitiesPS5_ActivityDependencies("Act1", "Tutorial");
+DB_GLO_ActivitiesPS5_ActivityDependencies("Act2", "Act1");
+DB_GLO_ActivitiesPS5_ActivityDependencies("Act3", "Act2");
+KBSECTION
+//REGION Debug hooks
+
+IF
+TextEvent("activitystart")
+AND
+GetTextEventParamString(1,_Activity)
+THEN
+PROC_Start_Activity(_Activity);
+
+IF
+TextEvent("activityend")
+AND
+GetTextEventParamString(1,_Outcome)
+THEN
+PROC_End_Activity(_Outcome);
+
+IF
+TextEvent("activityshow")
+AND
+GetTextEventParamString(1,_Activity)
+THEN
+PROC_Show_Activity(_Activity);
+
+IF
+TextEvent("activityhide")
+AND
+GetTextEventParamString(1,_Activity)
+THEN
+PROC_Hide_Activity(_Activity);
+
+IF
+TextEvent("activityshowall")
+AND
+GetTextEventParamString(1,_Type)
+THEN
+PROC_Show_All_Activities(_Type);
+
+IF
+TextEvent("activityhideall")
+AND
+GetTextEventParamString(1,_Type)
+THEN
+PROC_Hide_All_Activities(_Type);
+
+//END_REGION
+
+//REGION Definitions
+
+PROC
+PROC_Start_Activity((STRING)_Activity)
+THEN
+StartActivity(_Activity);
+
+PROC
+PROC_End_Activity((STRING)_Outcome)
+THEN
+EndActivity(_Outcome);
+
+PROC
+PROC_Show_Activity((STRING)_Activity)
+THEN
+ShowActivity(_Activity);
+
+PROC
+PROC_Hide_Activity((STRING)_Activity)
+THEN
+HideActivity(_Activity);
+
+PROC
+PROC_Show_All_Activities((STRING)_Type)
+THEN
+ShowAllActivities(_Type);
+
+PROC
+PROC_Hide_All_Activities((STRING)_Type)
+THEN
+HideAllActivities(_Type);
+
+//END_REGION
+
+/* Activities:
+Progression (type)
+  Tutorial
+  Act1
+  Act2
+  Act3
+
+Outcomes:
+  completed
+  failed (irrelevant)
+  abandoned
+*/
+
+	
+
+//REGION Activities
+PROC
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity((STRING)_Activity)
+THEN
+PROC_GLO_ActivitiesPS5_AttemptEndPreviousActivity(_Activity);
+PROC_Hide_All_Activities("Progression");
+PROC_Start_Activity(_Activity);
+PROC_Show_Activity(_Activity); //conflicting info whether this is needed after starting. Having it here shouldn't hurt.
+DB_GLO_ActivitiesPS5_CurrentActivity(_Activity);
+
+PROC //complete previous activity when progressing normally
+PROC_GLO_ActivitiesPS5_AttemptEndPreviousActivity((STRING)_Activity)
+AND
+DB_GLO_ActivitiesPS5_ActivityDependencies(_Activity, _PrecedingActivity)
+AND
+DB_GLO_ActivitiesPS5_CurrentActivity(_PrecedingActivity)
+THEN
+EndActivity("completed");
+
+PROC //reset everything otherwise
+PROC_GLO_ActivitiesPS5_AttemptEndPreviousActivity((STRING)_Activity)
+AND
+DB_GLO_ActivitiesPS5_CurrentActivity(_CurrentActivity)
+AND
+DB_GLO_ActivitiesPS5_ActivityDependencies(_Activity, _PrecedingActivity)
+AND
+_CurrentActivity != _PrecedingActivity
+THEN
+EndActivity("abandoned");
+
+IF //singleton DB
+DB_GLO_ActivitiesPS5_CurrentActivity(_Activity)
+AND
+DB_GLO_ActivitiesPS5_CurrentActivity(_OtherActivity)
+AND
+_Activity != _OtherActivity
+THEN
+NOT DB_GLO_ActivitiesPS5_CurrentActivity(_OtherActivity);
+
+IF
+SavegameLoadStarted()
+AND
+DB_GLO_ActivitiesPS5_CurrentActivity(_Activity)
+THEN
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity(_Activity);
+
+PROC
+PROC_GLO_ActivitiesPS5_TutorialStart()
+THEN
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity("Tutorial");
+
+PROC
+PROC_GLO_ActivitiesPS5_Act1Start()
+THEN
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity("Act1");
+
+IF
+LevelLoaded("SCL_Main_A")
+AND
+QRY_OnlyOnce("ActivitiesPS5_Act2")
+THEN
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity("Act2");
+
+IF
+LevelLoaded("CRE_Main_A")
+AND
+QRY_OnlyOnce("ActivitiesPS5_Act2")
+THEN
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity("Act2");
+
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A")
+THEN
+PROC_GLO_ActivitiesPS5_ExclusiveStartActivity("Act3");
+
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,121 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRIME_GuardsEquipment_Upgrade("","");
+NOT DB_CRIME_GuardsEquipment_Upgrade("","");
+
+// DB_CRIME_GuardsEquipment_Upgrade((STRING)_Region,(STRING)_Pool);
+//   _Region: crime region
+//   _Pool: identifier from _CRIME_CrimeGuards
+//
+//  If defined, then guards from this guard pool will upgrade their equipment on long rest/region swap whenever the sum
+//  of relevant noticed crimes in that region crosses a threshold. The newly used equipment sets are determined by taking
+//  the name of the equipment set defined in the editor followed by "_Level2" or "_Level3". These must always exist for
+//  all equipment sets used by guards in these pools.
+
+// The thresholds to switch to a different equipment set
+DB_CRIME_GuardsEquipment_TensionLevels(2, 200);
+DB_CRIME_GuardsEquipment_TensionLevels(3, 500);
+DB_CRIME_GuardsEquipment_MaxTensionLevel(3);
+KBSECTION
+//REGION Initialisation
+IF
+DB_CRIME_Guards_RegionInfo((STRING)_Region,(STRING)_Pool,(FLAG)_)
+AND
+DB_CRIME_GuardsEquipment_Upgrade(_Region,_Pool)
+THEN
+// Region - equipment level (1 = default) - sum of tensions
+DB_CRIME_GuardsEquipment_InternTension(_Region,1,0);
+//END_REGION
+
+//REGION Update tension
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_Investigator,"Idle",_)
+AND
+CrimeGetLeadInvestigator(_CrimeID,_Investigator)
+AND
+CrimeHasProperty(_CrimeID,BackgroundReaction_db918cfb-a484-437c-93bb-8bc36fe98a9c,0)
+AND
+CrimeHasProperty(_CrimeID,IgnoreForRegionTensionIncrease_58adcbdb-1bdf-4702-b0f0-f0f596d75b0e,0)
+AND
+CharacterGetCrimeRegion(_Investigator,_Region)
+AND
+DB_CRIME_GuardsEquipment_InternTension(_Region,_CurrentTensionLevel,_CurrentTension)
+AND
+DB_CRIME_GuardsEquipment_MaxTensionLevel(_MaxTensionLevel)
+AND
+_CurrentTensionLevel < _MaxTensionLevel
+AND
+CrimeGetTension(_CrimeID,_Tension)
+AND
+IntegerSum(_CurrentTension,_Tension,_NewTension)
+THEN
+NOT DB_CRIME_GuardsEquipment_InternTension(_Region,_CurrentTensionLevel,_CurrentTension);
+DB_CRIME_GuardsEquipment_InternTension(_Region,_CurrentTensionLevel,_NewTension);
+PROC_CRIME_GuardsEquipment_ChangedTension(_Region,_CurrentTension,_NewTension);
+
+PROC
+PROC_CRIME_GuardsEquipment_ChangedTension((STRING)_Region,(INTEGER)_StartCurrentTension,(INTEGER)_NewTension)
+AND
+DB_CRIME_GuardsEquipment_TensionLevels(_NewTensionLevel,_NewLimit)
+AND
+_StartCurrentTension < _NewLimit
+AND
+_NewTension >= _NewLimit
+AND
+// Match every time in case we increase the tension level by multiple steps at once
+DB_CRIME_GuardsEquipment_InternTension(_Region,_CurrentTensionLevel,_CurrentTension)
+THEN
+NOT DB_CRIME_GuardsEquipment_InternTension(_Region,_CurrentTensionLevel,_CurrentTension);
+DB_CRIME_GuardsEquipment_InternTension(_Region,_NewTensionLevel,_NewTension);
+DB_CRIME_GuardsEquipment_InternQueueEquip(_Region);
+
+//END_REGION
+
+//REGION Change equipment
+IF
+TextEvent("UpdateGuardsEquipment")
+THEN
+PROC_CRIME_GuardsEquipment_ChangeEquipments();
+
+PROC
+PROC_LongRestOrLevelUnloading((STRING)_)
+THEN
+PROC_CRIME_GuardsEquipment_ChangeEquipments();
+
+PROC
+PROC_CRIME_GuardsEquipment_ChangeEquipments()
+AND
+DB_CRIME_GuardsEquipment_InternQueueEquip(_Region)
+AND
+DB_CRIME_GuardsEquipment_InternTension(_Region,_Level,_)
+AND
+DB_CRIME_GuardsEquipment_Upgrade(_Region,_Pool)
+AND
+DB_CRIME_Guards_RegionInfo(_Region,_Pool,_CancelGuardsGlobalFlag)
+AND
+QRY_CRIME_Guards_NoCancelFlag(_CancelGuardsGlobalFlag)
+AND
+DB_CRIME_Guards_RegionGuard(_Region,_Pool,_Guard)
+AND
+NOT DB_CantAct(_Guard)
+AND
+GetDefaultEquipmentSet(_Guard,_DefaultEquipment)
+AND
+Concatenate(_DefaultEquipment,"_Level",_EquipmentLevel)
+AND
+ConcatenateInteger(_EquipmentLevel,_Level,_NewEquipment)
+THEN
+CharacterGiveEquipmentSet(_Guard,_NewEquipment);
+
+PROC
+PROC_CRIME_GuardsEquipment_ChangeEquipments()
+AND
+DB_CRIME_GuardsEquipment_InternQueueEquip(_Region)
+THEN
+NOT DB_CRIME_GuardsEquipment_InternQueueEquip(_Region);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

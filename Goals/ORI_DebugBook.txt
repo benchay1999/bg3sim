@@ -1,0 +1,1767 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//For fixed entries: Use DB_DebugBookEntry([0-9x](STRING)Branch Name,(STRING)Leaf Name,(STRING)Event,(0/1)Close Debug Book on Clicking Leaf)
+//For conditional entries: Use DB_DebugBookEntry_Temp(...). Same as DB_DebugBookEntry but created at the start of the populate and only lasts until the next populate.
+//  Create them when PROC_DebugBook_AddConditionalEntries gets called.
+
+//REGION Greever's Test Values. These should be commented out.
+/*
+DB_DebugBookEntry("1 level","GDebug_1",1);
+DB_DebugBookEntry("2 level","2-1 level","GDebug_2-1",0);
+DB_DebugBookEntry("2 level","2-2 level","GDebug_2-2",0);
+DB_DebugBookEntry("3 level","3-2 level","3-3 level","GDebug_3-3",1);
+DB_DebugBookEntry("4 level","4-2 level","4-3 level","4-4 level","GDebug_4-4",0);
+DB_DebugBookEntry("5 level","5-2 level","5-31 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-32 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-33 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-34 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-35 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-36 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-37 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-38 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-39 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-40 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-41 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("5 level","5-2 level","5-42 level","5-4 level","5-5 level","GDebug_5-5",1);
+DB_DebugBookEntry("6 level","6-E level","GDebug_6-E",0);
+DB_DebugBookEntry("6 level","6-2 level","6-3 level","6-4 level","6-5 level","6-6 level","GDebug_6-6",0);
+DB_DebugBookEntry("7 level","7-2 level","7-3 level","7-4 level","7-5 level","7-6 level","7-7 level","GDebug_7-7",1);
+DB_DebugBookEntry("8 level","8-2 level","8-3 level","8-4 level","8-5 level","8-6 level","8-7 level","8-8 level","GDebug_8-8",0);
+DB_DebugBookEntry("9 level","9-2 level","9-3 level","9-4 level","9-5 level","9-6 level","9-7 level","9-8 level","9-9 level","GDebug_9-9",1);
+DB_DebugBookEntry("10 level","10-2 level","10-3 level","10-4 level","10-5 level","10-6 level","10-7 level","10-8 level","10-9 level","10-10 level","GDebug_10-10",0);
+DB_DebugBook_TestValue(0);
+*/
+//END_REGION
+
+NOT DB_CAMPDEBUG_SetFlagAfterNightStarted((FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//Prevent 2 debug books from being opened at the same time
+PROC
+PROC_DialogStarted((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,(INTEGER)_Instance)
+AND
+DB_DialogName((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,_OldInstance)
+AND
+_Instance != _OldInstance
+AND
+DB_DialogSpeakers(_OldInstance,_OtherPlayer,1)
+THEN
+DialogRequestStopForDialog((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,_OtherPlayer);
+
+PROC
+PROC_DialogStarted((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,(INTEGER)_Instance)
+THEN
+DB_DebugBook_Level(1);
+SysClear("DB_DebugBook_Branch",2);
+PROC_DebugBook_Populate();
+
+IF
+DialogEnded((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,_Instance)
+AND
+DB_DebugBook_Level(_Level)
+THEN
+NOT DB_DebugBook_Level(_Level);
+PROC_DebugBook_ResetStrings();
+
+//Hook to add DB_DebugBookEntries that are conditional
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+IF
+DB_DebugBook_Level(_NewLevel)
+AND
+DB_DebugBook_Level(_OldLevel)
+AND
+_NewLevel != _OldLevel
+THEN
+NOT DB_DebugBook_Level(_OldLevel);
+
+PROC
+PROC_DebugBook_Populate()
+THEN
+PROC_DebugBook_DeleteConditionalEntries();
+
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Element((STRING)_First,(INTEGER)_Second)
+THEN
+NOT DB_DebugBook_Element((STRING)_First,(INTEGER)_Second);
+
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DialogName((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+THEN
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player);
+
+//Show the titlestring (AKA the current path. e.g. "Gale > Act 1 > Teleport")
+PROC
+PROC_DebugBook_Populate()
+THEN
+DB_DebugBook_TitleString("");
+
+IF
+DB_DebugBook_TitleString(_New)
+AND
+DB_DebugBook_TitleString(_Old)
+AND
+_Old != _New
+THEN
+NOT DB_DebugBook_TitleString(_Old);
+
+PROC
+PROC_DebugBook_Populate()
+AND
+NOT DB_DebugBook_Branch(_,_)
+THEN
+DB_DebugBook_TitleString("Top Level");
+
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Branch(_,_Branch)
+AND
+DB_DebugBook_TitleString(_Old)
+AND
+Concatenate(_Old," > ",_Spacer)
+AND
+Concatenate(_Spacer,_Branch,_New)
+THEN
+DB_DebugBook_TitleString(_New);
+
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_TitleString(_TitleString)
+THEN
+DialogSetVariableString((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,"CampTitleText_08d933a5-1e27-6557-3c72-b3a7a5eb356c",_TitleString);
+
+
+//REGION Variable Depth support
+//1
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,"","","","","","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,"","","","","","","","","",_Event,_Close)
+AND
+_First != ""
+AND
+NOT DB_DebugBookEntry(_First,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,"","","","","","","","","",_Event,_Close);
+ 
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,"","","","","","","","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,"","","","","","","","","",_Event,_Close);
+
+//2
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,"","","","","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,"","","","","","","","",_Event,_Close)
+AND
+_Second != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,"","","","","","","","",_Event,_Close);
+ 
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,"","","","","","","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,"","","","","","","","",_Event,_Close);
+
+//3
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,"","","","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,"","","","","","","",_Event,_Close)
+AND
+_Third != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,"","","","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,"","","","","","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,"","","","","","","",_Event,_Close);
+
+//4
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,"","","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,"","","","","","",_Event,_Close)
+AND
+_Fourth != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,"","","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,"","","","","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,"","","","","","",_Event,_Close);
+
+//5
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,"","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,"","","","","",_Event,_Close)
+AND
+_Fifth != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Fifth,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,"","","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,"","","","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,"","","","","",_Event,_Close);
+
+//6
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,"","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,"","","","",_Event,_Close)
+AND
+_Sixth != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,"","","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,"","","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,"","","","",_Event,_Close);
+
+//7
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,"","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,"","","",_Event,_Close)
+AND
+_Seventh != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,"","","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,"","","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,"","","",_Event,_Close);
+
+//8
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Eighth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,"","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,"","",_Event,_Close)
+AND
+_Eighth != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,"","",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Eighth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,"","",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,"","",_Event,_Close);
+
+//9
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Eighth,(STRING)_Nineth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,"",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,"",_Event,_Close)
+AND
+_Nineth != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,"",_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Eighth,(STRING)_Nineth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,"",_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,"",_Event,_Close);
+
+//10
+IF
+DB_DebugBookEntry((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Eighth,(STRING)_Nineth,(STRING)_Tenth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close);
+
+IF
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close)
+AND
+_Tenth != ""
+AND
+NOT DB_DebugBookEntry(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close)
+AND
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close);
+
+IF
+DB_DebugBookEntry_Temp((STRING)_First,(STRING)_Second,(STRING)_Third,(STRING)_Fourth,(STRING)_Fifth,(STRING)_Sixth,(STRING)_Seventh,(STRING)_Eighth,(STRING)_Nineth,(STRING)_Tenth,(STRING)_Event,(INTEGER)_Close)
+THEN
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close);
+
+PROC
+PROC_DebugBook_DeleteConditionalEntries()
+AND
+DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close)
+THEN
+NOT DB_DebugBookEntry_Temp(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close);
+NOT DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Nineth,_Tenth,_Event,_Close);
+//END_REGION
+
+//REGION Element Gathering
+//Lvl 1
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(1)
+AND
+DB_DebugBookEntry_Padded(_Entry,_Next,_,_,_,_,_,_,_,_,_,_)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 2
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(2)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBookEntry_Padded(_First,_Entry,_Next,_,_,_,_,_,_,_,_,_)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 3
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(3)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Entry,_Next,_,_,_,_,_,_,_,_)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 4
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(4)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Entry,_Next,_,_,_,_,_,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 5
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(5)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Entry,_Next,_,_,_,_,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 6
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(6)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Entry,_Next,_,_,_,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 7
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(7)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth) 
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Entry,_Next,_,_,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 8
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(8)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBook_Branch(7,_Seventh)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Entry,_Next,_,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 9
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(9)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBook_Branch(7,_Seventh)
+AND
+DB_DebugBook_Branch(8,_Eighth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Entry,_Next,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,_Next);
+
+//Lvl 10
+PROC
+PROC_DebugBook_Populate()
+AND
+DB_DebugBook_Level(10)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBook_Branch(7,_Seventh)
+AND
+DB_DebugBook_Branch(8,_Eighth)
+AND
+DB_DebugBook_Branch(9,_Ninth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Ninth,_Entry,_Event,_CloseDiag)
+AND
+_Entry != ""
+THEN
+PROC_DebugBook_AddElement(_Entry,"");
+//END_REGION
+
+//REGION Clicking a Leaf
+IF
+FlagSet(_DebugFlag,NULL_00000000-0000-0000-0000-000000000000,_DialogInstance)
+AND
+DB_DebugBook_FlagStringCouple((FLAG)_DebugFlag,(STRING)_Element)
+AND
+QRY_DebugBook_GetEventIfLeaf(_Element)
+AND
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag)
+AND
+DB_DialogPlayers(_DialogInstance,_Player,1)
+THEN
+PROC_DebugBook_Event(_Event,(CHARACTER)_Player);
+DB_DebugBook_DelayedPopulated(_CloseDiag);
+
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+QRY_DebugBook_GetEventIfLeaf_Reset()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DebugBook_GetEventIfLeaf_Reset()
+AND
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag)
+THEN
+NOT DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 1
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(1)
+AND
+DB_DebugBookEntry_Padded(_Element,"",_,_,_,_,_,_,_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 2
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(2)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBookEntry_Padded(_First,_Element,"",_,_,_,_,_,_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 3
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(3)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Element,"",_,_,_,_,_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 4
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(4)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Element,"",_,_,_,_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 5
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(5)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Element,"",_,_,_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 6
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(6)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Element,"",_,_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 7
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(7)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Element,"",_,_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 8
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(8)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBook_Branch(7,_Seventh)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Element,"",_,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 9
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(9)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBook_Branch(7,_Seventh)
+AND
+DB_DebugBook_Branch(8,_Eighth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Element,"",_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+//Lvl 10
+QRY
+QRY_DebugBook_GetEventIfLeaf((STRING)_Element)
+AND
+DB_DebugBook_Level(10)
+AND
+DB_DebugBook_Branch(1,_First)
+AND
+DB_DebugBook_Branch(2,_Second)
+AND
+DB_DebugBook_Branch(3,_Third)
+AND
+DB_DebugBook_Branch(4,_Fourth)
+AND
+DB_DebugBook_Branch(5,_Fifth)
+AND
+DB_DebugBook_Branch(6,_Sixth)
+AND
+DB_DebugBook_Branch(7,_Seventh)
+AND
+DB_DebugBook_Branch(8,_Eighth)
+AND
+DB_DebugBook_Branch(9,_Ninth)
+AND
+DB_DebugBookEntry_Padded(_First,_Second,_Third,_Fourth,_Fifth,_Sixth,_Seventh,_Eighth,_Ninth,_Element,_Event,_CloseDiag)
+THEN
+DB_QRYRTN_DebugBook_GetEventIfLeaf(_Event,_CloseDiag);
+
+IF
+TextEvent(_DebugBook_Command)
+AND
+DB_DebugBookEntry_Padded(_,_,_,_,_,_,_,_,_,_,_DebugBook_Command,_)
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_DebugBook_Event(_DebugBook_Command,_Player);
+
+PROC
+PROC_DebugBook_Event((STRING)_Event,(CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Going Up a level (Back To Root)
+IF
+FlagSet((FLAG)Debug_CAMP_GoUp1Level_a74f804b-1ab0-04f7-1825-ea048c637cb2,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_DebugBook_Level(_Level)
+AND
+IntegerSubtract(_Level,1,_NewLevel)
+AND
+DB_DebugBook_Branch(_NewLevel,_Element)
+THEN
+NOT DB_DebugBook_Branch(_NewLevel,_Element);
+DB_DebugBook_Level(_NewLevel);
+PROC_DebugBook_Populate();
+//END_REGION
+
+//REGION Going Down a level (To the Leaves)
+IF
+FlagSet(_DebugFlag,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_DebugBook_FlagStringCouple((FLAG)_DebugFlag,(STRING)_Element)
+AND
+NOT QRY_DebugBook_GetEventIfLeaf(_Element)
+AND
+DB_DebugBook_Level(_Level)
+AND
+IntegerSum(_Level,1,_NewLevel)
+THEN
+DB_DebugBook_Branch(_Level,_Element);
+DB_DebugBook_Level(_NewLevel);
+PROC_DebugBook_Populate();
+//END_REGION
+
+IF
+FlagSet(_,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_DebugBook_DelayedPopulated(0)
+THEN
+NOT DB_DebugBook_DelayedPopulated(0);
+PROC_DebugBook_Populate();
+
+IF
+FlagSet(_,NULL_00000000-0000-0000-0000-000000000000,_DialogInstance)
+AND
+DB_DebugBook_DelayedPopulated(1)
+AND
+DB_DialogPlayers(_DialogInstance,_Player,1)
+THEN
+NOT DB_DebugBook_DelayedPopulated(1);
+PROC_TryStopDialogFor((CHARACTER)_Player);
+
+//REGION Level-independent pipeline stuff to fill in and show nodes.
+PROC
+PROC_DebugBook_Populate()
+THEN
+PROC_DebugBook_ResetStrings();
+DB_DebugBook_FirstObjectReached(1);
+PROC_DebugBook_LoadMoreStrings("");
+PROC_DebugBook_SetStringFlags();
+
+PROC
+PROC_DebugBook_AddElement((STRING)_Element,(STRING)_NextElement)
+AND
+_NextElement != ""
+THEN
+DB_DebugBook_Element(_Element,0);
+
+PROC
+PROC_DebugBook_AddElement((STRING)_Element,"")
+THEN
+DB_DebugBook_Element(_Element,1);
+
+PROC
+PROC_DebugBook_LoadMoreStrings((STRING)_)
+AND
+DB_DebugBook_FlagStringCouple((FLAG)_Flag,(STRING)_String)
+THEN
+NOT DB_DebugBook_FlagStringCouple(_Flag,_String);
+
+//Loop over all elements and as long as a node is available, add it.
+PROC
+PROC_DebugBook_LoadMoreStrings((STRING)_FirstObject)
+AND
+DB_DebugBook_Element(_Entry,_LeafNode)
+AND
+QRY_DebugBook_FirstObjectReached(_Entry,_FirstObject)
+AND
+QRY_DebugBook_GetFreeDialogString(_Entry)
+AND
+DB_QRYRTN_DebugBook_GetFreeDialogString(_FreeVariable,_Flag)
+AND
+QRY_DebugBook_FormatEntry(_Entry,_LeafNode)
+AND
+DB_QRYRTN_DebugBook_FormatEntry(_FormattedEntry)
+THEN
+DialogSetVariableString((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,_FreeVariable,_FormattedEntry);
+DB_DebugBook_FlagStringCouple(_Flag,_Entry);
+
+QRY
+QRY_DebugBook_FormatEntry((STRING)_Entry,(INTEGER)_LeafNode)
+AND
+DB_QRYRTN_DebugBook_FormatEntry(_FormattedEntry)
+THEN
+NOT DB_QRYRTN_DebugBook_FormatEntry(_FormattedEntry);
+
+QRY
+QRY_DebugBook_FormatEntry((STRING)_Entry,1)
+AND
+Concatenate("* ",_Entry,_FormattedEntry)
+THEN
+DB_QRYRTN_DebugBook_FormatEntry(_FormattedEntry);
+
+QRY
+QRY_DebugBook_FormatEntry((STRING)_Entry,0)
+AND
+Concatenate("> ",_Entry,_FormattedEntry)
+THEN
+DB_QRYRTN_DebugBook_FormatEntry(_FormattedEntry);
+
+QRY
+QRY_DebugBook_FirstObjectReached((STRING)_FirstObject,(STRING)_FirstObject)
+THEN
+DB_DebugBook_FirstObjectReached(1);
+
+QRY
+QRY_DebugBook_FirstObjectReached((STRING)_Object,(STRING)_FirstObject)
+AND
+DB_DebugBook_FirstObjectReached(1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DebugBook_GetFreeDialogString((STRING)_ID)
+AND
+DB_QRYRTN_DebugBook_GetFreeDialogString(_FreeVariable,_Flag)
+THEN
+NOT DB_QRYRTN_DebugBook_GetFreeDialogString(_FreeVariable,_Flag);
+
+QRY
+QRY_DebugBook_GetFreeDialogString((STRING)_ID)
+AND
+DB_CAMPDEBUGBOOK_StringVariableFlag(_StringVariable,_Flag) //List of All Variables
+AND
+NOT DB_DebugBook_FlagStringCouple(_Flag,_) // Subtract Variables already in use
+AND
+NOT DB_QRYRTN_DebugBook_GetFreeDialogString(_,_) //And only return the first available
+THEN
+DB_QRYRTN_DebugBook_GetFreeDialogString(_StringVariable,_Flag);
+
+//We ran out of available flags but have entries left, Remember the entry ID that we didn't find a node for, so we can start from there if we load in more entries. 
+QRY
+QRY_DebugBook_GetFreeDialogString((STRING)_ID)
+AND
+NOT DB_QRYRTN_DebugBook_GetFreeDialogString(_,_)
+AND
+NOT DB_DebugBook_LoadMoreStringTracker(_)
+THEN
+DB_DebugBook_LoadMoreStringTracker(_ID);
+
+//Flags: The flags have a double use: 
+// Track Validity: If a node holds no text (i.e. you have more nodes than elements) the flag is set to true, so the node is not shown.
+// As Event when the user selects a node in the dialog.
+IF
+DB_DebugBook_FlagStringCouple((FLAG)_Flag,_)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+PROC_GlobalClearFlagAndCache(_Flag);
+
+//Clear old data
+PROC
+PROC_DebugBook_ResetStrings()
+AND
+DB_DebugBook_LoadMoreStringTracker(_String)
+THEN
+NOT DB_DebugBook_LoadMoreStringTracker(_String);
+
+//Clear old data
+PROC
+PROC_DebugBook_ResetStrings()
+AND
+DB_DebugBook_FlagStringCouple(_Flag,_String)
+THEN
+NOT DB_DebugBook_FlagStringCouple(_Flag,_String);
+
+PROC
+PROC_DebugBook_SetStringFlags()
+AND
+DB_CAMPDEBUGBOOK_StringVariableFlag(_StringVariable,_Flag)
+AND
+NOT DB_DebugBook_FlagStringCouple((FLAG)_Flag,_)
+AND
+NOT DB_GlobalFlag(_Flag)
+THEN
+SetFlag(_Flag,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//If we have more objects than nodes, show the Load More node
+PROC
+PROC_DebugBook_SetStringFlags()
+AND
+DB_DebugBook_LoadMoreStringTracker(_String)
+AND
+GetFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+ClearFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Else, don't
+PROC
+PROC_DebugBook_SetStringFlags()
+AND
+NOT DB_DebugBook_LoadMoreStringTracker(_)
+AND
+GetFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+SetFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+PROC_DebugBook_SetStringFlags()
+AND
+NOT DB_DebugBook_Level(1)
+AND
+GetFlag((FLAG)Debug_CAMP_GoUp1Level_a74f804b-1ab0-04f7-1825-ea048c637cb2,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+ClearFlag((FLAG)Debug_CAMP_GoUp1Level_a74f804b-1ab0-04f7-1825-ea048c637cb2,NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+PROC_DebugBook_SetStringFlags()
+AND
+DB_DebugBook_Level(1)
+AND
+GetFlag((FLAG)Debug_CAMP_GoUp1Level_a74f804b-1ab0-04f7-1825-ea048c637cb2,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+SetFlag((FLAG)Debug_CAMP_GoUp1Level_a74f804b-1ab0-04f7-1825-ea048c637cb2,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Show next X objects in dialog
+IF
+FlagSet((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,_,_)
+AND
+DB_DebugBook_Level(_Level)
+AND
+DB_DebugBook_LoadMoreStringTracker(_String)
+THEN
+ClearFlag((FLAG)Debug_CAMP_CampStringMore_15e4ec02-5e2a-77c2-9aa2-661af4048605,NULL_00000000-0000-0000-0000-000000000000,0);
+NOT DB_DebugBook_LoadMoreStringTracker(_String);
+NOT DB_DebugBook_FirstObjectReached(1);
+PROC_DebugBook_LoadMoreStrings(_String);
+PROC_DebugBook_SetStringFlags();
+//END_REGION
+
+//REGION Greever's Conditional Test Values. These should be commented out.
+/*
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+DB_DebugBook_DebuggingMode(1)
+THEN
+DB_DebugBookEntry_Temp("Temp","FlipTemp","GDebug_FLIPTEMP",0);
+
+PROC
+PROC_DebugBook_Event("GDebug_FLIPTEMP",(CHARACTER)_Player)
+AND
+DB_DebugBook_TestValue(_Value)
+AND
+DB_Negate(_Value,_NotValue)
+THEN
+DB_DebugBook_TestValue(_NotValue);
+NOT DB_DebugBook_TestValue(_Value);
+
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+DB_DebugBook_DebuggingMode(1)
+AND
+DB_DebugBook_TestValue(0)
+THEN
+DB_DebugBookEntry_Temp("Temp","FlippedOff","Temp 3-3","GDebug_TEMP_3-3",0);
+
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+DB_DebugBook_DebuggingMode(1)
+AND
+DB_DebugBook_TestValue(1)
+THEN
+DB_DebugBookEntry_Temp("Temp","FlippedOn","GDebug_TEMP_2-2",0);
+*/
+//END_REGION
+
+//REGION Public Helpers
+
+//Ending the day after closing debugbook - DB_ORI_DebugBook_CampOnBookClose(1)
+IF
+DialogEnded((DIALOGRESOURCE)DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50,_ID)
+AND
+DB_ORI_DebugBook_CampOnBookClose(1)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+THEN
+NOT DB_ORI_DebugBook_CampOnBookClose(1);
+ObjectTimerLaunch(_Player,"ORI_DebugBook_GoToCamp",1000);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player,"ORI_DebugBook_GoToCamp")
+AND
+NOT DB_Camp_NightMode(1)
+THEN
+PROC_Camp_TryEnterNightMode((CHARACTER)_Player);
+
+
+
+//REGION Teleport to level
+QRY
+QRY_DebugBook_CheckAct3LevelWithCamp()
+AND
+DB_ActiveLevel("BGO_Main_A")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DebugBook_CheckAct3LevelWithCamp()
+AND
+DB_ActiveLevel("CTY_Main_A")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DebugBook_LevelSwapIfNecessary((STRING)_Level,(STRING)_EventName,(CHARACTER)_Player)
+AND
+DB_ActiveLevel(_Level)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DebugBook_LevelSwapIfNecessary((STRING)_Level,(STRING)_EventName,(CHARACTER)_Player)
+AND
+NOT DB_ActiveLevel(_Level)
+AND
+QRY_DebugBook_TeleportAndRelaunch((STRING)_Level,(STRING)_EventName,(CHARACTER)_Player)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DebugBook_TeleportAndRelaunch((STRING)_Level,(STRING)_EventName,(CHARACTER)_Player)
+THEN
+DB_Debug_ORI_ResendEventOnLevelLoad(_EventName, _Level, _Player);
+PROC_Debug_ORI_GoToLevel(_Level);
+
+PROC
+PROC_Debug_ORI_GoToLevel((STRING)_Level)
+AND
+DB_ORI_DebugBookTeleportTrigger((STRING)_Level, (TRIGGER)_Trigger)
+THEN
+PROC_TeleportPartiesTo(_Trigger, "");
+
+//END_REGION
+
+//REGION Resend an event when a given level is loaded.
+
+IF
+DB_Debug_ORI_ResendEventOnLevelLoad(_Event, _Level, _Player)
+AND
+DB_ActiveLevel(_Level)
+THEN
+NOT DB_Debug_ORI_ResendEventOnLevelLoad(_Event, _Level, _Player);
+PROC_DebugBook_Event(_Event, (CHARACTER)_Player);
+PROC_DebugBook_CampAfterLevelSwap((CHARACTER)_Player);
+
+PROC
+PROC_DebugBook_CampAfterLevelSwap((CHARACTER)_Player)
+AND
+DB_ORI_DebugBook_CampOnBookClose(1)
+THEN
+NOT DB_ORI_DebugBook_CampOnBookClose(1);
+ObjectTimerLaunch(_Player,"ORI_DebugBook_GoToCamp",1000);
+//END_REGION
+
+//REGION Origin nights
+
+IF
+DB_Debug_ORI_CampNight((STRING)_Character, (STRING)_Level, (STRING)_Act, (STRING)_Situation, (STRING)_NightName, (FLAG)_NightFlag)
+AND
+GetFlagName(_NightFlag, _Event)
+THEN
+DB_DebugBookEntry(_Character, _Act, _Situation, _NightName, _Event, 1);
+
+PROC
+PROC_DebugBook_Event(_Event, (CHARACTER)_Player)
+AND
+DB_DebugBookEntry(_Character, _Act, _Situation, _NightName, _Event, 1)
+AND
+DB_Debug_ORI_CampNight(_Character, _Level, _Act, _Situation, _NightName, _NightFlag)
+AND
+DB_ActiveLevel(_Level)
+THEN
+PROC_CAMPDEBUG_QueueNight(_NightFlag, 1);
+PROC_ORI_DebugBook_SetCampOnBookClose(_Player);
+
+PROC
+PROC_DebugBook_Event(_Event, (CHARACTER)_Player)
+AND
+DB_DebugBookEntry(_Character, _Act, _Situation, _NightName, _Event, 1)
+AND
+DB_Debug_ORI_CampNight(_Character, _Level, _Act, _Situation, _NightName, _NightFlag)
+AND
+NOT DB_ActiveLevel(_Level)
+THEN
+PROC_Debug_ORI_GoToLevel(_Level);
+DB_Debug_ORI_ResendEventOnLevelLoad(_Event, _Level, _Player);
+
+PROC
+PROC_ORI_DebugBook_SetCampOnBookClose((CHARACTER)_Player)
+AND
+DB_DialogName(DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50, _)
+THEN
+DB_ORI_DebugBook_CampOnBookClose(1);
+
+PROC
+PROC_ORI_DebugBook_SetCampOnBookClose((CHARACTER)_Player)
+AND
+NOT DB_DialogName(DebugBook_Origin_a5cc9735-cc49-a01d-b06d-803a514bda50, _)
+THEN
+ObjectTimerLaunch(_Player,"ORI_DebugBook_GoToCamp",1000);
+
+//END_REGION
+
+//REGION Set a flag only after a night has started.
+PROC
+PROC_CampNight_StartSelected()
+AND
+DB_CAMPDEBUG_SetFlagAfterNightStarted((FLAG)_NightFlag,(FLAG)_FlagToSet,(GUIDSTRING)_FlagTarget)
+AND
+DB_Camp_QueuedNight((FLAG)_NightFlag)
+THEN
+SetFlag(_FlagToSet,_FlagTarget,0);
+NOT DB_CAMPDEBUG_SetFlagAfterNightStarted(_NightFlag,_FlagToSet,_FlagTarget);
+//END_REGION
+
+//REGION Companion Common Code
+PROC
+PROC_DebugBook_SetupPartyMemberEntries((CHARACTER)_Companion,(STRING)_CompanionString,(INTEGER)_CanBeCompanion,1)
+AND
+Concatenate(_CompanionString,"RecruitAvatar",_RecruitAvatarEvent)
+THEN
+DB_DebugBookEntry(_CompanionString,"Recruit","As Avatar",_RecruitAvatarEvent,0);
+DB_DebugBook_PartyMember_AvatarEvent(_Companion,_RecruitAvatarEvent);
+
+PROC
+PROC_DebugBook_SetupPartyMemberEntries((CHARACTER)_Companion,(STRING)_CompanionString,1,(INTEGER)_CanBeAvatar)
+AND
+Concatenate(_CompanionString,"RecruitCompanion",_RecruitCompanionEvent)
+AND
+Concatenate(_CompanionString,"RecruitCamp",_RecruitCampEvent)
+THEN
+DB_DebugBookEntry(_CompanionString,"Recruit","As Companion",_RecruitCompanionEvent,0);
+DB_DebugBookEntry(_CompanionString,"Recruit","Send To Camp",_RecruitCampEvent,0);
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_RecruitCompanionEvent,_RecruitCampEvent);
+
+//Recruit as Avatar
+PROC
+PROC_DebugBook_Event(_RecruitAvatarEvent,(CHARACTER)_Player)
+AND
+DB_DebugBook_PartyMember_AvatarEvent(_PartyMember,_RecruitAvatarEvent)
+THEN
+PROC_DebugBook_RecruitAvatar(_PartyMember,_Player);
+
+//Recruit As Companion
+PROC
+PROC_DebugBook_Event(_RecruitCompanionEvent,(CHARACTER)_Player)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_RecruitCompanionEvent,_RecruitCampEvent)
+THEN
+PROC_DebugBook_RecruitCompanion(_Companion,_Player);
+
+//Send to Camp
+PROC
+PROC_DebugBook_Event(_RecruitCampEvent,(CHARACTER)_Player)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_RecruitCompanionEvent,_RecruitCampEvent)
+THEN
+PROC_DebugBook_RecruitCamp(_Companion,_Player);
+
+PROC
+PROC_DebugBook_RecruitAvatar((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+DB_Players(_Character)
+AND
+NOT DB_Avatars(_Character)
+AND
+GetFaction(_Character,_PlayerFaction)
+THEN
+PROC_ORI_ClearPartnersIfCompanion(_Character);
+DB_GLO_PartyMembers_DefaultFaction(_Character,_PlayerFaction);
+ClearFlag((FLAG)ORI_State_Recruited_e78c0aab-fb48-98e9-3ed9-773a0c39988d, _Character);
+PROC_RemoveDialog(_Character);
+SetTag(_Character,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+
+PROC
+PROC_DebugBook_RecruitAvatar((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+DB_Players(_Character)
+AND
+GetFaction(_Character,_PlayerFaction)
+AND
+QRY_OnlyOnce_Reset("TEMP_FactionAssigned")
+AND
+NOT DB_AvatarFactions(_PlayerFaction)
+AND
+DB_AvatarFactions(_TryPlayerFaction)
+AND
+NOT QRY_Temp_AvatarFactionTaken(_TryPlayerFaction)
+AND
+QRY_OnlyOnce("TEMP_FactionAssigned")
+THEN
+SetFaction(_Character, _TryPlayerFaction);
+
+QRY
+QRY_Temp_AvatarFactionTaken((FACTION)_Faction)
+AND
+DB_Avatars(_Player)
+AND
+GetFaction(_Player,_Faction)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DebugBook_RecruitAvatar((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+NOT DB_Players(_Character)
+AND
+DB_GlobalFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd)
+THEN
+DebugText(_Player,"Party Full");
+
+PROC
+PROC_DebugBook_RecruitAvatar((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+NOT DB_Players(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd)
+THEN
+SetOnStage(_Character,1);
+TeleportTo(_Character, _Player);
+PROC_GLO_PartyMembers_Add(_Character, _Player); //First as a companion: Clear up recruitment situations.
+DB_Players(_Character);
+PROC_DebugBook_RecruitAvatar((CHARACTER)_Character,(CHARACTER)_Player); //Again but this time as a DB_Players
+
+PROC
+PROC_DebugBook_RecruitCompanion((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+DB_Players(_Character)
+AND
+DB_Avatars(_Character)
+AND
+DB_OriginNPCAlignment(_Character,_Faction)
+THEN
+PROC_ORI_ClearPartnersIfAvatar(_Character);
+DB_GLO_PartyMembers_DefaultFaction(_Character,_Faction);
+ClearTag(_Character,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+PROC_GLO_PartyMembers_Add(_Character,_Player);
+
+PROC
+PROC_DebugBook_RecruitCompanion((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+NOT DB_Players(_Character)
+AND
+DB_GlobalFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd)
+THEN
+DebugText(_Player,"Party Full");
+
+PROC
+PROC_DebugBook_RecruitCompanion((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+NOT DB_Players(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd)
+THEN
+SetOnStage(_Character,1);
+TeleportTo(_Character, _Player);
+PROC_GLO_PartyMembers_Add(_Character, _Player);
+SetFlag((FLAG)SetPreset_Default_7eabc516-c15c-46ff-a99d-60d4a9f7037e, _Character, 0); // flagType: Object
+
+PROC
+PROC_DebugBook_RecruitCamp((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+DB_Avatars(_Character)
+THEN
+PROC_DebugBook_RecruitCompanion(_Character,_Player);
+
+PROC
+PROC_DebugBook_RecruitCamp((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+NOT DB_Players(_Character)
+THEN
+SetEntityEvent(_Character,"DebugTeleportedToCamp");
+
+PROC
+PROC_DebugBook_RecruitCamp((CHARACTER)_Character,(CHARACTER)_Player)
+AND
+DB_Players(_Character)
+THEN
+PROC_GLO_PartyMembers_Remove(_Character,(CHARACTER)_Player,0);
+
+PROC
+PROC_ORI_ClearPartnersIfCompanion((CHARACTER)_Character)
+AND
+DB_ORI_Partnered(_Avatar,_Character)
+THEN
+NOT DB_ORI_Partnered(_Avatar,_Character);
+PROC_ORI_Partnered_Clear_PartneredFlag(_Avatar);
+ClearFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Character);
+
+PROC
+PROC_ORI_ClearPartnersIfAvatar((CHARACTER)_Avatar)
+AND
+DB_ORI_Partnered(_Avatar,_Character)
+THEN
+NOT DB_ORI_Partnered(_Avatar,_Character);
+ClearFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Avatar);
+ClearFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Character);
+
+
+//Track which companion's branch we're in.
+IF
+DB_DebugBook_Branch(1,_CompanionString)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_,_)
+THEN
+PROC_DebugBook_UpdateLastSelectedCompanion(_Companion);
+
+PROC
+PROC_DebugBook_UpdateLastSelectedCompanion((CHARACTER)_Companion)
+AND
+DB_DebugBook_LastSelectedCompanion(_OldCompanion)
+AND
+_Companion != _OldCompanion
+THEN
+NOT DB_DebugBook_LastSelectedCompanion(_OldCompanion);
+
+PROC
+PROC_DebugBook_UpdateLastSelectedCompanion((CHARACTER)_Companion)
+THEN
+DB_DebugBook_LastSelectedCompanion(_Companion);
+
+//Approval
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+NOT DB_Avatars(_Player)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_,_)
+THEN
+DB_DebugBookEntry_Temp(_CompanionString,"Approval","Open the debug book with an avatar to change approval.","BLANK",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Relationship","Open the debug book with an avatar to change approval.","BLANK",0);
+
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+DB_Avatars(_Player)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_,_)
+AND
+DB_ApprovalRating(_Companion,_Player,_Approval)
+AND
+ConcatenateInteger("Current approval: ",_Approval,_ApprovalText)
+THEN
+DB_DebugBookEntry_Temp(_CompanionString,"Approval",_ApprovalText,"BLANK",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Approval","Increase 10","ApprovalUp10",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Approval","Decrease 10","ApprovalDown10",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Approval","Set to -50","Approval-50",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Approval","Set to 0","Approval0",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Approval","Set to 100","Approval100",0);
+
+PROC
+PROC_DebugBook_Event("ApprovalUp10",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ApprovalRating(_Companion,_Player,_OldValue)
+AND
+IntegerSum(_OldValue,10,_NewValue)
+AND
+IntegerMin(_NewValue,100,_NewCappedValue)
+AND
+ChangeApprovalRating((CHARACTER)_Companion, (CHARACTER)_Player, 0, 10,_)
+THEN
+PROC_ApprovalRatingChanged(_Companion,_Player,10,_NewCappedValue);
+
+PROC
+PROC_DebugBook_Event("ApprovalDown10",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ApprovalRating(_Companion,_Player,_OldValue)
+AND
+IntegerSubtract(_OldValue,10,_NewValue)
+AND
+IntegerMax(_NewValue,-50,_NewCappedValue)
+AND
+ChangeApprovalRating((CHARACTER)_Companion, (CHARACTER)_Player, 0, -10,_)
+THEN
+PROC_ApprovalRatingChanged(_Companion,_Player,-10,_NewCappedValue);
+
+PROC
+PROC_DebugBook_Event("Approval-50",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ApprovalRating(_Companion,_Player,_Approval)
+AND
+IntegerSubtract(-50,_Approval,_Delta)
+AND
+ChangeApprovalRating((CHARACTER)_Companion, (CHARACTER)_Player, 0, _Delta,_)
+THEN
+PROC_ApprovalRatingChanged(_Companion,_Player,-50,-50);
+
+PROC
+PROC_DebugBook_Event("Approval0",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ApprovalRating(_Companion,_Player,_Approval)
+AND
+IntegerSubtract(0,_Approval,_Delta)
+AND
+ChangeApprovalRating((CHARACTER)_Companion, (CHARACTER)_Player, 0, _Delta,_)
+THEN
+PROC_ApprovalRatingChanged(_Companion,_Player,_Delta,0);
+
+PROC
+PROC_DebugBook_Event("Approval100",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ApprovalRating(_Companion,_Player,_Approval)
+AND
+IntegerSubtract(100,_Approval,_Delta)
+AND
+ChangeApprovalRating((CHARACTER)_Companion, (CHARACTER)_Player, 0, _Delta,_)
+THEN
+PROC_ApprovalRatingChanged(_Companion,_Player,100,100);
+
+//Relationship
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+DB_Avatars(_Player)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_,_)
+AND
+QRY_DebugBook_GetPartnerString_ClearOldReturnValues()
+AND
+QRY_Debugbook_GetPartnerString(_Companion)
+AND
+DB_QRYRTN_Debugbook_GetPartnerString(_PartnerName)
+AND
+Concatenate("Current Partner: ",_PartnerName,_CurrentPartnerString)
+THEN
+DB_DebugBookEntry_Temp(_CompanionString,"Relationship",_CurrentPartnerString,"BLANK",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Relationship","Break off relationship","StopRelationship",0);
+
+QRY
+QRY_Debugbook_GetPartnerString(_Companion)
+AND
+DB_ORI_Partnered(_Avatar,_Companion)
+AND
+GetDisplayName(_Avatar,_TranslatedStringKey)
+AND
+ResolveTranslatedString(_TranslatedStringKey,_AvatarName)
+THEN
+DB_QRYRTN_Debugbook_GetPartnerString(_AvatarName);
+
+QRY
+QRY_DebugBook_GetPartnerString_ClearOldReturnValues()
+THEN
+SysClear("DB_QRYRTN_Debugbook_GetPartnerString",1);
+
+PROC
+PROC_DebugBook_AddConditionalEntries((CHARACTER)_Player)
+AND
+DB_Avatars(_Player)
+AND
+DB_DebugBook_PartyMember_CompanionEvents(_Companion,_CompanionString,_,_)
+AND
+NOT QRY_Debugbook_GetPartnerString(_Companion)
+THEN
+DB_DebugBookEntry_Temp(_CompanionString,"Relationship","Current Partner: None","BLANK",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Relationship","Start pre-relationship","StartPreRelationship",0);
+DB_DebugBookEntry_Temp(_CompanionString,"Relationship","Start relationship","StartRelationship",0);
+
+QRY
+QRY_Debugbook_GetPartnerString((CHARACTER)_Origin)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DebugBook_Event("StopRelationship",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ORI_Partnered(_Avatar,_Companion)
+AND
+DB_CompanionCanPartner((CHARACTER)_Companion, _, _DateFlag, _ExFlag, _, _, _)
+THEN
+NOT DB_ORI_Partnered(_Avatar,_Companion);
+PROC_ORI_Partnered_Clear_PartneredFlag(_Avatar);
+SetFlag(_ExFlag, _Avatar);
+ClearFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Companion);
+
+
+//break off existing pre-relationship with other players
+PROC
+PROC_DebugBook_Event("StartPreRelationship",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_ORI_Dating(_Avatar, _Companion)
+AND
+DB_CompanionCanPartner((CHARACTER)_Companion, _PreRelationship, _, _, _, _, _)
+THEN
+ClearFlag(_PreRelationship, _Avatar);
+
+PROC
+PROC_DebugBook_Event("StartPreRelationship",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_Avatars(_Player)
+AND
+DB_CompanionCanPartner((CHARACTER)_Companion, _PreRelationship, _, _, _, _, _)
+THEN
+SetFlag((FLAG)_PreRelationship,_Player);
+
+
+//break off existing relationship for player
+PROC
+PROC_DebugBook_Event("StartRelationship",(CHARACTER)_Player)
+AND
+DB_ORI_Partnered(_Player,_Companion)
+AND
+DB_CompanionCanPartner((CHARACTER)_Companion, _, _DateFlag, _ExFlag, _, _, _)
+THEN
+NOT DB_ORI_Partnered(_Player,_Companion);
+SetFlag(_ExFlag, _Player);
+ClearFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Companion);
+
+PROC
+PROC_DebugBook_Event("StartRelationship",(CHARACTER)_Player)
+AND
+DB_DebugBook_LastSelectedCompanion(_Companion)
+AND
+DB_Avatars(_Player)
+AND
+NOT DB_ORI_Partnered(_Player,_)
+AND
+NOT DB_ORI_Partnered(_,_Companion)
+AND
+DB_CompanionCanPartner((CHARACTER)_Companion, _, _DateFlag, _, _, _, _)
+THEN
+DB_ORI_Partnered(_Player,_Companion);
+SetFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Player);
+SetFlag(_DateFlag,_Player);
+SetFlag((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74,_Companion);
+
+
+//END_REGION
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

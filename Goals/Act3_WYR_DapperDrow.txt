@@ -1,0 +1,964 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// States
+DB_WYR_DapperDrow_StateFlags("Taproom", (FLAG)WYR_DapperDrow_State_InTaproom_ce15384c-361d-405e-817a-02dc7951c44f);
+DB_WYR_DapperDrow_StateFlags("MovingToRoom", (FLAG)WYR_DapperDrow_State_MovingToRoom_227569be-d3b8-4739-addd-cadb8c372f35);
+DB_WYR_DapperDrow_StateFlags("RoomBeforeIntimacy", (FLAG)WYR_DapperDrow_State_WaitingInRoom_32ff489d-aa5e-4ed6-ae88-e1132633995e);
+DB_WYR_DapperDrow_StateFlags("RoomIntimacy", (FLAG)WYR_DapperDrow_State_IntimacyInProgress_83aa5591-6e76-42dc-afb1-c3b3f6540fbf);
+DB_WYR_DapperDrow_StateFlags("RoomAfterIntimacy", (FLAG)WYR_DapperDrow_State_InRoomAfterIntimacy_beb9b918-45e0-4ba3-9443-236d2aa2fde4);
+DB_WYR_DapperDrow_StateFlags("MovingToTaproom", (FLAG)WYR_DapperDrow_State_MovingToTaproom_ab9408b3-d3c0-4472-983a-908ef1df4b87);
+DB_WYR_DapperDrow_StateFlags("Gone", (FLAG)WYR_DapperDrow_State_Gone_b87fd1a3-bd14-4991-8681-004d95936ac9);
+
+// Dialogs
+DB_WYR_DapperDrow_Drows(
+	(CHARACTER)S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b,
+	(TRIGGER)S_WYR_DapperDrow_Brother_TaproomPos_53492aea-1a0a-4301-a748-5224f10df51a,
+	(TRIGGER)S_WYR_DapperDrow_Brother_RoomPos_2a1a5894-2a42-4a57-8777-311a0d7bfc9c,
+	(DIALOGRESOURCE)WYR_DapperDrow_Brother_742f76a6-ee4f-695d-2d84-25eac71e630d);
+DB_WYR_DapperDrow_Drows(
+	(CHARACTER)S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a,
+	(TRIGGER)S_WYR_DapperDrow_Sister_TaproomPos_35daa474-0254-4123-8113-c98991d95b50, 
+	(TRIGGER)S_WYR_DapperDrow_Sister_RoomPos_e64670fa-e4cd-4d33-80e3-b3b898624468,
+	(DIALOGRESOURCE)WYR_DapperDrow_Sister_9bafd623-4f2a-0842-d114-1fff99fe9324);
+
+DB_DialogMoneyTransfer(1, WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5, 500, 3, 1); // Player (speaker 3) paying to the NPC (default speaker 1)
+DB_DialogMoneyTransfer(2, WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5, 500, 3, 2); // Player (speaker 3) paying to the NPC (speaker 2)
+DB_DialogMoneyTransfer(3, WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5, 1000, 3, 1); // Player (speaker 3) paying to the NPC (default speaker 1) TODO: Split
+
+DB_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e, WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea);
+DB_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyCancel_24a92baa-3deb-cad3-5913-36208439d736, WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea);
+
+DB_TriggerEvents_AllPartyMembersLeft((TRIGGER)S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa, "WYR_DapperDrow_Event_AllPartyMembersLeftRoom");
+
+DB_DialogBlockAttackButton((DIALOGRESOURCE)WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5);
+
+DB_DoNotFaceDialog(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, WYR_DapperDrow_AD_Siblings_63d626fa-c19e-fb52-0c59-803fcb66298a);
+DB_DoNotFaceDialog(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, WYR_DapperDrow_AD_Siblings_63d626fa-c19e-fb52-0c59-803fcb66298a);
+
+// Hire drow
+DB_WYR_DapperDrow_HireFlag((FLAG)WYR_DapperDrow_State_HiredBrother_e0d6ad5e-c5d4-9d8c-8c6f-997694d6f7b8, (CHARACTER)S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b);
+DB_WYR_DapperDrow_HireFlag(WYR_DapperDrow_State_HiredSister_390a05d9-0313-095d-1356-1884bdf6273e, S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a);
+DB_WYR_DapperDrow_HireFlag(WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800, S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b);
+DB_WYR_DapperDrow_HireFlag(WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800, S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a);
+
+PROC_CharacterDisableCrime((CHARACTER)S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, "KeepAnEyeOnMe");
+PROC_CharacterDisableCrime((CHARACTER)S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, "KeepAnEyeOnMe");
+
+// Devil Sight / Blind immunity support
+DB_WYR_DapperDrow_BlindImmunityPassives("DevilsSight", (FLAG)WYR_DapperDrow_Event_ImmuneToBlind_b48f7bc4-1eac-4a64-9e5a-c282edc690f2);
+DB_WYR_DapperDrow_BlindImmunityPassives("DevilsSight", (FLAG)WYR_DapperDrow_Event_ImmuneToBlind_DevilSight_bfd05724-f2cb-47e3-a94c-6eaef982812e);
+DB_WYR_DapperDrow_BlindImmunityPassives("MAG_Shadow_BlindImmunity_Ring_Passive", (FLAG)WYR_DapperDrow_Event_ImmuneToBlind_b48f7bc4-1eac-4a64-9e5a-c282edc690f2);
+DB_WYR_DapperDrow_BlindImmunityPassives("MAG_Infernal_Metal_Helmet_InfernalSight_Passive", (FLAG)WYR_DapperDrow_Event_ImmuneToBlind_b48f7bc4-1eac-4a64-9e5a-c282edc690f2);
+DB_WYR_DapperDrow_BlindImmunityPassives("MAG_Watcher_Helmet_Darkvision_Passive", (FLAG)WYR_DapperDrow_Event_ImmuneToBlind_b48f7bc4-1eac-4a64-9e5a-c282edc690f2);
+DB_WYR_DapperDrow_BlindImmunityPassives("MAG_SHA_SharBlessing_Spear_Passive", (FLAG)WYR_DapperDrow_Event_ImmuneToBlind_SharSpear_71875fee-c7e7-479d-b02e-13ac6d7dcaab);
+KBSECTION
+//REGION Init
+// Init
+IF
+DB_WYR_DapperDrow_Drows(_Character,_TaproomPos,_,_DefaultDialog)
+THEN
+DB_Dialogs(_Character,_DefaultDialog);
+PROC_WYR_DapperDrow_StateProgress(_Character, "Taproom");
+TriggerRegisterForCharacter(S_WYR_DapperDrow_TaproomArea_ee94f8e8-6bb0-4d4d-8840-2f5611606b7b, _Character);
+TriggerRegisterForCharacter(S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa, _Character);
+TeleportTo(_Character,_TaproomPos);
+//END_REGION
+
+//REGION State manager
+PROC
+PROC_WYR_DapperDrow_StateProgress((CHARACTER)_Character, (STRING)_NewState)
+AND
+DB_WYR_DapperDrow_StateFlags(_NewState, _)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, _CurrentState, _)
+AND
+_CurrentState != "Gone"
+THEN
+PROC_WYR_DapperDrow_StateChanged(_Character, _CurrentState, _NewState);
+PROC_WYR_DapperDrow_StateUpdateFlag((CHARACTER)_Character, _NewState);
+
+PROC
+PROC_WYR_DapperDrow_StateProgress((CHARACTER)_Character, (STRING)_NewState)
+AND
+DB_WYR_DapperDrow_StateFlags(_NewState, _)
+AND
+NOT DB_WYR_DapperDrow_CurrentStateFlag(_Character,_,_)
+THEN
+PROC_WYR_DapperDrow_StateUpdateFlag((CHARACTER)_Character, _NewState);
+PROC_WYR_DapperDrow_StateChanged((CHARACTER)_Character, "", _NewState);
+
+PROC
+PROC_WYR_DapperDrow_StateUpdateFlag((CHARACTER)_Character, (STRING)_NewState)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, _CurrentState, _Flag)
+THEN
+ClearFlag(_Flag, _Character, 0);
+NOT DB_WYR_DapperDrow_CurrentStateFlag(_Character, _CurrentState, _Flag);
+
+PROC
+PROC_WYR_DapperDrow_StateUpdateFlag((CHARACTER)_Character, (STRING)_NewState)
+AND
+DB_WYR_DapperDrow_StateFlags(_NewState, _NewFlag)
+THEN
+SetFlag(_NewFlag, _Character, 0);
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, _NewState, _NewFlag);
+
+// to override
+PROC
+PROC_WYR_DapperDrow_StateChanged((CHARACTER)_Character, (STRING)_CurrentState, (STRING)_NewState)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Taproom three-way dialog starting
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, _Player)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag((CHARACTER)S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, "Taproom", _)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, _Player)
+THEN
+DB_SelectedDialog(
+	WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5, 
+	S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, 
+	S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b,
+	_Player);
+SetFlag(WYR_DapperDrow_Event_SiblingSelected_900c664f-e7cc-18ff-adb9-69969bf57b2d, S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, 0);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, _Player)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, "Taproom", _)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, _Player)
+THEN
+DB_SelectedDialog(
+	WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5, 
+	S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, 
+	S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b,
+	_Player);
+SetFlag(WYR_DapperDrow_Event_SiblingSelected_900c664f-e7cc-18ff-adb9-69969bf57b2d, S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, 0);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5, _Inst)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_, _Inst, _Avatar, 1)
+AND
+DB_Avatars((CHARACTER)_Avatar) 
+AND
+DB_ORI_Partnered((CHARACTER)_Avatar, (CHARACTER)_Companion)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Avatar, _Companion)
+THEN
+PROC_DialogAddSpeakingActor(_Inst, _Companion);
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5,_)
+AND
+DB_WYR_DapperDrow_Drows((CHARACTER)_Character,_,_,_)
+AND
+GetFlag(WYR_DapperDrow_Event_SiblingSelected_900c664f-e7cc-18ff-adb9-69969bf57b2d, _Character, 1)
+THEN
+ClearFlag(WYR_DapperDrow_Event_SiblingSelected_900c664f-e7cc-18ff-adb9-69969bf57b2d, _Character, 0);
+//END_REGION
+
+//REGION Hiring
+IF
+DB_WYR_DapperDrow_HireFlag(_Flag,_)
+AND
+NOT DB_FlagReactionAfterDialog(_Flag, WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5)
+THEN
+DB_FlagReactionAfterDialog(_Flag, WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5);
+
+// drow state change after being hired
+PROC
+PROC_FlagReactionAfterDialog(_Player, _Flag, WYR_DapperDrow_SiblingsThreeWay_86e1a78a-6cbe-0af6-5cdb-2db1c0f466d5)
+AND
+DB_WYR_DapperDrow_HireFlag(_Flag,_)
+THEN
+PROC_WYR_DapperDrow_Hire((CHARACTER)_Player, _Flag);
+
+PROC
+PROC_WYR_DapperDrow_Hire((CHARACTER)_Player, (FLAG)_Flag)
+AND
+QRY_WYR_DapperDrow_Start((CHARACTER)_Player, _Flag)
+AND
+DB_WYR_DapperDrow_HireFlag(_Flag, _CharacterToHire)
+THEN
+PROC_WYR_DapperDrow_StateProgress(_CharacterToHire, "MovingToRoom");
+
+QRY
+QRY_WYR_DapperDrow_Start((CHARACTER)_Player, (FLAG)_Flag)
+AND
+NOT DB_GlobalFlag((FLAG)WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+NOT DB_WYR_DapperDrow_CurrentCustomer(_Player,_)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e);
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, (FLAG)_Flag);
+
+// Setting an event flag for the drow personal dialogs after the other sibling being hired
+PROC
+PROC_DialogFlagSetup(WYR_DapperDrow_Brother_742f76a6-ee4f-695d-2d84-25eac71e630d,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, "Taproom", _)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, _CurrentState, _)
+AND
+_CurrentState != "Taproom"
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_SiblingHired_2ee8961d-501e-fdab-4846-0a0f887de3ab);
+
+PROC
+PROC_DialogFlagSetup(WYR_DapperDrow_Sister_9bafd623-4f2a-0842-d114-1fff99fe9324,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, "Taproom", _)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, _CurrentState, _)
+AND
+_CurrentState != "Taproom"
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_SiblingHired_2ee8961d-501e-fdab-4846-0a0f887de3ab);
+
+IF
+DialogEnded(_Dialog,_)
+AND
+DB_WYR_DapperDrow_Drows(_,_,_,_Dialog)
+THEN
+PROC_GlobalClearFlagAndCache(WYR_DapperDrow_Event_SiblingHired_2ee8961d-501e-fdab-4846-0a0f887de3ab);
+
+// Partner joining when the player hires both drow
+IF
+FlagCleared((FLAG)WYR_DapperDrow_Event_PlayerPartnerAgreedGroup_caac47bf-905e-ddf6-c76b-930a99bbab70, _Avatar, _Inst)
+AND
+DB_PartOfTheTeam(_Companion)
+AND
+_Companion != _Avatar
+AND
+GetFlag(WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, 1)
+THEN
+ClearFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, _Inst);
+
+IF
+FlagCleared((FLAG)WYR_DapperDrow_Event_PlayerPartnerAgreedGroup_caac47bf-905e-ddf6-c76b-930a99bbab70, _Avatar, _Inst)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_HalsinGroupPlusOne_e6423eae-d8f1-a668-cd1a-29ec76e9d37d, _Avatar, 1)
+THEN
+ClearFlag((FLAG)WYR_DapperDrow_State_HalsinGroupPlusOne_e6423eae-d8f1-a668-cd1a-29ec76e9d37d, _Avatar, _Inst);
+
+// Marker
+IF
+DB_WYR_DapperDrow_CurrentCustomer(_Player,_)
+THEN
+PROC_ShowMarker(_Player, "WYR_DapperDrowRoom");
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_WYR_DapperDrow_CurrentCustomer(_Player, _)
+THEN
+PROC_HideMarker(_Player, "WYR_DapperDrowRoom");
+//END_REGION
+
+//REGION Transition to the room and back
+// in the rooms
+IF
+EnteredTrigger(_Character, S_WYR_DapperDrow_TaproomArea_ee94f8e8-6bb0-4d4d-8840-2f5611606b7b)
+AND
+DB_WYR_DapperDrow_Drows(_Character,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, "MovingToTaproom", _)
+THEN
+PROC_WYR_DapperDrow_StateProgress(_Character, "Taproom");
+
+IF
+EnteredTrigger(_Character, S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa)
+AND
+DB_WYR_DapperDrow_Drows(_Character,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, "MovingToRoom", _)
+THEN
+PROC_WYR_DapperDrow_StateProgress(_Character, "RoomBeforeIntimacy");
+
+// fast-forwarding
+PROC
+PROC_LongRest()
+THEN
+PROC_WYR_DapperDroow_FastForwardMoving();
+
+IF
+FlagSet((FLAG)Debug_Teleport_WYR_DapperDrow_9ecb42a9-59bb-4570-80a9-0d0c13da9ed7,_,_)
+THEN
+PROC_WYR_DapperDroow_FastForwardMoving();
+
+IF
+FlagSet((FLAG)Debug_Teleport_WYR_SharessCaress_1c6d5111-862a-4ac3-b6c2-64378f2cba8d,_,_)
+THEN
+PROC_WYR_DapperDroow_FastForwardMoving();
+
+PROC
+PROC_WYR_DapperDroow_FastForwardMoving()
+AND
+NOT DB_GlobalFlag((FLAG)WYR_DapperDrow_State_PermaUnavailable_2d958aad-7077-4b53-b337-0636af755948)
+AND
+DB_WYR_DapperDrow_Drows(_Character, _, _RoomPos,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, "MovingToRoom", _)
+THEN
+NOT DB_NotifyWhenReadyToMoveOn(_Character, "WYR_DapperDrow_DisappearedToRoom_Notify");
+PROC_CancelDisappearOutOfSight(_Character);
+PROC_SetOnStage(_Character, 1);
+TeleportTo(_Character, _RoomPos);
+
+PROC
+PROC_WYR_DapperDroow_FastForwardMoving()
+AND
+DB_WYR_DapperDrow_Drows(_Character, _TaproomPos, _,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, "MovingToTaproom", _)
+THEN
+NOT DB_NotifyWhenReadyToMoveOn(_Character, "WYR_DapperDrow_DisappearedToTaproom_Notify");
+PROC_CancelDisappearOutOfSight(_Character);
+PROC_SetOnStage(_Character, 1);
+TeleportTo(_Character, _TaproomPos);
+//END_REGION
+
+//REGION Intimacy: Starting the dialog
+// Hired only brother
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, _Player)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, WYR_DapperDrow_State_HiredBrother_e0d6ad5e-c5d4-9d8c-8c6f-997694d6f7b8)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, "RoomBeforeIntimacy", _)
+AND
+DB_InRegion(_Player, S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa)
+AND
+NOT QRY_WYR_DapperDrow_WrongPeopleInRoom((CHARACTER)_Player)
+THEN
+DB_SelectedDialog(
+	WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, 
+	NULL_00000000-0000-0000-0000-000000000000, 
+	S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b,
+	_Player);
+
+// Hired only sister
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, _Player)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, WYR_DapperDrow_State_HiredSister_390a05d9-0313-095d-1356-1884bdf6273e)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, "RoomBeforeIntimacy", _)
+AND
+DB_InRegion(_Player, S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa)
+AND
+NOT QRY_WYR_DapperDrow_WrongPeopleInRoom((CHARACTER)_Player)
+THEN
+DB_SelectedDialog(
+	WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, 
+	S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, 
+	NULL_00000000-0000-0000-0000-000000000000,
+	_Player);
+
+// Hired both
+// clicked with the avatar
+QRY
+QRY_SelectCustomDialog_AfterGenerics(_Sibling, _Player)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_Drows((CHARACTER)_Sibling,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800)
+AND
+QRY_WYR_DapperDrow_StartIntimacyHiredBoth(_Player)
+THEN
+DB_NOOP(1);
+
+// clicked with a companion who wanted to join
+QRY
+QRY_SelectCustomDialog_AfterGenerics(_Sibling, _Companion)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_Drows((CHARACTER)_Sibling,_,_,_)
+AND
+NOT DB_Avatars((CHARACTER)_Companion)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, 1)
+AND
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800)
+AND
+QRY_WYR_DapperDrow_StartIntimacyHiredBoth(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WYR_DapperDrow_StartIntimacyHiredBoth((CHARACTER)_Player)
+AND
+DB_InRegion(_Player, S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa)
+AND
+NOT QRY_WYR_DapperDrow_AnySiblingUnavailable((CHARACTER)_Player)
+AND
+NOT QRY_WYR_DapperDrow_WrongPeopleInRoom((CHARACTER)_Player)
+AND
+NOT QRY_WYR_DapperDrow_PartnerUnavailable((CHARACTER)_Player)
+THEN
+DB_SelectedDialog(
+	WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, 
+	S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, 
+	S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b,
+	_Player);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, _Inst)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_, _Inst, _Player, 1)
+AND
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800)
+AND
+DB_Players(_Companion) // we can't use partners because Halsin may join even if he's not partnered
+AND
+NOT DB_Avatars(_Companion) 
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, 1)
+THEN
+PROC_DialogAddSpeakingActor(_Inst, _Companion);
+
+// Setting event flags to pick the right greetind node explaining why the dialog can't be started
+// checking if any of the siblings is unavailable
+QRY
+QRY_WYR_DapperDrow_AnySiblingUnavailable((CHARACTER)_Player)
+AND
+DB_WYR_DapperDrow_Drows(_Sibling,_,_,_)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(_Sibling, _Player)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacySiblingUnavailable_fbf59322-a38e-78d3-bdf6-768aae261aeb);
+
+QRY
+QRY_WYR_DapperDrow_AnySiblingUnavailable((CHARACTER)_Player)
+AND
+DB_WYR_DapperDrow_Drows(_Sibling,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Sibling, _CurrentState, _)
+AND
+_CurrentState != "RoomBeforeIntimacy"
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacySiblingUnavailable_fbf59322-a38e-78d3-bdf6-768aae261aeb);
+
+// checking if Halsin is unavailable
+QRY
+QRY_WYR_DapperDrow_PartnerUnavailable((CHARACTER)_Player)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, 1)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Player)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacyHalsinUnavailable_5fbe3264-7f9f-d28f-0943-9fadb00d5fac);
+
+// any partnered companion (but Halsin) is unavailable
+QRY
+QRY_WYR_DapperDrow_PartnerUnavailable((CHARACTER)_Player)
+AND
+DB_PartOfTheTeam(_PartneredCompanion)
+AND
+_PartneredCompanion != _Player
+AND
+_PartneredCompanion != S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _PartneredCompanion, 1)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(_PartneredCompanion, _Player)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacyPartnerUnavailable_b8043818-4a56-cc76-d2a0-2d0f3058cb36);
+
+// checking if anyone is in the room
+QRY
+QRY_WYR_DapperDrow_WrongPeopleInRoom((CHARACTER)_AllowedPlayer)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_PlayerSummons(_PartyMember) // the cat can watch
+AND
+_PartyMember != _AllowedPlayer
+AND
+DB_InRegion(_PartyMember, S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _PartyMember, 0)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacyRoomUnavailable_1b2e26df-e6ee-46df-dabc-34832d908849);
+
+IF
+DialogStarted((DIALOGRESOURCE)WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea,_)
+THEN
+PROC_WYR_DapperDrow_ClearItnimacyEventFlags();
+
+IF
+DialogEnded(_Dialog,_)
+AND
+DB_WYR_DapperDrow_Drows(_,_,_,_Dialog)
+THEN
+PROC_WYR_DapperDrow_ClearItnimacyEventFlags();
+
+PROC
+PROC_WYR_DapperDrow_ClearItnimacyEventFlags()
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacyRoomUnavailable_1b2e26df-e6ee-46df-dabc-34832d908849);
+PROC_GlobalClearFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacySiblingUnavailable_fbf59322-a38e-78d3-bdf6-768aae261aeb);
+PROC_GlobalClearFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacyHalsinUnavailable_5fbe3264-7f9f-d28f-0943-9fadb00d5fac);
+PROC_GlobalClearFlagAndCache((FLAG)WYR_DapperDrow_Event_IntimacyPartnerUnavailable_b8043818-4a56-cc76-d2a0-2d0f3058cb36);
+
+// Devil Sight / Blind immutnity support
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, _, _, _Player)
+AND
+DB_WYR_DapperDrow_BlindImmunityPassives(_Passive, _Flag)
+AND
+NOT DB_WYR_DapperDrow_BlindImmunity_FlagSet(_Player, _Flag)
+AND
+HasPassive(_Player, _Passive, 1)
+THEN
+DB_WYR_DapperDrow_BlindImmunity_FlagSet(_Player, _Flag);
+SetFlag((FLAG)_Flag, _Player);
+
+IF
+DialogEnded(WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea,_)
+AND
+DB_WYR_DapperDrow_BlindImmunity_FlagSet(_Player, _Flag)
+AND
+GetFlag(_Flag, _Player, 1)
+THEN
+NOT DB_WYR_DapperDrow_BlindImmunity_FlagSet(_Player, _Flag);
+ClearFlag(_Flag, _Player);
+//END_REGION
+
+//REGION Intimacy: In progress
+// States handling
+IF
+DialogStarted((DIALOGRESOURCE)WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea,_)
+AND
+DB_WYR_DapperDrow_Drows(_Character,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, "RoomBeforeIntimacy", _)
+THEN
+Close(S_WYR_SharessCaress_DapperDrowRoomDoor_2ac2357e-8dd9-4d3e-93eb-06354a681a99);
+PROC_WYR_DapperDrow_StateProgress(_Character, "RoomIntimacy");
+
+// Restarting if were interrupted before being done
+IF
+DialogEnded(WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea,_)
+AND
+NOT DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_Drows(_Drow,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Drow, "RoomIntimacy", _)
+THEN
+PROC_WYR_DapperDrow_StateProgress(_Drow, "RoomBeforeIntimacy");
+
+// Trespassing while the scene is in progress
+PROC
+PROC_WYR_DapperDrow_StateChanged(_Character, _, "RoomIntimacy")
+AND
+NOT DB_TrespassTrigger(S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa,_,_,_)
+THEN
+DB_TrespassTrigger(
+	S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa,
+	S_WYR_DapperDrow_NearRoomDoorPos_b014f4e3-fe1a-46cf-9c45-151a9ad704f9, 
+	"WYR_DapperDrow_Trespassing",
+	_Character);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Character, "WYR_DapperDrow_Trespassing", _, (CHARACTER)_NPC, (INTEGER)_CrimeID)
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Character, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Character, "WYR_DapperDrow_Trespassing", _, (CHARACTER)_NPC, (INTEGER)_CrimeID)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Character, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_WYR_DapperDrow_StateChanged(_Character, _, "RoomAfterIntimacy")
+AND
+DB_TrespassTrigger(S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa, _OutPos,	_, _Character)
+THEN
+PROC_RemoveDBTrespassTrigger(S_WYR_DapperDrow_RoomArea_e1b2c356-494b-4042-9d75-cf64a17c7faa, _OutPos, _Character);
+
+// you can't persuade them to let you in if not invited
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom("Persuade", (INTEGER)_CrimeID, (CHARACTER)_Character, (CHARACTER)_Criminal, (STRING)_Race, (DIALOGRESOURCE)_Dialog)
+AND
+CrimeGetType(_CrimeID, "WYR_DapperDrow_Trespassing")
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom("no");
+
+// Filtering peanuts
+QRY
+QRY_WYR_DapperDrow_AcceptedForIntimacy((CHARACTER)_Player)
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WYR_DapperDrow_AcceptedForIntimacy((CHARACTER)_Companion)
+AND
+NOT DB_WYR_DapperDrow_CurrentCustomer(_Companion, _)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_BlockCompanionInclusion(_Companion, WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea)
+AND
+NOT QRY_WYR_DapperDrow_AcceptedForIntimacy((CHARACTER)_Companion)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Post-intimacy
+// Clicking on a drow again after the scene
+QRY
+QRY_SelectCustomDialog_AfterGenerics(_Sibling, _Player)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_Drows((CHARACTER)_Sibling,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Sibling, "RoomAfterIntimacy", _)
+AND
+DB_WYR_DapperDrow_CurrentCustomer((CHARACTER)_Player, _)
+THEN
+DB_SelectedDialog(
+	WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, 
+	NULL_00000000-0000-0000-0000-000000000000,
+	NULL_00000000-0000-0000-0000-000000000000,
+	_Player);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(WYR_DapperDrow_Intimacy_0766f47e-3707-7978-9406-f816084a81ea, _Inst)
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_, _Inst, _Avatar, 1)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Drow, "RoomAfterIntimacy", _)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Drow, _Avatar)
+THEN
+PROC_DialogAddSpeakingActor(_Inst, _Drow);
+
+// Intimacy done
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_Drows(_Character,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, "RoomIntimacy", _)
+THEN
+PROC_WYR_DapperDrow_StateProgress(_Character, "RoomAfterIntimacy");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800)
+THEN
+SetFlag(WYR_DapperDrow_HasMet_Siblings_Intimacy_40520989-424e-c498-3abd-67804b5cf8bd, _Player, 0);
+SetFlag(WYR_DapperDrow_State_HadGroupIntimacy_be106638-b596-cdc6-a380-749e92786762, _Player, 0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, WYR_DapperDrow_State_HiredBrother_e0d6ad5e-c5d4-9d8c-8c6f-997694d6f7b8)
+THEN
+SetFlag(WYR_DapperDrow_HasMet_Brother_Intimacy_1299afb3-445c-d1a0-601e-3ff2f9299335, _Player, 0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, WYR_DapperDrow_State_HiredSister_390a05d9-0313-095d-1356-1884bdf6273e)
+THEN
+SetFlag(WYR_DapperDrow_HasMet_Sister_Intimacy_93ed2151-001b-b438-d5a1-c08aa2d1378d, _Player, 0);
+
+// Cancelling
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyCancel_24a92baa-3deb-cad3-5913-36208439d736)
+THEN
+PROC_GlobalClearFlagAndCache(WYR_DapperDrow_Event_IntimacyCancel_24a92baa-3deb-cad3-5913-36208439d736);
+PROC_WYR_DapperDrow_Stop();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(WYR_DapperDrow_Event_IntimacyCancel_24a92baa-3deb-cad3-5913-36208439d736)
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, _Flag)
+THEN
+PROC_WYR_DapperDrow_ReturnMoney(_Player, _Flag);
+
+// Stopping
+IF
+EntityEvent(_, "WYR_DapperDrow_Event_AllPartyMembersLeftRoom")
+AND
+DB_GlobalFlag(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e)
+AND
+DB_GlobalFlag(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e)
+THEN
+PROC_WYR_DapperDrow_Stop();
+
+PROC
+PROC_WYR_DapperDrow_Stop()
+THEN
+PROC_GlobalClearFlagAndCache(WYR_DapperDrow_State_InProgress_4d795f16-b52c-d25c-0912-a2867d42893e);
+PROC_GlobalClearFlagAndCache(WYR_DapperDrow_Event_IntimacyDone_10cfd95c-876e-cce9-9138-5593b5b5a33e);
+
+PROC
+PROC_WYR_DapperDrow_Stop()
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, (FLAG)WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800)
+AND
+GetFlag((FLAG)WYR_DapperDrow_Event_PlayerPartnerAgreedGroup_caac47bf-905e-ddf6-c76b-930a99bbab70, _Player, 1)
+THEN
+ClearFlag((FLAG)WYR_DapperDrow_Event_PlayerPartnerAgreedGroup_caac47bf-905e-ddf6-c76b-930a99bbab70, _Player, 0);
+
+PROC
+PROC_WYR_DapperDrow_Stop()
+AND
+DB_WYR_DapperDrow_CurrentCustomer(_Player, _Flag)
+AND
+GetFlag(_Flag, _Player, 1)
+THEN
+ClearFlag(_Flag, _Player, 0);
+NOT DB_WYR_DapperDrow_CurrentCustomer(_Player, _Flag);
+
+PROC
+PROC_WYR_DapperDrow_Stop()
+AND
+DB_WYR_DapperDrow_Drows(_Character,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Character, _CurrentState, _)
+AND
+_CurrentState != "Taproom"
+THEN
+PROC_WYR_DapperDrow_StateProgress(_Character, "MovingToTaproom");
+//END_REGION
+
+//REGION Intimacy: handling gameplay nudity
+IF
+FlagSet((FLAG)WYR_DapperDrow_Event_BlackScreen_ee0af87e-597f-d5dc-2c77-cb9c99d6404e,_,_)
+AND
+DB_WYR_DapperDrow_Drows(_Drow,_,_,_)
+AND
+DB_WYR_DapperDrow_CurrentStateFlag(_Drow, "RoomIntimacy", _)
+THEN
+DB_WYR_DapperDrow_Nude(_Drow);
+
+IF
+DB_WYR_DapperDrow_Nude((CHARACTER)S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a)
+THEN
+Transform(S_WYR_DapperDrow_Sister_7574fc5a-3645-4370-a778-0b38d0ef162a, UNI_WYR_DapperDrow_Sister_Naked_a5fb4957-29c1-4f58-a0e4-6ced8efccb0d, (SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+
+IF
+DB_WYR_DapperDrow_Nude((CHARACTER)S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b)
+THEN
+Transform(S_WYR_DapperDrow_Brother_f25b5f9a-bfde-4d81-a3fb-74fc39dad95b, UNI_WYR_DapperDrow_Brother_Naked_e1b256c5-17ac-41ae-81ef-6977afe510e9, (SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+
+IF
+FlagSet((FLAG)WYR_DapperDrow_Event_BlackScreen_ee0af87e-597f-d5dc-2c77-cb9c99d6404e,_,_DialogInstance)
+AND
+DB_DialogPlayers(_DialogInstance, _Player, _)
+AND
+QRY_WYR_DapperDrow_AcceptedForIntimacy((CHARACTER)_Player)
+THEN
+PROC_SetArmourSet((CHARACTER)_Player, ARMOURSET.Vanity);
+PROC_WYR_DapperDrow_MakePlayerNaked((CHARACTER)_Player);
+
+PROC
+PROC_WYR_DapperDrow_MakePlayerNaked((CHARACTER)_Player)
+AND
+DB_EquippedItemSlots(_Slot)
+AND
+IsSubstring(_Slot, "Vanity", 1)
+AND
+GetEquippedItem(_Player, _Slot, _Item)
+THEN
+Unequip(_Player, _Item);
+
+PROC
+PROC_WYR_DapperDrow_StateProgress(_Drow, "MovingToTaproom")
+AND
+DB_WYR_DapperDrow_Nude(_Drow)
+THEN
+NOT DB_WYR_DapperDrow_Nude(_Drow);
+RemoveTransforms(_Drow);
+//END_REGION
+
+//REGION Misc states
+PROC
+PROC_StateSet_PermaDefeated(_Character)
+AND
+DB_WYR_DapperDrow_Drows((CHARACTER)_Character,_,_,_)
+THEN
+PROC_WYR_DapperDrow_StateProgress(_Character, "Gone");
+
+PROC
+PROC_WYR_DapperDrow_StateChanged(_Character, _, "Gone")
+AND
+DB_WYR_DapperDrow_Drows((CHARACTER)_Character,_,_,_)
+THEN
+PROC_GlobalSetFlagAndCache(WYR_DapperDrow_State_PermaUnavailable_2d958aad-7077-4b53-b337-0636af755948);
+
+IF
+FlagSet(WYR_DapperDrow_State_PermaUnavailable_2d958aad-7077-4b53-b337-0636af755948,_,_)
+THEN
+PROC_WYR_DapperDrow_Stop();
+
+PROC
+PROC_StateSet_PermaDefeated(_Companion)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, 1)
+THEN
+PROC_WYR_DapperDrow_Stop();
+
+IF
+FlagSet((FLAG)GLO_Companion_Leave_363c71f4-8b46-c0c0-4bbb-0e5a85e4652d, _Companion, _)
+AND
+GetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, 1)
+THEN
+PROC_WYR_DapperDrow_Stop();
+//END_REGION
+
+//REGION Money
+PROC
+PROC_WYR_DapperDrow_ReturnMoney((CHARACTER)_Player, (FLAG)_Flag)
+THEN
+DB_NOOP(1); // TODO
+//END_REGION
+
+//REGION Debug
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_Reset_766ecb0c-8526-bd65-3610-3b34ad668bca,_,_)
+THEN
+PROC_WYR_DapperDrow_Stop();
+
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_Reset_766ecb0c-8526-bd65-3610-3b34ad668bca,_,_)
+AND
+DB_WYR_DapperDrow_Drows(_Character,_TaproomPos,_,_)
+THEN
+TeleportTo(_Character,_TaproomPos);
+PROC_WYR_DapperDrow_StateProgress(_Character, "Taproom");
+
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_HireMale_a7f43744-03e0-2ae3-68c0-1085d1e9fe79, _Player, _Instance)
+THEN
+ClearFlag(Debug_WYR_DapperDrow_HireMale_a7f43744-03e0-2ae3-68c0-1085d1e9fe79, _Player, _Instance);
+SetFlag((FLAG)WYR_DapperDrow_State_HiredBrother_e0d6ad5e-c5d4-9d8c-8c6f-997694d6f7b8, _Player, 0);
+PROC_WYR_DapperDrow_Hire((CHARACTER)_Player, (FLAG)WYR_DapperDrow_State_HiredBrother_e0d6ad5e-c5d4-9d8c-8c6f-997694d6f7b8);
+TeleportTo(_Player, S_Debug_Teleport_WYR_DapperDrow_43942fc9-6b75-4c14-b1a2-e157a4b786c2);
+PROC_WYR_DapperDroow_FastForwardMoving();
+
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_HireFemale_9f00501d-5b9f-dbd2-8f12-80720b789f1d, _Player, _Instance)
+THEN
+ClearFlag(Debug_WYR_DapperDrow_HireFemale_9f00501d-5b9f-dbd2-8f12-80720b789f1d, _Player, _Instance);
+SetFlag((FLAG)WYR_DapperDrow_State_HiredSister_390a05d9-0313-095d-1356-1884bdf6273e, _Player, 0);
+PROC_WYR_DapperDrow_Hire((CHARACTER)_Player, (FLAG)WYR_DapperDrow_State_HiredSister_390a05d9-0313-095d-1356-1884bdf6273e);
+TeleportTo(_Player, S_Debug_Teleport_WYR_DapperDrow_43942fc9-6b75-4c14-b1a2-e157a4b786c2);
+PROC_WYR_DapperDroow_FastForwardMoving();
+
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_HireBoth_d56cf27c-11ae-34e5-299b-3c1c3dbb62bf, _Player, _Instance)
+THEN
+ClearFlag(Debug_WYR_DapperDrow_HireBoth_d56cf27c-11ae-34e5-299b-3c1c3dbb62bf, _Player, _Instance);
+SetFlag((FLAG)WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800, _Player, 0);
+PROC_WYR_DapperDrow_Hire((CHARACTER)_Player, (FLAG)WYR_DapperDrow_State_HiredBoth_4dc060ee-1076-ba53-8663-e436665b4800);
+TeleportTo(_Player, S_Debug_Teleport_WYR_DapperDrow_43942fc9-6b75-4c14-b1a2-e157a4b786c2);
+PROC_WYR_DapperDroow_FastForwardMoving();
+
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_HireBoth_d56cf27c-11ae-34e5-299b-3c1c3dbb62bf, _Player, _Instance)
+AND
+DB_ORI_Partnered((CHARACTER)_Player, (CHARACTER)_Companion)
+THEN
+SetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, _Companion, _Instance);
+
+IF
+FlagSet((FLAG)Debug_WYR_DapperDrow_HalsinJoins_d1c2ea6a-5305-42b2-9523-ffff60351ca0, _, _Instance)
+THEN
+PROC_GlobalClearFlagAndCache(Debug_WYR_DapperDrow_HalsinJoins_d1c2ea6a-5305-42b2-9523-ffff60351ca0);
+SetFlag((FLAG)WYR_DapperDrow_State_PartnerAgreedGroup_b285bbaa-7b79-48c6-bf26-1b9f2de5cdb7, S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Instance);
+
+IF
+TextEvent("WYR_DapperDrow_HireBoth")
+AND
+GetHostCharacter(_Host)
+THEN
+SetFlag(Debug_WYR_DapperDrow_HireBoth_d56cf27c-11ae-34e5-299b-3c1c3dbb62bf, _Host, 0);
+
+IF
+TextEvent("WYR_DapperDrow_HireFemale")
+AND
+GetHostCharacter(_Host)
+THEN
+SetFlag(Debug_WYR_DapperDrow_HireFemale_9f00501d-5b9f-dbd2-8f12-80720b789f1d, _Host, 0);
+
+IF
+TextEvent("WYR_DapperDrow_HireMale")
+AND
+GetHostCharacter(_Host)
+THEN
+SetFlag(Debug_WYR_DapperDrow_HireMale_a7f43744-03e0-2ae3-68c0-1085d1e9fe79, _Host, 0);
+
+IF
+TextEvent("WYR_DapperDrow_HalsinJoins")
+THEN
+PROC_GlobalSetFlagAndCache(Debug_WYR_DapperDrow_HalsinJoins_d1c2ea6a-5305-42b2-9523-ffff60351ca0);
+
+IF
+TextEvent("WYR_DapperDrow_Reset")
+THEN
+PROC_GlobalSetFlagAndCache(Debug_WYR_DapperDrow_Reset_766ecb0c-8526-bd65-3610-3b34ad668bca);
+
+IF
+TextEvent("WYR_DapperDrow_ToRoom")
+AND
+GetHostCharacter(_Host)
+THEN
+TeleportTo(_Host, S_Debug_Teleport_WYR_DapperDrow_43942fc9-6b75-4c14-b1a2-e157a4b786c2);
+PROC_WYR_DapperDroow_FastForwardMoving();
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

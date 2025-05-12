@@ -1,0 +1,330 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_GLO_Tadpole_Init();
+
+NOT DB_TadpolePower("");
+
+DB_TadpoleCounter(1,(FLAG)GLO_TadpoledCount1_ff1c4f21-91b7-9c21-0ed6-74ec9c1c5628);
+DB_TadpoleCounter(2,(FLAG)GLO_TadpoledCount2_d35434a5-94f1-88b2-479d-674b9aee2a29);
+DB_TadpoleCounter(3,(FLAG)GLO_TadpoledCount3_969f02bb-f03f-50e1-f3ae-86293dece3cc);
+DB_TadpoleCounter(4,(FLAG)GLO_TadpoledCount4_9a94c778-c16e-9e23-8aeb-c9d7b7834582);
+DB_TadpoleCounter(5,(FLAG)GLO_TadpoledCount5_01a081b5-ddd7-c0f5-b3d7-0c6e2532b57d);
+DB_TadpoleCounter(6,(FLAG)GLO_TadpoledCount6_d857f96a-5da1-a03b-d4b6-fb7e433be60a);
+KBSECTION
+//REGION Adds Tadpole Tags to all starting players
+PROC
+PROC_GLO_Tadpole_Init()
+AND
+DB_Players(_Player)
+THEN
+SetTag(_Player, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed);
+
+IF
+DB_Origins(_Char)
+THEN
+DB_Tadpole_TadpoleBurstException(_Char);
+
+IF
+DB_Avatars(_Avatar)
+THEN
+DB_Tadpole_TadpoleBurstException(_Avatar);
+//END_REGION
+
+//REGION Add Tadpole checkonly tag
+
+IF
+TagSet(_Entity,ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+THEN
+SetTag(_Entity,ILLITHID_INVIS_CHECK_4835ba9d-c0d6-40fb-ad62-88f875b536c2);
+
+IF
+TagCleared(_Entity,ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed)
+THEN
+ClearTag(_Entity,ILLITHID_HIDDEN_CHECK_4835ba9d-c0d6-40fb-ad62-88f875b536c2);
+
+IF
+TagCleared(_Entity,ILLITHID_HIDDEN_CHECK_4835ba9d-c0d6-40fb-ad62-88f875b536c2)
+AND
+IsTagged(_Entity,ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,1)
+THEN
+SetTag(_Entity,ILLITHID_HIDDEN_CHECK_4835ba9d-c0d6-40fb-ad62-88f875b536c2);
+
+IF
+TagCleared(_Entity,ILLITHID_HIDDEN_CHECK_4835ba9d-c0d6-40fb-ad62-88f875b536c2)
+AND
+DB_IsEditor(1)
+AND
+IsTagged(_Entity,ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed,1)
+AND
+GUIDToString(_Entity,_EntityStr)
+AND
+Concatenate("Never remove ILLITHID_HIDDEN_CHECK tag directly!! Entity: ",_EntityStr,_Str)
+THEN
+DebugBreak(_Str);
+
+//END_REGION Add Tadpole checkonly tag
+
+//REGION Tadpole Burst
+IF
+DB_Dead(_Tadpoled)
+AND
+NOT DB_Players(_Tadpoled)
+AND
+NOT DB_Tadpole_TadpoleBurstException(_Tadpoled)
+AND
+IsTagged(_Tadpoled, (TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+THEN
+PROC_Tadpole_TadpoledDied(_Tadpoled);
+
+PROC
+PROC_Tadpole_TadpoledDied((CHARACTER)_Tadpoled)
+AND
+DB_Is_InCombat(_Tadpoled, _CombatID)
+THEN
+DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID);
+
+PROC
+PROC_Tadpole_TadpoledDied((CHARACTER)_Tadpoled)
+THEN
+DB_TadPole_TadpoleBurstQueued(_Tadpoled);
+DB_Tadpole_StillTadpoled(_Tadpoled);
+
+IF
+DB_Tadpole_StillTadpoled(_Tadpoled)
+AND
+NOT DB_Tadpole_WaitForCombatEnd(_Tadpoled, _)
+AND
+DB_Sees(_Player, _Tadpoled)
+AND
+DB_Players(_Player)
+THEN
+PROC_Tadpole_Create(_Tadpoled);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID)
+AND
+NOT QRY_Tadpole_SetNewNearbyCombat(_Tadpoled)
+THEN
+NOT DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID);
+
+QRY
+QRY_Tadpole_SetNewNearbyCombat((CHARACTER)_Tadpoled)
+AND
+QRY_Tadpole_SetNewNearbyCombat_Reset()
+AND
+DB_Is_InCombat(_Object, _NewCombatID)
+AND
+NOT DB_Tadpole_SetNewNearbyCombat(1)
+AND
+GetDistanceTo(_Tadpoled, _Object, _Dist)
+AND
+_Dist <= 18.0
+AND
+HasLineOfSight(_Tadpoled, _Object, 1)
+AND
+DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID)
+THEN
+DB_Tadpole_SetNewNearbyCombat(1);
+DB_Tadpole_WaitForCombatEnd(_Tadpoled, _NewCombatID);
+NOT DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID);
+
+QRY
+QRY_Tadpole_SetNewNearbyCombat_Reset()
+THEN
+NOT DB_Tadpole_SetNewNearbyCombat(1);
+
+
+//REGION Tadpole Vanish
+IF
+EntityEvent(_Tadpole, "GLO_Tadpole_TadpoleVanished")
+AND
+DB_Tadpole_TadpoleCreature((CHARACTER)_Tadpole, (CHARACTER)_Host)
+THEN
+NOT DB_Tadpole_TadpoleCreature(_Tadpole, _Host);
+
+PROC
+PROC_LongRest()
+AND
+DB_Tadpole_StillTadpoled(_Tadpoled)
+THEN
+NOT DB_Tadpole_StillTadpoled(_Tadpoled);
+
+PROC
+PROC_LongRest()
+AND
+DB_Tadpole_TadpoleCreature(_Tadpole, _Host)
+THEN
+NOT DB_Tadpole_TadpoleCreature(_Tadpole, _Host);
+DB_ExecuteWhenObjectInCurrentLevel("GLO_Tadpole_RemoveTadpole",_Tadpole);
+
+PROC
+PROC_ExecuteWhenObjectInCurrentLevel("GLO_Tadpole_RemoveTadpole",_Tadpole)
+THEN
+PROC_GLO_Tadpole_Remove((CHARACTER)_Tadpole);
+
+PROC
+PROC_LongRest()
+AND
+DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID)
+THEN
+NOT DB_Tadpole_WaitForCombatEnd(_Tadpoled, _CombatID);
+
+PROC
+PROC_GLO_Tadpole_Remove((CHARACTER)_Tadpole)
+AND
+IsOnStage(_Tadpole, 1)
+AND
+NOT DB_Dead(_Tadpole)
+THEN
+SetOnStage(_Tadpole, 0);
+
+//END_REGION
+
+//REGION Tadpole Kill
+IF
+DB_PermaDefeated(_Tadpole)
+AND
+DB_Tadpole_TadpoleCreature((CHARACTER)_Tadpole, (CHARACTER)_Host)
+THEN
+NOT DB_Tadpole_TadpoleCreature(_Tadpole, _Host);
+//END_REGION
+
+//END_REGION
+
+//REGION Tadpole once a day
+IF
+FlagSet(GLO_Tadpoled_UsedToday1_36d218ea-3eab-481f-fdaa-4ee185e76c25,_Player,_Dialog)
+THEN
+PROC_GLO_Tadpole_CorruptionIncrease((CHARACTER)_Player);
+PROC_GLO_Tadpole_TrackUseOnNPC(_Player,_Dialog);
+
+PROC
+PROC_GLO_Tadpole_CorruptionIncrease((CHARACTER)_Player)
+THEN
+DB_GLO_Tadpoled_UsedTracker(_Player);
+SetFlag((FLAG)GLO_Tadpoled_PartyUsed_1f4048fa-8793-4a61-9f18-cc660b68601b,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+FlagSet(GLO_Tadpoled_UsedToday2_b9d51e70-8963-e27f-a1fe-db5b9cfb3b1d,_Player,_Dialog)
+THEN
+PROC_GLO_Tadpole_TrackUseOnNPC((CHARACTER)_Player,_Dialog);
+DB_GLO_Tadpoled_UsedTracker((CHARACTER)_Player);
+
+PROC
+PROC_GLO_Tadpole_TrackUseOnNPC((CHARACTER)_Player,(INTEGER)_Dialog)
+AND
+DB_DialogNPCs(_Dialog, _NPC, _)
+AND
+NOT DB_Origins((CHARACTER)_NPC)
+THEN
+DB_Tadpole_UsedOnNPC(_Player,_Dialog);
+
+PROC
+PROC_LongRest_Player((CHARACTER)_Player, 1) //Only reset Tadpole if fully rested.
+AND
+DB_GLO_Tadpoled_UsedTracker(_Player)
+THEN
+NOT DB_GLO_Tadpoled_UsedTracker(_Player);
+ClearFlag(GLO_Tadpoled_UsedToday1_36d218ea-3eab-481f-fdaa-4ee185e76c25,_Player,0);
+ClearFlag(GLO_Tadpoled_UsedToday2_b9d51e70-8963-e27f-a1fe-db5b9cfb3b1d,_Player,0);
+//END_REGION
+
+//REGION Reflection Dialog after first use on NPC
+IF
+DialogEnded(_,_ID)
+AND
+DB_Tadpole_UsedOnNPC(_Player,_ID)
+AND
+DB_CurrentLevel("WLD_Main_A")
+THEN
+PROC_GroupDiscussion_DelayedStart(_Player,(VOICEBARKRESOURCE)GLO_Tadpole_GD_IVB_FirstUse_392de716-2528-46a2-983e-6e3aef9848e3);
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_Tadpole_UsedOnNPC(_Player,_ID)
+THEN
+NOT DB_Tadpole_UsedOnNPC(_Player,_ID);
+//END_REGION
+
+//REGION Using Tadpole Powers out of dialog also increases counter
+IF
+FlagSet(_TadpoleCountReachedFlag,_Player,_)
+AND
+DB_TadpoleCounter(_Count,_TadpoleCountReachedFlag)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+DB_GLO_Tadpoled_Count(_Player,_Count);
+
+IF
+DB_GLO_Tadpoled_Count(_Player,_Count)
+AND
+DB_GLO_Tadpoled_Count(_Player,_Count2)
+AND
+_Count > _Count2
+THEN
+NOT DB_GLO_Tadpoled_Count(_Player,_Count2);
+
+IF
+CastedSpell(_Player,_TadpolePower,_,_,_)
+AND
+DB_TadpolePower(_TadpolePower)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_TadpolePowerUsed(_Player);
+
+PROC
+PROC_GLO_TadpolePowerUsed((CHARACTER)_Player)
+AND
+NOT DB_GLO_TadpoledPowerUsage(_Player,_)
+THEN
+DB_GLO_TadpoledPowerUsage(_Player,0);
+
+PROC
+PROC_GLO_TadpolePowerUsed((CHARACTER)_Player)
+AND
+DB_GLO_TadpoledPowerUsage(_Player,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_GLO_TadpoledPowerUsage(_Player,_Count);
+DB_GLO_TadpoledPowerUsage(_Player,_NewCount);
+
+PROC
+PROC_GLO_TadpolePowerUsed((CHARACTER)_Player)
+AND
+DB_GLO_TadpoledPowerUsage(_Player,2)
+THEN
+NOT DB_GLO_TadpoledPowerUsage(_Player,2);
+PROC_GLO_TadpolePowerUsed_IncreaseCorruption(_Player);
+
+PROC
+PROC_GLO_TadpolePowerUsed_IncreaseCorruption((CHARACTER)_Player)
+AND
+NOT DB_GLO_Tadpoled_Count(_Player,_)
+THEN
+DB_GLO_Tadpoled_Count(_Player,0);
+
+PROC
+PROC_GLO_TadpolePowerUsed_IncreaseCorruption((CHARACTER)_Player)
+AND
+DB_GLO_Tadpoled_Count(_Player,_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+AND
+DB_TadpoleCounter(_NewCount,_TadpoleCountReachedFlag)
+THEN
+NOT DB_GLO_Tadpoled_Count(_Player,_Count);
+DB_GLO_Tadpoled_Count(_Player,_NewCount);
+SetFlag(_TadpoleCountReachedFlag,_Player,0);
+PROC_GLO_Tadpole_CorruptionIncrease(_Player);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

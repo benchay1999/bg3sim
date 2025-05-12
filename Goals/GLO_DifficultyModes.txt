@@ -1,0 +1,251 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_DifficultyClasses((RULESETMODIFIER)SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521, "EASY", 	(FLAG)GLO_DifficultyMode_Easy_8ff3ba67-ada2-442b-925c-ee2415359024);
+DB_GLO_DifficultyClasses((RULESETMODIFIER)SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521, "MEDIUM", (FLAG)GLO_DifficultyMode_Medium_0fc95071-9342-44d5-988a-30e8a8c8b787);
+DB_GLO_DifficultyClasses((RULESETMODIFIER)SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521, "HARD", 	(FLAG)GLO_DifficultyMode_Hard_aba45e0b-b623-404d-8bba-0ab65e480586);
+DB_GLO_DifficultyClasses((RULESETMODIFIER)CHARACTER_STATS_DIFFICULTY_7d788f28-1df5-474b-b106-4f8d0b6de928, "STATUS_EASY", 	(FLAG)GLO_DifficultyMode_CharacterStats_Easy_73c9db9a-efcb-40cc-8815-5162b87d6b02);
+DB_GLO_DifficultyClasses((RULESETMODIFIER)CHARACTER_STATS_DIFFICULTY_7d788f28-1df5-474b-b106-4f8d0b6de928, "STATUS_MEDIUM", (FLAG)GLO_DifficultyMode_CharacterStats_Medium_b2c46d86-0d5d-42ae-9f15-c1020a007123);
+DB_GLO_DifficultyClasses((RULESETMODIFIER)CHARACTER_STATS_DIFFICULTY_7d788f28-1df5-474b-b106-4f8d0b6de928, "STATUS_HARD", 	(FLAG)GLO_DifficultyMode_CharacterStats_Hard_f6360070-ce41-41d7-8cbe-75ec3b6d6ddb);
+
+NOT DB_GLO_DifficultyModes_BoostedEntities((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+IF
+GameModeStarted(_, _, _)
+AND
+DB_GLO_DifficultyClasses(_Ruleset, _, _)
+AND
+GetRulesetModifierString(_Ruleset, _Difficulty)
+AND
+DB_GLO_DifficultyClasses(_Ruleset, _Difficulty, _DifficultyFlag)
+THEN
+PROC_GlobalSetFlagAndCache(_DifficultyFlag);
+
+IF
+RulesetModifierChangedString(_Ruleset, (STRING)_OldDifficulty, (STRING)_NewDifficulty)
+AND
+DB_GLO_DifficultyClasses(_Ruleset, _NewDifficulty, _NewDifficultyFlag)
+THEN
+PROC_GlobalSetFlagAndCache(_NewDifficultyFlag);
+
+IF
+FlagSet(_NewDifficultyFlag, _, _)
+AND
+DB_GLO_DifficultyClasses(_Ruleset, _, _NewDifficultyFlag)
+AND
+DB_GLO_DifficultyClasses(_Ruleset, _, _OldDifficultyFlag)
+AND
+_NewDifficultyFlag != _OldDifficultyFlag
+AND
+DB_GlobalFlag(_OldDifficultyFlag)
+THEN
+PROC_GlobalClearFlagAndCache(_OldDifficultyFlag);
+
+//REGION Boosting Allies HP
+IF
+FlagSet((FLAG)GLO_DifficultyMode_Easy_8ff3ba67-ada2-442b-925c-ee2415359024, _, _)
+THEN
+PROC_GLO_DifficultyModes_EnableAllHPBoosts();
+
+// Character leaves the team
+IF
+DB_GLO_DifficultyModes_BoostedEntities(_Char)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)_Char)
+THEN
+PROC_GLO_DifficultyModes_ApplyHPBoost(_Char);
+
+// Keep track of entities with the HP boosted from stats
+IF
+StatusApplied(_Entity, "HEALTHBOOST_ALLIEDNPC_EASYMODE", _, _)
+AND
+NOT DB_GLO_DifficultyModes_BoostedEntities(_Entity)
+THEN 
+PROC_GLO_DifficultyModes_AddHPBoostedEntity(_Entity);
+
+PROC
+PROC_GLO_DifficultyModes_AddHPBoostedEntity((GUIDSTRING)_Entity)
+AND
+QRY_GLO_DifficultyModes_CanApplyHPBoost(_Entity)
+THEN
+DB_GLO_DifficultyModes_BoostedEntities(_Entity);
+PROC_GLO_DifficultyModes_ApplyHPBoost(_Entity);
+
+PROC
+PROC_GLO_DifficultyModes_EnableAllHPBoosts()
+AND
+DB_GLO_DifficultyModes_BoostedEntities(_Entity)
+THEN
+PROC_GLO_DifficultyModes_ApplyHPBoost(_Entity);
+
+PROC
+PROC_GLO_DifficultyModes_ApplyHPBoost((GUIDSTRING)_Entity)
+AND
+NOT DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Entity)
+AND
+DB_GlobalFlag((FLAG)GLO_DifficultyMode_Easy_8ff3ba67-ada2-442b-925c-ee2415359024)
+AND
+HasAppliedStatus(_Entity, "HEALTHBOOST_ALLIEDNPC_EASYMODE", 0)
+AND
+QRY_GLO_DifficultyModes_CanApplyHPBoost(_Entity)
+THEN
+ApplyStatus(_Entity, "HEALTHBOOST_ALLIEDNPC_EASYMODE", -1.0, 1);
+
+IF
+FlagCleared((FLAG)GLO_DifficultyMode_Easy_8ff3ba67-ada2-442b-925c-ee2415359024, _, _)
+THEN
+PROC_GLO_DifficultyModes_DisableAllHPBoosts();
+
+// Character joins the team
+IF
+DB_PartOfTheTeam(_Char)
+THEN
+PROC_GLO_DifficultyModes_RemoveHPBoost(_Char);
+
+PROC
+PROC_GLO_DifficultyModes_DisableAllHPBoosts()
+AND
+DB_GLO_DifficultyModes_BoostedEntities(_Entity)
+THEN
+PROC_GLO_DifficultyModes_RemoveHPBoost(_Entity);
+
+PROC
+PROC_GLO_DifficultyModes_RemoveHPBoostedEntity((GUIDSTRING)_Entity)
+THEN
+NOT DB_GLO_DifficultyModes_BoostedEntities(_Entity);
+PROC_GLO_DifficultyModes_RemoveHPBoost(_Entity);
+
+PROC
+PROC_GLO_DifficultyModes_RemoveHPBoost((GUIDSTRING)_Entity)
+THEN
+NOT DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Entity);
+RemoveStatus(_Entity, "HEALTHBOOST_ALLIEDNPC_EASYMODE", NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GLO_DifficultyModes_CanApplyHPBoost((GUIDSTRING)_Entity)
+AND
+QRY_IsExistingCharacter(_Entity, 1)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)_Entity)
+AND
+NOT DB_Is_InCombat(_Entity, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_DifficultyModes_CanApplyHPBoost((GUIDSTRING)_Entity)
+AND
+QRY_IsExistingCharacter(_Entity, 1)
+AND
+NOT DB_PartOfTheTeam((CHARACTER)_Entity)
+AND
+DB_Is_InCombat(_Entity, _CombatID)
+AND
+NOT QRY_IsEnemyToAnyPlayerInCombat(_Entity, _CombatID) 
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_DifficultyModes_CanApplyHPBoost((GUIDSTRING)_Entity)
+AND
+QRY_IsExistingItem(_Entity, 1)
+AND
+IsDestroyed((ITEM)_Entity, 0)
+THEN
+DB_NOOP(1);
+
+//REGION Combat Logic
+IF
+EnteredCombat((CHARACTER)_Char, _CombatID)
+AND
+DB_GLO_DifficultyModes_BoostedEntities(_Char)
+THEN
+PROC_GLO_DifficultyModes_TryTemporarilyRemoveBoost(_Char, _CombatID);
+
+// To avoid OOO execution problems with characters joining a combat encounter
+IF
+CombatStarted(_CombatID)
+AND
+DB_Is_InCombat(_Char, _CombatID)
+AND
+DB_GLO_DifficultyModes_BoostedEntities((CHARACTER)_Char)
+THEN
+PROC_GLO_DifficultyModes_TryTemporarilyRemoveBoost(_Char, _CombatID);
+
+PROC
+PROC_GLO_DifficultyModes_TryTemporarilyRemoveBoost((CHARACTER)_Char, (GUIDSTRING)_CombatID)
+AND
+NOT DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Char)
+AND
+IsCharacter(_Char, 1)
+AND
+QRY_IsEnemyToAnyPlayerInCombat(_Char, _CombatID)
+THEN
+DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Char);
+RemoveStatus(_Char, "HEALTHBOOST_ALLIEDNPC_EASYMODE", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_LeftCombat(_Char, _)
+AND
+NOT DB_Is_InCombat(_Char, _)
+AND
+DB_GlobalFlag((FLAG)GLO_DifficultyMode_Easy_8ff3ba67-ada2-442b-925c-ee2415359024)
+AND
+DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Char)
+AND
+QRY_GLO_DifficultyModes_CanApplyHPBoost(_Char)
+THEN
+ApplyStatus(_Char, "HEALTHBOOST_ALLIEDNPC_EASYMODE", -1.0, 1);
+
+PROC
+PROC_LeftCombat(_Char, _)
+AND
+NOT DB_Is_InCombat(_Char, _)
+AND
+DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Char)
+THEN
+NOT DB_GLO_DifficultyModes_RemoveHPBoostTemporarily(_Char);
+//END_REGION Combat Logic
+
+//END_REGION Boosting Allies HP
+
+//REGION Dynamic PLAYER_BONUSES_EASYMODE status
+// Only used for potential companions who are neutral or hostile till a certain point (Minthara, Minsc)
+PROC
+PROC_GLO_DifficultyModes_AddPlayerBonuses((CHARACTER)_Char)
+AND
+NOT DB_GLO_DifficultyModes_PlayerBonuses(_Char)
+THEN
+DB_GLO_DifficultyModes_PlayerBonuses(_Char);
+
+PROC
+PROC_GLO_DifficultyModes_AddPlayerBonuses((CHARACTER)_Char)
+AND
+DB_GlobalFlag((FLAG)GLO_DifficultyMode_CharacterStats_Easy_73c9db9a-efcb-40cc-8815-5162b87d6b02)
+THEN
+ApplyStatus(_Char, "PLAYER_BONUSES_EASYMODE", -1.0, 1, _Char);
+
+PROC
+PROC_GLO_DifficultyModes_RemovePlayerBonuses((CHARACTER)_Char)
+THEN
+RemoveStatus(_Char, "PLAYER_BONUSES_EASYMODE", _Char);
+NOT DB_GLO_DifficultyModes_PlayerBonuses(_Char);
+
+IF
+FlagSet((FLAG)GLO_DifficultyMode_CharacterStats_Easy_73c9db9a-efcb-40cc-8815-5162b87d6b02, _, _)
+AND
+DB_GLO_DifficultyModes_PlayerBonuses(_Char)
+THEN
+ApplyStatus(_Char, "PLAYER_BONUSES_EASYMODE", -1.0, 1, _Char);
+
+IF
+FlagCleared((FLAG)GLO_DifficultyMode_CharacterStats_Easy_73c9db9a-efcb-40cc-8815-5162b87d6b02, _, _)
+AND
+DB_GLO_DifficultyModes_PlayerBonuses(_Char)
+THEN
+RemoveStatus(_Char, "PLAYER_BONUSES_EASYMODE", _Char);
+//END_REGION Dynamic PLAYER_BONUSES_EASYMODE status
+
+EXITSECTION
+
+ENDEXITSECTION

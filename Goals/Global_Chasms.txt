@@ -1,0 +1,198 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_GLO_Chasms_ChasmRecoveryAnimation((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Chasm fallback for flying/floating characters
+
+IF
+EnteredChasm(_Entity,_,_,_,_,_)
+AND
+DB_GLO_Chasms_EnterChasmProcessed((GUIDSTRING)_Entity)
+THEN
+NOT DB_GLO_Chasms_EnterChasmProcessed((GUIDSTRING)_Entity);
+
+IF
+EnteredChasm(_Entity,_,_Chasm,_X,_Y,_Z)
+AND
+NOT DB_PermaDefeated(_Entity)
+AND
+QRY_GLO_Chasms_HasChasmImmunity(_Entity,_Chasm)
+AND
+DB_QRY_RTN_GLO_ChasmReturnType((INTEGER)_ChasmReturnType)
+THEN
+EnterChasmProcessed(_Entity,1);
+DB_GLO_Chasms_EnterChasmProcessed((GUIDSTRING)_Entity);
+TeleportToPosition(_Entity,_X,_Y,_Z,"",0,0,0,0,1);
+PROC_GLO_Chasms_RecoverFromChasm((GUIDSTRING)_Entity,_ChasmReturnType);
+NOT DB_QRY_RTN_GLO_ChasmReturnType(_ChasmReturnType);
+
+//Recover from non-deep water
+PROC
+PROC_GLO_Chasms_RecoverFromChasm((GUIDSTRING)_Entity,0)
+AND
+NOT DB_GLO_Chasms_ChasmRecoveryAnimation((GUIDSTRING)_Entity,(ANIMATION)_)
+THEN
+PROC_SetOnStage(_Entity,1);
+ApplyStatus(_Entity,"CHASM_IMMUNITY_VFX_POOF",0.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//Recover from deep water
+PROC
+PROC_GLO_Chasms_RecoverFromChasm((GUIDSTRING)_Entity,1)
+AND
+NOT DB_GLO_Chasms_ChasmRecoveryAnimation((GUIDSTRING)_Entity,(ANIMATION)_)
+THEN
+PROC_SetOnStage(_Entity,1);
+ApplyStatus(_Entity,"CHASM_IMMUNITY_VFX_SPLASH",0.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+
+PROC
+PROC_GLO_Chasms_RecoverFromChasm((GUIDSTRING)_Entity,(INTEGER)_)
+AND
+DB_GLO_Chasms_ChasmRecoveryAnimation((GUIDSTRING)_Entity,(ANIMATION)_Animation)
+THEN
+PlayAnimation(_Entity,_Animation,"");
+SetOnStage(_Entity,1);
+
+QRY
+QRY_GLO_Chasms_HasChasmImmunity((GUIDSTRING)_Entity,(GUIDSTRING)_Chasm)
+AND
+IsTagged(_Entity,(TAG)CHASM_IMMUNE_1063224a-a5ab-41b1-b309-0ac730e4e8ce,1)
+AND
+IsTagged(_Chasm,(TAG)DEEP_WATER_CHASM_fb59fa11-9bd3-4af4-a81d-b5ad1882102e,0)
+THEN
+DB_GLO_Chasms_HasChasmImmunity(_Entity);
+DB_QRY_RTN_GLO_ChasmReturnType(0);
+
+QRY
+QRY_GLO_Chasms_HasChasmImmunity((GUIDSTRING)_Entity,(GUIDSTRING)_Chasm)
+AND
+NOT DB_GLO_Chasms_HasChasmImmunity(_Entity)
+AND
+IsTagged(_Entity,(TAG)CHASM_IMMUNE_1063224a-a5ab-41b1-b309-0ac730e4e8ce,1)
+//AND
+//IsTagged(_Chasm,(TAG)DEEP_WATER_CHASM_fb59fa11-9bd3-4af4-a81d-b5ad1882102e,1)
+//Doesn't actually need to be checked - if we get this far into the rule, DEEP_WATER_CHASM is implied
+THEN
+DB_GLO_Chasms_HasChasmImmunity(_Entity);
+DB_QRY_RTN_GLO_ChasmReturnType(1);
+
+QRY
+QRY_GLO_Chasms_HasChasmImmunity((GUIDSTRING)_Entity,(GUIDSTRING)_Chasm)
+AND
+NOT DB_GLO_Chasms_HasChasmImmunity(_Entity)
+AND
+IsTagged(_Entity,(TAG)CHASM_IMMUNE_FLY_8803503b-64e0-49dd-ba5b-0c4f2c5cc0b5,1)
+AND
+IsTagged(_Chasm,(TAG)DEEP_WATER_CHASM_fb59fa11-9bd3-4af4-a81d-b5ad1882102e,0)
+THEN
+DB_GLO_Chasms_HasChasmImmunity(_Entity);
+DB_QRY_RTN_GLO_ChasmReturnType(0);
+
+QRY
+QRY_GLO_Chasms_HasChasmImmunity((GUIDSTRING)_Entity,(GUIDSTRING)_Chasm)
+AND
+NOT DB_GLO_Chasms_HasChasmImmunity(_Entity)
+AND
+IsTagged(_Entity,(TAG)CHASM_IMMUNE_SWIM_b7018e56-3185-4dde-8605-48bd9e782969,1)
+AND
+IsTagged(_Chasm,(TAG)DEEP_WATER_CHASM_fb59fa11-9bd3-4af4-a81d-b5ad1882102e,1)
+THEN
+DB_GLO_Chasms_HasChasmImmunity(_Entity);
+DB_QRY_RTN_GLO_ChasmReturnType(1);
+
+QRY
+QRY_GLO_Chasms_HasChasmImmunity((GUIDSTRING)_Entity,(GUIDSTRING)_)
+AND
+DB_GLO_Chasms_HasChasmImmunity(_Entity)
+THEN
+NOT DB_GLO_Chasms_HasChasmImmunity(_Entity);
+
+//END_REGION
+
+//REGION Player chasm wisps
+IF
+EnteredChasm(_Player, _CauseObj, _Chasm, _ChasmX, _ChasmY, _ChasmZ)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GLO_Chasms_EnterChasmProcessed((GUIDSTRING)_Player)
+THEN
+PROC_Camp_PlayerEnteredChasm((CHARACTER)_Player, _CauseObj, _ChasmX, _ChasmY, _ChasmZ);
+
+//Upon entering Chasm, the player is turned into a wisp and teleported to last safe position.
+//We add a small 1 second delay where the player is invisible to hide popping and prevent blood puddles.
+PROC
+PROC_Camp_PlayerEnteredChasm((CHARACTER)_Player, (GUIDSTRING)_CauseObj, (REAL)_ChasmX, (REAL)_ChasmY, (REAL)_ChasmZ)
+AND
+NOT DB_ChasmRetrievalDelay(_Player, _, _, _)
+THEN
+DB_ChasmRetrievalDelay(_Player, _ChasmX, _ChasmY, _ChasmZ);
+RealtimeObjectTimerLaunch(_Player,"ChasmRetrievalDelay",1000);
+SetVisible(_Player,0);
+Die(_Player,DEATHTYPE.Chasm,_CauseObj,1,1);
+EnterChasmProcessed(_Player, 1);
+
+IF
+ObjectTimerFinished(_Player,"ChasmRetrievalDelay")
+AND
+IsDead((CHARACTER)_Player,1)
+AND
+DB_ChasmRetrievalDelay((CHARACTER)_Player, _ChasmX, _ChasmY, _ChasmZ)
+THEN
+ApplyStatus(_Player,"DEAD_WILL_O_WISP",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+TeleportToPosition(_Player, _ChasmX, _ChasmY, _ChasmZ, "ChasmCorpseTeleported", 0, 0, 1);
+
+IF
+ObjectTimerFinished(_Player,"ChasmRetrievalDelay")
+AND
+IsDead((CHARACTER)_Player,0)
+THEN
+//resurrected before timer expired 
+PROC_ChasmRetrieval_Clear(_Player);
+
+IF
+StatusApplied(_Player,"DEAD_WILL_O_WISP",_,_)
+THEN
+DB_ChasmRetrieval_Requirement1(_Player);
+
+IF
+EntityEvent(_Player,"ChasmCorpseTeleported")
+THEN
+DB_ChasmRetrieval_Requirement2(_Player);
+
+//Wait until status is applied AND teleport is finished. Thank the ECS gods!
+IF
+DB_ChasmRetrieval_Requirement1(_Player)
+AND
+DB_ChasmRetrieval_Requirement2(_Player)
+AND
+DB_ChasmRetrievalDelay((CHARACTER)_Player, _ChasmX, _ChasmY, _ChasmZ)
+THEN
+NOT DB_ChasmRetrievalDelay(_Player, _ChasmX, _ChasmY, _ChasmZ);
+NOT DB_ChasmRetrieval_Requirement1(_Player);
+NOT DB_ChasmRetrieval_Requirement2(_Player);
+SetVisible(_Player,1);
+
+IF
+Resurrected(_Player)
+THEN
+RemoveStatus(_Player,"DEAD_WILL_O_WISP",NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_ChasmRetrieval_Clear((CHARACTER)_Player)
+AND
+DB_ChasmRetrievalDelay(_Player, _ChasmX, _ChasmY, _ChasmZ)
+THEN
+NOT DB_ChasmRetrievalDelay(_Player, _ChasmX, _ChasmY, _ChasmZ);
+
+PROC
+PROC_ChasmRetrieval_Clear((CHARACTER)_Player)
+THEN
+NOT DB_ChasmRetrieval_Requirement1(_Player);
+NOT DB_ChasmRetrieval_Requirement2(_Player);
+SetVisible(_Player,1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

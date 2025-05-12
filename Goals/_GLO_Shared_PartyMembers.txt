@@ -1,0 +1,2090 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_AvatarFactions((FACTION)Hero_Player1_6545a015-1b3d-66a4-6a0e-6ec62065cdb7);
+DB_AvatarFactions((FACTION)Hero_Player2_9fac6ec7-642b-3553-1bc8-6b8e0edae7d5);
+DB_AvatarFactions((FACTION)Hero_Player3_286958be-0845-b4ee-611f-1a9c27dcbe10);
+DB_AvatarFactions((FACTION)Hero_Player4_e69da880-4178-0d67-846d-bf65f8750ce3);
+// Be prepared for the inevitable 8 avatars mod
+DB_AvatarFactions((FACTION)Hero_Player5_42455b5c-c09b-ea83-4fee-5932dfd76525);
+DB_AvatarFactions((FACTION)Hero_Player6_1e359c81-966b-783e-1f5b-69600828513d);
+DB_AvatarFactions((FACTION)Hero_Player7_738620dc-b053-098a-4193-895e3516d93b);
+DB_AvatarFactions((FACTION)Hero_Player8_eaca69b1-71a6-1abd-a08c-4e57af77ad1a);
+
+DB_PlayerSlotReserved(0);
+
+DB_CompanionFactions((FACTION)Companion1_6ae41c2e-e72a-c682-a014-18e638ced83f);
+DB_CompanionFactions((FACTION)Companion2_26bdc9a8-aa89-9a52-042d-3defee5855eb);
+DB_CompanionFactions((FACTION)Companion3_afb9d9bb-9a52-4737-4d8d-c5c72f32b730);
+DB_CompanionFactions((FACTION)Companion4_1b5bd02e-2178-c73c-3eb0-b8f4fc4f7dc5);
+DB_CompanionFactions((FACTION)Companion5_82692ccd-1862-b8b1-5bfb-318fa17e4a8a);
+DB_CompanionFactions((FACTION)Companion6_b0adf105-0c9d-9000-6f99-6f734ea327e0);
+DB_CompanionFactions((FACTION)Companion7_8e465ee5-ad2b-008b-966b-d1641e37e3c5);
+DB_CompanionFactions((FACTION)Companion8_16ff923d-ab9b-bbc1-4480-2ec8d38f05ee);
+DB_CompanionFactions((FACTION)Companion9_4abec10d-c2d1-a505-a09a-719c83999847);
+DB_CompanionFactions((FACTION)Companion10_fd96559f-010a-6e27-8689-eb29795ff2af);
+DB_CompanionFactions((FACTION)Companion11_a36493ce-5798-d27f-1e24-01cb79fbdb1b);
+DB_CompanionFactions((FACTION)Companion12_aeaf8c61-8ff3-1bc2-18fc-7da29495fc68);
+DB_CompanionFactions((FACTION)Companion13_401f9d21-7a96-0f56-de79-21eff96f8d72);
+DB_CompanionFactions((FACTION)Companion14_1ebdab21-fb0b-3dd8-a7b7-bfbc777d7a5d);
+DB_CompanionFactions((FACTION)Companion15_9a7c52c8-ca88-4493-bca5-9b917494c94c);
+
+DB_GLO_AvatarKickableFlags((FLAG)GLO_CompanionSwap_State_Avatar1ControlledByUser_e15a7358-59fa-1464-e443-d2f0c05be7b8,(FLAG)GLO_Avatar1_Event_Kick_0c8260f1-e574-498c-8967-7195738ca570, (FLAG)GLO_Avatar1_State_CanBeKicked_b8862a4a-3a57-4619-91da-baf103809026, "GLO_CompanionSwap_AvatarName1_938ab998-0908-f7de-0f9f-3d34dbf5808f");
+DB_GLO_AvatarKickableFlags((FLAG)GLO_CompanionSwap_State_Avatar2ControlledByUser_f00c1231-0994-966f-93af-aafaec816838,(FLAG)GLO_Avatar2_Event_Kick_812fb4c0-ff19-4b79-a4d3-74ad534e901e, (FLAG)GLO_Avatar2_State_CanBeKicked_0d93a22f-cdc1-4642-bf72-1015c9d8c3d1, "GLO_CompanionSwap_AvatarName2_1cbefe6a-48c2-e77d-4a66-ab7524b61dbe");
+DB_GLO_AvatarKickableFlags((FLAG)GLO_CompanionSwap_State_Avatar3ControlledByUser_3aa71922-adc8-9432-2315-3fe6f8b92943,(FLAG)GLO_Avatar3_Event_Kick_34c922d5-fd6f-40d4-91eb-59de831e92ea, (FLAG)GLO_Avatar3_State_CanBeKicked_97f72b05-aa49-47ff-9e31-aba0ecea7191, "GLO_CompanionSwap_AvatarName3_d8706512-5c01-67d4-db8b-6c383dc02331");
+DB_GLO_AvatarKickableFlags((FLAG)GLO_CompanionSwap_State_Avatar4ControlledByUser_2c08aa4d-ce1f-41d7-a06d-30d48302c0a6,(FLAG)GLO_Avatar4_Event_Kick_34c4dd02-fcfb-4d5d-a486-bd6aea9a35f8, (FLAG)GLO_Avatar4_State_CanBeKicked_75ff445e-f072-446b-8352-2dc753653796, "GLO_CompanionSwap_AvatarName4_fc31b1ba-d511-0552-070f-b57b2b9e6bf7");
+
+NOT DB_GLO_CompanionSwapDialogue((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Helpers
+QRY
+QRY_GLO_PartyMembers_GetInPartyDialogReset((CHARACTER)_Member)
+THEN
+PROC_GLO_PartyMembers_ResetInPartyDialogs((CHARACTER)_Member);
+
+PROC
+PROC_GLO_PartyMembers_ResetInPartyDialogs((CHARACTER)_Origin)
+AND
+DB_GLO_PartyMembers_InPartyDialog(_Origin,_Dialog)
+THEN
+NOT DB_GLO_PartyMembers_InPartyDialog(_Origin,_Dialog);
+
+PROC
+PROC_GLO_PartyMembers_SetInpartyDialog((CHARACTER)_Member,(DIALOGRESOURCE)_Dialog)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_Member);
+
+PROC
+PROC_GLO_PartyMembers_SetInpartyDialog((CHARACTER)_Member,(DIALOGRESOURCE)_Dialog)
+AND
+_Dialog != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_Dialogs(_Member,_Dialog);
+
+//END_REGION
+
+//REGION Set avatar factions to HeroXXX
+// When using ccStartNew after reloading story, make sure we cache the factions of the
+// avatars loaded from the party preset (can't check for DB_StoryReloaded(1) because
+// that gets cleared, but there's no harm in doing this once even if story was not
+// reloaded)
+PROC
+PROC_PlayersSelected("ccStartNew")
+AND
+NOT DB_AvatarHasFaction(_,_)
+AND
+DB_Avatars(_Avatar)
+AND
+GetFaction(_Avatar, _AvatarFaction)
+AND
+DB_AvatarFactions(_AvatarFaction)
+THEN
+DB_AvatarHasFaction(_Avatar,_AvatarFaction);
+
+PROC
+PROC_PlayersSelected((STRING)_Flow)
+AND
+// DB_Players rather than DB_Avatars, because this is called right after setting the AVATAR tags
+// and hence DB_Avatars won't be filled in yet.
+DB_Players(_Avatar)
+AND
+// For the ccStartNew flow
+IsTagged(_Avatar,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+AND
+DB_AvatarFactions(_AvatarFaction)
+AND
+NOT DB_AvatarHasFaction(_,_AvatarFaction)
+AND
+NOT DB_AvatarHasFaction(_Avatar,_)
+THEN
+SetFaction(_Avatar,_AvatarFaction);
+DB_AvatarHasFaction(_Avatar,_AvatarFaction);
+//END_REGION
+
+//REGION Check Party Size
+//Check for Solo Player
+PROC
+PROC_CheckPartyFull()
+AND
+SysCount("DB_Players",1,_Int)
+AND
+_Int == 1
+THEN
+SetFlag((FLAG)GEN_SoloPlayer_29e32f83-2001-0dbc-7df9-3ca2b3bc4349, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+//Check for Max Player count
+PROC
+PROC_CheckPartyFull()
+AND
+SysCount("DB_Players",1,_Int)
+AND
+_Int != 1
+THEN
+ClearFlag((FLAG)GEN_SoloPlayer_29e32f83-2001-0dbc-7df9-3ca2b3bc4349, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_CheckPartyFull()
+AND
+SysCount("DB_Players",1,_Int1)
+AND
+DB_PlayerSlotReserved(_Int2)
+AND
+IntegerSum(_Int1,_Int2,_IntTotal)
+AND
+GetMaxPartySize(_Max)
+AND
+_IntTotal >= _Max
+THEN
+SetFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_CheckPartyFull()
+AND
+SysCount("DB_Players",1,_Int1)
+AND
+DB_PlayerSlotReserved(_Int2)
+AND
+IntegerSum(_Int1,_Int2,_IntTotal)
+AND
+GetMaxPartySize(_Max)
+AND
+_IntTotal < _Max
+THEN
+ClearFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+UserConnected(_UserID,_,_)
+AND
+NOT DB_UserConnecting(_UserID)
+THEN
+DB_UserConnecting(_UserID);
+PROC_PlayerSlot_Reserve();
+
+IF
+UserDisconnected(_UserID,_,_)
+AND
+DB_UserConnecting(_UserID)
+THEN
+NOT DB_UserConnecting(_UserID);
+PROC_PlayerSlot_Free();
+
+IF
+CharacterReservedUserIDChanged(_,_,_UserID)
+AND
+DB_UserConnecting(_UserID)
+THEN
+NOT DB_UserConnecting(_UserID);
+PROC_PlayerSlot_Free();
+
+//Safety
+IF
+SavegameLoaded()
+AND
+DB_UserConnecting(_UserID)
+THEN
+NOT DB_UserConnecting(_UserID);
+PROC_PlayerSlot_Free();
+
+// Patch for GUS-314426
+// Reserved slots should only be present either if a user is connecting or henchmen mutex is on
+IF
+SavegameLoaded()
+AND
+DB_PlayerSlotReserved(_Count)
+AND
+_Count > 0
+AND
+NOT DB_UserConnecting(_)
+AND
+GetFlag(Hirelings_State_CCmutex_dfbc6d83-5c08-417d-9cc7-6f3bcdea9deb,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+NOT DB_PlayerSlotReserved(_Count);
+DB_PlayerSlotReserved(0);
+PROC_CheckPartyFull();
+
+PROC
+PROC_PlayerSlot_Reserve()
+AND
+DB_PlayerSlotReserved(_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_PlayerSlotReserved(_Count);
+DB_PlayerSlotReserved(_NewCount);
+PROC_CheckPartyFull();
+
+PROC
+PROC_PlayerSlot_Free()
+AND
+DB_PlayerSlotReserved(_Count)
+AND
+_Count > 0
+AND
+IntegerSum(_Count,-1,_NewCount)
+THEN
+NOT DB_PlayerSlotReserved(_Count);
+DB_PlayerSlotReserved(_NewCount);
+PROC_CheckPartyFull();
+//END_REGION
+
+//REGION Dismiss companion because new avatar joined
+IF
+ForceDismissCompanion(_Companion)
+THEN
+PROC_GLO_PartyMembers_Remove(_Companion,1);
+//END_REGION
+
+//REGION Block dismiss a companion by code (when a new avatar joins)
+//To be dismissable, a companion/hireling must be: Able to talk, not in a danger or blocked zone.
+
+//CantTalk
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable(_Player)
+AND
+DB_CantTalk(_Player)
+THEN
+DB_BlockDismissable(_Player);
+PROC_SetBlockDismiss(_Player,1);
+
+//DangerZone
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_InDangerZone(_Player,_)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+//Suppression Zone
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_PartyDialogSuppressed(_Player,(TRIGGER)_)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+//FastTravelBlock_BlockedZone
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_FastTravelBlock_BlockedZone_StatusSet(_Player)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+
+//FastTravelBlock_CantMove
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_Is_EngineBlock_Move(_Player)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+//FastTravelBlock_Arrested
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_FastTravelBlock_Arrested_StatusSet(_Player)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+//FastTravelBlock_FugitiveInPrison
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_FastTravelBlock_FugitiveInPrison_StatusSet(_Player, _FugitiveStatus)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_CantTalk_IgnoreDialogsCombatStatusesDead(_Player)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_Defeated(_Player)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_Is_InCombat(_Player, _)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+DB_Is_EngineBlock_Talk(_Player)
+THEN
+DB_BlockDismissable_IgnoreDialog(_Player);
+
+//Unblock dismissal
+IF
+DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+NOT DB_InDangerZone(_Player,_)
+AND
+NOT DB_PartyDialogSuppressed(_Player,_)
+AND
+NOT DB_FastTravelBlock_BlockedZone_StatusSet(_Player)
+AND
+NOT DB_Is_EngineBlock_Move(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_Is_EngineBlock_Talk(_Player)
+AND
+NOT DB_Is_InCombat(_Player, _)
+AND
+NOT DB_FastTravelBlock_Arrested_StatusSet(_Player)
+AND
+NOT DB_FastTravelBlock_FugitiveInPrison_StatusSet(_Player, _)
+AND
+NOT DB_CantTalk_IgnoreDialogsCombatStatusesDead(_Player)
+THEN
+NOT DB_BlockDismissable_IgnoreDialog(_Player);
+
+IF
+DB_Players(_Player)
+AND
+DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+NOT DB_BlockDismissable(_Player)
+THEN
+DB_BlockDismissable(_Player);
+PROC_SetBlockDismiss(_Player,1);
+
+IF
+DB_BlockDismissable(_Player)
+AND
+NOT DB_BlockDismissable_IgnoreDialog(_Player)
+AND
+NOT DB_CantTalk(_Player)
+THEN
+NOT DB_BlockDismissable(_Player);
+PROC_SetBlockDismiss(_Player,0);
+
+PROC
+PROC_SetBlockDismiss((CHARACTER)_Player,(INTEGER)_State)
+AND
+NOT DB_Avatars(_Player)
+AND
+NOT DB_DismissedAvatar(_Player)
+THEN
+SetBlockDismiss(_Player,_State);
+
+QRY
+QRY_BlockDismissableConditionalCanTalk((CHARACTER)_Player, 1)
+AND
+DB_BlockDismissable_IgnoreDialog(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_BlockDismissableConditionalCanTalk((CHARACTER)_Player, 0)
+AND
+DB_BlockDismissable(_Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Recruit/dismiss after dialog
+IF
+FlagSet(OriginRemoveFromPartyAfterDialog_7a429beb-fbfb-fa8a-3a33-0349323ad11d, (CHARACTER)_Member, _ID) // flagType: Object
+THEN
+ClearFlag((FLAG)OriginRemoveFromPartyAfterDialog_7a429beb-fbfb-fa8a-3a33-0349323ad11d, _Member, 0); // flagType: Object
+DB_GLO_PartyMembers_DismissAfterDialog(_ID,_Member);
+
+IF
+DialogEnded(_InPartyDialog,_ID)
+AND
+DB_OriginInPartyDialog(_Companion,_InPartyDialog)
+AND
+NOT DB_GLO_PartyMembers_DismissAfterDialog(_ID,_)
+AND
+NOT DB_GLO_PartyMembers_RecruitAfterDialog(_ID,_,_)
+AND
+GUIDToString(_InPartyDialog,_DialogName)
+AND
+Concatenate("DialogName:",_DialogName,_ParamString)
+THEN
+TrackAnalyticsInfo("InPartyDialogNoRecruitDismiss",_ParamString,_Companion);
+
+//Companion
+IF
+DialogEnded(_,_ID)
+AND
+DB_GLO_PartyMembers_DismissAfterDialog(_ID,_Member)
+AND
+DialogGetInvolvedPlayer(_ID,2,_Player)
+AND
+NOT DB_Avatars(_Member)
+THEN
+NOT DB_GLO_PartyMembers_DismissAfterDialog(_ID,_Member);
+PROC_GLO_PartyMembers_Remove(_Member,(CHARACTER)_Player,0,0); //Don't transfer story items (they'll be in camp and part of the Magic Pockets network)
+
+//Avatar
+IF
+DialogEnded(_,_ID)
+AND
+DB_GLO_PartyMembers_DismissAfterDialog(_ID,_Member)
+AND
+DialogGetInvolvedPlayer(_ID,2,_Player)
+AND
+DB_Avatars(_Member)
+THEN
+NOT DB_GLO_PartyMembers_DismissAfterDialog(_ID,_Member);
+PROC_GLO_PartyMembers_Remove(_Member,(CHARACTER)_Player,0,1); //Do transfer story items (the avatar will be in Wither's Wardrobe and their inventory will NOT be part of the Magic Pockets network)
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_GLO_PartyMembers_RecruitAfterDialog(_ID,_Origin,_Player)
+THEN
+PROC_GLO_PartyMembers_CheckAdd(_Origin,_Player);
+NOT DB_GLO_PartyMembers_RecruitAfterDialog(_ID,_Origin,_Player);
+//END_REGION
+
+//REGION Recruit a party member
+PROC
+PROC_GLO_PartyMembers_CheckAdd((CHARACTER)_Origin,(CHARACTER)_Player)
+AND
+GetFlag((FLAG)GEN_MaxPlayerCountReached_823b5064-8aa4-c0b7-1b8c-657b46987ccd, NULL_00000000-0000-0000-0000-000000000000, 0) // flagType: Global
+THEN
+PROC_GLO_PartyMembers_Add(_Origin,_Player);
+
+// Dummy for adding avatars to the party; can happen after kicking them
+QRY
+QRY_GLO_PartyMembers_GetInPartyDialog((CHARACTER)_Avatar)
+AND
+IsTagged(_Avatar,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+THEN
+DB_GLO_PartyMembers_InPartyDialog(_Avatar,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)_Companion)
+AND
+NOT DB_OnlyOncePerPlayer(_Companion,"Recruitment_Respec")
+THEN
+RequestInitialLevel(_Companion);
+DB_OnlyOncePerPlayer(_Companion,"Recruitment_Respec");
+
+//Companion
+PROC
+PROC_GLO_PartyMembers_Add((CHARACTER)_Origin,(CHARACTER)_Player)
+AND
+NOT DB_DismissedAvatar(_Origin)
+AND
+QRY_GLO_PartyMembers_GetInPartyDialogReset(_Origin)
+AND
+QRY_GLO_PartyMembers_GetInPartyDialog(_Origin)
+AND
+DB_GLO_PartyMembers_InPartyDialog(_Origin,_NewDialog)
+AND
+DB_GLO_PartyMembers_DefaultFaction(_Origin,_PlayerFaction)
+THEN
+PROC_GLO_PartyMembers_ClearCompanionHostilityForOriginalFaction(_Origin);
+MakePlayer(_Origin,_Player);
+RegisterAsCompanion(_Origin, _Player);
+PROC_AssignCharacterToPlayer(_Origin,_Player);
+PROC_GLO_PartyMembers_SetInpartyDialog(_Origin,_NewDialog);
+SetFaction(_Origin,_PlayerFaction);
+ClearTag(_Origin, BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+DB_Players(_Origin);
+DB_PartOfTheTeam(_Origin);
+NOT DB_GLO_PartyMembers_DefaultFaction(_Origin,_PlayerFaction);
+PROC_CheckPartyFull();
+PROC_CheckFirstTimeRecruited(_Origin);
+SetFlag((FLAG)ORI_State_Recruited_e78c0aab-fb48-98e9-3ed9-773a0c39988d, _Origin);
+SetNoFollowFlag(_Origin, 0);
+PROC_GLO_PartyMembers_AddHook(_Origin,_Player);
+
+//Avatar (UI-action)
+PROC
+PROC_GLO_PartyMembers_Add((CHARACTER)_Avatar,(CHARACTER)_Player)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DismissedAvatar(_Avatar)
+THEN
+SetOnStage(_Avatar,1);
+MakePlayer(_Avatar,_Player);
+PROC_AssignCharacterToPlayer(_Avatar,_Player);
+ClearTag(_Avatar, BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+DB_Players(_Avatar);
+DB_Avatars(_Avatar);
+NOT DB_DismissedAvatar(_Avatar);
+PROC_CheckPartyFull();
+PROC_GLO_PartyMembers_AddHook(_Avatar,_Player);
+
+//Avatar (client joins)
+PROC
+PROC_GLO_PartyMembers_Add((CHARACTER)_Avatar,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_DismissedAvatar(_Avatar)
+AND
+GetHostCharacter(_HostPlayer) //Only used to teleport the avatar to the party
+THEN
+MakePlayer(_Avatar,_HostPlayer); //Should not be necessary (code makes _Avatar a player) but we've had unexplained Osiris Avatars that were still NPCs. (GUS-318910)
+ClearTag(_Avatar, BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+DB_Players(_Avatar);
+DB_Avatars(_Avatar);
+NOT DB_DismissedAvatar(_Avatar);
+PROC_CheckPartyFull();
+TeleportTo(_Avatar,_HostPlayer);
+PROC_GLO_PartyMembers_AddHook(_Avatar,_HostPlayer);
+
+// Clear previous leave reasons
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)_Origin,(CHARACTER)_Player)
+AND
+DB_Origin_TemporaryLeaveReason(_Origin, _Reason)
+THEN
+NOT DB_Origin_TemporaryLeaveReason(_Origin, _Reason);
+
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)_Origin,(CHARACTER)_Player)
+AND
+DB_OriginInPartyGlobal(_Origin,(FLAG)_GlobalFlag)
+THEN
+SetFlag((FLAG)_GlobalFlag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_GLO_PartyMembers_AddHook((CHARACTER)_Origin,(CHARACTER)_)
+AND
+IsTagged(_Origin,(TAG)DOWNED_DISABLED_7095912e-fcb9-41dd-aec3-3cf7803e4b22,1)
+THEN
+ClearTag(_Origin,DOWNED_DISABLED_7095912e-fcb9-41dd-aec3-3cf7803e4b22);
+
+PROC
+PROC_GLO_PartyMembers_ClearCompanionHostilityForOriginalFaction((CHARACTER)_Companion)
+AND
+DB_GLO_PartyMembers_OriginalAlignment(_Companion, _OriginalFaction)
+AND
+DB_HostileToPlayerGroup(_OriginalFaction, _Player)
+AND
+DB_Players(_Player)
+AND
+GetFaction(_Player, _PlayerFaction)
+THEN
+NOT DB_HostileToPlayerGroup(_OriginalFaction, (CHARACTER)_Player);
+PROC_HostileToPlayerGroupCancelFlag_TryCancel(_Companion, _PlayerFaction);
+
+PROC
+PROC_GLO_PartyMembers_ClearCompanionHostilityForOriginalFaction((CHARACTER)_Companion)
+AND
+DB_GLO_PartyMembers_OriginalAlignment(_Companion, _OriginalFaction)
+AND
+DB_HostileToPlayerGroup(_OriginalFaction, _PlayerInCamp)
+AND
+NOT DB_Players(_PlayerInCamp)
+AND
+DB_GLO_PartyMembers_DefaultFaction(_PlayerInCamp, _PlayerFaction)
+THEN
+NOT DB_HostileToPlayerGroup(_OriginalFaction, _PlayerInCamp);
+PROC_HostileToPlayerGroupCancelFlag_TryCancel(_PlayerInCamp, _PlayerFaction, 1);
+
+
+//END_REGION
+
+//REGION Dismiss a party member
+PROC
+PROC_GLO_PartyMembers_Remove((CHARACTER)_Origin,1)
+THEN
+PROC_GLO_PartyMembers_Remove(_Origin,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,1);
+
+PROC
+PROC_GLO_PartyMembers_Remove((CHARACTER)_Origin,0)
+THEN
+DebugBreak("this should not be called for unforced removals of origins!");
+
+
+PROC
+PROC_GLO_PartyMembers_Remove((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_Force)
+THEN
+PROC_GLO_PartyMembers_Remove(_Origin,_Dismisser,_Force,0);
+
+PROC
+PROC_GLO_PartyMembers_Remove((CHARACTER)_DismissedCompanion,(CHARACTER)_Dismisser,(INTEGER)_Force,(INTEGER)_TransferItems)
+AND
+NOT DB_Avatars(_DismissedCompanion)
+THEN
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter(_DismissedCompanion,_Dismisser,_Force,_TransferItems);
+PROC_CheckPartyFull();
+
+//Only allow dismissing avatars if the dismisser and the dismissed avatar are on the same user.
+PROC
+PROC_GLO_PartyMembers_Remove((CHARACTER)_DismissedAvatar,(CHARACTER)_Dismisser,(INTEGER)_Force,(INTEGER)_TransferItems)
+AND
+DB_Avatars(_DismissedAvatar)
+AND
+_Dismisser != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetReservedUserID(_DismissedAvatar,_DismissedAvatarUser)
+AND
+GetReservedUserID(_Dismisser,_DismissedAvatarUser)
+THEN
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter(_DismissedAvatar,_Dismisser,_Force,_TransferItems);
+PROC_CheckPartyFull();
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_DismissedMember,(CHARACTER)_Dismisser,(INTEGER)_ForceRemove,(INTEGER)_TransferItems)
+AND
+GetReservedUserID(_DismissedMember,_DismissedUser)
+AND
+DB_Players(_Player)
+AND
+_Player!=_DismissedMember
+AND
+GetReservedUserID(_Player,_DismissedUser)
+THEN
+DB_GLO_PartyMember_OriginUserHasOtherCharacter(1);
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_Origin,(CHARACTER)_Dismisser,1,(INTEGER)_TransferItems)
+THEN
+DB_GLO_PartyMember_OriginUserHasOtherCharacter(1);
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_ForceRemove,(INTEGER)_TransferItems)
+AND
+DB_GLO_PartyMember_OriginUserHasOtherCharacter(1)
+AND
+DB_Negate(_TransferItems,_OnlyGoldAndBodies)
+THEN
+PROC_GLO_PartyMembers_TransferStoryItems(_Origin,_Dismisser,_OnlyGoldAndBodies);
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_ForceRemove,(INTEGER)_TransferItems)
+AND
+DB_GLO_PartyMember_OriginUserHasOtherCharacter(1)
+AND
+DB_Players(_Origin)
+THEN
+DetachFromPartyGroup(_Origin);
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_ForceRemove,(INTEGER)_TransferItems)
+AND
+DB_GLO_PartyMember_OriginUserHasOtherCharacter(1)
+THEN
+PROC_GLO_PartyMembers_MakeNPC(_Origin);
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems((CHARACTER)_Origin,(CHARACTER)_Dismisser)
+THEN
+PROC_GLO_PartyMembers_TransferStoryItems(_Origin,_Dismisser,0);
+
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_OnlyGoldAndPartyMembers)
+AND
+NOT DB_BlockStoryItemTransfer(_Origin)
+AND
+_Dismisser != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetReservedUserID(_Dismisser,_User)
+AND
+GetReservedUserID(_Origin,_User)
+THEN
+PROC_GLO_PartyMembers_TransferStoryItems_Execute(_Origin,_Dismisser,_OnlyGoldAndPartyMembers);
+DB_StoryItemsTransfered(1);
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems_Execute((CHARACTER)_Origin,(CHARACTER)_Dismisser,0)
+THEN
+TransferItemsToCharacter(_Origin,_Dismisser);
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems_Execute((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_OnlyGoldAndPartyMembers)
+AND
+GetGold(_Origin,_Gold)
+AND
+IntegerProduct(_Gold,-1,_MinusGold)
+THEN
+AddGold(_Origin,_MinusGold);
+AddGold(_Dismisser,_Gold);
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems(_Origin,_,1)
+THEN
+// Don't trigger fallbacks for transferring the inventory if we only wanted to transfer the gold (even if user id mismatch)
+DB_StoryItemsTransfered(1);
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems(_Origin,_,(INTEGER)_OnlyGoldAndPartyMembers)
+AND
+NOT DB_BlockStoryItemTransfer(_Origin)
+AND
+NOT DB_StoryItemsTransfered(1)
+THEN
+TransferItemsToUser(_Origin);
+
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems(_LeavingPlayer,_RemainingPlayer,(INTEGER)_OnlyGoldAndPartyMembers)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+IsInInventoryOf(_PartyMember,_LeavingPlayer,1)
+THEN
+ToInventory(_PartyMember,_RemainingPlayer,1,1,1);
+
+PROC
+PROC_GLO_PartyMembers_TransferStoryItems(_,_,(INTEGER)_OnlyGoldAndPartyMembers)
+THEN
+NOT DB_StoryItemsTransfered(1);
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_Origin,(CHARACTER)_Dismisser,1,(INTEGER)_TransferItems)
+THEN
+FlushOsirisQueue(_Origin);
+
+PROC
+PROC_GLO_PartyMembers_RemoveIfUserHasOtherCharacter((CHARACTER)_Origin,(CHARACTER)_Dismisser,(INTEGER)_ForceRemove,(INTEGER)_TransferItems)
+THEN
+NOT DB_GLO_PartyMember_OriginUserHasOtherCharacter(1);
+//END_REGION
+
+//REGION User has other characters besides the current one
+QRY
+QRY_GLO_PartyMembers_UserHasOtherCharacters((CHARACTER)_Player)
+AND
+GetReservedUserID(_Player,_ID)
+AND
+DB_Players(_OtherPlayer)
+AND
+_Player != _OtherPlayer
+AND
+GetReservedUserID(_OtherPlayer,_ID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Dismiss all companions, except if the user has no avatar(s) -> dismiss non-controlled companions
+// Remove remnants from previous call
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_Keep(_Player)
+THEN
+NOT DB_GLO_PartyMembers_CollectDismissAll_Keep(_Player);
+
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_OriginalOwningUserChar(_OwnerChar,_Companion)
+THEN
+NOT DB_GLO_PartyMembers_CollectDismissAll_OriginalOwningUserChar(_OwnerChar,_Companion);
+
+
+// Defines DB_GLO_PartyMembers_CollectDismissAll_Keep(_Player) for all players that should not be dismissed
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_Players(_Player)
+AND
+GetReservedUserID(_Player,_UserID)
+AND
+IsTagged(_Player,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,_IsAvatar)
+AND
+IsControlled(_Player,_IsControlled)
+THEN
+DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_Player,_IsAvatar,_IsControlled);
+
+// Prefer avatars over non-avatars
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_AvatarPlayer,1,_)
+AND
+DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_NonAvatarPlayer,0,_IsControlled)
+THEN
+NOT DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_NonAvatarPlayer,0,_IsControlled);
+
+// Prefer controlled companions over non-controlled companions
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_ControlledCompanion,0,1)
+AND
+DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_UnControlledCompanion,0,0)
+THEN
+NOT DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_UnControlledCompanion,0,0);
+
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_Player,_IsAvatar,_IsControlled)
+THEN
+NOT DB_GLO_PartyMembers_CollectDismissAll_MaybeKeep(_UserID,_Player,_IsAvatar,_IsControlled);
+DB_GLO_PartyMembers_CollectDismissAll_Keep(_Player);
+
+// Record which user controlled which dismissed characters, so we can assign them back to the correct user afterwards
+// (you can switch characters between users, so recruiter/Recruit bonds are not sufficient)
+PROC
+PROC_GLO_PartyMembers_CollectDismissAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_Keep(_KeepChar)
+AND
+GetReservedUserID(_KeepChar,_UserID)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_GLO_PartyMembers_CollectDismissAll_Keep(_Companion)
+AND
+GetReservedUserID(_Companion,_UserID)
+THEN
+DB_GLO_PartyMembers_CollectDismissAll_OriginalOwningUserChar(_KeepChar,_Companion);
+//END_REGION
+
+//REGION Character gets kicked from their own party (end-game situation)
+// 0) Block any alignment changes by ProcFixPlayerAlignments() towards this character
+//    and make immortal (needed for party restoration at the end)
+// 1) Record current party layout
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+AND
+DB_Players(_PartyMember)
+AND
+_PartyMember != _Avatar
+AND
+IsInPartyWith(_PartyMember,_Avatar,1)
+AND
+GetReservedUserID(_Avatar,_AvatarUserID)
+AND
+GetReservedUserID(_PartyMember,_PartyMemberUserID)
+THEN
+PROC_GLO_PartyMembers_Kick_DefinePartyMemberDB(_Avatar,_AvatarUserID,_PartyMember,_PartyMemberUserID);
+
+PROC
+PROC_GLO_PartyMembers_Kick_DefinePartyMemberDB((CHARACTER)_Avatar,(INTEGER)_AvatarUserID,(CHARACTER)_PartyMember,(INTEGER)_PartyMemberUserID)
+AND
+_AvatarUserID == _PartyMemberUserID
+THEN
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,1);
+
+PROC
+PROC_GLO_PartyMembers_Kick_DefinePartyMemberDB((CHARACTER)_Avatar,(INTEGER)_AvatarUserID,(CHARACTER)_PartyMember,(INTEGER)_PartyMemberUserID)
+AND
+_AvatarUserID != _PartyMemberUserID
+THEN
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,0);
+
+// 2) Move characters controlled by other players to a new party (= make original user leave their party)
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+AND
+GetReservedUserID(_Avatar,_PartyMemberUserID)
+THEN
+LeaveParty(_PartyMemberUserID);
+
+// 3) Make other party characters controlled by same player AI-controlled
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,1)
+THEN
+PROC_GLO_PartyMembers_Kick_RemoveAIMember(_Avatar,_PartyMember,_FallbackFactionForAI);
+
+// In case the player controlled multiple avatars, this may not be set
+PROC
+PROC_GLO_PartyMembers_Kick_RemoveAIMember((CHARACTER)_Avatar,(CHARACTER)_Player,(FACTION)_FallbackFactionForAI)
+AND
+NOT DB_GLO_PartyMembers_OriginalAlignment(_Player,_)
+THEN
+DB_GLO_PartyMembers_OriginalAlignment(_Player,_FallbackFactionForAI);
+
+PROC
+PROC_GLO_PartyMembers_Kick_RemoveAIMember((CHARACTER)_Avatar,(CHARACTER)_Player,(FACTION)_FallbackFactionForAI)
+AND
+NOT DB_GLO_PartyMembers_BlockReturnToRecruitmentPosition(_Player)
+THEN
+DB_GLO_PartyMembers_Kick_BlockedReturnToRecruitmentPosition(_Avatar,_Player);
+DB_GLO_PartyMembers_BlockReturnToRecruitmentPosition(_Player);
+
+PROC
+PROC_GLO_PartyMembers_Kick_RemoveAIMember((CHARACTER)_Avatar,(CHARACTER)_Player,(FACTION)_FallbackFactionForAI)
+THEN
+PROC_GLO_PartyMembers_MakeNPC(_Player);
+
+// Make the dismissed AI-controlled characters allied with the rest of the players
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_PartyMember)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,1)
+AND
+GetFaction(_PartyMember,_PMFaction)
+THEN
+DB_GLO_PartyMemebers_KickAvatar_RestoreHeroFactionRelationAfterDeath(_PartyMember);
+PROC_SetRelation(_PMFaction,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,100);
+PROC_SetRelation((FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,_PMFaction,100);
+
+// 4) Make the Hero alignment hostile against the alignment of the kicked hero and vice versa
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+AND
+GetFaction(_Avatar,_AvatarFaction)
+THEN
+DB_GLO_PartyMembers_Kicked(_Avatar);
+SetTag(_Avatar,(TAG)BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+PROC_SetRelation(_AvatarFaction,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360, 0);
+PROC_SetRelation((FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,_AvatarFaction, 0);
+
+// Also all other players individually, because their individual relations may have been overridden earlier and then changing Hero won't do anything anymore
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+AND
+DB_Players(_Player)
+AND
+_Player != _Avatar
+AND
+GetFaction(_Player,_PlayerFaction)
+AND
+GetFaction(_Avatar,_AvatarFaction)
+THEN
+PROC_SetRelation(_PlayerFaction,_AvatarFaction, 0);
+PROC_SetRelation(_AvatarFaction,_PlayerFaction, 0);
+
+// and make the kicked hero also hostile against the removed companions and vice versa
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,1)
+AND
+GetFaction(_PartyMember,_PartyMemberFaction)
+AND
+GetFaction(_Avatar,_AvatarFaction)
+THEN
+PROC_SetRelation(_AvatarFaction,_PartyMemberFaction, 0);
+PROC_SetRelation(_PartyMemberFaction,_AvatarFaction, 0);
+
+// and report that we are ready
+PROC
+PROC_GLO_PartyMembers_Kick((CHARACTER)_Avatar,(FACTION)_FallbackFactionForAI)
+THEN
+SetEntityEvent(_Avatar,"GLO_PartyMembers_Kicked");
+
+// 5) If that avatar dies, give its user control over the kicked AI party members (if any)
+IF
+HitpointsChanged(_Avatar,_)
+AND
+DB_GLO_PartyMembers_Kicked((CHARACTER)_Avatar)
+AND
+GetHitpointsPercentage(_Avatar,_Percentage)
+AND
+_Percentage <= 0.0
+AND
+NOT DB_GLO_PartyMembers_Kick_PartyMembers_Dying(_Avatar)
+THEN
+PROC_GLO_PartyMembers_Kick_PartyMembers_TryDead(_Avatar);
+
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_TryDead((CHARACTER)_Avatar)
+AND
+NOT QRY_GLO_PartyMembers_Kicked_BlockRestoreAvatarOnDeath(_Avatar)
+THEN
+PROC_GLO_PartyMembers_Kick_PartyMembers_Dead(_Avatar);
+DB_GLO_PartyMembers_Kick_PartyMembers_Dying(_Avatar);
+
+QRY
+QRY_GLO_PartyMembers_Kicked_BlockRestoreAvatarOnDeath((CHARACTER)_Avatar)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+// First restore the NPC alignment relations
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_Dead((CHARACTER)_Avatar)
+THEN
+PROC_GLO_PartyMembers_Kick_PartyMembers_Restore_Internal((CHARACTER)_Avatar);
+
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_Restore((CHARACTER)_Avatar)
+THEN
+PROC_GLO_PartyMembers_Kick_PartyMembers_Restore_Internal((CHARACTER)_Avatar);
+
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_Restore_Internal((CHARACTER)_Avatar)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_,_)
+AND
+DB_GLO_PartyMemebers_KickAvatar_RestoreHeroFactionRelationAfterDeath(_PartyMember)
+AND
+GetFaction(_PartyMember,_PartyMemberFaction)
+THEN
+NOT DB_GLO_PartyMemebers_KickAvatar_RestoreHeroFactionRelationAfterDeath(_PartyMember);
+PROC_SetRelation(_PartyMemberFaction,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,50);
+PROC_SetRelation((FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,_PartyMemberFaction,50);
+
+//REGION Add NPC party members again
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_Restore_Internal((CHARACTER)_Avatar)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,1)
+THEN
+PROC_GLO_PartyMembers_Add(_PartyMember,_Avatar);
+//END_REGION
+
+// And die permanently
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_Dead(_Avatar)
+THEN
+SetImmortal(_Avatar,0);
+Die(_Avatar,DEATHTYPE.DoT,1);
+
+// Then remove the avatar from the party (if there were any non-controlled party members;
+// otherwise doing this will kick the player from the game).
+
+// Don't make an NPC and then die, because generics can kick in (regarding doing damage
+// to a neutral NPC in combat) in case of surfaces etc.
+IF
+DB_PermaDefeated(_Avatar)
+AND
+DB_GLO_PartyMembers_Kicked((CHARACTER)_Avatar)
+THEN
+PROC_GLO_PartyMembers_TryDropBackpackOnDeath((CHARACTER)_Avatar);
+
+PROC
+PROC_GLO_PartyMembers_TryDropBackpackOnDeath((CHARACTER)_Avatar)
+AND
+NOT QRY_GLO_PartyMembers_BlockBackpackOnDeath(_Avatar)
+AND
+GetPosition(_Avatar,_X,_Y,_Z)
+AND
+CreateAt((ITEMROOT)LOOT_GEN_Backpack_D_Posed_A_Colorvar_B_f697d433-7b8f-4fe1-8fe3-990bdfeedeee,_X,_Y,_Z,0,0,"",_BackPack)
+THEN
+// Since IsLootable is disabled for the _Avatar, drop his items in a backpack instead
+MoveAllItemsTo(_Avatar,_BackPack);
+SetEntityEvent(_Avatar,"GLO_PartyMembers_KickedDied");
+
+PROC
+PROC_GLO_PartyMembers_TryDropBackpackOnDeath((CHARACTER)_Avatar)
+AND
+QRY_GLO_PartyMembers_UserHasOtherCharacters(_Avatar)
+THEN
+NOT DB_Players(_Avatar);
+
+
+QRY
+QRY_GLO_PartyMembers_BlockBackpackOnDeath((CHARACTER)_Avatar)
+AND
+1 == 0
+THEN
+DB_NOOP(0);
+
+// Don't make NPC if last character for this user, because then will be kicked from the game
+IF
+DB_PermaDefeated(_Avatar)
+AND
+DB_GLO_PartyMembers_Kicked((CHARACTER)_Avatar)
+AND
+QRY_GLO_PartyMembers_UserHasOtherCharacters(_Avatar)
+THEN
+MakeNPC(_Avatar);
+
+// Clean up
+IF
+DB_PermaDefeated(_Avatar)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers_Dying((CHARACTER)_Avatar)
+THEN
+NOT DB_GLO_PartyMembers_Kick_PartyMembers_Dying(_Avatar);
+PROC_GLO_PartyMembers_Kick_CleanUp(_Avatar);
+
+PROC
+PROC_GLO_PartyMembers_Kick_PartyMembers_Restore((CHARACTER)_Avatar)
+THEN
+PROC_GLO_PartyMembers_Kick_CleanUp(_Avatar);
+
+// Remove everything so that this avatar dying will no longer result in returning
+// control to the companions
+PROC
+PROC_GLO_PartyMembers_Kick_CleanUp((CHARACTER)_Avatar)
+THEN
+SetImmortal(_Avatar,0);
+
+PROC
+PROC_GLO_PartyMembers_Kick_CleanUp((CHARACTER)_Avatar)
+AND
+DB_GLO_PartyMembers_Kick_BlockedReturnToRecruitmentPosition(_Avatar,_Player)
+THEN
+NOT DB_GLO_PartyMembers_Kick_BlockedReturnToRecruitmentPosition(_Avatar,_Player);
+NOT DB_GLO_PartyMembers_BlockReturnToRecruitmentPosition(_Player);
+
+PROC
+PROC_GLO_PartyMembers_Kick_CleanUp((CHARACTER)_Avatar)
+AND
+DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,_AvatarUserOwned)
+THEN
+NOT DB_GLO_PartyMembers_Kick_PartyMembers(_Avatar,_PartyMember,_AvatarUserOwned);
+
+PROC
+PROC_GLO_PartyMembers_Kick_CleanUp((CHARACTER)_Avatar)
+THEN
+NOT DB_GLO_PartyMembers_Kicked(_Avatar);
+//END_REGION
+
+//REGION Temporary removal of non-avatar characters controlled by this user, except if they only control companions (-> keep currently controlled companion)
+PROC
+PROC_GLO_PartyMembers_TempRemoveAll((INTEGER)_SetOffStage)
+THEN
+PROC_GLO_PartyMembers_CollectDismissAll();
+
+// DB_GLO_PartyMembers_CollectDismissAll_Keep() keeps track which characters were kept (call PROC_GLO_PartyMembers_TempRestore() on these afterwards to get their companions back)
+// DB_GLO_PartyMembers_CollectDismissAll_OriginalOwningUserChar() keeps track (via a character) of the user to which the removed characters were assigned
+// DB_GLO_PartyMembers_TempRemoved() keeps track of the origin Recruit/recruiter bond, for use by callers afterwards (mainly backward compatibility)
+PROC
+PROC_GLO_PartyMembers_TempRemoveAll((INTEGER)_SetOffStage)
+AND
+DB_GLO_PartyMembers_CollectDismissAll_Keep(_KeepCharacter)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_KeepCharacter)
+AND
+NOT DB_GLO_PartyMembers_CollectDismissAll_Keep(_Companion)
+THEN
+DB_GLO_PartyMembers_TempRemoved(_KeepCharacter,_Companion);
+
+PROC
+PROC_GLO_PartyMembers_TempRemoveAll((INTEGER)_SetOffStage)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_GLO_PartyMembers_CollectDismissAll_Keep(_Companion)
+THEN
+DB_BlockStoryItemTransfer(_Companion);
+PROC_GLO_PartyMembers_Remove(_Companion,1);
+
+PROC
+PROC_GLO_PartyMembers_TempRemoveAll(1)
+AND
+DB_GLO_PartyMembers_TempRemoved(_KeepCharacter,_Companion)
+THEN
+SetOnStage(_Companion,0);
+
+PROC
+PROC_GLO_PartyMembers_TempRestore((CHARACTER)_)
+THEN
+//because I don't want to disturb the flow too much, doing a check here on a new DB instead of the temp dismissed one
+DB_BlockOwnershipChecks(1);
+
+PROC
+PROC_GLO_PartyMembers_TempRestore((CHARACTER)_KeepCharacter)
+AND
+DB_GLO_PartyMembers_CollectDismissAll_OriginalOwningUserChar(_KeepCharacter,_Companion)
+AND
+DB_GLO_PartyMembers_TempRemoved(_Avatar,_Companion)
+THEN
+NOT DB_BlockStoryItemTransfer(_Companion);
+SetOnStage(_Companion,1);
+NOT DB_GLO_PartyMembers_TempRemoved(_Avatar,_Companion);
+PROC_GLO_PartyMembers_Add(_Companion,_KeepCharacter);
+TeleportTo(_Companion,_KeepCharacter);
+Resurrect(_Companion);
+
+PROC
+PROC_GLO_PartyMembers_TempRestore((CHARACTER)_)
+THEN
+//because I don't want to disturb the flow too much, doing a check here on a new DB instead of the temp dismissed one
+NOT DB_BlockOwnershipChecks(1);
+PROC_ItemEventCheck(1);
+
+PROC
+PROC_GLO_PartyMembers_TempRestoreAll()
+AND
+DB_GLO_PartyMembers_CollectDismissAll_Keep(_KeepCharacter)
+THEN
+PROC_GLO_PartyMembers_TempRestore(_KeepCharacter);
+
+// If a removed character dies, don't restore it again afterwards
+// (it died as an NPC)
+IF
+Died(_Companion)
+AND
+DB_GLO_PartyMembers_TempRemoved(_Avatar,_Companion)
+THEN
+NOT DB_GLO_PartyMembers_TempRemoved(_Avatar,_Companion);
+//END_REGION
+
+//REGION Party member dialogs (in-party)
+IF
+Resurrected(_Origin)
+AND
+QRY_GLO_PartyMembers_GetInPartyDialogReset(_Origin)
+AND
+QRY_GLO_PartyMembers_GetInPartyDialog(_Origin)
+AND
+DB_GLO_PartyMembers_InPartyDialog(_Origin,_NewDialog)
+AND
+DB_Players(_Origin)
+AND
+NOT DB_Avatars(_Origin)
+THEN
+PROC_GLO_PartyMembers_SetInpartyDialog(_Origin,_NewDialog);
+//END_REGION
+
+//REGION do first time initialization on our origin character
+PROC
+PROC_GLO_PartyMembers_Initialize((CHARACTER)_Origin)
+THEN
+MakeNPC(_Origin);
+DB_NoLowAttitudeDialog(_Origin);
+NOT DB_Players(_Origin);
+NOT DB_PartyMembers(_Origin);
+
+//faction "handling" TODO:FIXME: get rid of this mess
+PROC
+PROC_GLO_PartyMembers_Initialize((CHARACTER)_Origin)
+AND
+NOT DB_CompanionOnlyFaction(_Origin, _)
+AND
+GetFaction(_Origin,_PlayerFaction)
+AND
+DB_OriginNPCAlignment((CHARACTER)_Origin,(FACTION)_NpcFaction)
+THEN
+//this is a "normal" origin that has been placed with the player faction 
+SetFaction(_Origin,_NpcFaction);
+DB_GLO_PartyMembers_DefaultFaction(_Origin,_PlayerFaction);
+
+PROC
+PROC_GLO_PartyMembers_Initialize((CHARACTER)_Origin)
+AND
+DB_CompanionOnlyFaction((CHARACTER)_Origin, (FACTION)_PlayerFaction)
+THEN
+//this is an origin that is recruitable later and has been placed with a specific NPC faction
+//so there's no need to play around with the faction at this point, just record their player faction
+DB_GLO_PartyMembers_DefaultFaction(_Origin,_PlayerFaction);
+
+
+//END_REGION
+
+//REGION Turn a party member back into an NPC (after dismissing)
+//Companion Dismissal
+PROC
+PROC_GLO_PartyMembers_MakeNPC((CHARACTER)_Member)
+AND
+NOT DB_Avatars(_Member)
+AND
+GetFaction(_Member,_PlayerFaction)
+AND
+DB_GLO_PartyMembers_OriginalAlignment((CHARACTER)_Member,(FACTION)_NpcFaction)
+AND
+DB_PartyMembers(_Member)
+THEN
+PROC_GLO_PartyMembers_PreMakeNPCHook((CHARACTER)_Member);
+NOT DB_Players(_Member);
+MakeNPC(_Member);
+PROC_RemoveAllPolymorphs(_Member);
+DB_GLO_PartyMembers_DefaultFaction(_Member,_PlayerFaction);
+SetFaction(_Member,_NpcFaction);
+DB_NoLowAttitudeDialog(_Member);
+PROC_RemoveAllDialogEntriesForSpeaker(_Member);
+SetHasDialog(_Member,0);
+PROC_CheckPartyFull();
+PROC_CRIME_PrisonRemoveFugitiveStatuses(_Member);
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Member);
+ClearFlag((FLAG)ORI_State_Recruited_e78c0aab-fb48-98e9-3ed9-773a0c39988d, _Member);
+
+//Avatar Dismissal
+PROC
+PROC_GLO_PartyMembers_MakeNPC((CHARACTER)_Member)
+AND
+DB_Avatars(_Member)
+AND
+QRY_GLO_AvatarCanBeDismissed(_Member)
+THEN
+PROC_GLO_PartyMembers_PreMakeNPCHook((CHARACTER)_Member);
+RemoveSummons(_Member, 1);
+RemoveStatus(_Member,"DEAD_WILL_O_WISP",NULL_00000000-0000-0000-0000-000000000000); //For those that fell into a chasm and are now a soul echo -> Revert to original body before stuffing in closet.
+DB_DismissedAvatar(_Member);
+NOT DB_Players(_Member);
+NOT DB_Avatars(_Member);
+MakeNPC(_Member);
+PROC_RemoveAllPolymorphs(_Member);
+PROC_RemoveAllDialogEntriesForSpeaker(_Member);
+SetHasDialog(_Member,0);
+PROC_GLO_PartyMembers_DismissAvatar(_Member);
+PROC_CheckPartyFull();
+PROC_CRIME_PrisonRemoveFugitiveStatuses(_Member);
+
+//Dead avatar -> Instant dismissal
+PROC
+PROC_GLO_PartyMembers_DismissAvatar((CHARACTER)_Member)
+AND
+DB_Dead(_Member)
+AND
+GetPosition(_Member,_X,_Y,_Z)
+THEN
+PlayEffectAtPosition((EFFECTRESOURCE)VFX_Item_CharacterToInventory_01_7f4a38a8-7143-95e6-fdfd-11cc27fa6b54,_X,_Y,_Z);
+DismissAvatar(_Member,1);
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Member);
+PROC_GLO_AvatarDismissed((CHARACTER)_Member);
+
+//Alive Avatar -> Use animation + safety fallback timer
+PROC
+PROC_GLO_PartyMembers_DismissAvatar((CHARACTER)_Member)
+AND
+NOT DB_Dead(_Member)
+THEN
+DB_AvatarDismissal_WaitingForAnimFinished(_Member);
+PlayAnimation(_Member,(ANIMATION)CUST_Wardrobe_Dismiss_01_3cca6b7b-20b9-4bef-925d-0e0917107e19,"GLO_DismissedAvatar_AnimFinished");
+ObjectTimerLaunch(_Member,"GLO_DismissedAvatar_AnimFinished_Fallback",15000);
+
+PROC
+PROC_GLO_PartyMembers_DismissAvatar((CHARACTER)_Member)
+AND
+DB_CRIME_PrisonArrestedNonShapeshifted(_Member, _PrisonTrigger, _ArrestedNotShapeshifted)
+AND
+DB_IsArrested(_Arrester, _Member)
+AND
+DB_PlayerPrison((TRIGGER)_PrisonTrigger, (STRING)_PrisonCrimeName, (STRING)_PrisonCrimeNameAD, (STRING)_FugitiveStatus)
+THEN
+NOT DB_CRIME_PrisonArrestedNonShapeshifted(_Member, _PrisonTrigger, _ArrestedNotShapeshifted);
+NOT DB_CRIME_PrisonKnowCurrentShape(_Member, _PrisonTrigger);
+ClearFlag((FLAG)IsInPrison_c9b75b21-6eba-065e-7680-fc9a0c5838e4, _Member, 0);
+NOT DB_IsArrested(_Arrester, _Member);
+
+IF
+AnimationEvent(_Member, "AnimationSetOffStage", 0)
+AND
+DB_AvatarDismissal_WaitingForAnimFinished((CHARACTER)_Member)
+THEN
+NOT DB_AvatarDismissal_WaitingForAnimFinished(_Member);
+ObjectTimerCancel(_Member,"GLO_DismissedAvatar_AnimFinished_Fallback");
+DismissAvatar(_Member,1);
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Member);
+PROC_GLO_AvatarDismissed((CHARACTER)_Member);
+
+IF
+CharacterReservedUserIDChanged(_AvatarBeingDismissed,_,_NewUserID)
+AND
+_NewUserID != -65536
+AND
+DB_AvatarDismissal_WaitingForAnimFinished(_AvatarBeingDismissed)
+THEN
+StopAnimation(_AvatarBeingDismissed,1);
+ObjectTimerCancel(_AvatarBeingDismissed,"GLO_DismissedAvatar_AnimFinished_Fallback");
+NOT DB_AvatarDismissal_WaitingForAnimFinished(_AvatarBeingDismissed);
+PROC_GLO_PartyMembers_CheckAdd(_AvatarBeingDismissed,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EntityEvent(_Member,"GLO_DismissedAvatar_AnimFinished")
+AND
+DB_AvatarDismissal_WaitingForAnimFinished((CHARACTER)_Member)
+THEN
+NOT DB_AvatarDismissal_WaitingForAnimFinished(_Member);
+ObjectTimerCancel(_Member,"GLO_DismissedAvatar_AnimFinished_Fallback");
+DismissAvatar(_Member,1);
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Member);
+PROC_GLO_AvatarDismissed((CHARACTER)_Member);
+
+IF
+ObjectTimerFinished(_Member,"GLO_DismissedAvatar_AnimFinished_Fallback")
+AND
+DB_AvatarDismissal_WaitingForAnimFinished((CHARACTER)_Member)
+THEN
+NOT DB_AvatarDismissal_WaitingForAnimFinished(_Member);
+DismissAvatar(_Member,1);
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Member);
+PROC_GLO_AvatarDismissed((CHARACTER)_Member);
+
+
+//Use this proc if you want to do check thing on a player right before he becomes an NPC.
+PROC
+PROC_GLO_PartyMembers_PreMakeNPCHook((CHARACTER)_Member)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_AvatarDismissed((CHARACTER)_Member)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Transfer all items of an NPC to a player
+PROC
+PROC_GLO_PartyMembers_TransferInventoryToPlayer((CHARACTER)_Companion,(CHARACTER)_Player, (STRING)_Reason)
+AND
+GetPosition(_Player,_X,_Y,_Z)
+AND
+CreateAt(LOOT_GEN_Backpack_A_Posed_A_47805d79-88f1-4933-86eb-f78f67cbc33f,_X,_Y,_Z,0,0,"",_BackPack)
+THEN
+DB_CompanionLeavingBackPack(_Companion,_Player,(ITEM)_BackPack);
+MoveAllItemsTo(_Companion,_BackPack, 0, 0, 1, 0);
+MoveAllStoryItemsTo(_Companion,_BackPack,1,1);
+ToInventory(_BackPack,_Player);
+PROC_GLO_PartyMembers_ShowPermanentLeaveMessage(_Player,_Reason);
+
+PROC
+PROC_GLO_PartyMembers_ShowPermanentLeaveMessage((CHARACTER)_Player,(STRING)_Reason)
+AND
+NOT QRY_PartyMembers_BlockLeaveMessage(_Reason)
+THEN
+OpenMessageBox(_Player,"GLO_CompanionLeftPermanently");
+
+QRY
+QRY_PartyMembers_BlockLeaveMessage((STRING)_Reason)
+AND
+DB_Origin_TemporaryLeaveReason(_, _Reason)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Support
+QRY
+QRY_GLO_PartyMembers_AnyTempRemoved()
+AND
+DB_GLO_PartyMembers_TempRemoved(_,_)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("ResetIsPlayerDB")
+AND
+QRY_GLO_PartyMembers_AnyTempRemoved()
+THEN
+DebugBreak("Do not use ResetIsPlayerDB while characters have been temporarily removed from the party. Nothing done.");
+
+IF
+TextEvent("ResetIsPlayerDB")
+AND
+NOT QRY_GLO_PartyMembers_AnyTempRemoved()
+AND
+DB_Players(_Player)
+AND
+IsPlayer(_Player, 0)
+THEN
+NOT DB_Players(_Player);
+
+//END_REGION
+
+//REGION Trigger registration
+PROC
+PROC_TriggerRegisterForPlayers((TRIGGER)_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_RegisterLevelObject("PlayerTriggers", _Trigger);
+
+PROC
+PROC_TriggerUnregisterForPlayers((TRIGGER)_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_UnregisterLevelObject("PlayerTriggers", _Trigger);
+
+
+PROC
+PROC_TriggerRegisterForParty((TRIGGER)_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_RegisterLevelObject("PartyTriggers", _Trigger);
+
+PROC
+PROC_TriggerUnregisterForParty((TRIGGER)_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_UnregisterLevelObject("PartyTriggers", _Trigger);
+
+PROC
+PROC_LevelObjectRegistered("PlayerTriggers", (GUIDSTRING)_Trigger)
+AND
+DB_CurrentLevel(_Level)
+THEN
+DB_ActivePartyTriggers(_Level, (TRIGGER)_Trigger, 0);
+
+PROC
+PROC_LevelObjectUnregistered("PlayerTriggers", (GUIDSTRING)_Trigger)
+AND
+DB_ActivePartyTriggers(_Level, (TRIGGER)_Trigger, 0)
+THEN
+NOT DB_ActivePartyTriggers(_Level, (TRIGGER)_Trigger, 0);
+PROC_UnregisterPartyTrigger(_Level,_Trigger);
+
+PROC
+PROC_LevelObjectRegistered("PartyTriggers", (GUIDSTRING)_Trigger)
+AND
+DB_CurrentLevel(_Level)
+THEN
+DB_ActivePartyTriggers(_Level, (TRIGGER)_Trigger, 1);
+
+PROC
+PROC_LevelObjectUnregistered("PartyTriggers", (GUIDSTRING)_Trigger)
+AND
+DB_ActivePartyTriggers(_Level, (TRIGGER)_Trigger, 1)
+THEN
+NOT DB_ActivePartyTriggers(_Level, (TRIGGER)_Trigger, 1);
+PROC_UnregisterPartyTrigger(_Level,_Trigger);
+
+// New level or trigger -> register triggers
+IF
+DB_CurrentLevel(_Level)
+AND	
+DB_ActivePartyTriggers(_Level,_Trigger, _IncludePartyMembers)
+THEN
+PROC_RegisterPartyTrigger(_Level,_Trigger,_IncludePartyMembers);
+
+//New partymember
+IF
+DB_PartyMembers(_PartyMember)
+THEN
+PROC_RegisterPartyTriggersForNewPartymember(_PartyMember);
+
+PROC
+PROC_RegisterPartyTriggersForNewPartymember((CHARACTER)_PartyMember)
+AND
+DB_CurrentLevel(_Level)
+AND	
+DB_ActivePartyTriggers(_Level,_Trigger, 1)
+AND
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_PartyMember)
+THEN
+TriggerRegisterForCharacter(_Trigger,_PartyMember);
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_PartyMember);
+
+//New player
+PROC
+PROC_RegisterPartyTriggersForNewPartymember((CHARACTER)_PartyMember)
+AND
+DB_Players(_PartyMember)
+AND
+DB_CurrentLevel(_Level)
+AND	
+DB_ActivePartyTriggers(_Level,_Trigger, 0)
+AND
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_PartyMember)
+THEN
+TriggerRegisterForCharacter(_Trigger,_PartyMember);
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_PartyMember);
+
+//No longer a player
+IF
+CharacterLeftParty(_PartyMember)
+AND
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_PartyMember)
+THEN
+TriggerUnregisterForCharacter(_Trigger,_PartyMember);
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_PartyMember);
+
+//All players
+PROC
+PROC_RegisterPartyTrigger((STRING)_Level,(TRIGGER)_Trigger,0)
+AND
+DB_Players(_Player)
+AND
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player)
+THEN
+TriggerRegisterForCharacter(_Trigger,_Player);
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player);
+
+//All Partymembers
+PROC
+PROC_RegisterPartyTrigger((STRING)_Level,(TRIGGER)_Trigger,1)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player)
+THEN
+TriggerRegisterForCharacter(_Trigger,_Player);
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player);
+
+PROC
+PROC_UnregisterPartyTrigger((STRING)_Level,(TRIGGER)_Trigger)
+AND
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player)
+THEN
+TriggerUnregisterForCharacter(_Trigger,_Player);
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player);
+
+PROC
+PROC_LevelBecameUnreachable((STRING)_Level)
+THEN
+PROC_GLO_PartyMembers_LevelUnreachable(_Level);
+
+PROC
+PROC_GLO_PartyMembers_LevelUnreachable((STRING)_Level)
+AND
+DB_ActivePartyTriggers(_Level,_Trigger,_)
+AND
+DB_WasInRegion(_Character,_Trigger)
+THEN
+NOT DB_WasInRegion(_Character,_Trigger);
+
+PROC
+PROC_GLO_PartyMembers_LevelUnreachable((STRING)_Level)
+AND
+DB_ActivePartyTriggers(_Level,_Trigger,0)
+THEN
+PROC_UnregisterLevelObject("PlayerTriggers",_Trigger);
+NOT DB_ActivePartyTriggers(_Level,_Trigger,0);
+
+PROC
+PROC_GLO_PartyMembers_LevelUnreachable((STRING)_Level)
+AND
+DB_ActivePartyTriggers(_Level,_Trigger,1)
+THEN
+PROC_UnregisterLevelObject("PartyTriggers",_Trigger);
+NOT DB_ActivePartyTriggers(_Level,_Trigger,1);
+
+// With the regular flow only happens in _Level is the current level because we also
+// want to unregister the trigger, but that will never be the case anymore here
+PROC
+PROC_GLO_PartyMembers_LevelUnreachable((STRING)_Level)
+AND
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player)
+THEN
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Player);
+//END_REGION
+
+//REGION Set flag if party member resurrected while out of party
+IF
+Resurrected(_Character)
+AND
+DB_GLO_Playable(_Character)
+AND
+NOT DB_Players(_Character)
+THEN
+SetFlag(GLO_State_ResurrectedOutOfParty_6d11649a-f5b0-4919-b54b-e66188ddd414, _Character, 0);
+
+
+//END_REGION
+
+//REGION Default Genitalia for players that didn't go through CC or picked an origin with a fixed appaerance
+IF
+DB_Players(_Player)
+AND
+NOT DB_GenitalTagAdded(_Player)
+AND
+IsTagged(_Player,(TAG)GENITAL_PENIS_d27831df-2891-42e4-b615-ae555404918b,1)
+THEN
+DB_GenitalTagAdded(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_GenitalTagAdded(_Player)
+AND
+IsTagged(_Player,(TAG)GENITAL_VULVA_a0738fdf-ca0c-446f-a11d-6211ecac3291,1)
+THEN
+DB_GenitalTagAdded(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_GenitalTagAdded(_Player)
+AND
+IsTagged(_Player,(TAG)MALE_8f74d144-041e-4035-a9ac-72f41fc32de7,1)
+THEN
+SetTag(_Player,(TAG)GENITAL_PENIS_d27831df-2891-42e4-b615-ae555404918b);
+DB_GenitalTagAdded(_Player);
+
+IF
+DB_Players(_Player)
+AND
+NOT DB_GenitalTagAdded(_Player)
+AND
+IsTagged(_Player,(TAG)FEMALE_3806477c-65a7-4100-9f92-be4c12c4fa4f,1)
+THEN
+SetTag(_Player,(TAG)GENITAL_VULVA_a0738fdf-ca0c-446f-a11d-6211ecac3291);
+DB_GenitalTagAdded(_Player);
+
+IF
+TagSet(_Player,(TAG)GENITAL_VULVA_a0738fdf-ca0c-446f-a11d-6211ecac3291)
+AND
+IsTagged(_Player,(TAG)GENITAL_PENIS_d27831df-2891-42e4-b615-ae555404918b,1)
+THEN
+ClearTag(_Player,(TAG)GENITAL_PENIS_d27831df-2891-42e4-b615-ae555404918b);
+
+IF
+TagSet(_Player,(TAG)GENITAL_PENIS_d27831df-2891-42e4-b615-ae555404918b)
+AND
+IsTagged(_Player,(TAG)GENITAL_VULVA_a0738fdf-ca0c-446f-a11d-6211ecac3291,1)
+THEN
+ClearTag(_Player,(TAG)GENITAL_VULVA_a0738fdf-ca0c-446f-a11d-6211ecac3291);
+//END_REGION
+
+//REGION Dismissable Avatar Party Dialogues
+IF
+CharacterReservedUserIDChanged(_,_,_)
+THEN
+PROC_CheckDismissableAvatars();
+
+IF
+DB_Avatars(_Avatar)
+THEN
+PROC_CheckDismissableAvatars();
+
+IF
+DB_DismissedAvatar(_Avatar)
+THEN
+NOT DB_AvatarHasDismissableDialog(_Avatar);
+PROC_CheckDismissableAvatars();
+
+PROC
+PROC_GLO_AvatarDismissed(_)
+THEN
+PROC_CheckDismissableAvatars();
+
+PROC
+PROC_GLO_PartyMembers_AddHook(_,_)
+THEN
+PROC_CheckDismissableAvatars();
+
+IF
+CharacterLeftParty(_)
+THEN
+PROC_CheckDismissableAvatars();
+
+PROC
+PROC_SetBlockDismiss((CHARACTER)_Player,(INTEGER)_State)
+THEN
+PROC_CheckDismissableAvatars();
+
+//Active Camp changed
+IF
+LevelLoaded(_Region)
+THEN
+PROC_CheckDismissableAvatars();
+
+//Only do it once a frame and on a frame delay to avoid chain reactions and race conditions.
+PROC
+PROC_CheckDismissableAvatars()
+AND
+NOT DB_CheckDismissableAvatarsEventSent(1)
+THEN
+DB_CheckDismissableAvatarsEventSent(1);
+TimerLaunch("CheckDismissableAvatars-Framedelay",0);
+
+IF
+TimerFinished("CheckDismissableAvatars-Framedelay")
+THEN
+NOT DB_CheckDismissableAvatarsEventSent(1);
+PROC_UpdateAllDismissableAvatars();
+
+PROC
+PROC_UpdateAllDismissableAvatars()
+AND
+DB_Avatars(_Avatar)
+AND
+NOT QRY_MaybeSetAvatarDismissable(_Avatar)
+AND
+DB_AvatarHasDismissableDialog(_Avatar)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_Avatar);
+SetHasDialog(_Avatar,0);
+NOT DB_AvatarHasDismissableDialog(_Avatar);
+
+QRY QRY_MaybeSetAvatarDismissable((CHARACTER)_Avatar)
+AND
+QRY_GLO_AvatarCanBeDismissed(_Avatar)
+THEN
+PROC_SetAvatarDismissable(_Avatar);
+
+PROC
+PROC_SetAvatarDismissable((CHARACTER)_Avatar)
+AND
+NOT DB_AvatarHasDismissableDialog(_Avatar)
+THEN
+DB_Dialogs(_Avatar,(DIALOGRESOURCE)GLO_AvatarDismissal_3132e4bf-3c94-1338-356b-cc105e26d407);
+DB_AvatarHasDismissableDialog(_Avatar);
+
+//If during GLO_AvatarDismissal the 2 players are no longer the same user, cancel the dialog immediately.
+IF
+CharacterReservedUserIDChanged(_,_,_)
+AND
+DB_DialogName((DIALOGRESOURCE)GLO_AvatarDismissal_3132e4bf-3c94-1338-356b-cc105e26d407,_DialogID)
+AND
+DB_DialogPlayers(_DialogID,_Player1,1)
+AND
+DB_DialogPlayers(_DialogID,_Player2,2)
+AND
+GetReservedUserID((CHARACTER)_Player1,_UserID1)
+AND
+GetReservedUserID((CHARACTER)_Player2,_UserID2)
+AND
+_UserID1 != _UserID2
+THEN
+PROC_ForceStopDialog(_Player1);
+
+//Conditions for avatar dismissal:
+//-Camp Available
+//-Not an origin
+//-User has another avatar
+//-DEAD OR No Companion Dismiss Conditions (the same conditions that decide if a companion can be dismissed apply to avatar as well and are already neatly prepackaged in DB_BlockDismissable). These don't apply for dead avatars however (Dismissal by Withers)
+//-For kicking Avatars through a dialogue, Avatars in the same dialogue are allowed
+//-No followers on Avatar
+QRY
+QRY_GLO_AvatarCanBeDismissed((CHARACTER)_DismissCandidate)
+AND
+QRY_GLO_AvatarCanBeDismissed((CHARACTER)_DismissCandidate, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_AvatarCanBeDismissed((CHARACTER)_DismissCandidate, (INTEGER)_AllowSameDialog) //Alive Avatar Definition
+AND
+NOT QRY_GLO_AvatarDismissalForbidden()
+AND
+DB_ActiveCamp(_)
+AND
+NOT DB_Dead(_DismissCandidate)
+AND
+NOT QRY_BlockDismissableConditionalCanTalk(_DismissCandidate, 1)
+AND
+QRY_AvatarDismissal_CanKickOrigins(_DismissCandidate)
+AND
+DB_Avatars(_OtherAvatar)
+AND
+_OtherAvatar != _DismissCandidate
+AND
+QRY_SameUser(_OtherAvatar,_DismissCandidate)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_AvatarCanBeDismissed((CHARACTER)_DismissCandidate, (INTEGER)_AllowSameDialog) //Dead Avatar Definition
+AND
+NOT QRY_GLO_AvatarDismissalForbidden()
+AND
+DB_ActiveCamp(_)
+AND
+DB_Dead(_DismissCandidate)
+AND
+QRY_AvatarDismissal_CanKickOrigins(_DismissCandidate)
+AND
+DB_Avatars(_OtherAvatar)
+AND
+_OtherAvatar != _DismissCandidate
+AND
+QRY_SameUser(_OtherAvatar,_DismissCandidate)
+THEN
+DB_NOOP(1);
+
+//Always allow kicking generics
+QRY
+QRY_AvatarDismissal_CanKickOrigins((CHARACTER)_DismissCandidate)
+AND
+NOT DB_OriginInPartyGlobal(_DismissCandidate,_)
+THEN
+DB_NOOP(1);
+
+//Only allow kicking origins if the debug command was set.
+QRY
+QRY_AvatarDismissal_CanKickOrigins((CHARACTER)_DismissCandidate)
+AND
+DB_OriginInPartyGlobal(_DismissCandidate,_)
+AND
+DB_AvatarDismissal_AllowOrigins(1)
+THEN
+DB_NOOP(1);
+
+//Temp Avatar Retrieval Mechanic: Click on them in camp
+IF
+DialogStartRequested(_DismissedAvatar,_Player)
+AND
+DB_DismissedAvatar((CHARACTER)_DismissedAvatar)
+THEN
+PROC_GLO_PartyMembers_CheckAdd(_DismissedAvatar,(CHARACTER)_Player);
+
+//Taken out of the avatar container
+IF
+DroppedBy(_DismissedAvatar,_UnsummonerOrNULL)
+AND
+DB_DismissedAvatar((CHARACTER)_DismissedAvatar)
+THEN
+PROC_GLO_PartyMembers_CheckAdd(_DismissedAvatar,_UnsummonerOrNULL);
+
+//Something went wrong if still a DB_DismissedAvatar after the previous rule -> Fallback put them back in the closet.
+IF
+DroppedBy(_DismissedAvatar,_UnsummonerOrNULL)
+AND
+DB_DismissedAvatar((CHARACTER)_DismissedAvatar)
+THEN
+DismissAvatar(_DismissedAvatar,1);
+PROC_CheckPartyFull();
+
+IF
+TextEvent("StoreAvatar")
+AND
+GetHostCharacter(_Avatar)
+AND
+DB_Avatars(_Avatar)
+AND
+GetReservedUserID(_Avatar,_UserID)
+AND
+DB_Avatars(_Avatar2)
+AND
+_Avatar != _Avatar2
+AND
+GetReservedUserID(_Avatar2,_UserID)
+THEN
+MakePlayerActive(_Avatar2);
+PROC_GLO_PartyMembers_Remove(_Avatar,_Avatar2,1,1);
+
+IF
+TextEvent("RetrieveAvatar")
+AND
+QRY_OnlyOnce_Reset("Debug_RetrieveAvatar")
+AND
+DB_DismissedAvatar(_Member)
+AND
+QRY_OnlyOnce("Debug_RetrieveAvatar")
+AND
+GetHostCharacter(_Host)
+THEN
+PROC_GLO_PartyMembers_CheckAdd(_Member,_Host);
+
+IF
+TextEvent("alloworiginavatardismissal")
+THEN
+DB_AvatarDismissal_AllowOrigins(1);
+PROC_CheckDismissableAvatars();
+
+//Avatar Dismissal Killswitch
+QRY
+QRY_GLO_AvatarDismissalForbidden()
+AND
+DB_GLO_AvatarDismissalForbidden(1)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("avatardismissal-on")
+THEN
+NOT DB_GLO_AvatarDismissalForbidden(1);
+PROC_CheckDismissableAvatars();
+
+IF
+TextEvent("avatardismissal-off")
+THEN
+DB_GLO_AvatarDismissalForbidden(1);
+PROC_CheckDismissableAvatars();
+
+IF
+GameOption("avatardismissal",_Str)
+AND
+DB_BooleanStrings(0,_Str)
+THEN
+DB_GLO_AvatarDismissalForbidden(1);
+PROC_CheckDismissableAvatars();
+
+IF
+LevelGameplayStarted(_, _)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_AvatarDismissal_CanKickOrigins(_Avatar)
+AND
+NOT DB_OriginKickFromPartyFlags(_Avatar, _, _)
+THEN
+PROC_GLO_SetAvatarKickableFlag(_Avatar);
+
+IF
+DB_Avatars(_Avatar)
+AND
+NOT DB_OriginKickFromPartyFlags(_Avatar, _, _)
+AND
+QRY_AvatarDismissal_CanKickOrigins(_Avatar)
+AND
+QRY_AnyActiveLevel()
+THEN
+PROC_GLO_SetAvatarKickableFlag(_Avatar);
+
+PROC
+PROC_PartyMemberKickFromPartyFlags_Update(_ID)
+AND
+DB_GLO_AvatarKickableFlags_Assigned(_Avatar, _, _, _, _Name)
+AND
+DB_GLO_CompanionSwapDialogue(_Dialogue)
+THEN
+PROC_GLO_AvatarKickable_DialogueNames((CHARACTER)_Avatar, (STRING)_Name);
+
+PROC
+PROC_PartyMemberKickFromPartyFlags_Update(_ID)
+AND
+DB_GLO_AvatarKickableFlags_Assigned(_Avatar, _ShowFlag, _, _, _)
+AND
+DB_DialogPlayers(_ID, _Speaker, _)
+AND
+DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT QRY_GLO_SetAvatarControlledFlag(_Speaker, _ShowFlag, _Avatar)
+THEN
+ClearFlag(_ShowFlag, _Speaker, _ID);
+
+QRY
+QRY_GLO_SetAvatarControlledFlag((GUIDSTRING)_Speaker, (FLAG)_ShowFlag, (GUIDSTRING)_Avatar)
+AND
+_Speaker != _Avatar
+AND
+QRY_SameUser((CHARACTER)_Speaker, (CHARACTER)_Avatar)
+THEN
+SetFlag(_ShowFlag, _Speaker, 0);
+
+PROC
+PROC_GLO_SetAvatarKickableFlag((CHARACTER)_Avatar)
+AND
+SysFactAtIndex("DB_GLO_AvatarKickableFlags", 4, 1, "DB_GLO_AvatarKickableFlag_Picked")
+AND
+DB_GLO_AvatarKickableFlag_Picked(_ShowFlag, _KickFlag, _KickableFlag, _Name)
+AND
+DB_GLO_AvatarKickableFlags(_ShowFlag, _KickFlag, _KickableFlag, _Name)
+THEN
+NOT DB_GLO_AvatarKickableFlags(_ShowFlag, _KickFlag, _KickableFlag, _Name);
+PROC_GLO_AvatarKickable_DialogueNames(_Avatar, _Name);
+DB_OriginKickFromPartyFlags(_Avatar, _KickFlag, _KickableFlag);
+NOT DB_GLO_AvatarKickableFlag_Picked(_ShowFlag, _KickFlag, _KickableFlag, _Name);
+DB_GLO_AvatarKickableFlags_Assigned(_Avatar, _ShowFlag, _KickFlag, _KickableFlag, _Name);
+
+PROC
+PROC_GLO_AvatarKickable_DialogueNames((CHARACTER)_Avatar, (STRING)_NameVariable)
+AND
+GetDisplayName(_Avatar, _Name)
+AND
+DB_GLO_CompanionSwapDialogue(_Dialogue)
+THEN
+DialogSetVariableTranslatedString(_Dialogue, _NameVariable, _Name);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

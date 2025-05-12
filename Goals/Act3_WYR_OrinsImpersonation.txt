@@ -1,0 +1,2060 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION World Impersonation related
+DB_WYR_OrinsImpersonation_WorldImpersonationTotal(2); // total number of impersonations allowed before stopping.
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Journalist",			(FLAG)WYR_OrinsImpersonation_CanImpersonate_Journalist_b57ac526-9ab2-413b-bba1-99e3a09f530a,	30, (CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42); // Priority numbers not implemented yet, just for future me. For now priority is based on sequence.
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Smith",				(FLAG)WYR_OrinsImpersonation_CanImpersonate_Smith_4d5fc872-029e-4766-8034-2d68d7369f11, 		40, (CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef); // Integer is the priority. Higher the number, the more likely for chosing the impersonation - if its valid.
+DB_WYR_OrinsImpersonation_WorldImpersonationList("FlamingFist", 		(FLAG)WYR_OrinsImpersonation_CanImpersonate_FlamingFist_27422427-a983-409c-8b09-b1873f39d91b,	20, (CHARACTER)S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1);
+DB_WYR_OrinsImpersonation_WorldImpersonationList("DyingAttacker",		(FLAG)WYR_OrinsImpersonation_CanImpersonate_DyingAttacker_9fe49101-16bb-412e-8bbc-da6aeb33ba26,	10, (CHARACTER)S_GLO_SmugglersCave_DyingAttacker_b9ff6ee5-b7d1-4bed-af3b-eb6c39dcd169);
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Dryad",				(FLAG)WYR_OrinsImpersonation_CanImpersonate_Dryad_4ea59eec-5124-4146-94ce-221e94ef2e1d, 		50, (CHARACTER)S_WYR_Circus_LoveDryad_a8bce35d-17ee-46e3-8d56-1d0d29c4a01e);
+
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs("Journalist",		(DIALOGRESOURCE)WYR_OrinsImpersonation_OrinJournalist_9d68c24d-8d5e-06b8-b1eb-8458451e077a);
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs("Smith",			(DIALOGRESOURCE)WYR_OrinsImpersonation_SmithOrin_1ac3d821-7909-422b-46b3-d09975215f63);
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs("FlamingFist",		(DIALOGRESOURCE)WYR_OrinsImpersonation_OrinFlamingFist_cdca26dd-5b9d-93e6-f760-eb5b47062d2e);
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs("DyingAttacker",	(DIALOGRESOURCE)WYR_OrinsImpersonation_OrinDyingAttacker_939f417e-0f96-4dee-aa06-4c2d735e8fc0);
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs("Dryad",			(DIALOGRESOURCE)WYR_Circus_LoveDryad_d0c00951-4d09-d1a6-2ab3-6c6ba1932a25);
+
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("Journalist",		(TRIGGER)S_WYR_OrinsImpersonation_Journalist_PosTrigger_c5b9f53d-1b21-4636-978b-7525e01ff784);
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("Smith",			(TRIGGER)S_WYR_OrinsImpersonation_Smith_PosTrigger_a423e0b9-a35d-41e0-966c-e7a9c311bd81);
+//DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("Smith",			(TRIGGER)S_BHVR_WRLD_WYR_OrinsImpersonation_Anvil_SceneTrigger_001_2f93f84c-2fd9-4580-b1fc-087d2a04bc98);
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("FlamingFist",		(TRIGGER)S_WYR_OrinsImpersonation_FlamingFist_PosTrigger_06aaec7a-fd57-403a-8b80-a6d100781bc2);
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("DyingAttacker",	(TRIGGER)S_WYR_OrinsImpersonation_DyingAttacker_PosTrigger_60bac7c3-a574-4336-9384-1281aacdef1c);
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("Dryad",			(TRIGGER)S_WYR_Circus_LoveDryadPos_fd253957-a697-4d64-a170-e9648c961036);
+
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag("Journalist",		(FLAG)WYR_OrinsImpersonation_State_Impersonated_Journalist_d71fcc28-0315-4825-bf3f-a563abbd25ed);
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag("Smith",			(FLAG)WYR_OrinsImpersonation_State_Impersonated_Smith_97b39a81-b28b-4228-b59d-18db921aef0a);
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag("FlamingFist",	(FLAG)WYR_OrinsImpersonation_State_Impersonated_FlamingFist_3c85edc1-106c-418b-a86d-afb025c0a50e);
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag("DyingAttacker",	(FLAG)WYR_OrinsImpersonation_State_Impersonated_DyingAttacker_4a410be2-27f3-45a3-8b2f-bdbf568930f6);
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag("Dryad",			(FLAG)WYR_OrinsImpersonation_State_Impersonated_Dryad_9c8a1a80-e51c-4bba-b028-f43dabc4bddc);
+
+DB_WYR_OrinsImpersonation_WorldImpersonationHasMetFlag("Journalist",	(FLAG)WYR_OrinsImpersonation_Hasmet_Journalist_1460a3c7-eb48-8a45-10c0-75d4842f969e);
+DB_WYR_OrinsImpersonation_WorldImpersonationHasMetFlag("Smith",			(FLAG)WYR_OrinsImpersonation_HasMet_OrinAsSmith_da78ec0a-5593-ad2b-ca15-5091efa95600);
+DB_WYR_OrinsImpersonation_WorldImpersonationHasMetFlag("FlamingFist",	(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_WYR_OrinsImpersonation_WorldImpersonationHasMetFlag("DyingAttacker",	(FLAG)WYR_SmugglersCave_DyingAttacker_Hasmet_f4931b5a-2694-709a-c6ab-2f5b83a0f0c4);
+DB_WYR_OrinsImpersonation_WorldImpersonationHasMetFlag("Dryad",			(FLAG)WYR_OrinsImpersonation_HasMet_OrinAsDryad_9d16c43f-4c34-fd74-a753-8f6936212e49);
+
+DB_WYR_OrinsImpersonation_ApproachTriggers("Journalist", 				(TRIGGER)S_WYR_OrinsImpersonation_Journalist_ApproachTrigger_0d395694-7fa1-4cd9-a745-341fef8d5821);
+DB_WYR_OrinsImpersonation_ApproachTriggers("Smith", 					(TRIGGER)S_WYR_OrinsImpersonation_Smith_ApproachTrigger_e220c2ce-abf4-4e32-99b0-f8fe23143104);
+DB_WYR_OrinsImpersonation_ApproachTriggers("FlamingFist", 				(TRIGGER)S_WYR_OrinsImpersonation_FlamingFist_ApproachTrigger_a864c98a-07da-48a7-82ea-684d461ea5bc);
+DB_WYR_OrinsImpersonation_ApproachTriggers("DyingAttacker", 			(TRIGGER)S_WYR_OrinsImpersonation_DyingAttacker_ApproachTrigger_b8f48597-6490-4775-a213-7c8522ab3d6e);
+DB_WYR_OrinsImpersonation_ApproachTriggers("Dryad", 					(TRIGGER)S_WYR_OrinsImpersonation_Dryad_ApproachTrigger_d12f03c8-3dd1-40d9-96c5-fc6a662096a6);
+
+DB_WYR_OrinsImpersonation_PostOrinDeathPos("Journalist", 				(TRIGGER)S_WYR_OrinsImpersonation_JournalistTemple_PostOrin_PosTrigger_204687ec-5630-41d9-856b-e8f1255e6e2f);
+DB_WYR_OrinsImpersonation_PostOrinDeathPos("Smith", 					(TRIGGER)S_GLO_OrinsImpersonation_SmithTemple_PostOrin_PosTrigger_e54fb528-85ef-49f6-aef9-d74b401e058a);
+DB_WYR_OrinsImpersonation_PostOrinDeathPos("FlamingFist", 				(TRIGGER)S_WYR_OrinsImpersonation_FlamingFistTemple_PostOrin_PosTrigger_b7269e30-1537-4284-86f6-a982291f73bc);
+DB_WYR_OrinsImpersonation_PostOrinDeathPos("DyingAttacker", 			(TRIGGER)S_WYR_OrinsImpersonation_DyingAttackerTemple_PostOrin_PosTrigger_07dea2a6-bfe5-425f-b60d-99487099c9c8);
+DB_WYR_OrinsImpersonation_PostOrinDeathPos("Dryad", 					(TRIGGER)S_WYR_OrinsImpersonation_Dryad_PostOrin_PosTrigger_3e58c5d3-5693-4874-8ecc-4767e4d73a5d);
+
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("");
+NOT DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("");
+//END_REGION
+
+// to track when Smith is actually killed.
+DB_PermaDefeatedFlag(S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (FLAG)WYR_OrinsImpersonation_State_Smith_PermaDefeated_9d67753b-cd72-402a-85eb-fdb59dcdd198);
+
+// track Peaceful resolution for the Smith after Orin tries to frame the players.
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_OrinsImpersonation_State_Smith_PeacefulResolution_b541bec5-fefb-480e-9891-313398dd32ff, (DIALOGRESOURCE)WYR_OrinsImpersonation_Smith_1e493c0e-c863-e14f-c46b-d3e539af3445);
+
+PROC_WYR_OrinsImpersonation_InitWorldImpersonations();
+PROC_WYR_OrinsImpersonation_InitOrin();
+KBSECTION
+//REGION Upon loading Wyrm's Crossing, setup impersonations or not
+IF
+LevelLoaded("BGO_Main_A") // If Wyrm's Crossing was loaded
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_State_WorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9) // if world impersonations is still enabled.
+AND
+NOT DB_GlobalFlag((FLAG)WYR_KillDirectorGortash_Knows_CampCompromised_62f279b8-9f36-4f4a-92d3-edc16cb4d760) // if Gortash has not warned the players yet about Orin's impersonations.
+THEN
+//PROC_WYR_OrinsImpersonation_ResetAllImpersonations();
+PROC_WYR_OrinsImpersonation_SetupOrin();
+
+IF
+LevelLoaded("BGO_Main_A") // If Wyrm's Crossing was loaded, and impersonations were already disabled, and Orin is still alive.
+AND
+NOT DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_State_WorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Orin_State_PermaDefeated_c716e4d9-e6ed-445c-a710-ee4d91c67298)
+THEN
+PROC_WYR_OrinsImpersonation_RemoveAllApproachTrigger();
+PROC_WYR_OrinsImpersonation_ResetAllImpersonations();
+
+IF
+LevelLoaded("BGO_Main_A") // If Wyrm's Crossing was loaded, and impersonations were already disabled, and Orin is NOT alive.
+AND
+NOT DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_State_WorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9)
+AND
+DB_GlobalFlag((FLAG)GLO_Orin_State_PermaDefeated_c716e4d9-e6ed-445c-a710-ee4d91c67298)
+THEN
+PROC_WYR_OrinsImpersonation_RemoveAllApproachTrigger();
+PROC_WYR_OrinsImpersonation_ResetAllImpersonations();
+//END_REGION
+
+//REGION Upon Unloading Wyrm's Crossing, make sure Orin drops her shapeshift of Dryad because she's a local character and would cause a crash.
+PROC
+PROC_LevelUnloading("BGO_Main_A")
+AND
+DB_GEN_OrinsAbduction_IsTransformed(1)
+THEN
+NOT DB_GEN_OrinsAbduction_IsTransformed(1);
+RemoveTransforms(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+//END_REGION
+
+//REGION React to Gortash telling players about Orin. Disable World Impersonations (and reset any if any was currently ongoing). Enable In-Camp Abductions (done in OrinsAbduction goal)
+IF
+DB_GlobalFlag((FLAG)WYR_KillDirectorGortash_Knows_CampCompromised_62f279b8-9f36-4f4a-92d3-edc16cb4d760)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_State_WorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9);
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations(); // this would also reset the current impersonation if one was currently on-going.
+PROC_WYR_OrinsImpersonation_OrinTeleportOut();
+//END_REGION
+
+//REGION React to Gortash being killed. Disable World Impersonations (and reset any if any was currently ongoing). Enable In-Camp Abductions (done in OrinsAbduction goal)
+IF
+DB_GlobalFlag((FLAG)GLO_Gortash_State_PermaDefeated_74dd56ff-7e00-42a6-a0f3-0d122f364769)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_State_WorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9);
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations(); // this would also reset the current impersonation if one was currently on-going.
+PROC_WYR_OrinsImpersonation_OrinTeleportOut();
+//END_REGION
+
+//REGION Initialises the World Impersonations targets.
+// for single fire rules.
+PROC
+PROC_WYR_OrinsImpersonation_InitWorldImpersonations()
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationTotal(_TotalCount)
+THEN
+// Setup the counter used to count the number of impersonations happened.
+PROC_DeclareCounter("CurImpersonationsLeft"); // setup the counter to track the number of World Impersonations left.
+PROC_IncreaseCounter("CurImpersonationsLeft", _TotalCount); // setup total impersonation allowed to happen. Will count down to 0.
+PROC_WYR_OrinsImpersonation_InitApproachTriggers(); // Init Approach Triggers
+
+// for iterative rules
+PROC
+PROC_WYR_OrinsImpersonation_InitWorldImpersonations()
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList(_CurImpName, _CurImpFlag, _, _)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)_CurImpFlag); // be default, all should be able to be impersonated.
+PROC_WYR_OrinsImpersonation_ResetImpersonated((STRING)_CurImpName); // Init whatever impersonations required. These are the characters NORMAL state.
+//END_REGION
+
+//REGION Init Approach Triggers
+PROC
+PROC_WYR_OrinsImpersonation_InitApproachTriggers()
+AND
+DB_WYR_OrinsImpersonation_ApproachTriggers(_, _ApproachTrigger)
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)_ApproachTrigger);
+//END_REGION
+
+//REGION Approaching the impersonation approach triggers
+IF
+EnteredTrigger(_Player, (TRIGGER)_ApproachTrigger)
+AND
+DB_Players(_Player)
+AND
+DB_WYR_OrinsImpersonation_ApproachTriggers(_ImpName, _ApproachTrigger)
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation(_CurImpName, _, _, _)
+AND
+_ImpName != _CurImpName // if its already the same impersonation, don't do anything.
+AND
+NOT DB_CantTalk(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND 
+NOT QRY_WYR_OrinsImpersonation_NoOtherPlayersNearActiveImpersonation(_CurImpName) // make sure there isn't anyone else near another impersonation
+THEN
+PROC_WYR_OrinsImpersonation_SetNextImpersonation(_ImpName);
+
+// as long as no one is in the trigger rea of a CURRENT impersonation, it should TRUE. But condition above checks to make sure its always FALSE.
+QRY
+QRY_WYR_OrinsImpersonation_NoOtherPlayersNearActiveImpersonation((STRING)_CurImpName)
+AND
+DB_WYR_OrinsImpersonation_ApproachTriggers(_CurImpName, _OtherImpTrig)
+AND 
+DB_Players(_OtherPlayer)
+AND
+DB_InRegion((CHARACTER)_OtherPlayer, (TRIGGER)_OtherImpTrig)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+
+//REGION Removing the impersonation approach triggers
+PROC
+PROC_WYR_OrinsImpersonation_RemoveApproachTrigger((STRING)_ImpName, (TRIGGER)_ApproachTrigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_ApproachTrigger);
+NOT DB_WYR_OrinsImpersonation_ApproachTriggers(_ImpName, _ApproachTrigger);
+
+PROC
+PROC_WYR_OrinsImpersonation_RemoveAllApproachTrigger()
+AND
+DB_WYR_OrinsImpersonation_ApproachTriggers(_ImpName, _ApproachTrigger)
+THEN
+PROC_WYR_OrinsImpersonation_RemoveApproachTrigger(_ImpName, _ApproachTrigger);
+//END_REGION
+
+//REGION Checks which World Impersonation is available next, and sets it up. If the total impersonation is 0, then disable all impersonations.
+// Get the next best Impersonation.
+PROC 
+PROC_WYR_OrinsImpersonation_GetNextImpersonation()
+AND
+DB_GlobalCounter("CurImpersonationsLeft", _CurImpCount)
+AND
+_CurImpCount > 0
+AND
+QRY_WYR_OrinsImpersonation_GetBestImpersonation()
+THEN
+PROC_WYR_OrinsImpersonation_SetupNextImpersonation();
+
+PROC 
+PROC_WYR_OrinsImpersonation_GetNextImpersonation()
+AND
+DB_GlobalCounter("CurImpersonationsLeft", _CurImpCount)
+AND
+_CurImpCount == 0
+THEN
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations();
+
+QRY
+QRY_WYR_OrinsImpersonation_GetBestImpersonation()
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+NOT DB_WYR_OrinsImpersonation_ChosenImpersonation(_, _, _, _)
+AND
+QRY_WYR_OrinsImmpersonation_CheckValidImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+THEN
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar);
+
+QRY
+QRY_WYR_OrinsImmpersonation_CheckValidImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+QRY_WYR_OrinsImmpersonation_CheckBasicReq((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_WYR_OrinsImmpersonation_CheckBasicReq((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+DB_GlobalFlag(_ImpFlag)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION End the current impersonation and reduce the total impersonation counter.
+PROC 
+PROC_WYR_OrinsImpersonation_EndCurImpersonation()
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+DB_WYR_OrinsImpersonation_ApproachTriggers(_ImpName, _ApproachTrigger)
+THEN
+PROC_WYR_OrinsImpersonation_FinaliseImpersonatedPostOrin(_ImpName);
+PROC_GlobalClearFlagAndCache((FLAG)_ImpFlag);
+PROC_DecreaseCounter("CurImpersonationsLeft");
+PROC_WYR_OrinsImpersonation_ClearDB_ChosenImpersonation();
+PROC_WYR_OrinsImpersonation_RemoveApproachTrigger(_ImpName, _ApproachTrigger); // Remove the Approach Trigger 
+//END_REGION
+
+//REGION Reset current World Impersonation since it wasn't triggered.
+PROC
+PROC_WYR_OrinsImpersonation_ResetCurImpersonation((STRING)_CurImpName)
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_CurImpName, (FLAG)_CurImpFlag, (INTEGER)_CurImpPriority, (CHARACTER)_CurImpChar)
+THEN
+// move Orin first so she doesn't take up the space the impersonated is suppose to go to.
+//TeleportTo((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (TRIGGER)S_WYR_OrinsImpersonation_Orin_Home_PosTrigger_bc069bd8-bd09-4581-b6bb-d7bb88f73ed2, "", 0, 0, 0, 0, 0);
+PROC_WYR_OrinsImpersonation_ResetImpersonated(_CurImpName);
+//END_REGION
+
+// This can definitely be refactored, but left opened in case each target has wildly deviating resets in the near future.
+//REGION Reset impersonate target to pre-Orin state, happens when we setup the impersonation, but then players didn't actually trigger it. So we have to unset it.
+PROC
+PROC_WYR_OrinsImpersonation_ResetAllImpersonations()
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList((STRING)_ImpName, _, _, _)
+THEN
+PROC_WYR_OrinsImpersonation_ResetImpersonated(_ImpName);
+
+
+PROC
+PROC_WYR_OrinsImpersonation_ResetImpersonated(_ImpName)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList((STRING)_ImpName, (FLAG)_ImpFlag, _, (CHARACTER)_ImpChar)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos((STRING)_ImpName, (TRIGGER)_ImpPos)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+THEN
+TeleportTo((CHARACTER)_ImpChar, _ImpPos, "", 0, 0, 0, 0, 0);
+SetVisible((CHARACTER)_ImpChar, 1);
+
+PROC
+PROC_WYR_OrinsImpersonation_ResetImpersonated("Smith")
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Smith", (FLAG)_ImpFlag, _, (CHARACTER)_ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+THEN
+DB_DialogBlockTradeButton((DIALOGRESOURCE)WYR_OrinsImpersonation_Smith_1e493c0e-c863-e14f-c46b-d3e539af3445);
+DB_PreventKnockedOutPermaDefeated((CHARACTER)_ImpChar);
+DB_Dialogs((CHARACTER)_ImpChar, (DIALOGRESOURCE)WYR_OrinsImpersonation_Smith_1e493c0e-c863-e14f-c46b-d3e539af3445); // Dialog for the Smith in his NORMAL state.
+DB_WYR_OrinsImpersonation_Smith_IsReset(1);
+PROC_WYR_OrinsImpersonation_KnockedOut_Remove((CHARACTER)_ImpChar);
+
+PROC
+PROC_WYR_OrinsImpersonation_ResetImpersonated("Journalist")
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Journalist", (FLAG)_ImpFlag, _, (CHARACTER)_ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+THEN
+DB_Dialogs((CHARACTER)_ImpChar, (DIALOGRESOURCE)WYR_OrinsImpersonation_Journalist_97599f1b-cd1a-ae55-dc42-43dd2766e031); // Dialog for the Journalist in his NORMAL state.
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Setup((CHARACTER)_ImpChar);
+
+PROC
+PROC_WYR_OrinsImpersonation_ResetImpersonated("DyingAttacker")
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("DyingAttacker", (FLAG)_ImpFlag, _, (CHARACTER)_ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)WYR_SmugglersCave_AD_DyingAttacker_3d085140-6c05-d317-851c-265eb03395f9, _ImpChar);
+PROC_WYR_OrinsImpersonation_Remove_DyingEffect();
+
+PROC
+PROC_WYR_OrinsImpersonation_ResetImpersonated("FlamingFist")
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("FlamingFist", (FLAG)_ImpFlag, _, (CHARACTER)_ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+THEN
+PROC_WYR_OrinsImpersonation_FlamingFist_RemoveFaction();
+NOT DB_SceneAllowAllDisturbances("GEN_OrinsAbduction_Scene");
+PROC_WYR_OrinsImpersonation_FlamingFist_ClearInventory();
+
+// Only reset the inventory if currently its the Flaming Fist impersonation and NOT during a campnight
+PROC
+PROC_WYR_OrinsImpersonation_FlamingFist_ClearInventory()
+AND
+NOT DB_Camp_QueuedNight(NIGHT_BhaalTemple_Abduction_3b3655ad-e3a2-45da-9030-ffe34d28ea92)
+THEN
+PROC_GEN_OrinsAbduction_Orin_RemoveAllItems();
+//END_REGION
+
+//REGION Reset and disable Flaming Fist impersonation if the Barn goes hostile.
+PROC
+PROC_WYR_OrinsImpersonation_FlamingFist_ResetAndDisable()
+AND
+//DB_WYR_OrinsImpersonation_WorldImpersonationList("FlamingFist", _FlamingFistFlag, _, _) 
+DB_WYR_OrinsImpersonation_ChosenImpersonation("FlamingFist", _FlamingFistFlag, _, _)
+AND
+DB_WYR_OrinsImpersonation_ApproachTriggers("FlamingFist", _ApproachTrigger)
+THEN
+PROC_WYR_OrinsImpersonation_ResetImpersonated("FlamingFist"); // resets the real Flaming Fist to his original location
+PROC_GlobalClearFlagAndCache((FLAG)_FlamingFistFlag); // clears the flag that enables FlamingFist as a possible impersonation
+PROC_WYR_OrinsImpersonation_RemoveApproachTrigger("FlamingFist", _ApproachTrigger); // remove the trigger associated to this impersonation.
+PROC_WYR_OrinsImpersonation_ClearDB_ChosenImpersonation(); // clear the current chosen impersonation.
+
+PROC_Purge_CancelMovement((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+PROC_WYR_OrinsImpersonation_GetNextImpersonation();
+PROC_WYR_OrinsImpersonation_OrinTeleportOut();
+//END_REGION
+
+//REGION Setup specific World Impersonation since it was triggered near the player.
+PROC
+PROC_WYR_OrinsImpersonation_SetNextImpersonation((STRING)_NewImpName)
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_CurImpName, (FLAG)_CurImpFlag, (INTEGER)_CurImpPriority, (CHARACTER)_CurImpChar) // grab the current impersonation data so we can reset it if its not the same as the new impersonation
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList((STRING)_NewImpName, (FLAG)_NewImpFlag, (INTEGER)_NewImpPriority, (CHARACTER)_NewImpChar) // grab the new impersonation data
+AND
+_NewImpName != _CurImpName // if its not the same impersonation, we need to reset the old one first
+/*
+AND // Debugging
+Concatenate("ResetCurImpersonation: _CurImpName: ", _CurImpName, _ReturnString1)
+AND
+Concatenate(_ReturnString1, " _NewImpName: ", _ReturnString2)
+AND
+Concatenate(_ReturnString2, _NewImpName, _ReturnString3) // End of Debugging
+*/
+THEN
+//DebugBreak(_ReturnString3);
+PROC_WYR_OrinsImpersonation_ResetCurImpersonation((STRING)_CurImpName); // reset the current impersonation.
+PROC_WYR_OrinsImpersonation_ClearDB_ChosenImpersonation();
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_NewImpName, (FLAG)_NewImpFlag, (INTEGER)_NewImpPriority, (CHARACTER)_NewImpChar);
+//PROC_WYR_OrinsImpersonation_CheckCurImpersonation();
+PROC_WYR_OrinsImpersonation_SetupNextImpersonation();
+//END_REGION
+
+//REGION Setup the next World Impersonation, which means putting Orin in her impersonation location, and the real impersonated target to their IMPERSONATED state.
+PROC
+PROC_WYR_OrinsImpersonation_SetupNextImpersonation()
+AND
+DB_GlobalCounter("CurImpersonationsLeft", _CurImpCount)
+AND
+_CurImpCount > 0
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+THEN
+PROC_WYR_OrinsImpersonation_OrinImpersonates(_ImpName);
+
+// if the total impersonation already reached 0, unset the current impersonation.
+PROC
+PROC_WYR_OrinsImpersonation_SetupNextImpersonation()
+AND
+DB_GlobalCounter("CurImpersonationsLeft", _CurImpCount)
+AND
+_CurImpCount == 0
+THEN
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations();
+//END_REGION
+
+//REGION Disable Impersonations, also reset current impersonation if there is one currently running.
+PROC
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations()
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_State_InWorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9); // disable In World Impersonations.
+DB_GlobalCounter("CurImpersonationsLeft", 0);
+PROC_WYR_OrinsImpersonation_RemoveAllApproachTrigger();
+
+PROC // if there's currently one impersonation running.
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations()
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, _, _, _)
+THEN
+PROC_WYR_OrinsImpersonation_ResetCurImpersonation(_ImpName);
+PROC_WYR_OrinsImpersonation_ClearDB_ChosenImpersonation();
+//END_REGION
+
+//REGION Reaction to Orin being attacked during her In-World Impersonations.
+PROC
+PROC_WYR_OrinsImpersonation_EndImpersonationByAttack()
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation(_ChosenName)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationHasMetFlag(_ChosenName, _ChosenHasMetFlag)
+THEN
+PROC_WYR_OrinsImpersonation_EndImpersonation(_ChosenName);
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_State_MetOrinOnce_5f82392a-6e8f-4c9b-a927-b9d77ee263ec);
+PROC_GlobalSetFlagAndCache((FLAG)_ChosenHasMetFlag);
+//END_REGION
+
+
+//REGION Finalise the impersonated target's final destination after an impersonation.
+PROC
+PROC_WYR_OrinsImpersonation_FinaliseImpersonatedPostOrin((STRING)_ImpName)
+AND
+_ImpName != "Smith" // smith doesn't die immediate like the others, he'll die after a long rest.
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, _, _, (CHARACTER)_ImpChar)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag(_ImpName, (FLAG)_DeathFlag)
+THEN
+SetVisible((CHARACTER)_ImpChar, 1);
+Die(_ImpChar,DEATHTYPE.DoT,1);
+PROC_GlobalSetFlagAndCache((FLAG)_DeathFlag); // sets the flag so dialogs know this character is dead in Bhaal Temple.
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Stop((CHARACTER)_ImpChar); // if Orin was impersonating the Journalist, make sure she stops her spotting too.
+PROC_WYR_OrinsImpersonation_FlamingFist_RemoveFaction(); // if Orin was impersonating the Flaming Fist, make sure she clears her faction.
+
+// if its the smith, just set the flag, later upon long rest, only then we kill him in bhaal temple. Because he isn't killed immediately like the other impersonations.
+PROC
+PROC_WYR_OrinsImpersonation_FinaliseImpersonatedPostOrin("Smith") 
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationDeathFlag("Smith", (FLAG)_DeathFlag)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)_DeathFlag);
+//END_REGION
+
+//REGION Orin came back and finished off the Smith after the initial impersonation.
+// If players had long rested, and Smith was Impersonated - he will be abducted by Orin and killed in Bhaal Temple
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_State_Impersonated_Smith_97b39a81-b28b-4228-b59d-18db921aef0a)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Smith", _, _, (CHARACTER)_ImpChar)
+AND
+NOT DB_WYR_OrinsImpersonation_Smith_KilledByPlayer(_) // if players were the one who killed the smith, don't bother teleporting to temple.
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) // make sure he's not already dead due to some other circumstances
+AND
+DB_WYR_OrinsImpersonation_PostOrinDeathPos("Smith", _ImpTemplePos)
+THEN
+PROC_WYR_OrinsImpersonation_Smith_PlaceOrinNote(_ImpChar);
+PROC_WYR_OrinsImpersonation_Smith_PostOrinPAD_Enable(); // enable PAD if players had spoken to the real smith yet.
+PROC_WYR_OrinsImpersonation_SmithSpottingStopped();
+TeleportTo((CHARACTER)_ImpChar, (TRIGGER)_ImpTemplePos, "", 0, 0, 0, 0, 0);
+SetVisible((CHARACTER)_ImpChar, 1);
+Die(_ImpChar,DEATHTYPE.DoT, 1);
+
+PROC
+PROC_WYR_OrinsImpersonation_Smith_PlaceOrinNote((CHARACTER)_ImpChar)
+THEN
+CreateSurface(_ImpChar, "SurfaceBlood", 1.0, -1.0); // create blood where smith used to be.
+TeleportTo((ITEM)S_WYR_OrinsMessages_GyldroKilled_af28bfa4-374f-44d3-a1de-5c3bd9c2872e, (CHARACTER)_ImpChar, "", 0, 0, 0, 0, 0);
+
+PROC
+PROC_WYR_OrinsImpersonation_Smith_PostOrinPAD_Enable()
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_HasMet_Smith_1d8e504b-242b-4226-90fb-3a2c55a29f18)
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)S_WYR_OrinsImpersonation_PAD_Smith_BloodSpot_c33ec4ed-7efa-41c0-999a-69c41a0a0dec);
+
+IF
+EnteredTrigger((CHARACTER)_Player, (TRIGGER)S_WYR_OrinsImpersonation_PAD_Smith_BloodSpot_c33ec4ed-7efa-41c0-999a-69c41a0a0dec)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("WYR_OrinsImpersonation_PAD_SmithDead")
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_Knows_SmithGone_676658e5-4349-4d6e-b69a-796bd9d009b2);
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_PAD_Smith_BloodSpot_49bb6d40-2ad1-4ce2-f89b-61ba69bc7234, _Player); // TODO: In future convert to VB when possible.
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_WYR_OrinsImpersonation_PAD_Smith_BloodSpot_c33ec4ed-7efa-41c0-999a-69c41a0a0dec);
+//END_REGION
+
+//REGION Smith was killed by Player
+IF
+KilledBy(S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (CHARACTER)_Player, _, _StoryID)
+AND
+DB_PartyMembers(_Player)
+THEN
+DB_WYR_OrinsImpersonation_Smith_KilledByPlayer(1);
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_Knows_SmithGone_676658e5-4349-4d6e-b69a-796bd9d009b2);
+//END_REGION
+
+// Some of the following can definitely be refactored, but will only refactor later since these could change in the near future.
+//REGION Setup Impersonated Target, sets the target position to post-Orin position, while Orin is Impersonating target, but not committing to the impersonation until players really talk to Orin first.
+PROC
+PROC_WYR_OrinsImpersonation_SetupImpersonated(_ImpName) // for everyone except smith.
+AND
+_ImpName != "Smith"
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList(_ImpName, _, _, _ImpChar)
+AND
+DB_WYR_OrinsImpersonation_PostOrinDeathPos(_ImpName, _ImpTemplePos)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+THEN
+TeleportTo((CHARACTER)_ImpChar, (TRIGGER)_ImpTemplePos, "", 0, 0, 0, 0, 0);
+
+PROC
+PROC_WYR_OrinsImpersonation_SetupImpersonated("Smith")
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("Smith", _, _, _ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+THEN
+TeleportTo((CHARACTER)_ImpChar, (TRIGGER)S_WYR_OrinsImpersonation_Smith_PostOrin_PosTrigger_00341b5c-bff4-4a69-9764-d809beb995a8, "", 0, 0, 0, 0, 0); // this location is at the door just inside of the house 
+PROC_WYR_OrinsImpersonation_KnockedOut_Apply((CHARACTER)_ImpChar);
+SetVisible((CHARACTER)_ImpChar, 0);
+
+PROC
+PROC_WYR_OrinsImpersonation_SetupImpersonated("DyingAttacker")
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationList("DyingAttacker", _, _, _ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar) 
+THEN
+PROC_ForceStopDialog(_ImpChar);
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)_ImpChar); // just in case she's coming from her Smith impersonation.
+//END_REGION
+
+
+//REGION Apply and Remove KNOCKED_OUT effect
+PROC
+PROC_WYR_OrinsImpersonation_KnockedOut_Apply((CHARACTER)_TargetChar)
+//AND
+//NOT DB_KnockedOut(_TargetChar)
+THEN
+//DB_DoNotRemoveKnockedOutCharacterOnLongRest(_TargetChar);
+//DB_PreventKnockedOutPermaDefeated(_TargetChar);
+//DB_PreventPermaDefeated(_TargetChar);
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_SmithAwakens_56b37a8b-c3ff-76bc-3451-99f312dd4a0e);
+ApplyStatus(_TargetChar, "WYR_ORINSIMPERSONATION_KNOCKEDOUT", -1.0);
+PROC_SetHasDialogIfChar(_TargetChar, 1);
+SetDetached(_TargetChar, 1);
+
+PROC
+PROC_WYR_OrinsImpersonation_KnockedOut_Remove((CHARACTER)_TargetChar)
+//AND
+//DB_KnockedOut(_TargetChar)
+THEN
+RemoveStatus(_TargetChar, "WYR_ORINSIMPERSONATION_KNOCKEDOUT");
+//NOT DB_DoNotRemoveKnockedOutCharacterOnLongRest(_TargetChar);
+//NOT DB_PreventKnockedOutPermaDefeated(_TargetChar);
+//NOT DB_PreventPermaDefeated(_TargetChar);
+NOT DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_SmithAwakens_56b37a8b-c3ff-76bc-3451-99f312dd4a0e);
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil_StopLoop(_TargetChar); // loop anvil world behavior for smith
+SetDetached(_TargetChar, 0);
+
+// wait for status removed for a normal reset, then start world behavior anvil.
+IF
+StatusRemoved(S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, "WYR_ORINSIMPERSONATION_KNOCKEDOUT", _, _)
+AND
+DB_WYR_OrinsImpersonation_Smith_IsReset(1)
+THEN
+NOT DB_WYR_OrinsImpersonation_Smith_IsReset(1);
+PROC_WYR_OrinsImpersonation_StandAndDrink_StartWorldBehavior((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+//PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Setup((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef); // DISABLED: ADs still interrupt world behaviors, disabling for now.
+
+
+//END_REGION
+
+//REGION Smith awakens(put back on stage) and starts an AD - this happens after Orin teleports away.
+PROC
+PROC_WYR_OrinsImpersonation_SmithAwakens()
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef) 
+THEN
+SetVisible((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, 1);
+PROC_WYR_OrinsImpersonation_KnockedOut_Remove((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_SmithAwakens_56b37a8b-c3ff-76bc-3451-99f312dd4a0e, (CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+TimerLaunch("WYR_OrinsImpersonation_Smith_Awakened", 1000); // delay to start moving the smith as it creates animation issues - most likely due to AD timelines.
+
+// have to wait for status to be removed first, before calling CharacterMoveTo, else they'll be some animation state issues.
+IF
+TimerFinished("WYR_OrinsImpersonation_Smith_Awakened")
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (GUIDSTRING)S_WYR_OrinsImpersonation_Smith_PosTrigger_a423e0b9-a35d-41e0-966c-e7a9c311bd81, "Run", "WYR_OrinsImpersonation_SmithPos");
+//END_REGION
+
+
+//REGION Upon completion of awaken AD, Smith should walk towards his usual spot - a Point Trigger.
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_SmithAwakens_56b37a8b-c3ff-76bc-3451-99f312dd4a0e, _)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef)
+THEN
+PROC_WYR_OrinsImpersonation_SmithSpottingStarted();
+//DB_NOOP(1);
+//PROC_CharacterMoveTo((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (GUIDSTRING)S_WYR_OrinsImpersonation_Smith_PosTrigger_a423e0b9-a35d-41e0-966c-e7a9c311bd81, "Walk", "WYR_OrinsImpersonation_SmithPos");
+//END_REGION
+
+//REGION Smith tries to spot the players once he reaches his stand position.
+PROC
+PROC_WYR_OrinsImpersonation_SmithSpottingStarted()
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef) 
+THEN
+DB_WYR_OrinsImpersonation_SmithSpotting((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+
+PROC
+PROC_WYR_OrinsImpersonation_SmithSpottingStopped()
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, "WYR_OrinsImpersonation_SmithSpotting");
+NOT DB_WYR_OrinsImpersonation_SmithSpotting((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+
+IF
+DB_WYR_OrinsImpersonation_SmithSpotting(_Character)
+THEN
+DB_SpotPlayers(_Character,"WYR_OrinsImpersonation_SmithSpotting",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+
+// Smith spotted a player.
+PROC
+PROC_SpotPlayers_Spotted(_,"WYR_OrinsImpersonation_SmithSpotting",_Player)
+THEN
+PROC_WYR_OrinsImpersonation_Smith_DecideWhoToAccuse(_Player);
+NOT DB_WYR_OrinsImpersonation_SmithSpotting((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef); // remove spotting.
+
+// Smith tries to talk to the same character OrinSmith was talking to.
+PROC
+PROC_WYR_OrinsImpersonation_Smith_DecideWhoToAccuse((CHARACTER)_Player)
+AND
+DB_WYR_OrinsImpersonation_CharacterOrinSmithSpokeTo(_PlayerOrinTalkedTo)
+AND
+DB_Sees((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, _PlayerOrinTalkedTo)
+AND
+NOT DB_CantTalk(_PlayerOrinTalkedTo)
+THEN
+PROC_WYR_OrinsImpersonation_Smith_StartDialog(_PlayerOrinTalkedTo);
+
+// Smith tries to talk to the closest avatar from the player he spotted.
+PROC
+PROC_WYR_OrinsImpersonation_Smith_DecideWhoToAccuse((CHARACTER)_Player)
+AND
+NOT DB_WYR_OrinsImpersonation_Smith_AccuseDialogStarted(1)
+AND
+DB_WYR_OrinsImpersonation_CharacterOrinSmithSpokeTo(_PlayerOrinTalkedTo)
+AND
+NOT DB_Sees((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, _PlayerOrinTalkedTo)
+AND
+QRY_GetClosestAvailableCharacterTo(_Player, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_ClosestAvatar, _Player, _Distance, 1)
+AND
+_Distance < 10.0
+THEN
+PROC_WYR_OrinsImpersonation_Smith_StartDialog(_ClosestAvatar);
+
+// Smith can't find the person SmithOrin talked to or a closest avatar, so just start with whoever he spotted.
+PROC
+PROC_WYR_OrinsImpersonation_Smith_DecideWhoToAccuse((CHARACTER)_Player)
+AND
+NOT DB_WYR_OrinsImpersonation_Smith_AccuseDialogStarted(1)
+THEN
+PROC_WYR_OrinsImpersonation_Smith_StartDialog(_Player);
+
+PROC
+PROC_WYR_OrinsImpersonation_Smith_StartDialog((CHARACTER)_Player)
+AND
+QRY_StartDialog_Fixed(
+	(DIALOGRESOURCE)WYR_OrinsImpersonation_Smith_1e493c0e-c863-e14f-c46b-d3e539af3445,
+	(CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef,
+			   _Player)
+THEN
+DB_WYR_OrinsImpersonation_Smith_AccuseDialogStarted(1);
+
+// at the end of the dialog with the players, Smith should take a drink - unless of course players made him hostile.
+IF
+DialogEnded((DIALOGRESOURCE)WYR_OrinsImpersonation_Smith_1e493c0e-c863-e14f-c46b-d3e539af3445, _)
+AND
+NOT DB_Is_InCombat(S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, _) // not in combat
+THEN
+PROC_WYR_OrinsImpersonation_StandAndDrink_StartWorldBehavior(S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+//END_REGION
+
+//REGION Init Orin basics, and give her the ring.
+// Checking if Orin is Available to start the dialogue (not dead) and registering the trigger
+PROC
+PROC_WYR_OrinsImpersonation_InitOrin()
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+THEN
+SetVisible((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 1);
+//END_REGION
+
+//REGION Setup Orin in her first impersonation if its still valid to.
+// Setup only if Impersonations are still valid to occur.
+PROC
+PROC_WYR_OrinsImpersonation_SetupOrin()
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_State_InWorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9)
+THEN
+PROC_WYR_OrinsImpersonation_GetNextImpersonation();
+//END_REGION
+
+//REGION Delay Orin's Transform call to give time for RemoveTransform to complete.
+IF
+TimerFinished("WYR_OrinsImpersonation_DelayOrinTransform")
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+DB_GEN_OrinsAbduction_OrinTransformRule_Common((SHAPESHIFTRULE)_ImpTransformRule)
+THEN
+Transform((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (CHARACTER)_ImpChar, (SHAPESHIFTRULE)_ImpTransformRule);
+//END_REGION
+
+// The following parts can definitely be refactored later. For now keeping it dirty like this in case different impersonation behavior end up being very different from each other.
+//REGION Orin impersonates the target. 
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonatesCommon((DIALOGRESOURCE)_ImpDialog)
+THEN
+SetVisible((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 1);
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+//PROC_SetHasDialogIfChar(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 1);
+DB_PreventPermaDefeated(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // prevent her permadeath in Impersonation encounters
+PROC_WYR_OrinsImpersonation_ClearDB_OrinCurrentImpersonation();
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_Event_TransformToOrin_a8f5b171-d755-4a32-b293-6996543f51fb);
+SetImmortal(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 1);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)_ImpDialog); // temp fix while combat removes Orin's ability to turn into Slayer at will.
+DB_SceneManager((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "GEN_OrinsAbduction_Scene");
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Stop((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // if Orin was the journalist, make sure to stop spotting just in case.
+//PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Stop((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // DISABLED: ADs still interrupt world behaviors, disabling for now.
+PROC_WYR_OrinsImpersonation_Anvil_ForceStopWorldBehavior(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // if world behavior was playing, better to stop it.
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonates(_ImpName)
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+_ImpName != "Dryad"
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs((STRING)_ImpName, (DIALOGRESOURCE)_ImpDialog)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos((STRING)_ImpName, (TRIGGER)_ImpHomePos)
+AND
+DB_GEN_OrinsAbduction_OrinTransformRule_Common((SHAPESHIFTRULE)_ImpTransformRule)
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // its possible that she was killed in Bhaal temple before coming to the smith, if so, she shouldn't appear either.
+THEN
+PROC_WYR_OrinsImpersonation_SetupImpersonated(_ImpName);
+PROC_WYR_OrinsImpersonation_OrinImpersonatesCommon(_ImpDialog);
+//DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)_ImpDialog, (TRIGGER)_ImpHomePos, 1);
+DB_Dialogs((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (CHARACTER)S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662, (DIALOGRESOURCE)_ImpDialog);
+TeleportTo((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (TRIGGER)_ImpHomePos, "GEN_OrinsAbduction_OrinTeleported", 0, 0, 0, 0, 0);
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation(_ImpName);
+RemoveTransforms((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // remove Orin's current Tranformation.
+DB_GEN_OrinsAbduction_IsTransformed(1);
+TimerLaunch("WYR_OrinsImpersonation_DelayOrinTransform", 10); // delay the transform call to give time for the RemoveTransform to complete.
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonates("DyingAttacker")
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_CanImpersonate_DyingAttacker_9fe49101-16bb-412e-8bbc-da6aeb33ba26)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_SmugglersCave_DyingAttacker_b9ff6ee5-b7d1-4bed-af3b-eb6c39dcd169)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // its possible that she was killed in Bhaal temple before coming to the smith, if so, she shouldn't appear either.
+THEN
+PROC_WYR_OrinsImpersonation_Apply_DyingEffect();
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonates("Dryad")
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation("Dryad", (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs("Dryad", (DIALOGRESOURCE)_ImpDialog)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationHomePos("Dryad", (TRIGGER)_ImpHomePos)
+AND
+DB_GEN_OrinsAbduction_OrinTransformRule_Common((SHAPESHIFTRULE)_ImpTransformRule)
+AND
+DB_GlobalFlag((FLAG)_ImpFlag)
+AND
+NOT DB_PermaDefeated((CHARACTER)_ImpChar)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // its possible that she was killed in Bhaal temple before coming to the smith, if so, she shouldn't appear either.
+THEN
+PROC_WYR_OrinsImpersonation_SetupImpersonated("Dryad");
+PROC_WYR_OrinsImpersonation_OrinImpersonatesCommon(_ImpDialog);
+TeleportTo((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (TRIGGER)_ImpHomePos, "", 0, 0, 0, 0, 0);
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("Dryad");
+RemoveTransforms((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // remove Orin's current Tranformation.
+DB_GEN_OrinsAbduction_IsTransformed(1);
+TimerLaunch("WYR_OrinsImpersonation_DelayOrinTransform", 10); // delay the transform call to give time for the RemoveTransform to complete.
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonates("FlamingFist")
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_CanImpersonate_FlamingFist_27422427-a983-409c-8b09-b1873f39d91b)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // its possible that she was killed in Bhaal temple before coming to the smith, if so, she shouldn't appear either.
+THEN
+PROC_WYR_OrinsImpersonation_FlamingFist_ApplyFaction();
+DB_SceneAllowAllDisturbances("GEN_OrinsAbduction_Scene");
+CopyCharacterEquipment(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (CHARACTER)S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1);
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonates("Journalist")
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_CanImpersonate_Journalist_b57ac526-9ab2-413b-bba1-99e3a09f530a)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // its possible that she was killed in Bhaal temple before coming to the smith, if so, she shouldn't appear either.
+THEN
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Setup((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // start Orin's spotting
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Stop((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42); // stop Journalist's spotting
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinImpersonates("Smith")
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_CanImpersonate_Smith_4d5fc872-029e-4766-8034-2d68d7369f11)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101) // its possible that she was killed in Bhaal temple before coming to the smith, if so, she shouldn't appear either.
+THEN
+DB_WYR_OrinsImpersonation_Behavior_Anvil_StopLoop((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef); // stop the looping for the Smith
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil_StopLoop((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // start looping for Orin.
+PROC_WYR_OrinsImpersonation_Anvil_StartWorldBehavior((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+//PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Setup((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // DISABLED: ADs still interrupt world behaviors, disabling for now.
+//END_REGION
+
+//REGION When Orin is impersonating the journalist, she should try to get the player's attention. AD and CUST animation will be played when she spots them.
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Setup((CHARACTER)_Character)
+AND
+DB_SpotPlayers((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+PROC_SpotPlayers_RestartSpotting((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting");
+DB_SpotPlayers_SpotTrigger((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting", (TRIGGER)S_WYR_OrinsImpersonation_Journalist_SpottingArea_41ccc43e-d13d-434b-a28d-ee59fc1c48e3);
+DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_Character);
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Setup((CHARACTER)_Character)
+AND
+NOT DB_SpotPlayers((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_SpotPlayers((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting", (TRIGGER)S_WYR_OrinsImpersonation_Journalist_SpottingArea_41ccc43e-d13d-434b-a28d-ee59fc1c48e3);
+DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_Character);
+
+// if Orin/Journalist first spotted a player.
+PROC
+PROC_SpotPlayers_Spotted(_Character, "WYR_OrinsImpersonation_OrinJournalistSpotting", _Player)
+AND
+DB_Players(_Player)
+AND
+DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_Character)
+THEN
+PROC_WYR_OrinsImpersonation_OrinJournalist_PlayAnimationAD(_Character, _Player); // play wave animation on Orin/Journalist targeting the spotted character
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Start(_Character, _Player); // start the timer to track the animation to loop it at the end (if valid)
+
+// if spotting is stopped, then looping timer should also stop.
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Stop((CHARACTER)_Character)
+AND
+DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_Character)
+THEN
+PROC_SpotPlayers_StopSpotting("WYR_OrinsImpersonation_OrinJournalistSpotting");
+NOT DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_Character);
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Stop((CHARACTER)_Character);
+NOT DB_WYR_OrinsImpersonation_FoundWaveTarget(1); // clean this up in case players return.
+NOT DB_WYR_OrinsImpersonation_Waving(1); // clean this up in case players return again.
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Start((CHARACTER)_Character, (CHARACTER)_Player)
+THEN
+TimerLaunch("WYR_OrinsImpersonation_OrinJournalistTimer", 8000);
+DB_WYR_OrinsImpersonation_OrinJournalist_LoopTimer(_Character);
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Stop((CHARACTER)_Character)
+THEN
+NOT DB_WYR_OrinsImpersonation_OrinJournalist_LoopTimer(_Character);
+TimerCancel("WYR_OrinsImpersonation_OrinJournalistTimer");
+
+// if Journalist keeps seeing the player
+IF
+TimerFinished("WYR_OrinsImpersonation_OrinJournalistTimer")
+AND
+DB_WYR_OrinsImpersonation_OrinJournalist_LoopTimer(_Character)
+AND
+QRY_WYR_OrinsImpersonation_FindWaveTarget(_Character) // find first valid wave target.
+AND
+DB_QRYRTN_WYR_OrinsImpersonation_WaveTarget(_Player) // return of target character to wave at
+THEN
+NOT DB_WYR_OrinsImpersonation_FoundWaveTarget(1); // used to track if a target was already spotted - if there is one there no point looking for other targets to wave at.
+NOT DB_WYR_OrinsImpersonation_Waving(1); // used to track if the wave animation is still ongoing or not.
+PROC_WYR_OrinsImpersonation_OrinJournalist_PlayAnimationAD(_Character, _Player);
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Start(_Character, _Player);
+
+// if the Journalist cannot see the players anymore, stop the looping. But spotting will need to restart for next time they're visible again - which should start the loop timer again.
+IF
+TimerFinished("WYR_OrinsImpersonation_OrinJournalistTimer")
+AND
+DB_WYR_OrinsImpersonation_OrinJournalist_LoopTimer(_Character) // used to track if its Orin or the real Journalist doing the wave.
+AND
+NOT QRY_WYR_OrinsImpersonation_FindWaveTarget(_Character) 
+THEN
+NOT DB_WYR_OrinsImpersonation_FoundWaveTarget(1); // used to track if a target was already spotted - if there is one there no point looking for other targets to wave at.
+NOT DB_WYR_OrinsImpersonation_Waving(1); // used to track if the wave animation is still ongoing or not.
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Stop((CHARACTER)_Character);
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Setup((CHARACTER)_Character);
+
+// if its the Journalist, she's persistent in the world if Orin never impersonates her. So after her initial attempt to get players attention and spoken to them, she doesn't wave to the players anymore. So check the has met flag if wave needed.
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_PlayAnimationAD((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42, (CHARACTER)_Player)
+AND
+GetFlag((FLAG)WYR_OrinsImpersonation_Hasmet_Journalist_1460a3c7-eb48-8a45-10c0-75d4842f969e, _Player, 0)
+AND
+NOT DB_WYR_OrinsImpersonation_Waving(1) // used to track if the wave animation is still ongoing or not.
+THEN
+SteerTo((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42, _Player, 0);
+PlayAnimation(S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42, CUST_Waving_01_8d682545-f220-4db9-b170-71b1c22c6f2f, "WYR_OrinsImpersonation_OrinJournalist_Waving");
+DB_WYR_OrinsImpersonation_Waving(1); // used to track if the wave animation is still ongoing or not.
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_Journalist_dd8ddce2-5bd8-5186-42f1-10ae29dd807e, S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42);
+
+// if the real Journalist has already been spoken to, stop spotting and timer, cause she no longer is interested in the player
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_PlayAnimationAD((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42, (CHARACTER)_Player)
+AND
+GetFlag((FLAG)WYR_OrinsImpersonation_Hasmet_Journalist_1460a3c7-eb48-8a45-10c0-75d4842f969e, _Player, 1)
+THEN
+PROC_WYR_OrinsImpersonation_OrinJournalist_LoopTimer_Stop((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42);
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Stop((CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42); // stop the spotting process too.
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinJournalist_PlayAnimationAD((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, _Player)
+AND
+NOT DB_WYR_OrinsImpersonation_Waving(1) // used to track if the wave animation is still ongoing or not.
+THEN
+SteerTo((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, _Player, 0);
+PlayAnimation(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, CUST_Waving_01_8d682545-f220-4db9-b170-71b1c22c6f2f, "WYR_OrinsImpersonation_OrinJournalist_Waving");
+DB_WYR_OrinsImpersonation_Waving(1); // used to track if the wave animation is still ongoing or not.
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_Journalist_dd8ddce2-5bd8-5186-42f1-10ae29dd807e, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+//END_REGION
+
+//REGION QRYRTN for finding the first valid wave target.
+// clear the DB
+QRY
+QRY_WYR_OrinsImpersonation_FindWaveTarget(_)
+AND
+DB_QRYRTN_WYR_OrinsImpersonation_WaveTarget(_Target)
+THEN
+NOT DB_QRYRTN_WYR_OrinsImpersonation_WaveTarget(_Target);
+
+// QRY return to find the first valid target to wave at.
+QRY
+QRY_WYR_OrinsImpersonation_FindWaveTarget((CHARACTER)_Character)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, _Character)
+AND
+DB_InRegion(_Player, (TRIGGER)S_WYR_OrinsImpersonation_Journalist_ApproachTrigger_0d395694-7fa1-4cd9-a745-341fef8d5821)
+AND
+NOT DB_WYR_OrinsImpersonation_FoundWaveTarget(1) // used to track if a target was already spotted - if there is one there no point looking for other targets to wave at.
+THEN
+DB_WYR_OrinsImpersonation_FoundWaveTarget(1); // found a valid target already.
+DB_QRYRTN_WYR_OrinsImpersonation_WaveTarget(_Player);
+//END_REGION
+
+//REGION Special setup for dialog start for Dryad
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, _Player)
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("Dryad")
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_CanImpersonate_Dryad_4ea59eec-5124-4146-94ce-221e94ef2e1d)
+THEN
+DB_SelectedDialog(
+	WYR_Circus_LoveDryad_d0c00951-4d09-d1a6-2ab3-6c6ba1932a25,
+	S_WYR_Circus_LoveDryad_a8bce35d-17ee-46e3-8d56-1d0d29c4a01e,
+	_Player);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(WYR_Circus_LoveDryad_d0c00951-4d09-d1a6-2ab3-6c6ba1932a25, _DialogID)
+AND
+DB_GlobalFlag(WYR_OrinsImpersonation_State_InWorldImpersonationsEnabled_4f3afc61-a52f-44ec-8308-3f81a17854d9)
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("Dryad")
+AND
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_CanImpersonate_Dryad_4ea59eec-5124-4146-94ce-221e94ef2e1d)
+THEN
+PROC_DialogAddSpeakingActorAt(_DialogID, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 13);
+//END_REGION
+
+//REGION WORLD BEHAVIOR for usage for Orin or the real Smith
+PROC
+PROC_WYR_OrinsImpersonation_Anvil_StartWorldBehavior((CHARACTER)_Char)
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+NOT DB_Is_InCombat((GUIDSTRING)_Char, _)
+AND
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil((CHARACTER)_Char, _)
+AND
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil_StopLoop(_Char)
+AND
+StartBehaviorDialog_Internal(
+	(DIALOGRESOURCE)BHVR_WRLD_DEN_WeaponSmith_Anvil_76b162f7-e424-4ac7-e028-4241b7ff1599, 
+	1, 
+	(CHARACTER)_Char, 
+	NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000,
+	(TRIGGER)S_BHVR_WRLD_WYR_OrinsImpersonation_Anvil_SceneTrigger_001_2f93f84c-2fd9-4580-b1fc-087d2a04bc98, _Success, _DialogID) 
+THEN
+DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID);
+
+PROC
+PROC_WYR_OrinsImpersonation_Anvil_ForceStopWorldBehavior((CHARACTER)_Char)
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID)
+THEN
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID);
+PROC_StopDialogIfStarted(_Char, (DIALOGRESOURCE)BHVR_WRLD_DEN_WeaponSmith_Anvil_76b162f7-e424-4ac7-e028-4241b7ff1599, _DialogID);
+DB_WYR_OrinsImpersonation_Behavior_Anvil_StopLoop((CHARACTER)_Char); // stop looping for char.
+
+IF
+AutomatedDialogStarted((DIALOGRESOURCE)BHVR_WRLD_DEN_WeaponSmith_Anvil_76b162f7-e424-4ac7-e028-4241b7ff1599, _DialogID)
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID)
+THEN
+DB_NOOP(1);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)BHVR_WRLD_DEN_WeaponSmith_Anvil_76b162f7-e424-4ac7-e028-4241b7ff1599, _DialogID)
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID)
+THEN
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID);
+PROC_WYR_OrinsImpersonation_Anvil_StartWorldBehavior(_Char);
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)BHVR_WRLD_DEN_WeaponSmith_Anvil_76b162f7-e424-4ac7-e028-4241b7ff1599, _DialogID)
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID)
+THEN
+NOT DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID);
+
+// if players started speaking to Orin, stop the world behavior loop
+IF 
+DialogStarted((DIALOGRESOURCE)WYR_OrinsImpersonation_SmithOrin_1ac3d821-7909-422b-46b3-d09975215f63, _)
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(_Char, _DialogID)
+THEN
+DB_WYR_OrinsImpersonation_Behavior_Anvil_StopLoop(_Char);
+
+PROC
+PROC_WYR_OrinsImpersonation_StandAndDrink_StartWorldBehavior((CHARACTER)_Char)
+AND
+NOT DB_PermaDefeated(_Char)
+AND
+NOT DB_WYR_OrinsImpersonation_Behavior_StandAndDrink(_Char, _)
+AND
+NOT DB_Is_InCombat((GUIDSTRING)_Char, _)
+AND
+StartBehaviorDialog_Internal(
+	(DIALOGRESOURCE)BHVR_WRLD_GLO_StandAndDrink_a4065598-1ea2-8866-d23f-f765b5008273, 
+	1, 
+	(CHARACTER)_Char, 
+	NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 
+	NULL_00000000-0000-0000-0000-000000000000, _Success, _DialogID)
+THEN
+DB_WYR_OrinsImpersonation_Behavior_StandAndDrink(_Char, _DialogID);
+
+// at the end of the drink world behavior, start the anvil world behavior
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)BHVR_WRLD_GLO_StandAndDrink_a4065598-1ea2-8866-d23f-f765b5008273, _DialogID)
+AND
+DB_WYR_OrinsImpersonation_Behavior_StandAndDrink(_Char, _DialogID)
+THEN
+NOT DB_WYR_OrinsImpersonation_Behavior_StandAndDrink(_Char, _DialogID);
+PROC_WYR_OrinsImpersonation_Smith_UseAnvil();
+
+PROC
+PROC_WYR_OrinsImpersonation_Smith_UseAnvil()
+AND
+NOT DB_WYR_OrinsImpersonation_Behavior_WaitForAnvilUse(1)
+THEN
+DB_WYR_OrinsImpersonation_Behavior_WaitForAnvilUse(1);
+TimerLaunch("WYR_OrinsImpersonation_Smith_UseAnvil_Timer", 2000);
+
+IF
+TimerFinished("WYR_OrinsImpersonation_Smith_UseAnvil_Timer")
+AND
+DB_WYR_OrinsImpersonation_Behavior_WaitForAnvilUse(1)
+THEN
+NOT DB_WYR_OrinsImpersonation_Behavior_WaitForAnvilUse(1);
+PROC_WYR_OrinsImpersonation_Anvil_StartWorldBehavior((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+
+//END_REGION
+
+/*
+//REGION Spotting for players as Smith to play an AD. // DISABLED : Due to ADs interrupting
+PROC
+PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Setup((CHARACTER)_Character)
+AND
+DB_SpotPlayers((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinSmithSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+PROC_SpotPlayers_RestartSpotting((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinSmithSpotting");
+DB_WYR_OrinsImpersonation_OrinSmithSpotting(_Character);
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Setup((CHARACTER)_Character)
+AND
+NOT DB_SpotPlayers((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinSmithSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_SpotPlayers((CHARACTER)_Character, "WYR_OrinsImpersonation_OrinSmithSpotting", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_WYR_OrinsImpersonation_OrinSmithSpotting(_Character);
+
+PROC
+PROC_SpotPlayers_Spotted(_Character, "WYR_OrinsImpersonation_OrinSmithSpotting", _Player)
+AND
+DB_Players(_Player)
+AND
+DB_WYR_OrinsImpersonation_OrinSmithSpotting(_Character)
+THEN
+PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Stop(_Character);
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_Smith_f2c23c85-62aa-c695-0f7f-019e0dbf8c0a, _Character);
+
+PROC
+PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Stop((CHARACTER)_Character)
+AND
+DB_WYR_OrinsImpersonation_OrinSmithSpotting(_Character)
+THEN
+PROC_SpotPlayers_StopSpotting("WYR_OrinsImpersonation_OrinSmithSpotting");
+NOT DB_WYR_OrinsImpersonation_OrinSmithSpotting(_Character);
+//END_REGION
+*/
+
+//REGION When in dialog, Orin transforms into her original form. Flag would be set then. Gameplay must reflect her transformation as well.
+// for all circumstances except DyingAttacker, remove the transform
+IF
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_Event_TransformToOrin_a8f5b171-d755-4a32-b293-6996543f51fb)
+THEN
+PROC_GEN_OrinsAbduction_OrinTransformsBack();
+
+// for the DyingAttacker, also remove the dying status.
+IF
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_Event_TransformToOrin_a8f5b171-d755-4a32-b293-6996543f51fb)
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("DyingAttacker")
+THEN
+PROC_WYR_OrinsImpersonation_Remove_DyingEffect();
+//END_REGION
+
+//REGION End the impersonation, Orin will have to teleport out. Decide whether to reset an impersonation if it is currently occurring.
+PROC
+PROC_WYR_OrinsImpersonation_EndImpersonation(_)
+THEN
+PROC_SceneOver("GEN_OrinsAbduction_Scene");
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+PROC_WYR_OrinsImpersonation_PostImpersonation_TryStartPAD();
+PROC_WYR_OrinsImpersonation_EndCurImpersonation(); // ends the current impersonation
+PROC_WYR_OrinsImpersonation_OrinTeleportOut(); // teleport her out to safe location - unless there's another impersonation available. in which case place her at that impersonation.
+PROC_WYR_OrinsImpersonation_GetNextImpersonation();
+SetEntityEvent(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "ClearCrimeReturn", 1);
+
+PROC
+PROC_WYR_OrinsImpersonation_EndImpersonation("Smith")
+THEN
+PROC_WYR_OrinsImpersonation_SmithAwakens();
+//END_REGION
+
+//REGION Play Post-Impersonation PAD
+PROC
+PROC_WYR_OrinsImpersonation_PostImpersonation_TryStartPAD()
+AND
+GetClosestPlayer(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, _Player, _)
+AND
+NOT DB_WYR_OrinsImpersonation_PostImpersonation_Started(1)
+THEN
+DB_WYR_OrinsImpersonation_PostImpersonation_Started(1);
+TimerLaunch("WYR_OrinsImpersonation_PAD_PostImpersonation", 1000); // delay to start PAD so it doesn't play before Orin can fully teleport away.
+DB_WYR_OrinsImpersonation_ClosetPlayerToOrinBeforeTeleport((CHARACTER)_Player);
+
+// Timer is temp fix for the animation
+IF
+TimerFinished("WYR_OrinsImpersonation_PAD_PostImpersonation")
+AND
+DB_WYR_OrinsImpersonation_ClosetPlayerToOrinBeforeTeleport(_Player)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_PAD_PostImpersonation_a5358359-4a97-594d-d5be-19aee288d815, _Player);
+NOT DB_WYR_OrinsImpersonation_ClosetPlayerToOrinBeforeTeleport(_Player);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)WYR_OrinsImpersonation_PAD_PostImpersonation_a5358359-4a97-594d-d5be-19aee288d815, _)
+THEN
+NOT DB_WYR_OrinsImpersonation_PostImpersonation_Started(1);
+//END_REGION
+
+//REGION Dialog when Orin's impersonation ends, she will teleport away
+IF
+DialogEnded((DIALOGRESOURCE)_ChosenDialog, _)
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation(_ChosenName)
+AND
+DB_WYR_OrinsImpersonation_WorldImpersonationDialogs(_ChosenName, _ChosenDialog)
+AND 
+DB_GlobalFlag((FLAG)WYR_OrinsImpersonation_Event_TransformToOrin_a8f5b171-d755-4a32-b293-6996543f51fb)
+AND
+NOT DB_GEN_OrinsAbduction_OrinAttacker(_) // as long as Orin wasn't attacked.
+THEN
+PROC_WYR_OrinsImpersonation_EndImpersonation(_ChosenName);
+
+// Remember who Orin spoke to.
+IF
+DialogEnded((DIALOGRESOURCE)WYR_OrinsImpersonation_SmithOrin_1ac3d821-7909-422b-46b3-d09975215f63, _DialogID)
+AND
+NOT DB_WYR_OrinsImpersonation_CharacterOrinSmithSpokeTo(_)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+DB_WYR_OrinsImpersonation_CharacterOrinSmithSpokeTo((CHARACTER)_Player);
+//END_REGION
+
+//REGION Orin Teleports Away to temporary hidden location once her impersonations are all done. If not, she should jump to the next impersonation.
+PROC // we just play the teleport out animation, but the actual teleportation is handled by the next impersonation.
+PROC_WYR_OrinsImpersonation_OrinTeleportOut()
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BhaalTemple_State_OrinInTemple_494df8e1-a986-4744-958f-b33880dd5bb2)
+THEN
+PROC_GEN_OrinsAbduction_PlayEffect_Teleport();
+SetHitpointsPercentage(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 100.0); // heal her back up in case she took damage from the last encounter.
+RemoveHarmfulStatuses(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+PROC_WYR_OrinsImpersonation_OrinJournalist_Spotting_Stop((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+//PROC_WYR_OrinsImpersonation_OrinSmith_Spotting_Stop((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101); // DISABLED: ADs still interrupt world behaviors, disabling for now.
+PROC_GEN_OrinsAbduction_ClearDB_OrinAttacker();
+
+// In the case where its the last impersonation, place Orin in a safe spot in scipters asylum. Until she's needed in LOW Bhaal Temple.
+PROC 
+PROC_WYR_OrinsImpersonation_OrinTeleportOut() 
+AND
+DB_GlobalCounter("CurImpersonationsLeft", _CurImpCount)
+AND
+_CurImpCount == 0
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BhaalTemple_State_OrinInTemple_494df8e1-a986-4744-958f-b33880dd5bb2)
+THEN
+TeleportTo((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (TRIGGER)S_WYR_OrinsImpersonation_Orin_Home_PosTrigger_bc069bd8-bd09-4581-b6bb-d7bb88f73ed2, "", 0, 0, 0, 0, 0);
+//END_REGION
+
+//REGION Reaction to when CIRCUS is cancelled and therefore Dryad is no longer a valid impersonation.
+IF
+DB_GlobalFlag((FLAG)WYR_Circus_State_Gone_151fd307-4cb8-44ba-8998-40e1d748b707)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_Dryad_4ea59eec-5124-4146-94ce-221e94ef2e1d); // disable the Dryad from further impersonations
+PROC_WYR_OrinsImpersonation_RemoveApproachTrigger("Dryad", (TRIGGER)S_WYR_OrinsImpersonation_Dryad_ApproachTrigger_d12f03c8-3dd1-40d9-96c5-fc6a662096a6); // remove the approach triggger
+PROC_WYR_OrinsImpersonation_CircusClosed_ResetDryad(); // reset the Dryad if she was currently being impersonated.
+
+PROC
+PROC_WYR_OrinsImpersonation_CircusClosed_ResetDryad() // if Dryad is currently being impersonated, we need to remove her impersonation
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation("Dryad", _, _, _)
+THEN
+PROC_WYR_OrinsImpersonation_ResetCurImpersonation("Dryad"); 
+PROC_WYR_OrinsImpersonation_ClearDB_ChosenImpersonation();
+TeleportTo((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, (TRIGGER)S_WYR_OrinsImpersonation_Orin_Home_PosTrigger_bc069bd8-bd09-4581-b6bb-d7bb88f73ed2, "", 0, 0, 0, 0, 0); // teleport her home where she will wait for next impersonation
+SetEntityEvent(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "ClearCrimeReturn", 1);
+//END_REGION
+
+//REGION Orin DyingAttacker status applications and removal
+PROC
+PROC_WYR_OrinsImpersonation_Apply_DyingEffect()
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation("DyingAttacker")
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 1.0);
+ApplyStatus(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_ORINSIMPERSONATION_IMPALED_DYING", -1.0, 1);
+ApplyStatus(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_SMUGGLER_DYING", -1.0, 1);
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)WYR_SmugglersCave_AD_DyingAttacker_3d085140-6c05-d317-851c-265eb03395f9);
+PROC_TryStartAD((DIALOGRESOURCE)WYR_SmugglersCave_AD_DyingAttacker_3d085140-6c05-d317-851c-265eb03395f9, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+
+PROC
+PROC_WYR_OrinsImpersonation_Remove_DyingEffect()
+AND
+HasActiveStatus((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_ORINSIMPERSONATION_IMPALED_DYING", 1)
+THEN
+SetHitpointsPercentage(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, 100.0);
+RemoveStatus(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_SMUGGLER_DYING");
+RemoveStatus(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_ORINSIMPERSONATION_IMPALED_DYING");
+NOT DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)WYR_SmugglersCave_AD_DyingAttacker_3d085140-6c05-d317-851c-265eb03395f9);
+//END_REGION
+
+//REGION Orin Flaming Fist status for Faction apply and removal
+PROC
+PROC_WYR_OrinsImpersonation_FlamingFist_ApplyFaction()
+THEN
+DB_NOOP(1);
+ApplyStatus(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_ORINSIMPERSONATION_ORIN_FLAMINGFIST_FACTION", -1.0, 1);
+
+PROC
+PROC_WYR_OrinsImpersonation_FlamingFist_RemoveFaction()
+AND
+HasActiveStatus((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_ORINSIMPERSONATION_ORIN_FLAMINGFIST_FACTION", 1)
+THEN
+RemoveStatus(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, "WYR_ORINSIMPERSONATION_ORIN_FLAMINGFIST_FACTION");
+//END_REGION
+
+//REGION Peaceful resolution for the smith when players convinced him they were not the ones who attacked him
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_OrinsImpersonation_State_Smith_PeacefulResolution_b541bec5-fefb-480e-9891-313398dd32ff)
+THEN
+PROC_PeacefulResolve((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+//END_REGION
+
+//REGION Singletons
+// Singleton for tracking who is currently spotting for the Journalist.
+IF
+DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_NewState)
+AND
+DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_OldState)
+AND
+_NewState != _OldState
+THEN
+NOT DB_WYR_OrinsImpersonation_OrinJournalist_Spotting(_OldState);
+
+//END_REGION
+
+//REGION Clear DBs
+PROC
+PROC_WYR_OrinsImpersonation_ClearDB_OrinCurrentImpersonation()
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation(_PrevVal)
+THEN
+NOT DB_WYR_OrinsImpersonation_OrinCurrentImpersonation(_PrevVal);
+
+PROC
+PROC_WYR_OrinsImpersonation_ClearDB_ChosenImpersonation()
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation(_PrevVal1, _PrevVal2, _PrevVal3, _PrevVal4)
+THEN
+NOT DB_WYR_OrinsImpersonation_ChosenImpersonation(_PrevVal1, _PrevVal2, _PrevVal3, _PrevVal4);
+//END_REGION
+
+//REGION Debug Check Commands
+IF
+TextEvent("OICheckTargetDB")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Check Target DB");
+PROC_WYR_OrinsImpersonation_Check_OrinCurrentImpersonation();
+
+PROC
+PROC_WYR_OrinsImpersonation_Check_OrinCurrentImpersonation()
+AND
+DB_WYR_OrinsImpersonation_OrinCurrentImpersonation(_Char)
+AND
+Concatenate("OrinCurrentImpersonation: ", _Char, _FinalString)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, _FinalString);
+
+
+IF
+TextEvent("OICheckDefeatedDB")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Check Defeated DB");
+PROC_WYR_OrinsImpersonation_CheckDefeatedDB();
+
+PROC
+PROC_WYR_OrinsImpersonation_CheckDefeatedDB()
+AND
+DB_Defeated((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Orin was in DefeateDB");
+
+IF
+TextEvent("OICheckCampDB")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Check Camp DB");
+PROC_WYR_OrinsImpersonation_CheckCampDB();
+
+PROC
+PROC_WYR_OrinsImpersonation_CheckCampDB()
+AND
+DB_InCamp(_Char)
+AND
+GUIDToString(_Char, _ReturnString)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, _ReturnString);
+
+IF
+TextEvent("OICheckImpCounter")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OICheckImpCounter");
+PROC_Debug_WYR_OrinsImpersonation_CheckImpCounter();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_CheckImpCounter()
+AND
+DB_GlobalCounter("CurImpersonationsLeft", _CurImpCount)
+AND
+IntegerToString((INTEGER)_CurImpCount, _CurImpCountString)
+AND
+Concatenate("Remaining Impersonations: ", _CurImpCountString, _ReturnString)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, _ReturnString);
+
+
+IF
+TextEvent("OICheckCurImpersonation")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OICheckCurImpersonation");
+PROC_Debug_WYR_OrinsImpersonation_CheckCurImpersonation();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_CheckCurImpersonation()
+AND
+DB_WYR_OrinsImpersonation_ChosenImpersonation((STRING)_ImpName, (FLAG)_ImpFlag, (INTEGER)_ImpPriority, (CHARACTER)_ImpChar)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, _ImpName);
+
+
+
+
+
+//END_REGION
+
+
+//REGION Debug general commands
+IF
+TextEvent("OIForceNextImpersonation")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIForceNextImpersonation");
+PROC_WYR_OrinsImpersonation_EndCurImpersonation();
+PROC_WYR_OrinsImpersonation_GetNextImpersonation();
+PROC_Debug_WYR_OrinsImpersonation_CheckCurImpersonation();
+
+IF
+TextEvent("OIForceImpersonateSmith")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIForceImpersonateSmith");
+PROC_WYR_OrinsImpersonation_SetNextImpersonation("Smith");
+
+IF
+TextEvent("OIForceImpersonateJournalist")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIForceImpersonateJournalist");
+PROC_WYR_OrinsImpersonation_SetNextImpersonation("Journalist");
+
+IF
+TextEvent("OIForceImpersonateFlamingFist")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIForceImpersonateFlamingFist");
+PROC_WYR_OrinsImpersonation_SetNextImpersonation("FlamingFist");
+
+IF
+TextEvent("OIForceImpersonateDyingAttacker")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIForceImpersonateDyingAttacker");
+PROC_WYR_OrinsImpersonation_SetNextImpersonation("DyingAttacker");
+
+IF
+TextEvent("OIForceImpersonateDryad")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIForceImpersonateDryad");
+PROC_WYR_OrinsImpersonation_SetNextImpersonation("Dryad");
+
+
+IF
+TextEvent("OIGivePlayerRing")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIGivePlayerRing");
+ToInventory((ITEM)S_GLO_Orin_TeleportRing_b9ed80b2-cedd-4008-a0d9-7ccf016a7bbf, (CHARACTER)_Player);
+
+
+IF
+TextEvent("OISetMaxImpersonation")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISetMaxImpersonation");
+PROC_DeclareCounter("CurImpersonationsLeft"); // setup the counter to track the number of World Impersonations left.
+PROC_IncreaseCounter("CurImpersonationsLeft", 5); // setup total impersonation allowed to happen. Will count down to 0.
+PROC_Debug_WYR_OrinsImpersonation_CheckImpCounter();
+
+
+IF
+TextEvent("OIDisableImpersonations")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIDisableImpersonations");
+PROC_WYR_OrinsImpersonation_DisableAllImpersonations();
+PROC_WYR_OrinsImpersonation_OrinTeleportOut();
+
+
+IF
+TextEvent("OISetSeenGnomes")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISetSeenGnomes");
+PROC_GlobalSetFlagAndCache((FLAG)WYR_Ironhand_State_PlayerSawGnomes_d2378ff6-22b2-4f31-aa4e-947408de5cdc);
+
+IF
+TextEvent("OITeleportToSmith")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OITeleportToSmith");
+TeleportToPosition((CHARACTER)_Player, -8.895544, 49.030273, -53.968704);
+
+IF
+TextEvent("OIJournalistWrite")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIJournalistWrite");
+PlayAnimation(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, CUST_Writing_01_98fe16cb-1bbe-4046-bede-5d2336962b63, "WYR_OrinsImpersonation_OrinJournalist_Waving");
+
+
+IF
+TextEvent("OIJournalistOrinWave")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIJournalistOrinWave");
+PlayAnimation(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, CUST_Waving_01_8d682545-f220-4db9-b170-71b1c22c6f2f, "WYR_OrinsImpersonation_OrinJournalist_Waving");
+
+IF
+TextEvent("OIJournalistOrinAD")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIJournalistOrinAD");
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_Journalist_dd8ddce2-5bd8-5186-42f1-10ae29dd807e, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+
+IF
+TextEvent("OIJournalistWave")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIJournalistWave");
+PlayAnimation(S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42, CUST_Waving_01_8d682545-f220-4db9-b170-71b1c22c6f2f, "WYR_OrinsImpersonation_OrinJournalist_Waving");
+
+IF
+TextEvent("OIJournalistAD")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIJournalistAD");
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_Journalist_dd8ddce2-5bd8-5186-42f1-10ae29dd807e, S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42);
+//END_REGION
+
+
+//REGION Debug Force-Start Dialogs
+// Add DB_Dialog with normal Smith
+IF
+TextEvent("OIAddDialogSmith")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIAddDialogSmith");
+DB_Dialogs((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (DIALOGRESOURCE)WYR_OrinsImpersonation_Smith_1e493c0e-c863-e14f-c46b-d3e539af3445); // Dialog for the Smith in his NORMAL state.
+
+
+
+
+// Force start dialog with normal Smith
+IF
+TextEvent("OIStartSmith")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartSmith");
+PROC_Debug_WYR_OrinsImpersonation_Start_Smith();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_Smith()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_OrinsImpersonation_SmithOrin_1ac3d821-7909-422b-46b3-d09975215f63,
+	(CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef,
+			   _Players)
+THEN
+DB_NOOP(1);
+
+
+//REGION Journalist
+// Force start dialog with normal Journalist
+IF
+TextEvent("OIStartJournalist")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartJournalist");
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_Journalist_b57ac526-9ab2-413b-bba1-99e3a09f530a);
+PROC_Debug_WYR_OrinsImpersonation_Start_Journalist();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_Journalist()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_OrinsImpersonation_Journalist_97599f1b-cd1a-ae55-dc42-43dd2766e031,
+	(CHARACTER)S_GLO_OrinsImpersonation_Journalist_5b8fb80d-a374-4872-9a7b-ee5e4e25ed42,
+			   _Players)
+THEN
+DB_NOOP(1);
+
+
+IF
+TextEvent("OIStartJournalistOrin")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartJournalistOrin");
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_Journalist_b57ac526-9ab2-413b-bba1-99e3a09f530a);
+PROC_Debug_WYR_OrinsImpersonation_Start_JournalistOrin();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_JournalistOrin()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_OrinsImpersonation_OrinJournalist_9d68c24d-8d5e-06b8-b1eb-8458451e077a,
+	(CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101,
+			   S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662,			
+			   _Players)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Flaming Fist
+// Force start dialog with normal Flaming Fist
+IF
+TextEvent("OIStartFlamingFist")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartFlamingFist");
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_FlamingFist_27422427-a983-409c-8b09-b1873f39d91b);
+PROC_Debug_WYR_OrinsImpersonation_Start_FlamingFist();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_FlamingFist()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_RefugeeCamp_FlamingFist_001_f21754e7-489b-4b50-899e-c98d3649e1df,
+	(CHARACTER)S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1,
+			   _Players)
+THEN
+DB_NOOP(1);
+//DB_Dialogs(S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1,WYR_RefugeeCamp_FlamingFist_001_f21754e7-489b-4b50-899e-c98d3649e1df);
+
+IF
+TextEvent("OIStartFlamingFistOrin")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartFlamingFistOrin");
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_FlamingFist_27422427-a983-409c-8b09-b1873f39d91b);
+PROC_Debug_WYR_OrinsImpersonation_Start_FlamingFistOrin();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_FlamingFistOrin()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_OrinsImpersonation_OrinFlamingFist_cdca26dd-5b9d-93e6-f760-eb5b47062d2e,
+	(CHARACTER)S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1,
+			   S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662,			
+			   _Players)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION DyingAttacker
+// Force start dialog with normal DyingAttacker
+IF
+TextEvent("OIStartDyingAttacker")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartDyingAttacker");
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_DyingAttacker_9fe49101-16bb-412e-8bbc-da6aeb33ba26);
+PROC_Debug_WYR_OrinsImpersonation_Start_DyingAttacker();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_DyingAttacker()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_RefugeeCamp_FlamingFist_001_f21754e7-489b-4b50-899e-c98d3649e1df,
+	(CHARACTER)S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1,
+			   _Players)
+THEN
+DB_NOOP(1);
+//DB_Dialogs(S_GLO_RefugeeCamp_FlamingFist_001_2e90c37b-78ca-4df5-9fdc-3a680e3fafc1,WYR_RefugeeCamp_FlamingFist_001_f21754e7-489b-4b50-899e-c98d3649e1df);
+
+IF
+TextEvent("OIStartDyingAttackerOrin")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartDyingAttackerOrin");
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_DyingAttacker_9fe49101-16bb-412e-8bbc-da6aeb33ba26);
+PROC_Debug_WYR_OrinsImpersonation_Start_DyingAttackerOrin();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_DyingAttackerOrin()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_OrinsImpersonation_OrinDyingAttacker_939f417e-0f96-4dee-aa06-4c2d735e8fc0,
+	(CHARACTER)S_GLO_SmugglersCave_DyingAttacker_b9ff6ee5-b7d1-4bed-af3b-eb6c39dcd169,
+			   S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662,			
+			   _Players)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("OIApplyDyingStatus")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Apply Dying Status");
+PROC_WYR_OrinsImpersonation_Apply_DyingEffect();
+
+IF
+TextEvent("OIRemoveDyingStatus")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Remove Dying Status");
+PROC_WYR_OrinsImpersonation_Remove_DyingEffect();
+
+IF
+TextEvent("OIRemoveTransform")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "Remove Transform");
+RemoveTransforms((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+//END_REGION
+
+
+//REGION OrinDryad debug commands
+// Force start dialog with normal Dryad
+IF
+TextEvent("OIStartDryad")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartDryad");
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_CanImpersonate_Dryad_4ea59eec-5124-4146-94ce-221e94ef2e1d);
+PROC_Debug_WYR_OrinsImpersonation_Start_Dryad();
+
+PROC
+PROC_Debug_WYR_OrinsImpersonation_Start_Dryad()
+AND
+DB_Players(_Players)
+AND
+NOT QRY_StartDialog(
+	(DIALOGRESOURCE)WYR_Circus_LoveDryad_d0c00951-4d09-d1a6-2ab3-6c6ba1932a25,
+	(CHARACTER)S_WYR_Circus_LoveDryad_a8bce35d-17ee-46e3-8d56-1d0d29c4a01e,
+			   _Players)
+THEN
+DB_NOOP(1);
+//DB_Dialogs(S_WYR_Circus_LoveDryad_a8bce35d-17ee-46e3-8d56-1d0d29c4a01e, WYR_Circus_LoveDryad_d0c00951-4d09-d1a6-2ab3-6c6ba1932a25);
+
+IF
+TextEvent("OIStartDryadAD")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIStartDryadAD");
+PROC_TryStartAD((DIALOGRESOURCE)WYR_Circus_AD_LoveDryad_0a121d28-d4e8-07bb-6a70-404c247e5d48, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+
+//END_REGION
+
+IF
+TextEvent("OIMetOrinOnce")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIMetOrinOnce");
+PROC_GlobalSetFlagAndCache((FLAG)WYR_OrinsImpersonation_State_MetOrinOnce_5f82392a-6e8f-4c9b-a927-b9d77ee263ec);
+
+IF
+TextEvent("OIMetOrinOnceReset")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIMetOrinOnceReset");
+PROC_GlobalClearFlagAndCache((FLAG)WYR_OrinsImpersonation_State_MetOrinOnce_5f82392a-6e8f-4c9b-a927-b9d77ee263ec);
+
+IF
+TextEvent("OIResetAndDisableFlamingFist")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIResetAndDisableFlamingFist");
+PROC_WYR_OrinsImpersonation_FlamingFist_ResetAndDisable();
+
+IF
+TextEvent("OIMoveSmith")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIMoveSmith");
+PROC_CharacterMoveTo((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (GUIDSTRING)S_WYR_OrinsImpersonation_Smith_PosTrigger_a423e0b9-a35d-41e0-966c-e7a9c311bd81, "Run", "WYR_OrinsImpersonation_SmithPos");
+
+IF
+TextEvent("OISmithStatusApply")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISmithStatusApply");
+PROC_WYR_OrinsImpersonation_KnockedOut_Apply((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+
+IF
+TextEvent("OISmithStatusRemove")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISmithStatusRemove");
+PROC_WYR_OrinsImpersonation_KnockedOut_Remove((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+
+IF
+TextEvent("OIWRLDBHVR_Drink_Smith_Start")
+AND
+GetHostCharacter(_Player)
+AND
+StartBehaviorDialog_Internal(
+	(DIALOGRESOURCE)BHVR_WRLD_GLO_StandAndDrink_a4065598-1ea2-8866-d23f-f765b5008273, 
+	1, 
+	(CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, 
+	NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 
+	NULL_00000000-0000-0000-0000-000000000000, _Success, _DialogID)
+THEN
+DebugText(_Player, "OIWRLDBHVR_Drink_Smith_Start");
+
+
+IF
+TextEvent("OIWRLDBHVR_Anvil_Orin")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIWRLDBHVR_Anvil_Orin");
+PROC_WYR_OrinsImpersonation_Anvil_StartWorldBehavior((CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+
+IF
+TextEvent("OIWRLDBHVR_Anvil_Smith")
+AND
+GetHostCharacter(_Player)
+/*
+AND
+StartBehaviorDialog_Internal(
+	(DIALOGRESOURCE)BHVR_WRLD_DEN_WeaponSmith_Anvil_76b162f7-e424-4ac7-e028-4241b7ff1599, 
+	1, 
+	(CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, 
+	NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000,
+	(TRIGGER)S_BHVR_WRLD_WYR_OrinsImpersonation_Anvil_SceneTrigger_001_2f93f84c-2fd9-4580-b1fc-087d2a04bc98, _Success, _DialogID)
+*/
+THEN
+DebugText(_Player, "OIWRLDBHVR_Anvil_Smith");
+PROC_WYR_OrinsImpersonation_Anvil_StartWorldBehavior((CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef);
+
+IF
+TextEvent("OIWRLDBHVR_Anvil_Orin_GracefulStop")
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, _DialogID)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIWRLDBHVR_Anvil_Orin_GracefulStop");
+DialogRequestBehaviorGracefulStop((INTEGER)_DialogID, 0);
+
+IF
+TextEvent("OIWRLDBHVR_Anvil_Orin_ForceStop")
+AND
+DB_WYR_OrinsImpersonation_Behavior_Anvil(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101, _DialogID)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OIWRLDBHVR_Anvil_Orin_ForceStop");
+PROC_WYR_OrinsImpersonation_Anvil_ForceStopWorldBehavior(S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+
+IF
+TextEvent("OISmithAD_Start")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISmithAD_Start");
+PROC_TryStartAD((DIALOGRESOURCE)WYR_OrinsImpersonation_AD_Smith_f2c23c85-62aa-c695-0f7f-019e0dbf8c0a, S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101);
+
+
+IF
+TextEvent("OISitOnGround")
+AND
+DB_GEN_OrinsAbduction_OrinTransformRule_Common(_TransformRule)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISitOnGround");
+TeleportTo((CHARACTER)S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662, _Player, "", 0, 0, 0, 0, 0);
+Transform((CHARACTER)S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662, (CHARACTER)S_GLO_OrinsImpersonation_Smith_2ac966aa-3372-419a-902a-8330925830ef, (SHAPESHIFTRULE)_TransformRule);
+SitOnGround(S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662);
+
+IF
+TextEvent("OISitOnGroundStop")
+AND
+DB_GEN_OrinsAbduction_OrinTransformRule_Common(_TransformRule)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISitOnGroundStop");
+EndRepose(S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662);
+
+IF
+TextEvent("OIWRLDBHVR_SitOnGround_Start")
+AND
+GetHostCharacter(_Player)
+AND
+StartBehaviorDialog_Internal(
+	(DIALOGRESOURCE)BHVR_WRLD_GLO_SitGroundDrink_HUM_M_6213924c-ba91-280d-be95-22a8e6a4b42f, 
+	1, 
+	(CHARACTER)S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662, 
+	NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000,
+	(TRIGGER)NULL_00000000-0000-0000-0000-000000000000, _Success, _DialogID)
+THEN
+DebugText(_Player, "OIWRLDBHVR_SitOnGround_Start");
+
+IF
+TextEvent("OISitOnGround_Drink_Start")
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player, "OISitOnGround_Drink_Start");
+PlayAnimation((CHARACTER)S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662, (ANIMATION)CUST_SittingGroundDrinking_01_Loop_717f3d36-b7dc-4cbc-b390-9fa5be580caa, "WYR_OrinsImpersonation_Debug_EndOfCustDrink");
+
+IF
+EntityEvent(_, "WYR_OrinsImpersonation_Debug_EndOfCustDrink")
+THEN
+SitOnGround(S_WYR_OrinsImpersonation_OrinDummy_10bcedcb-ea08-4af7-9946-297e4088e662);
+
+
+//END_REGION
+
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3"

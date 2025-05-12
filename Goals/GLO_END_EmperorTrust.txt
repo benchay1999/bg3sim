@@ -1,0 +1,89 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+//DB_END_FinalDecisions_Promises((FLAG)_PromiseMadeFlag, (FLAG)_KeptPromiseFlag, (STRING)_PromiseName, (INTEGER)_PlayerImportanceWieght, (INTEGER)_EmperorTrustDelta);
+DB_END_FinalDecisions_Promises((FLAG)GOB_DrowCommander_Event_RaidersSortie_26816b01-2d64-b50c-3bf6-bffd7dc5f0b9, (FLAG)DEN_AttackOnDen_State_RaiderVictory_abe1bce8-c234-4afe-a490-76210d98a078, "MintharaRaid", 4, 20);
+DB_END_FinalDecisions_Promises((FLAG)Debug_END_FinalDecisions_Event_Event1PromiseMade_c1f8a4e9-1a1d-428b-8c76-a44c4fee53e8, (FLAG)Debug_END_FinalDecisions_Event_Event1PromiseKept_d3083cdb-aec0-4939-84ce-dc6f5234f85a, "Debug1", 1, 8);
+DB_END_FinalDecisions_Promises((FLAG)Debug_END_FinalDecisions_Event_Event2PromiseMade_5dafbe29-9dc7-457a-9d82-04b859f38efb, (FLAG)Debug_END_FinalDecisions_Event_Event2PromiseKept_8fd423bc-fd6d-4c31-b1c9-d2b1d4e3b9f4, "Debug2", 2, 12);
+DB_END_FinalDecisions_Promises((FLAG)Debug_END_FinalDecisions_Event_Event3PromiseMade_52db18f2-cf32-4efb-836e-e0c00db343d2, (FLAG)Debug_END_FinalDecisions_Event_Event3PromiseKept_50965301-e92e-4287-9602-1db3ba9a5696, "Debug3", 3, 20);
+
+//DB_END_FinalDecisions_Promises((FLAG)_PromiseMadeFlag, (FLAG)_BrokePromiseFlag, (STRING)_PromiseName, (INTEGER)_PlayerImportanceWieght, (INTEGER)_EmperorTrustDelta
+DB_END_FinalDecisions_Promises((FLAG)GOB_DrowCommander_Event_RaidersSortie_26816b01-2d64-b50c-3bf6-bffd7dc5f0b9, (FLAG)DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d, "MintharaRaid", 4, -20);
+DB_END_FinalDecisions_Promises((FLAG)Debug_END_FinalDecisions_Event_Event1PromiseMade_c1f8a4e9-1a1d-428b-8c76-a44c4fee53e8, (FLAG)Debug_END_FinalDecisions_Event_Event1PromiseBroken_ea5dd58b-076e-4488-818c-599826f923d6, "Debug1", 1, -8);
+DB_END_FinalDecisions_Promises((FLAG)Debug_END_FinalDecisions_Event_Event2PromiseMade_5dafbe29-9dc7-457a-9d82-04b859f38efb, (FLAG)Debug_END_FinalDecisions_Event_Event2PromiseBroken_ffcffec5-da0b-4268-a033-b68e57c4960b, "Debug2", 2, -12);
+DB_END_FinalDecisions_Promises((FLAG)Debug_END_FinalDecisions_Event_Event3PromiseMade_52db18f2-cf32-4efb-836e-e0c00db343d2, (FLAG)Debug_END_FinalDecisions_Event_Event3PromiseBroken_388d4f6c-5efd-470b-90ef-82133be39a83, "Debug3", 3, -20);
+
+//DB_END_FinalDecisions_EmperorTrust((INTEGER)_BaseTrustValue)
+DB_END_FinalDecisions_EmperorTrust(80);
+
+//DB_END_FinalDecisions_PromiseEventFlags((STRING)_PromiseName, (FLAG)_EventFlag)
+DB_END_FinalDecisions_PromiseEventFlags("MintharaRaid", (FLAG)END_FinalDecisions_Event_BrokeMintharaRaidPromise_950b9e65-74bf-48c2-89de-3bc7b6772fb3);
+DB_END_FinalDecisions_PromiseEventFlags("NightsongFreedom", (FLAG)END_FinalDecisions_Event_BrokeNightsongFreedomPromise_df7d9735-ae10-43c7-b030-36fd5f6bf7f9);
+DB_END_FinalDecisions_PromiseEventFlags("Debug1", (FLAG)Debug_END_FinalDecisions_Event_BrokeDebug1_1e9b7923-9063-41d9-af88-04b2041607d4);
+DB_END_FinalDecisions_PromiseEventFlags("Debug2", (FLAG)Debug_END_FinalDecisions_Event_BrokeDebug2_c5c3dec4-d11d-4f3b-9cdc-c8eff0898ac3);
+DB_END_FinalDecisions_PromiseEventFlags("Debug3", (FLAG)Debug_END_FinalDecisions_Event_BrokeDebug3_137f898e-0f3c-4011-8fc4-519b1533cd91);
+*/
+KBSECTION
+/*
+//REGION
+IF
+TextEvent("SetEmperorTrust")
+AND
+GetTextEventParamInteger(1, _TrustValue)
+AND
+DB_END_FinalDecisions_EmperorTrust((INTEGER)_CurrentTrust)
+THEN
+NOT DB_END_FinalDecisions_EmperorTrust(_CurrentTrust);
+DB_END_FinalDecisions_EmperorTrust(_TrustValue);
+//END_REGION
+
+//REGION Listen for the PromiseMade/Broken flag to be set for a given situation
+IF
+DB_END_FinalDecisions_Promises((FLAG)_Flag, (FLAG)_BrokePromise, (STRING)_PromiseName, (INTEGER)_PlayerImportanceWeight, (INTEGER)_TrustDelta)
+AND
+DB_GlobalFlag(_Flag)
+AND
+DB_GlobalFlag(_BrokePromise)
+THEN
+PROC_END_FinalDecisions_ModifyEmperorTrust(_TrustDelta);
+PROC_END_FinalDecisions_TryCacheBrokenPromise(_PromiseName, _PlayerImportanceWeight, _TrustDelta);
+
+PROC
+PROC_END_FinalDecisions_TryCacheBrokenPromise((STRING)_PromiseName, (INTEGER)_PlayerImportanceWeight, (INTEGER)_TrustDelta)
+AND
+_TrustDelta < 0
+AND
+DB_END_FinalDecisions_PromiseEventFlags(_PromiseName, (FLAG)_EventFlag)
+THEN
+PROC_END_FinalDecisions_WeightBrokenPromise(_PromiseName, _PlayerImportanceWeight, _EventFlag);
+//END_REGION
+
+//REGION Weight CachedBrokenPromises
+PROC
+PROC_END_FinalDecisions_WeightBrokenPromise((STRING)_PromiseName, (INTEGER)_Weight, (FLAG)_EventFlag)
+AND
+_Weight > 0
+AND
+IntegerSubtract(_Weight, 1, _NewWeight)
+THEN
+DB_END_FinalDecisions_WeightedCachedBrokenPromises(_PromiseName, _NewWeight, _EventFlag);
+PROC_END_FinalDecisions_WeightBrokenPromise(_PromiseName, _NewWeight, _EventFlag);
+//END_REGION
+
+//REGION Modify Emperor Trust Value
+PROC
+PROC_END_FinalDecisions_ModifyEmperorTrust((INTEGER)_TrustDelta)
+AND
+DB_END_FinalDecisions_EmperorTrust((INTEGER)_CurrentTrust)
+AND
+IntegerSum(_CurrentTrust, _TrustDelta, (INTEGER)_NewTrust)
+THEN
+NOT DB_END_FinalDecisions_EmperorTrust(_CurrentTrust);
+DB_END_FinalDecisions_EmperorTrust(_NewTrust);
+//END_REGION
+*/
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

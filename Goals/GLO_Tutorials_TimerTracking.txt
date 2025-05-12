@@ -1,0 +1,104 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+/* System for handling various timers in Tutorials. 
+- Prevents multiple identical timer starts
+- DB_GLO_Tutorials_TrackedTimers caches timer states "Running" and "Finished", non-object timers are bound to null object
+- By default all timers cached as Finished are treated as once only. If you want to use them again, remove the Finished record using PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord
+*/
+//REGION Start
+PROC
+PROC_GLO_Tutorials_TrackedTimerStart((STRING)_TimerName, (INTEGER)_TimerLength)
+AND
+NOT DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, _)
+THEN
+TimerLaunch(_TimerName, _TimerLength);
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Running");
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerStart((GUIDSTRING)_Object, (STRING)_TimerName, (INTEGER)_TimerLength)
+AND
+NOT DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, _)
+THEN
+RealtimeObjectTimerLaunch(_Object, _TimerName, _TimerLength);
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Running");
+//END_REGION
+
+//REGION Finish
+IF
+TimerFinished(_TimerName)
+AND
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Running")
+THEN
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Finished");
+PROC_GLO_Tutorials_TrackedTimerFinished(_TimerName);
+
+IF
+ObjectTimerFinished(_Object, _TimerName)
+AND
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Running")
+THEN
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Finished");
+PROC_GLO_Tutorials_TrackedTimerFinished(_Object, _TimerName);
+
+IF // DB self manager, only 1 state value per timer signature allowed
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, _State)
+AND
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, _OtherState)
+AND
+_State != _OtherState
+THEN
+NOT DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, _OtherState);
+//END_REGION
+
+//REGION Cancel
+PROC
+PROC_GLO_Tutorials_TrackedTimerCancel((STRING)_TimerName)
+AND
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Running")
+THEN
+TimerCancel(_TimerName);
+NOT DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Running");
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerCancel((GUIDSTRING)_Object, (STRING)_TimerName)
+AND
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Running")
+THEN
+ObjectTimerCancel(_Object, _TimerName);
+NOT DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Running");
+//END_REGION
+
+//REGION DB Erase record
+PROC
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord((STRING)_TimerName)
+AND
+DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Finished")
+THEN
+NOT DB_GLO_Tutorials_TrackedTimers((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, _TimerName, "Finished");
+
+PROC
+PROC_GLO_Tutorials_TrackedTimer_EraseTimerRecord((GUIDSTRING)_Object, (STRING)_TimerName)
+AND
+DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Finished")
+THEN
+NOT DB_GLO_Tutorials_TrackedTimers(_Object, _TimerName, "Finished");
+//END_REGION
+
+//REGION Dummy functions, for the sake of definitions
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished((STRING)_TimerName)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_Tutorials_TrackedTimerFinished((GUIDSTRING)_Object, (STRING)_TimerName)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

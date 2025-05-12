@@ -1,0 +1,377 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Children((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+SetImmortal((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+
+DB_DialogMoneyTransfer(1, (DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684, 5);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)WYR_MeetingYenna_State_KindPath_39ce1c08-e6c3-4d5c-9aca-904d1484895d, (DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684);
+
+DB_DoNotFaceDialog(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (DIALOGRESOURCE)WYR_MeetingYenna_Cat_d5fdc246-b963-6708-e901-4d2a56c92765);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("YennaVisitCamp") //send Yenna to visit camp
+AND
+GetHostCharacter(_Player)
+AND
+DB_ActiveLevel("CTY_Main_A")
+THEN
+PROC_WYR_YennaVisitCamp();
+DebugText(_Player, "YennaVisitCamp");
+
+IF
+TextEvent("YennaVisitCamp") //send Yenna to visit camp
+AND
+GetHostCharacter(_Player)
+AND
+DB_ActiveLevel("BGO_Main_A")
+THEN
+PROC_WYR_YennaVisitCamp();
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_WYR_YennaInteraction_d044f6cc-6b3c-46e6-8163-e55ff0e6a57e);
+DebugText(_Player, "YennaVisitCamp");
+
+IF
+TextEvent("YennaMovedToCamp") //set up Yenna in camp as if she's already been invited to stay
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(CAMP_Yenna_State_InviteYenna_97ef627d-05ca-4218-a7e0-00aafcad939e);
+SetFlag(CAMP_Yenna_State_MovedToCamp_f30c28c0-19b8-4e0a-bf67-ce4e52e00991);
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, 1);
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)CAMP_MeetingYenna_InviteYenna_dc450528-d148-fdf9-35c7-de3b8851c860);
+DB_Dialogs((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (DIALOGRESOURCE)WYR_MeetingYenna_Cat_d5fdc246-b963-6708-e901-4d2a56c92765);
+DebugText(_Player, "YennaMovedToCamp");
+
+IF
+TextEvent("YennaPostAbduction_VisitCamp") //send Yenna to visit the camp one last time after the abduction
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(LOW_BhaalTemple_State_WasAbductedYenna_ff8e1e49-dcb0-4671-a747-dce5c704207b);
+SetFlag(CAMP_Yenna_State_PostAbductionCampChat_d30c5b6a-eada-4c8c-927d-a50de178ec29);
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, 1);
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)CAMP_MeetingYenna_SoupVendor_b1b97be3-de2f-c93f-6738-e4d9f9f136cb);
+DebugText(_Player, "YennaPostAbduction_VisitCamp");
+
+IF
+TextEvent("YennaPostAbduction_MovedToCamp") //set up Yenna in camp after the abduction as if she's already been invited to stay
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(CAMP_Yenna_State_MovedToCamp_f30c28c0-19b8-4e0a-bf67-ce4e52e00991);
+SetFlag(LOW_BhaalTemple_State_WasAbductedYenna_ff8e1e49-dcb0-4671-a747-dce5c704207b);
+SetFlag(CAMP_Yenna_State_PostAbductionCampChat_d30c5b6a-eada-4c8c-927d-a50de178ec29);
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, 1);
+PROC_SetCustomTradeTreasure((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "LOW_Yenna_SoupTrader");
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)CAMP_MeetingYenna_SoupVendor_b1b97be3-de2f-c93f-6738-e4d9f9f136cb);
+DebugText(_Player, "YennaPostAbduction_MovedToCamp");
+//END_REGION
+
+
+//REGION Yenna intro in WYR
+//if you haven't spoken to Yenna yet, she should be available in wrym's crossing
+IF
+DB_ActiveLevel("BGO_Main_A")
+AND
+NOT DB_GlobalFlag(WYR_MeetingYenna_State_EndedIntro_6dc1887c-a348-445a-8299-366875f5b5ee)
+AND
+NOT DB_OnlyOnce("WYR_MeetingYenna_IntroDialog")
+AND
+QRY_OnlyOnce("WYR_MeetingYenna_EnterWYR_FirstTime")
+THEN
+TeleportTo(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (TRIGGER)S_WYR_YennaTeleport_99795c53-6046-4ef6-b372-c80f1bd86a93);
+TeleportTo(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (TRIGGER)S_WYR_YennasCatTeleport_0a38b7a0-4954-49f6-b26b-a80c071090f9);
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684);
+DB_Dialogs((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (DIALOGRESOURCE)WYR_MeetingYenna_Cat_d5fdc246-b963-6708-e901-4d2a56c92765);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_WYR_YennaInteraction_d044f6cc-6b3c-46e6-8163-e55ff0e6a57e);
+PROC_PlayLoopingAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)CUST_Worried_01_a4616816-be6d-4fa1-a65a-2da057196af4,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+
+//Yenna should be in wyrm's crossing if she hasn't been met in camp yet
+IF
+DB_ActiveLevel("BGO_Main_A")
+AND
+NOT DB_GlobalFlag(CAMP_Yenna_State_InviteYenna_97ef627d-05ca-4218-a7e0-00aafcad939e)
+AND
+NOT DB_GlobalFlag(CAMP_Yenna_State_MovedToCamp_f30c28c0-19b8-4e0a-bf67-ce4e52e00991)
+AND
+NOT DB_YennaDismissedFromCamp(1)
+AND
+NOT DB_GlobalFlag(WYR_MeetingYenna_State_EndedIntro_6dc1887c-a348-445a-8299-366875f5b5ee)
+AND
+NOT DB_OnlyOnce("WYR_MeetingYenna_IntroDialog")
+AND
+QRY_OnlyOnce("WYR_MeetingYenna_EnterWYR_FirstTime")
+THEN
+TeleportTo(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (TRIGGER)S_WYR_YennaTeleport_99795c53-6046-4ef6-b372-c80f1bd86a93);
+TeleportTo(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (TRIGGER)S_WYR_YennasCatTeleport_0a38b7a0-4954-49f6-b26b-a80c071090f9);
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684);
+DB_Dialogs((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (DIALOGRESOURCE)WYR_MeetingYenna_Cat_d5fdc246-b963-6708-e901-4d2a56c92765);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_WYR_YennaInteraction_d044f6cc-6b3c-46e6-8163-e55ff0e6a57e);
+PROC_PlayLoopingAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)CUST_Worried_01_a4616816-be6d-4fa1-a65a-2da057196af4,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+
+//Force Yenna to speak to the player when they get close
+IF
+DB_InRegion(_Player, (TRIGGER)S_WYR_YennaInteraction_d044f6cc-6b3c-46e6-8163-e55ff0e6a57e)
+AND
+NOT DB_CantTalk(_Player)
+AND
+NOT DB_OnlyOnce("WYR_MeetingYenna_IntroDialog")
+THEN
+DB_OnlyOnce("WYR_MeetingYenna_IntroDialog");
+SetFlag(WYR_MeetingYenna_Event_TalkingToPlayer_5e9a86e4-75cf-4f3c-bc73-799bf0567ae7);
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_WYR_YennaInteraction_d044f6cc-6b3c-46e6-8163-e55ff0e6a57e);
+PROC_CharacterMoveToAndTalk((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, _Player, (DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684, "", "Run", 10.0);
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_Follow((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684, _)
+AND
+DB_GlobalFlag(WYR_MeetingYenna_State_YennaWalksAway_cc120ce6-a4b6-4ca4-bfc2-c24e1a30a778)
+THEN
+PROC_StopFollow((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71);
+PROC_CharacterMoveTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_WYR_YennaLeavePos_e5c0ba4b-2d97-47a4-b5b0-0a4eebfcae21, "Walk", "WYR_MeetingYenna_YennaStartsToWalkAway");
+PROC_CharacterMoveTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_WYR_YennasCatLeavePos_158f4198-16cc-4827-81fa-42b777f60f50, "Walk", "WYR_MeetingYenna_YennasCatStartsToWalkAway");
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_WYR_YennaLeavePos_e5c0ba4b-2d97-47a4-b5b0-0a4eebfcae21, "Walk", 0, "WYR_MeetingYenna_YennaWalksAway");
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_WYR_YennasCatLeavePos_158f4198-16cc-4827-81fa-42b777f60f50, "Walk", 0, "WYR_MeetingYenna_YennasCatWalksAway");
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684, _)
+AND
+NOT DB_GlobalFlag(WYR_MeetingYenna_State_YennaWalksAway_cc120ce6-a4b6-4ca4-bfc2-c24e1a30a778)
+THEN
+PROC_StopFollow((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71);
+PROC_CharacterMoveTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_WYR_YennaBackToPos_afb37e09-f804-4168-83db-2e60d340188a, "Walk", "WYR_MeetingYenna_BackToStartPos");
+PROC_CharacterMoveTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_WYR_YennasCatBackToPos_b71fc223-16ec-4b6b-9dba-6a33686c4cff, "Walk", "WYR_MeetingYenna_CatBackToStartPos");
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)WYR_MeetingYenna_State_KindPath_39ce1c08-e6c3-4d5c-9aca-904d1484895d)
+THEN
+SetFlag(WYR_MeetingYenna_State_LessWorried_9d0fe1b5-0ec9-421b-97e4-f7122def5875);
+
+IF
+EntityEvent(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "WYR_MeetingYenna_YennaWalksAway")
+THEN
+PROC_WYR_YennaVisitCamp();
+
+IF
+EntityEvent(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, "WYR_MeetingYenna_CatBackToStartPos")
+THEN
+PROC_PlayLoopingAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)CUST_Worried_01_a4616816-be6d-4fa1-a65a-2da057196af4,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+
+//REGION Pre-camp setup
+IF
+DialogEnded((DIALOGRESOURCE)WYR_MeetingYenna_Introduction_4da93265-3276-570f-460b-0f43b9003684, _)
+THEN
+SetFlag(WYR_MeetingYenna_State_EndedIntro_6dc1887c-a348-445a-8299-366875f5b5ee);
+
+IF
+DB_GlobalFlag(WYR_MeetingYenna_State_EndedIntro_6dc1887c-a348-445a-8299-366875f5b5ee)
+AND
+DB_Players(_Player)
+AND
+DB_InCamp(_Player)
+AND
+QRY_OnlyOnce("WYR_MeetingYenna_VisitCamp_FirstTime")
+THEN
+PROC_WYR_YennaVisitCamp();
+//END_REGION
+
+
+//REGION Dismiss Yenna
+IF
+FlagSet(CAMP_Yenna_State_DismissYenna_5a7a31ec-d743-4b7b-8a7c-d8eff917d49e, _, _ID)
+AND
+NOT DB_Defeated(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f)
+AND
+DB_Players(_Player)
+AND
+DB_ActiveCamp("FARM")
+THEN
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_FARM_YennaDismissPos_b01ceb1a-7615-495e-9488-ced3d55ca96c, "Walk", 0, "Camp_MeetingYenna_DismissedYenna");
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_CAMP_FARM_YennasCatDismissPos_56502e76-6f81-4645-9573-62e3384a6c40, "Walk", 0, "Camp_MeetingYenna_DismissedYennasCat");
+ClearFlag(CAMP_Yenna_State_DismissYenna_5a7a31ec-d743-4b7b-8a7c-d8eff917d49e, _Player);
+DB_YennaDismissedFromCamp(1);
+
+IF
+FlagSet(CAMP_Yenna_State_DismissYenna_5a7a31ec-d743-4b7b-8a7c-d8eff917d49e, _, _ID)
+AND
+NOT DB_Defeated(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f)
+AND
+DB_Players(_Player)
+AND
+DB_ActiveCamp("ELFSONG")
+THEN
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_ELFSONG_YennaDismissPos_d65c1038-1bfe-4ac4-8cca-3d3480403e1d, "Walk", 0, "Camp_MeetingYenna_DismissedYenna");
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_CAMP_ELFSONG_YennasCatDismissPos_f7c53a0c-0acd-4395-a87f-201565c15038, "Walk", 0, "Camp_MeetingYenna_DismissedYennasCat");
+ClearFlag(CAMP_Yenna_State_DismissYenna_5a7a31ec-d743-4b7b-8a7c-d8eff917d49e, _Player);
+DB_YennaDismissedFromCamp(1);
+
+IF
+FlagSet(CAMP_Yenna_State_DismissYenna_5a7a31ec-d743-4b7b-8a7c-d8eff917d49e, _, _ID)
+AND
+NOT DB_Defeated(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f)
+AND
+DB_Players(_Player)
+AND
+DB_ActiveCamp("SLUMS")
+THEN
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_SLUMS_YennaDismissPos_7db270b5-f196-4424-b92e-09359bc98686, "Walk", 0, "Camp_MeetingYenna_DismissedYenna");
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_CAMP_SLUMS_YennasCatDismissPos_1a48a107-d934-427c-b78d-fb405e38af39, "Walk", 0, "Camp_MeetingYenna_DismissedYennasCat");
+ClearFlag(CAMP_Yenna_State_DismissYenna_5a7a31ec-d743-4b7b-8a7c-d8eff917d49e, _Player);
+DB_YennaDismissedFromCamp(1);
+//END_REGION
+
+
+//REGION Invite Yenna
+IF
+FlagSet(CAMP_Yenna_State_InviteYenna_97ef627d-05ca-4218-a7e0-00aafcad939e, _, _ID)
+AND
+DB_ActiveCamp("FARM")
+THEN
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_CharacterMoveTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_FARM_YennaCampfirePos_ad701c7e-0bc8-4d92-afed-0c985fbe789d, "Walk", "Camp_MeetingYenna_InvitedYenna");
+PROC_CharacterMoveTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_CAMP_FARM_YennasCatCampfirePos_8fd8868d-b2f8-425e-98ed-f8e22d376780, "Walk", "Camp_MeetingYenna_InvitedYennasCat");
+
+IF
+FlagSet(CAMP_Yenna_State_InviteYenna_97ef627d-05ca-4218-a7e0-00aafcad939e, _, _ID)
+AND
+DB_ActiveCamp("ELFSONG")
+THEN
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_CharacterMoveTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_ELFSONG_YennaCampfirePos_3fc5b1f1-baab-4fce-a3e5-7bad43710067, "Walk", "Camp_MeetingYenna_InvitedYenna");
+PROC_CharacterMoveTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_CAMP_ELFSONG_YennasCatCampfirePos_0b6556a1-c1bb-4690-aa43-b4134488fae6, "Walk", "Camp_MeetingYenna_InvitedYennasCat");
+
+IF
+FlagSet(CAMP_Yenna_State_InviteYenna_97ef627d-05ca-4218-a7e0-00aafcad939e, _, _ID)
+AND
+DB_ActiveCamp("SLUMS")
+THEN
+StopAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_CharacterMoveTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_SLUMS_YennaCampfirePos_831a027b-0c93-49df-85af-7b5d94914693, "Walk", "Camp_MeetingYenna_InvitedYenna");
+PROC_CharacterMoveTo((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, S_CAMP_SLUMS_YennasCatCampfirePos_c1dbd2b9-7ee0-4657-9592-045df06521fa, "Walk", "Camp_MeetingYenna_InvitedYennasCat");
+//END_REGION
+
+
+//REGION Move to Camp - visit
+//Yenna visits the camp as long as she hasn't been invited to stay
+IF
+DB_YennaDismissedFromCamp(1)
+AND
+DB_Players(_Player)
+AND
+NOT DB_InCamp(_Player)
+AND
+NOT DB_InCamp(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f)
+THEN
+PROC_WYR_YennaVisitCamp();
+
+PROC
+PROC_WYR_YennaVisitCamp()
+THEN
+PROC_RemoveDialog(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)CAMP_MeetingYenna_InviteYenna_dc450528-d148-fdf9-35c7-de3b8851c860);
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, 1);
+SetFlag(WYR_MeetingYenna_State_VisitingCamp_0e5d9d5f-e947-4be3-aa75-b4cc9ad2e21d);
+
+PROC
+PROC_WYR_YennaVisitCamp()
+AND
+NOT DB_Defeated((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71)
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 1);
+PROC_PlayLoopingAnimation((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)CUST_Worried_01_a4616816-be6d-4fa1-a65a-2da057196af4,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+
+//REGION Move to Camp - move permanently to the campfire
+IF
+FlagSet(CAMP_Yenna_State_MovedToCamp_f30c28c0-19b8-4e0a-bf67-ce4e52e00991, _, _ID)
+THEN
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "FARM", S_CAMP_FARM_YennaCampfirePos_ad701c7e-0bc8-4d92-afed-0c985fbe789d);
+DB_ORI_OriginCampData((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, "FARM", S_CAMP_FARM_YennasCatCampfirePos_8fd8868d-b2f8-425e-98ed-f8e22d376780);
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "ELFSONG", S_CAMP_ELFSONG_YennaCampfirePos_3fc5b1f1-baab-4fce-a3e5-7bad43710067);
+DB_ORI_OriginCampData((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, "ELFSONG", S_CAMP_ELFSONG_YennasCatCampfirePos_0b6556a1-c1bb-4690-aa43-b4134488fae6);
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "SLUMS", S_CAMP_SLUMS_YennaCampfirePos_831a027b-0c93-49df-85af-7b5d94914693);
+DB_ORI_OriginCampData((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, "SLUMS", S_CAMP_SLUMS_YennasCatCampfirePos_c1dbd2b9-7ee0-4657-9592-045df06521fa);
+//END_REGION
+
+
+//REGION Reactivity - abduction
+IF
+FlagSet(LOW_BhaalTemple_State_WasAbductedYenna_ff8e1e49-dcb0-4671-a747-dce5c704207b, _, _ID)
+THEN
+TeleportTo(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, (TRIGGER)S_LOW_YennasCat_AsylumPos_e7350450-8242-4548-8c10-50bd47cc3c8d);
+SetImmortal((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 0);
+Die((CHARACTER)S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, DEATHTYPE.Physical, 0);
+
+IF
+DB_GlobalFlag(CAMP_Yenna_State_PostAbductionCampChat_d30c5b6a-eada-4c8c-927d-a50de178ec29)
+AND
+DB_InCamp(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f)
+THEN
+PROC_SetCustomTradeTreasure((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "LOW_Yenna_SoupTrader");
+PROC_RemoveDialog(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+DB_Dialogs((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (DIALOGRESOURCE)CAMP_MeetingYenna_SoupVendor_b1b97be3-de2f-c93f-6738-e4d9f9f136cb);
+
+//If the player dismisses Yenna post-abduction, she will leave forever
+IF
+DB_GlobalFlag(CAMP_Yenna_State_DismissYennaPermanently_28b1eb24-33c3-48e3-b347-fa454d737840)
+AND
+DB_ActiveCamp("SLUMS")
+THEN
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_SLUMS_YennaDismissPos_7db270b5-f196-4424-b92e-09359bc98686, "Walk", 0, "Camp_MeetingYenna_DismissedYennaPermanently");
+
+IF
+DB_GlobalFlag(CAMP_Yenna_State_DismissYennaPermanently_28b1eb24-33c3-48e3-b347-fa454d737840)
+AND
+DB_ActiveCamp("ELFSONG")
+THEN
+PROC_DisappearOutOfSightTo((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, S_CAMP_ELFSONG_YennaDismissPos_d65c1038-1bfe-4ac4-8cca-3d3480403e1d, "Walk", 0, "Camp_MeetingYenna_DismissedYennaPermanently");
+
+IF
+EntityEvent((CHARACTER)S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, "Camp_MeetingYenna_DismissedYennaPermanently")
+THEN
+TeleportTo(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, (TRIGGER)S_LOW_Yenna_AsylumPos_28c321b5-e550-43b5-bb90-ef97373cb55a);
+ClearFlag(WYR_MeetingYenna_State_VisitingCamp_0e5d9d5f-e947-4be3-aa75-b4cc9ad2e21d);
+//END_REGION
+
+//REGION Reactivity - crime/attacks
+IF
+AttackedBy(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, _, _Player, _, _, _, _)
+THEN
+SetHitpointsPercentage(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f, 100.0);
+RemoveHarmfulStatuses(S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+
+IF
+AttackedBy(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, _, _Player, _, _, _, _)
+THEN
+PROC_CharacterFullRestore(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71);
+SetHitpointsPercentage(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71, 100.0);
+RemoveHarmfulStatuses(S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71);
+
+PROC
+PROC_CharacterRegisterCrimeHandleIgnoresAfter(_CrimeID, _, _, _, S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f)
+THEN
+CrimeIgnoreCrime(_CrimeID, S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+CrimeIgnoreCrime(_CrimeID, S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71);
+
+PROC
+PROC_CharacterRegisterCrimeHandleIgnoresAfter(_CrimeID, _, _, _, S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71)
+THEN
+CrimeIgnoreCrime(_CrimeID, S_GLO_Yenna_d496d903-d3d6-4314-a324-18542de77b0f);
+CrimeIgnoreCrime(_CrimeID, S_GLO_YennasCat_6583b752-ac47-4ae9-ab9d-d75cebaf9b71);
+//END_REGION
+ 
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3_GEN"

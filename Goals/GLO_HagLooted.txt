@@ -1,0 +1,76 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+DB_CurrentLevel("SCL_Main_A")
+AND
+DB_GlobalFlag((FLAG)HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720)
+AND
+IsInInventory(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,1)
+AND
+QRY_OnlyOnce("GLO_SetupInventoriedHagDisappearance_OnlyOnce")
+THEN
+DB_GLO_InventoriedHagDisappearsOnLongRest(1);
+
+//REGION On first long rest after entering SCL the hag is in sone inventory
+PROC
+PROC_LongRest()
+AND
+DB_GLO_InventoriedHagDisappearsOnLongRest(1)
+AND
+GetDirectInventoryOwner(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,_HagInventoryOwner)
+THEN
+NOT DB_GLO_InventoriedHagDisappearsOnLongRest(1);
+DB_GLO_HagInventoryOwner(_HagInventoryOwner);
+
+IF
+DB_GLO_HagInventoryOwner(_HagInventoryOwner)
+AND
+GetDirectInventoryOwner(_HagInventoryOwner,_HigherLevelHagInventoryOwner)
+THEN
+NOT DB_GLO_HagInventoryOwner(_HagInventoryOwner);
+DB_GLO_HagInventoryOwner(_HigherLevelHagInventoryOwner);
+
+IF
+DB_GLO_HagInventoryOwner(_HagInventoryOwner)
+AND
+NOT GetDirectInventoryOwner(_HagInventoryOwner,_)
+THEN
+NOT DB_GLO_HagInventoryOwner(_HagInventoryOwner);
+TemplateAddTo((ITEMROOT)CONS_Hag_MysteriousGift_27d74bd9-b852-43fd-98ac-999f33e05aa9,_HagInventoryOwner,1,1);
+TeleportTo(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,_HagInventoryOwner,"GLO_HagTeleportedOutOfInventory",0,0,0);
+
+IF
+EntityEvent(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,"GLO_HagTeleportedOutOfInventory")
+THEN
+PROC_SetOnStage(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,0);
+//END_REGION
+
+//REGION Since entering SCL the hag was removed from inventory
+PROC
+PROC_LongRest()
+AND
+DB_GLO_InventoriedHagDisappearsOnLongRest(1)
+AND
+NOT GetDirectInventoryOwner(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,_)
+AND
+CreateAtObject(CONS_Hag_MysteriousGift_27d74bd9-b852-43fd-98ac-999f33e05aa9,S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,0,0,"",0,_CreatedItem)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_LongRest()
+AND
+DB_GLO_InventoriedHagDisappearsOnLongRest(1)
+AND
+NOT GetDirectInventoryOwner(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,_)
+THEN
+NOT DB_GLO_InventoriedHagDisappearsOnLongRest(1);
+PROC_SetOnStage(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d,0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "GLO_Hag"

@@ -1,0 +1,430 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers((TRIGGER)S_MOO_Oubliette_Entry_Box_b157662d-991f-4a3e-9076-a36b9593c200);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_MOO_Oubliette_HorrorScreech_Box_c70cdda1-8479-4adc-9ddf-6091515e4da5);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_MOO_Oubliette_Escape_Box_022573bb-94ce-40b2-94d8-f2e67de368a9);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_MOO_Oubliette_Escape_Box_022573bb-94ce-40b2-94d8-f2e67de368a9);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_MOO_Oubliette_Escape_Box_022573bb-94ce-40b2-94d8-f2e67de368a9);
+
+DB_GLO_CharacterCorpseDialog(S_MOO_Oubliette_Corpse_Membranes_ebcb2820-6eb4-41ee-aa0e-e01fd90f2b08,MOO_Oubliette_CorpseMembranes_Dead_c2c5fe7f-fbdc-7cf3-08fa-808d9ac51e39);
+
+DB_OneShot_VoiceBarkTrigger(S_MOO_Oubliette_ColonyComment_PAD_Trigger_35d72bf5-4d80-4fe1-a41f-9e301693d6f9,MOO_Oubliette_VB_ColonyComment_d4022045-85b7-a962-b66c-f984bf0cdf92);
+
+DB_OneShotPlayerTrigger((TRIGGER)S_COL_Oubliette_Daisy_8419194d-e67a-4290-be4f-b72c91e1a3b9);
+DB_OneShotPlayerTrigger((TRIGGER)S_MOO_Oubliette_ShoutFX_Box_2a8615af-ed27-43bc-8fff-fe289d25146f);
+KBSECTION
+//REGION Debug hooks
+
+IF
+TextEvent("Oubliette_Enter")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,S_MOO_OublietteAppearPos_da5c04d6-6b54-43ac-b171-4c8157f1c9d4, "",1,1,1,1,1);
+
+IF
+TextEvent("Oubliette_Enter_Cell")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,S_MOO_OublietteEntranceCell_27c6761c-0dec-48b8-9349-da687a603005, "",1,1,1,1,1);
+
+IF
+TextEvent("Oubliette_Enter_Fall")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,S_MOO_OublietteAppearPos_da5c04d6-6b54-43ac-b171-4c8157f1c9d4, "",1,1,1,1,0);
+
+IF
+TextEvent("Oubliette_Enter_Cell_Fall")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,S_MOO_OublietteEntranceCell_27c6761c-0dec-48b8-9349-da687a603005, "",1,1,1,1,0);
+
+IF
+TextEvent("Oubliette_Entrance_Cell")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,S_MOO_PrisonSpawnPoint_aaf10d5a-4018-4a7b-84d5-52f276857eed, "",1,1,1,1,1);
+
+IF
+TextEvent("Oubliette_Entrance_Escape")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,TeleportTrigger_Prison_OublietteReturnToMoonriseTower_745875e1-e453-43a3-991c-bc4a610edd11, "",1,1,1,1,1);
+
+IF
+TextEvent("Oubliette_Entrance")
+AND
+GetHostCharacter(_Character)
+THEN
+TeleportTo(_Character,S_MOO_Oubliette_Entrance_Point_f9d4c07f-cfa8-4eb5-84b0-953c277afbed, "",1,1,1,1,1);
+
+IF
+TextEvent("Oubliette_Reset")
+THEN
+NOT DB_MOO_Oubliette_HorrorScreech(1);
+
+IF
+TextEvent("Oubliette_Reset")
+AND
+DB_MOO_Oubliette_IsInside(_Player)
+THEN
+NOT DB_MOO_Oubliette_IsInside(_Player);
+
+IF
+TextEvent("Oubliette_Reset")
+AND
+DB_OnlyOnce_PerUser(_ProfileID,_SituationID)
+AND
+QRY_MOO_Oubliette_SituationID_ShouldReset(_SituationID)
+THEN
+NOT DB_OnlyOnce_PerUser(_ProfileID,_SituationID);
+
+QRY
+QRY_MOO_Oubliette_SituationID_ShouldReset("MOO_Oubliette_Entry_Once")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_MOO_Oubliette_SituationID_ShouldReset("MOO_Oubliette_Entry_Twice")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_MOO_Oubliette_SituationID_ShouldReset("MOO_Oubliette_HorrorScreech")
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Moonrise Tower prison to oubliette entry
+
+IF
+EnteredTrigger(_Char, S_MOO_OublietteEntrance_5fc9baa7-135c-4d19-a2b6-ec93bed76854)
+AND
+NOT DB_Is_InCombat(_Char, _)
+THEN
+PROC_MOO_Oubliette_TeleportDown(_Char, S_MOO_OublietteAppearPos_da5c04d6-6b54-43ac-b171-4c8157f1c9d4);
+SetCombatGroupID(_Char, "");
+
+IF
+EnteredTrigger(_Char, S_MOO_OublietteEntrance_5fc9baa7-135c-4d19-a2b6-ec93bed76854)
+AND
+DB_Is_InCombat(_Char, _)
+THEN
+PROC_MOO_Oubliette_TeleportDown((CHARACTER)_Char,(TRIGGER)S_MOO_OublietteAppearPos_da5c04d6-6b54-43ac-b171-4c8157f1c9d4);
+SetCombatGroupID(_Char, "");
+
+IF
+EnteredTrigger(_Char, S_MOO_OublietteEntranceCell_27c6761c-0dec-48b8-9349-da687a603005)
+AND
+NOT DB_Is_InCombat(_Char, _)
+THEN
+PROC_MOO_Oubliette_TeleportDown(_Char, S_MOO_OublietteAppearCellPos_b1f1929e-1fe7-4561-8a9a-f59277c4e5eb);
+SetCombatGroupID(_Char, "");
+
+IF
+EnteredTrigger(_Char, S_MOO_OublietteEntranceCell_27c6761c-0dec-48b8-9349-da687a603005)
+AND
+DB_Is_InCombat(_Char, _)
+THEN
+PROC_MOO_Oubliette_TeleportDown(_Char, S_MOO_OublietteAppearCellPos_b1f1929e-1fe7-4561-8a9a-f59277c4e5eb);
+SetCombatGroupID(_Char, "");
+
+PROC
+PROC_MOO_Oubliette_TeleportDown(_Player, _)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(MOO_Oubliette_State_EnteredThroughPrison_4b1b86b4-a2ae-44e9-9a96-ce1199264ebb)
+THEN
+SetFlag(MOO_Oubliette_State_EnteredThroughPrison_4b1b86b4-a2ae-44e9-9a96-ce1199264ebb);
+
+PROC
+PROC_MOO_Oubliette_TeleportDown((CHARACTER)_Char,(TRIGGER)_Trigger)
+AND
+IsImmuneToFallDamage(_Char,1)
+THEN
+DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,1);
+
+PROC
+PROC_MOO_Oubliette_TeleportDown((CHARACTER)_Char,(TRIGGER)_Trigger)
+AND
+NOT DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,(INTEGER)_)
+AND
+HasActiveStatus(_Char,"FLY",1)
+THEN
+DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,1);
+
+PROC
+PROC_MOO_Oubliette_TeleportDown((CHARACTER)_Char,(TRIGGER)_Trigger)
+AND
+NOT DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,(INTEGER)_)
+THEN
+DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,0);
+
+PROC
+PROC_MOO_Oubliette_TeleportDown((CHARACTER)_Char,(TRIGGER)_Trigger)
+AND
+DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,(INTEGER)_NegateFallDamage)
+THEN
+TeleportTo(_Char,_Trigger, "",1,0,0,1,_NegateFallDamage);
+NOT DB_MOO_Oubliette_ShouldNegateFallDamage((CHARACTER)_Char,(INTEGER)_NegateFallDamage);
+
+//END_REGION
+
+//REGION Automated Dialogs
+
+//REGION First/second visit PAD
+//Play first/second visit PAD
+IF
+EnteredTrigger(_Player,S_MOO_Oubliette_Entry_Box_b157662d-991f-4a3e-9076-a36b9593c200)
+AND
+NOT DB_MOO_Oubliette_IsInside(_Player)
+AND
+QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,"MOO_Oubliette_Entry_Once")
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,"MOO_Oubliette_Entry_Twice")
+THEN
+PROC_MOO_Oubliette_Entry_CueDialog(_Player);
+
+IF
+EnteredTrigger(_Player,S_MOO_Oubliette_Entry_Box_b157662d-991f-4a3e-9076-a36b9593c200)
+AND
+NOT DB_MOO_Oubliette_IsInside(_Player)
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,"MOO_Oubliette_Entry_Once")
+THEN
+PROC_MOO_Oubliette_Entry_CueDialog(_Player);
+
+PROC
+PROC_MOO_Oubliette_Entry_CueDialog((CHARACTER)_Player)
+AND
+NOT DB_MOO_Oubliette_IsInside(_Player)
+THEN
+DB_MOO_Oubliette_IsInside(_Player);
+DB_MOO_Oubliette_Entry_Players(_Player);
+TimerCancel("MOO_Oubliette_Entry");
+TimerLaunch("MOO_Oubliette_Entry",3000);
+//Delay dialog to avoid being obscured by fade in
+//or allow other players to enter in the meantime
+
+IF
+TimerFinished("MOO_Oubliette_Entry")
+AND
+DB_MOO_Oubliette_IsInside(_Player)
+AND
+QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,"MOO_Oubliette_Entry_Once")
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,"MOO_Oubliette_Entry_Twice")
+THEN
+PROC_OncePerUserAndNearbyPlayers_Set(_Player,"MOO_Oubliette_Entry_Twice", 10.0);
+
+IF
+TimerFinished("MOO_Oubliette_Entry")
+AND
+DB_MOO_Oubliette_IsInside(_Player)
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Player,"MOO_Oubliette_Entry_Once")
+THEN
+PROC_OncePerUserAndNearbyPlayers_Set(_Player,"MOO_Oubliette_Entry_Once", 10.0);
+
+//Determine entry speaker (if any available)
+IF
+TimerFinished("MOO_Oubliette_Entry")
+AND
+DB_MOO_Oubliette_Entry_Players(_Player)
+AND
+NOT DB_MOO_Oubliette_Entry_Speaker(_)
+AND
+QRY_SpeakerIsAvailable(_Player)
+THEN
+DB_MOO_Oubliette_Entry_Speaker(_Player);
+
+//Clear obsolete database
+IF
+TimerFinished("MOO_Oubliette_Entry")
+AND
+DB_MOO_Oubliette_Entry_Players(_Player)
+THEN
+NOT DB_MOO_Oubliette_Entry_Players(_Player);
+
+//Start entry dialog
+IF
+TimerFinished("MOO_Oubliette_Entry")
+AND
+DB_MOO_Oubliette_Entry_Speaker(_Player)
+AND
+QRY_StartDialog(MOO_Oubliette_PAD_Entry_49f75387-4bc8-0d5f-6a71-bba91d98e4d3,_Player)
+THEN
+NOT DB_MOO_Oubliette_Entry_Speaker(_Player);
+
+//END_REGION
+
+//REGION Escape PAD
+
+//Left Oubliette flag
+IF
+LeftTrigger(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+AND
+DB_MOO_Oubliette_IsInside(_Player)
+AND
+GetFlag((FLAG)MOO_Oubliette_State_HasEntered_b0a61423-10d0-34b4-b4e7-eb422f5a5664,_Player,0)
+THEN
+SetFlag((FLAG)MOO_Oubliette_State_HasEntered_b0a61423-10d0-34b4-b4e7-eb422f5a5664,_Player);
+
+//Trigger timer
+IF
+LeftTrigger(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+AND
+DB_MOO_Oubliette_IsInside(_Player)
+THEN
+NOT DB_MOO_Oubliette_IsInside(_Player);
+DB_MOO_Oubliette_Escaping(_Player);
+TimerCancel("MOO_Oubliette_Escape");
+TimerLaunch("MOO_Oubliette_Escape",3000);
+
+//Escape AD
+IF
+TimerFinished("MOO_Oubliette_Escape")
+AND
+DB_MOO_Oubliette_Escaping(_Player)
+AND
+DB_InRegion(_Player,S_MOO_Oubliette_Escape_Box_022573bb-94ce-40b2-94d8-f2e67de368a9)
+AND
+NOT DB_InRegion(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player,"MOO_Oubliette_Escape")
+AND
+QRY_StartDialog(MOO_Oubliette_PAD_Escape_8b3608ed-5cd7-fe82-0082-8412e653a43b,_Player)
+THEN
+DB_NOOP(1);
+
+IF
+TimerFinished("MOO_Oubliette_Escape")
+AND
+DB_MOO_Oubliette_Escaping(_Player)
+THEN
+NOT DB_MOO_Oubliette_Escaping(_Player);
+
+//Delay with timer to allow for escape AD to play above
+//(allows escape box EnteredTrigger to happen after area trigger LeftTrigger happens)
+//also allows nearby player to catch up
+IF
+TimerFinished("MOO_Oubliette_Escape")
+AND
+DB_MOO_Oubliette_IsInside(_Player)
+AND
+NOT DB_InRegion(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+THEN
+NOT DB_MOO_Oubliette_IsInside(_Player);
+
+//END_REGION
+
+//REGION Hook horror screech + PAD
+//If the patrolling hook horror is still patrolling, play screech and AD
+IF
+EnteredTrigger(_Player,S_MOO_Oubliette_HorrorScreech_Box_c70cdda1-8479-4adc-9ddf-6091515e4da5)
+AND
+NOT DB_MOO_Oubliette_HorrorScreech(_)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player,"MOO_Oubliette_HorrorScreech")
+THEN
+PROC_MOO_Oubliette_Start_HorrorScreech(_Player);
+
+PROC
+PROC_MOO_Oubliette_Start_HorrorScreech((CHARACTER)_)
+AND
+DB_InRegion(_Player,S_MOO_Oubliette_SUB_c6f54de0-1c8f-4cf8-bcf9-b13c8f53b05b)
+THEN
+PlayHUDSound(_Player,"S_MOO_Oubliette_HorrorScreech");
+
+PROC
+PROC_MOO_Oubliette_Start_HorrorScreech((CHARACTER)_Player)
+THEN
+DB_MOO_Oubliette_HorrorScreech_Speaker((CHARACTER)_Player);
+TimerLaunch("MOO_Oubliette_HorrorScreech",4000);
+
+IF
+TimerFinished("MOO_Oubliette_HorrorScreech")
+AND
+DB_MOO_Oubliette_HorrorScreech_Speaker((CHARACTER)_Player)
+THEN
+StartVoiceBark(MOO_Oubliette_VB_HorrorScreech_ffd7dcbb-a9fc-a110-5130-2d40261dd750,_Player);
+NOT DB_MOO_Oubliette_HorrorScreech_Speaker((CHARACTER)_Player);
+
+//Disturbing the hook horror will prevent the screech + PAD from playing again
+IF
+EnteredCombat(S_MOO_OublietteHookHorror_000_eda129f0-b54b-4b05-95a3-ba626e4b765a,_)
+AND
+NOT DB_MOO_Oubliette_HorrorScreech(_)
+THEN
+DB_MOO_Oubliette_HorrorScreech(1);
+
+IF
+Dying(S_MOO_OublietteHookHorror_000_eda129f0-b54b-4b05-95a3-ba626e4b765a)
+AND
+NOT DB_MOO_Oubliette_HorrorScreech(_)
+THEN
+DB_MOO_Oubliette_HorrorScreech(1);
+
+//END_REGION
+
+//END_REGION
+
+//Bloodbath: covered in blood status effect
+IF
+EnteredTrigger(_Character,S_MOO_Oubliette_BloodBath_Box_001_fa16ff6c-fcca-46a1-b0bf-f2331855c0d4)
+AND
+HasActiveStatus(_Character,"BLOOD_COVERED_FULL",0)
+THEN
+ApplyStatus(_Character, "BLOOD_COVERED_FULL", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EnteredTrigger(_Character,S_MOO_Oubliette_BloodBath_Box_002_052fb5de-8815-4652-ab78-fd2aa8902725)
+AND
+HasActiveStatus(_Character,"BLOOD_COVERED_FULL",0)
+THEN
+ApplyStatus(_Character, "BLOOD_COVERED_FULL", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_OneShotTriggerEntered(_Player,S_COL_Oubliette_Daisy_8419194d-e67a-4290-be4f-b72c91e1a3b9)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)COL_Arrival_DaisyAD_ThroughPrison_d3901325-9eac-1ea0-887e-c2ba286f2d48);
+
+PROC
+PROC_COL_TeleportPartiesToColony(_)
+THEN
+NOT DB_OneShotPlayerTrigger((TRIGGER)S_COL_Oubliette_Daisy_8419194d-e67a-4290-be4f-b72c91e1a3b9);
+
+PROC
+PROC_OneShotTriggerEntered(_,S_MOO_Oubliette_ShoutFX_Box_2a8615af-ed27-43bc-8fff-fe289d25146f)
+AND
+GetPosition(S_MOO_Oubliette_ShoutFX_Point_a83379dc-a2b6-4e7e-936e-a27559708fd9,_X,_Y,_Z)
+THEN
+PlayEffectAtPosition(VFX_Environment_SCL_MoonrisePrison_Scream_01_8ce13b2d-bee6-fd05-e6a8-ac73080a06e8,_X,_Y,_Z,1.0);
+
+// If player entered elsewhere
+IF
+EnteredTrigger(_Player,S_MOO_Oubliette_Entry_Box_b157662d-991f-4a3e-9076-a36b9593c200)
+AND
+DB_OneShotPlayerTrigger((TRIGGER)S_MOO_Oubliette_ShoutFX_Box_2a8615af-ed27-43bc-8fff-fe289d25146f)
+THEN
+NOT DB_OneShotPlayerTrigger((TRIGGER)S_MOO_Oubliette_ShoutFX_Box_2a8615af-ed27-43bc-8fff-fe289d25146f);
+
+PROC
+PROC_COL_OnFirstEntry()
+THEN
+PROC_RemoveOneShotVoiceBarkTrigger(S_MOO_Oubliette_ColonyComment_PAD_Trigger_35d72bf5-4d80-4fe1-a41f-9e301693d6f9,MOO_Oubliette_VB_ColonyComment_d4022045-85b7-a962-b66c-f984bf0cdf92);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

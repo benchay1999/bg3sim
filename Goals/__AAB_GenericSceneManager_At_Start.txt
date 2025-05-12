@@ -1,0 +1,63 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Scene manager rules that must run before rules in other goals
+KBSECTION
+// Preempt the assault crime handling (so we don't first get a DisturbanceRegistering and then an Attacked/Died interrupt)
+IF
+AttackedBy((CHARACTER)_NPC,(CHARACTER)_AttackerOwner,(CHARACTER)_Attacker,_,_,_,_StoryActionID)
+AND
+DB_SceneManager(_NPC,_SceneName)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+THEN
+PROC_SceneManager_HandleViolence(_NPC,_ResolvedAttacker,_SceneName,"Attacked",_StoryActionID);
+
+IF
+MissedBy((CHARACTER)_NPC,(CHARACTER)_AttackerOwner,(CHARACTER)_Attacker,_StoryActionID)
+AND
+DB_SceneManager(_NPC,_SceneName)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+THEN
+PROC_SceneManager_HandleViolence(_NPC,_ResolvedAttacker,_SceneName,"Attacked",_StoryActionID);
+
+IF
+KilledBy(_NPC,_AttackerOwner,_Attacker,_StoryActionID)
+AND
+_NPC != _Attacker
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneManager_HandleViolence(_NPC,_ResolvedAttacker,_SceneName,"Died",_StoryActionID);
+DB_InternScene_DeathHandled(_SceneName,_NPC);
+
+IF
+Died(_NPC)
+AND
+// No KilledBy events get sent if there is no (known) killer, e.g. in case of ctrl-shift-k,
+// or an NPC dying from being in a dangerous surface that's not owned by anyone
+NOT DB_InternScene_DeathHandled(_,_NPC)
+AND
+DB_SceneManager(_NPC,_SceneName)
+THEN
+PROC_SceneInterrupted(_NPC,NULL_00000000-0000-0000-0000-000000000000,_SceneName,"Died");
+
+IF
+Died(_NPC)
+AND
+DB_InternScene_DeathHandled(_SceneName,_NPC)
+THEN
+NOT DB_InternScene_DeathHandled(_SceneName,_NPC);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

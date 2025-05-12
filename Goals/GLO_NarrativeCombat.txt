@@ -1,0 +1,287 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//This DB is set then PROC_GLO_NarrativeCombat_StartCombat is called and is cleared when PROC_GLO_NarrativeCombat_EndCombat is called.
+//DB_GLO_NarrativeCombat_ID((STRING)_Identifier,(GUIDSTRING)_NarrativeCombatID)
+NOT DB_GLO_NarrativeCombat_ID("", NULL_00000000-0000-0000-0000-000000000000);
+
+//To track who is actively in the narrative combat
+//DB_GLO_NarrativeCombat_Participant((STRING)_NarrativeCombatIdentifier,(GUIDSTRING)_NarrativeCombatID,(GUIDSTRING)_Entity)
+NOT DB_GLO_NarrativeCombat_Participant("", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+//To know a character that was at any point in the narrative combat that is still active. Is cleared when narrative combat ends
+//DB_GLO_NarrativeCombat_WasParticipant((STRING)_NarrativeCombatIdentifier,(GUIDSTRING)_NarrativeCombatID,(GUIDSTRING)_Entity)
+NOT DB_GLO_NarrativeCombat_WasParticipant("", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+//Exclude any generics that would make characters leave or rejoin if this DB is set. Generics mainly just handle death.
+//DB_GLO_NarrativeCombat_GenericException((STRING)_Identifier)
+NOT DB_GLO_NarrativeCombat_GenericException("");
+
+//Entity you want more direct control over when they join/leave.
+//DB_GLO_NarrativeCombat_GenericExceptionParticipant((STRING)_NarrativeCombatIdentifier,(GUIDSTRING)_Entity)
+NOT DB_GLO_NarrativeCombat_GenericExceptionParticipant("", NULL_00000000-0000-0000-0000-000000000000);
+
+//The trigger bounds of the narrative combat. Needed for characters to rejoin with generics (example, character died then resurrected)
+//DB_GLO_NarrativeCombat_Region((STRING)_Identifier,(TRIGGER)_Region)
+NOT DB_GLO_NarrativeCombat_Region("",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+
+KBSECTION
+PROC
+PROC_GLO_NarrativeCombat_StartCombat((STRING)_Identifier)
+AND
+CreateNarrativeCombat(_ID)
+THEN
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID);
+PROC_GLO_NarrativeCombat_IDGenerated((STRING)_Identifier, (GUIDSTRING)_ID);
+
+PROC
+PROC_GLO_NarrativeCombat_IDGenerated((STRING)_Identifier, (GUIDSTRING)_ID)
+THEN
+DB_NOOP(1);
+
+IF
+DB_Is_InCombat(_Entity, _ID)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+NOT DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity)
+AND
+IsInNarrativeCombat(_Entity, _ID, 0)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat(_Identifier, _Entity);
+
+PROC
+PROC_GLO_NarrativeCombat_JoinCombat((STRING)_Identifier, (GUIDSTRING)_Entity)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+IsInNarrativeCombat(_Entity, _ID, 0)
+AND
+NOT DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity)
+THEN
+SetInNarrativeCombat(_Entity, _ID, 1);
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity);	//needs to be set after the DB
+
+IF
+DB_Is_InCombat(_Entity, _ID)
+AND
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity)
+THEN
+PROC_GLO_NarrativeCombat_ParticipantJoined(_Identifier, _Entity);
+
+//For handling generic edge-cases that us PROC_EnterCombat
+PROC
+PROC_EnterCombat(_Entity, _Target)
+AND
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Target)
+AND
+IsInNarrativeCombat(_Target, _ID, 1)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat(_Identifier, _Entity);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantJoined(_Identifier, _Char)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+AND
+IsCharacter(_Char, 1)
+THEN
+TriggerRegisterForCharacter(_Region, (CHARACTER)_Char);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantJoined(_Identifier, _Entity)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+NOT DB_GLO_NarrativeCombat_WasParticipant(_Identifier, _ID, _Entity)
+THEN
+DB_GLO_NarrativeCombat_WasParticipant(_Identifier, _ID, _Entity);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantJoined((STRING)_Identifier,(GUIDSTRING)_Entity)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_NarrativeCombat_LeaveCombat((STRING)_Identifier, (GUIDSTRING)_Entity)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+IsInNarrativeCombat(_Entity, _ID, 1)
+AND
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity)
+THEN
+NOT DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity);
+SetInNarrativeCombat(_Entity, _ID, 0);
+PROC_GLO_NarrativeCombat_ParticipantLeft(_Identifier, _Entity);
+
+PROC
+PROC_GLO_NarrativeCombat_ParticipantLeft((STRING)_Identifier,(GUIDSTRING)_Entity)
+THEN
+DB_NOOP(1);
+
+IF
+EnteredTrigger(_Char, _Region)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+THEN
+PROC_GLO_NarrativeCombat_CharacterEnteredRegion(_Char, _Region);
+
+PROC
+PROC_GLO_NarrativeCombat_CharacterEnteredRegion((CHARACTER)_Char,(TRIGGER)_Region)
+THEN
+DB_NOOP(1);
+
+IF
+DB_Defeated(_Char)
+AND
+NOT DB_Downed((CHARACTER)_Char)
+AND
+NOT DB_Is_Banished(_Char) //Banished characters do not leave combat
+AND
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Char)
+AND
+QRY_GLO_NarrativeCombat_IsNotException(_Identifier, _Char)
+THEN
+PROC_GLO_NarrativeCombat_LeaveCombat(_Identifier, _Char);
+
+IF
+DB_OffStage(_Char)
+AND
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Char)
+AND
+QRY_GLO_NarrativeCombat_IsNotException(_Identifier, _Char)
+THEN
+PROC_GLO_NarrativeCombat_LeaveCombat(_Identifier, _Char);
+
+QRY
+QRY_GLO_NarrativeCombat_IsNotException((STRING)_Identifier, (GUIDSTRING)_Char)
+AND
+NOT DB_GLO_NarrativeCombat_GenericException(_Identifier)
+AND
+NOT DB_GLO_NarrativeCombat_GenericExceptionParticipant(_Identifier, _Char)
+THEN
+DB_NOOP(1);
+
+//Players will join combat if they enter an active narrrative combat region
+IF
+DB_InRegion(_Player, _Region)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_HiddenCharacters(_Player, _)
+AND
+QRY_GLO_NarrativeCombat_IsNotException(_Identifier, _Player)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat(_Identifier, _Player);
+
+//NPCs that leave DB_Defeated should rejoin combat if it's still active and they are still in the combat region
+PROC
+PROC_StateCleared_Defeated(_Char)
+AND
+DB_GLO_NarrativeCombat_WasParticipant(_Identifier, _ID, _Char)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+AND
+DB_InRegion((CHARACTER)_Char, _Region)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+QRY_GLO_NarrativeCombat_IsNotException(_Identifier, _Char)
+THEN
+PROC_GLO_NarrativeCombat_JoinCombat(_Identifier, _Char);
+
+IF
+LeftTrigger(_Char, _Region)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+THEN
+PROC_GLO_NarrativeCombat_CharacterLeftRegion(_Identifier, _Char, _Region);
+PROC_GLO_NarrativeCombat_CheckForAnyPlayersInRegion(_Region);
+
+PROC
+PROC_GLO_NarrativeCombat_CharacterLeftRegion((STRING)_Identifier, (CHARACTER)_Char,(TRIGGER)_Region)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_NarrativeCombat_CheckForAnyPlayersInRegion((TRIGGER)_Region)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTrigger(_Region)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+THEN
+PROC_GLO_NarrativeCombat_AllPlayersLeftRegion(_Region);
+
+PROC
+PROC_GLO_NarrativeCombat_AllPlayersLeftRegion((TRIGGER)_Region)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_NarrativeCombat_AnyLivingPartyMembersInRegion((TRIGGER)_Region)
+AND
+DB_GLO_NarrativeCombat_Region(_Identifier, _Region)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_InRegion(_Player, _Region)
+AND
+NOT QRY_GLO_NarrativeCombat_IsDefeated(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_NarrativeCombat_IsDefeated((CHARACTER)_Char)
+AND
+DB_Defeated(_Char)
+AND
+NOT DB_Downed(_Char)
+AND
+NOT DB_Is_Banished(_Char)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_NarrativeCombat_EndCombat((STRING)_Identifier)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity)
+THEN
+NOT DB_GLO_NarrativeCombat_Participant(_Identifier, _ID, _Entity);
+
+PROC
+PROC_GLO_NarrativeCombat_EndCombat((STRING)_Identifier)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+AND
+DB_GLO_NarrativeCombat_WasParticipant(_Identifier, _ID, _Entity)
+THEN
+NOT DB_GLO_NarrativeCombat_WasParticipant(_Identifier, _ID, _Entity);
+
+PROC
+PROC_GLO_NarrativeCombat_EndCombat((STRING)_Identifier)
+AND
+DB_GLO_NarrativeCombat_ID(_Identifier, _ID)
+THEN
+DestroyNarrativeCombat(_ID);
+NOT DB_GLO_NarrativeCombat_ID(_Identifier, _ID);
+PROC_GLO_NarrativeCombat_IDDestroyed(_Identifier, _ID);
+
+PROC
+PROC_GLO_NarrativeCombat_IDDestroyed((STRING)_Identifier,(GUIDSTRING)_ID)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION

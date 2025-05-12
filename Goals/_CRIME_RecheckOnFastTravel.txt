@@ -1,0 +1,81 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// PROC_CRIME_RecheckOnFastTravel((INTEGER)_CrimeID,(CHARACTER)_Criminal)
+//   - called for every criminal part of a RecheckOnTeleport disturbance whenever the party teleports to camp or to a waypoint
+//   - can stop disturbance if it is no longer valid (before NPCs at the target location have a chance to react)
+KBSECTION
+//REGION Track disturbances that need rechecking/cancelling on fast travel
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+CrimeHasProperty(_CrimeID, RecheckOnFastTravel_e7567171-f97c-45ce-b1d5-35bc055f4b19, 1)
+THEN
+DB_CRIME_RecheckOnFastTravel_Criminals(_CrimeID,_Char);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+CrimeHasProperty(_CrimeID, CancelOnFastTravel_22851ef8-a2af-4f10-a3dd-d3e7e81d7ae6, 1)
+THEN
+DB_CRIME_CancelOnFastTravel_Criminals(_CrimeID,_Char);
+
+IF
+OnCriminalMergedWithCrime(_CrimeID, _Criminal)
+AND
+CrimeHasProperty(_CrimeID, RecheckOnFastTravel_e7567171-f97c-45ce-b1d5-35bc055f4b19, 1)
+THEN
+DB_CRIME_RecheckOnFastTravel_Criminals(_CrimeID,_Criminal);
+
+IF
+OnCriminalMergedWithCrime(_CrimeID, _Criminal)
+AND
+CrimeHasProperty(_CrimeID, CancelOnFastTravel_22851ef8-a2af-4f10-a3dd-d3e7e81d7ae6, 1)
+THEN
+DB_CRIME_CancelOnFastTravel_Criminals(_CrimeID,_Criminal);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_RecheckOnFastTravel_Criminals(_CrimeID,_Char)
+THEN
+NOT DB_CRIME_RecheckOnFastTravel_Criminals(_CrimeID,_Char);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_CancelOnFastTravel_Criminals(_CrimeID,_Char)
+THEN
+NOT DB_CRIME_CancelOnFastTravel_Criminals(_CrimeID,_Char);
+//END_REGION
+
+//REGION Recheck on teleporting to a waypoint or camp
+PROC
+PROC_WaypointTeleported((CHARACTER)_Character,(TRIGGER)_)
+AND
+DB_CRIME_RecheckOnFastTravel_Criminals(_CrimeID,_Character)
+THEN
+PROC_CRIME_RecheckOnFastTravel(_CrimeID,_Character);
+
+PROC
+PROC_CRIME_RecheckOnFastTravel((INTEGER)_CrimeID,(CHARACTER)_Character)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Cancel on teleporting to a waypoint or camp
+PROC
+PROC_WaypointTeleported((CHARACTER)_Character,(TRIGGER)_)
+AND
+DB_CRIME_CancelOnFastTravel_Criminals(_CrimeID,_Character)
+THEN
+NOT DB_CRIME_CancelOnFastTravel_Criminals(_CrimeID,_Character);
+// "Stop the crime for this criminal" = "remove this criminal from the crime"
+// When all criminals are removed, the crime itself will stop as well
+CharacterStopCrimeWithID(_Character,_CrimeID);
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

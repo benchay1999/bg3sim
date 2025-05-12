@@ -1,0 +1,32 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Low HP AD by players
+IF
+HitpointsChanged(_Player,_Percentage)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GLO_PlayerComments_Blocked(_Player)
+AND
+_Percentage > 0.0
+AND
+_Percentage < 20.0
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_PAD_LowHealth_aa35f5b5-d50f-d02b-d0e0-80262a304929,_Player)
+THEN
+DB_GLO_PlayerComments_Blocked(_Player);
+// Max once per turn
+ObjectTimerLaunch(_Player,"GLO_PlayerComments_Blocked",6000);
+
+IF
+ObjectTimerFinished(_Player,"GLO_PlayerComments_Blocked")
+THEN
+NOT DB_GLO_PlayerComments_Blocked((CHARACTER)_Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

@@ -1,0 +1,277 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Is Humanoid - spell set
+DB_Follower_Spellset(0, "CommonSummonActions");
+DB_Follower_Spellset(1, "CommonPlayerActions");
+
+DB_Follower_NPCSpells("Shout_Dash","Shout_Dash_NPC");
+
+DB_Follower_AnimatingSpore((TAG)BULETTE_06c1ef36-dac6-4224-8320-d4d38f84897f);
+DB_Follower_AnimatingSpore((TAG)HOOKHORROR_5e1d89d2-c7f6-49d2-8ed8-64b4ae7c4aba);
+DB_Follower_AnimatingSpore((TAG)MINOTAUR_aa374556-6257-4326-829f-7a9667e6fcb4);
+DB_Follower_AnimatingSpore((TAG)KUOTOA_e3763301-199e-4022-8813-da1bb4eb9542);
+DB_Follower_AnimatingSpore_Spellset("AnimateSporeCreatureActions");
+
+NOT DB_Spell_DominateBeastFollower((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_Spells_AnimateDead((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION QRY to check if follower is the special-cases from the AnimatingSporeCreature list
+QRY
+QRY_IsAnimatingSporeCreature((CHARACTER)_Follower)
+AND
+DB_Follower_AnimatingSpore(_CreatureTag)
+AND
+IsTagged(_Follower, _CreatureTag, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+
+//REGION Add default actions to followers
+// if follower is common humanoid AND NOT AnimatingSpore
+IF
+DB_PartyFollowers(_Follower)
+AND
+IsTagged(_Follower, HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8, 1) // is humaniod
+AND
+DB_Follower_Spellset(1, _SpellSet)
+AND
+NOT QRY_IsAnimatingSporeCreature(_Follower) // is non-AnimatingSpore
+THEN
+PROC_PartyFollower_AddDefaultActions(_Follower, _SpellSet, 1);
+
+// if follower is common NON-humanoid AND NOT AnimatingSpore
+IF
+DB_PartyFollowers(_Follower)
+AND
+IsTagged(_Follower, HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8, 0) // is non-humaniod
+AND
+DB_Follower_Spellset(0, _SpellSet)
+AND
+NOT QRY_IsAnimatingSporeCreature(_Follower) // is non-AnimatingSpore
+THEN
+PROC_PartyFollower_AddDefaultActions(_Follower, _SpellSet, 1);
+
+// if animating spore exception followers
+IF
+DB_PartyFollowers(_Follower)
+AND
+QRY_IsAnimatingSporeCreature(_Follower) // is AnimatingSpore
+AND
+DB_Follower_AnimatingSpore_Spellset(_SpellSet)
+THEN
+PROC_PartyFollower_AddDefaultActions(_Follower, _SpellSet, 1);
+
+PROC
+PROC_PartyFollower_AddDefaultActions((CHARACTER)_Follower, (STRING)_SpellSet, (INTEGER)_ActionIndex)
+AND
+GetSpellFromSet(_SpellSet,_ActionIndex,_Action)
+AND
+IntegerSum(_ActionIndex,1,_NextActionIndex)
+THEN
+PROC_PartyFollower_AddAction(_Follower,_Action);
+PROC_PartyFollower_AddDefaultActions(_Follower,_SpellSet,_NextActionIndex);
+
+PROC
+PROC_PartyFollower_AddAction((CHARACTER)_Follower,(STRING)_Action)
+AND
+DB_Follower_NPCSpells(_Action,_NPCAction)
+AND
+// We can't remove these NPC spells, as they're assigned via a default spellset and
+// we can only remove spells added via Osiris -> only add if they don't have the
+// NPC version
+HasSpell(_Follower,_NPCAction,0)
+THEN
+AddSpell(_Follower,_Action,0);
+DB_PartyFollowers_AddedActions(_Follower,_Action);
+
+PROC
+PROC_PartyFollower_AddAction((CHARACTER)_Follower,(STRING)_Action)
+AND
+NOT DB_Follower_NPCSpells(_Action,_)
+AND
+HasSpell(_Follower,_Action,0)
+THEN
+AddSpell(_Follower,_Action,0);
+DB_PartyFollowers_AddedActions(_Follower,_Action);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+DB_PartyFollowers_AddedActions(_Follower,_Action)
+THEN
+PROC_PartyFollowers_RemoveSpells((CHARACTER)_Follower);
+
+IF
+DB_PartyFollowers_AddedActions(_Follower,_Action)
+AND
+NOT DB_PartyFollowers(_Follower)
+THEN
+PROC_PartyFollowers_RemoveSpells(_Follower);
+
+PROC
+PROC_PartyFollowers_RemoveSpells((CHARACTER)_Follower)
+AND
+DB_PartyFollowers_AddedActions(_Follower,_Action)
+THEN
+RemoveSpell(_Follower,_Action);
+NOT DB_PartyFollowers_AddedActions(_Follower,_Action);
+
+//END_REGION
+
+//REGION Assign FOLLOWER tag to followers
+
+IF
+DB_PartyFollowers(_Follower)
+AND
+IsTagged(_Follower,FOLLOWER_275cee8d-2c1a-4afc-b6a0-0ef6ed2b11ee,0)
+THEN
+SetTag(_Follower,FOLLOWER_275cee8d-2c1a-4afc-b6a0-0ef6ed2b11ee);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+IsTagged(_Follower,FOLLOWER_275cee8d-2c1a-4afc-b6a0-0ef6ed2b11ee,1)
+THEN
+
+PROC_RemoveAllPolymorphs((GUIDSTRING)_Follower);
+ClearTag(_Follower,FOLLOWER_275cee8d-2c1a-4afc-b6a0-0ef6ed2b11ee);
+
+//END_REGION
+
+//REGION Reassign follower to avatar if leader gets dismissed
+PROC
+PROC_GLO_PartyMembers_PreMakeNPCHook((CHARACTER)_OldLeader)
+AND
+DB_PartyFollowers(_Follower)
+AND
+NOT DB_PlayerSummons(_Follower)
+AND
+NOT DB_Spell_DominateBeastFollower(_Follower, _, _) 
+AND
+NOT DB_GLO_Spells_AnimateDead(_Follower, _)
+AND
+CharacterGetOwner(_Follower, _OldLeader)
+AND
+QRY_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader)
+AND
+DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, _NewLeader)
+THEN
+PROC_GLO_PreReassignFollowerHook(_Follower, _OldLeader, _NewLeader);
+RemovePartyFollower(_Follower, _OldLeader);
+DB_GLO_Follower_Reassigning(_Follower, _OldLeader, _NewLeader);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+DB_GLO_Follower_Reassigning(_Follower, _OldLeader, _NewLeader)
+THEN
+AddPartyFollower(_Follower, _NewLeader);
+NOT DB_GLO_Follower_Reassigning(_Follower, _OldLeader, _NewLeader);
+PROC_GLO_PostReassignFollowerHook(_Follower, _OldLeader, _NewLeader);
+
+QRY
+QRY_GLO_Follower_GetBestReplacementLeaderFor(_)
+AND
+DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor((CHARACTER)_OldLeader, (CHARACTER)_NewLeader)
+THEN
+NOT DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, _NewLeader);
+
+// Use QRY_GetBestAvatarForCompanion for non-Avatar
+QRY
+QRY_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader)
+AND
+QRY_GetBestAvatarForCompanion(_OldLeader) //  will fail for avatar
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_OldLeader, _NewLeader)
+THEN
+DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, _NewLeader);
+
+// Find closest avatar for avatar
+QRY
+QRY_GLO_Follower_GetBestReplacementLeaderFor((CHARACTER)_OldLeader)
+AND
+NOT DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, _)
+AND
+QRY_GetClosestAvailableCharacterTo(_OldLeader, 0, 0, NULL_00000000-0000-0000-0000-000000000000, _OldLeader, 1)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_NewLeader, _OldLeader, _, 1) // the closest avatar
+THEN
+DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, (CHARACTER)_NewLeader);
+
+// Fallback if QRY_GetClosestAvailableCharacterTo failed.
+QRY
+QRY_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader)
+AND
+NOT DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, _)
+AND
+QRY_OnlyOnce_Reset("GLO_Follower_GetBestAvatarLeaderFor")
+AND
+DB_Avatars(_NewLeader)
+AND
+_NewLeader != _OldLeader
+AND
+QRY_OnlyOnce("GLO_Follower_GetBestAvatarLeaderFor")
+THEN
+DB_QRYRTN_GLO_Follower_GetBestReplacementLeaderFor(_OldLeader, _NewLeader);
+
+PROC
+PROC_GLO_PreReassignFollowerHook((CHARACTER)_Follower, (CHARACTER)_OldLeader, (CHARACTER)_NewLeader)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_PostReassignFollowerHook((CHARACTER)_Follower, (CHARACTER)_OldLeader, (CHARACTER)_NewLeader)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsPartyFollower((CHARACTER)_Follower, 1)
+AND
+QRY_IsPartyFollower((CHARACTER)_Follower)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsPartyFollower((CHARACTER)_Follower, 0)
+AND
+NOT QRY_IsPartyFollower((CHARACTER)_Follower)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsPartyFollower((CHARACTER)_Follower)
+AND
+IsPartyFollower((CHARACTER)_Follower,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsPartyFollower((CHARACTER)_Follower)
+AND
+DB_GLO_Follower_Reassigning((CHARACTER)_Follower, _, _)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_RemovePartyFollower((CHARACTER)_Follower)
+AND
+IsPartyFollower((CHARACTER)_Follower,1)
+AND
+CharacterGetOwner((CHARACTER)_Follower,_Player)
+THEN
+RemovePartyFollower((CHARACTER)_Follower,_Player);
+
+PROC
+PROC_RemovePartyFollower((CHARACTER)_Follower)
+AND
+DB_GLO_Follower_Reassigning(_Follower, _OldChar, _NewChar)
+THEN
+NOT DB_GLO_Follower_Reassigning(_Follower, _OldChar, _NewChar);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

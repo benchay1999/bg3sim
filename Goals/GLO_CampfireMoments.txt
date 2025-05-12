@@ -1,0 +1,741 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence:
+// -[Link Redacted]
+// -[Link Redacted]
+
+//REGION Campfire Moment Definitions
+//Some fake definitions so everything compiles nicely and the formatting is clear
+NOT DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_FixedPlayer((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)DIALOGGUID_Fake_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+KBSECTION
+//REGION Campfire Moment Hooks
+/*
+Define a Campfire Moment with DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)_DialogName,...);
+_DialogName is the group dialog that gets started. Use the template CampfireMoment_Template as a base.
+
+Speakers:
+To make it work you must also define the fixed NPC speakers of the Campfire Moment using ONE of these 4 overloads:
+DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1);
+DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1,(GUIDSTRING)_NPC2);
+DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1,(GUIDSTRING)_NPC2,(GUIDSTRING)_NPC3);
+DB_CampfireMoment_FixedSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1,(GUIDSTRING)_NPC2,(GUIDSTRING)_NPC3,(GUIDSTRING)_NPC4);
+
+If you want a fixed player speaker, use
+DB_CampfireMoment_FixedPlayer((DIALOGRESOURCE)_DialogName,(CHARACTER)_Player);
+
+If you want optional speakers, who have a speaker slot but may or not be there, use ONE of these 4 overloads:
+DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1);
+DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1,(GUIDSTRING)_NPC2);
+DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1,(GUIDSTRING)_NPC2,(GUIDSTRING)_NPC3);
+DB_CampfireMoment_OptionalSpeakers((DIALOGRESOURCE)_DialogName,(GUIDSTRING)_NPC1,(GUIDSTRING)_NPC2,(GUIDSTRING)_NPC3,(GUIDSTRING)_NPC4);
+
+Use the following 2 procs to do anything respectively before or after the Campfire Moment triggers.
+*/
+PROC
+PROC_CampfireMoment_PreDialog((DIALOGRESOURCE)_Dialog)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CampfireMoment_PostDialog((DIALOGRESOURCE)_Dialog)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Campfire Moments - Cleanup
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog)
+THEN
+NOT DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1)
+THEN
+NOT DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2)
+THEN
+NOT DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3)
+THEN
+NOT DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4)
+THEN
+NOT DB_CampfireMoment_FixedSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_FixedPlayer(_CampfireMomentDialog,_Player)
+THEN
+NOT DB_CampfireMoment_FixedPlayer(_CampfireMomentDialog,_Player);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1)
+THEN
+NOT DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2)
+THEN
+NOT DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3)
+THEN
+NOT DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3);
+
+PROC
+PROC_CampfireMoment_ClearCampfireMoment((DIALOGRESOURCE)_CampfireMomentDialog)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4)
+THEN
+NOT DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker1,_Speaker2,_Speaker3,_Speaker4);
+//END_REGION
+
+//REGION Campfire Moments - Speaker Selection
+PROC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+THEN
+DB_CampfireMoment_DialogStarting(_Dialog);
+
+PROC //AVATAR 0 NPC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog)
+AND
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp((GUIDSTRING)_Avatar)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Avatar)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+
+PROC //ORPHAN 0 NPC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+AND
+QRY_CampfireMoment_FindOrphanInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp(_Orphan)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Orphan)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+
+PROC //AVATAR 1 NPC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp((GUIDSTRING)_Avatar)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Avatar)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+
+PROC //ORPHAN 1 NPC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+AND
+QRY_CampfireMoment_FindOrphanInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp(_Orphan)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker, _Orphan)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+
+PROC //AVATAR 2 NPCs
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker2)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker2)
+AND
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp((GUIDSTRING)_Avatar)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Speaker2,_Avatar)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+SetVisible(_Speaker2,1);
+
+PROC //ORPHAN 2 NPCs
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker2)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker2)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+AND
+QRY_CampfireMoment_FindOrphanInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp((GUIDSTRING)_Orphan)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Speaker2, _Orphan)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+SetVisible(_Speaker2,1);
+
+PROC //AVATAR 3 NPCs
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker2)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker3)
+AND
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp((GUIDSTRING)_Avatar)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Speaker2,_Speaker3,_Avatar)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+SetVisible(_Speaker2,1);
+SetVisible(_Speaker3,1);
+
+PROC //ORPHAN 3 NPCs
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker2)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker3)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+AND
+QRY_CampfireMoment_FindOrphanInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp((GUIDSTRING)_Orphan)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Speaker2,_Speaker3, _Orphan)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+SetVisible(_Speaker2,1);
+SetVisible(_Speaker3,1);
+
+PROC //AVATAR 4 NPCs
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker2)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker3)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker4)
+AND
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp((GUIDSTRING)_Avatar)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Speaker2,_Speaker3,_Speaker4,_Avatar)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+SetVisible(_Speaker2,1);
+SetVisible(_Speaker3,1);
+SetVisible(_Speaker4,1);
+
+PROC //ORPHAN 4 NPCs
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,(GUIDSTRING)_Speaker,(GUIDSTRING)_Speaker2,(GUIDSTRING)_Speaker3,(GUIDSTRING)_Speaker4)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker2)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker3)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker4)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+AND
+QRY_CampfireMoment_FindOrphanInCamp(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp((GUIDSTRING)_Orphan)
+AND
+QRY_StartDialog_Fixed(_Dialog,_Speaker,_Speaker2,_Speaker3,_Speaker4, _Orphan)
+THEN
+DB_CampfireMoment_Succeeded(_Dialog);
+SetVisible(_Speaker,1);
+SetVisible(_Speaker2,1);
+SetVisible(_Speaker3,1);
+SetVisible(_Speaker4,1);
+
+PROC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CampfireMoment_Succeeded(_Dialog)
+THEN
+PROC_CampfireMoment_Failed(_Dialog);
+
+PROC
+PROC_CampfireMoment_Dialog((DIALOGRESOURCE)_Dialog)
+THEN
+NOT DB_CampfireMoment_DialogStarting(_Dialog);
+NOT DB_CampfireMoment_Succeeded(_Dialog);
+
+PROC
+PROC_CampfireMoment_Failed((DIALOGRESOURCE)_Dialog)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_FindAvatarInCamp((DIALOGRESOURCE)_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_Avatar)
+THEN
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_Avatar);
+
+QRY
+QRY_CampfireMoment_FindAvatarInCamp((DIALOGRESOURCE)_Dialog)
+AND
+DB_CampfireMoment_FixedPlayer(_Dialog,_Avatar)
+AND
+DB_PlayerInCamp(_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_Avatar);
+
+QRY
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+AND
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion((CHARACTER)_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_Avatar);
+
+QRY
+QRY_CampfireMoment_FindAvatarInCamp(_Dialog)
+AND
+DB_PlayerInCamp(_Player)
+AND
+DB_Avatars(_Player)
+AND
+NOT QRY_CampfireMoment_IsAlreadyFixedSpeaker(_Dialog,_Player)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_)
+THEN
+DB_QRYRTN_CampfireMoment_FindAvatarInCamp(_Player);
+
+QRY
+QRY_CampfireMoment_FindOrphanInCamp((DIALOGRESOURCE)_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp(_Orphan)
+THEN
+NOT DB_QRYRTN_CampfireMoment_FindOrphanInCamp(_Orphan);
+
+QRY
+QRY_CampfireMoment_FindOrphanInCamp(_Dialog)
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT QRY_CampfireMoment_IsAlreadyFixedSpeaker(_Dialog,_Player)
+AND
+NOT DB_QRYRTN_CampfireMoment_FindOrphanInCamp(_)
+THEN
+DB_QRYRTN_CampfireMoment_FindOrphanInCamp(_Player);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Player,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Player,_,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_Player,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Player,_,_,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_Player,_,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_,_Player,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_IsAlreadyFixedSpeaker((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Player)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_,_,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Dialog)
+AND
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar)
+THEN
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//1-1
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Companion)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//2-1
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Companion,_)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//2-2
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_Companion)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//3-1
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Companion,_,_)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//3-2
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_Companion,_)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//3-3
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_,_Companion)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//4-1
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_Companion,_,_,_)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//4-2
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_Companion,_,_)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//4-3
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_,_Companion,_)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+//4-4
+QRY
+QRY_CampfireMoment_BestAvatarForFixedSpeakerCompanion((DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_)
+AND
+DB_CampfireMoment_FixedSpeakers(_Dialog,_,_,_,_Companion)
+AND
+DB_Origins((CHARACTER)_Companion)
+AND
+QRY_GetBestAvatarForCompanion(_Companion,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Companion,_Avatar)
+THEN
+DB_QRYRTN_CampfireMoment_BestAvatarForFixedSpeakerCompanion(_Avatar);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_CampfireMomentDialog,(INTEGER)_ID)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker)
+THEN
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_CampfireMomentDialog,(INTEGER)_ID)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker,_Speaker2)
+THEN
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker);
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker2);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_CampfireMomentDialog,(INTEGER)_ID)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker,_Speaker2,_Speaker3)
+THEN
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker);
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker2);
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker3);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_CampfireMomentDialog,(INTEGER)_ID)
+AND
+DB_CampfireMoment_OptionalSpeakers(_CampfireMomentDialog,_Speaker,_Speaker2,_Speaker3,_Speaker4)
+THEN
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker);
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker2);
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker3);
+PROC_CampfireMoment_TryAddOptionalSpeaker(_ID,_Speaker4);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_CampfireMomentDialog,(INTEGER)_ID)
+AND
+DB_CampfireMoment_DialogStarting(_CampfireMomentDialog)
+THEN
+PROC_CampfireMoment_AddPlayers(_ID);
+
+PROC
+PROC_CampfireMoment_TryAddOptionalSpeaker((INTEGER)_ID,(GUIDSTRING)_Speaker)
+AND
+QRY_ItemOrCharacterInCamp(_Speaker)
+AND
+QRY_SpeakerIsAvailable(_Speaker)
+THEN
+SetVisible(_Speaker,1);
+PROC_DialogAddSpeakingActor(_ID,_Speaker);
+
+PROC
+PROC_CampfireMoment_AddPlayers((INTEGER)_ID)
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_DialogRequestCache_SpeakerList_Players(_,_ID,_Player,_)
+THEN
+PROC_DialogAddSpeakingActor(_ID,_Player,1);
+
+QRY
+QRY_ItemOrCharacterInCamp((GUIDSTRING)_Speaker)
+AND
+IsItem(_Speaker,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ItemOrCharacterInCamp((GUIDSTRING)_Speaker)
+AND
+IsCharacter(_Speaker,1)
+AND
+DB_InCamp((CHARACTER)_Speaker)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

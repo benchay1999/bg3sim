@@ -1,0 +1,88 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+DB_AutoSaveTrigger((TRIGGER)_Trigger)
+AND
+NOT DB_Subregion(_Trigger,_,_,_) //Subregions can function as autosaves the first time they are entered
+THEN
+DB_OneShotPlayerTrigger(_Trigger);
+
+//retro-active check, if a trigger is a sub-region, it should not be oneshot
+IF
+DB_Subregion(_Trigger,_,_,_)
+AND
+DB_OneShotPlayerTrigger(_Trigger)
+THEN
+NOT DB_OneShotPlayerTrigger(_Trigger);
+
+PROC
+PROC_OneShotTriggerEntered(_,_Trigger)
+AND
+DB_AutoSaveTrigger(_Trigger)
+AND
+DB_AutosaveGroup(_Trigger,_Group)
+AND
+DB_AutosaveGroup(_AnotherTrigger,_Group)
+AND
+_AnotherTrigger != _Trigger
+THEN
+NOT DB_AutoSaveTrigger(_AnotherTrigger);
+NOT DB_OneShotPlayerTrigger(_AnotherTrigger);
+PROC_TriggerUnregisterForPlayers(_AnotherTrigger);
+
+PROC
+PROC_OneShotTriggerEntered(_,_Trigger)
+AND
+DB_AutoSaveTrigger(_Trigger)
+THEN
+NOT DB_AutoSaveTrigger(_Trigger);
+PROC_GLO_TryAutosave();
+
+PROC
+PROC_GLO_TryAutosave()
+AND
+DB_ActiveLevel(_)
+THEN
+AutoSave();
+
+PROC
+PROC_GLO_TryAutosave()
+AND
+NOT DB_ActiveLevel(_)
+THEN
+DB_GLO_PendingAutosave(1);
+
+IF
+DB_GLO_PendingAutosave(1)
+AND
+DB_ActiveLevel(_)
+THEN
+NOT DB_GLO_PendingAutosave(1);
+AutoSave();
+
+//For use of Autosave triggers that are attached to non-oneshots such as Subregions
+IF
+EnteredTrigger((CHARACTER)_Player,(TRIGGER)_Trigger)
+AND
+DB_Players(_Player)
+AND
+DB_AutoSaveTrigger(_Trigger)
+AND
+NOT DB_OneShotPlayerTrigger(_Trigger)
+THEN
+NOT DB_AutoSaveTrigger(_Trigger);
+AutoSave();
+
+IF
+DB_AutosaveGroup((TRIGGER)_Trigger,(STRING)_ID)
+THEN
+DB_AutoSaveTrigger(_Trigger);
+
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

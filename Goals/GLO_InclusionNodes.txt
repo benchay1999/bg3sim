@@ -1,0 +1,501 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+DB_ORI_InclusionFlags((FLAG)ORI_Inclusion_Random_5c169560-2732-c515-9e73-06ba1fd768f0, 1);
+DB_ORI_InclusionFlags((FLAG)ORI_Inclusion_2Random_c30251ab-eab9-4ed8-bdf9-e1e816b7f12c, 2);
+
+DB_ORI_IncludedFlags((FLAG)ORI_Inclusion_PickedAtRandom_46a601fb-8cb7-46ed-9856-3d4e38c53a02, 1);
+DB_ORI_IncludedFlags((FLAG)ORI_Inclusion_PickedAtRandom2_32f45064-c5f2-465f-ac2d-5ad0c1ce9f59, 2);
+
+NOT DB_GLO_Inclusion_DisableForDialog((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_Inclusion_DisableForDialogInCamp((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Softlock party/camp memebers that might get included at the start of the dialog
+//Osiris doesn't know who will be included in the dialog, but because of timeline reasons, we need to add any potential speaker to the dialog at the start.
+//If code finds a reserved slot for the speaker, they will get added (DialogActorJoined), if not, they will send (DialogActorJoinFailed)
+
+//In Camp
+PROC
+PROC_StartDialog_AddInclusionSpeakers((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Inst,_MainPlayer,1)
+AND
+DB_PlayerInCamp((CHARACTER)_MainPlayer)
+AND
+NOT DB_OriginInPartyDialog(_,_Dialog)
+AND
+DB_InCamp(_Companion)
+AND
+NOT DB_ObjectInclusion(_, _Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_DismissedAvatar(_Companion)
+AND
+QRY_SpeakerIsAvailable(_Companion)
+AND
+NOT QRY_Inclusion_BlockCompanionInclusion(_Companion,_Dialog)
+AND
+IsControlled(_Companion,0)
+AND
+QRY_Inclusion_SpeakerIsAvailableForInclusion(_Dialog, _Inst, _Companion, _MainPlayer)
+THEN
+DB_Inclusion_SpeakerCandidate(_Inst,(GUIDSTRING)_Companion);
+
+//Out of Camp
+PROC
+PROC_StartDialog_AddInclusionSpeakers((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_Inst,_MainPlayer,1)
+AND
+NOT DB_PlayerInCamp((CHARACTER)_MainPlayer)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_ObjectInclusion(_, _Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT QRY_Inclusion_BlockCompanionInclusion(_Companion,_Dialog)
+AND
+QRY_Inclusion_SpeakerIsAvailableForInclusion(_Dialog, _Inst, _Companion, _MainPlayer)
+THEN
+DB_Inclusion_SpeakerCandidate(_Inst,_Companion);
+
+IF
+DB_Inclusion_SpeakerCandidate(_Inst,_Companion)
+AND
+DB_Players((CHARACTER)_Companion)
+THEN
+DB_Inclusion_SpeakerCandidate_Player(_Inst,(GUIDSTRING)_Companion);
+NOT DB_Inclusion_SpeakerCandidate(_Inst,_Companion);
+
+PROC
+PROC_StartDialog_AddInclusionSpeakers((DIALOGRESOURCE)_Dialog,(INTEGER)_Inst)
+THEN
+PROC_Inclusion_AddRandomSpeaker_Recursive_PlayersOnly();
+PROC_Inclusion_AddRandomSpeaker_Recursive();
+
+PROC
+PROC_Inclusion_AddRandomSpeaker_Recursive_PlayersOnly()
+AND
+QRY_GetRandom("DB_Inclusion_SpeakerCandidate_Player",2,"DB_Inclusion_RandomAddActor")
+AND
+DB_Inclusion_RandomAddActor((INTEGER)_Inst,(GUIDSTRING)_Companion)
+THEN
+NOT DB_Inclusion_RandomAddActor(_Inst,_Companion);
+NOT DB_Inclusion_SpeakerCandidate_Player(_Inst,_Companion);
+PROC_TryAddInclusionActor(_Inst,_Companion,0);
+PROC_Inclusion_AddRandomSpeaker_Recursive_PlayersOnly();
+
+PROC
+PROC_Inclusion_AddRandomSpeaker_Recursive()
+AND
+QRY_GetRandom("DB_Inclusion_SpeakerCandidate",2,"DB_Inclusion_RandomAddActor")
+AND
+DB_Inclusion_RandomAddActor((INTEGER)_Inst,(GUIDSTRING)_Companion)
+THEN
+NOT DB_Inclusion_RandomAddActor(_Inst,_Companion);
+NOT DB_Inclusion_SpeakerCandidate(_Inst,_Companion);
+PROC_TryAddInclusionActor(_Inst,_Companion,0);
+PROC_Inclusion_AddRandomSpeaker_Recursive();
+
+PROC
+PROC_TryAddInclusionActor((INTEGER)_Inst,(GUIDSTRING)_Actor,(INTEGER)_ConsiderSpeakerGroups)
+AND
+QRY_DialogAddInclusionActor(_Inst,_Actor,_ConsiderSpeakerGroups)
+THEN
+DB_ObjectInclusion(_Inst, _Actor);
+DB_ObjectIsDialogSoftLocked(_Inst, _Actor);
+
+IF
+DialogActorJoinFailed(_,_Inst,_Actor)
+AND
+DB_ObjectInclusion(_Inst, _Actor)
+THEN
+NOT DB_ObjectInclusion(_Inst, _Actor);
+//END_REGION
+
+//REGION Softlocking for NPC Inclusions
+PROC
+PROC_StartDialog_AddInclusionSpeakers((DIALOGRESOURCE)_InclusionDialog,(INTEGER)_Inst)
+AND
+// Don't use DB_DialogRequestCache_SpeakerList_NPCs, as there may not be any NPCs
+DB_DialogRequestCache_SpeakerList_Speakers(_InclusionDialog,_Inst,_Speaker,1)
+AND
+DB_Inclusion_NPCDialog(_InclusionDialog,(CHARACTER)_NPC)
+AND
+NOT DB_ObjectInclusion(_, _NPC)
+AND
+QRY_Inclusion_SpeakerIsAvailableForInclusion(_InclusionDialog, _Inst, _NPC, (CHARACTER)_Speaker)
+THEN
+PROC_DialogAddSpeakingActor(_Inst,_NPC);
+DB_ObjectInclusion(_Inst, _NPC);
+DB_ObjectIsDialogSoftLocked(_Inst, _NPC);
+
+QRY
+QRY_Inclusion_SpeakerIsAvailableForInclusion((DIALOGRESOURCE)_InclusionDialog, (INTEGER)_Instance, (CHARACTER)_NPC, (CHARACTER)_MainPlayer)
+AND
+NOT DB_Inclusion_CombatInclusionDialog(_InclusionDialog)
+AND
+NOT DB_DialogRequestCache_SpeakerList_Speakers(_,_Instance,_NPC,_)	//don't include if we're already in here
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_NPC,_MainPlayer)
+AND
+NOT QRY_Inclusion_MultiplayerProblem(_NPC,_InclusionDialog,_Instance)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_SpeakerIsAvailableForInclusion((DIALOGRESOURCE)_InclusionDialog, (INTEGER)_Instance, (CHARACTER)_NPC, (CHARACTER)_MainPlayer)
+AND
+DB_Inclusion_CombatInclusionDialog(_InclusionDialog)
+AND
+NOT DB_DialogRequestCache_SpeakerList_Speakers(_,_Instance,_NPC,_)	//don't include if we're already in here
+AND
+QRY_SpeakerIsAvailable(_NPC, 1)
+AND
+QRY_SpeakerIsInDialogRange(_NPC,_MainPlayer)
+AND
+NOT QRY_Inclusion_MultiplayerProblem(_NPC,_InclusionDialog,_Instance)
+THEN
+DB_NOOP(1);
+
+//Controlled players can't be included
+QRY
+QRY_Inclusion_MultiplayerProblem((CHARACTER)_Player,(DIALOGRESOURCE)_InclusionDialog, (INTEGER)_Inst)
+AND
+DB_Players(_Player)
+AND
+IsControlled(_Player,1)
+THEN
+DB_NOOP(1);
+
+//Can only include an (uncontrolled) player character if that user is already in the dialog.
+QRY
+QRY_Inclusion_MultiplayerProblem((CHARACTER)_Player,(DIALOGRESOURCE)_InclusionDialog, (INTEGER)_Inst)
+AND
+DB_Players(_Player)
+AND
+GetReservedUserID(_Player,_UserID)
+AND
+NOT QRY_Inclusion_MultiplayerProblem_AlreadyHasSpeakerWithUserID(_InclusionDialog,_Inst,_UserID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_MultiplayerProblem_AlreadyHasSpeakerWithUserID((DIALOGRESOURCE)_InclusionDialog,(INTEGER)_Inst,(INTEGER)_UserID)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_InclusionDialog,_Inst,_ExistingSpeaker,_)
+AND
+GetReservedUserID((CHARACTER)_ExistingSpeaker,_UserID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Singular Inclusion
+//Right before the included character needs to say a line, we turn off the softlock. This will make sure they can no longer be removed from the dialog if they're needed elsewhere
+//Right after the included character has said their line, we turn the softlock back on.
+//This communication happens with a start- and an end-event that's unique for each character and defined with DB_Inclusion_Object(_Object,_StartEvent,_EndEvent);
+
+IF
+FlagSet((FLAG)_ObjectInclusionStartEvent, _Char, _ID) // flagType: Object
+AND
+DB_Inclusion_Object((GUIDSTRING)_Speaker,(FLAG)_ObjectInclusionStartEvent,(FLAG)_)
+THEN
+NOT DB_ObjectIsDialogSoftLocked(_ID, _Speaker); //make sure we're no longer marked as available
+ClearFlag((FLAG)_ObjectInclusionStartEvent, _Char); // flagType: Object
+
+IF
+FlagSet((FLAG)_ObjectInclusionEndEvent, _Char, _ID) // flagType: Object
+AND
+DB_Inclusion_Object(_Origin,(FLAG)_,(FLAG)_ObjectInclusionEndEvent)
+AND
+DB_ObjectInclusion(_ID,_Origin)
+THEN
+DB_ObjectIsDialogSoftLocked(_ID, _Origin);
+
+IF
+FlagSet((FLAG)_ObjectInclusionEndEvent, _Char, _ID) // flagType: Object
+AND
+DB_Inclusion_Object(_Origin,(FLAG)_,(FLAG)_ObjectInclusionEndEvent)
+THEN
+ClearFlag((FLAG)_ObjectInclusionEndEvent, _Char); // flagType: Object
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_ObjectInclusion(_ID,_Origin)
+THEN
+NOT DB_ObjectInclusion(_ID,_Origin);
+
+IF
+AutomatedDialogEnded(_,_ID)
+AND
+DB_ObjectInclusion(_ID,_Origin)
+THEN
+NOT DB_ObjectInclusion(_ID,_Origin);
+
+IF
+DialogActorLeft(_,_ID,_Origin,_)
+AND
+DB_ObjectInclusion(_ID,_Origin)
+THEN
+NOT DB_ObjectInclusion(_ID,_Origin);
+
+IF
+DB_ObjectIsDialogSoftLocked(_ID, _Origin)
+AND
+NOT DB_ObjectInclusion(_ID, _Origin)
+THEN
+NOT DB_ObjectIsDialogSoftLocked(_ID, _Origin);
+//END_REGION
+
+//REGION Exclude orphaned companions.
+QRY
+QRY_Inclusion_BlockCompanionInclusion((GUIDSTRING)_Speaker, (DIALOGRESOURCE)_Dialog)
+AND
+DB_Players((CHARACTER)_Speaker)
+AND
+NOT QRY_Inclusion_CompanionInclusion(_Speaker,_Dialog)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_CompanionInclusion((GUIDSTRING)_Speaker, (DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_Avatars((CHARACTER)_Speaker)
+AND
+NOT DB_Is_Polymorphed(_Speaker)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_,_PlayerInDialog,_)
+AND
+GetReservedUserID(_Speaker,_UserID)
+AND
+GetReservedUserID((CHARACTER)_PlayerInDialog,_UserID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Random Inclusion (arbitrary number of speakers version).
+IF
+FlagSet(_Flag,_Player,_)
+AND
+DB_ORI_InclusionFlags(_Flag, _)
+THEN
+ClearFlag(_Flag,_Player,0);
+
+IF
+FlagSet(_Flag,_Player,_ID)
+AND
+DB_ORI_InclusionFlags(_Flag, _TotalNum)
+AND
+QRY_Inclusion_GetRandomOrigins((CHARACTER)_Player,_ID, _TotalNum)
+AND
+DB_QRYRTN_Inclusion_GetRandomOrigin((CHARACTER)_Origin, (INTEGER)_Num)
+AND
+DB_ORI_IncludedFlags(_PickedFlag, _Num)
+THEN
+PROC_RandomInclusion_StoreSoftLock(_ID,_Origin);
+SetFlag(_PickedFlag,_Origin,0);
+DB_ORI_Inclusion_Random(_ID, _Origin, _Num);
+
+IF
+DialogEnded(_, _ID)
+AND
+DB_ORI_Inclusion_Random(_ID, _Origin, _Num)
+AND
+DB_ORI_IncludedFlags(_PickedFlag, _Num)
+THEN
+ClearFlag((FLAG)_PickedFlag,_Origin,0);
+NOT DB_ORI_Inclusion_Random(_ID, _Origin, _Num);
+
+IF
+AutomatedDialogEnded(_, _ID)
+AND
+DB_ORI_Inclusion_Random(_ID, _Origin, _Num)
+AND
+DB_ORI_IncludedFlags(_PickedFlag, _Num)
+THEN
+ClearFlag((FLAG)_PickedFlag,_Origin,0);
+NOT DB_ORI_Inclusion_Random(_ID, _Origin, _Num);
+
+IF
+FlagSet((FLAG)ORI_Inclusion_End_Random_b5261e06-a89e-0ec8-bab9-2329ff72b6d1,_Player,_ID)
+AND
+DB_ORI_Inclusion_Random(_ID, _Origin, _Num)
+AND
+DB_ORI_IncludedFlags(_PickedFlag, _Num)
+THEN
+PROC_RandomInclusion_RestoreSoftLock(_ID,_Origin);
+ClearFlag(_PickedFlag,_Origin,0);
+NOT DB_ORI_Inclusion_Random(_ID, _Origin, _Num);
+
+IF
+FlagSet((FLAG)ORI_Inclusion_End_Random_b5261e06-a89e-0ec8-bab9-2329ff72b6d1,_Player,_)
+THEN
+ClearFlag((FLAG)ORI_Inclusion_End_Random_b5261e06-a89e-0ec8-bab9-2329ff72b6d1,_Player,0);
+
+PROC
+PROC_RandomInclusion_StoreSoftLock((INTEGER)_ID,(CHARACTER)_Origin)
+AND
+DB_ObjectIsDialogSoftLocked(_ID, _Origin)
+THEN
+DB_RandomInclusion_WasSoftlocked(_ID,_Origin);
+NOT DB_ObjectIsDialogSoftLocked(_ID, _Origin); //make sure we're no longer marked as available
+
+PROC
+PROC_RandomInclusion_RestoreSoftLock((INTEGER)_ID,(CHARACTER)_Origin)
+AND
+DB_RandomInclusion_WasSoftlocked(_ID, _Origin)
+THEN
+NOT DB_RandomInclusion_WasSoftlocked(_ID,_Origin);
+DB_ObjectIsDialogSoftLocked(_ID, _Origin);
+
+IF
+DialogEnded(_, _ID)
+AND
+DB_RandomInclusion_WasSoftlocked(_ID, _Origin)
+THEN
+NOT DB_RandomInclusion_WasSoftlocked(_ID,_Origin);
+
+IF
+AutomatedDialogEnded(_, _ID)
+AND
+DB_RandomInclusion_WasSoftlocked(_ID, _Origin)
+THEN
+NOT DB_RandomInclusion_WasSoftlocked(_ID,_Origin);
+
+QRY
+QRY_Inclusion_GetRandomOrigins((CHARACTER)_Player,(INTEGER)_ID, (INTEGER)_Num)
+AND
+DB_QRYRTN_Inclusion_GetRandomOrigin(_Origin, _Index)
+THEN
+NOT DB_QRYRTN_Inclusion_GetRandomOrigin(_Origin, _Index);
+
+QRY
+QRY_Inclusion_GetRandomOrigins((CHARACTER)_Player,(INTEGER)_ID, (INTEGER)_Num)
+AND
+DB_DialogName(_DialogName, _ID)
+AND
+DB_DialogPlayers(_ID, _Origin, _)
+AND
+QRY_OriginIsAvailableForInclusion(_ID, (CHARACTER)_Origin)
+AND
+_Player != _Origin
+AND
+DB_Origins((CHARACTER)_Origin)
+AND
+NOT DB_Avatars(_Origin)
+THEN
+DB_Inclusion_RandomCandidate((CHARACTER)_Origin);
+
+QRY
+QRY_OriginIsAvailableForInclusion((INTEGER)_ID, (CHARACTER)_Origin)
+AND
+DB_ObjectIsDialogSoftLocked(_ID, _Origin)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_OriginIsAvailableForInclusion((INTEGER)_ID, (CHARACTER)_Origin)
+AND
+DB_Dialog_IncludedNearbySpeakers(_ID, _Origin)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_GetRandomOrigins((CHARACTER)_Player,(INTEGER)_ID, (INTEGER)_Num)
+AND
+QRY_DoNTimes(_Num)
+AND
+DB_QRY_RTN_DoNTimes(_)
+THEN
+PROC_AddRandomIncludedOrigin();
+
+PROC
+PROC_AddRandomIncludedOrigin()
+THEN
+PROC_GetRandom("DB_Inclusion_RandomCandidate",1,"DB_Inclusion_IndividualRandomOrigin");
+
+PROC
+PROC_AddRandomIncludedOrigin()
+AND
+DB_Inclusion_IndividualRandomOrigin(_Origin)
+AND
+SysCount("DB_QRYRTN_Inclusion_GetRandomOrigin", 2, _CurrentNumber)
+AND
+IntegerSum(_CurrentNumber, 1, _NewNumber)
+THEN
+NOT DB_Inclusion_RandomCandidate(_Origin);
+DB_QRYRTN_Inclusion_GetRandomOrigin(_Origin, _NewNumber);
+NOT DB_Inclusion_IndividualRandomOrigin(_Origin);
+
+QRY
+QRY_Inclusion_GetRandomOrigins((CHARACTER)_Player,(INTEGER)_ID, (INTEGER)_Num)
+THEN
+SysClear("DB_Inclusion_RandomCandidate",1);
+
+QRY
+QRY_Inclusion_GetRandomOrigins((CHARACTER)_Player,(INTEGER)_ID, (INTEGER)_Num)
+AND
+SysCount("DB_QRYRTN_Inclusion_GetRandomOrigin", 2, _FinalNumber)
+AND
+_FinalNumber < _Num
+THEN
+SysClear("DB_QRYRTN_Inclusion_GetRandomOrigin",2); //If you couldn't pick enough people, just don't bother including any.
+//END_REGION
+
+//REGION Handling soft lock for inclusion speakers
+
+PROC
+PROC_Inclusion_RemoveOrigin((GUIDSTRING)_Origin)
+AND
+DB_ObjectIsDialogSoftLocked(_ID, _Origin)
+AND
+DialogRemoveActorFromDialog(_ID,_Origin,_)
+THEN
+NOT DB_ObjectIsDialogSoftLocked(_ID,_Origin);
+
+IF
+OnStoryOverride(_Origin)
+THEN
+PROC_Inclusion_RemoveOrigin(_Origin);
+
+IF
+CharacterReservedUserIDChanged(_Origin,_OldUser,_NewUser)
+AND
+_OldUser != -65536
+THEN
+PROC_Inclusion_RemoveOrigin(_Origin);
+
+IF
+GainedControl(_Origin)
+THEN
+PROC_Inclusion_RemoveOrigin(_Origin);
+
+//END_REGION
+
+//REGION Block Companion Inclusion override
+QRY
+QRY_Inclusion_BlockCompanionInclusion(_, _Dialog)
+AND
+DB_GLO_Inclusion_DisableForDialog((DIALOGRESOURCE)_Dialog)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_BlockCompanionInclusion(_Speaker, _Dialog)
+AND
+DB_GLO_Inclusion_DisableForDialogInCamp((DIALOGRESOURCE)_Dialog)
+AND
+DB_InCamp((CHARACTER)_Speaker)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,2052 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Main
+// Reach Moonrise
+DB_QuestDef_State((FLAG)SCL_Harpers_Event_ShowHavenLocation_5565fa4f-ec30-472a-a9ea-7bb7b09390b3, "GLO_Moonrise", "KnowHaven_KnowHarpers");
+DB_QuestDef_State((FLAG)SCL_HarperScouts_Event_InvitedToHaven_9ade36a5-8ea6-ab0e-929c-ac323741435a, "GLO_Moonrise", "KnowHaven_HarperScouts");
+DB_QuestDef_State_ConditionalFlag(
+	(FLAG)GLO_Haven_HeardAbout_e2fba874-5443-415d-8c50-26c51d6993b3, "GLO_Moonrise", "KnowHaven",
+	0, (FLAG)GLO_Haven_KnowsLocation_16cb0598-a205-47dc-8de9-5229b6897012);
+DB_QuestDef_State((FLAG)SCL_Drider_Quest_BetrayedCaravan_3b4381c1-9483-c6ae-3174-d80a2636a6c9, "GLO_Moonrise", "Drider_BetrayedCaravan_Parent");
+DB_QuestDef_State((FLAG)SCL_Drider_State_HasMoonlantern_18a0f150-6f13-429b-9c2b-dbc7dc3ba927, "GLO_Moonrise", "TookMoonlantern_Parent");
+DB_QuestDef_State((FLAG)HAV_EnteringHaven_State_GainedAccess_07c776da-353a-9050-e9be-c42d51a99412, "GLO_Moonrise", "VisitedHaven_Reach");
+DB_QuestDef_State((FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a, "GLO_Moonrise", "HarperAmbushStart");
+
+// Infiltrate
+DB_QuestDef_State((FLAG)MOO_EntranceCheckpoint_AllowedIn_eaac9acc-ec76-fb91-edc4-a694fc9c8156, "GLO_Moonrise", "PassedMTCheckpoint");
+DB_QuestDef_State((FLAG)MOO_EntranceCheckpoint_GainedAccess_e1925000-34f0-9f85-fd1f-32b49478defe, "GLO_Moonrise", "PassedMTCheckpoint");
+DB_QuestDef_State((FLAG)MOO_Execution_Event_KethericRegenerated_d71b5d18-1a38-2bbd-50ce-6e06fa5f6704, "GLO_Moonrise", "ExecutionWitness");
+DB_QuestDef_State((FLAG)MOO_Executioner_Knows_BalthazarIsMissing_84e5cbc6-d9ad-935b-b54c-fc227a365ad6, "GLO_Moonrise", "AskedCaptureNightsong");
+DB_QuestDef_State((FLAG)MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4, "GLO_Moonrise", "AskedKidnapIsobel");
+DB_QuestDef_State((FLAG)GLO_Ketheric_State_AskedBringIsobel_6c4d6bf6-c5f6-4fac-fac0-a6a323ce52a7, "GLO_Moonrise", "AskedKidnapIsobel_Ketheric");
+DB_QuestDef_State((FLAG)ORI_Minthara_State_ToldBalthazar_3ccb6b27-8e83-3cca-81b0-f6acdfd31f13, "GLO_Moonrise", "Relic_MintharaToldNecro");
+
+// Assault
+DB_QuestDef_State(SHA_NightsongPrison_State_NightsongFreed_24f27b06-6665-79ed-d7bf-e4bf356ca2fa, "GLO_Moonrise", "FreedNS_Parent");
+DB_QuestDef_State(MOO_Assault_HasMet_Jaheira_437d97ee-ae53-283f-52be-e81336d56da7, "GLO_Moonrise", "AssaultSawHarpers");
+DB_QuestDef_State_ConditionalFlag(
+	MOO_Assault_State_AllyReadyPositions_f0316e51-b885-472a-a8db-b5cf64aca732, "GLO_Moonrise", "AssaultedMT",
+	1, (FLAG)GLO_MoonriseTower_EverEnteredBefore_26aeabb0-7644-4897-9bbd-7a95e3e8930f);
+
+// Helpers
+DB_GLO_Moonrise_Journal_LearnedSourceFlags((FLAG)SHA_Necromancer_Knows_InvulnerabilitySource_0e33cbbe-18b6-ac57-8ec3-35f296bc6734);
+DB_GLO_Moonrise_Journal_LearnedSourceFlags((FLAG)MOO_BalthazarsSecrets_Knows_NightsongSecret_3599ecf9-382d-46b7-8c72-c7d99303d7c4);
+
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_Shadowcurse
+DB_QuestDef_State((FLAG)HAV_EnteringHaven_State_GainedAccess_07c776da-353a-9050-e9be-c42d51a99412, "GLO_Moonrise", "Protection_VisitedHaven");
+DB_QuestDef_State((FLAG)SCL_ShadowCurse_Knows_DeepCurse_1f996b1d-833b-4a0f-9aca-a3ebf55c0039, "GLO_Moonrise", "ExperiencedShadowcurse_DeepCurse");
+DB_QuestDef_State((FLAG)HAV_Jaheira_SentToIsobel_66fe5023-3708-9bba-5dce-70b4ded2665b, "GLO_Moonrise", "IsobelProtection");
+DB_QuestDef_State((FLAG)HAV_TakingIsobel_Event_GiveOintment_efb6aed5-fd07-433b-b0c5-b980bf77bb2c, "GLO_Moonrise", "GotSeluneProtection");
+DB_QuestDef_State_ConditionalFlag((FLAG)SCL_Drider_HasMet_2af6450a-480a-32bd-65cb-505587c2b0f3, "GLO_Moonrise", "MetDrider",
+	0,(FLAG)HAV_Siege_State_NoProtection_2da0dbf1-88ca-4cab-9c8f-ee8921822958);
+DB_QuestDef_ChainedState("GLO_Moonrise", "Drider_BetrayedCaravan_Parent", "Drider_BetrayedCaravan");
+DB_QuestDef_State((FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a, "GLO_Moonrise", "MoveToAmbush");
+DB_QuestDef_State_ConditionalFlag((FLAG)SCL_Drider_State_HarpersPermaDefeatedBeforeAmbush_cb451e32-061a-422c-ab4c-18a0c174696d, "GLO_Moonrise", "HarpersDefeated_NotReachedAmbush",  
+	1, (FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a);
+DB_QuestDef_State((FLAG)SCL_Drider_Event_AcquiredMoonlanternWithoutFight_cb3bc317-8358-47f4-831e-44ff812ec2b0, "GLO_Moonrise", "PeacefulResolution");
+DB_QuestDef_State_ConditionalFlag((FLAG)SCL_Drider_State_SidedWithCaravan_57a698da-0149-48d1-91fa-9a84a5dcc293, "GLO_Moonrise", "CaravanBetrayedHarpers", 
+	1, (FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a);
+DB_QuestDef_ChainedState("GLO_Moonrise", "KnowHaven_HarperScouts", "Protection_HelpedHarperScouts");
+DB_QuestDef_State(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030, "GLO_Moonrise", "ReachedMoonriseNoLantern");
+DB_QuestDef_ChainedState("GLO_Moonrise", "Relic_ToldHelpNecromancer", "ZrellToldLantern");
+DB_QuestDef_ConditionalState("GLO_Moonrise", "FollowDrider", "JoinedCaravan", "CaravanBetrayedHarpers", 1);
+DB_QuestDef_ConditionalState("GLO_Moonrise", "FollowDrider", "JoinedCaravan", "MetDrider_HavenFell", 1);
+DB_QuestDef_State((FLAG)SCL_Pixie_State_KilledByDarkUrge_1ee1a751-e825-d343-4dba-d885d79175c9, "GLO_Moonrise", "KilledPixie_DarkUrge");
+
+// Harpers permadefeated before the caravan appears
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("SCL_DriderHarperGroup_BeforeAmbush", (FLAG)SCL_Drider_State_HarpersPermaDefeatedBeforeAmbush_cb451e32-061a-422c-ab4c-18a0c174696d);
+
+// Add entries here that need to be unlocked for HavenFell to be valid
+DB_SCL_Journal_HavenQuestUpdates("Protection_VisitedHaven");
+DB_SCL_Journal_HavenQuestUpdates("Protection_HelpedHarperScouts");
+DB_SCL_Journal_HavenQuestUpdates("LearnAboutHaven_NoMoonlantern");
+DB_SCL_Journal_HavenQuestUpdates("LearnAboutHaven_Moonlantern");
+DB_SCL_Journal_HavenQuestUpdates("IsobelProtection");
+DB_SCL_Journal_HavenQuestUpdates("AgreedToHelp_NotLeft");
+
+DB_SCL_Journal_IsobelDialogues((DIALOGRESOURCE)HAV_TakingIsobel_BriefInRoom_22c23201-13a8-916c-932c-a7976bb1f5a5);
+DB_SCL_Journal_IsobelDialogues((DIALOGRESOURCE)HAV_TakingIsobel_FollowUpSaved_5de4ab22-4449-3f6c-3909-f13d66a0e9bd);
+
+DB_GLO_Moonrise_Journal_KnowsAboutNereLanternFlags((FLAG)GLO_Player_Knows_NereToldAboutMoonlantern_8c20dcde-b0b8-bc5e-3305-5de123d71036);
+DB_GLO_Moonrise_Journal_KnowsAboutNereLanternFlags((FLAG)UND_TheDrowNere_Event_MoonlanternBroken_8165207b-e0ad-1a9f-701f-ca7f63ead477);
+DB_GLO_Moonrise_Journal_KnowsAboutNereLanternFlags((FLAG)GLO_Shadowcurse_Knows_FromGnome_f81ae4ea-a095-11f2-fc60-1b7b61a4ba03);
+DB_GLO_Moonrise_Journal_KnowsAboutNereLanternFlags((FLAG)GLO_Shadowcurse_Knows_FromDuergar_493ad2e1-44cd-2f9d-7d24-4697233a0a3b);
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_Caravan
+DB_QuestDef_ChainedState("GLO_Moonrise", "DriderCaravanUpdate", "MeetDrider_Summoned");
+DB_QuestDef_ChainedState("GLO_Moonrise", "DriderCaravanStart", "MeetDrider_Summoned");
+DB_QuestDef_State((FLAG)SCL_Drider_State_AfterAmbushSituationDefused_320cbaed-d830-bcbd-8c19-d1fdab1d2268, "GLO_Moonrise", "FollowDrider");
+DB_QuestDef_State((FLAG)SCL_Drider_Event_CaravanAvoided_LeavesToMOO_87691b6f-39e6-eb50-927c-3e1dafbd61b5, "GLO_Moonrise", "HidFromCaravan");
+//END_REGION
+
+//REGION SUB - Isobel
+// GLO_Moonrise_SUB_MarcusCapture
+DB_QuestDef_State((FLAG)HAV_TakingIsobel_State_SpyConfrontationStarted_44c18469-4650-4941-bf5f-9fe1f01df6e0, "GLO_Moonrise", "MarcusBrief");
+DB_QuestDef_State((FLAG)HAV_TakingIsobel_Event_AttackedMarcusDuringBrief_65767f32-1d6c-46e2-8592-2c94c9efcc2d, "GLO_Moonrise", "AssaultMarcus");
+DB_QuestDef_State((FLAG)HAV_TakingIsobel_Event_HarperGuardIsobel_7316cac0-c33c-4bb7-94b4-62c7eb10de86, "GLO_Moonrise", "WarnedJaheira");
+DB_QuestDef_State((FLAG)HAV_TakingIsobel_State_SidedWithIsobel_52395bbc-a58d-44cd-bd40-8069c776875b, "GLO_Moonrise", "BetrayMarcus");
+
+DB_QuestDef_ChainedState("GLO_Moonrise", "IsobelDead", "Infiltrator_RewardedZrell");
+DB_QuestDef_ChainedState("GLO_Moonrise", "IsobelKidnapped", "Infiltrator_RewardedZrell");
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen("GLO_Moonrise_SUB_MarcusCapture", "Altar_IsobelDead", "Infiltrator_RewardedKetheric");
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen("GLO_Moonrise_SUB_MarcusCapture", "Altar_IsobelKidnapped", "Infiltrator_RewardedKetheric");
+
+DB_GLO_Moonrise_Journal_OnMoonriseMission("CaptureNotMet");
+DB_GLO_Moonrise_Journal_OnMoonriseMission("CaptureMet");
+
+// GLO_Moonrise_SUB_ZrellCapture
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen("GLO_Moonrise_SUB_ZrellCapture", "IsobelDead", "CapturedIsobelForZrell");
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen("GLO_Moonrise_SUB_ZrellCapture", "IsobelKidnapped", "CapturedIsobelForZrell");
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen("GLO_Moonrise_SUB_ZrellCapture", "Altar_IsobelDead", "CapturedIsobelForKetheric");
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen("GLO_Moonrise_SUB_ZrellCapture", "Altar_IsobelKidnapped", "CapturedIsobelForKetheric");
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_Relic
+DB_QuestDef_State((FLAG)MOO_Executioner_Knows_BalthazarIsMissing_84e5cbc6-d9ad-935b-b54c-fc227a365ad6, "GLO_Moonrise", "Relic_ToldHelpNecromancer");
+DB_QuestDef_BookReadState("GLO_Moonrise", "Relic_LearnSourceBook", (ITEM)S_MOO_BalthazarSecretBook_8f90de22-6a7c-4579-a966-73c0d80d7a54);
+DB_QuestDef_State((FLAG)SHA_Upper_State_DiscUnlocked_4b056ce5-e145-4d90-8451-0ff502e11898, "GLO_Moonrise", "ActivatedElevator");
+DB_QuestDef_State_ConditionalFlag(SHA_Trials_Event_AllGemsFound_2d47ee89-2a15-4b33-b933-59f0b0aa6f3b, "GLO_Moonrise", "AcquiredAllGems_LowerAltar", 1, (FLAG)SHA_Upper_State_DiscUnlocked_4b056ce5-e145-4d90-8451-0ff502e11898);
+DB_QuestDef_State_ConditionalFlag(SHA_Trials_Event_AllGemsFound_2d47ee89-2a15-4b33-b933-59f0b0aa6f3b, "GLO_Moonrise", "AcquiredAllGems_UpperAltar", 0, (FLAG)SHA_Upper_State_DiscUnlocked_4b056ce5-e145-4d90-8451-0ff502e11898);
+DB_QuestDef_State_ConditionalFlag((FLAG)SHA_Upper_State_DiscUnlocked_4b056ce5-e145-4d90-8451-0ff502e11898, "GLO_Moonrise", "ActivatedElevator_HasGems", 1, SHA_Trials_Event_AllGemsFound_2d47ee89-2a15-4b33-b933-59f0b0aa6f3b);
+DB_QuestDef_State((FLAG)SHA_NightsongPrison_State_PlayerBetrayedNecro_ed6e37a5-ea65-cf0b-f70b-8e9e2a7e4ed2, "GLO_Moonrise", "Relic_NecromancerFight");
+DB_QuestDef_State((FLAG)ORI_Shadowheart_State_SharPath_bf9ae334-ff6a-458d-b898-3074bca0bdfb, "GLO_Moonrise", "Relic_KilledNS");
+DB_QuestDef_State((FLAG)SHA_NightsongPrison_State_NightsongFreed_24f27b06-6665-79ed-d7bf-e4bf356ca2fa, "GLO_Moonrise", "Relic_FreedNS");
+
+DB_SHA_RelicJournal("Relic_LearnSourceBook");
+DB_SHA_RelicJournal("Relic_BrewerConfession");
+DB_SHA_RelicJournal("Relic_MetNecromancer_Alt");
+DB_SHA_RelicJournal("Relic_MetNecromancer");
+//END_REGION
+KBSECTION
+//REGION GLO_Moonrise: Reach Moonrise
+IF
+FlagSet((FLAG)GLO_Daisy_Event_ToldToGoToMoonrise_f51feeff-096d-44b3-8453-0c486e88f8a4, _, _)
+AND
+DB_QuestIsAccepted("GLO_Moonrise")
+AND
+DB_ActiveLevel("SCL_Main_A")
+AND
+NOT DB_GlobalFlag((FLAG)GLO_MoonriseTower_EverEnteredBefore_26aeabb0-7644-4897-9bbd-7a95e3e8930f)
+THEN
+QuestUpdate("GLO_Moonrise", "ToldMoonriseInSCL_Daisy_KnowsMT");
+
+IF
+FlagSet((FLAG)GLO_Daisy_Event_ToldToGoToMoonrise_f51feeff-096d-44b3-8453-0c486e88f8a4, _, _)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise")
+AND
+DB_ActiveLevel("SCL_Main_A")
+AND
+NOT DB_GlobalFlag((FLAG)GLO_MoonriseTower_EverEnteredBefore_26aeabb0-7644-4897-9bbd-7a95e3e8930f)
+THEN
+QuestUpdate("GLO_Moonrise", "ToldMoonriseInSCL_Daisy_DontKnow");
+
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_QuestIsAccepted("GLO_PathToMoonrise")
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Daisy_Event_ToldToGoToMoonrise_f51feeff-096d-44b3-8453-0c486e88f8a4)
+THEN
+QuestUpdate("GLO_Moonrise", "EnteredSCL_KnowsMT");
+
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_QuestIsAccepted("GLO_PathToMoonrise")
+AND
+DB_GlobalFlag((FLAG)GLO_Daisy_Event_ToldToGoToMoonrise_f51feeff-096d-44b3-8453-0c486e88f8a4)
+THEN
+QuestUpdate("GLO_Moonrise", "EnteredSCL_KnowsMT_HadDream");
+
+IF
+FlagSet(HAV_Jaheira_State_MissionGiven_7516666c-4c71-86d7-9d2b-9f3a4269970b,_,_)
+AND
+NOT DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+AND
+NOT DB_GlobalFlag(SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731)
+THEN
+QuestUpdate("GLO_Moonrise", "JaheiraKillKetheric_Reach");
+
+IF
+FlagSet((FLAG)GLO_HAV_IsobelGaveMission_4f0dd500-6de8-08ce-7db9-083c891e67e7,_,_)
+AND
+NOT DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelKillKetheric_Reach");
+
+IF
+QuestAccepted(_, "GLO_Moonrise_SUB_MarcusCapture")
+AND
+NOT DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+THEN
+QuestUpdate("GLO_Moonrise", "InfiltratorStart_Reach");
+
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", "SavedIsobel")
+AND
+NOT DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+THEN
+QuestUpdate("GLO_Moonrise", "ProtectedIsobel_Reach");
+
+PROC
+PROC_State_Changed(S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab, "HAV_Mood", "HAV_Mood_State_Siege")
+AND
+NOT DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+THEN
+QuestUpdate("GLO_Moonrise", "HavenFell_Parent");
+
+// Drider appears at the checkpoint
+PROC
+PROC_SCL_Drider_StartCaravanEscort()
+AND
+DB_QuestIsAccepted("GLO_Moonrise")
+AND
+DB_OnlyOnce("SCL_Drider_DriderAppears")
+THEN
+QuestUpdate("GLO_Moonrise", "DriderCaravanUpdate");
+
+PROC
+PROC_SCL_Drider_StartCaravanEscort()
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise")
+AND
+DB_OnlyOnce("SCL_Drider_DriderAppears")
+THEN
+QuestUpdate("GLO_Moonrise", "DriderCaravanStart");
+//END_REGION
+
+//REGION GLO_Moonrise: Infiltrate 
+IF
+FlagSet((FLAG)MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030, _, _)
+AND
+DB_QuestIsAccepted("GLO_Moonrise")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "PassedMTCheckpoint")
+THEN
+QuestUpdate("GLO_Moonrise", "FoundMOO");
+
+IF
+DialogEnded(MOO_Execution_2b2f9929-86da-50b1-c796-7d3e485ed901, _)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_Defeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+QuestUpdate("GLO_Moonrise", "ZrellRequest");
+
+IF
+FlagSet((FLAG)MOO_Execution_Event_IsobelDebrief_b76693b3-aa07-d119-8f4e-f2c7c3185a01,_,_)
+AND
+DB_GlobalFlag((FLAG)MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelKidnappedBeforeNightsong"); // Tadpole reward
+
+IF
+FlagSet((FLAG)MOO_Executioner_State_IsDefeated_2b857607-9c26-4d56-a1a9-a63f8ff5bebf,_,_)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+THEN
+QuestUpdate("GLO_Moonrise", "KilledZrellBeforeBalthazar");
+
+// task from haven
+IF
+FlagSet(HAV_Jaheira_State_MissionGiven_7516666c-4c71-86d7-9d2b-9f3a4269970b,_,_)
+AND
+DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_GlobalFlag(SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731)
+THEN
+QuestUpdate("GLO_Moonrise", "JaheiraKillKetheric");
+
+IF
+FlagSet((FLAG)GLO_HAV_IsobelGaveMission_4f0dd500-6de8-08ce-7db9-083c891e67e7,_,_)
+AND
+DB_GlobalFlag(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelKillKetheric");
+
+// Learned source
+IF
+FlagSet((FLAG)MOO_BalthazarsSecrets_Knows_NightsongSecret_3599ecf9-382d-46b7-8c72-c7d99303d7c4,_,_)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "ZrellDead_LearnSourceBook")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "TowersHostile_LearnedSource")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "LearnedSource")
+THEN
+QuestUpdate("GLO_Moonrise", "ZrellDead_LearnSourceBook");
+
+IF
+FlagSet(_Flag,_,_)
+AND
+DB_GLO_Moonrise_Journal_LearnedSourceFlags(_Flag)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "ZrellDead_LearnSourceBook")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "TurnedHostile_LearnSourceBook")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "LearnedSource")
+THEN
+QuestUpdate("GLO_Moonrise", "LearnedSource");
+
+IF
+FlagSet((FLAG)SHA_Necromancer_State_AskedHelp_1e06992f-24ad-254e-42aa-a0092f6f8431,_,_)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+THEN
+QuestUpdate("GLO_Moonrise", "FoundBalthazar");
+
+// Meeting Nightsong
+IF
+DialogStarted(SHA_NightsongPrison_NightsongsFate_309684a3-b0e7-9a5b-68fb-63c802c2240c, _)
+AND
+NOT DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+DB_GlobalFlag(GLO_MoonriseTower_EverEnteredBefore_26aeabb0-7644-4897-9bbd-7a95e3e8930f)
+THEN
+QuestUpdate("GLO_Moonrise", "MetNS_Infiltrate");
+
+// Marker on Zrell
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", "ZrellRequest")
+AND
+DB_Players(_Player)
+AND
+NOT DB_GLO_Moonrise_Journal_ZrellMarkerShown(_Player)
+THEN
+DB_GLO_Moonrise_Journal_ZrellMarkerShown(_Player);
+PROC_ShowMarker(_Player, "MOO_Executioner");
+
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", _QuestUpdate)
+AND
+_QuestUpdate != "ZrellRequest"
+AND
+DB_Players(_Player)
+AND
+DB_GLO_Moonrise_Journal_ZrellMarkerShown(_Player)
+THEN
+NOT DB_GLO_Moonrise_Journal_ZrellMarkerShown(_Player);
+PROC_HideMarker(_Player, "MOO_Executioner");
+
+// Post Nightsong
+IF
+FlagSet(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5,_,_)
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "ExecutionWitness")
+THEN
+QuestUpdate("GLO_Moonrise", "ReturnToZrell");
+
+IF
+FlagSet(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5,_,_)
+AND
+DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "ExecutionWitness")
+THEN
+QuestUpdate("GLO_Moonrise", "ReturnToKetheric");
+//END_REGION
+
+//REGION GLO_Moonrise: Audience with the Absolute
+// Player pushed their way to the roof to talk to Ketheric. 
+// After Nightsong is captured entering the roof no longer triggers hostility
+PROC
+PROC_MOO_Journal_KethericToldPlayerToKneelAtAltar()
+AND
+DB_GlobalFlag(MOO_Audience_State_KethericToldToKneelAtAltar_d36fc964-2170-4731-a6aa-29749c33b774)
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+NOT DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+THEN
+QuestUpdate("GLO_Moonrise", "EarlyKethericRoof");
+
+//MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce is set if she is captured or killed since she is moved to colony in both bases
+IF
+FlagSet(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce, _, _)
+AND
+QRY_GLO_Moonrise_Journal_IsOnKidnapIsobelQuest()
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+PROC_MOO_Journal_UpdateIsobelReportQuest("Zrell");
+
+IF
+FlagSet(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce, _, _)
+AND
+QRY_GLO_Moonrise_Journal_IsOnKidnapIsobelQuest()
+AND
+DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+PROC_MOO_Journal_UpdateIsobelReportQuest("Ketheric");
+
+PROC
+PROC_MOO_Journal_UpdateIsobelReportQuest("Zrell")
+AND
+NOT DB_PermaDefeated(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+THEN
+QuestUpdate("GLO_Moonrise", "ReportKidnapZrell_Alive");
+
+PROC
+PROC_MOO_Journal_UpdateIsobelReportQuest("Zrell")
+AND
+DB_PermaDefeated(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+THEN
+QuestUpdate("GLO_Moonrise", "ReportKidnapZrell_Dead");
+
+PROC
+PROC_MOO_Journal_UpdateIsobelReportQuest("Ketheric")
+AND
+NOT DB_PermaDefeated(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+THEN
+QuestUpdate("GLO_Moonrise", "ReportKidnapKetheric_Alive");
+
+PROC
+PROC_MOO_Journal_UpdateIsobelReportQuest("Ketheric")
+AND
+DB_PermaDefeated(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+THEN
+QuestUpdate("GLO_Moonrise", "ReportKidnapKetheric_Dead");
+
+QRY
+QRY_GLO_Moonrise_Journal_IsOnKidnapIsobelQuest()
+AND
+DB_GlobalFlag(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Moonrise_Journal_IsOnKidnapIsobelQuest()
+AND
+DB_GlobalFlag(GLO_Ketheric_State_AskedBringIsobel_6c4d6bf6-c5f6-4fac-fac0-a6a323ce52a7)
+THEN
+DB_NOOP(1);
+
+// Gaining roof access
+IF
+DialogEnded((DIALOGRESOURCE)MOO_Executioner_1e888683-64d6-47f1-3cde-f1d9f430e3e6,_)
+AND
+DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+AND
+QRY_OnlyOnce("PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof")
+THEN
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof();
+
+// Asked to kidnap  - Isobel in MT but dead
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AskedKidnapIsobel")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelDead");
+
+// Asked to kidnap - Isobel alive in MT
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AskedKidnapIsobel")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelKidnapped");
+
+// Asked to kidnap - Marcus is dead and the player infroms Z'rell that trying to capture Isobel now is too difficult
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AskedKidnapIsobel")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "FailedKidnapping");
+
+
+// Already brought Isobel to Moonrise. Gained access after bringing Nightsong as well.
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "IsobelKidnappedBeforeNightsong")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelCaptureAlreadyReported"); // Same text as FirstMeeting_IsobelKidnapped, no reward (already got reward when reported about Isobel)
+
+
+// Didnt ask to bring - Isobel alive at Moonrise after Nightsong
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AskedKidnapIsobel")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "IsobelKidnappedBeforeNightsong")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "FirstMeeting_IsobelKidnapped");  // Tadpole reward
+
+// Didnt ask to bring - Isobel in MT but dead
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "IsobelKidnappedBeforeNightsong")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AskedKidnapIsobel")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "FirstMeeting_IsobelDead"); // Tadpole reward
+
+// Didnt ask to bring - didnt bring, got permission anyway (because brought Nightsong before)
+PROC
+PROC_GLO_Moonrise_Journal_ZrellGaveAccessToRoof()
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "IsobelKidnappedBeforeNightsong")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AskedKidnapIsobel")
+AND
+QRY_OnlyOnce("GLO_Moonrise_Journal_ZrellSentToKetheric_OnlyOnce")
+THEN
+QuestUpdate("GLO_Moonrise", "FirstMeeting_IsobelFailed");
+
+
+// Flag might already be set if the player forced their way to the roof eariler, so checking whenever this dialog completes
+IF
+DialogEnded(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, _)
+AND
+DB_GlobalFlag(MOO_Audience_State_KethericToldToKneelAtAltar_d36fc964-2170-4731-a6aa-29749c33b774) 
+THEN
+PROC_MOO_Journal_KethericToldPlayerToKneelAtAltar();
+
+PROC
+PROC_MOO_Journal_KethericToldPlayerToKneelAtAltar()
+AND
+DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+THEN
+QuestUpdate("GLO_Moonrise", "Altar_IsobelKidnapped");
+
+PROC
+PROC_MOO_Journal_KethericToldPlayerToKneelAtAltar()
+AND
+DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+THEN
+QuestUpdate("GLO_Moonrise", "Altar_IsobelDead");
+
+PROC
+PROC_MOO_Journal_KethericToldPlayerToKneelAtAltar()
+AND
+NOT DB_GlobalFlag(MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+AND
+NOT DB_GlobalFlag(HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+DB_GlobalFlag(MOO_Audience_State_GrantedPermission_ef5c0ad1-8aae-48b8-a438-5989b1778f9a)
+THEN
+QuestUpdate("GLO_Moonrise", "Altar_IsobelFailed");
+
+PROC
+PROC_COL_TeleportPartiesToColony(1)
+THEN
+QuestUpdate("GLO_Moonrise", "HadAudience");
+//END_REGION
+
+//REGION GLO_Moonrise: Defeat the cult
+IF
+FlagSet(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e,_,_)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+QuestUpdate("GLO_Moonrise", "TurnedHostile_BeforeNecro");
+
+IF
+FlagSet(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e,_,_)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+QuestUpdate("GLO_Moonrise", "TurnedHostile_AfterNecro");
+
+IF
+FlagSet(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e,_,_)
+AND
+DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+QuestUpdate("GLO_Moonrise", "TurnedHostile_SentNS");
+
+IF
+FlagSet(HAV_Jaheira_State_MissionGiven_7516666c-4c71-86d7-9d2b-9f3a4269970b,_,_)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_GlobalFlag(SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731)
+THEN
+QuestUpdate("MOO_EndKetheric", "TowersHostile_JaheiraKillKetheric");
+
+// Learned source
+IF
+FlagSet((FLAG)MOO_BalthazarsSecrets_Knows_NightsongSecret_3599ecf9-382d-46b7-8c72-c7d99303d7c4,_,_)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "ZrellDead_LearnSourceBook")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "TowersHostile_LearnedSource")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "LearnedSource")
+THEN
+QuestUpdate("GLO_Moonrise", "TurnedHostile_LearnSourceBook");
+
+IF
+FlagSet(_Flag,_,_)
+AND
+DB_GLO_Moonrise_Journal_LearnedSourceFlags(_Flag)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "ZrellDead_LearnSourceBook")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "TurnedHostile_LearnSourceBook")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "LearnedSource")
+THEN
+QuestUpdate("GLO_Moonrise", "TowersHostile_LearnedSource");
+
+// Balthazar
+IF
+FlagSet((FLAG)SHA_Necromancer_State_AskedHelp_1e06992f-24ad-254e-42aa-a0092f6f8431,_,_)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+THEN
+QuestUpdate("GLO_Moonrise", "TurnedHostile_FoundBalthazar");
+
+IF
+FlagSet((FLAG)SHA_Necromancer_State_Dead_f83edb0d-f11f-4a3e-a866-58af8fc6c96d,_,_)
+AND
+DB_State_Current(S_SHA_Necromancer_53651a9f-7ea8-444f-ba2d-224390b72f7d, "SHA_Necromancer", "SHA_Necromancer_State_AtTemple")
+THEN
+QuestUpdate("GLO_Moonrise", "BalthazarDied_Parent");
+
+// If the player attacks Ketheric after returning Nightsong
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+QuestUpdate("GLO_Moonrise", "AttackedKetheric_Close");
+
+// or after she was killed
+PROC
+PROC_MOO_Assault_StartBossFight()
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+DB_GlobalFlag(SHA_Nightsong_State_PermaDefeated_d02e8ea4-dec7-4824-8117-efc075dee4ba)
+THEN
+QuestUpdate("GLO_Moonrise", "AttackedKetheric_Close");
+
+IF
+AttackedBy(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, _,_,_,_,_)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "AttackedKetheric_NoNS_BeforeNecro")
+THEN
+QuestUpdate("GLO_Moonrise", "AttackedKetheric_NoNS");
+
+IF
+AttackedBy(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _Player, _,_,_,_,_)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+THEN
+QuestUpdate("GLO_Moonrise", "AttackedKetheric_NoNS_BeforeNecro");
+
+IF
+FlagSet((FLAG)SHA_Necromancer_State_PermaDefeated_c8fc43c5-f6bb-4c15-9869-8ceefc288ef2,_,_)
+THEN
+QuestUpdate("GLO_Moonrise", "BalthazarDied_Parent");
+
+// Meeting with Nightsong
+IF
+DialogStarted(SHA_NightsongPrison_NightsongsFate_309684a3-b0e7-9a5b-68fb-63c802c2240c, _)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+THEN
+QuestUpdate("GLO_Moonrise", "MetNS_Defeat");
+
+// Assault
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_NightsongDeath")
+THEN
+QuestUpdate("GLO_Moonrise", "KilledNS_Parent");
+
+IF
+FlagSet(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030, _, _)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Assault")
+THEN
+QuestUpdate("GLO_Moonrise", "FoundMOO_Assault");
+
+IF
+FlagSet(MOO_PartyProgress_EnteredMoonrise_278dff38-c7e5-4699-9cb9-6d66ef3c9030, _, _)
+AND
+DB_State_Current(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_NightsongDeath")
+THEN
+QuestUpdate("GLO_Moonrise", "FoundMOO_NightsongDead");
+
+// Close
+IF
+FlagSet((FLAG)MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6,_,_)
+AND
+NOT DB_GlobalFlag(SHA_Nightsong_State_PermaDefeated_d02e8ea4-dec7-4824-8117-efc075dee4ba)
+AND
+NOT DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+PROC_GLO_Moonrise_Journal_OnEndingMainQuest();
+QuestUpdate("GLO_Moonrise", "FacedKethericMT");
+
+IF
+FlagSet((FLAG)MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6,_,_)
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+PROC_GLO_Moonrise_Journal_OnEndingMainQuest();
+QuestUpdate("GLO_Moonrise", "FacedKethericMT_NoNS");
+
+IF
+FlagSet((FLAG)MOO_Assault_Event_KethericTeleportedAway_ba71e8cd-8922-61a4-a2ff-8c5f5ff8aac6,_,_)
+AND
+DB_GlobalFlag(SHA_Nightsong_State_PermaDefeated_d02e8ea4-dec7-4824-8117-efc075dee4ba)
+THEN
+PROC_GLO_Moonrise_Journal_OnEndingMainQuest();
+QuestUpdate("GLO_Moonrise", "FacedKethericMT_NoNS");
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_Shadowcurse
+// Learns about the curse
+IF
+FlagSet((FLAG)SCL_ShadowCurse_Knows_Curse_6981aa13-9654-4284-99af-8bdbfccc1d3f,_,_Instance)
+AND
+NOT DB_DialogName(_, _Instance)
+AND
+NOT QRY_GLO_Moonrise_KnowsAboutNereLantern()
+THEN
+QuestUpdate("GLO_Moonrise", "ExperiencedShadowcurse");
+
+// from the dialog where npcs are using torches
+IF
+FlagSet((FLAG)SCL_ShadowCurse_Knows_Curse_6981aa13-9654-4284-99af-8bdbfccc1d3f,_,_Instance)
+AND
+DB_DialogName(_, _Instance)
+AND
+NOT QRY_GLO_Moonrise_KnowsAboutNereLantern()
+THEN
+QuestUpdate("GLO_Moonrise", "ExperiencedShadowcurse_KnowsLight");
+
+IF
+FlagSet((FLAG)SCL_ShadowCurse_Knows_Curse_6981aa13-9654-4284-99af-8bdbfccc1d3f,_,_)
+AND
+QRY_GLO_Moonrise_KnowsAboutNereLantern()
+THEN
+QuestUpdate("GLO_Moonrise", "ExperiencedShadowcurse_KnowsNereLantern");
+
+QRY
+QRY_GLO_Moonrise_KnowsAboutNereLantern()
+AND
+DB_GLO_Moonrise_Journal_KnowsAboutNereLanternFlags(_Flag)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+DB_NOOP(1);
+
+// Used for trying to update GLO_Moonrise if players already visited SCL
+IF
+AddedTo(S_UND_Nere_Moonlantern_Broken_5a76ae0a-d013-42e9-98b5-fa427a1cddbe, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GLO_Moonrise_FoundNeresMoonlantern")
+AND
+DB_GlobalFlag((FLAG)VISITEDREGION_SCL_Main_A_f6e72539-9bc6-42e1-a20f-390f3a17ad8d)
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_Moonrise", "TookBrokenLantern");
+
+IF
+GameBookInterfaceClosed((ITEM)S_SCL_OrdersFromJaheira_7493444e-aa24-48ea-b54e-d68502f1956d, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Haven_EverEnteredBefore_f1176fa0-ec29-410e-bffa-24623b19c8e4)
+THEN
+QuestUpdate(_Player, "GLO_Moonrise", "ReadJaheiraOrders");
+
+// Interacting with the shadowcurse
+IF
+FlagSet((FLAG)SCL_Harpers_Event_ShowHavenLocation_5565fa4f-ec30-472a-a9ea-7bb7b09390b3, _, _)
+AND
+QRY_SCL_Drider_HarpersHaveMoonlantern()
+THEN
+QuestUpdate("GLO_Moonrise", "LearnAboutHaven_Moonlantern");
+
+IF
+FlagSet((FLAG)SCL_Harpers_Event_ShowHavenLocation_5565fa4f-ec30-472a-a9ea-7bb7b09390b3, _, _)
+AND
+NOT QRY_SCL_Drider_HarpersHaveMoonlantern()
+THEN
+QuestUpdate("GLO_Moonrise", "LearnAboutHaven_NoMoonlantern");
+
+IF
+FlagSet((FLAG)GLO_HAV_IsobelGaveMission_4f0dd500-6de8-08ce-7db9-083c891e67e7,_,_)
+AND
+DB_GlobalFlag(MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e)
+THEN
+QuestUpdate("GLO_Moonrise", "TowersHostile_IsobelKillKetheric");
+
+// Interacting with the shadowcurse
+IF
+StatusApplied((CHARACTER)_Player, "SCL_SHADOW_CURSE", _, _)
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)SCL_ShadowCurse_Knows_Curse_6981aa13-9654-4284-99af-8bdbfccc1d3f, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag((FLAG)SCL_ShadowCurse_Knows_DeepCurse_1f996b1d-833b-4a0f-9aca-a3ebf55c0039, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_OnlyOnce_PerUser(_,"SCL_EntryPoint_RemovedCurseByLight")
+THEN
+QuestUpdate("GLO_Moonrise", "ProtectedByLight");
+
+// Isobel tells about Harpers
+// Has to be done here to avoid conflicts with PROC_SCL_Drider_MoveHarpersToTheBridge()
+IF
+FlagSet(SCL_Drider_State_IsobelToldAboutHarpers_f56abcc8-566f-feaa-1115-d10317db14a8, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_HarpersPermaDefeatedBeforeAmbush_cb451e32-061a-422c-ab4c-18a0c174696d)
+AND
+NOT QRY_SCL_Drider_AnyHarpersDuringOrAfterAmbush()
+THEN
+QuestUpdate("GLO_Moonrise", "AgreedToHelp_NotLeft");
+QuestUpdate("GLO_Moonrise", "HarperAmbushStart");
+
+// Party member transforms into a shadowcursed creature.
+IF
+StatusApplied((CHARACTER)_PartyMember, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+DB_PartyMembers(_PartyMember)
+THEN
+QuestUpdate("GLO_Moonrise", "TransformedToShadowCreature");
+
+// Players sided with harpers and defeat the caravan.
+PROC
+PROC_SCL_Drider_HarpersWin_SidedWithHarpers()
+AND
+QRY_State_IsBeforeState(S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab, "HAV_Mood", "HAV_Mood_State_Siege")
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "Drider_BetrayedCaravan")
+THEN
+QuestUpdate("GLO_Moonrise", "TalkToHarpers");
+
+PROC
+PROC_SCL_Drider_HarpersWin_SidedWithHarpers()
+AND
+NOT QRY_State_IsBeforeState(S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab, "HAV_Mood", "HAV_Mood_State_Siege")
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "Drider_BetrayedCaravan")
+THEN
+QuestUpdate("GLO_Moonrise", "TakeMoonlantern");
+
+
+// Players betray the harpers.
+PROC
+PROC_StateSet_PermaDefeated(_Harper)
+AND
+DB_SCL_Pixie_MoonlanternHolder(_Harper)
+AND
+DB_SCL_Drider_HarpersGroup((CHARACTER)_Harper, _, _)
+AND
+NOT DB_PartyMembers((CHARACTER)_Harper)
+THEN
+QuestUpdate("GLO_Moonrise", "HarpersLostLantern");
+
+// Players and harpers reach the ambush area
+IF
+DB_InRegion(_Player, S_SCL_Drider_PlayerAndHarpersAmbushPosition_98361852-5286-4fae-8edb-9b5632876740)
+AND
+DB_State_Current(_Harper, "SCL_DriderHarpers", "WaitingAtAmbush")
+AND
+NOT DB_PermaDefeated(_Harper)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a)
+THEN
+QuestUpdate(_Player, "GLO_Moonrise", "StartAmbush");
+
+// Case of Haven's barrier falling if players had any Haven-related quests
+PROC
+PROC_State_Changed(S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab, "HAV_Mood", "HAV_Mood_State_Siege")
+AND
+QRY_SCL_Journal_HasHavenRelatedUpdates()
+THEN
+QuestUpdate("GLO_Moonrise", "HavenFell");
+
+QRY
+QRY_SCL_Journal_HasHavenRelatedUpdates()
+AND
+DB_Players(_Player)
+AND
+DB_SCL_Journal_HavenQuestUpdates(_QuestUpdate)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Moonrise", _QuestUpdate, 1)
+THEN
+DB_NOOP(1);
+
+// Took lantern while in the ambush combat
+IF
+AddedTo(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+QRY_SCL_Drider_CaravanBetrayedAndInCombat()
+THEN
+QuestUpdate("GLO_Moonrise", "TookMonlantern_BetrayedCaravan");
+
+// Took lantern while not in the ambush combat
+IF
+AddedTo(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_SCL_Drider_CaravanBetrayedAndInCombat()
+THEN
+PROC_GLO_Moonrise_Journal_TookMoonlanternUpdate(_Player);
+
+// If the combat ends, harpers have been permadefeated and players have the moonlantern close subquest
+IF
+DB_GlobalFlag((FLAG)SCL_Drider_State_HarpersPermaDefeated_be4a239e-0127-4916-a350-8704a86daea9)
+AND
+NOT DB_SCL_Drider_AmbushCombatID(_)
+AND
+DB_SCL_Pixie_MoonlanternHolder(_Player)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_Moonrise_Journal_TookMoonlanternUpdate(_Player);
+
+// If the combat ends, harpers leave to HAV and players have the moonlantern close subquest
+IF
+EntityEvent((CHARACTER)_, "SCL_Drider_HarperReturnsToInn")
+AND
+DB_SCL_Pixie_MoonlanternHolder(_Player)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_Moonrise_Journal_TookMoonlanternUpdate(_Player);
+
+PROC
+PROC_GLO_Moonrise_Journal_TookMoonlanternUpdate((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03) // If players take the pixie and she is dead close subquest.
+AND
+QRY_OnlyOnce("GLO_Moonrise_TookMoonlanternUpdate")
+THEN
+QuestUpdate(_Player, "GLO_Moonrise", "TookMoonlantern");
+
+PROC
+PROC_GLO_Moonrise_Journal_TookMoonlanternUpdate((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03) // If not, unlock the inspect moonlantern objective.
+AND
+QRY_OnlyOnce("GLO_Moonrise_TookMoonlanternUpdate")
+THEN
+QuestUpdate(_Player, "GLO_Moonrise", "InspectMoonlantern");
+
+IF
+FlagSet((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03, _, _DialogID) // Only update if the flag is set in the lantern dialog.
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_Moonrise", "KilledPixie");
+
+IF
+DialogEnded((DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, _DialogID)
+AND
+NOT DB_DialogRequestFailed((DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, _DialogID)
+AND
+DB_GlobalFlag((FLAG)GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03) // Edge case of killing hte pixie after releasing it
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_Moonrise", "ReleasedPixie");
+
+IF
+DialogEnded((DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, _DialogID)
+AND
+NOT DB_DialogRequestFailed((DIALOGRESOURCE)SCL_Pixie_InsideLantern_bc5adc36-86bf-b782-6e7f-6cc5d12a4abf, _DialogID)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+AND
+DB_DialogPlayers(_DialogID, _Player, 1)
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_Moonrise", "KeptPixie");
+
+IF
+AddedTo(S_MOO_Moonlantern_2dcc6a54-f07b-4b4c-98d4-ca7ec92a59fd, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate("GLO_Moonrise", "TookMoonlantern_BalthazarsRoom");
+
+IF
+FlagSet((FLAG)SCL_Drider_Event_GiveMoonlantern_69ac556a-7c78-43f5-9bea-f8efeda31b42, (CHARACTER)_Player, _DialogID)
+AND
+DB_Players(_Player)
+AND
+DB_DialogName(_Dialog, _DialogID)
+AND
+DB_SCL_Journal_IsobelDialogues(_Dialog)
+THEN
+QuestUpdate("GLO_Moonrise", "TookMoonlantern_VisitedHaven");
+
+// Caravan appears
+PROC
+PROC_SCL_Drider_TeleportCaravanToAmbush()
+THEN
+NOT DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("SCL_DriderHarperGroup_BeforeAmbush", (FLAG)SCL_Drider_State_HarpersPermaDefeatedBeforeAmbush_cb451e32-061a-422c-ab4c-18a0c174696d);
+QuestUpdate("GLO_Moonrise", "CaravanAppears");
+
+// Try close subquest
+PROC
+PROC_GLO_Moonrise_Journal_OnEndingMainQuest()
+THEN
+QuestUpdate("GLO_Moonrise", "NoProtection");
+
+// Harpers permadefeated before the caravan appears
+IF
+DB_SCL_Drider_HarpersGroup(_Harper, _, _)
+THEN
+DB_GLO_DefeatCounter(_Harper, "SCL_DriderHarperGroup_BeforeAmbush");
+
+// Disable CaravanBetrayedHarpers if harpers die before the ambush starts disable betray update
+IF
+FlagSet(SCL_Drider_State_HarpersPermaDefeatedBeforeAmbush_cb451e32-061a-422c-ab4c-18a0c174696d, _, _)
+THEN
+NOT DB_QuestDef_State((FLAG)SCL_Drider_State_SidedWithCaravan_57a698da-0149-48d1-91fa-9a84a5dcc293, "GLO_Moonrise", "CaravanBetrayedHarpers");
+
+PROC
+PROC_SCL_Drider_TeleportCaravanToAmbush()
+AND
+DB_GLO_DefeatCounter(_Harper, "SCL_DriderHarperGroup_BeforeAmbush")
+THEN
+NOT DB_GLO_DefeatCounter(_Harper, "SCL_DriderHarperGroup_BeforeAmbush");
+
+// Combat starts
+// Player starts combat
+IF
+DB_Is_InCombat(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, _CombatID)
+AND
+DB_Is_InCombat(_PartyMember, _CombatID)
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_SidedWithHarpers_a130dde9-c086-4486-9cd8-298a67fb6aee)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_Event_StartCaravanEscort_26062990-9018-4845-a520-d737837fa207)
+AND
+NOT DB_SCL_Drider_CombatJournalUpdated(1)
+AND
+QRY_IsEnemy(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, _PartyMember)
+THEN
+DB_SCL_Drider_CombatJournalUpdated(1);
+QuestUpdate("GLO_Moonrise", "AttackedCaravan");
+
+IF
+GameBookInterfaceClosed((ITEM)S_SCL_OrdersFromJaheira_7493444e-aa24-48ea-b54e-d68502f1956d, _Player)
+THEN
+DB_SCL_Drider_Journal_ReadOrders(1);
+
+IF
+DB_SCL_Drider_Journal_ReadOrders(1)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_HarpersPermaDefeatedBeforeAmbush_cb451e32-061a-422c-ab4c-18a0c174696d)
+AND
+QRY_State_IsBeforeState(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "EscortingCaravan")
+THEN
+QuestUpdate("GLO_Moonrise", "OrdersFromJaheira");
+
+// Harper starts combat
+IF
+DB_Is_InCombat(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, _CombatID)
+AND
+DB_Is_InCombat(_Harper, _CombatID)
+AND
+DB_SCL_Drider_HarpersGroup((CHARACTER)_Harper, _, _)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_SidedWithHarpers_a130dde9-c086-4486-9cd8-298a67fb6aee)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_Event_StartCaravanEscort_26062990-9018-4845-a520-d737837fa207)
+AND
+NOT DB_SCL_Drider_CombatJournalUpdated(1)
+AND
+QRY_IsEnemy(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, _Harper)
+THEN
+DB_SCL_Drider_CombatJournalUpdated(1);
+QuestUpdate("GLO_Moonrise", "AttackedCaravan");
+
+// Players kill the drider during the ambush together with the Harpers
+IF
+DB_PermaDefeated(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_SidedWithHarpers_a130dde9-c086-4486-9cd8-298a67fb6aee)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a)
+THEN
+QuestUpdate("GLO_Moonrise", "TakeMoonlantern");
+
+// Harpers and Drider have been permadefeated during the ambush combat and players did not start with the harpers
+IF
+DB_PermaDefeated(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_HarpersPermaDefeated_be4a239e-0127-4916-a350-8704a86daea9)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_StartedAmbushQuestWithHarpers_85b1171d-f21f-4cc4-8718-5f37a3f42f0a)
+AND
+QRY_SCL_Drider_AnyHarpersDuringOrAfterAmbush()
+AND
+DB_SCL_Drider_HarpersGroup(_Harper, _, _)
+AND
+NOT QRY_State_IsBeforeState(_Harper, "SCL_DriderHarpers", "BackAtInn")
+THEN
+QuestUpdate("GLO_Moonrise", "TakeMoonlantern");
+
+QRY
+QRY_SCL_Drider_AnyHarpersDuringOrAfterAmbush()
+AND
+DB_SCL_Drider_HarpersGroup(_Harper, _, _)
+AND
+NOT QRY_State_IsBeforeState(_Harper, "SCL_DriderHarpers", "MovingToAmbush")
+THEN
+DB_NOOP(1);
+
+// Drider dies while no ambush combat is in progress
+PROC
+PROC_StateSet_PermaDefeated(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab)
+AND
+NOT DB_SCL_Drider_AmbushCombatID(_)
+THEN
+QuestUpdate("GLO_Moonrise", "TakeMoonlantern");
+
+// Drider died after the player betrayed harpers
+IF
+DB_PermaDefeated(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab)
+AND
+DB_GlobalFlag(SCL_Drider_State_SidedWithCaravan_57a698da-0149-48d1-91fa-9a84a5dcc293)
+THEN
+QuestUpdate("GLO_Moonrise", "TakeMoonlantern_Betrayed");
+
+// The the drider after Haven fell and not on the ambush quest
+IF
+FlagSet((FLAG)SCL_Drider_HasMet_2af6450a-480a-32bd-65cb-505587c2b0f3,_,_)
+AND
+DB_GlobalFlag((FLAG)HAV_Siege_State_NoProtection_2da0dbf1-88ca-4cab-9c8f-ee8921822958)
+AND
+NOT QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "CaravanAppears")
+THEN
+QuestUpdate("GLO_Moonrise", "MetDrider_HavenFell");
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_Caravan
+IF
+FlagSet((FLAG)SCL_EntryPoint_State_GoblinInvited_bfb98886-3a98-9afa-2336-f45d045c9ce1,_,_)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Caravan")
+THEN
+QuestUpdate("GLO_Moonrise", "CaravanMetGoblin");
+
+IF
+FlagSet((FLAG)SCL_EntryPoint_State_GoblinInvited_bfb98886-3a98-9afa-2336-f45d045c9ce1,_,_)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Caravan")
+THEN
+QuestUpdate("GLO_Moonrise", "CaravanMetGoblin_NoClue");
+
+// Talked to Caravan folks without the lyre
+IF
+DialogEnded((DIALOGRESOURCE)SCL_Drider_Caravan_HalfOrcCaster_865adfae-1b72-1ed2-f961-d55abd4fb7b1,_)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_ToldMintharaHasLyre_c0600f2e-12e8-ae1e-3e6e-dc542e97bb71)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_WaitAtCaravanStart_c2414538-2e56-428e-935e-35d0b11a1ff8)
+THEN
+QuestUpdate("GLO_Moonrise", "CaravanNoLyre");
+
+IF
+DialogEnded((DIALOGRESOURCE)SCL_Drider_Caravan_HalfOrcCaster_865adfae-1b72-1ed2-f961-d55abd4fb7b1, _Instance)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_ToldMintharaHasLyre_c0600f2e-12e8-ae1e-3e6e-dc542e97bb71)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_WaitAtCaravanStart_c2414538-2e56-428e-935e-35d0b11a1ff8)
+AND
+DB_DialogPlayers(_Instance, _Player, 1)
+AND
+GetFlag((FLAG)GOB_DrowCommnader_Knows_HasSpiderLyre_40a04a2d-cc84-4f45-ad92-a32e8e5796f7, _Player, 1)
+THEN
+QuestUpdate("GLO_Moonrise", "TalkedCaravanDidntSummon");
+
+IF
+TemplateAddedTo(UNI_SCL_SpidersLyre_98282bec-aeaa-4490-ae43-0c27bed58c74, _, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_ToldMintharaHasLyre_c0600f2e-12e8-ae1e-3e6e-dc542e97bb71)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_WaitAtCaravanStart_c2414538-2e56-428e-935e-35d0b11a1ff8)
+THEN
+QuestUpdate("GLO_Moonrise", "CaravanGotLyre");
+
+// Started following
+IF
+FlagSet((FLAG)SCL_Drider_State_SidedWithCaravan_57a698da-0149-48d1-91fa-9a84a5dcc293, _, _)
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "HarpersDefeated_NotReachedAmbush")
+THEN
+QuestUpdate("GLO_Moonrise", "FollowDrider");
+
+PROC
+PROC_StateCleared_Defeated(S_SCL_DriderCaravan_HalfOrcCaster_f9522205-623f-4a82-904a-128b26182707)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_ToldMintharaHasLyre_c0600f2e-12e8-ae1e-3e6e-dc542e97bb71)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_State_WaitAtCaravanStart_c2414538-2e56-428e-935e-35d0b11a1ff8)
+AND
+DB_GlobalFlag(SCL_EntryPoint_State_GoblinInvited_bfb98886-3a98-9afa-2336-f45d045c9ce1)
+AND
+DB_GlobalFlag((FLAG)CAMP_GoblinHuntCelebration_Knows_CreaturePath_758098e2-ab9c-e667-9210-d3765c021541)
+THEN
+QuestUpdate("GLO_Moonrise", "CaravanCampDefeated");
+
+// Unlock caravan path if knew about Drider from Minthara
+IF
+DB_QuestIsAccepted("GLO_Moonrise")
+AND
+DB_GlobalFlag((FLAG)CAMP_GoblinHuntCelebration_Knows_CreaturePath_758098e2-ab9c-e667-9210-d3765c021541)
+THEN
+QuestUpdate("GLO_Moonrise", "MeetDrider_SentByMinthara");
+
+// ...Or From Nere
+IF
+DB_QuestIsAccepted("GLO_Moonrise")
+AND
+DB_GLO_Moonrise_Journal_NereToldPath(1)
+AND
+NOT DB_GlobalFlag((FLAG)CAMP_GoblinHuntCelebration_Knows_CreaturePath_758098e2-ab9c-e667-9210-d3765c021541)
+THEN
+QuestUpdate("GLO_Moonrise", "MeetDrider_SentByNere");
+
+IF
+FlagSet((FLAG)UND_TheDrowNere_Event_GiveSpidersLyre_769a260f-9f93-4187-a535-ccc427d2babb,_,_)
+THEN
+DB_GLO_Moonrise_Journal_NereToldPath(1);
+
+// Start of escort
+IF
+DialogEnded(SCL_Drider_CaravanStart_e436d37f-a2a4-92f7-a429-b0dcb2937690, _)
+AND
+DB_GlobalFlag(SCL_Drider_Event_StartCaravanEscort_26062990-9018-4845-a520-d737837fa207)
+AND
+NOT DB_GlobalFlag(SCL_Drider_State_WaitAtCaravanStart_c2414538-2e56-428e-935e-35d0b11a1ff8)
+THEN
+QuestUpdate("GLO_Moonrise", "FollowDrider");
+
+IF
+DialogEnded((DIALOGRESOURCE)SCL_Drider_Caravan_HalfOrcCaster_865adfae-1b72-1ed2-f961-d55abd4fb7b1, _)
+AND
+DB_GlobalFlag(SCL_Drider_Event_StartCaravanEscort_26062990-9018-4845-a520-d737837fa207)
+AND
+NOT DB_GlobalFlag(SCL_Drider_State_WaitAtCaravanStart_c2414538-2e56-428e-935e-35d0b11a1ff8)
+THEN
+QuestUpdate("GLO_Moonrise", "FollowDrider");
+
+// Didn't start with the caravan: start quest
+IF
+FlagCleared(SCL_Drider_State_WaitingAtAmbushAfterCombat_84d5065a-2648-d39d-d331-78ab4b68621d, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_Event_StartCaravanEscort_26062990-9018-4845-a520-d737837fa207)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Drider_Event_FailedConvincingAfterAmbush_1ea7879e-51d4-8a26-7a39-6db25f93403f)
+THEN
+QuestUpdate("GLO_Moonrise", "FollowDrider");
+
+// Ambush starts and players side with the caravan
+IF
+DB_SCL_Drider_AmbushCombatID(_)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_SidedWithCaravan_57a698da-0149-48d1-91fa-9a84a5dcc293)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Caravan")
+THEN
+QuestUpdate("GLO_Moonrise", "DefendCaravan");
+
+// Ambush starts and players side with the harpers
+IF
+DB_SCL_Drider_AmbushCombatID(_)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_SidedWithHarpers_a130dde9-c086-4486-9cd8-298a67fb6aee)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Caravan")
+THEN
+QuestUpdate("GLO_Moonrise", "BetrayedDrider");
+
+// Harpers defeated
+IF
+DB_GlobalFlag((FLAG)SCL_Drider_State_HarpersDefeated_2373a9db-2754-49f8-8523-fc1b32680db9)
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_State_SidedWithCaravan_57a698da-0149-48d1-91fa-9a84a5dcc293)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Caravan")
+THEN
+QuestUpdate("GLO_Moonrise", "DefeatedHarpers");
+
+// Closing subquest
+PROC
+PROC_SCL_Drider_ScatterCaravan()
+AND
+DB_State_Current(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "EscortingCaravan")
+THEN
+QuestUpdate("GLO_Moonrise", "DriderUnavailable");
+
+PROC
+PROC_State_Changed(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "ReachedMoonriseTower")
+THEN
+QuestUpdate("GLO_Moonrise", "Drider_ReachMOO");
+
+IF
+FlagSet((FLAG)TG_MOO_EnteredMoonrise_03de939d-8906-4d16-a3ae-945a34e471fb,_,_)
+AND
+NOT DB_State_Current(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "ReachedMoonriseTower")
+AND
+NOT DB_State_Current(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "EscortingCaravan")
+THEN
+QuestUpdate("GLO_Moonrise", "ReachedNoDrider");
+
+IF
+EnteredTrigger(_, S_SCL_Drider_CheckpointArea_e5f3735e-9f6b-4526-b3bf-e199c83ef19a)
+AND
+QRY_GLO_Moonrise_Journal_HasSeenOrKnowsCaravan()
+THEN
+QuestUpdate("GLO_Moonrise", "CaravanLeftCheckpoint");
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_SCL_Drider_CheckpointArea_e5f3735e-9f6b-4526-b3bf-e199c83ef19a);
+
+QRY
+QRY_GLO_Moonrise_Journal_HasSeenOrKnowsCaravan()
+AND
+DB_GlobalFlag((FLAG)SCL_Drider_Event_PlayersWillFindCaravanAtAmbush_b3f55a3b-4cbd-4181-8c8f-ecc8ff4eaf9c)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Moonrise_Journal_HasSeenOrKnowsCaravan()
+AND
+DB_GlobalFlag((FLAG)SCL_EntryPoint_Event_GainedAccessToCaravanCamp_8f7b8388-5f8d-4d56-b224-84abb6311068)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Moonrise_Journal_HasSeenOrKnowsCaravan()
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "CaravanMetGoblin")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Moonrise_Journal_HasSeenOrKnowsCaravan()
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "MeetDrider_SentByMinthara")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_Moonrise_Journal_HasSeenOrKnowsCaravan()
+AND
+QRY_QuestUpdateIsUnlockedForAny("GLO_Moonrise", "MeetDrider_SentByNere")
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_ZrellCapture
+// Ketheric gives quest
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", "AskedKidnapIsobel_Ketheric")
+AND
+NOT DB_QuestIsOpened("GLO_Moonrise_SUB_MarcusCapture")
+THEN
+QuestUpdate("GLO_Moonrise", "KethericIsobelBrief");
+
+// Zrell Brief, Marcus dead
+IF
+FlagSet(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4, _, _)
+AND
+DB_PermaDefeated(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+THEN
+QuestUpdate("GLO_Moonrise", "ZrellBrief");
+
+// Isobel killed during capture, Zrell alive
+IF
+FlagSet(HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+DB_GlobalFlag((FLAG)HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+NOT DB_GlobalFlag(MOO_Executioner_State_IsDefeated_2b857607-9c26-4d56-a1a9-a63f8ff5bebf)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ZrellBrief", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "IsobelKilled");
+
+// Kidnapped Isobel if Zrell gave you the initial brief
+IF
+FlagSet((FLAG)HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ZrellBrief", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "RewardZrell");
+
+// Isobel killed during capture, Zrell dead
+IF
+FlagSet(HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+DB_GlobalFlag((FLAG)HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+DB_GlobalFlag(MOO_Executioner_State_IsDefeated_2b857607-9c26-4d56-a1a9-a63f8ff5bebf)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ZrellBrief", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "ReportKidnapKetheric_Dead_Sub");
+
+// Isobel killed during capture, Zrell dead
+IF
+FlagSet(HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)HAV_Isobel_State_IsDead_af8b23d8-d04d-4e42-8a56-be909226e706)
+AND
+DB_GlobalFlag(MOO_Executioner_State_IsDefeated_2b857607-9c26-4d56-a1a9-a63f8ff5bebf)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ZrellBrief", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "ReportKidnapKetheric_Alive_Sub");
+
+// Made Moonrise Towers Hostile
+IF
+RelationChanged((FACTION)ACT2_MOO_Absolute_6b0751e2-fbd4-45e1-92ac-d5edb31649d8, (FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360, 0, 1)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ZrellBrief", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "EnemyOfAbsolute");
+
+// COMPLETION for getting to Audience with the Absolute without Kidnapping Isobel
+IF
+DialogEnded(MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, _)
+AND
+DB_GlobalFlag((FLAG)HAV_TakingIsobel_State_SpyIsDead_5377ad88-9ba1-461c-919f-a4ccfc75c8a7)
+AND
+NOT DB_GlobalFlag((FLAG)MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce)
+THEN
+QuestUpdate("GLO_Moonrise", "NoCaptureAudience");
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_MarcusCapture
+// Zrell tells you about Marcus
+IF
+FlagSet(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4, _, _)
+AND
+NOT DB_PermaDefeated(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_MarcusCapture")
+THEN
+QuestUpdate("GLO_Moonrise", "CaptureNotMet");
+
+IF
+FlagSet(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4, _, _)
+AND
+NOT DB_PermaDefeated(S_HAV_FlamingSpy_acb1dd9e-952b-4281-8e30-ec6f671493a6)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_MarcusCapture")
+THEN
+QuestUpdate("GLO_Moonrise", "CaptureMet");
+
+//Surprise Abduct Start
+IF 
+FlagSet(HAV_TakingIsobel_State_SidedWithSpy_5eb745b2-5043-2f36-4d3a-ee3f09ed7a82, _, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "MarcusBrief", 0)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "CaptureNotMet", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "SurpriseAbduct");
+
+// Surprise Defend Start
+PROC
+PROC_State_Changed(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211, "HAV_TakingIsobel_Capture", "SpyCombat_SideWithIsobel")
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "MarcusBrief", 0)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "CaptureNotMet", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "SurpriseProtect");
+
+// Made Moonrise Towers Hostile
+IF
+FlagSet((FLAG)MOO_MoonriseTower_State_Outcast_93565546-9052-4776-8563-2a1aca8d899e,_,_)
+AND
+DB_GLO_Moonrise_Journal_OnMoonriseMission(_Step)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", _Step, 1)
+THEN
+QuestUpdate("GLO_Moonrise", "EnemyOfMT");
+
+IF
+FlagSet(ORI_Shadowheart_State_SharPath_bf9ae334-ff6a-458d-b898-3074bca0bdfb,_,_)
+AND
+DB_GLO_Moonrise_Journal_OnMoonriseMission(_Step)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", _Step, 1)
+THEN
+QuestUpdate("GLO_Moonrise", "EnemyOfMT");
+
+// Freed NS
+IF
+FlagSet((FLAG)SHA_NightsongPrison_State_NightsongFreed_24f27b06-6665-79ed-d7bf-e4bf356ca2fa,_,_)
+AND
+DB_GLO_Moonrise_Journal_OnMoonriseMission(_Step)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", _Step, 1)
+THEN
+QuestUpdate("GLO_Moonrise", "FreedNS");
+
+IF
+FlagSet((FLAG)HAV_TakingIsobel_State_DefendedIsobel_0d0255e4-dd08-47d7-9b40-cce21ec4a5bd, _, _)
+AND
+DB_GlobalFlag((FLAG)HAV_TakingIsobel_State_SpyIsDefeated_863bc783-83ad-4102-b0ee-b5b70b136047)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "MarcusBrief", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "SavedIsobel");
+
+ 
+//Kidnapped Isobel With Marcus
+IF
+FlagSet((FLAG)HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d, _, _)
+AND
+DB_GlobalFlag((FLAG)HAV_TakingIsobel_State_SidedWithSpy_5eb745b2-5043-2f36-4d3a-ee3f09ed7a82)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "SavedIsobel", 0)
+THEN
+PROC_GLO_Moonrise_Journal_HelpedMarcusCaptureIsobel();
+
+PROC
+PROC_GLO_Moonrise_Journal_HelpedMarcusCaptureIsobel()
+AND
+NOT DB_GlobalFlag(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4)
+THEN
+QuestUpdate("GLO_Moonrise", "HelpedMarcusCaptureIsobel");
+
+PROC
+PROC_GLO_Moonrise_Journal_HelpedMarcusCaptureIsobel()
+AND
+DB_GlobalFlag(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4)
+AND
+NOT DB_PermaDefeated(MOO_Executioner_1e888683-64d6-47f1-3cde-f1d9f430e3e6)
+THEN
+QuestUpdate("GLO_Moonrise", "HelpedMarcusCaptureIsobel_Zrell");
+
+PROC
+PROC_GLO_Moonrise_Journal_HelpedMarcusCaptureIsobel()
+AND
+DB_GlobalFlag(MOO_Executioner_Event_AskedToKidnapIsobel_59a781cf-4a28-fbc7-b032-05c051c0c9f4)
+AND
+DB_PermaDefeated(MOO_Executioner_1e888683-64d6-47f1-3cde-f1d9f430e3e6)
+THEN
+QuestUpdate("GLO_Moonrise", "HelpedMarcusCaptureIsobel_Ketheric");
+
+// COMPLETION Tried to defend Isobel against Marcus, but failed and survived Siege
+IF
+FlagSet((FLAG)MOO_Isobel_State_AtMoonrise_a95b7f8f-1454-433f-a496-71c9306683ce,_,_)
+AND
+DB_GlobalFlag((FLAG)HAV_TakingIsobel_State_SidedWithIsobel_52395bbc-a58d-44cd-bd40-8069c776875b)
+THEN
+QuestUpdate("GLO_Moonrise", "MarcusCapturedIsobel");
+
+//COMPLETION Isobel Killed when Haven Falls
+IF
+DB_PermaDefeated(S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b)
+AND
+DB_PermaDefeated(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+THEN
+QuestUpdate("GLO_Moonrise", "NoCaptureNSDead");
+
+// Failsafe
+PROC
+PROC_GLO_Moonrise_Journal_OnEndingMainQuest()
+AND
+DB_QuestIsOpened("GLO_Moonrise_SUB_MarcusCapture")
+AND
+NOT DB_PermaDefeated(S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211)
+AND
+NOT DB_GlobalFlag(HAV_TakingIsobel_State_IsobelTakenAway_b1c15a65-8060-4b9e-a73f-bde4cc143f7d)
+THEN
+QuestUpdate("GLO_Moonrise", "SavedIsobel");
+//END_REGION
+
+//REGION GLO_Moonrise_SUB_Relic
+IF
+FlagSet((FLAG)TWN_Distillery_State_PeacefulResolution_ef40ccf6-a7d7-4fde-8fcf-82b947c29a44,_,_)
+AND
+DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_BrewerConfession");
+
+IF
+FlagSet((FLAG)TWN_Distillery_State_PeacefulResolution_ef40ccf6-a7d7-4fde-8fcf-82b947c29a44,_,_)
+AND
+NOT DB_QuestIsAccepted("GLO_Moonrise_SUB_Relic")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_BrewerConfession_Start");
+
+//GLO_Moonrise_SUB_Relic_Mausoleum
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)SHA_Crypt_AD_MagicSkull_49a95b57-79dc-1816-916c-5b2cdbc64aec, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_FoundNecroSkull", 0)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_ToldHelpNecromancer", 1)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Necromancer_State_AskedHelp_1e06992f-24ad-254e-42aa-a0092f6f8431)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundNecroSkull");
+
+
+//GLO_Moonrise_SUB_Relic_SearchTemple
+PROC
+PROC_SHA_Mausoleum_OpenSecretDoors()
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_ToldHelpNecromancer", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundEntrance");
+
+
+//GLO_Moonrise_SUB_Relic_FindNecro
+PROC
+PROC_SHA_Mausoleum_OpenSecretDoors()
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_ToldHelpNecromancer", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundEntrance_Necro");
+
+IF
+DialogEnded((DIALOGRESOURCE)SHA_TadpoledSkeletons_Scouts_8c88348b-6302-76dc-54ec-fd3eb430f27b, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_ToldHelpNecromancer", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundSkeletons");
+
+IF
+DialogEnded((DIALOGRESOURCE)SHA_Necromancer_Barricade_734cc4ae-3f54-6948-dde2-7227fc04ff4a, _ID)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_ToldHelpNecromancer", 1)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+IsEnemy((CHARACTER)S_SHA_Necromancer_Skeleton_002_3eff903e-b99b-4099-b912-f71a9d02b4a2, (CHARACTER)_Player, 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundBarricade");
+
+IF
+FlagSet((FLAG)SHA_Necromancer_State_JusticiarsDefeated_30313b78-abb9-450d-942b-7f6bc7837e08, _, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_ToldHelpNecromancer", 1)
+AND
+DB_Players(_Player)
+AND
+IsEnemy((CHARACTER)S_SHA_Necromancer_Skeleton_002_3eff903e-b99b-4099-b912-f71a9d02b4a2, (CHARACTER)_Player, 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundNecromancer");
+
+
+//GLO_Moonrise_SUB_Relic_FindPath
+IF
+FlagSet((FLAG)SHA_Necromancer_State_AskedHelp_1e06992f-24ad-254e-42aa-a0092f6f8431, _, _)
+AND
+DB_QuestIsOpened("GLO_Moonrise")
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_MetNecromancer_Alt", 0)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_EnterShadowfell", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_MetNecromancer");
+
+IF
+FlagSet((FLAG)SHA_Necromancer_State_AskedHelp_1e06992f-24ad-254e-42aa-a0092f6f8431, _, _)
+AND
+NOT DB_QuestIsOpened("GLO_Moonrise")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_MetNecromancer_Alt");
+
+IF
+DB_GlobalFlag((FLAG)SHA_Necromancer_State_Dead_f83edb0d-f11f-4a3e-a866-58af8fc6c96d)
+AND
+DB_State_Current(S_SHA_Necromancer_53651a9f-7ea8-444f-ba2d-224390b72f7d, "SHA_Necromancer", "SHA_Necromancer_State_AtTemple")
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_StartedTrials", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_NecromancerDefeated");
+
+
+//GLO_Moonrise_SUB_Relic_CompleteTrials
+
+IF
+CustomBookUIClosed(_, "SHA_TempleLore")
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Trials_Knows_LearnedAboutTrials_a9d9efe0-9031-4b82-8c72-8518c178e485)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)SHA_Trials_Knows_LearnedAboutTrials_a9d9efe0-9031-4b82-8c72-8518c178e485);
+
+IF
+FlagSet((FLAG)SHA_Trials_Knows_LearnedAboutTrials_a9d9efe0-9031-4b82-8c72-8518c178e485, _, _)
+AND
+DB_SHA_RelicJournal(_Entry)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", _Entry, 1)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_OpenedPath", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_StartedTrials");
+
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", _Entry)
+AND
+DB_SHA_RelicJournal(_Entry)
+AND
+DB_GlobalFlag((FLAG)SHA_Trials_Knows_LearnedAboutTrials_a9d9efe0-9031-4b82-8c72-8518c178e485)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_StartedTrials");
+
+IF
+FlagSet((FLAG)SHA_Trials_Knows_SeenAltarInscription_24f46431-f67a-4b04-b027-fa4300322c00, _, _)
+AND
+DB_SHA_RelicJournal(_Entry)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", _Entry, 1)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_OpenedPath", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_StartedTrials");
+
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", _Entry)
+AND
+DB_SHA_RelicJournal(_Entry)
+AND
+DB_GlobalFlag((FLAG)SHA_Trials_Knows_SeenAltarInscription_24f46431-f67a-4b04-b027-fa4300322c00)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_StartedTrials");
+
+IF
+AddedTo(_Gem, _Player,_)
+AND
+DB_SHA_Trials_GemsNotTaken((ITEM)_Gem)
+AND
+NOT DB_SHA_RelicJournal_GemsTaken(_Gem)
+THEN
+DB_SHA_RelicJournal_GemsTaken(_Gem);
+
+IF
+AddedTo(_Gem, _Player,_)
+AND
+DB_SHA_RelicJournal_GemsTaken((ITEM)_Gem)
+AND
+NOT DB_SHA_RelicJournal_GemsJournaled((ITEM)_Gem)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_StartedTrials", 1)
+THEN
+DB_SHA_RelicJournal_GemsJournaled((ITEM)_Gem);
+PROC_SHA_RelicJournal_GemUpdateCheck((ITEM)_Gem);
+
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", "Relic_StartedTrials")
+AND
+DB_SHA_RelicJournal_GemsTaken(_Gem)
+AND
+NOT DB_SHA_RelicJournal_GemsJournaled((ITEM)_Gem)
+THEN
+DB_SHA_RelicJournal_GemsJournaled((ITEM)_Gem);
+PROC_SHA_RelicJournal_GemUpdateCheck((ITEM)_Gem);
+
+PROC
+PROC_SHA_RelicJournal_GemUpdateCheck((ITEM)_Gem)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+_Gem != S_SHA_TrialGem_006_7fbf6a88-bce1-49e0-a216-0cb2ce23b0eb
+THEN
+PROC_SHA_RelicJournal_GemUpdate();
+
+PROC
+PROC_SHA_RelicJournal_GemUpdate()
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_FoundGemTrials", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundGemTrials2");
+
+PROC
+PROC_SHA_RelicJournal_GemUpdate()
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_FoundGem", 1)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_FoundGemTrials", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundGemTrials");
+
+PROC
+PROC_SHA_RelicJournal_GemUpdate()
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_FoundGem", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundGem");
+
+PROC
+PROC_SHA_RelicJournal_GemUpdateCheck(S_SHA_TrialGem_006_7fbf6a88-bce1-49e0-a216-0cb2ce23b0eb)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("SHA_RelicJournal_FoundOrthonGem")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundGemOrthon");
+
+IF
+DB_GlobalFlag((FLAG)SHA_Necromancer_State_Dead_f83edb0d-f11f-4a3e-a866-58af8fc6c96d)
+AND
+DB_State_Current(S_SHA_Necromancer_53651a9f-7ea8-444f-ba2d-224390b72f7d, "SHA_Necromancer", "SHA_Necromancer_State_AtTemple")
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_StartedTrials", 1)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_NecromancerDefeated");
+
+// GLO_Moonrise_SUB_Relic_CompleteTrials
+
+IF
+PlatformMovementFinished((ITEM)S_PLT_SHA_Disc_963cbac6-de2b-4ee5-ba5b-c13a0c4fcda9,"SHA_Disc_Moved")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_SeenSecondAltar");
+
+
+//GLO_Moonrise_SUB_Relic_FindRelic
+IF
+Opened((ITEM)S_SHA_NightsongChamberDoor_4689976f-7fe3-4d5f-933a-e872ce947d93)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_OpenedPath");
+
+
+//GLO_Moonrise_SUB_Relic_ReachNS
+IF
+FlagSet(SHA_NightsongPrison_State_PlayerEnteredPrison_f2cbe7cf-5223-4522-a649-879d08638282, _, _)
+AND
+DB_PermaDefeated(S_SHA_Necromancer_53651a9f-7ea8-444f-ba2d-224390b72f7d)
+THEN
+QuestUpdate((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "GLO_Moonrise", "Relic_EnterShadowfell_NecroDead");
+
+IF
+FlagSet(SHA_NightsongPrison_State_PlayerEnteredPrison_f2cbe7cf-5223-4522-a649-879d08638282, _, _)
+AND
+NOT DB_PermaDefeated(S_SHA_Necromancer_53651a9f-7ea8-444f-ba2d-224390b72f7d)
+THEN
+QuestUpdate((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "GLO_Moonrise", "Relic_EnterShadowfell");
+
+
+//GLO_Moonrise_SUB_Relic_TalkNS
+IF
+DB_GlobalFlag((FLAG)SHA_Necromancer_State_Dead_f83edb0d-f11f-4a3e-a866-58af8fc6c96d)
+AND
+DB_State_Current(S_SHA_Necromancer_53651a9f-7ea8-444f-ba2d-224390b72f7d, "SHA_Necromancer", "SHA_Necromancer_State_AtPrison")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_NecromancerDefeated_Shadowfell");
+
+IF
+EnteredTrigger(_Player, (TRIGGER)S_SHA_NightsongPrison_PrisonArea_3673ff64-5760-40fb-8b43-ce4f7731c562)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "Relic_EnterShadowfell", 0)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_FoundNightsongAlone");
+
+
+//GLO_Moonrise_SUB_Relic_ReportToMoonrise
+IF
+FlagSet((FLAG)SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731, _, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ExecutionWitness", 0)
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_ReturnToMoonrise");
+
+
+//GLO_Moonrise_SUB_Relic_ReportZrell
+IF
+FlagSet((FLAG)SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731, _, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ExecutionWitness", 1)
+AND
+NOT DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_ReturnToZrell");
+
+
+//GLO_Moonrise_SUB_Relic_ReportKetheric
+IF
+FlagSet((FLAG)SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731, _, _)
+AND
+QuestUpdateIsUnlocked(NULL_00000000-0000-0000-0000-000000000000, "GLO_Moonrise", "ExecutionWitness", 1)
+AND
+DB_PermaDefeated(S_MOO_Executioner_8e75eb3b-7551-485e-8f98-2bf2e51d3e84)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_ReturnToKetheric");
+
+
+//GLO_Moonrise_SUB_Relic_COMPLETION
+IF
+DialogEnded((DIALOGRESOURCE)MOO_Executioner_1e888683-64d6-47f1-3cde-f1d9f430e3e6, _)
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_RewardedZrell");
+
+IF
+DialogEnded((DIALOGRESOURCE)MOO_Audience_Ketheric_26cf4f1f-7f17-e59c-245c-6ed6e767d28f, _)
+AND
+DB_GlobalFlag(MOO_Necromancer_State_AtMoonrise_f64507bf-aa53-6de9-0b59-c19d649bb0a5)
+AND
+DB_QuestIsOpened("GLO_Moonrise_SUB_Relic")
+THEN
+QuestUpdate("GLO_Moonrise", "Relic_RewardedKetheric");
+//END_REGION
+
+
+//REGION - Jaheira SCE/INT Journal Update
+IF
+DialogEnded((DIALOGRESOURCE)SCE_Jaheira_Debrief_7eb6a35a-656a-78db-57c8-4d5178ef880b, _)
+AND
+DB_GlobalFlag(GLO_Jaheira_Knows_HarpersAtDanthelon_3d66ab2d-7997-3a14-8fcc-9291a8802c5c)
+AND
+NOT DB_LevelLoadedOnce("BGO_Main_A")
+AND
+QRY_OnlyOnce("GLO_Jaheira_StartedQuestInSCE")
+THEN
+QuestUpdate("ORI_HighHarper", "TalkedSCE");
+
+IF
+DialogEnded((DIALOGRESOURCE)Jaheira_InParty_e97481ba-961c-50a7-c54f-d34d6b75044d, _)
+AND
+DB_GlobalFlag(GLO_Jaheira_Knows_HarpersAtDanthelon_3d66ab2d-7997-3a14-8fcc-9291a8802c5c)
+AND
+NOT DB_LevelLoadedOnce("BGO_Main_A")
+AND
+QRY_OnlyOnce("GLO_Jaheira_StartedQuestInSCE")
+THEN
+QuestUpdate("ORI_HighHarper", "TalkedSCE");
+
+//END_REGION
+
+//REGION Helpers
+IF
+QuestUpdateUnlocked(_, "GLO_Moonrise", _MainUpdate)
+AND
+DB_GLO_Moonrise_Journal_ChainedStateIfOpen(_QuesSUB, _MainUpdate, _SubUpdate)
+AND
+DB_QuestIsOpened(_QuesSUB)
+THEN
+QuestUpdate("GLO_Moonrise", _SubUpdate);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

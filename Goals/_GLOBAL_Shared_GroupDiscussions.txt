@@ -1,0 +1,311 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+KBSECTION
+//REGION Instant Group Discussion (dialog starts when the call is made)
+PROC
+PROC_GroupDiscussion_InstantStart((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+NOT DB_GroupDiscussion_HasPlayed(_GroupDiscussion)
+THEN
+StartInteractiveVoiceBark(_GroupDiscussion,_Anchor);
+DB_GroupDiscussion_Attempt(_GroupDiscussion);
+
+IF
+VoiceBarkStarted(_GroupDiscussion,_Inst)
+AND
+DB_GroupDiscussion_Attempt(_GroupDiscussion)
+THEN
+DB_GroupDiscussion_HasPlayed(_GroupDiscussion);
+
+IF
+VoiceBarkStarted(_GroupDiscussion,_Inst)
+AND
+DB_GroupDiscussion_Attempt(_GroupDiscussion)
+THEN
+DB_GroupDiscussion_Instance(_GroupDiscussion,_Inst);
+
+IF
+DialogEnded(_,_Inst)
+AND
+DB_GroupDiscussion_Instance(_GroupDiscussion,_Inst)
+THEN
+NOT DB_GroupDiscussion_Instance(_GroupDiscussion,_Inst);
+
+IF
+DB_GroupDiscussion_Instance(_GroupDiscussion,_Inst)
+AND
+DB_DialogName(_GroupDiscussionDialog,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+THEN
+DB_OriginDialog((CHARACTER)_Player,_GroupDiscussionDialog);
+
+//END_REGION
+
+//REGION Delayed Group Discussion (Exclamation marks appear above player heads when the call is made. Discussion only starts when a player talks to another player.)
+PROC
+PROC_GroupDiscussion_DelayedStart((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_GroupDiscussion_Potential(_Player)
+THEN
+NOT DB_GroupDiscussion_Potential(_Player);
+
+//First gather all nearby players and track if they are avatars.
+//If we have at least 2 players and at least 1 of them is an avatar, we show exclamation marks, otherwise the Delayed Group Discussion failed.
+PROC
+PROC_GroupDiscussion_DelayedStart((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+NOT DB_GroupDiscussion_HasPlayed(_GroupDiscussion)
+AND
+DB_Players(_OtherPlayer)
+AND
+NOT DB_CantTalk_IgnoreStatusesCombat(_OtherPlayer)
+AND
+NOT DB_HandlingRelationshipDialog(_OtherPlayer,_,_,_,_,_)
+AND
+NOT DB_PartyDialogSuppressed(_OtherPlayer,_)
+AND
+NOT QRY_PreventMPDialogue(_Anchor,_OtherPlayer)
+AND
+QRY_SpeakerIsInDialogRange(_Anchor, _OtherPlayer)
+THEN
+DB_GroupDiscussion_Potential(_OtherPlayer);
+
+//Need at least one avatar and one companion
+PROC
+PROC_GroupDiscussion_DelayedStart((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+QRY_OnlyOnce_Reset("PROC_GroupDiscussion_DelayedStart_FoundAvatar")
+AND
+DB_GroupDiscussion_Potential(_Avatar)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_OnlyOnce("PROC_GroupDiscussion_DelayedStart_FoundAvatar")
+AND
+DB_GroupDiscussion_Potential(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+THEN
+PROC_ExclamationMark_Show(_Companion);
+DB_GroupDiscussion_Queued(_Companion,_GroupDiscussion);
+PROC_GroupDiscussion_StartTracking(_Companion,_GroupDiscussion);
+
+//If another GD is being handled, cancel it
+IF
+DB_GroupDiscussion_Queued(_Player,_NewDiscussion)
+AND
+DB_GroupDiscussion_Queued(_Player,_OldDiscussion)
+AND
+_NewDiscussion != _OldDiscussion
+THEN
+PROC_GroupDiscussion_Cancel(_OldDiscussion);
+//END_REGION
+
+//REGION Delayed Group Discussion - Distance/Validity Tracking (This only removes invalid targets, it does not add new valid targets should they become available)
+//Start Anchor Distance Tracker
+PROC
+PROC_GroupDiscussion_StartTracking((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+NOT DB_GroupDiscussion_Anchor(_Anchor,_GroupDiscussion,_,_,_)
+AND
+GetPosition(_Anchor,_X,_Y,_Z)
+THEN
+DB_GroupDiscussion_Anchor(_Anchor,_GroupDiscussion,_X,_Y,_Z);
+ObjectTimerLaunch(_Anchor,"GroupDiscussionDistanceCheck",3000);
+
+//Check every X seconds
+IF
+ObjectTimerFinished(_Anchor,"GroupDiscussionDistanceCheck")
+AND
+DB_GroupDiscussion_Anchor((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion,_X,_Y,_Z)
+THEN
+PROC_GroupDiscussion_CheckValidity(_GroupDiscussion);
+
+//Or if no longer able to talk
+IF
+DB_CantTalk_IgnoreStatusesCombat(_Player)
+AND
+DB_GroupDiscussion_Queued((CHARACTER)_Player,_GroupDiscussion)
+THEN
+PROC_GroupDiscussion_CheckValidity(_GroupDiscussion);
+
+//Or if in suppression zone
+PROC
+PROC_PartyDialogSuppressed_Start((CHARACTER)_Player)
+AND
+DB_GroupDiscussion_Queued((CHARACTER)_Player,_GroupDiscussion)
+THEN
+PROC_GroupDiscussion_CheckValidity(_GroupDiscussion);
+
+//Or if a player changed assigned user
+IF
+CharacterReservedUserIDChanged(_,_,_)
+AND
+DB_GroupDiscussion_Queued((CHARACTER)_Player,_GroupDiscussion)
+THEN
+PROC_GroupDiscussion_CheckValidity(_GroupDiscussion);
+
+//Or if player teleportation
+IF
+Teleported(_Player,_,_,_,_,_,_,_,_)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+THEN
+PROC_GroupDiscussion_CheckValidity(_GroupDiscussion);
+
+//Or if cancelled for 1 player (dismissal, ...)
+PROC
+PROC_GroupDiscussion_CancelForPlayer((CHARACTER)_Player)
+AND
+DB_GroupDiscussion_Queued((CHARACTER)_Player,_GroupDiscussion) 
+THEN
+PROC_GroupDiscussion_CheckValidity(_GroupDiscussion);
+
+PROC
+PROC_GroupDiscussion_CheckValidity((VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_GroupDiscussion_Anchor((CHARACTER)_Anchor,_GroupDiscussion,_X,_Y,_Z)
+AND
+QRY_GroupDiscussion_CheckValidity_Individual(_GroupDiscussion,_X,_Y,_Z) //Check for each player if they can still participate
+AND
+NOT QRY_GroupDiscussion_CheckValidity_Group(_Anchor,_GroupDiscussion) //Check if we still have enough participants
+THEN
+ObjectTimerCancel(_Anchor,"ExclamationDialogDistanceCheck");
+PROC_GroupDiscussion_Cancel(_GroupDiscussion);
+
+//Recheck if conditions for queued voicebark are still met.
+QRY
+QRY_GroupDiscussion_CheckValidity_Individual((VOICEBARKRESOURCE)_GroupDiscussion,(REAL)_X,(REAL)_Y,(REAL)_Z)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+AND
+GetDistanceToPosition(_Player,_X,_Y,_Z,_Dist)
+AND
+_Dist > 30.0
+THEN
+PROC_GroupDiscussion_RestorePlayerAfterCancel(_Player, _GroupDiscussion);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Individual((VOICEBARKRESOURCE)_GroupDiscussion,(REAL)_X,(REAL)_Y,(REAL)_Z)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+AND
+NOT DB_Players(_Player)
+THEN
+PROC_GroupDiscussion_RestorePlayerAfterCancel(_Player, _GroupDiscussion);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Individual((VOICEBARKRESOURCE)_GroupDiscussion,(REAL)_X,(REAL)_Y,(REAL)_Z)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+AND
+DB_CantTalk_IgnoreStatusesCombat(_Player)
+THEN
+PROC_GroupDiscussion_RestorePlayerAfterCancel(_Player, _GroupDiscussion);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Individual((VOICEBARKRESOURCE)_GroupDiscussion,(REAL)_X,(REAL)_Y,(REAL)_Z)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+AND
+DB_PartyDialogSuppressed(_Player,_)
+THEN
+PROC_GroupDiscussion_RestorePlayerAfterCancel(_Player, _GroupDiscussion);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Group((CHARACTER)_Anchor,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+QRY_GroupDiscussion_CheckValidity_Group_CountPlayersAndAvatars(_GroupDiscussion)
+AND
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount)
+AND
+_PlayerCount > _AvatarCount
+AND
+_AvatarCount >= 1
+THEN
+ObjectTimerCancel(_Anchor,"ExclamationDialogDistanceCheck");
+ObjectTimerLaunch(_Anchor,"ExclamationDialogDistanceCheck",3000);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Group_CountPlayersAndAvatars((VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount)
+THEN
+NOT DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Group_CountPlayersAndAvatars((VOICEBARKRESOURCE)_GroupDiscussion)
+THEN
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(0,0);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Group_CountPlayersAndAvatars((VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+AND
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount)
+AND
+IntegerSum(_PlayerCount,1,_NewPlayerCount)
+THEN
+NOT DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount);
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_NewPlayerCount,_AvatarCount);
+
+QRY
+QRY_GroupDiscussion_CheckValidity_Group_CountPlayersAndAvatars((VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_GroupDiscussion_Queued(_Player,_GroupDiscussion)
+AND
+DB_Avatars(_Player)
+AND
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount)
+AND
+IntegerSum(_AvatarCount,1,_NewAvatarCount)
+THEN
+NOT DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_AvatarCount);
+DB_QRYRTN_GroupDiscussion_CheckValidity_Group_Count(_PlayerCount,_NewAvatarCount);
+//END_REGION
+
+//REGION Delayed Group Discussion - Cancelling
+PROC
+PROC_GroupDiscussion_Cancel((VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_GroupDiscussion_Queued(_Char,_GroupDiscussion) 
+THEN
+PROC_GroupDiscussion_RestorePlayerAfterCancel(_Char,_GroupDiscussion);
+
+PROC
+PROC_GroupDiscussion_RestorePlayerAfterCancel((CHARACTER)_Player,(VOICEBARKRESOURCE)_GroupDiscussion)
+THEN
+PROC_ExclamationMark_Hide(_Player);
+NOT DB_GroupDiscussion_Queued(_Player,_GroupDiscussion);
+
+PROC
+PROC_GroupDiscussion_RestorePlayerAfterCancel((CHARACTER)_Player,(VOICEBARKRESOURCE)_GroupDiscussion)
+AND
+DB_Avatars(_Player)
+THEN
+SetHasDialog(_Player,0);
+//END_REGION
+
+//REGION Starting a Delayed Group Discussion
+QRY
+QRY_SelectReflectionDialog((GUIDSTRING)_Companion, (GUIDSTRING)_Avatar)
+AND
+DB_GroupDiscussion_Queued((CHARACTER)_Companion,_GroupDiscussion) 
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+NOT QRY_PreventMPDialogue(_Companion,_Avatar)
+THEN
+PROC_GroupDiscussion_Cancel(_GroupDiscussion); //this removes all exclamation marks and resets the players 
+PROC_GroupDiscussion_InstantStart(_Avatar,_GroupDiscussion);
+//No DB_SelectedDialog Set. We only have a voicebark file and the engine will later determine an appropriate dialog.
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION

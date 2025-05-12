@@ -1,0 +1,582 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Achievement should match the technical achievement ID in the sheet:
+//[Link Redacted]
+
+//RequiredProgress should be >1 if this is a progressive achievement
+
+//UnlockFor defines whether achievements should be unlocked per user, per character or for all users in the session
+//Per user achievements are progressed by any characters from the same user
+//Per character is for if achievement progress should only be tracked on one player character, and not multiple character of the same user
+//Global achievements are progressed and unlocked for all users in the session
+//Values are "PER_USER", "PER_CHARACTER", "GLOBAL"
+
+NOT DB_Achievements("AchievementID",-1,"GLOBAL"); //_Achievement, _RequiredProgress, _UnlockFor
+
+//If this global flag is set during this dialog, grant the achievement after the dialog
+NOT DB_Achievements_UnlockAfterDialogGlobalFlag("AchievementID",(FLAG)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+//If this character flag is set on a player during this dialog, grant the achievement after the dialog
+NOT DB_Achievements_UnlockAfterDialogPlayerFlag("AchievementID",(FLAG)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+//PROCs:
+//PROC_Achievements_Unlock((STRING)_Achievement)
+//PROC_Achievements_Unlock((STRING)_Achievement,(CHARACTER)_Player)
+//PROC_Achievements_Unlock_User((STRING)_Achievement,(INTEGER)_UserID)
+
+//PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress)
+//PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player)
+//PROC_Achievements_SetProgress_User((STRING)_Achievement,(INTEGER)_Progress,(INTEGER)_UserID)
+
+//PROC_Achievements_IncrementProgress((STRING)_Achievement)
+//PROC_Achievements_IncrementProgress_Character((STRING)_Achievement,(CHARACTER)_Player)
+//PROC_Achievements_IncrementProgress_User((STRING)_Achievement,(INTEGER)_UserID)
+
+//Internally defined
+NOT DB_Achievements_Completed("Achievement",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000); //_Achievement, _Player
+NOT DB_Achievements_Progress("Achievement",0); //_Achievement, _CurrentProgress		GLOBAL PROGRESS
+NOT DB_Achievements_Progress_Character("Achievement",0,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000); //_Achievement, _CurrentProgress, _Player		PER CHARACTER PROGRESS
+NOT DB_Achievements_Progress_User("Achievement",0,"UserProfileID"); //_Achievement, _CurrentProgress, User Profile ID		PER USER PROGRESS
+//NOTE THAT USER ID IS NOT THE SAME AS USER PROFILE ID!
+//User ID can change between sessions, user profile ID stays consistent
+KBSECTION
+//REGION Debug hooks
+
+IF
+TextEvent("unlockachievement")
+AND
+GetTextEventParamString(1,_Achievement)
+THEN
+PROC_Achievements_Unlock(_Achievement);
+
+IF
+TextEvent("achievementunlock")
+AND
+GetTextEventParamString(1,_Achievement)
+THEN
+PROC_Achievements_Unlock(_Achievement);
+
+IF
+TextEvent("achievementprogress")
+AND
+GetTextEventParamString(1,_Achievement)
+AND
+GetTextEventParamInteger(2,_Progress)
+THEN
+PROC_Achievements_SetProgress(_Achievement,_Progress);
+
+IF
+TextEvent("displayachievementprogress")
+THEN
+DB_Achievements_DEBUG_DisplayProgress(1);
+
+IF
+TextEvent("clearachievementprogress")
+AND
+DB_Achievements_Completed(_Achievement,_Player)
+THEN
+NOT DB_Achievements_Completed(_Achievement,_Player);
+
+IF
+TextEvent("clearachievementprogress")
+AND
+DB_Achievements_Progress(_Achievement,_Progress)
+THEN
+NOT DB_Achievements_Progress(_Achievement,_Progress);
+
+IF
+TextEvent("clearachievementprogress")
+AND
+DB_Achievements_Progress_Character(_Achievement,_Progress,_Player)
+THEN
+NOT DB_Achievements_Progress_Character(_Achievement,_Progress,_Player);
+
+IF
+TextEvent("clearachievementprogress")
+AND
+DB_Achievements_Progress_User(_Achievement,_Progress,_UserID)
+THEN
+NOT DB_Achievements_Progress_User(_Achievement,_Progress,_UserID);
+
+IF
+DB_Achievements_Progress(_Achievement,_Progress)
+AND
+DB_Achievements_DEBUG_DisplayProgress(1)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+AND
+DB_Players(_Player)
+THEN
+PROC_Achievements_DEBUG_DisplayProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player);
+
+IF
+DB_Achievements_Progress_Character(_Achievement,_Progress,_Player)
+AND
+DB_Achievements_DEBUG_DisplayProgress(1)
+AND
+DB_Achievements(_Achievement,_,"PER_CHARACTER")
+THEN
+PROC_Achievements_DEBUG_DisplayProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player);
+
+IF
+DB_Achievements_Progress_User(_Achievement,_Progress,_UserProfileID)
+AND
+DB_Achievements_DEBUG_DisplayProgress(1)
+AND
+DB_Achievements(_Achievement,_,"PER_USER")
+AND
+DB_Players(_Player)
+AND
+GetReservedUserID(_Player,_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+THEN
+PROC_Achievements_DEBUG_DisplayProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player);
+
+PROC
+PROC_Achievements_DEBUG_DisplayProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_Total,_)
+AND
+IntegerToString(_Progress,_ProgressString)
+AND
+IntegerToString(_Total,_TotalString)
+AND
+Concatenate(_Achievement," progress: ",_String1)
+AND
+Concatenate(_String1,_ProgressString,_String2)
+AND
+Concatenate(_String2,"/",_String3)
+AND
+Concatenate(_String3,_TotalString,_FinalString)
+THEN
+DebugText(_Player,_FinalString);
+
+//END_REGION
+
+//REGION Unlock achievements
+
+//Unlock for all players
+PROC
+PROC_Achievements_Unlock((STRING)_Achievement)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+THEN
+PROC_Achievements_Unlock(_Achievement,NULL_00000000-0000-0000-0000-000000000000);
+
+//If unlock per player achievement but no player defined - force unlock for all users
+PROC
+PROC_Achievements_Unlock((STRING)_Achievement)
+AND
+NOT DB_Achievements(_Achievement,_,"GLOBAL") //Per user/per character/undefined achievement
+AND
+DB_Players(_Player)
+THEN
+PROC_Achievements_Unlock(_Achievement,_Player);
+
+
+//Unlock for all players
+PROC
+PROC_Achievements_Unlock((STRING)_Achievement,(CHARACTER)_)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+AND
+DB_Players(_Player)
+THEN
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_Player);
+
+//Unlock for specific player
+PROC
+PROC_Achievements_Unlock((STRING)_Achievement,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_CHARACTER") //Per character
+THEN
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_Player);
+
+//Unlock for specific user
+PROC
+PROC_Achievements_Unlock((STRING)_Achievement,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_USER") //Per user
+AND
+DB_Players(_OtherPlayer)
+AND
+QRY_SameUser(_Player,_OtherPlayer)
+THEN
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_OtherPlayer);
+
+//Achievement undefined (for testing)
+PROC
+PROC_Achievements_Unlock((STRING)_Achievement,(CHARACTER)_)
+AND
+NOT DB_Achievements(_Achievement,_,_)
+AND
+DB_Players(_Player)
+THEN
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_Player);
+
+
+//Internal unlock
+PROC
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_Player)
+AND
+NOT DB_Achievements_Completed(_Achievement,_Player)
+AND
+Concatenate("Unlocked achievement ",_Achievement,_String)
+THEN
+DebugText(_Player,_String);
+
+PROC
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_Player)
+THEN
+UnlockAchievement(_Achievement,_Player);
+//already unlocked achievement can be unlocked again
+
+PROC
+PROC_Achievements_Internal_Unlock((STRING)_Achievement,(CHARACTER)_Player)
+AND
+NOT DB_Achievements_Completed(_Achievement,_Player)
+THEN
+DB_Achievements_Completed(_Achievement,_Player);
+PROC_Achievements_Unlocked(_Achievement,_Player);
+
+//For if you want to clean up achievement databases
+PROC
+PROC_Achievements_Unlocked((STRING)_Achievement,(CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Progressive achievements: set progress
+
+//GLOBAL
+//If progress already being tracked, update databases
+PROC
+PROC_Achievements_SetProgress(_Achievement,_Progress,_)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL") //global progress
+AND
+DB_Achievements_Progress(_Achievement,_OldProgress)
+AND
+_OldProgress != _Progress
+THEN
+NOT DB_Achievements_Progress(_Achievement,_OldProgress);
+DB_Achievements_Progress(_Achievement,_Progress);
+
+//If progress not tracked yet, add to database
+PROC
+PROC_Achievements_SetProgress(_Achievement,_Progress,_)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")//progress for all users
+AND
+NOT DB_Achievements_Progress(_Achievement,_)
+THEN
+DB_Achievements_Progress(_Achievement,_Progress);
+
+//Visual progress for all users
+PROC
+PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress)
+AND
+DB_Players(_Player)
+THEN
+PROC_Achievements_SetProgress(_Achievement,_Progress,_Player);
+
+//Unlock achievement if progress reached
+PROC
+PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Achievements_Completed(_Achievement,_Player) //if any player has not yet unlocked this achievement
+AND
+DB_Achievements(_Achievement,_RequiredProgress,_)
+AND
+_Progress >= _RequiredProgress
+THEN
+PROC_Achievements_Unlock(_Achievement,_Player);
+
+
+//PER CHARACTER
+//If progress already being tracked, update databases
+PROC
+PROC_Achievements_SetProgress(_Achievement,_Progress,_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_CHARACTER") //progress per character
+AND
+DB_Achievements_Progress_Character(_Achievement,_OldProgress,_Player)
+AND
+_OldProgress != _Progress
+THEN
+NOT DB_Achievements_Progress_Character(_Achievement,_OldProgress,_Player);
+DB_Achievements_Progress_Character(_Achievement,_Progress,_Player);
+
+//If progress not tracked yet, add to database
+PROC
+PROC_Achievements_SetProgress(_Achievement,_Progress,_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_CHARACTER") //progress per player
+AND
+NOT DB_Achievements_Progress_Character(_Achievement,_,_Player)
+THEN
+DB_Achievements_Progress_Character(_Achievement,_Progress,_Player);
+
+//Visual progress per player
+PROC
+PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player)
+AND
+NOT DB_Achievements_Completed(_Achievement,_Player)
+THEN
+SetAchievementProgressForPlayer(_Achievement,_Player,_Progress); //progress per player
+
+//Unlock achievement if progress reached
+PROC
+PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player)
+AND
+NOT DB_Achievements_Completed(_Achievement,_Player)
+AND
+DB_Achievements(_Achievement,_RequiredProgress,_)
+AND
+_Progress >= _RequiredProgress
+THEN
+PROC_Achievements_Unlock(_Achievement,_Player);
+
+
+//PER USER
+PROC
+PROC_Achievements_SetProgress((STRING)_Achievement,(INTEGER)_Progress,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_USER")
+AND
+GetReservedUserID(_Player,_UserID)
+THEN
+PROC_Achievements_SetProgress_User(_Achievement,_Progress,_UserID);
+
+PROC
+PROC_Achievements_SetProgress_User((STRING)_Achievement,(INTEGER)_Progress,(INTEGER)_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+THEN
+PROC_Achievements_SetProgress_UserProfile((STRING)_Achievement,(INTEGER)_Progress,(STRING)_UserProfileID);
+
+//If progress already being tracked, update databases
+PROC
+PROC_Achievements_SetProgress_UserProfile((STRING)_Achievement,(INTEGER)_Progress,(STRING)_UserProfileID)
+AND
+DB_Achievements(_Achievement,_,"PER_USER") //progress per user
+AND
+DB_Achievements_Progress_User(_Achievement,_OldProgress,_UserProfileID)
+AND
+_OldProgress != _Progress
+THEN
+NOT DB_Achievements_Progress_User(_Achievement,_OldProgress,_UserProfileID);
+DB_Achievements_Progress_User(_Achievement,_Progress,_UserProfileID);
+
+//If progress not tracked yet, add to database
+PROC
+PROC_Achievements_SetProgress_UserProfile((STRING)_Achievement,(INTEGER)_Progress,(STRING)_UserProfileID)
+AND
+DB_Achievements(_Achievement,_,"PER_USER") //progress per user
+AND
+NOT DB_Achievements_Progress_User(_Achievement,_,_UserProfileID)
+THEN
+DB_Achievements_Progress_User(_Achievement,_Progress,_UserProfileID);
+
+//Visual progress per user
+PROC
+PROC_Achievements_SetProgress_UserProfile((STRING)_Achievement,(INTEGER)_Progress,(STRING)_UserProfileID)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Achievements_Completed(_Achievement,_Player)
+THEN
+SetAchievementProgressForPlayer(_Achievement,_Player,_Progress); //progress per player
+
+//Unlock achievement if progress reached
+PROC
+PROC_Achievements_SetProgress_UserProfile((STRING)_Achievement,(INTEGER)_Progress,(STRING)_UserProfileID)
+AND
+DB_Achievements(_Achievement,_RequiredProgress,_)
+AND
+_Progress >= _RequiredProgress
+AND
+DB_Players(_Player)
+AND
+GetReservedUserID(_Player,_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+AND
+//if any player controlled by this user has not completed the achievement
+//it's possible a player character from a user who got the achievement
+//was transferred to a player who did not get the achievement
+NOT DB_Achievements_Completed(_Achievement,_Player)
+THEN
+PROC_Achievements_Unlock(_Achievement,_Player);
+
+//END_REGION
+
+//REGION Progressive achievements: increment progress
+
+//GLOBAL
+//If already tracking progress, increment
+PROC
+PROC_Achievements_IncrementProgress((STRING)_Achievement)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+AND
+DB_Achievements_Progress(_Achievement,_OldProgress)
+AND
+IntegerSum(_OldProgress,1,_CurrentProgress)
+THEN
+PROC_Achievements_SetProgress(_Achievement,_CurrentProgress);
+
+//If progress not tracked yet, set progress to 1
+PROC
+PROC_Achievements_IncrementProgress((STRING)_Achievement)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+AND
+NOT DB_Achievements_Progress(_Achievement,_)
+THEN
+PROC_Achievements_SetProgress(_Achievement,1);
+
+
+//PER CHARACTER
+PROC
+PROC_Achievements_IncrementProgress((STRING)_Achievement,(CHARACTER)_)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+THEN
+PROC_Achievements_IncrementProgress(_Achievement);
+
+//If already tracking progress, increment
+PROC
+PROC_Achievements_IncrementProgress((STRING)_Achievement,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_CHARACTER")
+AND
+DB_Achievements_Progress_Character(_Achievement,_OldProgress,_Player)
+AND
+IntegerSum(_OldProgress,1,_CurrentProgress)
+THEN
+PROC_Achievements_SetProgress(_Achievement,_CurrentProgress,_Player);
+
+//If progress not tracked yet, set progress to 1
+PROC
+PROC_Achievements_IncrementProgress((STRING)_Achievement,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_CHARACTER")
+AND
+NOT DB_Achievements_Progress_Character(_Achievement,_,_Player)
+THEN
+PROC_Achievements_SetProgress(_Achievement,1,_Player);
+
+
+//PER USER
+//If already tracking progress, increment
+PROC
+PROC_Achievements_IncrementProgress((STRING)_Achievement,(CHARACTER)_Player)
+AND
+DB_Achievements(_Achievement,_,"PER_USER")
+AND
+GetReservedUserID(_Player,_UserID)
+THEN
+PROC_Achievements_IncrementProgress_User((STRING)_Achievement,(INTEGER)_UserID);
+
+PROC
+PROC_Achievements_IncrementProgress_User((STRING)_Achievement,(INTEGER)_UserID)
+AND
+GetUserProfileID(_UserID,_UserProfileID)
+THEN
+PROC_Achievements_IncrementProgress_UserProfile((STRING)_Achievement,(STRING)_UserProfileID);
+
+//If already tracking progress, increment
+PROC
+PROC_Achievements_IncrementProgress_UserProfile((STRING)_Achievement,(STRING)_UserProfileID)
+AND
+DB_Achievements_Progress_User(_Achievement,_OldProgress,_UserProfileID)
+AND
+IntegerSum(_OldProgress,1,_CurrentProgress)
+THEN
+PROC_Achievements_SetProgress_UserProfile(_Achievement,_CurrentProgress,_UserProfileID);
+
+//If progress not tracked yet, set progress to 1
+PROC
+PROC_Achievements_IncrementProgress_UserProfile((STRING)_Achievement,(STRING)_UserProfileID)
+AND
+DB_Achievements(_Achievement,_,"PER_USER")
+AND
+NOT DB_Achievements_Progress_User(_Achievement,_,_UserProfileID)
+THEN
+PROC_Achievements_SetProgress_UserProfile(_Achievement,1,_UserProfileID);
+
+//END_REGION
+
+//REGION Unlock achievement after dialog global flag
+
+IF
+DB_Achievements_UnlockAfterDialogGlobalFlag((STRING)_,(FLAG)_Flag,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_GlobalFlagReactionAfterDialog(_Flag,_Dialog)
+THEN
+DB_GlobalFlagReactionAfterDialog(_Flag,_Dialog);
+
+//Unlock for all users
+PROC
+PROC_GlobalFlagReactionAfterDialog(_Flag,_Dialog)
+AND
+DB_Achievements_UnlockAfterDialogGlobalFlag((STRING)_Achievement,(FLAG)_Flag,(DIALOGRESOURCE)_Dialog)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+THEN
+PROC_Achievements_Unlock(_Achievement);
+
+//Unlock for all users in dialog
+PROC
+PROC_GlobalFlagReactionAfterDialog(_Flag,_Dialog,_DialogId)
+AND
+DB_Achievements_UnlockAfterDialogGlobalFlag((STRING)_Achievement,(FLAG)_Flag,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_Achievements(_Achievement,_,"GLOBAL")
+AND
+DB_DialogPlayers(_DialogId,_Player,_)
+THEN
+PROC_Achievements_Unlock(_Achievement,(CHARACTER)_Player);
+
+//END_REGION
+
+//REGION Unlock achievement after dialog character flag
+
+IF
+DB_Achievements_UnlockAfterDialogPlayerFlag((STRING)_,(FLAG)_Flag,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_FlagReactionAfterDialog(_Flag,_Dialog)
+THEN
+DB_FlagReactionAfterDialog(_Flag,_Dialog);
+
+//Unlock for all users
+PROC
+PROC_FlagReactionAfterDialog(_,_Flag,_Dialog)
+AND
+DB_Achievements_UnlockAfterDialogPlayerFlag((STRING)_Achievement,(FLAG)_Flag,(DIALOGRESOURCE)_Dialog)
+AND
+DB_Achievements(_Achievement,_,"GLOBAL")
+THEN
+PROC_Achievements_Unlock(_Achievement);
+
+//Unlock for flagged user
+PROC
+PROC_FlagReactionAfterDialog(_Player,_Flag,_Dialog)
+AND
+DB_Achievements_UnlockAfterDialogPlayerFlag((STRING)_Achievement,(FLAG)_Flag,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_Achievements(_Achievement,_,"GLOBAL")
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_Achievements_Unlock(_Achievement,(CHARACTER)_Player);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

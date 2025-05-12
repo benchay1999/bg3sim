@@ -1,0 +1,150 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Misc goal for Ketheric's general logics, situations and myrkulites
+//Relates to situations: 'Audience with the Absolute', 'Assault on Moonrise' and 'Ketheric Showdown'
+
+//REGION Ketheric 
+//starts invulnerable, immortal and doesn't join combat (not before reaching the roof or colony anyways)
+SetImmortal(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 1);
+SetCanJoinCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 0);
+SetCanFight(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, 0);
+//END_REGION
+
+//REGION Audience dialogues
+
+//--- Myrkulites before reaching the roof
+DB_Dialogs(S_MOO_AccessCultist_7f0f8d11-9d1e-4210-bbcb-41aa05666d58, MOO_Audience_AccessCultist_49ad9a32-be79-4e30-ad8d-0de5c68a9c0e);
+
+//TODO: should each skeleton have its own dialog? Are they really talking? (currently it's just a narrator node)
+DB_Dialogs(S_MOO_AudienceGuard_001_f986110c-7451-417a-89e2-b2628e200c4d, MOO_Audience_Skeletons_09b672de-bb84-8b0d-ae89-424ea6a4af9d);
+DB_Dialogs(S_MOO_AudienceGuard_002_50eed113-2a6a-469d-ba8e-a9fd44be681b, MOO_Audience_Skeletons_09b672de-bb84-8b0d-ae89-424ea6a4af9d);
+DB_Dialogs(S_MOO_AudienceGuard_003_c9c185bb-ca0d-46b7-b0da-bf6364a96e15, MOO_Audience_Skeletons_09b672de-bb84-8b0d-ae89-424ea6a4af9d);
+//END_REGION
+
+//REGION 
+//Defeat counter for minions on the roof, used specifically for use of Command Troops spell
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_001_97c8dc13-5a94-48c2-b2d1-2bb3c1d4dd40,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_002_0d759ded-13de-4e24-ad3b-cae83879b4c9,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_003_02edce28-9ce1-4905-a776-fd8b50ae0dcc,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_004_ee6ea72e-8a85-445f-8b48-461b4d9d5418,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_005_242237d0-a129-48a6-a868-3b9211138de5,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_006_48279220-f514-48a7-8084-c8b8eb3629ff,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_007_a1fbcddf-cf6e-4222-a022-0fd12d099ce2,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofNecromite_008_afd14856-feff-42be-9b6c-402889f45c13,"COL_KethericRooftop_KillCounter_Minion");
+DB_GLO_DefeatCounter((CHARACTER)S_MOO_RoofCultist_ebfd7bc7-0fd5-4dee-8fd5-308ded4d0a65,"COL_KethericRooftop_KillCounter_Minion");
+
+AddPreferredAiTargetTag((CHARACTER)S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab,(TAG)ACT2_MOO_KETHERIC_TAUNT_34ccbf00-621b-4cb2-a3e7-daef32df9146);
+//END_REGION
+
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1);
+KBSECTION
+//REGION 'Seeing' Ketheric
+
+IF
+DB_DialogNPCs(_ID, S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f, _)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(MOO_Ketheric_Knows_HasSeen_0d776dde-e2b5-447a-b41d-3dd3c025cf96)
+THEN
+SetFlag(MOO_Ketheric_Knows_HasSeen_0d776dde-e2b5-447a-b41d-3dd3c025cf96, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+
+//Add spawned necromites to combat automatically
+IF
+EnteredLevel(_Necromite,(ROOT)Quest_COL_Necromite_Summon_fec67606-9665-4942-b5bb-c211e2e03499,"SCL_Main_A")
+AND
+DB_Is_InCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,_)
+THEN
+PROC_EnterCombat(_Necromite,S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f);
+
+
+//REGION Rooftop minion tags
+IF
+DB_GLO_DefeatCounter(_Minion,"COL_KethericRooftop_KillCounter_Minion")
+THEN
+AddPreferredAiTargetTag((CHARACTER)_Minion,(TAG)ACT2_MOO_KETHERIC_TAUNT_34ccbf00-621b-4cb2-a3e7-daef32df9146);
+
+//Don't use Command Spell if too many allies are dead
+PROC
+PROC_GLO_DefeatCounter_Notify("COL_KethericRooftop_KillCounter_Minion",_,_,6)
+THEN
+SetTag(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,ACT2_MOO_KETHERIC_BLOCKCOMMAND_e97caba7-e96d-46d6-a1ac-01bade846aeb);
+
+//END_REGION
+
+//REGION Invulnerable Ketheric combat
+
+IF
+DB_GlobalFlag((FLAG)GLO_Ketheric_Knows_ImmortalitySource_0e9375d2-68e3-0509-36c5-55694768dad5)
+AND
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1)
+THEN
+NOT DB_MOO_Ketheric_DoImmortalityDaisyADs(1);
+
+IF
+DB_GlobalFlag((FLAG)MOO_KethericShowdown_State_Started_33489af3-23b7-4340-bbf6-19033c9dae03)
+AND
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1)
+THEN
+NOT DB_MOO_Ketheric_DoImmortalityDaisyADs(1);
+
+IF
+DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+AND
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1)
+THEN
+NOT DB_MOO_Ketheric_DoImmortalityDaisyADs(1);
+
+IF
+DB_GlobalFlag((FLAG)MOO_Assault_State_InProgress_0f3a8f5d-7402-4220-bebb-d4b21d3db08d)
+AND
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1)
+THEN
+NOT DB_MOO_Ketheric_DoImmortalityDaisyADs(1);
+
+IF
+TurnStarted(_Player)
+AND
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Is_InCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,_CombatId)
+AND
+DB_Is_InCombat(_Player,_CombatId)
+AND
+NOT DB_DialogPlayers(_,_Player,_)
+AND
+HasActiveStatus(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,"MOO_KETHERIC_INVULNERABLE",1)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)MOO_Kethetic_DaisyAD_AttackImmortal_2e314d09-6cfc-7a14-5bf1-718cb35acd88);
+
+IF
+AttackedBy(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,_Player,_,_,_,_,_)
+AND
+DB_MOO_Ketheric_DoImmortalityDaisyADs(1)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Is_InCombat(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,_CombatId)
+AND
+DB_Is_InCombat(_Player,_CombatId)
+AND
+NOT DB_DialogPlayers(_,_Player,_)
+AND
+NOT DB_DialogName(MOO_Kethetic_DaisyAD_AttackImmortal_2e314d09-6cfc-7a14-5bf1-718cb35acd88,_)
+AND
+HasActiveStatus(S_MOO_Ketheric_e9918f3e-5b87-40a3-a9bd-61545151573f,"MOO_KETHERIC_INVULNERABLE",1)
+THEN
+PROC_DaisyAD(_Player,(DIALOGRESOURCE)MOO_Kethetic_DaisyAD_AttackImmortalRepeated_691170f5-86fb-549f-203f-b60b6e1a7304);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

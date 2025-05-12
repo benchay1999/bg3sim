@@ -1,0 +1,238 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+Define this DB to allow for Anubis config change for characters which travel between acts.
+
+DB_GLO_LevelTraveler((CHARACTER)_Character,(STRING)_LevelName,(STRING)_AnubisConfig);
+*/
+
+// A simple system to run checks for npc setup for later acts.
+// Define
+//   DB_GLO_SetupForAct_Character((STRING)_ActRegion,(CHARACTER)_Char)
+// React to
+//   PROC_GLO_SetupForAct((STRING)_ActRegion,(CHARACTER)_Char,(INTEGER)_Valid)
+// to setup placement, dialog, and any other properties.
+//
+// The last parameter means: 1 - all checks passed
+//   0 - some checks failed
+//
+// By default the system only checks PermaDefeated.
+// PermaDefeated is considered to be a failed check.
+// To invert it (e.g. if you wish to bring a dead body into next Act), use
+//   DB_GLO_SetupForAct_PermaDefeatedIsSuccess((STRING)_ActRegion,(CHARACTER)_Char);
+// with the last parameter marking the desired "valid" state.
+//
+// For custom checks use
+//   QRY_GLO_SetupForAct_CustomBlock((STRING)_ActRegion,(CHARACTER)_Char)
+// Query success means the character failed its check.
+//
+// All act setup checks finish is marked by a call to
+//   PROC_GLO_SetupForActComplete((STRING)_ActRegion)
+//
+//
+// There is a helper procedure that re-runs act setup checks. Be warned that it will reiterate everything
+// even outside of your situation
+//   PROC_GLO_SetupForAct_DebugRerun()
+// `oe setupforact` in ReCon to run this PROC
+// A specified act version of this proc
+//   PROC_GLO_SetupForAct_DebugRerun((STRING)_Act)
+// A specified character version of the same proc
+//   PROC_GLO_SetupForAct_DebugRerun((STRING)_Act, (CHARACTER)_Character)
+//
+// Another helper procedure that can be used to place characters into the game world at the specified trigger:
+//   PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger, (FACTION)_Faction, (DIALOGRESOURCE)_Dialog, (STRING)_TeleportEvent);
+// _Faction, _Dialog and _TeleportEvent are optional.
+
+NOT DB_GLO_SetupForAct_PermaDefeatedIsSuccess("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Debug
+
+IF
+TextEvent("setupforact")
+THEN
+PROC_GLO_SetupForAct_DebugRerun();
+
+PROC
+PROC_GLO_SetupForAct_DebugRerun()
+AND
+DB_GLO_SetupForAct_CurrentLevel(_Act)
+THEN
+PROC_GLO_SetupForAct_DebugRerun(_Act);
+
+PROC
+PROC_GLO_SetupForAct_DebugRerun((STRING)_Act)
+AND
+DB_GLO_SetupForAct_CurrentLevel(_Act)
+THEN
+NOT DB_GLO_SetupForAct_CurrentLevel(_Act);
+DB_GLO_SetupForAct_CurrentLevel(_Act);
+
+PROC
+PROC_GLO_SetupForAct_DebugRerun((STRING)_Act, (CHARACTER)_Character)
+AND
+DB_GLO_SetupForAct_Character(_Act,_Character)
+THEN
+PROC_GLO_SetupForAct_DoChecks(_Act,_Character);
+PROC_GLO_SetupForActComplete(_Act);
+//END_REGION Debug
+
+
+IF
+EnteredLevel((CHARACTER)_Character,_,_LevelName)
+AND
+DB_GLO_LevelTraveler(_Character,_LevelName,_AnubisConfig)
+THEN
+PROC_SetAnubisConfig(_Character,_AnubisConfig);
+
+
+IF
+DB_GLO_SetupForAct_PermaDefeatedIsSuccess((STRING)_Act,(CHARACTER)_Char)
+AND
+NOT DB_GLO_SetupForAct_Character(_Act,_Char)
+THEN
+DB_GLO_SetupForAct_Character(_Act,_Char);
+
+IF
+DB_GLO_SetupForAct_CurrentLevel(_Act)
+AND
+DB_GLO_SetupForAct_Character(_Act,_Char)
+THEN
+PROC_GLO_SetupForAct_DoChecks(_Act,_Char);
+
+// avoid a bug with User Queries in Rule Conditions
+// described here: [Link Redacted]
+PROC
+PROC_GLO_SetupForAct_DoChecks((STRING)_Act,(CHARACTER)_Char)
+AND
+QRY_GLO_SetupForAct_CleanCheckDBs()
+AND
+QRY_GLO_SetupForAct_CheckPermaDefeated(_Act,_Char)
+AND
+DB_GLO_SetupForAct_PermaDefeatedOk(_DefeatedBool)
+AND
+QRY_GLO_SetupForAct_CheckCustom(_Act,_Char)
+AND
+DB_GLO_SetupForAct_CustomOk(_CustomOk)
+AND
+DB_LogicAnd(_DefeatedBool,_CustomOk,_Valid)
+THEN
+PROC_GLO_SetupForAct(_Act,_Char,_Valid);
+
+QRY
+QRY_GLO_SetupForAct_CheckCustom((STRING)_Act,(CHARACTER)_Char)
+THEN
+DB_GLO_SetupForAct_CustomOk(1);
+
+QRY
+QRY_GLO_SetupForAct_CheckCustom((STRING)_Act,(CHARACTER)_Char)
+AND
+QRY_GLO_SetupForAct_CustomBlock(_Act,_Char)
+THEN
+NOT DB_GLO_SetupForAct_CustomOk(1);
+DB_GLO_SetupForAct_CustomOk(0);
+
+QRY
+QRY_GLO_SetupForAct_CustomBlock((STRING)_Act,(CHARACTER)_Char)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_SetupForAct((STRING)_Act,(CHARACTER)_Char,(INTEGER)_Valid)
+THEN
+DB_NOOP(1);
+
+IF
+DB_GLO_SetupForAct_CurrentLevel(_Act)
+THEN
+PROC_GLO_SetupForActComplete(_Act);
+
+PROC
+PROC_GLO_SetupForActComplete((STRING)_Act)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_SetupForAct_CleanCheckDBs()
+THEN
+NOT DB_GLO_SetupForAct_PermaDefeatedOk(0);
+NOT DB_GLO_SetupForAct_PermaDefeatedOk(1);
+NOT DB_GLO_SetupForAct_CustomOk(0);
+NOT DB_GLO_SetupForAct_CustomOk(1);
+
+
+QRY
+QRY_GLO_SetupForAct_CheckPermaDefeated((STRING)_Act,(CHARACTER)_Char)
+THEN
+DB_GLO_SetupForAct_PermaDefeatedOk(1);
+
+QRY
+QRY_GLO_SetupForAct_CheckPermaDefeated((STRING)_Act,(CHARACTER)_Char)
+AND
+DB_GLO_SetupForAct_PermaDefeatedIsSuccess(_Act,_Char)
+AND
+NOT DB_PermaDefeated(_Char)
+THEN
+DB_GLO_SetupForAct_PermaDefeatedOk(0);
+
+QRY
+QRY_GLO_SetupForAct_CheckPermaDefeated((STRING)_Act,(CHARACTER)_Char)
+AND
+NOT DB_GLO_SetupForAct_PermaDefeatedIsSuccess(_Act,_Char)
+AND
+DB_PermaDefeated(_Char)
+THEN
+DB_GLO_SetupForAct_PermaDefeatedOk(0);
+
+QRY
+QRY_GLO_SetupForAct_CheckPermaDefeated((STRING)_Act,(CHARACTER)_Char)
+AND
+DB_GLO_SetupForAct_PermaDefeatedOk(0)
+THEN
+NOT DB_GLO_SetupForAct_PermaDefeatedOk(1);
+
+//REGION Helpers
+PROC
+PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger)
+THEN
+PROC_GLO_SetupForAct_Place(_Character, _Trigger, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, "");
+
+PROC
+PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger, (FACTION)_Faction)
+THEN
+PROC_GLO_SetupForAct_Place(_Character, _Trigger, _Faction, NULL_00000000-0000-0000-0000-000000000000, "");
+
+PROC
+PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger, (FACTION)_Faction, (DIALOGRESOURCE)_Dialog)
+THEN
+PROC_GLO_SetupForAct_Place(_Character, _Trigger, _Faction, _Dialog, "");
+
+PROC
+PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger, (FACTION)_Faction, (DIALOGRESOURCE)_Dialog, (STRING)_TeleportEvent)
+THEN
+SetVisible(_Character, 1);
+SetOnStage(_Character, 1);
+TeleportTo(_Character, _Trigger, _TeleportEvent);
+LookFromTrigger(_Character, _Trigger, 0);
+
+PROC
+PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger, (FACTION)_Faction, (DIALOGRESOURCE)_Dialog, (STRING)_TeleportEvent)
+AND
+_Faction != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetFaction(_Character, _Faction);
+
+PROC
+PROC_GLO_SetupForAct_Place((CHARACTER)_Character, (TRIGGER)_Trigger, (FACTION)_Faction, (DIALOGRESOURCE)_Dialog, (STRING)_TeleportEvent)
+AND
+_Dialog != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_Character);
+DB_Dialogs(_Character, _Dialog);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

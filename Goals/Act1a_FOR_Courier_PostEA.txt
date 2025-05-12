@@ -1,0 +1,878 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//To set the flag if the note about Kurwin's Coffin is read - Relevant for Act 3 Booster "Kurwin's Coffin" moment in the graveyard
+DB_BookFlags(S_FOR_Courier_Letter1_e599debc-5e67-4baa-a4da-5cc6c6c64b23,LOW_KurwinCoffin_Knows_ReadNineFingersNote_8b458528-dc75-4332-b817-5e887ec8bb93);
+
+SetTag((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f);
+
+// Always on DB to enable negative DB checks
+DB_FOR_Courier_AlwaysOn(1);
+
+// _Thrower, _Scratch, _ThrownObject
+NOT DB_FOR_CourierDog_StartFetch((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_FOR_CourierDog_IsFetching((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+DB_FOR_Courier_Fetch_Tags((TAG)WEIGHT_TINY_9360d001-0cef-49e0-a2e0-4d715d4976ea);
+DB_FOR_Courier_Fetch_Tags((TAG)SCRATCH_FETCH_31d621af-5add-48a5-9afa-3c3156ba7171);
+KBSECTION
+IF
+LevelLoaded(_)
+AND
+Exists((ITEM)S_CAMP_Courier_Dog_FakeBoo_LT_WLD_Campfire_A_000_f27c3558-a69e-440c-a00d-611178e5d07f,1)
+AND
+QRY_OnlyOnce("FOR_Courier_Init")
+THEN
+PROC_SetOnStage((ITEM)S_CAMP_Courier_Dog_FakeBoo_LT_WLD_Campfire_A_000_f27c3558-a69e-440c-a00d-611178e5d07f,0);
+
+IF
+FlagSet((FLAG)CAMP_Courier_Dog_Event_GiveFakeBoo_d868c86b-08b7-8300-ff3a-70290d1a5dbe,_Player,_)
+THEN
+PROC_ToInventoryAndOnStage((ITEM)S_CAMP_Courier_Dog_FakeBoo_LT_WLD_Campfire_A_000_f27c3558-a69e-440c-a00d-611178e5d07f,_Player,1,1,1);
+
+//REGION Familiar Scratch - add/remove Find Dog Familiar spell
+// Give the find dog spell to whoever holds the ball 
+IF
+AddedTo((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (CHARACTER)_Player, _)
+AND
+IsTagged((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f, 1)
+AND
+DB_Players(_Player)
+THEN
+PROC_FOR_CourierDog_AddSpell_FindFamiliarDog(_Player);
+
+IF
+TagSet((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f)
+AND
+DB_Players(_Player)
+AND
+IsInInventoryOf((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _Player, 1)
+THEN
+PROC_FOR_CourierDog_AddSpell_FindFamiliarDog(_Player);
+
+IF
+DB_Players(_Player)
+AND
+IsInInventoryOf((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _Player, 1)
+AND
+IsTagged((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f, 1)
+THEN
+PROC_FOR_CourierDog_AddSpell_FindFamiliarDog(_Player);
+
+PROC
+PROC_FOR_CourierDog_AddSpell_FindFamiliarDog((CHARACTER)_Player)
+AND
+HasSpell(_Player, "Target_FindFamiliar_Dog", 0)
+THEN
+DB_FOR_CourierDog_CurrentSummoner(_Player);
+AddSpell(_Player, "Target_FindFamiliar_Dog", 1, 0);
+SetFlag((FLAG)FOR_Courier_State_CanSummonDog_dded6f0a-25ea-a278-30e1-37d79e4e63c7, _Player);
+
+// Remove the find dog spell when the tag on the ball is lost
+IF
+TagCleared((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f)
+AND
+DB_FOR_CourierDog_CurrentSummoner(_Player)
+THEN
+PROC_FOR_CourierDog_RemoveSpell_FindFamiliarDog(_Player);
+
+// Remove the find dog spell to the last owner of the ball
+IF
+DB_FOR_CourierDog_CurrentSummoner(_NewPlayer)
+AND
+DB_FOR_CourierDog_CurrentSummoner(_Player)
+AND
+_NewPlayer != _Player
+THEN
+PROC_FOR_CourierDog_RemoveSpell_FindFamiliarDog(_Player);
+
+PROC
+PROC_FOR_CourierDog_RemoveSpell_FindFamiliarDog((CHARACTER)_Player)
+THEN
+PROC_FOR_CourierDog_KillActiveSummon();
+RemoveSpell(_Player, "Target_FindFamiliar_Dog", 0);
+NOT DB_FOR_CourierDog_CurrentSummoner(_Player);
+ClearFlag((FLAG)FOR_Courier_State_CanSummonDog_dded6f0a-25ea-a278-30e1-37d79e4e63c7, _Player);
+
+// The player has used the spell once
+IF
+CastSpell(_Caster, "Target_FindFamiliar_Dog", _, _, _)
+THEN
+DB_FOR_CourierDog_SummonSpellUsedBy(_Caster);
+
+// Reset spell-used DB on short rest
+IF
+ShortRested((CHARACTER)_Character)
+AND
+DB_FOR_CourierDog_SummonSpellUsedBy(_Character)
+THEN
+NOT DB_FOR_CourierDog_SummonSpellUsedBy(_Character);
+
+// Reset spell-used DB on long rest
+PROC
+PROC_LongRest()
+AND
+DB_FOR_CourierDog_SummonSpellUsedBy(_Character)
+THEN
+NOT DB_FOR_CourierDog_SummonSpellUsedBy(_Character);
+//END_REGION
+
+//REGION Familiar Scratch - summon tracking
+// Singleton ActiveScratch
+IF
+DB_FOR_CourierDog_ActiveScratch(_ScratchNew)
+AND
+DB_FOR_CourierDog_ActiveScratch(_ScratchOld)
+AND
+_ScratchNew != _ScratchOld
+THEN
+NOT DB_FOR_CourierDog_ActiveScratch(_ScratchOld);
+
+// The player has summoned scratch familiar
+IF
+DB_PlayerSummons(_Summon)
+AND
+GetTemplate(_Summon, (CHARACTERROOT)DogFamiliar_Scratch_Summon_b5deaa14-03b5-41c6-8372-7a9d758b4dfb)
+THEN
+PROC_FOR_CourierDog_FamiliarSummoned(_Summon);
+
+PROC
+PROC_FOR_CourierDog_FamiliarSummoned((CHARACTER)_Summon)
+THEN
+SetHasDialog(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901, 0);
+PROC_Poof(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901); // TODO: Add find familiar effect resource
+DB_FOR_CourierDog_ActiveSummon(_Summon);
+DB_FOR_CourierDog_ActiveScratch(_Summon);
+
+// Scratch familiar has been unsummoned
+IF
+CharacterLeftParty(_Summon)
+AND
+DB_FOR_CourierDog_ActiveSummon(_Summon)
+THEN
+PROC_FOR_CourierDog_FamiliarUnsummoned(_Summon);
+NOT DB_FOR_CourierDog_ActiveSummon(_Summon);
+DB_FOR_CourierDog_ActiveScratch((CHARACTER)S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+
+// If familiar Scratch still has the ball, move ball to Scratch
+PROC
+PROC_FOR_CourierDog_FamiliarUnsummoned((CHARACTER)_Summon)
+AND
+IsInInventoryOf((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _Summon, 1)
+THEN
+ToInventory((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+
+// Bring back real Scratch in camp after Scratch familiar has been unsummoned
+PROC
+PROC_FOR_CourierDog_FamiliarUnsummoned((CHARACTER)_Character)
+AND
+QRY_Camp_GetCamperPos((CHARACTER)S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901)
+AND
+DB_QRYRTN_Camp_GetCamperPos((CHARACTER)S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901,(TRIGGER)_CampPos)
+THEN
+PROC_Foop(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+PROC_Camp_TeleportToCamp((CHARACTER)S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901, _CampPos);
+SetHasDialog(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901, 1);
+
+PROC
+PROC_FOR_CourierDog_KillActiveSummon()
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+THEN
+Die(_Scratch, DEATHTYPE.Lifetime, NULL_00000000-0000-0000-0000-000000000000, 0, 0, 0.0);
+
+// When night camp is being set up, remove Scratch familiar, and bring back real Scratch asap.
+PROC
+PROC_Camp_ClearDisruptiveStatusses()
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+THEN
+PROC_SetOnStage(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901, 1);
+DB_Camp_WaitingToComeOnStage(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+PROC_FOR_CourierDog_KillActiveSummon();
+
+// Disable summoning of Scratch if he is dead or unavailable
+IF
+DB_FOR_CourierDog_CanSummon(1)
+AND
+DB_GlobalFlag((FLAG)GLO_CourierDog_State_IsPermaDefeated_4d17c54b-9507-4948-bbcc-0fe307f79f0b)
+THEN
+NOT DB_FOR_CourierDog_CanSummon(1);
+ClearTag((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f);
+
+IF
+DB_FOR_CourierDog_CanSummon(1)
+AND
+DB_GlobalFlag((FLAG)GLO_CourierDog_State_UnavailableForSummon_0fef1fa5-9216-4833-94c1-5fe1da7da7c7)
+THEN
+NOT DB_FOR_CourierDog_CanSummon(1);
+ClearTag((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f);
+
+// Enable summoning if dog is not dead and available
+IF
+DB_FOR_Courier_AlwaysOn(1)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_CourierDog_State_IsPermaDefeated_4d17c54b-9507-4948-bbcc-0fe307f79f0b)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_CourierDog_State_UnavailableForSummon_0fef1fa5-9216-4833-94c1-5fe1da7da7c7)
+THEN
+DB_FOR_CourierDog_CanSummon(1);
+SetTag((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, (TAG)ALLOW_FIND_DOG_FAMILIAR_4fe9c7b8-2f74-4467-901e-00be49468c9f);
+//END_REGION
+
+//REGION Familiar Scratch hidden item detection aura
+// Scratch will only start the process of detecting items, if he isn't already pointing out an item
+IF
+StatusApplied((GUIDSTRING)_Item, "SCRATCH_AURA_DISCOVERED", _, _)
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+AND
+HasActiveStatus(_Scratch, "SCRATCH_DISCOVERED", 0)
+THEN
+PROC_FOR_CourierDog_Aura_DetectedItem(_Item);
+
+// If no timer has been started, clear previous list, start a timer
+PROC
+PROC_FOR_CourierDog_Aura_DetectedItem(_)
+AND
+NOT DB_FOR_CourierDog_Aura_TimerLaunched(1)
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+THEN
+PROC_FOR_CourierDog_Aura_ClearDetectedItems();
+ObjectTimerLaunch(_Scratch, "FOR_CourierDog_Aura_WaitedBeforeRevealing", 4000, 0);
+DB_FOR_CourierDog_Aura_TimerLaunched(1);
+
+PROC
+PROC_FOR_CourierDog_Aura_ClearDetectedItems()
+AND
+DB_FOR_CourierDog_Aura_DetectedItems(_Item)
+THEN
+NOT DB_FOR_CourierDog_Aura_DetectedItems(_Item);
+
+// Add discovered item to start list, and clear its tag, so it cant be discovered again
+PROC
+PROC_FOR_CourierDog_Aura_DetectedItem((GUIDSTRING)_Item)
+AND
+DB_FOR_CourierDog_Aura_TimerLaunched(1)
+THEN
+SetTag(_Item, (TAG)DISCOVERED_SCRATCH_e80394b9-d51b-40c6-a07b-b30f5729f279);
+DB_FOR_CourierDog_Aura_DetectedItems(_Item);
+
+// If the item has been discovered while dog has it in its list, remove it from the list
+IF
+TagCleared(_Item, (TAG)DISCOVERABLE_ebe17d12-23a8-4554-8bf4-20589d42ea52)
+AND
+DB_FOR_CourierDog_Aura_DetectedItems(_Item)
+THEN
+NOT DB_FOR_CourierDog_Aura_DetectedItems(_Item);
+
+IF
+ObjectTimerFinished(_, "FOR_CourierDog_Aura_WaitedBeforeRevealing")
+THEN
+NOT DB_FOR_CourierDog_Aura_TimerLaunched(1);
+
+// Filter closest item from DB_FOR_CourierDog_Aura_DetectedItems and send behaviour event to Scratch
+IF
+ObjectTimerFinished((CHARACTER)_Scratch, "FOR_CourierDog_Aura_WaitedBeforeRevealing")
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+AND
+QRY_FOR_CourierDog_Aura_FindClosestItem()
+AND
+DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem((GUIDSTRING)_Item, _)
+THEN
+SetDualEntityEvent(_Scratch, _Item, "FOR_CourierDog_Aura_MoveToDiscoveredItem", 1);
+
+// Find the current closest item to Scratch in DB_FOR_CourierDog_Aura_DetectedItems
+// Items no longer in the same region as Scratch or more than 30 distance away will be ignored
+QRY
+QRY_FOR_CourierDog_Aura_FindClosestItem()
+AND
+DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_Item, _Distance)
+THEN
+NOT DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_Item, _Distance);
+
+QRY
+QRY_FOR_CourierDog_Aura_FindClosestItem()
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+AND
+DB_FOR_CourierDog_Aura_DetectedItems(_Item)
+AND
+DB_ActiveLevel(_Region)
+AND
+GetRegion(_Item, _Region)
+AND
+GetDistanceTo(_Item, _Scratch, _DistanceToItem)
+AND
+_DistanceToItem <= 30.0
+THEN
+PROC_FOR_CourierDog_Aura_FindClosestItem(_Item, _DistanceToItem);
+
+PROC
+PROC_FOR_CourierDog_Aura_FindClosestItem((GUIDSTRING)_Item, (REAL)_DistanceToItem)
+AND
+NOT DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_, _)
+THEN
+DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_Item, _DistanceToItem);
+
+PROC
+PROC_FOR_CourierDog_Aura_FindClosestItem((GUIDSTRING)_NewItem, (REAL)_DistanceToNewItem)
+AND
+NOT DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_NewItem, _DistanceToNewItem)
+AND
+DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_OldItem, _DistanceToOldItem)
+AND
+_DistanceToNewItem < _DistanceToOldItem
+THEN
+NOT DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_OldItem, _DistanceToOldItem);
+DB_QRYRTN_FOR_CourierDog_Aura_FindClosestItem(_NewItem, _DistanceToNewItem);
+//END_REGION
+
+//REGION Ball Throwing
+// ------- Disable post EA -------
+QRY
+QRY_CourierDog_BallThrown_PostEA()
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet((FLAG)CAMP_Courier_Dog_Moved2Camp_7dcb7732-1c76-463a-bec9-251f30860e6c, _, _)
+THEN
+DB_FOR_CourierDog_ActiveScratch((CHARACTER)S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+
+// ------- Scratch fetch anticipation -------
+// Logic to set flag on character that is about to throw so Scratch can respond to this
+IF
+StartedPreviewingSpell(_Player, "Throw_Throw", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_FOR_CourierDog_ActiveScratch(_Scratch)
+AND
+HasActiveStatus(_Player, "SNEAKING", 0)
+THEN
+SetFlag(FOR_CourierDog_Player_IsAboutToThrow_b886a9e3-4bb3-4e2c-93bf-72c04433f1dd, _Player);
+SetDualEntityEvent(_Player, _Scratch, "FOR_Courier_Dog_AboutToThrow", 1);
+
+IF
+UsingSpell(_Player, "Throw_Throw", "throw", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_FOR_CourierDog_ActiveScratch(_Scratch)
+AND
+GetFlag(FOR_CourierDog_Player_IsAboutToThrow_b886a9e3-4bb3-4e2c-93bf-72c04433f1dd, _Player, 1)
+THEN
+ClearFlag(FOR_CourierDog_Player_IsAboutToThrow_b886a9e3-4bb3-4e2c-93bf-72c04433f1dd, _Player);
+SetDualEntityEvent(_Player, _Scratch, "FOR_Courier_Dog_ThrowFinished", 1);
+
+IF
+CastSpellFailed(_Player, "Throw_Throw", "throw", _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_FOR_CourierDog_ActiveScratch(_Scratch)
+AND
+GetFlag(FOR_CourierDog_Player_IsAboutToThrow_b886a9e3-4bb3-4e2c-93bf-72c04433f1dd, _Player, 1)
+THEN
+ClearFlag(FOR_CourierDog_Player_IsAboutToThrow_b886a9e3-4bb3-4e2c-93bf-72c04433f1dd, _Player);
+SetDualEntityEvent(_Player, _Scratch, "FOR_Courier_Dog_ThrowFinished", 1);
+
+// ------- Object is thrown -------
+// Respond to items with the WEIGHT_TINY or SCRATCH_FETCH tag being thrown by players 
+IF
+OnThrown(_ThrownObject, _, _Player, _, _X, _Y, _Z)
+AND
+QRY_OnlyOnce_Reset("FOR_Courier_BallThrown")
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)CAMP_Courier_Dog_Moved2Camp_7dcb7732-1c76-463a-bec9-251f30860e6c)
+AND
+NOT DB_PermaDefeated(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_CourierDog_State_UnavailableForSummon_0fef1fa5-9216-4833-94c1-5fe1da7da7c7)
+AND
+DB_FOR_Courier_Fetch_Tags(_Tag)
+AND
+IsTagged(_ThrownObject, _Tag, 1)
+AND
+QRY_OnlyOnce("FOR_Courier_BallThrown")
+THEN
+PROC_FOR_Courier_BallThrown(_Player, _ThrownObject);
+
+// Scratch's ball is thrown when Scratch is captured
+IF
+OnThrown(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _, _Player, _, _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)CAMP_Courier_Dog_Moved2Camp_7dcb7732-1c76-463a-bec9-251f30860e6c)
+AND
+DB_GlobalFlag((FLAG)GLO_CourierDog_State_UnavailableForSummon_0fef1fa5-9216-4833-94c1-5fe1da7da7c7)
+THEN
+PROC_TryStartAD(Scratch_SummonUnavailable_PAD_84aafd7d-0e0c-74d8-7be4-791021a771a4, _Player);
+
+// Scratch's ball is thrown when Scratch is PermaDefeated
+IF
+OnThrown(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _, _Player, _, _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)CAMP_Courier_Dog_Moved2Camp_7dcb7732-1c76-463a-bec9-251f30860e6c)
+AND
+DB_PermaDefeated(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901)
+THEN
+PROC_TryStartAD(Scratch_SummonUnavailable_PAD_84aafd7d-0e0c-74d8-7be4-791021a771a4, _Player);
+
+// Scratch is not controlled -> start fetching
+PROC 
+PROC_FOR_Courier_BallThrown((CHARACTER)_Player, (GUIDSTRING)_ThrownObject)
+AND
+DB_FOR_CourierDog_ActiveScratch(_Scratch)
+AND
+IsControlled(_Scratch, 0)
+THEN
+PROC_FOR_CourierDog_StartFetching(_Player, _ThrownObject);
+
+// ------- Start fetching -------
+// clean up DB that was used to waterfall through possible Scratch situations
+PROC
+PROC_FOR_CourierDog_StartFetching(_Player, _)
+AND
+DB_FOR_CourierDog_StartFetch(_Player, _Scratch, _ThrownObject)
+AND
+_Scratch != NULL_00000000-0000-0000-0000-000000000000 // don't clear if DB is being used to track Scratch being summoned
+THEN
+NOT DB_FOR_CourierDog_StartFetch(_Player, _Scratch, _ThrownObject);
+
+// Scratch is nearby
+PROC
+PROC_FOR_CourierDog_StartFetching((CHARACTER)_Player, (GUIDSTRING)_ThrownObject)
+AND
+NOT DB_FOR_CourierDog_StartFetch(_Player, _, _ThrownObject)
+AND
+DB_FOR_CourierDog_ActiveScratch(_Scratch)
+AND
+NOT DB_CantMove(_Scratch)
+AND
+GetInnerDistanceTo(_Scratch, _ThrownObject, _Dist)
+AND
+_Dist < 30.0
+THEN
+DB_FOR_CourierDog_StartFetch(_Player, _Scratch, _ThrownObject);
+PROC_FOR_Courier_PlayFetch(_Player, _Scratch, _ThrownObject);
+
+// In camp and real Scratch is not nearby
+PROC
+PROC_FOR_CourierDog_StartFetching((CHARACTER)_Player, (ITEM)_ThrownObject)
+AND
+NOT DB_FOR_CourierDog_StartFetch(_Player, _, _ThrownObject)
+AND
+DB_FOR_CourierDog_ActiveScratch(_Scratch)
+AND
+DB_InCamp(_Player)
+AND
+NOT DB_CantMove(_Scratch)
+THEN
+DB_FOR_CourierDog_StartFetch(_Player, _Scratch, _ThrownObject);
+PROC_DisappearOutOfSightTo(_Scratch, _Player, "Run", 1, "FOR_CourierDog_Disappear_FromCamp2");
+
+IF
+EntityEvent((CHARACTER)_Scratch,"FOR_CourierDog_Disappear_FromCamp2")
+AND
+DB_FOR_CourierDog_StartFetch(_Player, _Scratch, _ThrownObject)
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_Camp(_Camp, _, _, _EntranceTrigger)
+THEN
+PROC_AppearOutOfSightTo(_Scratch, _Player, _EntranceTrigger, "FOR_CourierDog_BlinkedBeforePickup2");
+
+IF
+EntityEvent((CHARACTER)_Scratch, "FOR_CourierDog_BlinkedBeforePickup2")
+AND
+DB_FOR_CourierDog_StartFetch(_Player, _Scratch, _ThrownObject)
+THEN
+PROC_FOR_Courier_PlayFetch(_Player, _Scratch, _ThrownObject);
+
+// Summon Scratch familiar if spell is available and player is using his ball
+PROC
+PROC_FOR_CourierDog_StartFetching((CHARACTER)_Player, (ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f)
+AND
+NOT DB_FOR_CourierDog_StartFetch(_Player, _, S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f)
+AND
+NOT DB_FOR_CourierDog_SummonSpellUsedBy(_Player)
+AND
+HasSpell(_Player, "Target_FindFamiliar_Dog", 1)
+THEN
+UseSpell(_Player, "Target_FindFamiliar_Dog", S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f);
+DB_FOR_CourierDog_StartFetch(_Player, NULL_00000000-0000-0000-0000-000000000000, S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f);
+
+PROC
+PROC_FOR_CourierDog_FamiliarSummoned(_Summon)
+AND 
+DB_FOR_CourierDog_StartFetch(_Player, NULL_00000000-0000-0000-0000-000000000000, S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f)
+THEN
+NOT DB_FOR_CourierDog_StartFetch(_Player, NULL_00000000-0000-0000-0000-000000000000, S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f);
+DB_FOR_CourierDog_StartFetch(_Player, _Summon, S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f);
+SetEntityEvent(_Summon, "FOR_CourierDog_BlinkedBeforePickup2");
+
+// Only case remaining should be the spell isn't available, in which case, play PAD, but only when using Scratch's ball
+PROC
+PROC_FOR_CourierDog_StartFetching((CHARACTER)_Player, (ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f)
+AND
+NOT DB_FOR_CourierDog_StartFetch(_, _, S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f)
+THEN
+PROC_TryStartAD(Scratch_SummonUnavailable_PAD_84aafd7d-0e0c-74d8-7be4-791021a771a4, _Player);
+
+// ------- Initalize fetch DBs -------
+// reset fetch DB from old fetch attempts
+PROC
+PROC_FOR_Courier_PlayFetch(_, _, _)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownItem)
+THEN
+PROC_FOR_CourierDog_ClearFetch(_Player, _Scratch, _ThrownItem, 0);
+
+// Set DB to track fetching logic
+PROC 
+PROC_FOR_Courier_PlayFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownItem)
+THEN
+DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownItem);
+
+// Register ownership if item is owned by an NPC
+PROC 
+PROC_FOR_Courier_PlayFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownItem)
+AND
+IsCharacter(_ThrownItem, 0)
+AND
+GetOwner((ITEM)_ThrownItem, _Owner)
+THEN
+DB_FOR_CourierDog_Fetching_ItemOwner(_ThrownItem, _Owner);
+
+// Stop dialog for Scratch when fetching starts
+IF
+DB_FOR_CourierDog_IsFetching(_, _Scratch, _)
+THEN
+DialogRequestStop((CHARACTER)S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901);
+
+// ------- Play fetch -------
+// Send entity event to Anubis to make Scratch run after the object
+PROC
+PROC_FOR_Courier_PlayFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownObject)
+THEN
+SetEntityEventGuid(_Scratch, "FOR_CourierDog_Fetch_SetObject", _ThrownObject, 1);
+
+IF
+DualEntityEvent(_Scratch, _ThrownObject, "FOR_CourierDog_Fetch_ArrivedAtObject")
+AND
+DB_FOR_CourierDog_IsFetching(_, (CHARACTER)_Scratch, (CHARACTER)_ThrownObject)
+AND
+IsInInventory(_ThrownObject, 0)
+AND
+GetInnerDistanceTo(_Scratch, _ThrownObject, _Dist)
+AND
+_Dist < 2.5
+THEN
+ToInventory(_ThrownObject, _Scratch, 1, 0, 0);
+
+IF
+AddedTo((ITEM)_ThrownObject, (CHARACTER)_Scratch, _)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownObject)
+AND
+GetInnerDistanceTo(_Scratch, _Player, _Dist)
+AND
+_Dist < 50.0
+THEN
+SetEntityEventGuid(_Scratch, "FOR_CourierDog_Fetch_SetThrower", _Player, 1);
+
+IF
+DualEntityEvent(_Scratch, _Player, "FOR_CourierDog_Fetch_ArrivedAtThrower")
+AND
+DB_FOR_CourierDog_IsFetching((CHARACTER)_Player, (CHARACTER)_Scratch, _ThrownObject)
+AND
+GetInnerDistanceTo(_Scratch, _Player, _Dist)
+AND
+_Dist < 5.0
+THEN
+PROC_FOR_CourierDog_ReturnFetchItemToPlayer((ITEM)_ThrownObject,(CHARACTER)_Player);
+PROC_FOR_CourierDog_FetchedBallAchievementHook(_Player);
+
+PROC
+PROC_FOR_CourierDog_ReturnFetchItemToPlayer((ITEM)_ThrownObject,(CHARACTER)_Player)
+AND
+NOT QRY_FOR_CourierDog_BlockReturnFetchedItem()
+THEN
+ToInventory(_ThrownObject,_Player,1,1,0);
+
+QRY
+QRY_FOR_CourierDog_BlockReturnFetchedItem()
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+IF
+AddedTo(_ThrownObject, _Player, _)
+AND
+DB_FOR_CourierDog_IsFetching((CHARACTER)_Player, (CHARACTER)_Scratch, _ThrownObject)
+THEN
+PROC_FOR_CourierDog_FetchResultsInCrime(_Player, _Scratch, _ThrownObject);
+PROC_FOR_CourierDog_ClearFetch(_Player, _Scratch, _ThrownObject, 0); // Use clearFetch to clear old DBs
+
+PROC
+PROC_FOR_CourierDog_FetchedBallAchievementHook((CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+// If the original owner of the item was an NPC, register a crime for having Scratch fetch it for you
+PROC
+PROC_FOR_CourierDog_FetchResultsInCrime((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownItem)
+AND
+DB_FOR_CourierDog_Fetching_ItemOwner((ITEM)_ThrownItem, _Owner)
+AND
+QRY_CrimeIsNPCOwner(_Owner)
+AND
+GetTemplate(_ThrownItem, _ItemTemplate)
+AND
+GetStackAmount(_ThrownItem,_,_Amount)
+AND
+ItemGetGoldValue(_ThrownItem,_Value)
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+DB_CRIME_Steal(_CrimeID,_ThrownItem,_ItemTemplate,_Amount,_Value);
+PROC_CharacterRegisterCrime(_Player,"Steal",_ThrownItem,_Owner,_CrimeID);
+
+// ------- Fetch aborted -------
+// If the thrown item gets destroyed before fetching is done, abort fetch logic
+IF
+DestroyingBy(_ThrownObject, _, _, _)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownObject)
+THEN
+PROC_FOR_CourierDog_ClearFetch(_Player, _Scratch, _ThrownObject, 0);
+
+// If player leaves camp before fetch is done, stop fetching
+PROC
+PROC_CAMP_LeftCamp(_Player)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownObject)
+AND
+DB_InCamp(_Scratch)
+THEN
+PROC_FOR_CourierDog_ClearFetch(_Player, _Scratch, _ThrownObject, 0);
+
+// If player assumes control of Scratch, stop fetching
+IF
+GainedControl(_Scratch)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownObject)
+THEN
+PROC_FOR_CourierDog_ClearFetch(_Player, _Scratch, _ThrownObject, 0);
+
+// If familiar scratch dies, return any item to the thrower
+IF
+Dying(_ScratchFamiliar)
+AND
+DB_FOR_CourierDog_ActiveSummon(_ScratchFamiliar)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, _ScratchFamiliar, _ThrownObject)
+THEN
+PROC_FOR_CourierDog_ClearFetch(_Player, _ScratchFamiliar, _ThrownObject, 1);
+
+// Scratch enters combat, return any item to the thrower
+IF
+EnteredCombat(_Scratch, _)
+AND
+DB_FOR_CourierDog_IsFetching(_Player, (CHARACTER)_Scratch, _ThrownObject)
+THEN
+PROC_FOR_CourierDog_ClearFetch(_Player, _Scratch, _ThrownObject, 1);
+
+// ------- Clear fetch -------
+// move the item associated with the fetch to thrower
+PROC
+PROC_FOR_CourierDog_ClearFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownObject, 1)
+THEN
+ToInventory(_ThrownObject, _Player, 1, 1, 0);
+
+// drop the item associated with the fetch
+PROC
+PROC_FOR_CourierDog_ClearFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownObject, 0)
+THEN
+PROC_FOR_CourierDog_DropObjectIfNeeded(_Scratch, _ThrownObject);
+
+// If fetch logic is stopped, and Scratch is still holding the item, Scratch drops the item
+PROC
+PROC_FOR_CourierDog_DropObjectIfNeeded((CHARACTER)_Scratch, (GUIDSTRING)_ThrownObject)
+AND
+IsInInventoryOf(_ThrownObject, _Scratch, 1)
+AND
+GetPosition(_Scratch, _X, _Y, _Z)
+AND
+FindValidPosition(_X, _Y, _Z, 20.0, _ThrownObject, 0, _X_Safe, _Y_Safe, _Z_Safe)
+THEN
+DB_FOR_Courier_DropItemPositionSent(1);
+TeleportToPosition(_ThrownObject, _X_Safe, _Y_Safe, _Z_Safe);
+PROC_FOR_CourierDog_ResetOwnershipIfItem(_ThrownObject);
+
+//FindValidPosition fallback
+PROC
+PROC_FOR_CourierDog_DropObjectIfNeeded((CHARACTER)_Scratch, (GUIDSTRING)_ThrownObject)
+AND
+NOT DB_FOR_Courier_DropItemPositionSent(1)
+AND
+IsInInventoryOf(_ThrownObject, _Scratch, 1)
+AND
+GetPosition(_Scratch, _X, _Y, _Z)
+THEN
+DB_FOR_Courier_DropItemPositionSent(1);
+TeleportToPosition(_ThrownObject, _X, _Y, _Z);
+PROC_FOR_CourierDog_ResetOwnershipIfItem(_ThrownObject);
+
+// If the object is an item, and it is dropped before Scratch returns it, reset ownership so it doesn't belong to Scratch
+PROC
+PROC_FOR_CourierDog_ResetOwnershipIfItem((GUIDSTRING)_ThrownItem)
+AND
+DB_FOR_CourierDog_Fetching_ItemOwner((ITEM)_ThrownItem, _Owner)
+THEN
+NOT DB_FOR_Courier_DropItemPositionSent(1);
+SetOwner((ITEM)_ThrownItem, _Owner);
+
+// reset DB of fetch, clear any remaining story move on Scratch
+PROC
+PROC_FOR_CourierDog_ClearFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownObject, _)
+THEN
+NOT DB_FOR_CourierDog_IsFetching(_Player, _Scratch, _ThrownObject);
+SetEntityEventGuid(_Scratch, "FOR_CourierDog_Fetch_ClearObject", _ThrownObject);
+SetEntityEventGuid(_Scratch, "FOR_CourierDog_Fetch_ClearThrower", _Player);
+
+// reset DB to track NPC owner of last fetch item
+PROC
+PROC_FOR_CourierDog_ClearFetch((CHARACTER)_Player, (CHARACTER)_Scratch, (GUIDSTRING)_ThrownItem, _)
+AND
+DB_FOR_CourierDog_Fetching_ItemOwner((ITEM)_ThrownItem, _Owner)
+THEN
+NOT DB_FOR_CourierDog_Fetching_ItemOwner(_ThrownItem, _Owner);
+
+// ------- Scratch's ball loss prevention -------
+// Check if ball needs to be moved to Scratch
+PROC
+PROC_LongRest()
+THEN
+PROC_FOR_CourierDog_ReturnBallCheck();
+
+// Do check if ball was given at least once by Scratch, the ball has not been destroyed, Scratch is recruited and not perma defeated
+PROC
+PROC_FOR_CourierDog_ReturnBallCheck()
+AND
+QRY_OnlyOnce_Reset("FOR_CourierDog_ReturnBall")
+AND
+DB_FOR_CourierDog_BallGivenOnce(1)
+AND
+Exists(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, 1)
+AND
+DB_PartOfTheTeam(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901)
+AND
+NOT DB_PermaDefeated(S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901)
+THEN
+PROC_FOR_CourierDog_ReturnBallIfMissing();
+
+// Ball is somewhere in a level that is unreachable
+PROC
+PROC_FOR_CourierDog_ReturnBallIfMissing()
+AND
+QRY_EntityIsCurrentlyUnreachable(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f)
+AND
+QRY_OnlyOnce("FOR_CourierDog_ReturnBall")
+THEN
+PROC_FOR_CourierDog_ReturnBall();
+
+// Ball is not in an inventory
+PROC
+PROC_FOR_CourierDog_ReturnBallIfMissing()
+AND
+IsInInventory(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, 0)
+AND
+QRY_OnlyOnce("FOR_CourierDog_ReturnBall")
+THEN
+PROC_FOR_CourierDog_ReturnBall();
+
+// Ball is in an inventory that is not a camp chest or player
+PROC
+PROC_FOR_CourierDog_ReturnBallIfMissing()
+AND
+GetInventoryOwner(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _Inventory)
+AND
+NOT QRY_FOR_CourierDog_InventoryIsPlayerOrCampChest(_Inventory)
+AND
+QRY_OnlyOnce("FOR_CourierDog_ReturnBall")
+THEN
+PROC_FOR_CourierDog_ReturnBall();
+
+QRY
+QRY_FOR_CourierDog_InventoryIsPlayerOrCampChest((GUIDSTRING)_Inventory)
+AND
+DB_PartOfTheTeam((CHARACTER)_Inventory)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_FOR_CourierDog_InventoryIsPlayerOrCampChest((GUIDSTRING)_Inventory)
+AND
+DB_Camp_UserCampChest(_, (ITEM)_Inventory)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_FOR_CourierDog_ReturnBall()
+THEN
+ToInventory(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, S_FOR_Courier_Dog_3059f69c-068d-4e28-8491-55953c027901, 1, 0, 1);
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("dog2camp2")
+THEN
+PROC_FOR_Courier_Dog2Camp2();
+
+IF
+TextEvent("Scratch_KillSummon")
+THEN
+PROC_FOR_CourierDog_KillActiveSummon();
+
+IF
+FlagSet((FLAG)WYR_Posthouse_Debug_Dog2Camp2_92f442e1-e948-6593-9637-ef18c7fa52dd, _, _)
+THEN
+ClearFlag((FLAG)WYR_Posthouse_Debug_Dog2Camp2_92f442e1-e948-6593-9637-ef18c7fa52dd);
+PROC_FOR_Courier_Dog2Camp2();
+
+PROC
+PROC_FOR_Courier_Dog2Camp2()
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_FOR_Courier_Dog_MoveToCamp();
+PROC_ToInventoryAndOnStage((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _Player);
+
+IF
+TextEvent("Debug_CourierDog_SetTag")
+THEN
+SetTag((ITEM)PUZ_GEN_Button_A_000_98b7bb9e-8077-4314-8e15-5488c9fd8425, (TAG)DISCOVERABLE_ebe17d12-23a8-4554-8bf4-20589d42ea52);
+
+IF
+TextEvent("Scratch_WhatIsItBoy")
+AND
+DB_FOR_CourierDog_ActiveSummon(_Scratch)
+AND
+GetHostCharacter(_HostChar)
+THEN
+SetDualEntityEvent(_Scratch, _HostChar, "FOR_CourierDog_Aura_MoveToDiscoveredItem", 1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

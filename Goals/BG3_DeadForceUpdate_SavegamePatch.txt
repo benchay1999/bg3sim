@@ -1,0 +1,73 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 1")
+AND
+DB_Dead(_Character)
+THEN
+DB_BUGFIX_Marker("GUS-298878_FixForceUpdating",_Character);
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Hotfix 1")
+AND
+DB_LevelLoadedOnce(_Level)
+AND
+NOT DB_LevelUnreachable(_Level)
+THEN
+DB_BugFix_GUS298878_LevelToFix(_Level);
+
+IF
+LevelGameplayStarted(_Level,_)
+AND
+DB_BugFix_GUS298878_LevelToFix(_Level)
+AND
+DB_BUGFIX_Marker("GUS-298878_FixForceUpdating",_Character)
+AND
+Exists(_Character,1)
+THEN
+SetEntityEvent(_Character,"GUS-298878-ReturnToIdlePosForceUpdateDeadCheck",1);
+NOT DB_BUGFIX_Marker("GUS-298878_FixForceUpdating",_Character);
+DB_BUGFIX_Marker("GUS-298878_FixForceUpdating-Done",_Character);
+
+IF
+LevelGameplayStarted(_Level,_)
+AND
+DB_BugFix_GUS298878_LevelToFix(_Level)
+THEN
+NOT DB_BugFix_GUS298878_LevelToFix(_Level);
+
+PROC
+PROC_LevelBecameUnreachable(_Level)
+AND
+DB_BugFix_GUS298878_LevelToFix(_Level)
+THEN
+NOT DB_BugFix_GUS298878_LevelToFix(_Level);
+
+//REGION Cleanup
+PROC
+PROC_ApplySavegamePatches()
+AND
+NOT DB_BugFix_GUS298878_LevelToFix(_)
+AND
+DB_BUGFIX_Marker("GUS-298878_FixForceUpdating",_Character)
+THEN
+NOT DB_BUGFIX_Marker("GUS-298878_FixForceUpdating",_Character);
+
+PROC
+PROC_ApplySavegamePatches()
+AND
+NOT DB_BugFix_GUS298878_LevelToFix(_)
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

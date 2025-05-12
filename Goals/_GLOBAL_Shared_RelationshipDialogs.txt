@@ -1,0 +1,875 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+DB_LoopEffectDisabledInCombat(EFFECTRESOURCEGUID_VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80);
+
+//DB_RelationshipDialog_Autostart(_RelationshipDialog, _InPartyFlag) - dialog will try to autostart until it succeeds when the conditions for it are met
+NOT DB_RelationshipDialog_Autostart((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+//DB_RelationshipDialog_AutostartTryOnce(_RelationshipDialog, _InPartyFlag) - dialog will try to start once automatically, and if it fails it defaults back to normal WRD logic
+NOT DB_RelationshipDialog_AutostartTryOnce((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (FLAG) NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+IF
+FlagSet(GLO_DisableRelationshipDialogsPermanently_1b1d90ae-583f-4e91-9016-6cf6446a055a, _, _) // flagType: Global
+THEN
+GoalCompleted;
+
+//REGION Starting a Relationship Dialog
+QRY
+QRY_SelectRelationShipDialog((GUIDSTRING)_Companion, (GUIDSTRING)_Player)
+AND
+DB_HandlingRelationshipDialog((CHARACTER)_Companion,_Dialog,_Flag,_Category,_PartnerDateOnly, _MinApproval)
+AND
+DB_Avatars((CHARACTER)_Player)
+AND
+NOT QRY_PreventMPDialogue(_Companion,_Player)
+AND
+QRY_RelationshipDialog_SetDialog(_Dialog,_Flag,_Companion,_Player,_PartnerDateOnly, _MinApproval)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_RelationshipDialog_SetDialog((DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(CHARACTER)_Companion,(CHARACTER)_Player, 1, (INTEGER)_MinApproval)
+AND
+NOT DB_ORI_Partnered(_Player,_Companion)
+AND
+NOT DB_ORI_Dating(_Player,_Companion)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a,_Companion);
+
+QRY
+QRY_RelationshipDialog_SetDialog((DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(CHARACTER)_Companion,(CHARACTER)_Player, _, (INTEGER)_MinApproval)
+AND
+NOT DB_SelectedDialog((DIALOGRESOURCE)GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a,_Companion)
+AND
+NOT QRY_RelationshipDialog_IgnoreApproval((CHARACTER)_Companion,(DIALOGRESOURCE)_Dialog)
+AND
+GetApprovalRating(_Companion, _Player, _Approval)
+AND
+_Approval < _MinApproval
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)GLO_PAD_NotEnoughApprovalForCRD_fa524284-1538-70e5-1645-4171c72cd6e9,_Companion);
+
+QRY
+QRY_RelationshipDialog_SetDialog((DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(CHARACTER)_Companion,(CHARACTER)_Player,(INTEGER)_PartnerDateOnly, (INTEGER)_MinApproval)
+AND
+NOT DB_SelectedDialog((DIALOGRESOURCE)GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a,_Companion)
+AND
+NOT DB_SelectedDialog((DIALOGRESOURCE)GLO_PAD_NotEnoughApprovalForCRD_fa524284-1538-70e5-1645-4171c72cd6e9,_Companion)
+THEN
+DB_SelectedDialog(_Dialog, _Companion, _Player);
+
+QRY
+QRY_RelationshipDialog_IgnoreApproval((GUIDSTRING)_Companion,(DIALOGRESOURCE)_Dialog)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+DB_HandlingRelationshipDialog((CHARACTER)_Companion,_Dialog,_Flag,_Category,_PartnerDateOnly, _MinApproval)
+AND
+_Flag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetFlag(_Flag,_Companion,0);
+DB_RelationshipDialog_FlagSet(_Companion,_Dialog,_Flag);
+
+IF
+DB_RelationshipDialog_FlagSet(_Companion,_Dialog,_Flag)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_,_,_)
+THEN
+ClearFlag(_Flag,_Companion,0);
+NOT DB_RelationshipDialog_FlagSet(_Companion,_Dialog,_Flag);
+//END_REGION
+
+//REGION World Relationship Dialog
+PROC
+PROC_RelationshipDialog((CHARACTER)_Companion,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_Anchor)
+THEN
+PROC_RelationshipDialog(_Companion,_Dialog,(FLAG)NULL_00000000-0000-0000-0000-000000000000,_Anchor,0,-100);
+ 
+PROC
+PROC_RelationshipDialog((CHARACTER)_Companion,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(GUIDSTRING)_Anchor,(INTEGER)_PartnerDateOnly)
+THEN
+PROC_RelationshipDialog((CHARACTER)_Companion,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(GUIDSTRING)_Anchor,(INTEGER)_PartnerDateOnly, -100);
+
+PROC
+PROC_RelationshipDialog((CHARACTER)_Companion,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(GUIDSTRING)_Anchor,(INTEGER)_PartnerDateOnly, (INTEGER)_MinApproval)
+AND
+NOT DB_RelationshipDialog_WRD_TriggerInCamp(_Dialog,_Flag)
+AND
+NOT DB_Defeated(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_RelationshipDialogsFinished(_Companion,_Dialog,_Flag)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_,_,_)
+AND
+NOT DB_GroupDiscussion_Queued(_Companion,_)
+AND
+GetDistanceTo(_Companion,_Anchor,_Dist)
+AND
+_Dist < 30.0
+AND
+QRY_IsValidAvatarAvailableForRelationshipDialog(_Companion,_PartnerDateOnly, _MinApproval)
+THEN
+DB_RelationshipDialog_Queue(_Companion,_Dialog,_Flag,"WORLD",_PartnerDateOnly, _MinApproval);
+PROC_LaunchTestCompanionQueueTimer();
+
+PROC
+PROC_RelationshipDialog((CHARACTER)_Companion,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(GUIDSTRING)_Anchor,(INTEGER)_PartnerDateOnly, (INTEGER)_MinApproval)
+AND
+DB_RelationshipDialog_WRD_TriggerInCamp(_Dialog,_Flag)
+AND
+NOT DB_Defeated(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_RelationshipDialogsFinished(_Companion,_Dialog,_Flag)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_,_,_)
+AND
+NOT DB_GroupDiscussion_Queued(_Companion,_)
+AND
+GetDistanceTo(_Companion,_Anchor,_Dist)
+AND
+_Dist < 30.0
+AND
+QRY_IsValidAvatarAvailableForRelationshipDialog(_Companion,_PartnerDateOnly, _MinApproval)
+THEN
+DB_RelationshipDialog_Queue(_Companion,_Dialog,_Flag,"WORLDORCAMP",_PartnerDateOnly, _MinApproval);
+PROC_LaunchTestCompanionQueueTimer();
+
+QRY
+QRY_IsValidAvatarAvailableForRelationshipDialog((CHARACTER)_Companion,1,(INTEGER)_MinApproval)
+AND
+DB_ORI_Partnered(_Avatar,_Companion)
+AND
+NOT QRY_PreventMPDialogue(_Companion,_Avatar)
+AND
+GetApprovalRating(_Companion, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsValidAvatarAvailableForRelationshipDialog((CHARACTER)_Companion,1,(INTEGER)_MinApproval)
+AND
+DB_ORI_Dating(_Avatar,_Companion)
+AND
+NOT QRY_PreventMPDialogue(_Companion,_Avatar)
+AND
+GetApprovalRating(_Companion, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_IsValidAvatarAvailableForRelationshipDialog((CHARACTER)_Companion,0,(INTEGER)_MinApproval)
+AND
+DB_Avatars(_Avatar)
+AND
+NOT QRY_PreventMPDialogue(_Companion,_Avatar)
+AND
+GetApprovalRating(_Companion, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_LaunchTestCompanionQueueTimer()
+AND
+NOT DB_TestingCompanionQueue(1)
+THEN
+DB_TestingCompanionQueue(1);
+TimerLaunch("Test_RelationshipDialog_Queue",1500);
+
+IF
+TimerFinished("Test_RelationshipDialog_Queue")
+THEN
+NOT DB_TestingCompanionQueue(1);
+PROC_Test_RelationshipDialog_Queue();
+
+IF
+ApprovalRatingChanged(_Companion, _Avatar, _)
+AND
+DB_HandlingRelationshipDialog(_Companion,_RD,_Flag, _Category,_,_MinApproval)
+AND
+_MinApproval != -100
+AND
+QRY_RelationshipDialog_WorldCategory(_Category)
+AND
+QRY_SameUser(_Companion,_Avatar)
+AND
+GetApprovalRating(_Companion, _Avatar, _Approval)
+AND
+_Approval < _MinApproval
+THEN
+PROC_CancelRelationshipDialog(_Companion,_RD,_Flag);
+
+IF
+ApprovalRatingChanged(_Companion, _Avatar, _)
+AND
+DB_HandlingRelationshipDialog(_Companion,_RD,_Flag, _, _,_MinApproval)
+AND
+_MinApproval != -100
+AND
+NOT QRY_RelationshipDialog_HasAvatarWithSufficientApproval(_Companion, _MinApproval)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_RD,_Flag);
+
+IF
+CharacterReservedUserIDChanged(_,_,_)
+AND
+DB_ORI_Partnered(_Avatar,_Companion)
+AND
+DB_HandlingRelationshipDialog(_Companion,_RD,_Flag, _Category,1,_)
+AND
+QRY_RelationshipDialog_WorldCategory(_Category)
+AND
+NOT QRY_SameUser(_Companion,_Avatar)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_RD,_Flag);
+
+IF
+FlagCleared((FLAG)ORI_State_Partnered_6c1a31e8-1d3d-42a5-af4f-72ef7a798f74, (CHARACTER)_Companion, _)
+AND
+DB_HandlingRelationshipDialog(_Companion,_RD,_Flag, _, 1, _)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_RD,_Flag);
+
+IF
+CharacterReservedUserIDChanged(_,_,_)
+AND
+DB_ORI_Dating(_Avatar,_Companion)
+AND
+DB_HandlingRelationshipDialog(_Companion,_RD,_Flag, _Category,1,_)
+AND
+QRY_RelationshipDialog_WorldCategory(_Category)
+AND
+NOT QRY_SameUser(_Companion,_Avatar)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_RD,_Flag);
+
+IF
+CharacterReservedUserIDChanged(_,_,_)
+AND
+DB_HandlingRelationshipDialog(_Companion,_RD,_Flag, _,_,_MinApproval)
+AND
+_MinApproval != -100
+AND
+NOT QRY_RelationshipDialog_HasAvatarWithSufficientApproval(_Companion, _MinApproval)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_RD,_Flag);
+
+IF
+DialogStarted(_Dialog,_)
+AND
+DB_HandlingRelationshipDialog(_Companion,_Dialog,_,_,_,_)
+THEN
+PROC_ExclamationMark_Hide(_Companion);
+
+IF
+DialogEnded(_Dialog,_)
+AND
+DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval)
+THEN
+NOT DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval);
+DB_RelationshipDialogsFinished(_Companion,_Dialog,_Flag);
+
+PROC
+PROC_StateCleared_CantTalk(_Companion)
+AND
+//State is cleared before DialogEnded, so if an RD is queued while that dialogue is ongoing, this rule will set it to being handled,
+//then on end the one above will clear that Handling state, but the exclamation mark is never cleared =>
+//Postpone re-evaluation until the rule below.
+NOT QRY_Relationship_WaitForDialogEnd((CHARACTER)_Companion)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag,_Category,_ , _)
+THEN
+PROC_Test_RelationshipDialog_Queue();
+
+QRY
+QRY_Relationship_WaitForDialogEnd((CHARACTER)_Companion)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag,_Category,_ , _)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+DB_DialogSpeakers(_ID, _Companion, _)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded(_,_Instance)
+AND
+DB_DialogPlayers(_Instance,_Companion,_)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag,_Category,_ , _)
+AND
+QRY_RelationshipDialog_WorldCategory(_Category)
+THEN
+PROC_Test_RelationshipDialog_Queue();
+
+IF
+DialogEnded(_,_Instance)
+AND
+DB_DialogSpeakers(_Instance,_Companion,_)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag,"CAMP",_ , _)
+AND
+DB_InCamp(_Companion)
+THEN
+PROC_Test_RelationshipDialog_Queue();
+
+PROC
+PROC_Test_RelationshipDialog_Queue()
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag, _Category,_PartnerDateOnly, _MinApproval)
+AND
+QRY_RelationshipDialog_WorldCategory(_Category)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_,_,_,_, _)
+AND
+NOT DB_CantTalk(_Companion)
+AND
+NOT DB_InCamp(_Companion)
+AND
+QRY_PartyDialogSuppressed_CheckRelationshipDialogAllowed(_Companion, _Dialog, _Flag)
+THEN
+PROC_ExclamationMark_Show(_Companion);
+NOT DB_RelationshipDialog_Queue(_Companion,_Dialog,_Flag,_Category,_PartnerDateOnly, _MinApproval);
+DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_Category,_PartnerDateOnly, _MinApproval);
+
+
+PROC
+PROC_Test_RelationshipDialog_Queue()
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag,"WORLDORCAMP",_PartnerDateOnly, _MinApproval)
+AND
+DB_InCamp(_Companion)
+AND
+NOT DB_Camp_NightMode(1)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_,_,_,_,_)
+AND
+NOT DB_CantTalk(_Companion)
+AND
+QRY_PartyDialogSuppressed_CheckRelationshipDialogAllowed(_Companion, _Dialog, _Flag)
+THEN
+PROC_ExclamationMark_Show(_Companion);
+NOT DB_RelationshipDialog_Queue(_Companion,_Dialog,_Flag,"WORLDORCAMP",_PartnerDateOnly, _MinApproval);
+DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,"WORLDORCAMP",_PartnerDateOnly, _MinApproval);
+
+PROC
+PROC_Test_RelationshipDialog_Queue()
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag, "CAMP",_PartnerDateOnly, _MinApproval)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_,_,_,_, _)
+AND
+NOT DB_CantTalk(_Companion)
+AND
+DB_InCamp(_Companion)
+AND
+DB_Camp_QueuedNight(_NightFlag)
+AND
+DB_CampNight_CRD(_NightFlag,_Companion,_Dialog,_Flag)
+AND
+QRY_PartyDialogSuppressed_CheckRelationshipDialogAllowed(_Companion, _Dialog, _Flag)
+THEN
+PROC_ExclamationMark_Show(_Companion);
+NOT DB_RelationshipDialog_Queue(_Companion,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval);
+DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval);
+
+QRY
+QRY_RelationshipDialog_WorldCategory("WORLD")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_RelationshipDialog_WorldCategory("WORLDORCAMP")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CancelAllRelationshipDialogs((CHARACTER)_Companion)
+AND
+DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval)
+THEN
+PROC_ExclamationMark_Hide(_Companion);
+NOT DB_HandlingRelationshipDialog(_Companion,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval);
+
+PROC
+PROC_CancelAllRelationshipDialogs((CHARACTER)_Companion)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Companion,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval)
+THEN
+NOT DB_RelationshipDialog_Queue(_Companion,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval);
+//END_REGION
+
+//REGION Cancel WRDs/RD if walking away
+//WRD & SCRD
+IF
+DB_HandlingRelationshipDialog(_Companion,_ExclamationDialog,_Flag,"WORLD",_,_)
+AND
+NOT DB_ExclamationDialog_NeverStop(_ExclamationDialog,_Flag)
+AND
+GetPosition(_Companion,_X,_Y,_Z)
+THEN
+DB_ExclamationDialogAnchor(_Companion,_ExclamationDialog,_Flag,_X,_Y,_Z);
+ObjectTimerCancel(_Companion,"ExclamationDialogDistanceCheck");
+ObjectTimerLaunch(_Companion,"ExclamationDialogDistanceCheck",3000);
+
+PROC
+PROC_StopLoopEffect(_Companion,"RelationshipMarker")
+AND
+DB_ExclamationDialogAnchor((CHARACTER)_Companion,_ExclamationDialog,_Flag,_X,_Y,_Z)
+THEN
+NOT DB_ExclamationDialogAnchor(_Companion,_ExclamationDialog,_Flag,_X,_Y,_Z);
+
+//WRD & SCRD
+IF
+ObjectTimerFinished(_Companion,"ExclamationDialogDistanceCheck")
+AND
+NOT DB_Avatars((CHARACTER)_Companion)
+AND
+DB_ExclamationDialogAnchor((CHARACTER)_Companion,_ExclamationDialog,_Flag,_X,_Y,_Z)
+AND
+NOT QRY_ExclamationDialog_IsStillInRange(_Companion,_ExclamationDialog,_X,_Y,_Z)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_ExclamationDialog,_Flag);
+
+QRY
+QRY_ExclamationDialog_IsStillInRange((CHARACTER)_Player,(DIALOGRESOURCE)_ExclamationDialog,(REAL)_AnchorX,(REAL)_AnchorY,(REAL)_AnchorZ)
+AND
+GetDistanceToPosition(_Player,_AnchorX,_AnchorY,_AnchorZ,_Dist)
+AND
+_Dist < 30.0
+THEN
+ObjectTimerCancel(_Player,"ExclamationDialogDistanceCheck");
+ObjectTimerLaunch(_Player,"ExclamationDialogDistanceCheck",3000);
+
+IF
+Teleported(_Companion,_,_,_,_,_,_,_,_)
+AND
+NOT DB_Avatars((CHARACTER)_Companion)
+AND
+DB_ExclamationDialogAnchor((CHARACTER)_Companion,_ExclamationDialog,_Flag,_X,_Y,_Z)
+AND
+NOT QRY_ExclamationDialog_IsStillInRange(_Companion,_ExclamationDialog,_X,_Y,_Z)
+THEN
+PROC_CancelRelationshipDialog(_Companion,_ExclamationDialog,_Flag);
+ObjectTimerCancel(_Companion,"ExclamationDialogDistanceCheck");
+//END_REGION
+
+//REGION Autostart WRDs
+//Try to autostart RD only once
+IF
+DB_HandlingRelationshipDialog(_Origin, _Dialog, _Flag, _, _PartnerDateOnly, _MinApproval)
+AND
+DB_RelationshipDialog_AutostartTryOnce(_Dialog, _Flag)
+THEN
+PROC_RelationshipDialog_FindBestAvatarForDialog(_Origin, _Dialog, _Flag, _PartnerDateOnly, _MinApproval); 
+
+//Needed because we can't use QRYRTN DBs in rules triggered by DBs
+PROC
+PROC_RelationshipDialog_FindBestAvatarForDialog((CHARACTER)_Origin, (DIALOGRESOURCE)_Dialog, (FLAG)_Flag, (INTEGER)_PartnerDateOnly, (INTEGER)_MinApproval)
+AND
+QRY_GetBestAvatarForCompanion(_Origin)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Origin, _Avatar)
+THEN
+PROC_RelationshipDialog_CheckAvatarAvailabilityAndStartDialog(_Origin, _Dialog, _Flag, _Avatar, _PartnerDateOnly, _MinApproval);
+
+//Keep trying to Autostart until it succeeds
+IF
+DB_HandlingRelationshipDialog(_Origin, _Dialog, _Flag, _, _PartnerDateOnly, _MinApproval)
+AND
+DB_RelationshipDialog_Autostart(_Dialog, _Flag)
+AND
+NOT DB_RelationshipDialog_AutostartTryOnce(_Dialog, _Flag)
+AND
+DB_Sees(_Origin,_Avatar)
+AND
+DB_Avatars(_Avatar)
+AND
+NOT DB_CantTalk(_Origin) //Needed as trigger condition
+AND
+NOT DB_CantTalk(_Avatar) //Needed as trigger condition
+THEN
+PROC_RelationshipDialog_CheckAvatarAvailabilityAndStartDialog(_Origin, _Dialog, _Flag, _Avatar, _PartnerDateOnly, _MinApproval);
+
+PROC
+PROC_RelationshipDialog_CheckAvatarAvailabilityAndStartDialog((CHARACTER)_Origin, (DIALOGRESOURCE)_Dialog, (FLAG)_Flag, (CHARACTER)_Avatar, (INTEGER)_PartnerDateOnly, (INTEGER)_MinApproval)
+AND
+NOT QRY_RelationshipDialog_PreventAutostart(_Origin, _Dialog)
+AND
+QRY_SpeakerIsAvailable(_Origin)
+AND
+QRY_RelationshipDialog_AvatarGoodEnough(_Origin, _Avatar, _PartnerDateOnly, _MinApproval)
+AND
+NOT DB_RelationshipDialog_AutostartSucceeded(_Origin, _Dialog, _Flag)
+AND
+QRY_StartDialog_Fixed(_Dialog, _Origin, _Avatar)
+THEN
+DB_RelationshipDialog_AutostartSucceeded(_Origin, _Dialog, _Flag);
+
+//these might be started manually, consider them successfully started since we don't want to repeat these
+//this can happen if the sightcheck fails and the dialog is started before the automatic start can kick in
+//we don't want to retry this dialog then again
+IF 
+DialogStarted(_Dialog,_Inst)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(_Dialog,_Inst,_Origin,1)
+AND
+DB_HandlingRelationshipDialog((CHARACTER)_Origin, _Dialog, _Flag, _, _PartnerDateOnly, _MinApproval)
+AND
+DB_RelationshipDialog_Autostart(_Dialog, _Flag)
+THEN
+DB_RelationshipDialog_AutostartSucceeded(_Origin, _Dialog, _Flag);
+
+QRY
+QRY_RelationshipDialog_PreventAutostart((CHARACTER)_Origin, (DIALOGRESOURCE)_Dialog, (FLAG)NULL_00000000-0000-0000-0000-000000000000)
+AND
+QRY_RelationshipDialog_PreventAutostart((CHARACTER)_Origin, (DIALOGRESOURCE)_Dialog)
+THEN
+DB_NOOP(1);
+
+//Make the QRY_RelationshipDialog_PreventAutostart(_Origin, _Dialog) succeed to prevent a relationship dialog from autostarting while the conditions are true
+QRY
+QRY_RelationshipDialog_PreventAutostart((CHARACTER)_Origin, (DIALOGRESOURCE)_Dialog)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+//Dating or Partnered avatars
+QRY
+QRY_RelationshipDialog_AvatarGoodEnough((CHARACTER)_Origin, (CHARACTER)_Avatar, 1, (INTEGER)_MinApproval)
+AND
+NOT QRY_PreventMPDialogue(_Origin,_Avatar)
+AND
+QRY_ORI_GetPartnerOrDatingAvatar(_Origin)
+AND
+DB_QRYRTN_ORI_PartnerOrDatingAvatar(_Origin, _DatingAvatar)
+AND
+_Avatar == _DatingAvatar
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Avatar, _Origin, 0, 1)
+AND
+GetApprovalRating(_Origin, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+//Regardless of Dating/Patnered Status
+QRY
+QRY_RelationshipDialog_AvatarGoodEnough((CHARACTER)_Origin, (CHARACTER)_Avatar, 0, (INTEGER)_MinApproval)
+AND
+NOT QRY_PreventMPDialogue(_Origin,_Avatar)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Avatar, _Origin, 0, 1)
+AND
+GetApprovalRating(_Origin, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Suppression Zones
+//Requeue perpetual WRDs
+PROC
+PROC_PartyDialogSuppressed_Start((CHARACTER)_Character)
+AND
+DB_HandlingRelationshipDialog(_Character,_Dialog,_Flag,_WorldCategory,_PartnerDateOnly, _MinApproval)
+AND
+DB_ExclamationDialog_NeverStop(_Dialog,_Flag)
+AND
+QRY_RelationshipDialog_WorldCategory(_WorldCategory)
+THEN
+PROC_CancelRelationshipDialog(_Character,_Dialog,_Flag);
+DB_RelationshipDialog_Queue(_Character,_Dialog,_Flag,"WORLD",_PartnerDateOnly, _MinApproval);
+
+//Cancel regular WRDs
+PROC
+PROC_PartyDialogSuppressed_Start((CHARACTER)_Character)
+AND
+DB_HandlingRelationshipDialog(_Character,_Dialog,_Flag,_WorldCategory,_PartnerDateOnly, _MinApproval)
+AND
+NOT DB_ExclamationDialog_NeverStop(_Dialog,_Flag)
+AND
+QRY_RelationshipDialog_WorldCategory(_WorldCategory)
+THEN
+PROC_CancelRelationshipDialog(_Character,_Dialog,_Flag);
+
+//Restart the queue
+PROC
+PROC_PartyDialogSuppressed_Stop((CHARACTER)_Character)
+THEN
+PROC_Test_RelationshipDialog_Queue();
+//END_REGION
+
+//REGION Camp <-> World transitions
+//When entering Camp, place the neverstop WRDs back in the queue.
+IF
+DB_InCamp(_Camper)
+AND
+DB_HandlingRelationshipDialog(_Camper,_Dialog,_Flag,"WORLD",_PartnerDateOnly, _MinApproval)
+AND
+DB_ExclamationDialog_NeverStop(_Dialog,_Flag)
+THEN
+PROC_CancelRelationshipDialog(_Camper,_Dialog,_Flag);
+DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"WORLD",_PartnerDateOnly, _MinApproval);
+
+//When entering Night Mode, place the neverstop World or Camp WRDs back in the queue.
+IF
+DB_Camp_NightMode(1)
+AND
+DB_InCamp(_Camper)
+AND
+DB_HandlingRelationshipDialog(_Camper,_Dialog,_Flag,"WORLDORCAMP",_PartnerDateOnly, _MinApproval)
+AND
+DB_ExclamationDialog_NeverStop(_Dialog,_Flag)
+THEN
+PROC_CancelRelationshipDialog(_Camper,_Dialog,_Flag);
+DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"WORLDORCAMP",_PartnerDateOnly, _MinApproval);
+
+//When leaving camp, cancel any CRDs. The Night System will reactivate them if necessary.
+IF
+DB_HandlingRelationshipDialog(_Camper,_Dialog,_Flag,"CAMP",_,_)
+AND
+NOT DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"WORLDORCAMP",_, _)
+AND
+NOT DB_InCamp(_Camper)
+THEN
+PROC_CancelRelationshipDialog(_Camper,_Dialog,_Flag);
+
+PROC
+PROC_Camp_Rest()
+AND
+DB_HandlingRelationshipDialog(_Player,_CRD,_Flag,"CAMP",_,_)
+AND
+NOT DB_RelationshipDialog_Queue(_Player,_CRD,_Flag,"WORLDORCAMP",_, _)
+THEN
+PROC_CancelRelationshipDialog(_Player,_CRD,_Flag);
+
+IF
+FlagCleared((FLAG)CAMP_GLO_State_InCamp_161b7223-039d-4ebe-986f-1dcd9a66733f, _Camper,_)
+AND
+DB_RelationshipDialog_Queue((CHARACTER)_Camper,_Dialog,_Flag,_Category,_ ,_)
+AND
+QRY_RelationshipDialog_WorldCategory(_Category)
+THEN
+PROC_Test_RelationshipDialog_Queue();
+//END_REGION
+
+//REGION Camp Relationship Dialog
+PROC
+PROC_CampRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_Dialog,(INTEGER)_PartnerDateOnly)
+THEN
+PROC_CampRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_Dialog,(FLAG)NULL_00000000-0000-0000-0000-000000000000,(INTEGER)_PartnerDateOnly, -100);
+
+PROC
+PROC_CampRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(INTEGER)_PartnerDateOnly)
+THEN
+PROC_CampRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(INTEGER)_PartnerDateOnly, -100);
+
+PROC
+PROC_CampRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_Dialog,(FLAG)_Flag,(INTEGER)_PartnerDateOnly, (INTEGER)_MinApproval)
+AND
+NOT DB_Avatars(_Camper)
+AND
+DB_InCamp(_Camper)
+AND
+NOT DB_RelationshipDialogsFinished(_Camper,_Dialog,_Flag)
+AND
+NOT DB_HandlingRelationshipDialog(_Camper,_Dialog,_Flag,_,_, _)
+THEN
+DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly,_MinApproval);
+
+QRY
+QRY_ValidForCRD((CHARACTER)_Companion)
+AND
+DB_InCamp(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+NOT DB_HandlingRelationshipDialog(_Companion,_,_,_,_,_)
+AND
+NOT DB_CantTalk(_Companion)
+AND
+NOT QRY_DisabledCRDs()
+AND
+IsControlled(_Companion,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DisabledCRDs()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Try_CampRelationshipDialog((CHARACTER)_Camper,1)
+AND
+DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval)
+AND
+QRY_ValidForCRD(_Camper)
+THEN
+DB_HandlingRelationshipDialog(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval);
+NOT DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval);
+PROC_ExclamationMark_Show(_Camper);
+
+PROC
+PROC_Try_CampRelationshipDialog((CHARACTER)_Camper,(INTEGER)_Index)
+AND
+DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval)
+AND
+QRY_ValidForCRD(_Camper)
+THEN
+DB_HandlingRelationshipDialog(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval);
+NOT DB_RelationshipDialog_Queue(_Camper,_Dialog,_Flag,"CAMP",_PartnerDateOnly, _MinApproval);
+
+QRY
+QRY_RelationshipDialog_HasAvatarWithSufficientApproval((CHARACTER)_Companion, (INTEGER)_MinApproval)
+AND
+DB_Players(_Companion)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SameUser(_Avatar, _Companion)
+AND
+GetApprovalRating(_Companion, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_RelationshipDialog_HasAvatarWithSufficientApproval((CHARACTER)_Companion, (INTEGER)_MinApproval)
+AND
+NOT DB_Players(_Companion)
+AND
+DB_Avatars(_Avatar)
+AND
+GetApprovalRating(_Companion, _Avatar, _Approval)
+AND
+_Approval >= _MinApproval
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CampNight_ClearCampNight(_Night)
+AND
+DB_RelationshipDialog_Queue(_Camper,_RD,_Flag, "CAMP",_PartnerDateOnly, _MinApproval)
+AND
+DB_CampNight_CRD(_Night, _Camper, _RD, _Flag)
+THEN
+PROC_CancelRelationshipDialog(_Camper,_RD,_Flag);
+
+//END_REGION
+
+//REGION Exclamation mark VFX + tag
+
+//SHOW EXCLAMATION MARK
+//Use RelationshipMarker as identifier unless otherwise specified
+PROC
+PROC_ExclamationMark_Show((GUIDSTRING)_Character)
+THEN
+PROC_ExclamationMark_Show((GUIDSTRING)_Character,"RelationshipMarker");
+
+PROC
+PROC_ExclamationMark_Show((GUIDSTRING)_Character,(STRING)_Identifier)
+AND
+NOT DB_LoopEffect(_Character,_,_Identifier,_,VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80,_,_)
+THEN
+PROC_LoopEffect(VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80,_Character,_Identifier,"__ANY__","Dummy_OverheadFX");
+
+PROC
+PROC_ExclamationMark_Show((GUIDSTRING)_Character,(STRING)_)
+AND
+IsTagged(_Character,HAS_EXCLAMATION_DIALOG_e45ea222-a86f-4e00-a1ca-98d8b258b1ce,0)
+THEN
+SetTag(_Character,HAS_EXCLAMATION_DIALOG_e45ea222-a86f-4e00-a1ca-98d8b258b1ce);
+
+//HIDE EXCLAMATION MARK
+//Use RelationshipMarker as identifier unless otherwise specified
+PROC
+PROC_ExclamationMark_Hide((GUIDSTRING)_Character)
+AND
+DB_LoopEffect(_Character,_,"RelationshipMarker",_,VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80,_,_)
+THEN
+PROC_ExclamationMark_Hide((GUIDSTRING)_Character,"RelationshipMarker");
+
+PROC
+PROC_ExclamationMark_Hide((GUIDSTRING)_Character,(STRING)_Identifier)
+THEN
+PROC_StopLoopEffect(_Character,_Identifier);
+
+PROC
+PROC_ExclamationMark_Hide((GUIDSTRING)_Character,(STRING)_)
+AND
+NOT DB_LoopEffect(_Character,_,_,_,VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80,_,_)
+AND
+IsTagged(_Character,HAS_EXCLAMATION_DIALOG_e45ea222-a86f-4e00-a1ca-98d8b258b1ce,1)
+THEN
+ClearTag(_Character,HAS_EXCLAMATION_DIALOG_e45ea222-a86f-4e00-a1ca-98d8b258b1ce);
+
+//END_REGION
+
+//REGION Cancelling a Relationship Dialog
+PROC
+PROC_CancelRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_RD,(FLAG)_Flag)
+AND
+DB_RelationshipDialog_Queue(_Camper,_RD,_Flag,_Region,_PartnerDateOnly, _MinApproval)
+THEN
+NOT DB_RelationshipDialog_Queue(_Camper,_RD,_Flag,_Region,_PartnerDateOnly, _MinApproval);
+
+PROC
+PROC_CancelRelationshipDialog((CHARACTER)_Camper,(DIALOGRESOURCE)_RD,(FLAG)_Flag)
+AND
+DB_HandlingRelationshipDialog(_Camper,_RD,_Flag,_Region,_PartnerDateOnly, _MinApproval)
+THEN
+PROC_ExclamationMark_Hide(_Camper);
+NOT DB_HandlingRelationshipDialog(_Camper,_RD,_Flag,_Region,_PartnerDateOnly, _MinApproval);
+PROC_Test_RelationshipDialog_Queue();
+//END_REGION
+
+//REGION Death & Resurrection
+IF
+Died(_Player)
+AND
+DB_HandlingRelationshipDialog(_Player,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval)
+THEN
+PROC_ExclamationMark_Hide(_Player);
+NOT DB_HandlingRelationshipDialog(_Player,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval);
+DB_RelationshipDialog_Queue(_Player,_Dialog,_Flag,_Type,_PartnerDateOnly, _MinApproval);
+
+IF
+Resurrected(_Player)
+AND
+DB_InCamp(_Player)
+THEN
+PROC_Try_CampRelationshipDialog(_Player,0);
+
+IF
+Resurrected(_Player)
+THEN
+PROC_LaunchTestCompanionQueueTimer();
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

@@ -1,0 +1,29 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/* Characters who's gender is fixed by player's choice:
+	Daisy: can have up to four 'Daisy' characters in the game, one for each avatar. The 'default' daisy is the host's
+	Desire: only one 'Desire' character in the game, based on the Daisy made by the host. */
+
+//REGION Gender tags & flags
+
+DB_Genders_Daisy("Female", (TAG)DAISY_FEMALE_17c2405e-5771-4150-ad00-b1ef8d1dd5ae);
+DB_Genders_Daisy("Male", (TAG)DAISY_MALE_807af8f5-0183-42d9-8d40-6e93d5236cc2);
+DB_Genders_Daisy("Neutral", (TAG)DAISY_NEUTRAL_3caea564-7be7-4f04-ad3c-05f4ebee3926);
+//END_REGION
+
+//REGION 
+KBSECTION
+//REGION Set the Gender Tags for Daisy when an avatar is assigned
+PROC
+PROC_DaisyDesire_SetDaisyFor((CHARACTER)_Char, (CHARACTER)_Daisy, (STRING)_Gender)
+AND
+DB_Genders_Daisy(_Gender, _Tag)
+THEN
+SetTag(_Char, _Tag);
+SetTag(_Daisy, _Tag);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

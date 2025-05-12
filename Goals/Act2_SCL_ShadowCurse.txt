@@ -1,0 +1,2009 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Safe zones triggers
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_MoonriseTower_b0b0721f-2a4f-4530-85cf-c67c0db25f92);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_Haven_f4f81c2b-5428-4d06-a65e-3ba21e105cba);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_KethericCityEntrance_53985661-c41b-40a0-b6af-3add4fbb392d);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_HillsEntrance_a2135d8d-a2f3-4d1e-9eab-041d09dc20ec);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_HavenBasement_ccd7ad8c-6315-4fe6-898b-051a74f0dbb4);
+
+//Shadow-curse triggers
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_Main_5c64f194-e45c-40f0-b91e-9bcad384b401);
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_HavenBasement_1677b2e5-0b94-4336-8dd9-a4b2c80bf1d1);
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_HospitalBasement_f39a36bd-c94e-4bc5-8556-c4b280c4aab1);
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_Mausoleum_a980a674-7795-46e8-88e1-55d270498f4c);
+
+//Shadow-blight triggers
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Town_f2091d2d-2ac6-4e7e-ba08-315ffdd3e40a);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_HospitalBasement_fa03650f-6284-4d2c-b20a-7271b1c78901);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_LodgeArea_de7c9f83-802b-4bae-afe5-e6d8bb15a41e);
+
+PROC_TriggerRegisterForPlayers(S_HAV_Entrance_BlessingReminder_Inside_cd12c286-3362-4fac-bdf8-da2c019a4aad);
+PROC_TriggerRegisterForPlayers(S_HAV_Entrance_BlessingReminder_Outside_9f4d9b08-188e-4c10-9139-086e48ba8005);
+
+DB_HAV_ShadowCurse_BlessingReminders((CHARACTER)S_HAV_HavenOutcasts_FountainPatrol_Caster_ff70f59a-7d50-4e69-a768-60a97c6fb57d);
+DB_HAV_ShadowCurse_BlessingReminders((CHARACTER)S_HAV_HavenOutcasts_BarricadeGuards_Melee_Dwarf_b1d8b327-1f27-4921-aa2b-dd18a9d67fc8);
+DB_HAV_ShadowCurse_BlessingReminders((CHARACTER)S_HAV_HavenOutcasts_BarricadeYeller_Ranger_b612ef5f-3381-4486-8959-84dd399fb1ae);
+
+DB_SCL_ShadowCurse_Active(1);
+
+NOT DB_SCL_ShadowCurse_TriggerForcedTB(NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SCL_ShadowCurse_LightStatus((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, "", (GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+
+// Resistant statuses
+DB_SCL_ShadowCurse_ResistantStatuses("HAV_SELUNEOINTMENT");
+DB_SCL_ShadowCurse_ResistantStatuses("SCL_SHADOWCURSE_TEMPORARY_IMMUNITY");
+
+// Undead statuses
+DB_SCL_ShadowCurse_UndeadStatuses("SCL_SHADOW_CURSE_UNDEAD_NEW");
+DB_SCL_ShadowCurse_UndeadStatuses("SCL_SHADOW_CURSE_UNDEAD_HALSINLAKESIDE");
+
+//TODO: Remove once Shadowheart is free and can be applied to her in her character instead
+SetTag(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, ACT2_SHADOW_CURSE_RESISTANT_DONT_PROPAGATE_87dc3ebb-0eca-47d8-971e-3c500c743dd7);
+KBSECTION
+//REGION Init shadow curse 
+ 
+IF
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+TriggerRegisterForItems((TRIGGER)_Trigger);
+
+IF
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+TriggerRegisterForItems((TRIGGER)_Trigger);
+
+//END_REGION
+
+//REGION Triggers and areas
+IF
+DB_SCL_ShadowCurse_Active(1)
+AND
+DB_SCL_ShadowCurse_InSCL(_Character)
+AND
+IsDead((CHARACTER)_Character, 1) //Specifically exclude those who are dead on start.
+THEN
+DB_SCL_ShadowCurse_DiedCursed(_Character);
+
+IF
+DB_SCL_ShadowCurse_Active(1)
+AND
+DB_SCL_ShadowCurse_InSCL(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Character)
+AND
+NOT DB_SCL_ShadowCurse_DiedCursed((CHARACTER)_Character)
+AND
+IsTagged(_Character, SHADOW_a04374d9-c40f-4c41-a10f-7f3ca496b16a, 0)
+THEN
+PROC_SCL_Shadowcurse_Include(_Character);
+
+PROC
+PROC_SCL_Shadowcurse_Include((GUIDSTRING)_Character)
+AND
+IsCharacter(_Character, 1)
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger, (CHARACTER)_Character);
+
+PROC
+PROC_SCL_Shadowcurse_Exclude((GUIDSTRING)_Character)
+AND
+IsCharacter(_Character, 1)
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+THEN
+TriggerUnregisterForCharacter(_Trigger, (CHARACTER)_Character);
+
+// Curse areas
+IF
+DB_InRegion(_Character, _Trigger)
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+THEN
+DB_SCL_ShadowCurse_InCursedArea((GUIDSTRING)_Character, _Trigger);
+
+IF
+DB_SCL_Shadowcurse_Area(_Trigger)
+AND
+DB_SCL_ShadowCurse_InCursedArea((GUIDSTRING)_Character, _Trigger)
+AND
+NOT DB_InRegion((CHARACTER)_Character, _Trigger)
+AND
+IsCharacter(_Character, 1)
+THEN
+PROC_SCL_ShadowCurse_LeftCurseArea(_Character,_Trigger);
+
+IF
+DB_InRegion(_Character, _Trigger)
+AND
+DB_SCL_ShadowCurse_InCursedArea((GUIDSTRING)_Character, _Trigger)
+AND
+NOT DB_SCL_Shadowcurse_Area(_Trigger)
+THEN
+PROC_SCL_ShadowCurse_LeftCurseArea(_Character,_Trigger);
+
+IF
+DB_SCL_ShadowCurse_InCursedArea(_Character, _Trigger)
+AND
+NOT DB_SCL_ShadowCurse_InCursedArea(_Character)
+THEN
+DB_SCL_ShadowCurse_InCursedArea(_Character);
+
+//don't use our DB_SCL_ShadowCurse_InCursedArea DBs for this one, since we might have inflight trigger events that we haven't processed yet
+//this can cause us to remove shadowcurse and re-apply it immediately on teleports
+QRY
+QRY_SCL_ShadowCurse_InCursedArea((GUIDSTRING)_Object)
+AND
+IsCharacter(_Object, 0)
+AND
+IsOnStage(_Object,1)	//use the query since the event might not have arrived yet
+AND
+IsInInventory(_Object, 0)
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+AND
+IsInTrigger(_Object,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SCL_ShadowCurse_InCursedArea((GUIDSTRING)_Object)
+AND
+IsCharacter(_Object, 1)
+AND
+IsOnStage(_Object,1)
+AND
+IsInInventory(_Object, 0)
+AND
+NOT DB_DismissedAvatar((CHARACTER)_Object)
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+AND
+IsInTrigger(_Object,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SCL_Shadowcurse_ExcludedFromCurse((GUIDSTRING)_Object)
+AND
+DB_SCL_ShadowCurse_Immune(_Object)
+AND
+NOT DB_SCL_ShadowCurse_MoonLanternWielder((CHARACTER)_Object, (ITEM)_)	
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SCL_ShadowCurse_LeftCurseArea((GUIDSTRING)_Object,(TRIGGER)_Trigger)
+THEN
+NOT DB_SCL_ShadowCurse_InCursedArea(_Object, _Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_LeftCurseArea((GUIDSTRING)_Object,(TRIGGER)_)
+AND
+//lovely, when we get made immune we also unregister triggers
+//which means we get leave events, but we are still physically inside of these triggers
+//so don't check the triggers when we're immune
+NOT QRY_SCL_Shadowcurse_ExcludedFromCurse(_Object)
+AND
+NOT QRY_SCL_ShadowCurse_InCursedArea(_Object)
+THEN
+NOT DB_SCL_ShadowCurse_InCursedArea(_Object);
+
+
+PROC
+PROC_SCL_ShadowCurse_LeftCurseArea((GUIDSTRING)_Object,(TRIGGER)_)
+AND
+QRY_SCL_Shadowcurse_ExcludedFromCurse(_Object)	//see comment block above
+THEN
+NOT DB_SCL_ShadowCurse_InCursedArea(_Object);
+
+PROC
+PROC_SCL_ShadowCurse_LeftCurseArea((GUIDSTRING)_Object,(TRIGGER)_)
+AND
+NOT DB_SCL_ShadowCurse_InCursedArea(_Object)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_BlightTrigger)
+THEN
+TriggerUnregisterForCharacter(_BlightTrigger, (CHARACTER)_Object);
+
+PROC
+PROC_SCL_ShadowCurse_LeftCurseArea((GUIDSTRING)_Object,(TRIGGER)_)
+AND
+NOT DB_SCL_ShadowCurse_InCursedArea(_Object)
+AND
+DB_SCL_Shadowcurse_SafeZones(_SafeZoneTrigger)
+THEN
+TriggerUnregisterForCharacter(_SafeZoneTrigger, (CHARACTER)_Object);
+
+IF
+DB_SCL_ShadowCurse_InCursedArea(_Character)
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger, (CHARACTER)_Character);
+
+IF
+DB_SCL_ShadowCurse_InCursedArea(_Character)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger, (CHARACTER)_Character);
+
+IF
+ItemEnteredTrigger(_Item, _Trigger, _)
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+AND
+Exists(_Item,1)
+THEN
+DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Item, _Trigger);
+
+IF
+ItemLeftTrigger(_Item, _Trigger, _)
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+NOT DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Item, _Trigger);
+
+//Items that start out in the trigger don't get enter events, but they're not interesting unless they get lit anyway.
+IF
+StatusApplied(_Object, _Status, _, _)
+AND
+NOT DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Object, _)
+AND
+QRY_IsExistingItem(_Object, 1)
+AND
+IsInInventory(_Object,0)
+AND
+IsStatusFromGroup(_Status, "SG_Light", 1)
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+AND
+Exists(_Trigger,1)
+AND
+IsInTrigger(_Object, _Trigger, 1)
+THEN
+DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Object, _Trigger);
+
+// Safe areas
+IF
+DB_InRegion(_Character, _Trigger)
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Character, _Trigger);
+
+IF
+DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Character, _Trigger)
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+AND
+NOT DB_InRegion((CHARACTER)_Character, _Trigger)
+AND
+QRY_IsExistingCharacter(_Character, 1)
+THEN
+NOT DB_SCL_ShadowCurse_InSafeZone(_Character, _Trigger);
+
+IF
+DB_SCL_ShadowCurse_InSafeZone((GUIDSTRING)_Object, _Trigger)
+AND
+NOT DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+NOT DB_SCL_ShadowCurse_InSafeZone(_Object, _Trigger);
+
+IF
+DB_SCL_ShadowCurse_InSafeZone(_Object, _Trigger)
+AND
+NOT DB_SCL_ShadowCurse_InSafeZone(_Object)
+THEN
+DB_SCL_ShadowCurse_InSafeZone(_Object);
+
+IF
+DB_SCL_ShadowCurse_InSafeZone(_Object)
+AND
+NOT DB_SCL_ShadowCurse_InSafeZone(_Object, _)
+THEN
+NOT DB_SCL_ShadowCurse_InSafeZone(_Object);
+PROC_ShadowCurse_LeftSafeZone(_Object);
+
+// Blight areas
+IF
+ItemEnteredTrigger(_Item, _Trigger, _)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+AND
+Exists(_Item,1)
+THEN
+DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Item, _Trigger);
+
+IF
+ItemLeftTrigger(_Item, _Trigger, _)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+NOT DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Item, _Trigger);
+
+
+//Items that start out in the trigger don't get enter events, but they're not interesting unless they get lit anyway.
+IF
+StatusApplied(_Object, _Status, _, _)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Object, _)
+AND
+QRY_IsExistingItem(_Object, 1)
+AND
+IsInInventory(_Object,0)
+AND
+IsStatusFromGroup(_Status, "SG_Light", 1)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+AND
+Exists(_Trigger,1)
+AND
+IsInTrigger(_Object, _Trigger, 1)
+THEN
+DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Object, _Trigger);
+
+IF
+DB_InRegion(_Character, _Trigger)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Character, _Trigger);
+
+IF
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+AND
+DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Character, _Trigger)
+AND
+NOT DB_InRegion((CHARACTER)_Character, _Trigger)
+AND
+QRY_IsExistingCharacter(_Character, 1)
+THEN
+NOT DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Character, _Trigger);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Object, _Trigger)
+AND
+NOT DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+NOT DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Object, _Trigger);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Object, _)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Object)
+THEN
+DB_SCL_ShadowCurse_InBlightedArea(_Object);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Object)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Object, _)
+THEN
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Object);
+
+//we might have nested triggers, so unfortunately we need to do a check
+//for the triggers in case we still have unprocessed events coming in
+QRY
+QRY_InShadowCurseSafeZone((GUIDSTRING)_Obj)
+AND
+NOT DB_SCL_ShadowCurse_InSafeZone(_Obj)		//only do the expensive check if we don't already know
+AND 
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+AND
+Exists(_Obj,1)
+AND
+IsInTrigger(_Obj,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InShadowCurseSafeZone(_Obj)
+AND
+DB_SCL_ShadowCurse_InSafeZone(_Obj)	
+THEN
+DB_NOOP(1);
+
+//Add a hack for handling teleports to other levels
+//These generate trigger leave events, before they move players or start unloading the level
+//TODO: we probably want to do this after the point of no return anyway
+//TODO: not needed if we fix our trigger queries 
+IF
+LevelUnloading("SCL_Main_A")
+AND
+DB_PartyMembers(_Player)
+THEN
+NOT DB_SCL_ShadowCurse_InCursedArea(_Player);
+
+//END_REGION
+
+//REGION Immunity tag
+IFF
+TagSet(_Object, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9)
+THEN
+DB_SCL_ShadowCurse_Immune(_Object);
+
+IFF
+TagSet(_Object, (TAG)SHADOW_a04374d9-c40f-4c41-a10f-7f3ca496b16a)
+THEN
+DB_SCL_ShadowCurse_Immune(_Object);
+
+IFF
+TagCleared(_Object, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9)
+AND
+IsTagged(_Object, (TAG)SHADOW_a04374d9-c40f-4c41-a10f-7f3ca496b16a, 0)
+THEN
+NOT DB_SCL_ShadowCurse_Immune(_Object);
+
+IFF
+TagCleared(_Object, (TAG)SHADOW_a04374d9-c40f-4c41-a10f-7f3ca496b16a)
+AND
+IsTagged(_Object, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9, 0)
+THEN
+NOT DB_SCL_ShadowCurse_Immune(_Object);
+
+//we only dynamically clear that tag in the actual level, so this rule can stay as a non-global rule. We need the level to be able to register the triggers
+IF
+TagCleared(_Character, (TAG)ACT2_SHADOW_CURSE_IMMUNE_b47643e0-583c-4808-b108-f6d3b605b0a9)
+AND
+IsCharacter(_Character, 1)
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+THEN
+TriggerRegisterForCharacter(_Trigger, (CHARACTER)_Character);
+
+
+//END_REGION
+
+//REGION Light and darkness
+
+PROC
+PROC_ShadowCurse_TrackLight((GUIDSTRING)_Character)
+AND
+NOT DB_OffStage(_Character)	//don't track light for offstage characters
+THEN
+DB_SCL_ShadowCurse_TrackLight(_Character);
+ApplyStatus(_Character, "SCL_TRACKLIGHT", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+//explicit proc to recheck to handle nested safezone/curse triggers
+PROC
+PROC_ShadowCurse_LeftSafeZone((GUIDSTRING)_Obj)
+AND
+DB_SCL_ShadowCurse_InCursedArea(_Obj)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Obj)
+THEN
+PROC_ShadowCurse_TrackLight(_Obj);
+
+// Check for characters/objects spawned via CreateAtObject.
+IF
+WentOnStage(_Obj, 1)
+AND
+DB_SCL_ShadowCurse_InCursedArea(_Obj)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Obj)
+AND
+NOT DB_SCL_ShadowCurse_TrackLight(_Obj)
+AND
+NOT QRY_InShadowCurseSafeZone(_Obj)
+THEN
+PROC_ShadowCurse_TrackLight(_Obj);
+
+IF
+DB_SCL_ShadowCurse_InCursedArea(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Character)
+AND
+NOT QRY_InShadowCurseSafeZone(_Character)
+THEN
+PROC_ShadowCurse_TrackLight(_Character);
+
+IF
+DB_SCL_ShadowCurse_TrackLight(_Character)
+AND
+NOT DB_SCL_ShadowCurse_InCursedArea(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_TrackLight(_Character);
+RemoveStatus(_Character, "SCL_TRACKLIGHT", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_SCL_ShadowCurse_TrackLight(_Character)
+AND
+DB_SCL_ShadowCurse_InSafeZone(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_TrackLight(_Character);
+RemoveStatus(_Character, "SCL_TRACKLIGHT", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_SCL_ShadowCurse_TrackLight(_Character)
+AND
+DB_SCL_ShadowCurse_Immune(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_TrackLight(_Character);
+RemoveStatus(_Character, "SCL_TRACKLIGHT", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_SCL_ShadowCurse_TrackLight(_Character)
+THEN
+SetEntityEvent(_Character, "SCL_PrepareToCheckObscuredState", 1);
+
+// The purpose of the SCL_PrepareToCheckObscuredState and SCL_CheckObscuredState events is to delay the check of the ObscuredState by two frames after getting the SCL_TRACKLIGHT status
+// This is necessary because torches get gameplay light from their statuses.
+// The torch status will get added at the same time as SCL_TRACKLIGHT when the character is teleported next to the torch.
+// After the torch gets the status it needs two frames to subsequently mark tiles around it with its gameplay light.
+IF
+EntityEvent((CHARACTER)_Character, "SCL_PrepareToCheckObscuredState")
+THEN
+SetEntityEvent(_Character, "SCL_CheckObscuredState", 1);
+
+IF
+EntityEvent((CHARACTER)_Character, "SCL_CheckObscuredState")
+AND
+DB_SCL_ShadowCurse_TrackLight(_Character)	//make sure nothing changed during the frames
+AND
+GetObscuredState(_Character, _String)
+AND
+_String != "Clear"
+THEN
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Character);
+
+IF
+ObscuredStateChanged(_Character, _State)
+AND
+_State != "Clear"
+AND
+DB_SCL_ShadowCurse_TrackLight(_Character)
+THEN
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Character);
+
+IF
+ObscuredStateChanged(_Character, "Clear")
+AND
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character);
+
+IF
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)
+AND
+NOT DB_SCL_ShadowCurse_TrackLight(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character);
+
+
+//END_REGION
+
+//REGION Resistance
+
+IF
+DB_SCL_ShadowCurse_Resistant(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Resistant_Through_Status(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Resistant_Through_Tag(_Object)
+THEN
+NOT DB_SCL_ShadowCurse_Resistant(_Object);
+
+IF
+DB_SCL_ShadowCurse_Resistant_Through_Status(_Object)
+THEN
+DB_SCL_ShadowCurse_Resistant(_Object);
+
+IF
+DB_SCL_ShadowCurse_Resistant_Through_Tag(_Object)
+THEN
+DB_SCL_ShadowCurse_Resistant(_Object);
+
+//END_REGION
+
+//REGION Resistance tags
+
+IF
+TagSet(_Obj, ACT2_SHADOW_CURSE_RESISTANT_DONT_PROPAGATE_87dc3ebb-0eca-47d8-971e-3c500c743dd7)
+THEN
+DB_SCL_ShadowCurse_Resistant_Through_Tag(_Obj);
+
+IF
+TagCleared(_Obj,ACT2_SHADOW_CURSE_RESISTANT_DONT_PROPAGATE_87dc3ebb-0eca-47d8-971e-3c500c743dd7)
+THEN
+NOT DB_SCL_ShadowCurse_Resistant_Through_Tag(_Obj);
+
+//END_REGION
+
+//REGION Resistance statuses
+
+IF
+StatusApplied(_Character, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_ResistantStatuses(_Status)
+AND
+Exists(_Character,1)
+THEN
+DB_SCL_ShadowCurse_Resistant_Through_Status(_Character);
+
+IF
+StatusRemoved(_Character, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_ResistantStatuses(_Status)
+AND
+NOT QRY_SCL_ShadowCurse_IsResistantThroughStatus(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_Resistant_Through_Status(_Character);
+
+QRY
+QRY_SCL_ShadowCurse_IsResistantThroughStatus((GUIDSTRING)_Character)
+AND
+DB_SCL_ShadowCurse_ResistantStatuses(_Status)
+AND
+Exists(_Character,1)
+AND
+HasAppliedStatus(_Character, _Status, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Combine the above
+
+IF
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Resistant(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Character)
+THEN
+DB_SCL_ShadowCurse_ValidTarget(_Character);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Character)
+THEN
+DB_SCL_ShadowCurse_ValidTarget(_Character);
+
+IF
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+DB_SCL_ShadowCurse_Resistant(_Character)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_ValidTarget(_Character);
+
+IF
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)	//in blighted areas we don't care about the environmental conditions
+THEN
+NOT DB_SCL_ShadowCurse_ValidTarget(_Character);
+
+//END_REGION
+
+//REGION Party Logic - if a controlled player is not a valid target due to light conditions, the rest of the party is immune.
+
+IF
+DB_SCL_ShadowCurse_NotPartyProtected((GUIDSTRING)_Character)
+AND
+DB_SCL_ShadowCurse_PartyProtectedBy((CHARACTER)_Character,(CHARACTER)_Player)
+THEN
+NOT DB_SCL_ShadowCurse_PartyProtectedBy(_Character, _Player);
+
+IF
+DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+IsControlled(_Character,1)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+//the character that was protecting us lost the light conditions -> we lose our protection
+IF
+DB_SCL_ShadowCurse_PartyProtectedBy(_Character, _Player)
+AND
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Player)
+AND
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+IF
+DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+NOT DB_SCL_ShadowCurse_ValidTarget(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+IF
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+NOT DB_PartyMembers((CHARACTER)_Character)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected((GUIDSTRING)_Character);
+
+IF
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+QRY_IsExistingCharacter(_Character, 1) //Avoid asserts
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+IsControlled(_Character, 1)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected((GUIDSTRING)_Character);
+
+IF
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+IsControlled(_Character, 0)
+AND
+DB_PartyMembers(_Player)
+AND
+IsControlled(_Player, 1)
+AND
+InSamePartyGroup(_Player, _Character, 1)
+AND
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Player)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+//became a valid target, but alone in a party group -> nobody to protect me
+IF
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+QRY_IsExistingCharacter(_Character, 1)
+AND
+NOT QRY_IsNotAloneInPartyGroup((CHARACTER)_Character)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+IF
+DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)
+AND
+IsControlled(_Character, 0)
+AND
+DB_PartyMembers(_Player)
+AND
+IsControlled(_Player, 1)
+AND
+InSamePartyGroup(_Player, _Character, 1)
+AND
+NOT DB_SCL_ShadowCurse_ValidTarget(_Player)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Player)	//only share immunity if it's because of lightsources
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+DB_SCL_ShadowCurse_PartyProtectedBy(_Character, _Player);
+
+//became an invalid target and environmental conditions hold true, update immunity of attached characters
+IF
+DB_PartyMembers((CHARACTER)_Character)
+AND
+NOT DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)	
+AND
+IsControlled(_Character, 1)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Player)	//don't party protect when in blighted areas
+AND
+IsControlled(_Player, 0)
+AND
+InSamePartyGroup(_Player, _Character, 1)
+AND
+DB_SCL_ShadowCurse_ValidTarget(_Player)
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Player);
+DB_SCL_ShadowCurse_PartyProtectedBy(_Player, _Character);
+
+IF
+AttachedToPartyGroup(_Character)
+AND
+DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)	
+AND
+IsControlled(_Character, 0)
+AND
+DB_PartyMembers(_Player)
+AND
+IsControlled(_Player, 1)
+AND
+InSamePartyGroup(_Character, _Player, 1)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Player)	//only share immunity if it's because of lightsources
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+DB_SCL_ShadowCurse_PartyProtectedBy(_Character, _Player);
+
+//Joining a party group as a controlled member does nothing if the players were already safe; it does, however, make other people safe.
+IF
+AttachedToPartyGroup(_Character)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)	//only share immunity if it's because of lightsources
+AND
+IsControlled(_Character, 1)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_SCL_ShadowCurse_NotPartyProtected(_Player)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Player)	
+AND
+InSamePartyGroup(_Player, _Character, 1)
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Player);
+DB_SCL_ShadowCurse_PartyProtectedBy(_Player, _Character);
+
+//if we're detached without being controlled we might not be protected anymore
+//we check the case here where someone is in a group alone since in that case there's no attach (because nothing to attach to)
+IF
+DetachedFromPartyGroup(_Character)
+AND
+IsControlled(_Character, 0)
+AND
+NOT QRY_IsNotAloneInPartyGroup(_Character)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+//uncontrolled and attached to an unprotected group => lose your protection as well, otherwise the rules are inconsistent
+IF
+AttachedToPartyGroup(_Character)
+AND
+IsControlled(_Character, 0)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_SCL_ShadowCurse_NotPartyProtected(_Player)
+AND
+InSamePartyGroup(_Player, _Character, 1)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Character);
+
+IF
+GainedControl(_Character)
+AND
+DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_SCL_ShadowCurse_ValidTarget(_Player)
+AND
+InSamePartyGroup(_Player, _Character, 1)
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Player);
+
+//TODO: should we make the uncontrolled characters from the previous controlled character notpartyprotected
+//when we switch to a different group? Logically that makes sense, but might not feel quite right
+//can give weird results when attaching valid targets to the group though
+
+IF
+GainedControl(_Character)
+AND
+NOT DB_SCL_ShadowCurse_EnvironmentalConditions(_Character)	//only share immunity if it's because of lightsources
+AND
+DB_PartyMembers(_Player)
+AND
+DB_SCL_ShadowCurse_ValidTarget(_Player)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Player)	
+AND
+InSamePartyGroup(_Player, _Character, 1)
+THEN
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Player);
+DB_SCL_ShadowCurse_PartyProtectedBy(_Player, _Character);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Player)	
+THEN
+DB_SCL_ShadowCurse_NotPartyProtected(_Player);	//noone can protect you when in a blighted area
+
+//END_REGION
+
+//REGION Temporary immunity for removing curse manually
+// For removal via Remove Curse
+IF
+StatusRemoved((CHARACTER)_Character,"SCL_AREA",_Cause,_)
+AND
+DB_PartyMembers((CHARACTER)_Cause)
+AND
+Exists(_Character,1)
+AND
+IsDead(_Character,0)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)	//don't give immunity to deep curse
+THEN
+//party member removed our curse, give us temp immunity
+ApplyStatus(_Character,"SCL_SHADOWCURSE_TEMPORARY_IMMUNITY",18.0,1);
+DB_SCL_ShadowCurse_Resistant_Through_Status(_Character);	//set immediately to block an immediate re-apply
+
+//paranoid check in case the apply fails
+//we don't want the DB to become stuck on this character
+IF
+StatusAttemptFailed(_Char,"SCL_SHADOWCURSE_TEMPORARY_IMMUNITY",_,_)
+AND
+NOT QRY_SCL_ShadowCurse_IsResistantThroughStatus(_Char)
+THEN
+NOT DB_SCL_ShadowCurse_Resistant_Through_Status(_Char);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Character)
+AND
+HasAppliedStatus(_Character,"SCL_SHADOWCURSE_TEMPORARY_IMMUNITY",1)
+THEN
+RemoveStatus(_Character,"SCL_SHADOWCURSE_TEMPORARY_IMMUNITY", NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Apply curse to non-dead characters
+
+IF
+DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+AND
+DB_SCL_ShadowCurse_ValidTarget(_Character)
+AND
+NOT DB_Dead((CHARACTER)_Character)
+AND
+QRY_IsExistingCharacter(_Character, 1)
+AND
+NOT QRY_SCL_ShadowCurse_Undead(_Character)
+THEN
+PROC_SCL_ShadowCurse_MakeCurseSubject(_Character);
+
+PROC
+PROC_SCL_ShadowCurse_MakeCurseSubject((CHARACTER)_Character)
+AND
+NOT DB_SCL_ShadowCurse_Subject(_Character)
+THEN
+ApplyStatus(_Character, "SCL_AREA", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_SCL_ShadowCurse_Subject(_Character);
+
+QRY
+QRY_SCL_ShadowCurse_Undead((CHARACTER)_Character)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+HasAppliedStatus(_Character, _Status, 1)
+THEN
+DB_NOOP(1);
+
+IF
+DB_SCL_ShadowCurse_Subject(_Character)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Character)
+AND
+QRY_IsExistingCharacter(_Character, 1)
+AND
+DB_SCL_ShadowCurse_Resistant(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_ValidTarget(_Character);
+PROC_SCL_ShadowCurse_Remove(_Character);
+
+IF
+DB_SCL_ShadowCurse_Subject(_Character)
+AND
+DB_SCL_ShadowCurse_Immune(_Character)
+THEN
+NOT DB_SCL_ShadowCurse_ValidTarget(_Character);
+PROC_SCL_ShadowCurse_Remove(_Character);
+
+IF
+DB_SCL_ShadowCurse_Subject(_Character)
+AND
+NOT DB_SCL_ShadowCurse_NotPartyProtected(_Character)
+THEN
+PROC_SCL_ShadowCurse_Remove(_Character);
+
+IF
+DB_SCL_ShadowCurse_Subject(_Character)
+AND
+DB_Dead(_Character)
+THEN
+PROC_SCL_ShadowCurse_Remove(_Character);
+
+PROC
+PROC_SCL_ShadowCurse_Remove((CHARACTER)_Character)
+THEN
+RemoveStatus(_Character, "SCL_AREA");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_1");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_2");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_3");
+RemoveStatus(_Character, "SCL_SHADOW_CURSE_4");
+NOT DB_SCL_ShadowCurse_Subject(_Character);
+
+IF
+StatusRemoved((CHARACTER)_Character,"SCL_AREA",_,_)
+AND
+Exists(_Character,1)
+AND
+HasAppliedStatus(_Character,"SCL_AREA",0)	//to catch removing and adding in the same frame
+THEN
+// Primarily to clear DB_SCL_ShadowCurse_Subject, so it can be re-set
+PROC_SCL_ShadowCurse_Remove(_Character);
+
+QRY
+QRY_WaypointTeleport_PlayerBlocked_SpecificReason((CHARACTER)_Player)
+AND
+DB_SCL_ShadowCurse_Subject(_Player)
+THEN
+DB_NOOP(1);
+
+//Characters raised as Cursed Undead lose their Combat ADs
+IF
+StatusApplied(_Character, "SCL_SHADOW_CURSE_UNDEAD_NEW", _, _)
+AND
+NOT DB_Players((CHARACTER)_Character)
+AND
+_Character != S_GLO_Nightsong_6c55edb0-901b-4ba4-b9e8-3475a8392d9b
+THEN
+PROC_CombatReact_RemoveCombatADs(_Character);
+
+//END_REGION
+
+//REGION Applying Blight
+IF
+StatusApplied(_Entity, _Status, _Causee, _)
+AND
+_Status != "SCL_MOONSHIELD_AURA"
+AND
+Exists(_Entity,1)
+AND
+IsStatusFromGroup(_Status, "SG_Light", 1)
+THEN
+DB_SCL_ShadowCurse_LightStatus(_Entity, _Status, _Causee);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Object)
+AND
+Exists(_Object,1)
+THEN
+PROC_ShadowCurse_RemoveLightStatuses(_Object);
+
+IF
+StatusApplied(_Object, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Object)
+AND
+Exists(_Object,1)
+AND
+IsStatusFromGroup(_Status, "SG_Light", 1)
+THEN
+PROC_ShadowCurse_RemoveLightStatuses(_Object);
+
+IF
+TagSet(_Object, (TAG)SPELLLIGHTOBJECT_292e7f29-ff10-462d-8be9-94ddd18970ea)
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Object)
+AND
+Exists(_Object,1)
+THEN
+PROC_ShadowCurse_RemoveLightStatuses(_Object);
+
+IF
+Equipped(_Item, _Character)
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Character)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Item)
+AND
+Exists(_Character,1)
+THEN
+PROC_ShadowCurse_RemoveLightStatuses(_Character);
+//we need a bit of a framedelay here unfortunately. Some of our equipment runs through constellations and those have a delay
+SetEntityEvent(_Character,"SCL_ShadowCurse_RemoveEquipmentLightStatuses_1",1);
+
+IF
+EntityEvent(_Character,"SCL_ShadowCurse_RemoveEquipmentLightStatuses_1")
+THEN
+SetEntityEvent(_Character,"SCL_ShadowCurse_RemoveEquipmentLightStatuses_2",1);
+
+IF
+EntityEvent(_Character,"SCL_ShadowCurse_RemoveEquipmentLightStatuses_2")
+THEN
+SetEntityEvent(_Character,"SCL_ShadowCurse_RemoveEquipmentLightStatuses_3",1);
+
+IF
+EntityEvent(_Character,"SCL_ShadowCurse_RemoveEquipmentLightStatuses_3")
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Character)	//paranoid checks
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Character)
+AND
+Exists(_Character,1)
+THEN
+PROC_ShadowCurse_RemoveLightStatuses(_Character);
+
+
+//END_REGION
+
+//REGION Handle lights inside SCL area and safe zones
+PROC
+PROC_ShadowCurse_RemoveShadowblightTrigger((TRIGGER)_ShadowblightTrigger)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_ShadowblightTrigger)
+THEN
+NOT DB_SCL_Shadowcurse_Shadowblight(_ShadowblightTrigger);
+PROC_TriggerUnregisterForPlayers(_ShadowblightTrigger);
+PROC_TriggerUnregisterForItemsWhenInLevel(_ShadowblightTrigger);
+
+//Try to comment first
+PROC
+PROC_ShadowCurse_RemoveLightStatuses((GUIDSTRING)_Object)
+AND
+DB_SCL_ShadowCurse_LightStatus(_Object, _, _)
+THEN
+PROC_SCL_ShadowCurse_LightRemoved(_Object);
+
+//Then remove the light statuses, kill any light-shedding helpers.
+PROC
+PROC_ShadowCurse_RemoveLightStatuses((GUIDSTRING)_Object)
+THEN
+RemoveStatusesWithGroup(_Object, "SG_Light");
+
+PROC
+PROC_ShadowCurse_RemoveLightStatuses((GUIDSTRING)_Object)
+AND
+IsCharacter(_Object, 1)
+AND
+DB_EquippedItemSlots(_Slot)
+AND
+GetEquippedItem((CHARACTER)_Object, _Slot, _Equipment)
+THEN
+PROC_ShadowCurse_RemoveLightStatuses(_Equipment);
+
+PROC
+PROC_SCL_ShadowCurse_LightRemoved((GUIDSTRING)_Object)
+AND
+QRY_SCL_ShadowCurse_GetOwnerOrSelf(_Object)
+AND
+DB_QRYRTN_SCL_ShadowCurse_Owner(_Owner)
+THEN
+PROC_SCL_ShadowCurse_LightRemoved_Internal((GUIDSTRING)_Object, (GUIDSTRING)_Owner);
+
+// Edge-case for moonbeam aura: remove status from caster.
+PROC
+PROC_ShadowCurse_RemoveLightStatuses((GUIDSTRING)_Object)
+AND
+IsTagged(_Object, (TAG)MOONBEAM_26713098-eed9-4235-ace9-f8f196f9b60a, 1)
+THEN
+DB_GLO_Moonbeams_BlockMoonbeam(_Object);
+
+PROC
+PROC_ShadowCurse_RemoveLightStatuses((GUIDSTRING)_Object)
+AND
+IsTagged(_Object, (TAG)SPELLLIGHTOBJECT_292e7f29-ff10-462d-8be9-94ddd18970ea, 1)
+THEN
+Die(_Object, DEATHTYPE.Lifetime, 00000000-0000-0000-0000-000000000000, 0, 0);
+
+PROC
+PROC_SCL_ShadowCurse_LightRemoved_Internal((GUIDSTRING)_Object, (GUIDSTRING)_Owner)
+AND
+_Owner != _Object
+AND
+DB_Players((CHARACTER)_Owner)
+AND
+GetReservedUserID(_Owner, _UserID)
+AND
+GetUserProfileID(_UserID, _ProfileID)
+AND
+NOT DB_OnlyOnce_PerUser(_ProfileID,"SCL_ShadowCurse_VB_LightsSnuffedOut")
+THEN
+RealtimeObjectTimerLaunch(_Owner, "SCL_ShadowCurse_PlayLightsSnuffedVB", 200); // Add small delay since players can teleport to a safe place in the deep areas of the curse and no items have to be snuffed. 
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "SCL_ShadowCurse_PlayLightsSnuffedVB")
+AND
+DB_SCL_ShadowCurse_LightStatusToReapply(_Player, _, _, _, _)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player, "SCL_ShadowCurse_VB_LightsSnuffedOut")
+THEN
+StartVoiceBark(SCL_ShadowCurse_VB_LightsSnuffedOut_58f2eea5-531b-4553-b191-98c0b658cee5, _Player);
+
+PROC
+PROC_SCL_ShadowCurse_LightRemoved_Internal((GUIDSTRING)_Object, (GUIDSTRING)_Owner)
+AND
+DB_SCL_ShadowCurse_LightStatus(_Object, _Status, _Causee)
+AND
+HasAppliedStatus(_Object, _Status, 1)
+AND
+GetStatusCurrentLifetime(_Object, _Status, _DurationLeft)
+THEN
+DB_SCL_ShadowCurse_LightStatusToReapply(_Owner, _Object, _Status, _Causee, _DurationLeft);
+
+PROC
+PROC_SCL_ShadowCurse_LightRemoved_Internal((GUIDSTRING)_Object, (GUIDSTRING)_Owner)
+AND
+DB_SCL_ShadowCurse_LightStatus(_Object, _Status, _Causee)
+THEN
+NOT DB_SCL_ShadowCurse_LightStatus(_Object, _Status, _Causee);
+
+QRY
+QRY_SCL_ShadowCurse_GetOwnerOrSelf((GUIDSTRING)_Object)
+AND
+DB_QRYRTN_SCL_ShadowCurse_Owner(_PrevOwner)
+THEN
+NOT DB_QRYRTN_SCL_ShadowCurse_Owner(_PrevOwner);
+
+QRY
+QRY_SCL_ShadowCurse_GetOwnerOrSelf((GUIDSTRING)_Object)
+AND
+IsItem(_Object, 1)
+AND
+IsInInventory((ITEM)_Object, 1)
+AND
+GetInventoryOwner((ITEM)_Object, _Owner)
+THEN
+DB_QRYRTN_SCL_ShadowCurse_Owner((GUIDSTRING)_Owner);
+
+QRY
+QRY_SCL_ShadowCurse_GetOwnerOrSelf((GUIDSTRING)_Object)
+AND
+NOT DB_QRYRTN_SCL_ShadowCurse_Owner(_)
+THEN
+DB_QRYRTN_SCL_ShadowCurse_Owner(_Object);
+
+IF
+StatusRemoved(_Object, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_LightStatus(_Object, _Status, _Causee)
+THEN
+NOT DB_SCL_ShadowCurse_LightStatus(_Object, _Status, _Causee);
+
+IF
+DB_SCL_ShadowCurse_LightStatusToReapply(_Player, _Object, _Status, _Causee, _DurationLeft)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Player)
+AND
+IsEquipped((ITEM)_Object, 1)
+AND
+GetInventoryOwner((ITEM)_Object, _Player)
+THEN
+PROC_SCL_ShadowCurse_ObjectLeftBlightedArea(_Object);
+
+IF
+DB_SCL_ShadowCurse_LightStatusToReapply(_Player, _Object, _Status, _Causee, _DurationLeft)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Player)
+AND
+IsInInventoryOf((ITEM)_Object, _Player, 1)
+THEN
+PROC_SCL_ShadowCurse_ObjectLeftBlightedArea(_Object);
+
+IF
+ItemLeftTrigger(_Item, _Trigger, _)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea((GUIDSTRING)_Item, _)
+THEN
+PROC_SCL_ShadowCurse_ObjectLeftBlightedArea(_Item);
+
+PROC
+PROC_SCL_ShadowCurse_ObjectLeftBlightedArea((GUIDSTRING)_Object)
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Object)
+THEN
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Object);
+
+PROC
+PROC_SCL_ShadowCurse_ObjectLeftBlightedArea((GUIDSTRING)_Object)
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Object, _Trigger)
+THEN
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Object, _Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_ObjectLeftBlightedArea((ITEM)_Object)
+AND
+DB_SCL_ShadowCurse_LightStatusToReapply(_Player, _Object, _Status, _Causee, _DurationLeft)
+THEN
+ApplyStatus(_Object, _Status, _DurationLeft, 1, _Causee);
+NOT DB_SCL_ShadowCurse_LightStatusToReapply(_Player, _Object, _Status, _Causee, _DurationLeft);
+
+//END_REGION
+
+//REGION Isobel's blessing
+
+IF
+DB_GlobalFlag((FLAG)HAV_TakingIsobel_Event_GiveOintment_efb6aed5-fd07-433b-b0c5-b980bf77bb2c)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_GlobalFlag((FLAG)CURRENTREGION_SCL_Main_A_f76b85b5-b557-4409-98fd-cc7b22f8292b)
+AND
+NOT DB_Dead(_Player)
+THEN
+ApplyStatus(_Player, "HAV_SELUNEOINTMENT", -1.0, 1, S_GLO_Isobel_263bfbfc-6160-46f4-a9e1-1089cdb5c211);
+
+IF
+StatusApplied(_Player, "HAV_SELUNEOINTMENT", _, _)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+SetFlag(HAV_TakingIsobel_State_HasSeluneOintment_01e2ae8a-17d7-4e42-861b-2747bbb59e40, _Player);
+
+IF
+StatusRemoved(_Player, "HAV_SELUNEOINTMENT", _, _)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+GetFlag(HAV_TakingIsobel_State_HasSeluneOintment_01e2ae8a-17d7-4e42-861b-2747bbb59e40, _Player, 1)
+THEN
+ClearFlag(HAV_TakingIsobel_State_HasSeluneOintment_01e2ae8a-17d7-4e42-861b-2747bbb59e40, _Player);
+
+//END_REGION
+
+//REGION Reminder
+IF
+DB_GlobalFlag((FLAG)HAV_EnteringHaven_State_GainedAccess_07c776da-353a-9050-e9be-c42d51a99412)
+AND
+NOT DB_HAV_ShadowCurse_BlessingReminderOn(1)
+AND
+NOT DB_InRegion(_, S_HAV_Entrance_BlessingReminder_Outside_9f4d9b08-188e-4c10-9139-086e48ba8005)
+AND
+NOT DB_InRegion(_, S_HAV_Entrance_BlessingReminder_Inside_cd12c286-3362-4fac-bdf8-da2c019a4aad)
+THEN
+DB_HAV_ShadowCurse_BlessingReminderOn(1);
+PROC_TriggerUnregisterForPlayers(S_HAV_Entrance_BlessingReminder_Outside_9f4d9b08-188e-4c10-9139-086e48ba8005);
+
+IF
+LeftTrigger(_Character, S_HAV_Entrance_BlessingReminder_Inside_cd12c286-3362-4fac-bdf8-da2c019a4aad)
+AND
+DB_HAV_ShadowCurse_BlessingReminderOn(1)
+AND
+DB_Players(_Character)
+AND
+IsInTrigger(_Character, S_HAV_Entrance_BlessingReminder_Outside_9f4d9b08-188e-4c10-9139-086e48ba8005, 1)
+AND
+NOT QRY_HAV_ShadowCurse_CancelBlessingReminder(_Character)
+AND
+DB_HAV_ShadowCurse_BlessingReminders(_Warner)
+AND
+CanSee(_Warner, _Character, 1)
+AND
+NOT DB_HiddenCharacters(_Character, _)
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Character, "HAV_ExitBlessingReminder")
+AND
+QRY_StartDialog((DIALOGRESOURCE)HAV_ExitBlessingReminder_249c1a1e-9fc0-7472-89cd-9aee034b9d55, _Warner, _Character)
+THEN
+PROC_OncePerUserAndNearbyPlayers_Set(_Character, "HAV_ExitBlessingReminder", 10.0);
+
+QRY
+QRY_HAV_ShadowCurse_CancelBlessingReminder((CHARACTER)_Character)
+AND
+HasActiveStatus(_Character, "SCL_MOONSHIELD", 1)
+THEN
+PROC_TriggerUnregisterForPlayers(S_HAV_Entrance_BlessingReminder_Inside_cd12c286-3362-4fac-bdf8-da2c019a4aad);
+
+QRY
+QRY_HAV_ShadowCurse_CancelBlessingReminder(_Character)
+AND
+HasActiveStatus(_Character, "HAV_SELUNEOINTMENT", 1)
+THEN
+PROC_TriggerUnregisterForPlayers(S_HAV_Entrance_BlessingReminder_Inside_cd12c286-3362-4fac-bdf8-da2c019a4aad);
+
+//END_REGION
+
+//REGION Clean up the entire thing
+PROC
+PROC_LevelBecameUnreachable("SCL_Main_A")
+THEN
+PROC_SCL_ShadowCurse_Off();
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+AND
+DB_SCL_ShadowCurse_TrackLight(_Entity)
+THEN
+RemoveStatus(_Entity, "SCL_TRACKLIGHT"); // For safety reasons remove SCL_TRACKLIGHT to avoid keeping a CANTTRAVEL status.
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+AND
+NOT DB_LevelUnreachable("SCL_Main_A")
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+PROC_TriggerUnregisterForItemsWhenInLevel(_Trigger);
+NOT DB_SCL_Shadowcurse_Shadowblight(_Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Trigger)
+THEN
+NOT DB_SCL_Shadowcurse_Shadowblight(_Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+AND
+DB_SCL_Shadowcurse_Area(_Trigger)
+THEN
+NOT DB_SCL_Shadowcurse_Area(_Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+AND
+NOT DB_LevelUnreachable("SCL_Main_A")
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+PROC_TriggerUnregisterForItemsWhenInLevel(_Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+NOT DB_SCL_Shadowcurse_SafeZones(_Trigger);
+
+PROC
+PROC_SCL_ShadowCurse_Off()
+THEN
+GoalCompleted;
+
+//END_REGION
+
+//REGION Debug commands
+IF
+TextEvent("SCL_ShadowCurse_Off")
+AND
+DB_SCL_Shadowcurse_SafeZones(_Trigger)
+THEN
+//Safe zones triggers
+NOT DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_MoonriseTower_b0b0721f-2a4f-4530-85cf-c67c0db25f92);
+NOT DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_Haven_f4f81c2b-5428-4d06-a65e-3ba21e105cba);
+NOT DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_KethericCityEntrance_53985661-c41b-40a0-b6af-3add4fbb392d);
+NOT DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_HillsEntrance_a2135d8d-a2f3-4d1e-9eab-041d09dc20ec);
+NOT DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_HavenBasement_ccd7ad8c-6315-4fe6-898b-051a74f0dbb4);
+
+//Shadow-curse triggers
+NOT DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_Main_5c64f194-e45c-40f0-b91e-9bcad384b401);
+NOT DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_HavenBasement_1677b2e5-0b94-4336-8dd9-a4b2c80bf1d1);
+NOT DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_HospitalBasement_f39a36bd-c94e-4bc5-8556-c4b280c4aab1);
+NOT DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_Mausoleum_a980a674-7795-46e8-88e1-55d270498f4c);
+
+//Shadow-blight triggers
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Brewery_cacafbf4-8188-417b-8885-c3602edb725b);
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Graveyard_3019d319-77f3-4dcd-9ba4-e54a53a45631);
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Hospital_f2091d2d-2ac6-4e7e-ba08-315ffdd3e40a);
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Masonry_4bc3e026-8b4e-4ed2-ba68-41305d128a9b);
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_TollHouse_f5a599ea-6425-4603-8588-13a6b7899ba1);
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_HospitalBasement_fa03650f-6284-4d2c-b20a-7271b1c78901);
+NOT DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_LodgeArea_de7c9f83-802b-4bae-afe5-e6d8bb15a41e);
+
+TriggerSetAtmosphere(ATM_SCL_RuinsBattlefield_G_8840f07a-3f33-45df-93db-7f97e9904747, "468e3ebb-2681-e28a-43d9-01b884caabfa"); // ATM_Default_Morning_VUE_A: 468e3ebb-2681-e28a-43d9-01b884caabfa
+TriggerSetLighting(LTN_SCL_RuinsBattlefield_G_4d0e202a-4ecd-403d-959c-69fcc76cdefc, "6ec897a4-997e-3632-30ba-e66ad63dcec6"); // LTN_Default_Morning_VUE_A: 6ec897a4-997e-3632-30ba-e66ad63dcec6
+
+IF
+TextEvent("SCL_ShadowCurse_On")
+
+THEN
+//Safe zones triggers
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_MoonriseTower_b0b0721f-2a4f-4530-85cf-c67c0db25f92);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_Haven_f4f81c2b-5428-4d06-a65e-3ba21e105cba);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_KethericCityEntrance_53985661-c41b-40a0-b6af-3add4fbb392d);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_HillsEntrance_a2135d8d-a2f3-4d1e-9eab-041d09dc20ec);
+DB_SCL_Shadowcurse_SafeZones((TRIGGER)S_ShadowCurse_SafeZone_HavenBasement_ccd7ad8c-6315-4fe6-898b-051a74f0dbb4);
+
+//Shadow-curse triggers
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_Main_5c64f194-e45c-40f0-b91e-9bcad384b401);
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_HavenBasement_1677b2e5-0b94-4336-8dd9-a4b2c80bf1d1);
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_HospitalBasement_f39a36bd-c94e-4bc5-8556-c4b280c4aab1);
+DB_SCL_Shadowcurse_Area((TRIGGER)S_ShadowCurse_CurseArea_Mausoleum_a980a674-7795-46e8-88e1-55d270498f4c);
+
+//Shadow-blight triggers
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Brewery_cacafbf4-8188-417b-8885-c3602edb725b);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Graveyard_3019d319-77f3-4dcd-9ba4-e54a53a45631);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Hospital_f2091d2d-2ac6-4e7e-ba08-315ffdd3e40a);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_Masonry_4bc3e026-8b4e-4ed2-ba68-41305d128a9b);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_TollHouse_f5a599ea-6425-4603-8588-13a6b7899ba1);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_HospitalBasement_fa03650f-6284-4d2c-b20a-7271b1c78901);
+DB_SCL_Shadowcurse_Shadowblight((TRIGGER)S_ShadowCurse_BlightArea_LodgeArea_de7c9f83-802b-4bae-afe5-e6d8bb15a41e);
+//END_REGION
+
+//REGION Staff
+
+IF
+StatusApplied(_Object, "SCL_MOONSHIELD_AURA", _, _)
+AND
+NOT DB_SCL_MoonShieldFogVolume(_Object)
+AND
+Exists(_Object,1)
+AND
+NOT IsInInventory((ITEM)_Object, 1)
+THEN
+DB_SCL_MoonShieldFogVolume(_Object);
+AddFogVolume(_Object, S_SCL_MoonlanternFogVolume_ea3d6604-0ace-44b1-b920-a68ebec1f56e);
+
+IF
+StatusApplied(_Object, "SCL_MOONSHIELD_AURA", _, _)
+AND
+Exists(_Object,1)
+AND
+IsInInventory((ITEM)_Object, 1)
+AND
+IsEquipped(_Object, 1)
+AND
+GetInventoryOwner(_Object, _Character)
+AND
+NOT DB_SCL_MoonShieldFogVolume(_Character)
+THEN
+DB_SCL_MoonShieldFogVolume(_Character);
+AddFogVolume(_Character, S_SCL_MoonlanternFogVolume_ea3d6604-0ace-44b1-b920-a68ebec1f56e);
+
+IF
+Equipped(_Object, _Character)
+AND
+Exists(_Object,1)
+AND
+HasActiveStatus(_Object, "SCL_MOONSHIELD_AURA", 1)
+AND
+NOT DB_SCL_MoonShieldFogVolume(_Character)
+THEN
+DB_SCL_MoonShieldFogVolume(_Character);
+AddFogVolume(_Character, S_SCL_MoonlanternFogVolume_ea3d6604-0ace-44b1-b920-a68ebec1f56e);
+
+IF
+RemovedFrom(_Item, _Character)
+AND
+DB_SCL_MoonShieldFogVolume(_Character)
+AND
+Exists(_Character,1)
+AND
+NOT QRY_SCL_GotMoonShieldObject((CHARACTER)_Character)
+THEN
+NOT DB_SCL_MoonShieldFogVolume(_Character);
+RemoveFogVolume(_Character);
+
+IF
+RemovedFrom(_Object, _Character)
+AND
+Exists(_Object,1)
+AND
+HasActiveStatus(_Object, "SCL_MOONSHIELD_AURA", 1)
+AND
+NOT IsInInventory((ITEM)_Object, 1)
+AND
+NOT DB_SCL_MoonShieldFogVolume(_Object)
+THEN
+DB_SCL_MoonShieldFogVolume(_Object);
+AddFogVolume(_Character, S_SCL_MoonlanternFogVolume_ea3d6604-0ace-44b1-b920-a68ebec1f56e);
+
+IF
+StatusRemoved(_Object, "SCL_MOONSHIELD_AURA", _, _)
+AND
+DB_SCL_MoonShieldFogVolume(_Object)
+AND
+Exists(_Object,1)
+THEN
+RemoveFogVolume(_Object);
+
+IF
+StatusRemoved(_Object, "SCL_MOONSHIELD_AURA", _, _)
+AND
+DB_SCL_MoonShieldFogVolume(_Object)
+THEN
+NOT DB_SCL_MoonShieldFogVolume(_Object);
+
+IF
+StatusRemoved(_Object, "SCL_MOONSHIELD_AURA", _, _)
+AND
+Exists(_Object,1)
+AND
+IsInInventory((ITEM)_Object, 1)
+AND
+IsEquipped(_Object, 1)
+AND
+GetInventoryOwner(_Object, _Character)
+AND
+NOT DB_SCL_MoonShieldFogVolume(_Character)
+AND
+NOT QRY_SCL_GotMoonShieldObject((CHARACTER)_Character)
+THEN
+NOT DB_SCL_MoonShieldFogVolume(_Character);
+RemoveFogVolume(_Character);
+
+IF
+AddedTo(_Object, _, _)
+AND
+Exists(_Object,1)
+AND
+HasActiveStatus(_Object, "SCL_MOONSHIELD_AURA", 1)
+AND
+DB_SCL_MoonShieldFogVolume(_Object)
+THEN
+NOT DB_SCL_MoonShieldFogVolume(_Object);
+RemoveFogVolume(_Object);
+
+IF
+Unequipped(_Object, _Character)
+AND
+Exists(_Object,1)
+AND
+Exists(_Character,1)
+AND
+HasActiveStatus(_Object, "SCL_MOONSHIELD_AURA", 1)
+AND
+NOT QRY_SCL_GotMoonShieldObject(_Character)
+THEN
+NOT DB_SCL_MoonShieldFogVolume(_Character);
+RemoveFogVolume(_Character);
+
+QRY
+QRY_SCL_GotMoonShieldObject((CHARACTER)_Character)
+AND
+DB_EquippedItemSlots(_Slot)
+AND
+GetEquippedItem(_Character, _Slot, _Item)
+AND
+HasActiveStatus(_Item, "SCL_MOONSHIELD_AURA", 1)
+THEN
+DB_NOOP(1);
+
+
+IF
+TextEvent("SCL_ShadowCurse_TestFog")
+AND
+GetHostCharacter(_Character)
+THEN
+AddFogVolume(_Character, Shared_FogVolume_6435f26f-2f2f-4c4d-990f-8ff5fd0a47b8);
+
+IF
+TextEvent("SCL_ShadowCurse_TestFogOff")
+AND
+GetHostCharacter(_Character)
+THEN
+RemoveFogVolume(_Character);
+
+//END_REGION
+
+//REGION Approval logic
+QRY
+QRY_GLO_Spells_IgnoreFriendlyFire((CHARACTER)_Char)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+HasActiveStatus(_Char, _Status, 1)
+THEN
+DB_NOOP(1);
+//END_REGION Approval logic
+
+//REGION Game over logic
+IF
+StatusApplied(_Character, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+THEN
+DB_CustomDefeatedState(_Character, "SCL_Shadowcurse");
+
+IF
+StatusRemoved(_Character, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+DB_CustomDefeatedState(_Character, "SCL_Shadowcurse")
+AND
+NOT QRY_SCL_ShadowCurse_HasAnyOtherCurseStatusApplied(_Character, _Status)
+THEN
+NOT DB_CustomDefeatedState(_Character, "SCL_Shadowcurse");
+
+QRY
+QRY_SCL_ShadowCurse_HasAnyOtherCurseStatusApplied((GUIDSTRING)_Char, (STRING)_Status)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_OtherStatus)
+AND
+_OtherStatus != _Status
+AND
+HasAppliedStatus(_Char, _OtherStatus, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_BlockUseOfItem(_Player, S_SCL_Elevator_Fort_ToUnderdark_3a89175c-1f32-4f49-853c-f0aa7e8c917f)
+AND
+QRY_SCL_PartyMemberShadowcursed()
+THEN
+DB_CustomUseItemResponse(_Player, S_SCL_Elevator_Fort_ToUnderdark_3a89175c-1f32-4f49-853c-f0aa7e8c917f, 0);
+ShowError(_Player,"CampFastTravel"); //TODO - Improve error message.
+
+PROC
+PROC_BlockUseOfItem(_Player, S_SCL_LevelSwapTeleporter_Mountain_0d122b82-c4c9-4fda-81a1-cf9f9bf59167)
+AND
+QRY_SCL_PartyMemberShadowcursed()
+THEN
+DB_CustomUseItemResponse(_Player, S_SCL_LevelSwapTeleporter_Mountain_0d122b82-c4c9-4fda-81a1-cf9f9bf59167, 0);
+ShowError(_Player,"CampFastTravel"); //TODO - Improve error message.
+
+
+//END_REGION
+
+//REGION Anubis Logic
+IF
+StatusApplied((CHARACTER)_Character, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+NOT DB_SCL_ShadowCurse_Undead(_Character, _)
+AND
+QRY_OverrideAnubisConfig(_Character, "SCL_CursedCharacter") // Update anubis stack
+AND
+DB_QRYRTN_AnubisConfigOverrideIndex(_Index)
+THEN
+DB_SCL_ShadowCurse_Undead(_Character, _Index);
+
+IF
+StatusRemoved((CHARACTER)_Character, _Status, _, _)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+NOT QRY_SCL_ShadowCurse_HasAnyUndeadStatus((CHARACTER)_Character)
+AND
+DB_SCL_ShadowCurse_Undead(_Character, _Index)
+THEN
+NOT DB_SCL_ShadowCurse_Undead(_Character, _Index);
+PROC_RemoveAnubisConfigOverride(_Character, _Index);
+
+QRY
+QRY_SCL_ShadowCurse_HasAnyUndeadStatus((CHARACTER)_Character)
+AND
+DB_SCL_ShadowCurse_UndeadStatuses(_Status)
+AND
+HasActiveStatus(_Character, _Status, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION Anubis Logic
+
+//REGION Force Turn Based for characters who are not active when effected by the Shadow Curse
+
+IF
+StatusApplied(_Char,"SCL_SHADOW_CURSE",_,_)
+AND
+DB_Players((CHARACTER)_Char)
+AND
+NOT DB_SCL_ShadowCurse_TriggerForcedTB(_Char)
+THEN
+RealtimeObjectTimerLaunch(_Char, "SCL_ShadowCurse_TryStartFTB", 200);  // Add small delay since players can teleport to a cursed area but light sources remove the curse. 
+
+//Prevents a player from being shoved back in to FTB for 12 seconds maybe we don't need this
+IF
+ObjectTimerFinished((CHARACTER)_Char, "SCL_ShadowCurse_TryStartFTB")
+AND
+HasAppliedStatus(_Char, "SCL_SHADOW_CURSE", 1)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Char, "SCL_ShadowCurse_FTB")
+THEN
+DB_SCL_ShadowCurse_TriggerForcedTB(_Char);
+ForceTurnBasedMode((CHARACTER)_Char, 1);
+ObjectTimerLaunch(_Char, "SCL_ShadowCurseFTB_Cooldown", 12000, 1);
+
+IF
+ObjectTimerFinished(_Char, "SCL_ShadowCurseFTB_Cooldown")
+THEN
+NOT DB_SCL_ShadowCurse_TriggerForcedTB((CHARACTER)_Char);
+
+//Here to decide which AD to use
+IF
+DB_SCL_ShadowCurse_TriggerForcedTB(_Char)
+THEN
+PROC_SCL_ShadowCurse_ADChecker((CHARACTER)_Char);
+
+//Gives other players a VB if a companion more than about 2 screens away has gone to FTB from the Curse 
+PROC
+PROC_SCL_ShadowCurse_ADChecker((CHARACTER)_Char)
+AND
+DB_Players(_OtherChar)
+AND
+_Char != _OtherChar
+AND
+NOT QRY_IsCharaterUnconsciousOrEquivalent(_OtherChar)
+AND
+GetDistanceTo(_Char, _OtherChar, _Dist)
+AND
+_Dist > 30.0
+AND
+QRY_OncePerUserAndNearbyPlayers(_Char,"SCL_ShadowCurse_ADChecker")
+THEN
+PROC_DaisyAD(_OtherChar, SCL_ShadowCurse_EmperorAD_CompanionCursed_a5768cd9-85ff-a4a4-d28a-f4b375bd0674);
+
+//For the fallback AD if it's not to do with an off screen party member, then play ADs for anyone afflicted, with the QRY handling if they're too close
+PROC
+PROC_SCL_ShadowCurse_ADChecker((CHARACTER)_Char)
+AND
+DB_Players(_Char)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Char,"SCL_ShadowCurse_ADChecker")
+THEN
+StartVoiceBark(SCL_EntryPoint_VB_Curse_829b5e47-510f-4445-60c5-f95b5fd12e8d, _Char);
+
+//Then we tidy it up after
+PROC
+PROC_SCL_ShadowCurse_ADChecker((CHARACTER)_Char)
+AND
+QRY_OnlyOnce_Reset("SCL_Shadowcurse_ADChecker")
+THEN
+DB_NOOP(1);
+
+//Resets the detection for the unchained shadow cursed player Currently this is not robust against a 3 or 4 way party split edgecase
+IF
+StatusRemoved(_Char,"SCL_SHADOW_CURSE",_,_)
+AND
+DB_OnlyOnce_PerUser(_ProfileID, "SCL_ShadowCurse_FTB")
+AND
+QRY_OncePerUserAndNearbyPlayers_Reset("SCL_ShadowCurse_FTB")
+THEN
+DB_NOOP(1);
+
+//Reset the LightsSnuffedOutVB if you leave a blight area
+IF
+LeftTrigger(_Char, _Blight)
+AND
+DB_Players(_Char)
+AND
+DB_SCL_Shadowcurse_Shadowblight(_Blight)
+AND
+QRY_OnlyOncePerUser_Reset("SCL_ShadowCurse_VB_LightsSnuffedOut")
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Enhance the glow of the Lantern when in Blighted area.
+IF
+Equipped(_Item, _Player)
+AND
+IsTagged(_Item,(TAG)SCL_SHADOWCURSE_LANTERN_d40f0c3a-d95d-49fe-ae62-ca90ff2c2202,1)
+THEN
+DB_SCL_ShadowCurse_MoonLanternWielder(_Player,_Item);
+PROC_SCL_Shadowcurse_Include((CHARACTER)_Player);
+
+IF
+Unequipped(_Item, _Player)
+AND
+DB_SCL_ShadowCurse_MoonLanternWielder(_Player,_Item)
+THEN
+NOT DB_SCL_ShadowCurse_MoonLanternWielder(_Player,_Item);
+
+IF
+DB_SCL_ShadowCurse_Immune(_Player)
+AND
+NOT DB_SCL_ShadowCurse_MoonLanternWielder((CHARACTER)_Player,_)
+THEN
+PROC_SCL_Shadowcurse_Exclude(_Player);
+
+IF
+DB_SCL_ShadowCurse_MoonLanternWielder(_Player,_Lantern)
+AND
+DB_SCL_ShadowCurse_InBlightedArea(_Player)
+THEN
+SetTag(_Lantern, SCL_SHADOWCURSE_LANTERN_INBLIGHT_8a98d81f-ec79-483e-aa89-9e71806a339e);
+
+IF
+DB_SCL_ShadowCurse_MoonLanternWielder(_Player,_Lantern)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Player)
+THEN
+ClearTag(_Lantern, SCL_SHADOWCURSE_LANTERN_INBLIGHT_8a98d81f-ec79-483e-aa89-9e71806a339e);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Item)
+AND
+IsItem(_Item,1)
+AND
+IsTagged(_Item,(TAG)SCL_SHADOWCURSE_LANTERN_d40f0c3a-d95d-49fe-ae62-ca90ff2c2202,1)
+THEN
+DB_SCL_ShadowCurse_LanternInBlight(_Item);
+SetTag(_Item, (TAG)SCL_SHADOWCURSE_LANTERN_INBLIGHT_8a98d81f-ec79-483e-aa89-9e71806a339e);
+
+IF
+DB_SCL_ShadowCurse_LanternInBlight(_Item)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Item)
+THEN
+NOT DB_SCL_ShadowCurse_LanternInBlight(_Item);
+ClearTag(_Item, (TAG)SCL_SHADOWCURSE_LANTERN_INBLIGHT_8a98d81f-ec79-483e-aa89-9e71806a339e);
+
+//END_REGION
+
+//REGION Force the light indicator from showing when not protected
+
+//piggy back on our light tracking for this one
+IF
+DB_SCL_ShadowCurse_TrackLight(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Immune(_Object)
+AND
+NOT DB_SCL_ShadowCurse_Resistant(_Object)
+AND
+NOT DB_SCL_ShadowCurse_InBlightedArea(_Object)
+THEN
+PROC_SCL_Shadowcurse_ShowLightIndicator(_Object);
+
+PROC
+PROC_SCL_Shadowcurse_ShowLightIndicator((GUIDSTRING)_Object)
+THEN
+DB_SCL_ShadowCurse_ShowingLight(_Object);
+ApplyStatus(_Object,"SCL_SHADOWCURSE_SHOWLIGHT",-1.0,1);
+
+PROC
+PROC_SCL_Shadowcurse_HideLightIndicator((GUIDSTRING)_Object)
+THEN
+NOT DB_SCL_ShadowCurse_ShowingLight(_Object);
+RemoveStatus(_Object,"SCL_SHADOWCURSE_SHOWLIGHT");
+
+IF
+DB_SCL_ShadowCurse_ShowingLight(_Object)
+AND
+DB_SCL_ShadowCurse_Immune(_Object)
+THEN
+PROC_SCL_Shadowcurse_HideLightIndicator(_Object);
+
+IF
+DB_SCL_ShadowCurse_ShowingLight(_Object)
+AND
+DB_SCL_ShadowCurse_Resistant(_Object)
+THEN
+PROC_SCL_Shadowcurse_HideLightIndicator(_Object);
+
+IF
+DB_SCL_ShadowCurse_ShowingLight(_Object)
+AND
+NOT DB_SCL_ShadowCurse_TrackLight(_Object)
+THEN
+PROC_SCL_Shadowcurse_HideLightIndicator(_Object);
+
+IF
+DB_SCL_ShadowCurse_InBlightedArea(_Object)
+AND
+DB_SCL_ShadowCurse_ShowingLight(_Object)
+THEN
+PROC_SCL_Shadowcurse_HideLightIndicator(_Object);
+
+//END_REGION
+EXITSECTION
+SysClear("DB_HAV_ShadowCurse_BlessingReminders", 1);
+SysClear("DB_SCL_ShadowCurse_InSafeZone", 1);
+SysClear("DB_SCL_ShadowCurse_InSafeZone", 2);
+SysClear("DB_SCL_ShadowCurse_InCursedArea", 1);
+SysClear("DB_SCL_ShadowCurse_InCursedArea", 2);
+SysClear("DB_SCL_ShadowCurse_InBlightedArea", 1);
+SysClear("DB_SCL_ShadowCurse_InBlightedArea", 2);
+SysClear("DB_SCL_ShadowCurse_NotPartyProtected", 1);
+SysClear("DB_SCL_ShadowCurse_ValidTarget",1);
+SysClear("DB_SCL_ShadowCurse_InSCL",1);
+SysClear("DB_SCL_MoonShieldFogVolume",1);
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

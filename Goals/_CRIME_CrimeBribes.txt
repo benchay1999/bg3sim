@@ -1,0 +1,450 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CrimeBribes_SevereCrimes("Murder");
+DB_CrimeBribes_SevereCrimes("Assault");
+DB_CrimeBribes_SevereCrimes("Trespassing");
+DB_CrimeBribes_SevereCrimes("Steal");
+
+DB_CrimeBribes_GoldTables(0, (GOLDREWARD)BribesNonSevereCrimeMin_d6a0f75a-a24f-4a8a-ac36-fd5f68ce074f, (GOLDREWARD)BribesNonSevereCrimeMax_53745024-caa7-490a-b106-8dc4f6e36be2);
+DB_CrimeBribes_GoldTables(1, (GOLDREWARD)BribesSevereCrimeMin_73b8c1f6-1e2e-4f65-a80f-26a38da9e41f, (GOLDREWARD)BribesSevereCrimeMax_d9876116-9c83-4f6e-8efa-cc5d9c2328be);
+
+DB_CrimeEluding_Max("Bribe",1);
+DB_CrimeEluding_Max("Persuade",1);
+DB_CrimeEluding_Flags("Bribe","no",(FLAG)GEB_BribeDisabled_9e426938-8a06-8f2d-3d7d-7bdc975c3c02);
+DB_CrimeEluding_Flags("Bribe","lasttime",(FLAG)GEB_Crime_BribingDisabled_NextTime_30b21fcf-d1d7-42b3-9ea4-0af3c8f8852a);
+DB_CrimeEluding_Flags("Bribe","yes",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_CrimeEluding_Flags("Persuade","no",(FLAG)GEB_CharismaDisabled_4bed5f63-dbf9-4fb2-be84-c29edf10a96a);
+DB_CrimeEluding_Flags("Persuade","lasttime",(FLAG)GEB_CharismaDisabled_NextTime_3e72e9cf-3199-4a9c-9e21-8e187177a952);
+DB_CrimeEluding_Flags("Persuade","yes",(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+
+//REGION Characters that are impossible to bribe or persuade
+//Creatures added to this DB can't be eluded using the method assigned. Use "Bribe" or "Persuade"
+//DB_CrimeEluding_CantBeEludedUsing((CHARACTER)Investigator, (STRING)_Method);
+NOT DB_CrimeEluding_CantBeEludedUsing((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, "");
+//END_REGION
+KBSECTION
+//REGION Determine whether we select from the high or low bribes
+// Possible selectors:
+// * Tension
+// * Severity of the crime
+// * Number of times this person has been bribed
+
+// Determine severity
+// Return value:
+//   Severe crime: DB_QRYRTN_CrimeBribes_CrimeSeverity(1)
+//   Non-sever crime: DB_QRYRTN_CrimeBribes_CrimeSeverity(0)
+QRY
+QRY_CrimeBribes_CrimeGetSeverity((STRING)_CrimeType)
+AND
+DB_QRYRTN_CrimeBribes_CrimeSeverity(_Severity)
+THEN
+NOT DB_QRYRTN_CrimeBribes_CrimeSeverity(_Severity);
+
+QRY
+QRY_CrimeBribes_CrimeGetSeverity((STRING)_CrimeType)
+AND
+DB_CrimeBribes_SevereCrimes(_CrimeTypeFamily)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,_CrimeTypeFamily)
+THEN
+DB_QRYRTN_CrimeBribes_CrimeSeverity(1);
+
+QRY
+QRY_CrimeBribes_CrimeGetSeverity((STRING)_CrimeType)
+AND
+NOT DB_QRYRTN_CrimeBribes_CrimeSeverity(1)
+THEN
+DB_QRYRTN_CrimeBribes_CrimeSeverity(0);
+
+// Keep track of number of times this criminal has bribed this interrogator
+IF
+FlagSet((FLAG)_Flag, _Speaker, _ID) // flagType: Object
+AND
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)_Flag,_MoneyVarIndex)
+AND
+DB_DialogName(_Dialog,_ID)
+AND
+DB_CrimeTriggers_GeneralBribeDialog(_MoneyVarIndex,_Dialog)
+AND
+DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_,_,_TargetDBIndex)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+AND
+DB_DialogNPCs(_ID,_NPC,_TargetDBIndex)
+AND
+QRY_GLOBAL_Shapeshifting_GetPolymorphStatus((CHARACTER)_Player)
+AND
+DB_GLOBAL_Shapeshifting_PolymorphStatus(_Race)
+THEN
+PROC_CrimeBribes_RecordElude("Bribe",(CHARACTER)_NPC,_Player,_Race);
+
+//Same but for Convincing
+IF
+FlagSet((FLAG)CRIME_PersuasionSuccess_bdcb6798-b606-5c94-95d1-e03b4414c0af, _Speaker, _ID) // flagType: Object
+AND
+DB_DialogName(_Dialog,_ID)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+AND
+DB_DialogNPCs(_ID,_NPC,_TargetDBIndex)
+AND
+QRY_GLOBAL_Shapeshifting_GetPolymorphStatus((CHARACTER)_Player)
+AND
+DB_GLOBAL_Shapeshifting_PolymorphStatus(_Race)
+THEN
+PROC_CrimeBribes_RecordElude("Persuade",(CHARACTER)_NPC,_Player,_Race);
+ClearFlag((FLAG)CRIME_PersuasionSuccess_bdcb6798-b606-5c94-95d1-e03b4414c0af,_Speaker);
+
+PROC
+PROC_CrimeBribes_RecordElude((STRING)_Method,(CHARACTER)_NPC,(CHARACTER)_Player,(STRING)_Race)
+AND
+DB_CrimeBribes_PairEludes(_Method,_NPC,_Player,_Race,_Eludes)
+AND
+IntegerSum(_Eludes,1,_NewEludes)
+THEN
+NOT DB_CrimeBribes_PairEludes(_Method,_NPC,_Player,_Race,_Eludes);
+DB_CrimeBribes_PairEludes(_Method,_NPC,_Player,_Race,_NewEludes);
+
+// Return value:
+//   Eluded too many times: DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability("no")
+//   Not yet eluded or a few times: DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability("yes")
+//   Allow eluding for the last time: DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability("lasttime")
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability((STRING)_Result)
+THEN
+NOT DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability(_Result);
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_CrimeBribes_PairEludes(_Method,_Interrogator,_Criminal,_Race,_)
+THEN
+DB_CrimeBribes_PairEludes(_Method,_Interrogator,_Criminal,_Race,0);
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom_Reset()
+AND
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom(_Method,_CrimeID,_Interrogator,_Criminal,_Race,_Dialog)
+AND
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom((STRING)_Result)
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability(_Result);
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability(_)
+AND
+DB_CrimeBribes_PairEludes(_Method,_Interrogator,_Criminal,_Race,_Count)
+AND
+DB_CrimeEluding_Max(_Method,_Max)
+AND
+// This is the number of times the player has already eluded this NPC. Anymore than that is not allowed.
+_Count >= _Max
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability("no");
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability(_)
+AND
+DB_CrimeBribes_PairEludes(_Method,_Interrogator,_Criminal,_Race,_Count)
+AND
+DB_CrimeEluding_Max(_Method,_Max)
+AND
+IntegerSum(_Count,1,_Max)
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability("lasttime");
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+NOT DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability(_)
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability("yes");
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom_Reset()
+AND
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom(_Result)
+THEN
+NOT DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom(_Result);
+
+// In case multiple custom overrides set a result, take the last one
+IF
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom(_NewResult)
+AND
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom(_OldResult)
+AND
+_NewResult != _OldResult
+THEN
+NOT DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom(_OldResult);
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom_Reset()
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(STRING)_Race,(DIALOGRESOURCE)_Dialog)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+
+// Get bribe base & variation from table
+PROC
+PROC_CrimeBribes_GetBribeBounds((INTEGER)_HighBase,(INTEGER)_CriminalLevel)
+AND
+DB_CrimeBribes_GetBribeBounds((INTEGER)_Base,(INTEGER)_Rand)
+THEN
+NOT DB_CrimeBribes_GetBribeBounds(_Base,_Rand);
+
+PROC
+PROC_CrimeBribes_GetBribeBounds((INTEGER)_HighBase,(INTEGER)_CriminalLevel)
+AND
+DB_CrimeBribes_GoldTables(_HighBase,_MinTable,_MaxTable)
+AND
+DataGetGoldValue(_MinTable,_CriminalLevel,_MinGold)
+AND
+DataGetGoldValue(_MaxTable,_CriminalLevel,_MaxGold)
+AND
+IntegerSubtract(_MaxGold,_MinGold,_RandBase)
+AND
+IntegerSum(_RandBase,1,_Rand)
+THEN
+DB_CrimeBribes_GetBribeBounds(_MinGold,_Rand);
+
+// Get the bribe amount
+// Once a bribe amount has been set for an NPC, it stays that way until it switches from low to high
+// base, or if the level of the NPC changes (it doesn't make sense if the bribe changes randomly for
+// the same NPC with every new encounter).
+PROC
+PROC_CrimeBribes_GetBribe((INTEGER)_CrimeID,(CHARACTER)_NPC,(INTEGER)_CriminalLevel,(INTEGER)_HighBase)
+AND
+NOT DB_CrimeBribes_GetBribe_NPC(_NPC,_CriminalLevel,_HighBase,_)
+THEN
+PROC_CrimeBribes_GetBribeBounds((INTEGER)_HighBase,(INTEGER)_CriminalLevel);
+
+PROC
+PROC_CrimeBribes_GetBribe((INTEGER)_CrimeID,(CHARACTER)_NPC,(INTEGER)_CriminalLevel,(INTEGER)_HighBase)
+AND
+NOT DB_CrimeBribes_GetBribe_NPC(_NPC,_CriminalLevel,_HighBase,_)
+AND
+DB_CrimeBribes_GetBribeBounds(_Base,_Rand)
+AND
+Random(_Rand,_Variation)
+AND
+IntegerSum(_Base,_Variation,_BribeStart)
+AND
+QRY_IntegerRoundTo(_BribeStart,10)
+AND
+DB_QRYRTN_IntegerRoundTo((INTEGER)_Bribe)
+THEN
+DB_CrimeBribes_GetBribe_NPC(_NPC,_CriminalLevel,_HighBase,_Bribe);
+
+// return value
+PROC
+PROC_CrimeBribes_GetBribe((INTEGER)_CrimeID,(CHARACTER)_NPC,(INTEGER)_NPCLevel,(INTEGER)_HighBase)
+AND
+DB_CrimeBribes_GetBribe(_Bribe)
+THEN
+NOT DB_CrimeBribes_GetBribe(_Bribe);
+
+PROC
+PROC_CrimeBribes_GetBribe((INTEGER)_CrimeID,(CHARACTER)_NPC,(INTEGER)_NPCLevel,(INTEGER)_HighBase)
+AND
+DB_CrimeBribes_GetBribe_NPC(_NPC,_NPCLevel,_HighBase,_Bribe)
+THEN
+DB_CrimeBribes_GetBribe(_Bribe);
+
+// Override in case of crimes with high-value evidence (avoid having a bribe lower than the value of the evidence)
+// If the evidence value is > 2/3 of the bribe, replace the bribe with the evidence value + half the bribe
+PROC
+PROC_CrimeBribes_GetBribe((INTEGER)_CrimeID,(CHARACTER)_NPC,(INTEGER)_NPCLevel,(INTEGER)_HighBase)
+AND
+QRY_CRIME_GetEvidenceCompensationValue(_CrimeID)
+AND
+DB_QRYRTN_CRIME_GetEvidenceCompensationValue(_Compensation)
+AND
+DB_CrimeBribes_GetBribe(_Bribe)
+AND
+IntegerProduct(_Bribe,2,_Bribe2)
+AND
+IntegerDivide(_Bribe2,3,_Bribe23rd)
+AND
+_Compensation > _Bribe23rd
+AND
+IntegerDivide(_Bribe,2,_BribeHalf)
+AND
+IntegerSum(_Compensation,_BribeHalf,_HigherBribeStart)
+AND
+QRY_IntegerRoundTo(_HigherBribeStart,10)
+AND
+DB_QRYRTN_IntegerRoundTo(_HigherBribe)
+THEN
+NOT DB_CrimeBribes_GetBribe(_Bribe);
+DB_CrimeBribes_GetBribe(_HigherBribe);
+
+// Set the bribe amount
+PROC
+PROC_CrimeInterrogationRequest((STRING)_RegionID,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Suspect1,(CHARACTER)_Suspect2,(CHARACTER)_Suspect3,(CHARACTER)_Suspect4,(DIALOGRESOURCE)_InterrogateDialog)
+AND
+QRY_CrimeGetInterrogationDialog(_RegionID,_CrimeID,_Interrogator,_Suspect1,_Suspect2,_Suspect3,_Suspect4,_InterrogateDialog)
+AND
+DB_CrimeInterrogationDialog((DIALOGRESOURCE)_InterrogationDialog)
+THEN
+PROC_CrimeBribes_SetEludingOptions(_CrimeID,_Interrogator,_Suspect1,_InterrogationDialog);
+
+PROC
+PROC_StartCrimeDialog((INTEGER)_CrimeID,(DIALOGRESOURCE)_CrimeDialog,1,(CHARACTER)_NPC,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+THEN
+PROC_CrimeBribes_SetEludingOptions(_CrimeID,_NPC,_Criminal,_CrimeDialog);
+
+//REGION Generic callback to disable eluding methods (bribing, convincing, ...) by certain (classes of) characters
+PROC
+PROC_CrimeBribes_SetEludingOptions((INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(DIALOGRESOURCE)_Dialog)
+AND
+DB_PartyMembers(_Criminal)
+AND
+QRY_GLOBAL_Shapeshifting_GetPolymorphStatus(_Criminal)
+AND
+DB_GLOBAL_Shapeshifting_PolymorphStatus(_Race)
+AND
+DB_CrimeEluding_Max(_Method,_)
+AND
+QRY_CrimeBribes_GetEludedMethodAvailability(_Method,_CrimeID,_Interrogator,_Criminal,_Race,_Dialog)
+AND
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability(_Type)
+THEN
+PROC_CrimeBribes_ProcessEludeMethodAvailability(_Method,_CrimeID,_Interrogator,_Criminal,_Dialog,_Type);
+
+PROC
+PROC_CrimeBribes_ProcessEludeMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(DIALOGRESOURCE)_Dialog,(STRING)_Type)
+AND
+DB_CrimeEluding_Flags(_Method,_Type,_Flag)
+AND
+_Flag != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_CrimeEluding_MethodFlagSet(_Method,_Flag,_Interrogator,_Criminal,_Dialog);
+SetFlag(_Flag,_Interrogator);
+
+PROC
+PROC_CrimeBribes_ProcessEludeMethodAvailability((STRING)_Method,(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(DIALOGRESOURCE)_Dialog,(STRING)_Type)
+AND
+_Type != "no"
+THEN
+PROC_CrimeBribes_SetEludingOptions_ForAllowedMethod(_Method,_CrimeID,_Interrogator,_Criminal,_Dialog);
+//END_REGION
+
+//REGION Only allow eluding a few times
+// Can be set during dialog based on player actions
+IF
+FlagSet(_DisabledFlag,_Interrogator,_ID)
+AND
+DB_CrimeEluding_Flags(_Method,_,_DisabledFlag)
+AND
+DB_DialogPlayers(_ID,_Criminal,_)
+AND
+DB_DialogName(_Dialog,_ID)
+THEN
+DB_CrimeEluding_MethodFlagSet(_Method,_DisabledFlag,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,_Dialog);
+
+IF
+DialogEnded(_Dialog,_ID)
+AND
+DB_CrimeEluding_MethodFlagSet(_Method,_DisabledFlag,_Interrogator,_Criminal,_Dialog)
+THEN
+NOT DB_CrimeEluding_MethodFlagSet(_Method,_DisabledFlag,_Interrogator,_Criminal,_Dialog);
+ClearFlag(_DisabledFlag, _Interrogator); // flagType: Object
+
+IF
+AutomatedDialogEnded(_Dialog,_ID)
+AND
+DB_CrimeEluding_MethodFlagSet(_Method,_DisabledFlag,_Interrogator,_Criminal,_Dialog)
+THEN
+NOT DB_CrimeEluding_MethodFlagSet(_Method,_DisabledFlag,_Interrogator,_Criminal,_Dialog);
+ClearFlag(_DisabledFlag, _Interrogator); // flagType: Object
+
+//END_REGION
+
+// Low bribe if it's not a severe crime, AND tension is below warning threshold.
+// Otherwise higher bribe.
+PROC
+PROC_CrimeBribes_SetEludingOptions_ForAllowedMethod("Bribe",(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(DIALOGRESOURCE)_Dialog)
+AND
+DB_CrimeTriggers_GeneralBribeDialog(_MoneyVarIndex,_Dialog)
+AND
+CrimeGetType(_CrimeID,_CrimeType)
+AND
+QRY_CrimeBribes_CrimeGetSeverity(_CrimeType)
+AND
+DB_QRYRTN_CrimeBribes_CrimeSeverity(_Severity)
+AND
+CrimeIsTensionOverWarningTreshold(_Criminal,_TensionOverWarning)
+AND
+IntegerMax(_Severity,_TensionOverWarning,_HighBaseFinal)
+AND
+GetLevel(_Criminal,_CriminalLevel)
+THEN
+PROC_CrimeBribes_GetBribe(_CrimeID,_Interrogator,_CriminalLevel,_HighBaseFinal);
+
+PROC
+PROC_CrimeBribes_SetEludingOptions_ForAllowedMethod("Bribe",(INTEGER)_CrimeID,(CHARACTER)_Interrogator,(CHARACTER)_Criminal,(DIALOGRESOURCE)_Dialog)
+AND
+DB_CrimeTriggers_GeneralBribeDialog(_MoneyVarIndex,_Dialog)
+AND
+DB_CrimeBribes_GetBribe(_Bribe)
+THEN
+// Will clear previous entries, if any
+DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Bribe);
+DB_DialogMoneyTransfer_ForInstance(_MoneyVarIndex,_Dialog,_Interrogator);
+
+//END_REGION
+
+//REGION Permanent access to trespassing areas
+PROC
+PROC_CrimeBribes_SetEludingOptions_ForAllowedMethod(_Method,_CrimeID,_Interrogator,_Criminal,_Dialog)
+THEN
+ClearFlag((FLAG)GEB_Crime_TrespassCanConvincePermanently_7bedda15-54d7-498d-b73b-74d4f2edce16,_Interrogator);
+
+PROC
+PROC_CrimeBribes_SetEludingOptions_ForAllowedMethod(_Method,_CrimeID,_Interrogator,_Criminal,_Dialog)
+AND
+DB_PlayerTrespassing(_Criminal,_CrimeID,_TrespassTrigger)
+AND
+NOT DB_CRIME_TrespassNoPermanentAccess(_TrespassTrigger)
+AND
+DB_CrimeTriggers_GeneralBribeDialog(_MoneyVarIndex,_Dialog)
+AND
+DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Bribe)
+AND
+DB_CrimeTriggers_TrespassAccessBribeDialog(_ExpensiveMoneyVarIndex,_Dialog)
+AND
+IntegerProduct(_Bribe,4,_ExpensiveBribe)
+THEN
+SetFlag((FLAG)GEB_Crime_TrespassCanConvincePermanently_7bedda15-54d7-498d-b73b-74d4f2edce16,_Interrogator);
+DB_DialogMoneyTransfer(_ExpensiveMoneyVarIndex,_Dialog,_ExpensiveBribe);
+DB_DialogMoneyTransfer_ForInstance(_ExpensiveMoneyVarIndex,_Dialog,_Interrogator);
+//END_REGION
+
+//REGION Characters that are impossible to bribe or persuade
+QRY
+QRY_CrimeBribes_GetEludedMethodAvailability_Custom(_Method, _, _Interrogator, _, _, _)
+AND
+DB_CrimeEluding_CantBeEludedUsing(_Interrogator, _Method)
+THEN
+DB_QRYRTN_CrimeBribes_GetEludedMethodAvailability_Custom("no");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

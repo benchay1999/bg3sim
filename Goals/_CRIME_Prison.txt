@@ -1,0 +1,1832 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Prison definition
+// Prison location
+NOT DB_RegionPrison(
+    // _RegionName: crime region name (from crime region trigger(s))
+    "",
+    // _PrisonTrigger: trigger containing the prison cell
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+    // _PrisonSpawnPoint: trigger to which to teleport criminals when sending them to prison
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+// Custom cells
+NOT DB_RegionPrison_CustomCell(
+    // _MainPrisonTrigger: trigger containing the main prison cell
+	(TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+    // _CustomPrisonTrigger: trigger containing the prison cell
+	(TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+	// _Character: which character has to go to this custom cell
+	(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,
+    // _PrisonSpawnPoint: trigger to which to teleport criminals when sending them to prison
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+    // _CellDoor: cell door
+    (ITEM)NULL_00000000-0000-0000-0000-000000000000,
+    // _KeyName: cell door key ID
+    "");
+
+// Triggers in which NPCs should react to players escaped from this prison
+NOT DB_PrisonReactionTrigger(
+    // _PrisonTrigger: link to DB_RegionPrison
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+    // _RegionTrigger: one of the triggers in which NPCs should react
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+
+// Escape crimes
+NOT DB_PlayerPrison(
+    // _PrisonTrigger: link to DB_RegionPrison
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+    // _PrisonCrimeName: disturbance to register when escaping the prison, to re-arrest the fugitive
+    "",
+    // _PrisonCrimeNameAD: disturbance to register when escaping the prison, to comment on the fugitive
+    "",
+    // Status to apply while fugitive from this prison
+    "");
+
+NOT DB_FugitiveArea(
+	// _PrisonTrigger: link to DB_RegionPrison
+    (TRIGGER)NULL_00000000-0000-0000-0000-000000000000,
+	// _FugitiveArea: area from which fugitives have to leave to be able to fast travel.	
+	(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+DB_ReactOutOfRegion((TAG)REALLY_ASTARION_ffd08582-7396-4cac-bcd4-8f9cd0fd8ef3);
+DB_ReactOutOfRegion((TAG)REALLY_LAEZEL_b5682d1d-c395-489c-9675-1f9b0c328ea5);
+DB_ReactOutOfRegion((TAG)REALLY_SHADOWHEART_642d2aee-e3df-47e3-9f47-bbcd441bb9e0);
+DB_ReactOutOfRegion((TAG)REALLY_GALE_9b0354c0-56d9-4723-8034-918ac9abab19);
+DB_ReactOutOfRegion((TAG)AGGRESSIVEBEAST_1ed04fb5-e654-4dbf-893c-a795952e77e1);
+DB_ReactOutOfRegion((TAG)REALLY_WYLL_5f40def5-d3ec-4698-a367-01a339888956);
+
+DB_CRIME_AddressOwnerWithCombatFallback_Action("CRIME_OsirisArrest");
+KBSECTION
+IF
+DB_RegionPrison((STRING)_RegionName,(TRIGGER)_PrisonTrigger,(TRIGGER)_PrisonSpawnPoint)
+THEN
+PROC_TriggerRegisterForPlayers(_PrisonTrigger);
+DB_Region_Prison_HasBeenRegionPrison(_RegionName,_PrisonTrigger);
+
+IF
+DB_RegionPrison_CustomCell(_PrisonTrigger, _CellTrigger, _Char, _, _, _)
+AND
+DB_RegionPrison(_RegionName,_PrisonTrigger,_)
+THEN
+TriggerRegisterForCharacter(_CellTrigger, _Char);
+DB_Region_Prison_HasBeenRegionPrison(_RegionName,_CellTrigger);
+
+IF
+DB_FugitiveArea(_, _FugitiveArea)
+THEN
+PROC_TriggerRegisterForPlayers(_FugitiveArea);
+
+IF
+DB_PrisonReactionTrigger(_,_RegionTrigger)
+THEN
+PROC_TriggerRegisterForPlayers(_RegionTrigger);
+
+IF
+DB_RegionPrison_CustomCell(_MainPrisonTrigger, _CellTrigger, _Char, _, _, _)
+AND
+DB_PrisonReactionTrigger(_MainPrisonTrigger,_RegionTrigger)
+THEN
+TriggerRegisterForCharacter(_RegionTrigger, _Char);
+
+IF
+DB_RegionPrison_CustomCell(_MainPrisonTrigger, _, _, _CustomCellSpawnPoint, _, _)
+AND
+DB_RegionPrison(_, _MainPrisonTrigger, _PrisonSpawnPoint)
+AND
+DB_PrisonChest(_PrisonSpawnPoint, _PrisonChest)
+THEN
+DB_PrisonChest(_CustomCellSpawnPoint, _PrisonChest);
+
+PROC
+PROC_CRIME_Prison_RemoveCustomPrison((TRIGGER)_CustomPrisonTrigger, (CHARACTER)_Char)
+AND
+DB_RegionPrison_CustomCell(_MainPrisonTrigger, _CustomPrisonTrigger, _Char, _PrisonSpawnPoint, _CellDoor, _KeyName)
+AND
+DB_PrisonChest(_PrisonSpawnPoint, _PrisonChest)
+THEN
+NOT DB_PrisonChest(_PrisonSpawnPoint, _PrisonChest);
+
+PROC
+PROC_CRIME_Prison_RemoveCustomPrison((TRIGGER)_CustomPrisonTrigger, (CHARACTER)_Char)
+AND
+DB_RegionPrison_CustomCell(_MainPrisonTrigger, _CustomPrisonTrigger, _Char, _PrisonSpawnPoint, _CellDoor, _KeyName)
+THEN
+TriggerUnregisterForCharacter(_CustomPrisonTrigger, _Char);
+NOT DB_RegionPrison_CustomCell(_MainPrisonTrigger, _CustomPrisonTrigger, _Char, _PrisonSpawnPoint, _CellDoor, _KeyName);
+
+QRY
+QRY_NPCIsGuard((GUIDSTRING)_NPC)
+AND
+IsTagged(_Npc,(TAG)GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd,1)
+THEN
+DB_NOOP(1);
+
+//REGION Start Arrest 
+//Wait for dialog to end to arrest Player // Needs to be removed
+IF
+FlagSet(Start_Arrest_AfterDialog_efeec3fb-6e2f-41f1-298a-3246c43deb6a, (CHARACTER)_Character, _ID) // flagType: Object
+THEN
+ClearFlag((FLAG)Start_Arrest_AfterDialog_efeec3fb-6e2f-41f1-298a-3246c43deb6a, _Character, 0); // flagType: Object
+DB_ArrestAfterDialog(_Character,_ID);
+
+
+///////// Handle Evidence ////////////
+IF
+FlagSet(Allow_Arrest_2677bf25-03f3-6323-c72a-0ca61fe5ad01, (CHARACTER)_Player, _ID) // flagType: Object
+AND
+DB_DialogNPCs(_ID,_NPC,1)
+AND
+GetHandlingCrimeID((CHARACTER)_NPC,_CrimeID)
+THEN
+DB_ArrestDialog(_Player,_ID,_CrimeID);
+
+// Transfer someone to prison from a non-crime dialog (used for steel watchers)
+IF
+FlagSet(Allow_Arrest_2677bf25-03f3-6323-c72a-0ca61fe5ad01, (CHARACTER)_Player, _ID) // flagType: Object
+AND
+DB_DialogNPCs(_ID,_NPC,1)
+AND
+NOT DB_ArrestDialog(_Player,_ID,_)
+THEN
+DB_ArrestDialog(_Player,_ID,-1);
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_ArrestDialog(_Player,_ID,_CrimeID)
+AND
+_CrimeID != -1
+AND
+DB_DialogNPCs(_ID,_NPC,1)
+THEN
+PROC_CrimeHandleEvidence((CHARACTER)_Player,(CHARACTER)_NPC,_CrimeID);
+
+PROC
+PROC_CrimeHandleEvidence((CHARACTER)_Player,(CHARACTER)_Arrester,(INTEGER)_CrimeID)
+AND
+CharacterGetCrimeRegion(_Player,_CrimeRegionID)
+AND
+DB_RegionPrison(_CrimeRegionID,_PrisonTrigger,_)
+AND
+DB_PrisonEvidenceChest((TRIGGER)_PrisonTrigger,(ITEM)_EvidenceChest)
+AND
+CrimeHasProperty(_CrimeID,(DISTURBANCEPROPERTY)TransferEvidenceOnGround_b94687a0-8ccd-49ab-a5ae-858daec0b674,_TransferEvidenceOnGround)
+THEN
+CrimeTransferEvidenceTo(_CrimeID,_Player,_TransferEvidenceOnGround,_EvidenceChest);
+
+PROC
+PROC_CrimeHandleEvidence((CHARACTER)_Player,(CHARACTER)_Arrester,(INTEGER)_CrimeID)
+AND
+CharacterGetCrimeRegion(_Player,_CrimeRegionID)
+AND
+DB_RegionPrison(_CrimeRegionID,_PrisonTrigger,_)
+AND
+NOT DB_PrisonEvidenceChest((TRIGGER)_PrisonTrigger,_)
+AND
+CrimeHasProperty(_CrimeID,(DISTURBANCEPROPERTY)TransferEvidenceOnGround_b94687a0-8ccd-49ab-a5ae-858daec0b674,_TransferEvidenceOnGround)
+THEN
+CrimeTransferEvidenceTo(_CrimeID,_Player,_TransferEvidenceOnGround,_Arrester);
+
+
+///////// Start Arrest ////////////
+IF
+DialogEnded(_,_ID)
+AND
+DB_ArrestAfterDialog(_Character,_ID)
+THEN
+NOT DB_ArrestAfterDialog(_Character,_ID);
+PROC_CrimeStartArrest((CHARACTER)_Character,_ID);
+
+PROC
+PROC_CrimeStartArrest((CHARACTER)_Character,(INTEGER)_ID)
+AND
+CharacterGetCrimeRegion(_Character,_CrimeRegion)
+THEN
+PROC_CrimeDoPerformArrest(_ID,_CrimeRegion);
+
+PROC
+PROC_CrimeDoPerformArrest((INTEGER)_Inst,(STRING)_Region)
+AND
+// Summons/followers
+DB_DialogNPCs(_Inst,_Player,_)
+AND
+IsPartyMember((CHARACTER)_Player,0,1)
+AND
+// The first NPC is always the confronting NPC, never a party member
+DB_DialogNPCs(_Inst,_Arrester,1)
+THEN
+PROC_CrimePerformArrest((CHARACTER)_Arrester,_Player,_Region);
+
+PROC
+PROC_CrimeDoPerformArrest((INTEGER)_Inst,(STRING)_Region)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+AND
+IsPartyMember((CHARACTER)_Player,0,1)
+AND
+DB_DialogNPCs(_Inst,_Arrester,1)
+THEN
+PROC_CrimePerformArrest((CHARACTER)_Arrester,_Player,_Region);
+
+PROC
+PROC_CrimePerformArrest((CHARACTER)_Arrester,(CHARACTER)_Criminal,(STRING)_CrimeRegionID)
+AND
+DB_RegionPrison(_CrimeRegionID,_PrisonTrigger,_)
+AND
+DB_PlayerPrison(_PrisonTrigger,_,_,_FugitiveStatus)
+AND
+QRY_CRIME_Prison_ChooseSpawn((CHARACTER)_Criminal, (TRIGGER)_PrisonTrigger)
+AND
+DB_QRYRTN_CRIME_Prison_ChosenCell(_PrisonSpawnPoint)
+THEN
+PROC_CrimeTeleportCharacterToPrison(_Arrester,_Criminal,_PrisonTrigger,_PrisonSpawnPoint,_FugitiveStatus);
+
+PROC
+PROC_CrimeTeleportCharacterToPrison(_Arrester,_Criminal,_PrisonTrigger,_PrisonSpawnPoint,_FugitiveStatus)
+AND
+GUIDToString(_PrisonTrigger, _PrisonTriggerString)
+AND
+Concatenate("prison:", _PrisonTriggerString, _EventData)
+THEN
+TrackAnalyticsInfo("imprisoned", _EventData, _Criminal);
+
+// Clear DB
+QRY
+QRY_CRIME_Prison_ChooseSpawn((CHARACTER)_Criminal, (TRIGGER)_MainPrisonTrigger)
+AND
+DB_QRYRTN_CRIME_Prison_ChosenCell(_SpawnPoint)
+THEN
+NOT DB_QRYRTN_CRIME_Prison_ChosenCell(_SpawnPoint);
+
+// Custom cell: character
+QRY
+QRY_CRIME_Prison_ChooseSpawn((CHARACTER)_Criminal, (TRIGGER)_MainPrisonTrigger)
+AND
+QRY_CharacterGetOwnerOrSelf(_Criminal)
+AND
+DB_QRYRTN_CharacterGetOwnerOrSelf(_Owner)
+AND
+DB_RegionPrison_CustomCell(_MainPrisonTrigger, _, _Owner, _SpawnPoint, _, _)
+THEN
+DB_QRYRTN_CRIME_Prison_ChosenCell(_SpawnPoint);
+
+//Default cell
+QRY
+QRY_CRIME_Prison_ChooseSpawn((CHARACTER)_Criminal, (TRIGGER)_PrisonTrigger)
+AND
+DB_RegionPrison(_,_PrisonTrigger,_PrisonSpawnPoint)
+AND
+NOT DB_QRYRTN_CRIME_Prison_ChosenCell(_)
+THEN
+DB_QRYRTN_CRIME_Prison_ChosenCell(_PrisonSpawnPoint);
+
+PROC //--- can be used outside of the Crime System
+PROC_CrimeTeleportCharacterToPrison((CHARACTER)_Arrester,(CHARACTER)_Criminal,(TRIGGER)_PrisonTrigger,(TRIGGER)_PrisonSpawnPoint,(STRING)_FugitiveStatus)
+THEN
+PROC_CRIME_SetInPrisonArrestedBy(_Criminal,_Arrester,_FugitiveStatus);
+DetachFromPartyGroup(_Criminal);
+PROC_TeleportSmoke(_Criminal);
+TeleportTo(_Criminal,_PrisonSpawnPoint,"CRIME_TeleportedToPrison",0);
+PROC_TeleportSmoke(_Criminal);
+FlushOsirisQueue(_Criminal);
+LeaveCombat(_Criminal);
+PROC_CRIME_LockPrison(_Criminal,_PrisonSpawnPoint);
+
+PROC
+PROC_CRIME_SetInPrisonArrestedBy((CHARACTER)_Criminal,(CHARACTER)_Arrester,(STRING)_FugitiveStatus)
+THEN
+PROC_CRIME_Prison_StopFugitiveCrimes(_Criminal);
+SetFlag((FLAG)IsInPrison_c9b75b21-6eba-065e-7680-fc9a0c5838e4, _Criminal);
+RemoveStatus(_Criminal,_FugitiveStatus);
+DB_IsArrested(_Arrester,_Criminal);
+
+PROC
+PROC_CrimeTeleportCharacterToPrison((CHARACTER)_Arrester, (CHARACTER)_Character,(TRIGGER)_PrisonTrigger, (TRIGGER)_PrisonSpawnPoint,(STRING)_FugitiveStatus)
+AND
+DB_PrisonChest((TRIGGER)_PrisonTrigger,(ITEM)_PrisonChest)
+THEN
+// Wait a couple of frames so the moving to the evidence has finished, otherwise the MoveAllItems
+// moving the evidence to the evidence chest
+DB_CRIME_Prison_MoveItemsToPrisonChest(_Character,_PrisonChest);
+RealtimeObjectTimerLaunch(_Character,"CRIME_Prison_MoveInventoryToPrisonChest_0",0);
+
+// First frame: potential delay because inventory of evidence chest still needs to be generated
+IF
+ObjectTimerFinished(_Character,"CRIME_Prison_MoveInventoryToPrisonChest_0")
+THEN
+RealtimeObjectTimerLaunch(_Character,"CRIME_Prison_MoveInventoryToPrisonChest_1",1);
+
+// Second frame: Generate request
+IF
+ObjectTimerFinished(_Character,"CRIME_Prison_MoveInventoryToPrisonChest_1")
+THEN
+RealtimeObjectTimerLaunch(_Character,"CRIME_Prison_MoveInventoryToPrisonChest_2",1);
+
+// Third frame: Act on Request
+IF
+ObjectTimerFinished((CHARACTER)_Character,"CRIME_Prison_MoveInventoryToPrisonChest_1")
+AND
+DB_CRIME_Prison_MoveItemsToPrisonChest(_Character,_PrisonChest)
+THEN
+NOT DB_CRIME_Prison_MoveItemsToPrisonChest(_Character,_PrisonChest);
+MoveAllItemsTo(_Character,_PrisonChest,0,1,1);
+
+// Default cell
+PROC
+PROC_CRIME_LockPrison((CHARACTER)_Player,(TRIGGER)_PrisonSpawnPoint)
+AND
+DB_IsArrested(_,_Player)
+AND
+DB_Players(_Player)
+AND
+DB_RegionPrison(_, _PrisonTrigger, _PrisonSpawnPoint)
+AND
+DB_PlayerPrison_Door(_PrisonTrigger,(ITEM)_CellDoor,(STRING)_KeyName)
+THEN
+PROC_ItemCloseAndLock(_CellDoor,_KeyName);
+
+// Custom cell
+PROC
+PROC_CRIME_LockPrison((CHARACTER)_Player,(TRIGGER)_PrisonSpawnPoint)
+AND
+DB_IsArrested(_,_Player)
+AND
+DB_Players(_Player)
+AND
+DB_RegionPrison_CustomCell(_, _, _, _PrisonSpawnPoint, (ITEM)_CellDoor,(STRING)_KeyName)
+THEN
+PROC_ItemCloseAndLock(_CellDoor,_KeyName);
+
+////////////// Downed Criminal Arrest Flow //////////////
+IF
+DB_CRIME_TemporaryRelationPending(_, _Criminal, _CrimeID, _)
+AND
+DB_Crime_PlayerAttacked(_, _Criminal, _)
+AND
+CombatGetGuidFor(_Criminal, _CombatID)
+THEN
+DB_Crime_CombatID(_CrimeID,_CombatID);
+
+PROC
+PROC_OnDialogAttack_GoingHostile(_NPC, _Player)
+THEN
+DB_Crime_DialogAttackPlayer(_Player);
+
+IF
+DB_Crime_DialogAttackPlayer(_Player)
+AND
+NOT DB_EnterCombatRequested((GUIDSTRING)_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_Crime_PlayerAttacked(_CrimeID,(CHARACTER)_Player,_NPC)
+THEN
+DB_Crime_CombatID(_CrimeID,_CombatID);
+
+IF
+DB_Crime_DialogAttackPlayer(_Player)
+AND
+NOT DB_EnterCombatRequested((GUIDSTRING)_Player)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+NOT DB_Crime_PlayerAttacked(_,(CHARACTER)_Player,_)
+THEN
+DB_Crime_CombatID(-1, _CombatID);
+
+IF
+DB_Crime_DialogAttackPlayer(_Player)
+AND
+NOT DB_EnterCombatRequested(_Player)
+THEN
+NOT DB_Crime_DialogAttackPlayer((CHARACTER)_Player);
+
+IF
+DB_Downed(_Criminal)
+AND
+DB_PartyMembers((CHARACTER)_Criminal)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+DB_Is_InCombat(_Criminal, _CombatID)
+THEN
+DB_Crime_DefeatedPlayers(_Criminal, _CombatID);
+
+IF
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, _CombatID)
+AND
+DB_Downed(_Criminal)
+AND
+CharacterGetCrimeRegion(_Criminal, (STRING)_Region)
+AND
+_Region != ""
+AND
+DB_RegionPrison(_Region, _, _)
+AND
+QRY_Crime_CheckAvailableArresters(_CombatID, _Criminal)
+THEN
+SetTag(_Criminal, (TAG)AI_IGNORED_TARGET_ff6d7d1f-094f-432e-a117-fdc3a0ab7ac1);
+
+IF
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, _CombatID)
+AND
+NOT DB_Downed(_Criminal)
+THEN
+NOT DB_Crime_DefeatedPlayers(_Criminal, _CombatID);
+ClearTag(_Criminal, (TAG)AI_IGNORED_TARGET_ff6d7d1f-094f-432e-a117-fdc3a0ab7ac1);
+
+IF
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, (GUIDSTRING)_CombatID)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+NOT QRY_CRIME_CombatHasNonDownedPlayers(_CombatID)
+AND
+GUIDToString(_CombatID, _CombatString)
+AND
+Concatenate("Crime_Arrest_Fade_", _CombatString, _FadeEvent)
+THEN
+DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent);
+
+IF
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, (GUIDSTRING)_CombatID)
+AND
+SysCount("DB_Crime_DefeatedPlayers", 2, _DefeatedPlayerCount)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+CombatGetInvolvedPlayersCount(_CombatID, _PlayersInCombatCount)
+AND
+_DefeatedPlayerCount == _PlayersInCombatCount
+AND
+NOT QRY_CRIME_CombatHasNonDownedPlayers(_CombatID)
+THEN
+PROC_Crime_RemoveAITags();
+
+IF
+LeftCombat((CHARACTER)_Criminal, _CombatID)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+NOT DB_Crime_CombatEndsInArrest(_CombatID, _)
+AND
+NOT QRY_CRIME_CombatHasNonDownedPlayers(_CombatID)
+AND
+GUIDToString(_CombatID, _CombatString)
+AND
+Concatenate("Crime_Arrest_Fade_", _CombatString, _FadeEvent)
+THEN
+DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent);
+
+IF
+FleeFromCombat(_Criminal, _CombatID)
+AND
+DB_Crime_CombatEndsInArrest(_CombatID, _)
+THEN
+DB_Crime_FleeAvoidArrest(_Criminal, _CombatID);
+
+IF
+DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent)
+THEN
+PROC_Crime_StartCombatArrest(_CombatID, _FadeEvent);
+
+PROC
+PROC_Crime_RemoveAITags()
+AND
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, _)
+THEN
+ClearTag(_Criminal, (TAG)AI_IGNORED_TARGET_ff6d7d1f-094f-432e-a117-fdc3a0ab7ac1);
+
+PROC
+PROC_Crime_StartCombatArrest((GUIDSTRING)_CombatID, (STRING)_FadeEvent)
+AND
+DB_Players((CHARACTER)_Criminal)
+AND
+DB_Crime_DefeatedPlayers(_Criminal, _CombatID)
+AND
+NOT DB_Crime_FleeAvoidArrest(_Criminal, _CombatID)
+AND
+CharacterGetCrimeRegion(_Criminal, (STRING)_CrimeRegion)
+AND
+DB_RegionPrison(_CrimeRegion, _, _)
+AND
+QRY_Crime_CheckAvailableArresters(_CombatID, _Criminal, _FadeEvent)
+THEN
+DB_Crime_ArrestPossible(_CombatID);
+
+QRY
+QRY_Crime_CheckAvailableArresters((GUIDSTRING)_CombatID, (CHARACTER)_Criminal)
+AND
+QRY_Crime_CheckAvailableArresters((GUIDSTRING)_CombatID, (CHARACTER)_Criminal, "")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Crime_CheckAvailableArresters((GUIDSTRING)_CombatID, (CHARACTER)_Criminal, (STRING)_FadeEvent)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+DB_Is_InCombat(_Arrester, _CombatID)
+AND
+NOT DB_PartyMembers((CHARACTER)_Arrester)
+AND
+NOT DB_Crime_DefeatedPlayers(_Arrester, _)
+AND
+NOT DB_CantMove(_Arrester)
+AND
+QRY_NPCIsGuard(_Arrester)
+THEN
+PROC_Crime_BlockFadeWhenEventIsEmpty(_Criminal, _FadeEvent);
+
+QRY
+QRY_Crime_CheckAvailableArresters((GUIDSTRING)_CombatID, (CHARACTER)_Criminal, (STRING)_FadeEvent)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+DB_Is_InCombat(_Arrester, _CombatID)
+AND
+NOT DB_PartyMembers((CHARACTER)_Arrester)
+AND
+NOT DB_Crime_DefeatedPlayers(_Arrester, _)
+AND
+NOT DB_CantMove(_Arrester)
+AND
+QRY_CRIME_IsValidTag(_Arrester)
+THEN
+PROC_Crime_BlockFadeWhenEventIsEmpty(_Criminal, _FadeEvent);
+
+PROC
+PROC_Crime_BlockFadeWhenEventIsEmpty((CHARACTER)_Criminal, (STRING)_FadeEvent)
+AND
+_FadeEvent != ""
+THEN
+ScreenFadeTo(_Criminal, 1.5, 0, _FadeEvent);
+
+QRY
+QRY_Crime_CheckAvailableArresters((GUIDSTRING)_CombatID, _, (STRING)_FadeEvent)
+AND
+_FadeEvent != ""
+THEN
+EndCombat(_CombatID);
+
+IF
+ScreenFadeDone(_, _FadeEvent)
+AND
+DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent)
+THEN
+NOT DB_Crime_ArrestPossible(_CombatID);
+PROC_Crime_ArrestCombat_EndCombatAndClearFade(_CombatID, _FadeEvent);
+
+PROC
+PROC_Crime_ArrestCombat_EndCombatAndClearFade((GUIDSTRING)_CombatID, (STRING)_ScreenFade)
+AND
+DB_Crime_DefeatedPlayers(_Criminal, _CombatID)
+THEN
+EndCombat(_CombatID);
+
+QRY
+QRY_CRIME_CombatHasNonDownedPlayers((GUIDSTRING)_CombatID)
+AND
+DB_PartyMembers((CHARACTER)_Criminal)
+AND
+NOT DB_Crime_DefeatedPlayers(_Criminal, _CombatID)
+AND
+DB_Is_InCombat(_Criminal, _CombatID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GameOver_BlockGameOver()
+AND
+DB_Crime_CombatID(_CrimeID,(GUIDSTRING)_CombatID)
+AND
+DB_Is_InCombat(_Criminal, _CombatID)
+AND
+DB_PartyMembers((CHARACTER)_Criminal)
+AND
+DB_Downed(_Criminal)
+AND
+QRY_Crime_CheckAvailableArresters(_CombatID, _Criminal)
+AND
+CharacterGetCrimeRegion(_Criminal, (STRING)_CrimeRegion)
+AND
+DB_RegionPrison(_CrimeRegion, _, _)
+THEN
+DB_NOOP(1);
+
+IF
+CombatEnded((GUIDSTRING)_CombatID)
+AND
+DB_Crime_ArrestPossible(_CombatID)
+AND
+DB_Crime_CombatEndsInArrest(_CombatID, _ScreenFade)
+AND
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, _CombatID)
+AND
+CharacterGetCrimeRegion(_Criminal, (STRING)_CrimeRegion)
+AND
+DB_RegionPrison(_CrimeRegion, _, (TRIGGER)_PrisonSpawnPoint)
+THEN
+PROC_Crime_GetArrester(_CombatID);
+PROC_Crime_HandleEvidenceIfArrester(_CombatID,_Criminal);
+PROC_Crime_CheckArrester(_CombatID);
+PROC_CrimeStartArrest_Downed(_Criminal, _CombatID);
+ClearScreenFade(_Criminal, 2.0, _ScreenFade);
+
+PROC
+PROC_Crime_GetArrester((GUIDSTRING)_CombatID)
+AND
+DB_Was_InCombat(_Arrester, _CombatID)
+AND
+NOT DB_PartyMembers((CHARACTER)_Arrester)
+AND
+NOT DB_Crime_DefeatedPlayers(_Arrester, _)
+AND
+NOT DB_CantAct(_Arrester)
+AND
+QRY_NPCIsGuard(_Arrester)
+AND
+NOT DB_Crime_Arrester(_)
+THEN
+DB_Crime_Arrester(_Arrester);
+
+PROC
+PROC_Crime_GetArrester((GUIDSTRING)_CombatID)
+AND
+DB_Was_InCombat(_Arrester, _CombatID)
+AND
+QRY_CRIME_IsValidTag(_Arrester)
+AND
+NOT DB_PartyMembers((CHARACTER)_Arrester)
+AND
+NOT DB_Crime_DefeatedPlayers(_Arrester, _)
+AND
+NOT DB_CantAct(_Arrester)
+AND
+NOT DB_Crime_Arrester(_)
+THEN
+DB_Crime_Arrester(_Arrester);
+
+QRY
+QRY_CRIME_IsValidTag((GUIDSTRING)_Arrester)
+AND
+QRY_NPCIsGuard(_Arrester)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_IsValidTag((GUIDSTRING)_Arrester)
+AND
+IsTagged(_Arrester, (TAG)BADASSCIVILIAN_91f4b379-63a2-40e9-a509-7b9b2f90e4c8, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Crime_HandleEvidenceIfArrester((GUIDSTRING)_CombatID,(CHARACTER)_Criminal)
+AND
+DB_Crime_Arrester(_Arrester)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+AND
+_CrimeID != -1
+THEN
+PROC_CrimeHandleEvidence(_Criminal,_Arrester,_CrimeID);
+
+PROC
+PROC_Crime_CheckArrester((GUIDSTRING)_CombatID)
+AND
+NOT DB_Crime_Arrester(_)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+THEN
+NOT DB_Crime_CombatID(_CrimeID,_CombatID);
+
+PROC
+PROC_Crime_CheckArrester((GUIDSTRING)_CombatID)
+AND
+DB_Crime_FleeAvoidArrest(_Criminal, _CombatID)
+THEN
+NOT DB_Crime_FleeAvoidArrest(_Criminal, _CombatID);
+
+PROC
+PROC_Crime_CheckArrester((GUIDSTRING)_CombatID)
+AND
+DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent)
+AND
+NOT DB_Crime_Arrester(_)
+THEN
+PROC_GameOver_CheckGameOver();
+
+PROC
+PROC_CrimeStartArrest_Downed((CHARACTER)_Criminal, (GUIDSTRING)_CombatID)
+AND
+DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent)
+THEN
+NOT DB_Crime_CombatEndsInArrest(_CombatID, _FadeEvent);
+
+PROC
+PROC_CrimeStartArrest_Downed((CHARACTER)_Criminal, (GUIDSTRING)_CombatID)
+AND
+CharacterGetCrimeRegion(_Criminal, (STRING)_CrimeRegion)
+THEN
+PROC_CrimeDoPerformArrest_Arrest(_CombatID, _CrimeRegion, _Criminal);
+PROC_Crime_ClearArrester();
+
+PROC
+PROC_CrimeDoPerformArrest_Arrest((GUIDSTRING)_CombatID, (STRING)_CrimeRegion, (CHARACTER)_Criminal)
+AND
+DB_Crime_DefeatedPlayers(_Criminal, _CombatID)
+AND
+DB_Crime_Arrester((CHARACTER)_Arrester)
+THEN
+PROC_CrimePerformArrest(_Arrester, _Criminal, _CrimeRegion);
+PROC_Crime_RestoreAndClearNegativeStatuses(_Criminal);
+
+PROC
+PROC_Crime_RestoreAndClearNegativeStatuses((CHARACTER)_Criminal)
+AND
+DB_Downed(_Criminal)
+THEN
+RemoveStatusesWithType(_Criminal, "DOWNED", _Criminal);
+RemoveHarmfulStatuses(_Criminal);
+SetHitpoints(_Criminal, 1);
+
+PROC
+PROC_Crime_ClearArrester()
+AND
+DB_Crime_Arrester((CHARACTER)_Arrester)
+THEN
+NOT DB_Crime_Arrester(_Arrester);
+
+IF
+CombatEnded((GUIDSTRING)_CombatID)
+AND
+DB_Crime_DefeatedPlayers((CHARACTER)_Criminal, _CombatID)
+THEN
+NOT DB_Crime_DefeatedPlayers(_Criminal, _CombatID);
+ClearTag(_Criminal, (TAG)AI_IGNORED_TARGET_ff6d7d1f-094f-432e-a117-fdc3a0ab7ac1);
+
+IF
+CombatEnded((GUIDSTRING)_CombatID)
+AND
+DB_Crime_FleeAvoidArrest(_Criminal, _CombatID)
+THEN
+NOT DB_Crime_FleeAvoidArrest(_Criminal, _CombatID);
+
+IF
+CombatEnded((GUIDSTRING)_CombatID)
+AND
+DB_Crime_CombatID(_CrimeID,_CombatID)
+THEN
+NOT DB_Crime_CombatID(_CrimeID,_CombatID);
+//END_REGION
+
+//REGION Arrest dialog starting 
+
+IF
+CharacterOnCrimeSensibleActionNotification(_Arrester,_CrimeRegion,_CrimeID,"CRIME_OsirisArrest",_ArrestDialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_)
+AND
+CrimeGetType(_CrimeID,_CrimeName)
+AND
+QRY_CRIME_GetCrimeFamily(_CrimeName)
+AND
+DB_QRYRTN_CRIME_GetCrimeFamily(_CrimeFamily)
+AND
+NOT DB_CRIME_AddressOwnerWithCombatFallback(_CrimeFamily)
+THEN
+PROC_CRIME_OsirisArrest(_Arrester,_CrimeRegion,_CrimeID,_CrimeName,_ArrestDialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CRIME_SelectOsirisAction((CHARACTER)_Warner,"CRIME_OsirisArrest",(STRING)_CrimeRegion,(INTEGER)_CrimeID,(STRING)_CrimeName,(DIALOGRESOURCE)_WarningDialog,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+THEN
+PROC_CRIME_OsirisArrest(_Warner,_CrimeRegion,_CrimeID,_CrimeName,_WarningDialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4);
+
+// Temporary because Osiris event arrives before Anubis
+PROC
+PROC_CRIME_OsirisArrest((CHARACTER)_Arrester,(STRING)_CrimeRegion,(INTEGER)_CrimeID,(STRING)_CrimeName,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+THEN
+SetVarObject(_Arrester,"Criminal1",_Criminal1);
+SetVarObject(_Arrester,"Criminal2",_Criminal2);
+SetVarObject(_Arrester,"Criminal3",_Criminal3);
+SetVarObject(_Arrester,"Criminal4",_Criminal4);
+SetVarUUID(_Arrester,"ArrestDialog",_ArrestDialog);
+
+PROC
+PROC_CRIME_OsirisArrest((CHARACTER)_Arrester,(STRING)_CrimeRegion,(INTEGER)_CrimeID,(STRING)_CrimeName,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+THEN
+PROC_StartArrestDialog(_Arrester);
+
+
+IF
+EntityEvent(_Arrester,"ArrestOnRequest")
+AND
+GetHandlingCrimeID((CHARACTER)_Arrester,_CrimeID)
+THEN
+SetVarUUID(_Arrester,"ArrestDialog",GEB_Arrest_fabc5060-4331-61ef-a99e-f836fbed25bc);
+PROC_StartArrest((CHARACTER)_Arrester,(INTEGER)_CrimeID);
+
+IF
+EntityEvent((CHARACTER)_Arrester,"ArrestOnRequest")
+AND
+DB_Arresting(_Arrester,_CrimeID,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,_ArrestDialog)
+AND
+// If they're still in an interactive dialog, we'll do the CharacterMoveToAndTalk when that dialog ends)
+IsSpeakerReserved(_Arrester,0)
+THEN
+CharacterMoveToAndTalk(_Arrester,_Criminal1,NULL_00000000-0000-0000-0000-000000000000,"GEB_ArrestMove","Run",30.0);
+
+IF
+EntityEvent((CHARACTER)_Arrester, "CRIME_Perform_Arrest")
+AND
+GetHandlingCrimeID(_Arrester,_CrimeID)
+THEN
+PROC_StartArrest(_Arrester,_CrimeID);
+
+PROC
+PROC_StartArrest((CHARACTER)_Arrester,(INTEGER)_CrimeID)
+AND
+GetVarObject(_Arrester,"Criminal1",_Criminal1)
+AND
+GetVarObject(_Arrester,"Criminal2",_Criminal2)
+AND
+GetVarObject(_Arrester,"Criminal3",_Criminal3)
+AND
+GetVarObject(_Arrester,"Criminal4",_Criminal4)
+AND
+GetVarUUID(_Arrester,"ArrestDialog",_ArrestDialog)
+THEN
+DB_Arresting(_Arrester,_CrimeID,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_ArrestDialog);
+SetHasDialog(_Arrester,0);
+BlockNewCrimeReactions(_Arrester,1);
+PROC_ForceStopDialog(_Arrester);
+
+IF
+DialogEnded(_,_Instance)
+AND
+DB_DialogPlayers(_Instance,_Criminal,1)
+AND
+DB_Arresting(_Arrester,_CrimeID,(CHARACTER)_Criminal,_,_,_,_ArrestDialog)
+THEN
+CharacterMoveToAndTalk(_Arrester,_Criminal,NULL_00000000-0000-0000-0000-000000000000,"GEB_ArrestMove","Run",10.0);
+
+PROC
+PROC_StartArrest((CHARACTER)_Arrester,(INTEGER)_CrimeID)
+AND
+NOT DB_Arresting(_Arrester,_CrimeID,_,_,_,_,_)
+THEN
+CrimeConfrontationDone(_CrimeID,_Arrester);
+
+PROC
+PROC_CleanupArrest((CHARACTER)_Arrester)
+AND
+DB_Arresting(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog)
+THEN
+PROC_CRIME_RestoreWeaponUnsheathed(_Arrester,_CrimeID);
+BlockNewCrimeReactions(_Arrester,0);
+SetHasDialog(_Arrester,1);
+NOT DB_Arresting(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog);
+SetEntityEvent(_Arrester,"CRIME_StartArrest");
+
+IF
+CharacterMoveToAndTalkRequestDialog(_Arrester,(CHARACTER)_Criminal,_,"GEB_ArrestMove")
+AND
+DB_Arresting(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog)
+THEN
+SetEntityEvent(_Arrester,"CRIME_StartArrest");
+PROC_StartArrestDialog(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog);
+
+IF
+CharacterMoveToAndTalkFailed(_Arrester,_,"GEB_ArrestMove", _)
+AND
+DB_Arresting(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog)
+THEN
+CrimeConfrontationDone(_CrimeID,_Arrester);
+PROC_CleanupArrest(_Arrester);
+
+IF
+DB_Crime_FailedToInterruptStoryDialogs(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4)
+AND
+DB_Arresting(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog)
+THEN
+CharacterMoveToAndTalkFail(_Arrester,_Criminal,"GEB_ArrestMove","FailedToInterruptStoryDialogs");
+
+IF
+FlagSet((FLAG)_ActiveFlag, (CHARACTER)_Arrester, _) // flagType: Object
+AND
+DB_CrimeDialogFlags(_CrimeName,(FLAG)_ActiveFlag)
+AND
+DB_Arresting(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_ArrestDialog)
+THEN
+PROC_CleanupArrest(_Arrester);
+
+IF
+EnteredCombat((CHARACTER)_Arrester,_)
+AND
+DB_Arresting(_Arrester,_,_,_,_,_,_)
+THEN
+PROC_CleanupArrest(_Arrester);
+
+
+//--- StartArrestDialog
+QRY
+QRY_CrimeGetCustomArrestDialog((CHARACTER)_Arrester,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+QRY_CrimeGetCustomArrestDialogCustom(_Arrester,_CrimeID,_ArrestDialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4)
+THEN
+DB_NOOP(1); //Fill this DB to replace the ArrestDialog: DB_CrimeArrest_CustomDialog(_Arrester,_CrimeID,_CustomArrestDialog)
+
+QRY
+QRY_CrimeGetCustomArrestDialogCustom((CHARACTER)_Arrester,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_CrimeGetCustomArrestDialog((CHARACTER)_Arrester,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+NOT DB_CrimeArrest_CustomDialog(_Arrester,_CrimeID,_)
+THEN
+DB_CrimeArrest_CustomDialog(_Arrester,_CrimeID,_ArrestDialog);
+
+PROC 
+PROC_StartArrestDialog((CHARACTER)_Arrester)
+AND
+GetVarObject(_Arrester,"Criminal1",(CHARACTER)_Criminal1)
+AND
+GetVarObject(_Arrester,"Criminal2",(CHARACTER)_Criminal2)
+AND
+GetVarObject(_Arrester,"Criminal3",(CHARACTER)_Criminal3)
+AND
+GetVarObject(_Arrester,"Criminal4",(CHARACTER)_Criminal4)
+AND
+GetHandlingCrimeID(_Arrester,_CrimeID)
+AND
+GetVarUUID(_Arrester,"ArrestDialog",_ArrestDialog)
+AND
+QRY_CrimeGetCustomArrestDialog(_Arrester,_CrimeID,(DIALOGRESOURCE)_ArrestDialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4)
+AND
+DB_CrimeArrest_CustomDialog(_Arrester,_CrimeID,_NewArrestDialog)
+THEN
+NOT DB_CrimeArrest_CustomDialog(_Arrester,_CrimeID,(DIALOGRESOURCE)_NewArrestDialog);
+SetVarUUID(_Arrester,"ArrestDialog",_NewArrestDialog);
+PROC_StartArrestDialog(_Arrester,_CrimeID,_Criminal1,_Criminal2,_Criminal3,_Criminal4,(DIALOGRESOURCE)_NewArrestDialog);
+
+PROC 
+PROC_StartArrestDialog((CHARACTER)_Arrester,(INTEGER)_CrimeID,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_ArrestDialog)
+THEN
+ClearFlag((FLAG)GEB_Arrest_HavePrison_602741c9-b5be-6479-f456-4781383551ff, _Arrester, 0); // flagType: Object
+
+//--- Setup the Arrester's script
+PROC 
+PROC_StartArrestDialog((CHARACTER)_Arrester,(INTEGER)_CrimeID,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_ArrestDialog)
+AND
+CharacterGetCrimeRegion(_Criminal1, _RegionID)
+AND
+CrimeGetType(_CrimeID,_CrimeType)
+THEN
+PROC_CrimeSetupCountFlag(_CrimeID,_Arrester,_Criminal1,_Criminal2,_Criminal3,_Criminal4,_CrimeType,_ArrestDialog);
+PROC_CrimeStartRegionArrestInterrogation(_RegionID,_CrimeID,_ArrestDialog,_Arrester,_Criminal1,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CheckStartArrestInterrogation((INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+NOT DB_Crime_FailedToInterruptStoryDialogs(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4)
+THEN
+PROC_CrimeStartArrestInterrogation(_CrimeID,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4,1);
+
+PROC
+PROC_CheckStartArrestInterrogation((INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+DB_Crime_FailedToInterruptStoryDialogs(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4)
+THEN
+PROC_CrimeStartArrestInterrogation(_CrimeID,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4,0);
+NOT DB_Crime_FailedToInterruptStoryDialogs(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+DB_RegionPrison(_RegionID,_,_)
+AND
+NOT QRY_CRIME_PrisonBlocked(_RegionID)
+THEN
+SetFlag((FLAG)GEB_Arrest_HavePrison_602741c9-b5be-6479-f456-4781383551ff, _Arrester); // flagType: Object
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+_RegionID != ""
+AND
+DialogIsAutomated(_ArrestDialog, 1)
+THEN
+DebugBreak("Arrest dialog is automated, is assumed to be interactive!");
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+_RegionID != ""
+THEN
+DB_CRIME_StartingArrestDialog(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal);
+PROC_CrimeInterruptStoryDialogs("Arrest",_CrimeID,_ArrestDialog,1,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+_RegionID == ""
+AND
+DB_ReactOutOfRegion(_Tag)
+AND
+IsTagged(_Arrester,_Tag,1)
+AND
+NOT DB_ReactingCharOutOfRegion(_Arrester,_)
+THEN
+DB_CRIME_StartingArrestDialog(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal);
+PROC_CrimeInterruptStoryDialogs("Arrest",_CrimeID,_ArrestDialog,1,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+DB_ReactingCharOutOfRegion(_Arrester,_Tag);
+
+// We change crime dialog in the next section, so replace it in the DB which is used to clean some stuff on crime end
+PROC
+PROC_CrimeStartRegionArrestInterrogation((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+_RegionID == ""
+AND
+NOT DB_ReactingCharOutOfRegion(_Arrester,_)
+THEN
+PROC_CrimeStartRegionArrestInterrogation_SubActions(_RegionID,_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation_SubActions((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+DB_Crime_RequestedDialogWithTension(_CrimeName,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4)
+THEN
+NOT DB_Crime_RequestedDialogWithTension(_CrimeName,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+DB_Crime_RequestedDialogWithTension(_CrimeName,GEB_Attack_80d78319-8d61-53c6-053c-c40b8657892f,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation_SubActions((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+THEN
+DB_CRIME_StartingArrestDialog(_CrimeID,GEB_Attack_80d78319-8d61-53c6-053c-c40b8657892f,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+PROC_CrimeInterruptStoryDialogs("Arrest",_CrimeID,GEB_Attack_80d78319-8d61-53c6-053c-c40b8657892f,1,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC
+PROC_CrimeStartRegionArrestInterrogation((STRING)_RegionID,(INTEGER)_CrimeID,(DIALOGRESOURCE)_ArrestDialog,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4)
+AND
+DB_ReactingCharOutOfRegion(_Arrester,_Tag)
+THEN
+NOT DB_ReactingCharOutOfRegion(_Arrester,_Tag);
+
+PROC
+PROC_CRIME_DialogsStoppedCallback("Arrest",(INTEGER)_CrimeID)
+AND
+DB_CRIME_StartingArrestDialog(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4)
+THEN
+NOT DB_CRIME_StartingArrestDialog(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+PROC_CheckStartArrestInterrogation(_CrimeID,_ArrestDialog,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC 
+PROC_CrimeStartArrestInterrogation((INTEGER)_CrimeID,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,_)
+AND
+DB_EvidenceFound(_CrimeID,_Interrogator)
+AND
+DB_Crime_CallingGuards(_Interrogator,_Criminal,_ID)
+THEN
+NOT DB_Crime_CallingGuards(_Interrogator,_Criminal,_ID);
+NOT DB_EvidenceFound(_CrimeID,_Interrogator);
+DB_EvidenceFound(_CrimeID,_Arrester);
+
+PROC 
+PROC_CrimeStartArrestInterrogation((INTEGER)_CrimeID,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,1)
+AND
+DB_EvidenceFound(_CrimeID,_Interrogator)
+AND
+DB_Crime_CallingGuards(_Interrogator,_Criminal,_ID)
+THEN
+DB_StopInterrogationAfterDialog(_CrimeID,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+PROC 
+PROC_CrimeStartArrestInterrogation((INTEGER)_CrimeID,(CHARACTER)_Arrester,(CHARACTER)_Criminal,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,0)
+AND
+DB_Crime_Interrogation(_CrimeID,_,_,_,_,_,_)
+THEN
+PROC_StopInterrogation(_CrimeID,_Arrester,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+IF
+DialogEnded(_,_Instance)
+AND
+DB_ArrestDialog(_Player,_Instance,_CrimeID)
+THEN
+ClearFlag((FLAG)Allow_Arrest_2677bf25-03f3-6323-c72a-0ca61fe5ad01, _Player, 0); // flagType: Object
+NOT DB_ArrestDialog(_Player,_Instance,_CrimeID);
+PROC_CrimeStartArrest((CHARACTER)_Player,_Instance);
+
+IF
+DialogEnded(_,_Instance)
+AND
+DB_DialogNPCs(_Instance,_NPC,1)
+AND
+DB_StopInterrogationAfterDialog(_CrimeID,(CHARACTER)_NPC,_Criminal,_Criminal2,_Criminal3,_Criminal4)
+THEN
+PROC_StopInterrogation(_CrimeID,_NPC,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+NOT DB_StopInterrogationAfterDialog(_CrimeID,_NPC,_Criminal,_Criminal2,_Criminal3,_Criminal4);
+
+// TODO Remove the DB_ReactingCharOutOfRegion(_Arrester,_Tag) On Tag Removed
+//END_REGION
+
+//REGION Arrest Play As AD
+IF
+EntityEvent((CHARACTER)_Arrester,"GLO_PlayArrestAsAD")
+AND
+GetVarUUID(_Arrester,"ArrestDialog",_ArrestDialog)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)_ArrestDialog,_Arrester);
+//END_REGION
+
+//REGION Logic for ignoring the escape crimes
+IF
+DB_CRIME_Prison_IgnoreEscapeReason((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,(STRING)_Reason)
+AND
+NOT DB_CRIME_Prison_IgnoreEscape(_Player,_PrisonTrigger)
+THEN
+DB_CRIME_Prison_IgnoreEscape(_Player,_PrisonTrigger);
+PROC_CRIME_PrisonIgnoreEscapeCrimes(_Player,_PrisonTrigger,1);
+
+IF
+DB_CRIME_Prison_IgnoreEscape(_Player,_PrisonTrigger)
+AND
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,_)
+THEN
+NOT DB_CRIME_Prison_IgnoreEscape(_Player,_PrisonTrigger);
+PROC_CRIME_PrisonIgnoreEscapeCrimes(_Player,_PrisonTrigger,0);
+
+PROC
+PROC_CRIME_PrisonIgnoreEscapeCrimes((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,1)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+CrimeIgnoreCriminal(_EscapeID,_Player,_)
+AND
+_EscapeADID != 0
+AND
+CrimeIgnoreCriminal(_EscapeADID,_Player,_)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CRIME_PrisonIgnoreEscapeCrimes((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,0)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+CrimeStopIgnoringCriminal(_EscapeID,_Player,_)
+AND
+_EscapeADID != 0
+AND
+CrimeStopIgnoringCriminal(_EscapeADID,_Player,_)
+THEN
+DB_NOOP(1);
+
+IF
+DB_CRIME_Prison_IgnoreEscape(_Player,_PrisonTrigger)
+AND
+NOT DB_PlayerEscapedPrison(_Player,_,_PrisonTrigger,_,_,_,_,_,_)
+THEN
+NOT DB_CRIME_Prison_IgnoreEscape(_Player,_PrisonTrigger);
+//END_REGION
+
+//REGION Prisoner shapeshift handling
+
+// 1. Handle shapeshift form when arrested
+// Default cell
+PROC
+PROC_CRIME_LockPrison((CHARACTER)_Player,(TRIGGER)_PrisonSpawnPoint)
+AND
+DB_IsArrested(_,_Player)
+AND
+DB_Players(_Player)
+AND
+DB_RegionPrison(_, _PrisonTrigger, _PrisonSpawnPoint)
+THEN
+PROC_CRIME_PrisonShapeRecord(_Player,_PrisonTrigger);
+
+// Custom cell
+PROC
+PROC_CRIME_LockPrison((CHARACTER)_Player,(TRIGGER)_PrisonSpawnPoint)
+AND
+DB_IsArrested(_,_Player)
+AND
+DB_Players(_Player)
+AND
+DB_RegionPrison_CustomCell(_, _PrisonTrigger, _, _PrisonSpawnPoint, _, _)
+THEN
+PROC_CRIME_PrisonShapeRecord(_Player,_PrisonTrigger);
+
+// NPCs will always recognise you when not shapeshifted if arrested that way
+// (every time you shapeshift it's considered unique form, but your base form remains the same)
+PROC
+PROC_CRIME_PrisonShapeRecord((CHARACTER)_Player,(TRIGGER)_PrisonTrigger)
+AND
+NOT DB_PolymorphedInto(_Player,_,_,_)
+THEN
+DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,1);
+
+PROC
+PROC_CRIME_PrisonShapeRecord((CHARACTER)_Player,(TRIGGER)_PrisonTrigger)
+AND
+NOT DB_CRIME_PrisonArrestedNonShapeshifted(_Player,(TRIGGER)_PrisonTrigger,1)
+THEN
+DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,0);
+
+// They also always recognise you in your current shape
+PROC
+PROC_CRIME_PrisonShapeRecord((CHARACTER)_Player,(TRIGGER)_PrisonTrigger)
+THEN
+DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger);
+
+// Shapeshifted as prisoner and no one noticed -> don't know your shape any more...
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_Player,(INTEGER)_ID)
+AND
+NOT DB_CRIME_WitnessedShapeshift(_,_ID)
+AND
+DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger)
+THEN
+NOT DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger);
+
+// ... also if outside crime region to which prison belongs...
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_Player,(INTEGER)_ID)
+AND
+DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger)
+AND
+// Will return empty string when outside a crime region
+CharacterGetCrimeRegion(_Player,_Region)
+AND
+NOT DB_RegionPrison(_Region,_PrisonTrigger,_)
+THEN
+NOT DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger);
+
+// ... unless you changed back into your default shape and that's how you were arrested
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_Player,_)
+AND
+DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,1)
+AND
+NOT DB_PolymorphedInto(_Player,_,_,_)
+THEN
+DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger);
+
+
+// 2. Handle shapeshift form after escaping
+
+// Polymorph into default shape -> no longer ignored if you were arrested in your default shape (regardless of witnesses)
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_Player,(INTEGER)_ID)
+AND
+// The "1" matches _ArrestedNotShapeshifted
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,1,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+NOT DB_PolymorphedInto(_Player,_,_,_)
+THEN
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift");
+
+// Polymorph into non-default shape while no witnesses (or witnesses that don't care) -> ignored from now on
+PROC
+PROC_CRIME_WitnessedShapeshift((CHARACTER)_Player,(INTEGER)_ID)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift")
+AND
+DB_PolymorphedInto(_Player,_,_,_)
+AND
+NOT QRY_CRIME_ShapeshiftWitnessThatCares(_Player,_ID,_Arrester)
+THEN
+DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift");
+
+QRY
+QRY_CRIME_ShapeshiftWitnessThatCares((CHARACTER)_Criminal,(INTEGER)_ID,(CHARACTER)_Arrester)
+AND
+QRY_OnlyOnce_Reset("CRIME_ShapeshiftWitnessThatCares")
+AND
+DB_CRIME_WitnessedShapeshift(_Witness,_ID)
+AND
+NOT DB_OnlyOnce("CRIME_ShapeshiftWitnessThatCares")
+AND
+// Guards are allied to civilians but not the other way around, yet we assume
+// that civilians will also report
+IsAlly(_Witness,_Arrester,_Ally1)
+AND
+IsAlly(_Arrester,_Witness,_Ally2)
+AND
+DB_LogicOr(_Ally1,_Ally2,1)
+AND
+// If they're unable to start an AD, assume they're too busy/incapacitated to notice you shapeshifting as well
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)GEB_AD_Noticed_CriminalShapeshifting_d14d54f9-ed7e-a914-c040-7c68a93a76b7,_Witness,0,0,0,0)
+AND
+QRY_OnlyOnce("CRIME_ShapeshiftWitnessThatCares")
+THEN
+LookAtEntity(_Witness,_Criminal);
+//END_REGION
+
+//REGION Escaping prison
+// Default cell
+IF
+LeftTrigger(_Player,_PrisonTrigger)
+AND
+DB_IsArrested(_Arrester,_Player)
+AND
+DB_Players(_Player)
+AND
+DB_PlayerPrison((TRIGGER)_PrisonTrigger,(STRING)_PrisonCrimeName,(STRING)_PrisonCrimeNameAD,(STRING)_FugitiveStatus)
+AND
+DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,_ArrestedNotShapeshifted)
+THEN
+NOT DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,_ArrestedNotShapeshifted);
+PROC_CRIME_Prison_Escaped(_Player, _Arrester, _PrisonTrigger, _ArrestedNotShapeshifted, _PrisonCrimeName, _PrisonCrimeNameAD, _FugitiveStatus);
+
+// Custom cell
+IF
+LeftTrigger(_Player,_PrisonTrigger)
+AND
+DB_IsArrested(_Arrester,_Player)
+AND
+DB_RegionPrison_CustomCell(_MainPrisonTrigger, _PrisonTrigger, _Player, _, _, _)
+AND
+DB_PlayerPrison((TRIGGER)_MainPrisonTrigger,(STRING)_PrisonCrimeName,(STRING)_PrisonCrimeNameAD,(STRING)_FugitiveStatus)
+AND
+DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,_ArrestedNotShapeshifted)
+THEN
+NOT DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,_ArrestedNotShapeshifted);
+PROC_CRIME_Prison_Escaped(_Player, _Arrester, _PrisonTrigger, _ArrestedNotShapeshifted, _PrisonCrimeName, _PrisonCrimeNameAD, _FugitiveStatus);
+
+
+PROC
+PROC_CRIME_Prison_Escaped((CHARACTER)_Player, (CHARACTER)_Arrester, (TRIGGER)_PrisonTrigger, (INTEGER)_ArrestedNotShapeshifted, (STRING)_PrisonCrimeName, (STRING)_PrisonCrimeNameAD, (STRING)_FugitiveStatus)
+AND
+DB_Players(_Player)
+AND
+QRY_AnyRegionActive()
+THEN
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,0,0,_FugitiveStatus);
+ApplyStatus(_Player,_FugitiveStatus,100.0,1);
+
+//Non-player prison escape: AD prison escape crime fallback
+PROC
+PROC_CRIME_Prison_Escaped((CHARACTER)_Character, (CHARACTER)_Arrester, (TRIGGER)_PrisonTrigger, (INTEGER)_ArrestedNotShapeshifted, (STRING)_PrisonCrimeName, (STRING)_PrisonCrimeNameAD, (STRING)_FugitiveStatus)
+AND
+NOT DB_Players(_Character)
+AND
+QRY_AnyRegionActive()
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+PROC_CharacterRegisterCrime(_Character,"PrisonEscape_AD",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,_CrimeID);
+
+PROC
+PROC_CRIME_Prison_Escaped((CHARACTER)_Player, (CHARACTER)_Arrester, (TRIGGER)_PrisonTrigger, (INTEGER)_ArrestedNotShapeshifted, (STRING)_PrisonCrimeName, (STRING)_PrisonCrimeNameAD, (STRING)_FugitiveStatus)
+THEN
+ClearFlag((FLAG)IsInPrison_c9b75b21-6eba-065e-7680-fc9a0c5838e4, _Player, 0); // flagType: Object
+
+PROC
+PROC_CRIME_Prison_Escaped((CHARACTER)_Player, (CHARACTER)_, (TRIGGER)_PrisonTrigger, (INTEGER)_ArrestedNotShapeshifted, (STRING)_PrisonCrimeName, (STRING)_PrisonCrimeNameAD, (STRING)_FugitiveStatus)
+AND
+DB_IsArrested(_Arrester,_Player)
+THEN
+NOT DB_IsArrested(_Arrester,_Player);
+
+IF
+StatusApplied(_Player,_FugitiveStatus,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeDummyID,_EscapeADDummyID,_FugitiveStatus)
+AND
+CrimeGetNewID(_EscapeID)
+THEN
+NOT DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeDummyID,_EscapeADDummyID,_FugitiveStatus);
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADDummyID,_FugitiveStatus);
+PROC_CharacterRegisterCrime(_Player,_PrisonCrimeName,NULL_00000000-0000-0000-0000-000000000000,_Player,_EscapeID);
+
+PROC
+PROC_CharacterRegisterCrime_Blocked((CHARACTER)_Char,(STRING)_PrisonCrimeName,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_CrimeID,_EscapeADDummyID,_FugitiveStatus)
+THEN
+NOT DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_CrimeID,_EscapeADDummyID,_FugitiveStatus);
+
+IF
+StatusApplied(_Player,_FugitiveStatus,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADDummyID,_FugitiveStatus)
+AND
+_PrisonCrimeNameAD != ""
+AND
+CrimeGetNewID(_EscapeADID)
+THEN
+NOT DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADDummyID,_FugitiveStatus);
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus);
+PROC_CharacterRegisterCrime(_Player,_PrisonCrimeNameAD,NULL_00000000-0000-0000-0000-000000000000,_Player,_EscapeADID);
+
+PROC
+PROC_CharacterRegisterCrime_Blocked((CHARACTER)_Char,(STRING)_PrisonCrimeNameAD,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_CrimeID,_FugitiveStatus)
+THEN
+NOT DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_CrimeID,_FugitiveStatus);
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,0,_FugitiveStatus);
+
+// Use and clean up DB_CRIME_PrisonKnowCurrentShape when escaping the prison
+IF
+StatusApplied((CHARACTER)_Player,_FugitiveStatus,_,_)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_CrimeID,_FugitiveStatus)
+AND
+NOT DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger)
+THEN
+DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift");
+
+IF
+StatusApplied((CHARACTER)_Player,_FugitiveStatus,_,_)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_CrimeID,_FugitiveStatus)
+AND
+DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger)
+THEN
+NOT DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger);
+
+// Fugitive status runs out -> stop escaped crimes
+IF
+StatusRemoved(_Player,_FugitiveStatus,_,_)
+AND
+QRY_CRIME_Prison_PlayerOrDismissedAvatar((CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+THEN
+PROC_CRIME_Prison_StopFugitiveCrimes((CHARACTER)_Player);
+
+PROC
+PROC_CRIME_Prison_StopFugitiveCrimes((CHARACTER)_Player)
+AND
+QRY_CRIME_Prison_PlayerOrDismissedAvatar((CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+THEN
+NOT DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus);
+CharacterStopCrime(_Player,_PrisonCrimeName,NULL_00000000-0000-0000-0000-000000000000);
+CharacterStopCrime(_Player,_PrisonCrimeNameAD,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CRIME_PrisonRemoveFugitiveStatuses((CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+THEN
+RemoveStatus(_Player,_FugitiveStatus,NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_CRIME_Prison_PlayerOrDismissedAvatar((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Prison_PlayerOrDismissedAvatar((CHARACTER)_Player)
+AND
+DB_DismissedAvatar(_Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Returning to your cell
+IF
+EnteredTrigger(_Player,_PrisonTrigger)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_,_,_FugitiveStatus)
+THEN
+PROC_CRIME_Prison_CheckNoLongerFugitive(_Player);
+
+IF
+Closed(_CellDoor)
+AND
+DB_PlayerPrison_Door(_PrisonTrigger,(ITEM)_CellDoor,(STRING)_KeyName)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_,_,_FugitiveStatus)
+THEN
+PROC_CRIME_Prison_CheckNoLongerFugitive(_Player);
+
+IF
+Closed(_CellDoor)
+AND
+DB_RegionPrison_CustomCell(_MainPrisonTrigger,_CustomPrisonTrigger,_Char,_PrisonSpawnPoint,_CellDoor,_KeyName)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_CustomPrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_,_,_FugitiveStatus)
+THEN
+PROC_CRIME_Prison_CheckNoLongerFugitive(_Player);
+
+IF
+LeftCombat(_Player,_)
+AND
+DB_PlayerEscapedPrison((CHARACTER)_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_,_,_FugitiveStatus)
+THEN
+PROC_CRIME_Prison_CheckNoLongerFugitive(_Player);
+
+PROC
+PROC_CRIME_PrisonIgnoreEscapeCrimes((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,0)
+THEN
+PROC_CRIME_Prison_CheckNoLongerFugitive(_Player);
+
+// If the player is in the cell without doors that are intact and opened, player loses fugitive status
+PROC
+PROC_CRIME_Prison_CheckNoLongerFugitive((CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+NOT DB_Is_InCombat(_Player,_)
+AND
+NOT DB_CRIME_Prison_IgnoreEscape(_Player,_)
+AND
+DB_InRegion(_Player,_PrisonTrigger)
+AND
+NOT QRY_CRIME_Prison_CellHasIntactOpenDoors(_PrisonTrigger)
+AND
+NOT QRY_CRIME_SeenByAlliedNPC(_Player,_Arrester)
+THEN
+PROC_CRIME_SetInPrisonArrestedBy(_Player,_Arrester,_FugitiveStatus);
+NOT DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus);
+PROC_CRIME_BackInPrisonRestoreShapeshiftTracking(_Player,_PrisonTrigger,_ArrestedNotShapeshifted);
+
+QRY
+QRY_CRIME_SeenByAlliedNPC((CHARACTER)_Player,(CHARACTER)_Arrester)
+AND
+DB_Sees(_Character,_Player)
+AND
+IsAlly(_Character,_Arrester,_Ally1)
+AND
+IsAlly(_Arrester,_Character,_Ally2)
+AND
+DB_LogicOr(_Ally1,_Ally2,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Prison_CellHasIntactOpenDoors((TRIGGER)_PrisonTrigger)
+AND
+DB_PlayerPrison_Door(_PrisonTrigger,(ITEM)_CellDoor,(STRING)_KeyName)
+AND
+Exists(_CellDoor,1)
+AND
+IsDestroyed(_CellDoor, 0)
+AND
+IsClosed(_CellDoor, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Prison_CellHasIntactOpenDoors((TRIGGER)_CustomPrisonTrigger)
+AND
+DB_RegionPrison_CustomCell(_MainPrisonTrigger,_CustomPrisonTrigger,_Char,_PrisonSpawnPoint,_CellDoor,_KeyName)
+AND
+Exists(_CellDoor,1)
+AND
+IsDestroyed(_CellDoor, 0)
+AND
+IsClosed(_CellDoor, 0)
+THEN
+DB_NOOP(1);
+
+
+PROC
+PROC_CRIME_BackInPrisonRestoreShapeshiftTracking((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,(INTEGER)_ArrestedNotShapeshifted)
+THEN
+DB_CRIME_PrisonArrestedNonShapeshifted(_Player,_PrisonTrigger,_ArrestedNotShapeshifted);
+
+PROC
+PROC_CRIME_BackInPrisonRestoreShapeshiftTracking((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,(INTEGER)_ArrestedNotShapeshifted)
+AND
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift")
+THEN
+DB_CRIME_PrisonKnowCurrentShape(_Player,_PrisonTrigger);
+
+PROC
+PROC_CRIME_BackInPrisonRestoreShapeshiftTracking((CHARACTER)_Player,(TRIGGER)_PrisonTrigger,(INTEGER)_ArrestedNotShapeshifted)
+AND
+DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift")
+THEN
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"Shapeshift");
+//END_REGION
+
+//REGION Leaving and re-entering the prison's crime region after escaping
+
+// Ignore the escape crimes outside the prison's region
+IF
+LeftTrigger(_Player,_PrisonRegionTrigger)
+AND
+DB_Players(_Player)
+AND
+DB_PrisonReactionTrigger(_PrisonTrigger,_PrisonRegionTrigger)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+NOT QRY_CRIME_PrisonInAnyRegionTrigger(_Player,_PrisonTrigger)
+THEN
+DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"OutsideCrimeRegion");
+
+IF
+EnteredTrigger(_Player,_PrisonRegionTrigger)
+AND
+DB_Players(_Player)
+AND
+DB_PrisonReactionTrigger(_PrisonTrigger,_PrisonRegionTrigger)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+THEN
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"OutsideCrimeRegion");
+
+// Avoid wrongful accusations due to Entered/LeftTrigger frame delays when teleporting
+PROC
+PROC_CRIME_RecheckOnFastTravel((INTEGER)_CrimeID,(CHARACTER)_Player)
+AND
+DB_CRIME_PrisonRecheckWasOutsidePrison(_PrisonTrigger)
+THEN
+NOT DB_CRIME_PrisonRecheckWasOutsidePrison(_PrisonTrigger);
+
+PROC
+PROC_CRIME_RecheckOnFastTravel((INTEGER)_EscapeID,(CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+NOT QRY_CRIME_PrisonInAnyRegionTrigger(_Player,_PrisonTrigger)
+THEN
+DB_CRIME_PrisonRecheckWasOutsidePrison(_PrisonTrigger);
+DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"OutsideCrimeRegion");
+
+PROC
+PROC_CRIME_RecheckOnFastTravel((INTEGER)_EscapeID,(CHARACTER)_Player)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+NOT DB_CRIME_PrisonRecheckWasOutsidePrison(_PrisonTrigger)
+THEN
+NOT DB_CRIME_Prison_IgnoreEscapeReason(_Player,_PrisonTrigger,"OutsideCrimeRegion");
+
+
+QRY
+QRY_CRIME_PrisonInAnyRegionTrigger((CHARACTER)_Player,(TRIGGER)_PrisonTrigger)
+AND
+DB_PrisonReactionTrigger(_PrisonTrigger,_PrisonRegionTrigger)
+AND
+// Not DB_InRegion to handle frame delays
+IsInTrigger(_Player,_PrisonRegionTrigger,1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Clearing the status
+IF
+FlagSet(GEB_ClearTag_FUGITIVE_b7e841d0-8b8c-c18b-48af-8d2a283f62e6, _Player, _) // flagType: Object //set in GEB_Arrest_EscapedPrison
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_CRIME_TryRemoveFugitiveStatus(_Player);
+
+PROC
+PROC_CRIME_TryRemoveFugitiveStatus((CHARACTER)_Player)
+AND
+CharacterGetCrimeRegion(_Player,_Region)
+AND
+DB_PlayerEscapedPrison(_Player,_Arrester,_PrisonTrigger,_ArrestedNotShapeshifted,_PrisonCrimeName,_PrisonCrimeNameAD,_EscapeID,_EscapeADID,_FugitiveStatus)
+AND
+DB_Region_Prison_HasBeenRegionPrison(_Region,_PrisonTrigger)
+AND
+HasActiveStatus(_Player,_FugitiveStatus,1)
+THEN
+RemoveStatus(_Player,_FugitiveStatus);
+
+IF
+FlagSet(GEB_ClearTag_FUGITIVE_b7e841d0-8b8c-c18b-48af-8d2a283f62e6, _Player, _ID) // flagType: Object //set in GEB_Arrest_EscapedPrison
+AND
+DB_DialogNPCs(_ID,_NPC,1)
+THEN
+PROC_CrimeBribedGuards(_NPC,_Player);
+
+PROC
+PROC_CrimeBribedGuards((GUIDSTRING)_NPC,(GUIDSTRING)_Player)
+THEN
+CrimeIgnoreAllCrimesForCriminal(_Player,_NPC,300000);
+IgnoreCrimesInRadiusWithTagsForDuration((CHARACTER)_Player,20.0,"GUARD_0b52f35e-fb1f-4865-bcd2-5d21ef7343cd",300000);
+
+IF
+FlagSet(GEB_ClearTag_FUGITIVE_b7e841d0-8b8c-c18b-48af-8d2a283f62e6, _Player, _) // flagType: Object //set in GEB_Arrest_EscapedPrison
+THEN
+ClearFlag((FLAG)GEB_ClearTag_FUGITIVE_b7e841d0-8b8c-c18b-48af-8d2a283f62e6, _Player, 0); // flagType: Object
+
+IF
+ShortRested(_Player)
+THEN
+PROC_CRIME_TryRemoveFugitiveStatus(_Player);
+//END_REGION
+
+//REGION GUARD CALLING
+IF
+FlagSet(GEB_Arrest_Player_4434aa46-3370-47e8-8c3f-c9d9f9b7bce5, _NPC, _Inst) // flagType: Object
+AND
+DB_DialogNPCs(_Inst,_OldLead,1)
+THEN
+DB_CrimeArrestCallingGuards((CHARACTER)_OldLead,_Inst);
+
+IF
+FlagSet(GEB_Arrest_Player_4434aa46-3370-47e8-8c3f-c9d9f9b7bce5, _NPC, _Inst) // flagType: Object
+AND
+DB_DialogNPCs(_Inst,_OldLead,1)
+AND
+NOT DB_Is_InCombat((CHARACTER)_NPC,_)
+AND
+NOT DB_PickedLeadToHelp(_,_Inst)
+AND
+GetHandlingCrimeID((CHARACTER)_OldLead,_CrimeID)
+AND
+CrimeTransferLeadershipTo((CHARACTER)_OldLead,_CrimeID,_NPC,1)
+AND
+GetVarObject(_OldLead,"Criminal1",_Criminal1)
+AND
+GetVarObject(_OldLead,"Criminal2",_Criminal2)
+AND
+GetVarObject(_OldLead,"Criminal3",_Criminal3)
+AND
+GetVarObject(_OldLead,"Criminal4",_Criminal4)
+THEN
+SetHasDialog(_OldLead,0);
+DB_GuardCaller(_CrimeID,_OldLead,_NPC);
+SetEntityEvent(_OldLead,"CRIME_Flee");
+DB_PickedLeadToHelp(_NPC,_Inst);
+PROC_CRIME_SetWeaponUnsheathed(_Npc,_CrimeID);
+SetVarObject(_NPC,"Criminal1",_Criminal1); 
+SetVarObject(_NPC,"Criminal2",_Criminal2); 
+SetVarObject(_NPC,"Criminal3",_Criminal3); 
+SetVarObject(_NPC,"Criminal4",_Criminal4); 
+SetVarUUID(_NPC,"ArrestDialog",GEB_Arrest_fabc5060-4331-61ef-a99e-f836fbed25bc);
+SetEntityEvent(_NPC,"CRIME_Perform_Arrest");
+
+IF
+DialogEnded(_Dialog,_Inst)
+AND
+DB_CrimeArrestCallingGuards(_OldLead,_Inst)
+AND
+NOT DB_PickedLeadToHelp(_,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,1)
+THEN
+NOT DB_CrimeArrestCallingGuards(_OldLead,_Inst);
+//failed to transfer leadership, start combat as fallback
+PROC_TryStartAD(GEB_AD_DealWithCrime_2a70dd9f-c256-a987-e4c7-05a629559fd6,_OldLead);
+PROC_SetRelationTemporaryHostile((CHARACTER)_Player,_OldLead);
+
+IF
+DialogEnded(_Dialog,_Inst)
+AND
+DB_PickedLeadToHelp(_NPC,_Inst)
+AND
+DB_DialogNPCs(_Inst,_OldLead,1)
+THEN
+NOT DB_PickedLeadToHelp(_NPC,_Inst);
+NOT DB_CrimeArrestCallingGuards((CHARACTER)_OldLead,_Inst);
+
+IF
+OnCrimeConfrontationDone(_CrimeID,_OldLead,_,_,_,_,_)
+AND
+DB_GuardCaller(_CrimeID,_OldLead,_NPC)
+THEN
+SetHasDialog(_OldLead,1);
+NOT DB_GuardCaller(_CrimeID,_OldLead,_NPC);
+
+
+
+//END_REGION
+
+//REGION Helpers
+QRY
+QRY_CRIME_Prison_IsInAnyPrison((CHARACTER)_Player)
+AND
+DB_RegionPrison(_Area, _PrisonTrigger, _)
+AND
+IsInTrigger(_Player, _PrisonTrigger, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Prison_IsInAnyPrison((CHARACTER)_Player)
+AND
+DB_RegionPrison_CustomCell(_, _PrisonTrigger, _Player, _, _, _)
+AND
+IsInTrigger(_Player, _PrisonTrigger, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

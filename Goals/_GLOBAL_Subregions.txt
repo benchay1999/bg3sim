@@ -1,0 +1,231 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//When you need to mark the subregion's location on the map:
+
+//	- Use this fact with a 1 as the third value when the subregion's string ID is identical to the marker's ID
+//		DB_Subregion((TRIGGERGUID)_Trigger,(STRING)_,(INTEGER)_,(INTEGER)_)
+
+//	- Use when the marker was defined with a different ID than the subregion's name
+//		DB_SubregionMarker(_Trigger,_Message,_Marker,(INTEGER)_)
+
+//The last parameter is the priority level, with higher numbers meaning a higher priority, so that a character who is in several
+//triggers at once is considered to be in the one with the highest priority.
+KBSECTION
+IF
+DB_Subregion((TRIGGER)_Trigger,(STRING)_Message,(INTEGER)_ShowMarker, (INTEGER)_Level)
+THEN
+DB_Subregion_Level((TRIGGER)_Trigger, _Level);
+
+IF
+DB_SubregionMarker((TRIGGER)_Trigger,(STRING)_Message, (STRING)_Marker, (INTEGER)_Level)
+THEN
+DB_Subregion_Level((TRIGGER)_Trigger, _Level);
+
+IF
+DB_Subregion_Level((TRIGGER)_Trigger, _Level)
+AND
+NOT DB_SubregionMarker((TRIGGER)_Trigger, _, _, _Level)
+AND
+NOT DB_Subregion((TRIGGER)_Trigger, _, _, _Level)
+THEN
+NOT DB_Subregion_Level((TRIGGER)_Trigger, _Level);
+
+IF
+DB_Subregion((TRIGGER)_Trigger, _, _, _)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+IF
+DB_SubregionMarker((TRIGGER)_Trigger,(STRING)_, (STRING)_, _)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+IF
+EnteredTrigger(_Character,_Trigger)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_Subregion_Level(_Trigger, _Level)
+AND
+NOT QRY_Subregion_InDeeperLevel(_Character, _Level)
+THEN
+PROC_Subregion_Entered(_Character, _Trigger);
+
+QRY
+QRY_Subregion_InDeeperLevel((CHARACTER)_Character, (INTEGER)_Level)
+AND
+DB_InRegion(_Character, _Trigger)
+AND
+DB_Subregion_Level(_Trigger, _OtherLevel)
+AND
+_OtherLevel > _Level
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Subregion_Entered(_Character, _Trigger)
+AND
+DB_Subregion_Current(_Character, _OtherTrigger)
+THEN
+NOT DB_Subregion_Current(_Character, _OtherTrigger);
+
+PROC
+PROC_Subregion_Entered((CHARACTER)_Character, (TRIGGER)_Trigger)
+THEN
+DB_Subregion_Current(_Character, _Trigger);
+
+PROC
+PROC_Subregion_Entered(_Character, _Trigger)
+AND
+DB_Subregion(_Trigger,_Message,_ShowMarker,_)
+THEN
+SetSubRegionName(_Character,_Message,1);
+
+PROC
+PROC_Subregion_Entered(_Character, _Trigger)
+AND
+DB_SubregionMarker(_Trigger,_Message,_Marker,_)
+THEN
+SetSubRegionName(_Character,_Message,1);
+
+IF
+EnteredTrigger(_Character,_Trigger)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_Subregion(_Trigger,_Message,_ShowMarker, _)
+THEN
+PROC_CheckSetRegionMarker(_Message,_ShowMarker,_Character);
+
+IF
+EnteredTrigger(_Character,_Trigger)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_SubregionMarker(_Trigger,_Message,_Marker, _)
+THEN
+SetSubRegionName(_Character,_Message,1);
+PROC_CheckSetRegionMarker(_Marker,1,_Character);
+
+IF
+LeftTrigger(_Character, _Trigger)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_Subregion_Level(_Trigger, _Level)
+THEN
+PROC_FindNewSubregionOnExit(_Character);
+
+PROC
+PROC_FindNewSubregionOnExit(_)
+THEN
+PROC_ClearNewSubregionOnExit();
+
+PROC
+PROC_ClearNewSubregionOnExit()
+AND
+DB_Temp_LatestSubregion(_Trigger)
+THEN
+NOT DB_Temp_LatestSubregion(_Trigger);
+
+PROC
+PROC_FindNewSubregionOnExit((CHARACTER)_Character)
+AND
+DB_InRegion(_Character, _Trigger)
+AND
+DB_Subregion_Level(_Trigger, _Level)
+AND
+NOT QRY_Subregion_InDeeperLevel((CHARACTER)_Character, (INTEGER)_Level)
+THEN
+PROC_ClearNewSubregionOnExit();
+DB_Temp_LatestSubregion(_Trigger);
+
+
+PROC
+PROC_FindNewSubregionOnExit((CHARACTER)_Character)
+AND
+NOT DB_Temp_LatestSubregion(_)
+THEN
+SetSubRegionName(_Character, "",0);
+
+PROC
+PROC_FindNewSubregionOnExit((CHARACTER)_Character)
+AND
+DB_Temp_LatestSubregion(_Trigger)
+AND
+DB_Subregion(_Trigger,_Message, _, _)
+THEN
+SetSubRegionName(_Character,_Message,0);
+NOT DB_Temp_LatestSubregion(_Trigger);
+
+PROC
+PROC_CheckSetRegionMarker((STRING)_Message,1,(CHARACTER)_Character)
+AND
+DB_PartyMembers(_Character)
+THEN
+PROC_ShowMarker(_Character,_Message);
+
+//REGION Runtime updating of region names.
+PROC
+PROC_Subregion_Rename((TRIGGER)_Trigger, (STRING)_NewName)
+AND
+DB_SubregionMarker(_Trigger,_Message,_Marker, _Level)
+THEN
+NOT DB_SubregionMarker(_Trigger,_Message,_Marker, _Level);
+DB_SubregionMarker(_Trigger,_NewName,_Marker, _Level);
+PROC_Subregion_UpdateName(_Trigger, _NewName);
+
+PROC
+PROC_Subregion_Rename((TRIGGER)_Trigger, (STRING)_NewName)
+AND
+DB_Subregion((TRIGGER)_Trigger,(STRING)_Message, 1, _)
+THEN
+PROC_Subregion_UpdateMarker(_Message, _NewName);
+
+PROC
+PROC_Subregion_Rename((TRIGGER)_Trigger, (STRING)_NewName)
+AND
+DB_Subregion((TRIGGER)_Trigger,(STRING)_Message,(INTEGER)_ShowMarker, (INTEGER)_Level)
+THEN
+NOT DB_Subregion((TRIGGER)_Trigger,(STRING)_Message,(INTEGER)_ShowMarker, (INTEGER)_Level);
+DB_Subregion((TRIGGER)_Trigger,(STRING)_NewName,(INTEGER)_ShowMarker, (INTEGER)_Level);
+PROC_Subregion_UpdateName(_Trigger, _NewName);
+
+PROC
+PROC_Subregion_Rename((TRIGGER)_Trigger, (STRING)_NewName, (STRING)_NewMarker)
+AND
+DB_SubregionMarker(_Trigger,_Message,_Marker, _Level)
+THEN
+NOT DB_SubregionMarker(_Trigger,_Message,_Marker, _Level);
+DB_SubregionMarker(_Trigger,_NewName,_NewMarker, _Level);
+PROC_Subregion_UpdateName(_Trigger, _NewName);
+PROC_Subregion_UpdateMarker(_Marker, _NewMarker);
+
+PROC
+PROC_Subregion_UpdateMarker((STRING)_OldMarker, (STRING)_NewMarker)
+AND
+DB_ActivePlayerMarker(_Character,_OldMarker)
+THEN
+PROC_HideMarker(_Character, _OldMarker);
+PROC_ShowMarker(_Character, _NewMarker);
+
+PROC
+PROC_Subregion_UpdateName((TRIGGER)_Trigger, (STRING)_NewName)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_InRegion(_Character, _Trigger)
+AND
+DB_Subregion_Level(_Trigger, _Level)
+AND
+NOT QRY_Subregion_InDeeperLevel(_Character, _Level)
+THEN
+SetSubRegionName(_Character,_NewName,0);
+
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

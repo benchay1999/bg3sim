@@ -1,0 +1,381 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Party Preset handling
+ 
+QRY
+QRY_IsDebugProfileAvatar((CHARACTER)_Char)
+AND
+DB_DebugProfileChar(_Char)
+AND
+IsTagged(_Char,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+THEN
+DB_Noop(1);
+
+//While the new party is being set up, we know that having no players is safe.
+QRY
+QRY_GameOver_BlockGameOver() 
+AND
+DB_GLO_DebugPartySettingUp(1)
+AND
+NOT DB_Players(_)
+THEN
+DB_Noop(1);
+
+PROC
+PROC_TryClearAvatarTag((CHARACTER)_Char)
+AND
+NOT DB_DebugAVATARFound(_Char)
+THEN
+ClearTag(_Char,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+
+IF
+CharacterLoadedInPreset(_Char)
+THEN
+NOT DB_DoNotFace(_Char);
+SetOnStage(_Char,1);
+DB_DebugProfileChar(_Char);
+PROC_SelectDebugAVATAR(_Char);
+
+IF
+PartyPresetLoaded(_Profile, _)
+THEN
+PROC_SetupDebugParty();
+PROC_DoDebugSetup(_Profile);
+// Set number-of-party-members flags
+PROC_CheckPartyFull();
+SysClear("DB_DebugProfileChar",1);
+
+IF
+PartyPresetLoaded(_, _)
+AND
+DB_DebugAVATARFound(_Char)
+THEN
+NOT DB_DebugAVATARFound(_Char);
+
+IF
+PartyPresetLoaded(_, _)
+AND
+DB_StoryReloaded(1)
+AND
+DB_CurrentLevel(_Level)
+THEN
+NOT DB_StoryReloaded(1);
+DB_CharacterCreationStarted(0);
+PROC_GLO_Origins_SetupRecruitment(_Level);
+
+PROC
+PROC_SetupDebugParty()
+THEN
+PROC_VerifyDebugAvatar();
+
+PROC
+PROC_SetupDebugParty()
+THEN
+DB_GLO_DebugPartySettingUp(1);
+
+PROC
+PROC_SetupDebugParty()
+AND
+DB_StoryReloaded(1)
+AND
+DB_Origins(_Origin)
+AND
+NOT QRY_IsDebugProfileAvatar(_Origin)
+THEN
+// Initialise DB_GLO_PartyMembers_DefaultFaction
+PROC_GLO_PartyMembers_Initialize(_Origin);
+
+//clear old party
+PROC
+PROC_SetupDebugParty()
+AND
+DB_Players(_Char)
+AND
+NOT QRY_IsDebugProfileAvatar(_Char)
+THEN
+NOT DB_Players(_Char);
+PROC_TryClearAvatarTag(_Char);
+DB_GLO_PartyMembers_BlockReturnToRecruitmentPosition(_Char);
+PROC_GLO_PartyMembers_Remove(_Char,NULL_00000000-0000-0000-0000-000000000000,1,0);
+NOT DB_GLO_PartyMembers_BlockReturnToRecruitmentPosition(_Char);
+
+//setup new one
+PROC
+PROC_SetupDebugParty()
+AND
+DB_DebugProfileChar(_Char)
+AND
+NOT DB_Players(_Char)
+THEN
+SetFlag((FLAG)GLO_CompanionHasBeenRecruited_57c070c4-9dfb-4d61-9e7b-4111bc1df030, _Char); // flagType: Object
+PROC_AddDebugCharToParty(_Char);
+
+PROC
+PROC_SetupDebugParty()
+THEN
+PROC_SetupDebugParty_ApprovalRating();
+
+PROC
+PROC_SetupDebugParty()
+THEN
+NOT DB_GLO_DebugPartySettingUp(1);
+
+PROC
+PROC_SelectDebugAVATAR((CHARACTER)_Char)
+AND
+NOT DB_DebugAVATARFound(_)
+AND
+IsTagged(_Char,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+THEN
+DB_DebugAVATARFound(_Char);
+
+PROC
+PROC_VerifyDebugAvatar()
+AND
+NOT DB_DebugAVATARFound(_)
+AND
+GetHostCharacter(_Host)
+THEN
+SetTag(_Host,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+DB_DebugAVATARFound(_Host);
+
+PROC
+PROC_VerifyDebugAvatar()
+AND
+DB_DebugProfileChar(_Char)
+AND
+NOT DB_GLO_PartyMembers_DefaultFaction(_Char,_)
+AND
+IsTagged(_Char,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,0)
+AND
+GetFaction(_Char, _PlayerFaction)
+THEN
+DB_GLO_PartyMembers_DefaultFaction(_Char,_PlayerFaction);
+
+PROC
+PROC_AddDebugCharToParty((CHARACTER)_Char)
+AND
+DB_DebugAVATARFound(_Host)
+AND
+IsTagged(_Char,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,0)
+THEN
+PROC_GLO_PartyMembers_Add(_Char,_Host);
+SetFlag((FLAG)GLO_HasSelectedPreset_2acc4437-4ba5-4205-b045-3596d66c050b, _Char); // flagType: Object
+
+PROC
+PROC_AddDebugCharToParty((CHARACTER)_Origin)
+AND
+DB_DebugAVATARFound(_Host)
+AND
+IsTagged(_Origin,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+THEN
+BlockNewCrimeReactions(_Origin,1);
+PROC_AssignCharacterToPlayer(_Origin,_Host);
+DB_Players(_Origin);
+PROC_RemoveAllDialogEntriesForSpeaker(_Origin);
+SetHasDialog(_Origin,0);
+PROC_CheckPartyFull();
+
+PROC
+PROC_AddDebugCharToParty((CHARACTER)_Origin)
+AND
+DB_DebugAVATARFound(_Host)
+AND
+IsTagged(_Origin,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+AND
+InSamePartyGroup(_Origin,_Host,0)
+THEN
+AttachToPartyGroup(_Origin,_Host);
+
+PROC
+PROC_AddDebugCharToParty((CHARACTER)_Char)
+AND
+NOT DB_DebugAVATARFound(_)
+THEN
+MakePlayer(_Char, NULL_00000000-0000-0000-0000-000000000000);
+MakePlayerActive(_Char);
+SetTag(_Char,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650);
+DB_DebugAVATARFound(_Char);
+PROC_AddDebugCharToParty(_Char);
+
+PROC
+PROC_AddDebugCharToParty((CHARACTER)_Char)
+AND
+IsTagged(_Char, (TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650, 1)
+THEN
+// Set now already so that origin recruitment setups can check this
+DB_Avatars(_Char);
+
+PROC
+PROC_SetupDebugParty_ApprovalRating()
+AND
+DB_Avatars(_Avatar)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Avatars(_Player)
+AND
+GetApprovalRating(_Player,_Avatar,_Rating)
+THEN
+PROC_SetupDebugParty_ReplaceApprovalRating(_Player,_Avatar,_Rating);
+
+PROC
+PROC_SetupDebugParty_ReplaceApprovalRating((CHARACTER)_Player,(CHARACTER)_Avatar,(INTEGER)_Rating)
+AND
+NOT DB_ApprovalRating(_Player,_Avatar,_)
+THEN
+DB_ApprovalRating(_Player,_Avatar,_Rating);
+
+PROC
+PROC_SetupDebugParty_ReplaceApprovalRating((CHARACTER)_Player,(CHARACTER)_Avatar,(INTEGER)_Rating)
+AND
+DB_ApprovalRating(_Player,_Avatar,_OldRating)
+AND
+_OldRating != _Rating
+THEN
+DB_ApprovalRating(_Player,_Avatar,_Rating);
+NOT DB_ApprovalRating(_Player,_Avatar,_OldRating);
+
+//END_REGION
+//REGION Logic
+//stub entry for shared story
+PROC
+PROC_Debug_GiveDebugBook()
+THEN
+DB_Noop(1);
+
+PROC
+PROC_DoDebugSetup((STRING)_Region)
+THEN
+PROC_DebugResetPreviousRegion();
+PROC_DebugSetCurrentRegion(_Region);
+PROC_DebugGiveTags(_Region);
+PROC_DebugGiveGlobalFlags(_Region);
+PROC_DebugGiveObjectFlags(_Region);
+PROC_Debug_GiveDebugBook();
+FireOsirisEvents();
+
+PROC
+PROC_DebugResetPreviousRegion()
+AND
+DB_DebugPreviousRegion(_Region)
+THEN
+PROC_DebugRemoveObjectFlags(_Region);
+PROC_DebugRemoveGlobalFlags(_Region);
+PROC_DebugRemoveTags(_Region);
+
+PROC
+PROC_DebugSetCurrentRegion((STRING)_)
+AND
+DB_DebugPreviousRegion(_Region)
+THEN
+NOT DB_DebugPreviousRegion(_Region);
+
+PROC
+PROC_DebugSetCurrentRegion((STRING)_Region)
+THEN
+DB_DebugPreviousRegion(_Region);
+
+//REGION Adding
+PROC
+PROC_DebugGiveTag((CHARACTER)_Player,(TAG)_Tag,1)
+AND
+IsTagged(_Player,(TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650,1)
+THEN
+SetTag(_Player,_Tag);
+
+PROC
+PROC_DebugGiveTag((CHARACTER)_Player,(TAG)_Tag,0)
+THEN
+SetTag(_Player,_Tag);
+
+PROC
+PROC_DebugGiveTags((STRING)_Region)
+AND
+DB_DebugTags((STRING)_Region,(TAG)_Tag,(INTEGER)_AvatarOnly)
+AND
+DB_Players(_Player)
+THEN
+PROC_DebugGiveTag(_Player,_Tag,_AvatarOnly);
+
+PROC
+PROC_DebugGiveGlobalFlags((STRING)_Region)
+AND
+DB_DebugGlobalFlags((STRING)_Region,(FLAG)_Flag)
+THEN
+SetFlag((FLAG)_Flag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_DebugGiveObjectFlags((STRING)_Region)
+AND
+DB_DebugObjectFlags((STRING)_Region,(GUIDSTRING)_Object,(FLAG)_Flag)
+THEN
+SetFlag((FLAG)_Flag, _Object, 0); // flagType: Object
+//END_REGION
+
+//REGION Removing
+PROC
+PROC_DebugRemoveTags((STRING)_Region)
+AND
+DB_DebugTags(_Region,_Tag,_)
+AND
+DB_Players(_Player)
+THEN
+ClearTag(_Player,_Tag);
+
+PROC
+PROC_DebugRemoveGlobalFlags((STRING)_Region)
+AND
+DB_DebugGlobalFlags(_Region,(FLAG)_Flag)
+THEN
+ClearFlag((FLAG)_Flag, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_DebugRemoveObjectFlags((STRING)_Region)
+AND
+DB_DebugObjectFlags(_Region,_Object,(FLAG)_Flag)
+THEN
+ClearFlag((FLAG)_Flag, _Object, 0); // flagType: Object
+
+//END_REGION
+
+//END_REGION
+
+//REGION Clean up predefined party preset
+
+IF
+PartyPresetLoaded(_PartyPreset,_)
+AND
+DB_PredefinePartyPreset_Loaded(_PartyPreset)
+THEN
+NOT DB_PredefinePartyPreset_Loaded(_PartyPreset);
+
+IF
+DB_PredefinePartyPreset_Loaded(_PartyPreset)
+AND
+DB_CurrentLevel(_Level)
+AND
+IsGameLevel(_Level,1)
+THEN
+PROC_PartyPreset_SetupOrigins();
+
+PROC
+PROC_PartyPreset_SetupOrigins()
+AND
+DB_Origins(_Origin)
+AND
+NOT DB_Players(_Origin)
+THEN
+PROC_GLO_PartyMembers_Initialize(_Origin);
+
+PROC
+PROC_PartyPreset_SetupOrigins()
+THEN
+PROC_CheckPartyFull();
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,31 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_CrimeSetupWarning((STRING)_CrimeRegion,(INTEGER)_CrimeID,(CHARACTER)_Warner,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_WarningDialog)
+THEN
+ClearFlag((FLAG)GEB_Crime_IsAngry_60a1ad4c-ab66-4ca6-973c-a9b49bb84892, _Criminal1, 0);
+
+PROC
+PROC_CrimeSetupWarning((STRING)_CrimeRegion,(INTEGER)_CrimeID,(CHARACTER)_Warner,(CHARACTER)_Criminal1,(CHARACTER)_Criminal2,(CHARACTER)_Criminal3,(CHARACTER)_Criminal4,(DIALOGRESOURCE)_WarningDialog)
+AND
+DB_Players(_Criminal1)
+AND
+GetAttitudeTowardsPlayer(_Warner,_Criminal1,_Attitude)
+AND
+GetAbility(_Criminal1,"Charisma",_CharismaValue)
+AND
+IntegerSum(_Attitude,_CharismaValue,_Total)
+AND
+// With Charisma 10 and 0 attitude, allows for 1 assault, 1 item destroy, 2 vandalise, 2 pickpocket,
+// 4 trespassing, .. before a non-guard NPC victim will get angry (which in turn results in calling
+// guards to arrest)
+_Total < -10
+THEN
+SetFlag((FLAG)GEB_Crime_IsAngry_60a1ad4c-ab66-4ca6-973c-a9b49bb84892, _Warner, 0);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

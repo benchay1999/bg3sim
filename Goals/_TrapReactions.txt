@@ -1,0 +1,29 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Event2DisplayText("HiddenPerceptionReveal",(DIALOGRESOURCE)GEN_AD_HiddenPerceptionReveal_00000000-0000-0000-0000-000000000000);
+DB_Event2DisplayText("HiddenTrapReveal",GEN_AD_HiddenTrapReveal_00000000-0000-0000-0000-000000000000);
+DB_Event2DisplayText("FakePerceptionReveal",GEN_AD_FakePerceptionReveal_00000000-0000-0000-0000-000000000000);
+DB_Event2DisplayText("AmbushReveal",GLO_AD_AmbushDetected_00000000-0000-0000-0000-000000000000);
+KBSECTION
+IF
+EntityEvent((CHARACTER)_Player,_Event)
+AND
+NOT DB_BlockTextSpam(_Player)
+AND
+DB_Players(_Player)
+AND
+DB_Event2DisplayText(_Event,_Text)
+AND
+QRY_StartDialog_Fixed(_Text, _Player)
+THEN
+DB_BlockTextSpam(_Player);
+ObjectTimerLaunch(_Player,"BlockTextSpam",5000);
+
+IF
+ObjectTimerFinished(_Player,"BlockTextSpam")
+THEN
+NOT DB_BlockTextSpam((CHARACTER)_Player);
+EXITSECTION
+
+ENDEXITSECTION

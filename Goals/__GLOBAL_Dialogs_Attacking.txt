@@ -1,0 +1,76 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+/*
+* IMPORTANT NOTICE *
+The procedure PROC_OnDialogAttackRequested below forces dialog stop which in turn
+forces DialogEnded event being sent and handled BEFORE any further reactions
+to DialogAttackRequested have a chance to work.
+So if you need to change state on DialogAttackRequested but before DialogEnded,
+react to DB_OnDialogAttackRequested(_Target,_Player,0).
+*/
+
+IF
+DialogAttackRequested(_Target,_Player)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_DialogAttackRequested_CustomResponse(_Target, _Player)
+THEN
+PROC_OnDialogAttackRequested(_Target,_Player);
+
+PROC
+PROC_OnDialogAttackRequested((CHARACTER)_Target,(CHARACTER)_Player)
+AND
+DB_OnDialogAttackRequested(_Target,_Player,_Number)
+THEN
+NOT DB_OnDialogAttackRequested(_Target,_Player,_Number);
+
+PROC
+PROC_OnDialogAttackRequested((CHARACTER)_Target,(CHARACTER)_Player)
+THEN
+DB_OnDialogAttackRequested(_Target,_Player,0);
+
+PROC
+PROC_OnDialogAttackRequested((CHARACTER)_Target,(CHARACTER)_Player)
+AND
+QRY_StartDialog_BlockAttackButton_Intern_ValidHostileSpeaker(_Target)
+AND
+QRY_TryStopDialogFor(_Player)
+THEN
+NOT DB_OnDialogAttackRequested(_Target,_Player,0);
+DB_OnDialogAttackRequested(_Target,_Player,1);
+PROC_SetRelationTemporaryHostile(_Target,_Player);
+PROC_OnDialogAttack_GoingHostile(_Target,_Player);
+
+PROC
+PROC_OnDialogAttackRequested((CHARACTER)_Target,(CHARACTER)_Player)
+AND
+NOT DB_OnDialogAttackRequested(_Target,_Player,1)
+AND
+DB_DialogPlayers(_DlgInst,_Player,_)
+AND
+DB_DialogName(_Dialog,_DlgInst)
+AND
+GUIDToString(_Dialog,_DialogStr)
+AND
+Concatenate("DialogAttackRequest failed to stop the dialog: ",_DialogStr,_Str)
+THEN
+DebugBreak(_Str);
+
+PROC
+PROC_OnDialogAttack_GoingHostile((CHARACTER)_Target,(CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DialogAttackRequested_CustomResponse((CHARACTER)_Target, (CHARACTER)_Player)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION

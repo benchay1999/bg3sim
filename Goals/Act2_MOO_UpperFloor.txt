@@ -1,0 +1,233 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Hound
+DB_GlobalFlagReactionAfterDialog((FLAG)MOO_KethericHound_State_Sleep_4a44cc9b-a8a7-4ca8-8aaa-e19e8c04562a, (DIALOGRESOURCE)MOO_KethericHound_Hound_SwA_704a223e-657a-9170-7458-5bcd493c6bce);
+
+
+DB_HasItemEvent((ITEM)S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f,(FLAG)MOO_KethericHound_State_HasScratchBall_c063cc0d-2d9c-4fdc-97ba-75148e71d36a);
+
+//Ignoring player lockpicking/using door
+PROC_CharacterDisableCrime(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31 ,"UseForbiddenItem");
+
+TriggerRegisterForCharacter(S_MOO_UpperFloorInterior_SUB_93c522d3-04c4-4f71-a1dc-043478c51301, S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31);
+
+//END_REGION
+
+DB_BookFlags(S_MOO_MelodiaLetter_80590a99-b86d-4129-b763-c40f89e55e92,MOO_KethericsChambers_Knows_KethericsWife_265c4b21-25cb-4ea2-b9fe-0f37d035b886);
+DB_BookFlags(S_MOO_MyrkulLetter_1ae2a112-e446-44c1-8fbe-094505e651e6,GLO_Ketheric_Knows_Existence_aaf551db-484c-b549-4cc6-435086ae2d86);
+
+PROC_TriggerRegisterForPlayers(S_MOO_IsobelRoomBox_25ef805a-d619-406a-8c60-2eec53e8183c);
+PROC_TriggerRegisterForPlayers(S_MOO_KethericRoomPoly_d16ef571-5545-4ae4-9c3f-2aae0daea6ea);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("moo_scratchball")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_FOR_Courier_Ball_c9602f79-27a8-4f79-b0f2-3aba300bd80f, _Player, 1, 1, 1);
+//SetFlag(MOO_KethericHound_State_HasScratchBall_c063cc0d-2d9c-4fdc-97ba-75148e71d36a, _Player);
+
+IF
+TextEvent("moo_getwifeletter")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_MOO_MelodiaLetter_80590a99-b86d-4129-b763-c40f89e55e92, _Player, 1, 0, 1);
+
+//END_REGION
+//REGION Lever Door
+IF
+EntityEvent(S_MOO_KethericRoomLever_f684c040-fbe8-4f64-93b1-a15446241cb4, "MOO_KethericLever_Unlock")
+THEN
+PROC_ItemUnlockAndOpen(S_MOO_KethericBalconyDoor_bae900f7-e50a-48e7-8e20-5a81ac688fd9);
+
+IF
+EntityEvent(S_MOO_KethericRoomLever_f684c040-fbe8-4f64-93b1-a15446241cb4, "MOO_KethericLever_Lock")
+THEN
+PROC_ItemCloseAndLock(S_MOO_KethericBalconyDoor_bae900f7-e50a-48e7-8e20-5a81ac688fd9, "STORYLOCK");
+//END_REGION
+
+//REGION Hound
+
+PROC
+PROC_SpotPlayers_Spotted(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "MOO_UpperFloor_HoundSpot", _Player)
+AND
+NOT QRY_StartDialog(MOO_KethericHound_Hound_SwA_704a223e-657a-9170-7458-5bcd493c6bce,S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,_Player)
+THEN
+DB_MOO_KethericHound_FailedTameCombat((CHARACTER)_Player);
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_KethericHound_4755ac62-a42c-491c-b11c-7791f2a35297, 0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(MOO_KethericHound_State_Sleep_4a44cc9b-a8a7-4ca8-8aaa-e19e8c04562a)
+THEN
+ApplyStatus(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "SLEEPING", -1.0, 1, S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31);
+
+IF
+DialogEnded(MOO_KethericHound_Hound_SwA_704a223e-657a-9170-7458-5bcd493c6bce, _ID)
+AND
+NOT DB_GlobalFlag(MOO_KethericHound_State_TameSuccess_d62b15e4-c363-471e-90c4-707eb8327f7b)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+DB_MOO_KethericHound_FailedTameCombat((CHARACTER)_Player);
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_KethericHound_4755ac62-a42c-491c-b11c-7791f2a35297, 0);
+
+IF
+RelationChanged(ACT2_MOO_KethericHound_4755ac62-a42c-491c-b11c-7791f2a35297,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360,0,_)
+AND
+DB_MOO_KethericHound_FailedTameCombat((CHARACTER)_Player)
+THEN
+PROC_EnterCombat(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _Player);
+
+PROC
+PROC_Combat_CallingForHelp(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,"MOO_KethericHoundHelp")
+AND
+QRY_MOO_KethericHound_GetNearestPlayer()
+AND
+DB_QRTN_MOO_KethericHound_NearestPlayer(_Player, _)
+AND
+GetPosition(_Player, _PlayerX, _PlayerY, _PlayerZ)
+AND
+CrimeGetNewID(_CrimeID)
+AND
+QRY_MOO_KethericHound_GetNearestGuard()
+AND
+DB_QRTN_MOO_KethericHound_NearestGuard(_Guard, _)
+AND
+QRY_CRIME_Guards_HomePos(_Guard)
+AND
+DB_QRYRTN_CRIME_Guards_HomePos(_GuardX,_GuardY,_GuardZ)
+THEN
+DB_MOO_KethericHound_CalledGuard(_CrimeID, _Guard, _GuardX, _GuardY, _GuardZ);
+PROC_ClearStoryMove(_Guard);
+PROC_CancelDisappearOutOfSight(_Guard);
+PROC_CharacterRegisterCrimeWithPosition(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,"GLO_ScryingEye_CombatReinforcement",NULL_00000000-0000-0000-0000-000000000000,_GuardX,_GuardY,_GuardZ, S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,_CrimeID);
+DB_CRIME_CrimeInvestigationPos(_CrimeID,_PlayerX,_PlayerY,_PlayerZ);
+DB_CRIME_InvestigationNoWalkingTalking(_CrimeID);
+SetForceUpdate(_Guard,1);
+
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_MOO_KethericHound_CalledGuard(_CrimeID, _Guard, _HomeX, _HomeY, _HomeZ)
+AND
+GetDistanceToPosition(_Guard,_HomeX,_HomeY,_HomeZ,_Dist)
+THEN
+SetForceUpdate(_Guard,0);
+NOT DB_MOO_KethericHound_CalledGuard(_CrimeID, _Guard, _HomeX, _HomeY, _HomeZ);
+DB_CRIME_Guards_Leaving((CHARACTER)_Guard,_HomeX,_HomeY,_HomeZ);
+SetEntityEvent(_Guard, "ClearPeaceReturn", 1);
+PROC_CRIME_Guards_ReturnHome((CHARACTER)_Guard,_HomeX,_HomeY,_HomeZ,_Dist);
+
+
+QRY
+QRY_MOO_KethericHound_GetNearestPlayer()
+AND
+DB_Is_InCombat(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _ID)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+GetDistanceTo(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _Player, _Dist)
+THEN
+DB_QRTN_MOO_KethericHound_NearestPlayer(_Player, _Dist);
+
+IF
+DB_QRTN_MOO_KethericHound_NearestPlayer(_Player1, _Dist1)
+AND
+DB_QRTN_MOO_KethericHound_NearestPlayer(_Player2, _Dist2)
+AND
+_Dist1 < _Dist2
+THEN
+NOT DB_QRTN_MOO_KethericHound_NearestPlayer(_Player2, _Dist2);
+
+QRY
+QRY_MOO_KethericHound_GetNearestGuard()
+AND
+DB_CRIME_Guards_RegionGuard("SCL_Main_A_MOO", "Main Prison", _Guard)
+AND
+DB_InRegion(_Guard, S_MOO_UpperFloorInterior_SUB_93c522d3-04c4-4f71-a1dc-043478c51301)
+AND
+QRY_CRIME_GuardAvailable(_Guard)
+AND
+GetDistanceTo(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _Guard, _Dist)
+THEN
+DB_QRTN_MOO_KethericHound_NearestGuard(_Guard, _Dist);
+
+IF
+DB_QRTN_MOO_KethericHound_NearestGuard(_Guard1, _Dist1)
+AND
+DB_QRTN_MOO_KethericHound_NearestGuard(_Guard2, _Dist2)
+AND
+_Dist1 < _Dist2
+THEN
+NOT DB_QRTN_MOO_KethericHound_NearestGuard(_Guard2, _Dist2);
+
+IF
+FlagSet(MOO_KethericHound_State_SmelledBlessing_8b18d9a1-fbad-5106-c428-38caae51c18c, _, _)
+AND
+DB_MOO_AssaultPositions((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _Point, _Group)
+THEN
+NOT DB_MOO_AssaultPositions((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, _Point, _Group);
+DB_MOO_AssaultPositions((CHARACTER)S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, (TRIGGER)S_MOO_AssaultIsobelRoomPoint_001_71f34f15-c2d6-47e5-b664-febc2851826f, "MOO_Assault_KethericHound");
+DB_MOO_Assault_GenericDialog(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31,MOO_Assault_CrestfallenHound_SwA_7eb4149b-371f-b90d-1a53-f1843d77690f);
+
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Outcast")
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT2_MOO_KethericHound_4755ac62-a42c-491c-b11c-7791f2a35297, 0);
+PROC_SpotPlayers_StopSpotting(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "MOO_UpperFloor_HoundSpot");
+
+PROC
+PROC_State_Changed(S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6, "MOO", "MOO_State_Assault")
+THEN
+NOT DB_Combat_CallingForHelp(S_MOO_KethericHound_9c7a8f97-bae8-4509-ad10-a67c17202a31, "MOO_KethericHoundHelp", "Shout_CallForHelp");
+
+//Can have a follow up with Scratch who smells the hound used his ball, is not impressed
+//TODO: Maybe allow player to play fetch with hound while in room? Would need to make sure it doesn't conflict with 
+//current Scratch ball behaviour
+//END_REGION
+//REGION Ketheric Wifes Note
+PROC
+PROC_HiddenPerceptionCheckSucceeded(_,(CHARACTER)_Player,S_MOO_MelodiaLetterPlank_6276edbc-cc09-4569-9050-f70f77ab2ac8)
+THEN
+SetFlag(MOO_KethericsChambers_State_FoundPlank_2466fd50-41a4-4274-8be4-81347e2a2af5);
+
+//Uses pressure plate behaviour script to reveal as well
+//TODO: Will need a generic AD/SFX of wood creeking when the player steps on the plank
+IF
+DualEntityEvent(_Player, S_MOO_MelodiaLetterPlank_6276edbc-cc09-4569-9050-f70f77ab2ac8, "MOO_KethericsChambers_Plank")
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(MOO_KethericsChambers_State_FoundPlank_2466fd50-41a4-4274-8be4-81347e2a2af5)
+THEN
+SetFlag(MOO_KethericsChambers_State_FoundPlank_2466fd50-41a4-4274-8be4-81347e2a2af5);
+PROC_TryStartAD(GLO_PerceptionSuccess_48825dbe-a320-7c4c-fe3e-372b717d5bc9, _Player);
+SetEntityEvent(S_MOO_MelodiaLetterPlank_6276edbc-cc09-4569-9050-f70f77ab2ac8,"StoryReveal");
+
+//The player can see the plank if they hover their cursor over the plank while targeting, so reveal it if they attack it
+IF
+AttackedBy(S_MOO_MelodiaLetterPlank_6276edbc-cc09-4569-9050-f70f77ab2ac8, _Player, _, _, _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(MOO_KethericsChambers_State_FoundPlank_2466fd50-41a4-4274-8be4-81347e2a2af5)
+THEN
+SetDualEntityEvent(_Player, S_MOO_MelodiaLetterPlank_6276edbc-cc09-4569-9050-f70f77ab2ac8, "MOO_KethericsChambers_Plank", 1);
+
+PROC
+PROC_BookFlags_FlagSet((ITEM)S_MOO_MelodiaLetter_80590a99-b86d-4129-b763-c40f89e55e92,(FLAG)MOO_KethericsChambers_Knows_KethericsWife_265c4b21-25cb-4ea2-b9fe-0f37d035b886,(CHARACTER)_PartyMember)
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)MOO_KethericsChambers_VB_ReadWifesNote_fdd516d8-9089-fa89-15ff-a316c31e6a9a,_PartyMember);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

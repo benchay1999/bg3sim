@@ -1,0 +1,534 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Calling for help sets the tag that allows the NPC to cast the Shout_CallingForHelp spell on self
+//After the spell is cast, the players have one turn to inturupt the cast or they will 
+//DB_Combat_CallingForHelp((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,"ID_NULL"); // _Caster, _Id
+//DB_Combat_CallingForHelp_SpawnObjects((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000,"ID_NULL",_SpawnAnim); //_Char, _Pos, _Id, _SpawnAnim
+//DB_Combat_CallingForHelp_Spells(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,"SpellTurnOne")
+ 
+//Explode on the Death
+//DB_Combat_ExplodeOnDeath( _Template , _ExplodeTimeOffest, _ExplodeHeightOffset, _ExplodeSpell );
+DB_Combat_ExplodeOnDeath(MEPHIT_Magma_A_334e9419-5027-4e67-88f8-c41c8adffa98, 1180, 2.0, "Projectile_DeathBurst_MagmaMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Magma_WildMagic_9cf75e67-e219-4787-a410-7b2df9fbe255, 1180, 2.0, "Projectile_DeathBurst_MagmaMephit");
+DB_Combat_ExplodeOnDeath(LOW_GreaseWizard_FireMephit_c00e7115-966b-429d-9098-0baad3fb6570, 1180, 2.0, "Projectile_DeathBurst_MagmaMephit");
+DB_Combat_ExplodeOnDeath(LOW_GreaseWizard_FireMephit_Summon_22309308-6060-42d5-acd3-02e0ab01c2c1, 1180, 2.0, "Projectile_DeathBurst_MagmaMephit");
+DB_Combat_ExplodeOnDeath(LOW_Sewers_MagmaMephit_04e6250d-aa38-4402-8568-46d3590c024b, 1180, 2.0, "Projectile_DeathBurst_MagmaMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Ice_A_4d876d7a-4ae0-4571-a71b-688e9288dff4, 370, 2.0, "Projectile_DeathBurst_Died_IceMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Ice_A_Summon_9bfb58f1-52d2-45d4-8485-0eb224f1a87f, 370, 2.0, "Projectile_DeathBurst_Died_IceMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Mud_A_f765566e-3f98-457b-9048-59bdcc66f51d, 370, 2.0, "Projectile_DeathBurst_Died_MudMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Mud_A_ConjureElementals_Summon_74e37928-4361-4d5b-a304-0ba82f5e398a, 370, 2.0, "Projectile_DeathBurst_Died_MudMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Mud_A_Summon_02b5e1ea-389d-4008-a247-66538709388b, 370, 2.0, "Projectile_DeathBurst_Died_MudMephit");
+DB_Combat_ExplodeOnDeath(Mephit_Grease_53af9627-5afb-4985-a584-3fa532b3078e, 370, 2.0, "Projectile_DeathBurst_Died_GreaseMephit");
+DB_Combat_ExplodeOnDeath(Mephit_Grease_Young_b03f4282-ad07-4f6a-8ee5-a56ea3558a14, 370, 2.0, "Projectile_DeathBurst_Died_GreaseMephit");
+DB_Combat_ExplodeOnDeath(MEPHIT_Mud_WildMagic_3844ba99-4e84-4ae0-8cf6-33b981b8bbfa, 370, 2.0, "Projectile_DeathBurst_Died_MudMephit");
+DB_Combat_ExplodeOnDeath(Undead_Ghoul_WakeTheDead_d4111267-1310-4663-a9f6-281a9f58221f, 370, 2.0, "Projectile_DeathBurst_Ghoul");
+
+//Check for exceptions to the explode on death rule
+NOT DB_Combat_ExplodeOnDeath_ExcludeCharacter(NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Combat_CallingForHelp_CrimeDisabled("");
+NOT DB_GLO_Chandelier((ITEM)NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000);
+
+PROC_GLO_CombatNPCs_Init();
+KBSECTION
+//This is a global story script meant to gather all special monster abilities in one place.
+
+//REGION Call For Help
+
+IF
+DB_Combat_CallingForHelp((CHARACTER)_Char,(STRING)_Id,_Spell)
+AND
+_Char != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetTag(_Char,(TAG)AI_HINT_CALLFORHELP_527e1935-b73d-41e1-97e8-4b90e45b00a1);
+AddSpell(_Char,_Spell);
+
+IF
+StatusApplied((CHARACTER)_Char,"CALLING_FOR_HELP_SPAWNALLIES",_,_)
+AND
+DB_Combat_CallingForHelp(_Char,(STRING)_Id,_)
+THEN
+PROC_Combat_CallingForHelp(_Char,_Id);
+
+PROC
+PROC_Combat_CallingForHelp((CHARACTER)_Char,(STRING)_Id)
+THEN
+DB_Combat_CallingForHelp_Caster(_Char,_Id);
+PROC_Combat_CallingForHelp_SpawnObjects(_Id);
+PROC_Combat_CallingForHelp_CleanUp(_Id);
+
+PROC
+PROC_Combat_CallingForHelp_SpawnObjects((STRING)_Id)
+AND
+NOT DB_Combat_CallingForHelp_CrimeDisabled(_Id)
+AND
+DB_Combat_CallingForHelp_Caster(_Caster,_Id)
+AND
+GetPosition(_Caster,_CasterX,_CasterY,_CasterZ)
+AND
+DB_Combat_CallingForHelp((CHARACTER)_Char,_Id,(STRING)_)
+AND
+_Char != NULL_00000000-0000-0000-0000-000000000000
+AND
+_Char != _Caster
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+PROC_CharacterRegisterCrime(_Caster,"CallForHelp_Combat",NULL_00000000-0000-0000-0000-000000000000,_Char,_CrimeID);
+DB_CRIME_CrimeInvestigationPos(_CrimeID,_CasterX,_CasterY,_CasterZ);
+
+
+//Offstage Allies
+PROC
+PROC_Combat_CallingForHelp_SpawnObjects((STRING)_Id)
+AND
+DB_Combat_CallingForHelp_SpawnObjects((CHARACTER)_Char,(GUIDSTRING)_Pos,_Id,_SpawnAnim)
+AND
+DB_Combat_CallingForHelp_Caster(_Caster,_Id)
+AND
+_Char != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsOnStage(_Char,0)
+THEN
+AppearAt(_Char,_Pos,1,(ANIMATION)_SpawnAnim,"Combat_CallingForHelp_SpawnObjects");
+DB_Combat_CallingForHelp_QueueJoinCombat(_Char,_Caster);
+NOT DB_Combat_CallingForHelp_SpawnObjects(_Char,_Pos,_Id,_SpawnAnim);
+
+IF
+EntityEvent((CHARACTER)_Char,"Combat_CallingForHelp_SpawnObjects")
+AND
+DB_Combat_CallingForHelp_QueueJoinCombat(_Char,(CHARACTER)_Caster)
+THEN
+PROC_Disturbance_MoveToChar_Finished(_Char,_Caster,"Combat_CallingForHelp_SpawnObjects");
+
+PROC
+PROC_Disturbance_MoveToChar_Finished((CHARACTER)_Callee,(CHARACTER)_Caller,"Combat_CallingForHelp_SpawnObjects")
+THEN
+NOT DB_Combat_CallingForHelp_QueueJoinCombat(_Callee,_Caller);
+LookAtEntity(_Callee,_Caller);
+PROC_EnterCombat(_Callee,_Caller);
+
+//Clear DBs and Tag
+PROC
+PROC_Combat_CallingForHelp_CleanUp((STRING)_Id)
+AND
+DB_Combat_CallingForHelp((CHARACTER)_Char,_Id,(STRING)_Spell)
+THEN
+RemoveStatus(_Char,"CALLING_FOR_HELP_SPAWNALLIES");
+RemoveStatus(_Char,"CALLING_FOR_HELP");
+RemoveStatus(_Char,"CALLING_FOR_HELP_HOOKHORROR");
+RemoveStatus(_Char,"CALLING_FOR_HELP_SCRYINGEYE");
+ClearTag(_Char,(TAG)AI_HINT_CALLFORHELP_527e1935-b73d-41e1-97e8-4b90e45b00a1);
+NOT DB_Combat_CallingForHelp(_Char,_Id,_Spell);
+NOT DB_Combat_CallingForHelp_Caster(_Char,_Id);
+RemoveSpell(_Char,_Spell);
+
+IF
+Dying(_Char)
+AND
+DB_Combat_CallingForHelp(_Char,(STRING)_Id,(STRING)_Spell)
+THEN
+NOT DB_Combat_CallingForHelp(_Char,_Id,_Spell);
+RemoveSpell(_Char,_Spell);
+
+//END_REGION
+
+//REGION Firebowls
+
+IF
+DestroyingBy((ITEM)_Hinge,_Destroyer,_,_)
+AND
+DB_GLO_FireBowls((ITEM)_Bowl,_Hinge)
+THEN
+DB_GLO_FireBowls_Falling(_Bowl,_Destroyer);
+SetOwner(_Bowl,_Destroyer);
+SetGravity(_Bowl,GRAVITYTYPE.Enabled,_Destroyer);
+
+IF
+Fell(_Bowl, _Cause)
+AND
+DB_GLO_FireBowls((ITEM)_Bowl,_)
+AND
+GetPosition(_Bowl,_x,_y,_z)
+AND
+DB_GLO_FireBowls_Falling(_Bowl,_Destroyer)
+THEN
+NOT DB_GLO_FireBowls_Falling(_Bowl,_Destroyer);
+PlayEffectAtPosition((EFFECTRESOURCE)VFX_Item_FireBowl_Explosion_01_9838578e-0bee-4c7f-4cf4-8ebf4657d781,_x,_y,_z);
+Die(_Bowl,DEATHTYPE.Physical,_Destroyer,0,0,3.0);
+
+IF
+DestroyingBy(_Hinge,_Destroyer,_,_)
+AND
+DB_GLO_Chandelier((ITEM)_Chandelier,_Hinge)
+THEN
+DB_GLO_Chandelier_Falling(_Chandelier,_Destroyer);
+SetOwner(_Chandelier,_Destroyer);
+SetGravity(_Chandelier,GRAVITYTYPE.Enabled,_Destroyer);
+
+IF
+Fell(_Chandelier, _Cause)
+AND
+DB_GLO_Chandelier((ITEM)_Chandelier,_)
+AND
+DB_GLO_Chandelier_Falling(_Chandelier,_Destroyer)
+THEN
+NOT DB_GLO_Chandelier_Falling(_Chandelier,_Destroyer);
+Die(_Chandelier,DEATHTYPE.Physical,_Destroyer,0,0,3.0);
+
+//END_REGION
+
+//REGION Throwing Boulders
+//To prevent issues of players snapping ontop of boulders when throws miss
+//we destroy them on throw or fall
+IF
+OnThrown((ITEM)_Boulder,_,_,_,_,_,_)
+AND
+GetTemplate(_Boulder,Quest_CMB_BoulderThrowable_e5dad8d6-6e77-4596-b200-bf345174777c)
+THEN
+Die(_Boulder);
+
+IF
+Falling(_Item, _Cause)
+THEN
+DB_NOOP(1);
+
+IF
+Fell((ITEM)_Boulder, _Cause)
+AND
+GetTemplate(_Boulder,Quest_CMB_BoulderThrowable_e5dad8d6-6e77-4596-b200-bf345174777c)
+THEN
+Die(_Boulder, DEATHTYPE.Physical, _Cause, 1, 0);
+
+//END_REGION
+
+//REGION Spore Servant Hacks
+//Aniamting spores can be used both by the follower Sovereign and the NPC sovereign
+IF
+StatusApplied((CHARACTER)_Char,"CREATURE_SPORE_SERVANT",(CHARACTER)_Caster,_)
+AND
+_Caster != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_SporeServantBehaviourExceptions(_Char)
+THEN
+PROC_SetAnubisConfig(_Char,"DefaultCharacter");
+
+IF
+StatusApplied((CHARACTER)_Char,"CREATURE_SPORE_SERVANT",(CHARACTER)_Caster,_)
+AND
+_Caster != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_SporeServantDialogExceptions(_Char)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_Char);
+
+IF
+StatusApplied((CHARACTER)_Char,"CREATURE_SPORE_SERVANT",(CHARACTER)_Caster,_)
+AND
+_Caster != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_CMB_SporeServant_Create(_Char,_Caster);
+
+PROC
+PROC_CMB_SporeServant_Create((CHARACTER)_Char,(CHARACTER)_Caster)
+AND
+IsPartyFollower(_Caster,1)
+AND
+CharacterGetOwner(_Caster,_Owner)
+THEN
+PROC_CMB_SporeServant_AddToParty(_Char,_Owner,_Caster);
+
+//We only allow 1 spore servant follower here
+PROC
+PROC_CMB_SporeServant_AddToParty((CHARACTER)_Char,(CHARACTER)_Owner,(CHARACTER)_Caster)
+AND
+DB_CMB_SporeServantFollower((CHARACTER)_OldSporeServant,_Owner,_Caster)
+AND
+_Char != _OldSporeServant
+THEN
+Die(_OldSporeServant,DEATHTYPE.DoT,NULL_00000000-0000-0000-0000-000000000000,0,0);
+
+PROC
+PROC_CMB_SporeServant_AddToParty((CHARACTER)_Char,(CHARACTER)_Owner,(CHARACTER)_Caster)
+AND
+NOT DB_CMB_SporeServantFollower(_Char,_Owner,_Caster)
+AND
+GetFaction(_Caster, _Faction)
+THEN
+DB_CMB_SporeServantFollower(_Char,_Owner,_Caster);
+// For _GLO_Analytics
+DB_CMB_SpellFollower(_Char);
+SetFaction(_Char, _Faction);
+AddPartyFollower(_Char,_Owner);
+
+IF
+Died(_SporeServant)
+AND
+DB_PermaDefeated(_SporeServant)
+AND
+DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster)
+THEN
+NOT DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster);
+NOT DB_CMB_SpellFollower(_SporeServant);
+RemovePartyFollower(_SporeServant,_Owner);
+PROC_SetAnubisConfig(_SporeServant,"");
+
+//If the caster leaves the party, the servant should as well
+IF
+CharacterLeftParty(_Caster)
+AND
+DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster)
+THEN
+RemovePartyFollower(_SporeServant,_Owner);
+
+IF
+CharacterJoinedParty(_Caster)
+AND
+DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster)
+AND
+CharacterGetOwner(_Caster, _CurrentOwner)
+AND
+_Owner != _CurrentOwner
+THEN
+NOT DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster);
+DB_CMB_SporeServantFollower(_SporeServant,_CurrentOwner,_Caster);
+
+IF
+CharacterJoinedParty(_Caster)
+AND
+DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster)
+THEN
+AddPartyFollower(_SporeServant,_Owner);
+
+IF
+Died(_Caster)
+AND
+DB_PermaDefeated(_Caster)
+AND
+DB_CMB_SporeServantFollower(_SporeServant,_Owner,_Caster)
+THEN
+PROC_RemovePartyFollower(_SporeServant);
+
+
+// NPC summon that needs tracking in case caster faction changes
+PROC
+PROC_CMB_SporeServant_Create((CHARACTER)_Char, (CHARACTER)_Caster)
+AND
+NOT DB_CMB_SporeServantNPCFollower(_Char, _)
+AND
+NOT DB_CMB_SporeServantFollower(_Char, _,_)
+AND
+IsPartyFollower(_Caster,0)
+THEN
+DB_CMB_SporeServantNPCFollower((CHARACTER)_Char, (CHARACTER)_Caster);
+
+IF
+DB_PermaDefeated(_Caster)
+AND
+DB_CMB_SporeServantNPCFollower(_SporeServant, (CHARACTER)_Caster)
+THEN
+NOT DB_CMB_SporeServantNPCFollower(_SporeServant, _Caster);
+
+IF
+Died(_SporeServant)
+AND
+DB_CMB_SporeServantNPCFollower((CHARACTER)_SporeServant,_Caster)
+THEN
+NOT DB_CMB_SporeServantNPCFollower(_SporeServant,_Caster);
+PROC_SetAnubisConfig(_SporeServant,"");
+
+IF
+CharacterJoinedParty(_Caster)
+AND
+DB_CMB_SporeServantNPCFollower(_SporeServant,_Caster)
+THEN
+Die(_SporeServant,DEATHTYPE.DoT,NULL_00000000-0000-0000-0000-000000000000,0,0);
+
+IF
+BaseFactionChanged(_Caster, _OldFaction, _NewFaction)
+AND
+DB_CMB_SporeServantNPCFollower(_SporeServant,_Caster)
+THEN
+SetFaction(_SporeServant, _NewFaction);
+//END_REGION
+
+//REGION Spider Infestation Status
+IF
+Dying(_Char)
+AND
+HasActiveStatus(_Char,"SPIDER_INFESTATION",1)
+AND
+GetPosition(_Char,_X,_Y,_Z)
+THEN
+RemoveStatus(_Char,"SPIDER_INFESTATION");
+SetEntityEvent(_Char,"SpiderInfestationEnd");
+CreateExplosionAtPosition(_X,_Y,_Z,"Projectile_SpiderInfestation",1,_Char);
+
+IF
+TextEvent("spiderinfestation")
+AND
+GetHostCharacter((CHARACTER)_Char)
+THEN
+SetEntityEvent(_Char,"SpiderInfestationStart");
+//END_REGION
+
+//REGION Frog Reflect
+
+PROC
+PROC_CastedSpellOnTarget(_,_Frog,_,"Projectile",_,_)
+AND
+HasActiveStatus(_Frog,"FROG_REFLECTIVEMUCUS",1)
+THEN
+RemoveStatus(_Frog,"FROG_REFLECTIVEMUCUS");
+
+//END_REGION
+
+//REGION Osiris Events
+
+IF
+TextEvent("gobtest")
+AND
+DB_Players(_Player)
+AND
+IsControlled(_Player,1)
+THEN
+AddSpell((CHARACTER)S_TestLevel_Ranger_01_93d30cc6-411a-4a68-8421-069553295750,"Shout_GOB_Priestess_MirrorImage",0,0);
+DebugText((CHARACTER)S_TestLevel_Ranger_01_93d30cc6-411a-4a68-8421-069553295750,"Mirror Image added!");
+RemoveSpell((CHARACTER)S_TestLevel_Ranger_01_93d30cc6-411a-4a68-8421-069553295750,"Target_GOB_Priestess_Grease",0);
+DebugText((CHARACTER)S_TestLevel_Ranger_01_93d30cc6-411a-4a68-8421-069553295750,"Grease removed!");
+
+//END_REGION
+
+//REGION Explode on Death Timers
+
+IF
+Dying(_Char)
+AND
+QRY_Combat_ExplodeOnDeath_IsExplodeOnDeathCharacter(_Char)
+AND
+IsSummon(_Char, 0)
+THEN
+PROC_Combat_ExplodeOnDeath_LaunchExplodeOnDeathTimer(_Char);
+
+IF
+Dying(_Char)
+AND
+QRY_Combat_ExplodeOnDeath_IsExplodeOnDeathCharacter(_Char)
+AND
+IsSummon(_Char, 1)
+AND
+NOT HasActiveStatus(_Char,"UNSUMMON_ACTIVE",1)
+AND
+QRY_GetSummonOwner(_Char)
+AND
+DB_QRYRTN_GetSummonOwner(_Owner)
+AND
+NOT DB_InCamp(_Owner)
+THEN
+PROC_Combat_ExplodeOnDeath_LaunchExplodeOnDeathTimer(_Char);
+
+QRY
+QRY_Combat_ExplodeOnDeath_IsExplodeOnDeathCharacter((CHARACTER)_Char)
+AND
+GetTemplate(_Char,_Template)
+AND
+DB_Combat_ExplodeOnDeath(_Template, _Timer, _ExplodeHeightOffset, _ExplodeSpell)
+AND
+GetDeathType(_Char,_DeathType)
+AND
+_DeathType != "Chasm"
+AND
+NOT DB_Combat_ExplodeOnDeath_ExcludeCharacter(_Char)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Combat_ExplodeOnDeath_LaunchExplodeOnDeathTimer((CHARACTER)_Char)
+AND
+GetTemplate(_Char,_Template)
+AND 
+DB_Combat_ExplodeOnDeath(_Template, _Timer, _ExplodeHeightOffset, _ExplodeSpell)
+AND
+GUIDToString(_Char, _CharStr)
+AND
+Concatenate("Combat_ExplodeOnDeath_Timer_", _CharStr, _Str)
+THEN
+DB_Combat_ExplodeOnDeath_ExplodeAfterTimer(_Str, _Char, _ExplodeSpell, _ExplodeHeightOffset);
+TimerLaunch(_Str, _Timer);
+
+IF
+TimerFinished(_Str)
+AND
+DB_Combat_ExplodeOnDeath_ExplodeAfterTimer(_Str, _Char, _ExplodeSpell, _ExplodeHeightOffset)
+AND
+GetPosition(_Char,_X,_Y,_Z)
+AND
+RealSum(_Y,_ExplodeHeightOffset,_NewY)
+THEN
+NOT DB_Combat_ExplodeOnDeath_ExplodeAfterTimer(_Str, _Char, _ExplodeSpell, _ExplodeHeightOffset);
+CreateExplosionAtPosition(_X,_NewY,_Z,_ExplodeSpell,1,_Char);
+
+IF
+Died(_Character)
+AND
+DB_Combat_ExplodeOnDeath_ExcludeCharacter(_Character)
+THEN
+NOT DB_Combat_ExplodeOnDeath_ExcludeCharacter(_Character);
+
+//END_REGION
+
+//REGION Frightened AI Hack
+//Delay action for a moment
+IF
+TurnStarted((CHARACTER)_NPC)
+AND
+HasActiveStatus(_NPC,"FRIGHTENED",1)
+AND
+NOT DB_PartyMembers(_NPC)
+THEN
+SetEntityEventReal(_NPC,"GLO_CombatWait",1.2);
+
+//END_REGION
+
+//REGION Special cases for removing Mask of Regret status
+//Summoned items with aura's don't trigger the context for the status to get removed properly, so we have to hack it for those cases manually
+PROC
+PROC_GLO_CombatNPCs_Init()
+THEN
+DB_Combat_HAG_RemoveMaskOFRegretStatus("CLOUD_OF_DAGGERS");
+DB_Combat_HAG_RemoveMaskOFRegretStatus("MOONBEAM");
+
+IF
+StatusApplied(_Target,_Status,_Causee,_)
+AND
+DB_Combat_HAG_RemoveMaskOFRegretStatus(_Status)
+AND
+QRY_GetSummonOwner((ITEM)_Causee)
+AND
+DB_QRYRTN_GetSummonOwner(_Owner)
+AND
+HasActiveStatus(_Owner,"HAG_MASKOFREGRET",1)
+THEN
+RemoveStatus(_Owner,"HAG_MASKOFREGRET");
+
+
+//END_REGION
+
+//REGION Nere Coersion status
+
+IF
+AttackedBy(_Defender,_Attacker,_,_DamageType,_DamageAmount,_,_)
+AND
+HasActiveStatus(_Defender,"UND_NERE_COERCION",1)
+AND
+_DamageType != "Psychic"
+AND
+_DamageAmount > 0
+THEN
+RemoveStatus(_Defender,"UND_NERE_COERCION",_Attacker);
+
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION

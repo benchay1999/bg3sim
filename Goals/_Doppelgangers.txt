@@ -1,0 +1,35 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_DoppelgangerDismissSpells("Shout_Shapechanger_Doppelganger_Dismiss");
+DB_GLO_DoppelgangerDismissSpells("Shout_Shapechanger_Doppelganger_Dismiss_Urgent");
+KBSECTION
+IF
+CastSpell(_Doppel,_Spell,_,_,_StoryID)
+AND
+DB_GLO_DoppelgangerDismissSpells(_Spell)
+THEN
+DB_GLO_UnequipDoppelganger((CHARACTER)_Doppel,_StoryID);
+
+IF
+CastSpellFailed(_Doppel,_Spell,_,_,_StoryID)
+AND
+DB_GLO_DoppelgangerDismissSpells(_Spell)
+AND
+DB_GLO_UnequipDoppelganger((CHARACTER)_Doppel,_StoryID)
+THEN
+NOT DB_GLO_UnequipDoppelganger((CHARACTER)_Doppel,_StoryID);
+
+IF
+CastedSpell(_Doppel,_Spell,_,_,_StoryID)
+AND
+DB_GLO_DoppelgangerDismissSpells(_Spell)
+AND
+DB_GLO_UnequipDoppelganger((CHARACTER)_Doppel,_StoryID)
+THEN
+NOT DB_GLO_UnequipDoppelganger((CHARACTER)_Doppel,_StoryID);
+PROC_GLO_UnequipAllWeapons(_Doppel);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

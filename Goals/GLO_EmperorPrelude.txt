@@ -1,0 +1,924 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Ketheric Stone: SCL_Main_A (Always the first stone)
+//Gortash Stone: BGO_Main_A
+//Orin Stone: CTY_Main_A
+DB_DialogBlockTradeButton(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d);
+DB_DropMutingStatussesDialog(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d);
+DB_DialogBlockAttackButton(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d);
+
+DB_IgnoreMutingStatussesDialog(END_MorphicPool_BoatPassage_9459b1e4-f0b7-aab9-ae56-6c7089155d89);
+
+//DB_GLO_EmperorPrelude_NetherStoneFlags(_Netherstone, _HasItemFlag, _HadItemFlag, _LastStoneFlag, _ItemAtCampFlag, _MarkerID)
+DB_GLO_EmperorPrelude_NetherStoneTrackers((ITEM)S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d,
+    (FLAG)COL_KethericShowdown_State_HasNetherstone_0243527e-408f-4711-97a0-7759847bb00a,
+    (FLAG)GLO_EmperorPrelude_State_KethericStoneCollected_98cc3440-0316-4056-9aeb-d8b6e7c79b64,
+    (FLAG)NULL_00000000-0000-0000-0000-000000000000,
+    (FLAG)GLO_EmperorPrelude_State_KethericStoneAtCamp_ac25aac5-d4d0-4c2c-8327-6283e39f9938,
+    "GLO_CrownController_Ketheric");
+DB_GLO_EmperorPrelude_NetherStoneTrackers((ITEM)S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b,
+    (FLAG)LOW_BhaalTemple_State_HasNetherstone_818fd00e-6780-4712-980e-5c7c25ba9987,
+    (FLAG)GLO_EmperorPrelude_State_OrinStoneCollected_3e629422-74fd-49d0-9e15-d078f6a9c02c,
+    (FLAG)GLO_EmperorPrelude_State_ReceivedOrinStoneLast_a9278f62-84d9-4430-a0c1-4952f790513c,
+    (FLAG)GLO_EmperorPrelude_State_OrinStoneAtCamp_9ced54ed-8ea7-4d73-b9b4-d38ada6d7c17,
+    "GLO_CrownController_Orin");
+DB_GLO_EmperorPrelude_NetherStoneTrackers((ITEM)S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7,
+    (FLAG)WYR_KillDirectorGortash_State_HasNetherstone_27dbf056-29ee-4d43-9ad9-4831fa2c8739,
+    (FLAG)GLO_EmperorPrelude_State_GortashStoneCollected_c608f192-c5ab-4be9-b13d-4c4ca3c6b971,
+    (FLAG)GLO_EmperorPrelude_State_ReceivedGortashStoneLast_29527c15-99c6-4da7-9eba-ea04e30a4fa1,
+    (FLAG)GLO_EmperorPrelude_State_GortashStoneAtCamp_e22c3b3d-e1d4-4442-9cbc-010b2f4167f0,
+    "GLO_CrownController_Orin");
+
+//If Orin stone collected, listed to Gortash flag in DB_GLO_EmperorPrelude_LastStoneFlag (or visa versa)
+DB_GLO_EmperorPrelude_LastStoneOrderFlags((FLAG)GLO_EmperorPrelude_State_OrinStoneCollected_3e629422-74fd-49d0-9e15-d078f6a9c02c,
+    (FLAG)GLO_EmperorPrelude_State_ReceivedGortashStoneLast_29527c15-99c6-4da7-9eba-ea04e30a4fa1,
+    (CHARACTER)S_GLO_Gortash_b878a854-f790-4999-95c4-3f20f00f65ac,
+    (ITEM)S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7);
+DB_GLO_EmperorPrelude_LastStoneOrderFlags((FLAG)GLO_EmperorPrelude_State_GortashStoneCollected_c608f192-c5ab-4be9-b13d-4c4ca3c6b971,
+    (FLAG)GLO_EmperorPrelude_State_ReceivedOrinStoneLast_a9278f62-84d9-4430-a0c1-4952f790513c,
+    (CHARACTER)S_GLO_Orin_bf24e0ec-a3a6-4905-bd2d-45dc8edf8101,
+    (ITEM)S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b);
+
+DB_GLO_EmperorPrelude_GortashPactTracker((FLAG)COL_KethericShowdown_State_HasNetherstone_0243527e-408f-4711-97a0-7759847bb00a, (ITEM)S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d);
+DB_GLO_EmperorPrelude_GortashPactTracker((FLAG)LOW_BhaalTemple_State_HasNetherstone_818fd00e-6780-4712-980e-5c7c25ba9987, (ITEM)S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b);
+
+DB_GLO_EmperorPrelude_EmperorLocation("CTY_Main_A",(TRIGGER)S_END_EmperorProjectionOrinPoint_a0efed79-3ec1-47bb-a9d8-b4eaf47d076d);
+DB_GLO_EmperorPrelude_EmperorLocation("BGO_Main_A",(TRIGGER)S_END_EmperorProjectionGortashPoint_ae64c182-9e48-4be0-abab-1e4ef4cd438f);
+
+DB_HasItemEvent(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d,(FLAG)COL_KethericShowdown_State_HasNetherstone_0243527e-408f-4711-97a0-7759847bb00a);
+DB_HasItemEvent(S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b,(FLAG)LOW_BhaalTemple_State_HasNetherstone_818fd00e-6780-4712-980e-5c7c25ba9987);
+DB_HasItemEvent(S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7,(FLAG)WYR_KillDirectorGortash_State_HasNetherstone_27dbf056-29ee-4d43-9ad9-4831fa2c8739);
+
+
+DB_END_DEBUG_EmperorPrelude_Hooks("glo_emperorprelude_pact");
+DB_END_DEBUG_EmperorPrelude_Hooks("glo_emperorprelude_gortash");
+DB_END_DEBUG_EmperorPrelude_Hooks("glo_emperorprelude_orin");
+
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(0);
+
+DB_GLO_EmperorPrelude_LastIntermezzoStoneDropper((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+DB_GLO_EmperorPrelude_EmperorRevealedLevels("BGO_Main_A");
+DB_GLO_EmperorPrelude_EmperorRevealedLevels("CTY_Main_A");
+DB_GLO_EmperorPrelude_EmperorRevealedLevels("END_Main");
+
+KBSECTION
+//REGION DEBUG
+IF
+FlagSet(Debug_GLO_EmperorPrelude_GetKethericStone_bcaea7b6-28cf-4491-a8df-49191427a9b2, _Player, _)
+AND
+GetHostCharacter((CHARACTER)_Player)
+THEN
+ClearFlag(Debug_GLO_EmperorPrelude_GetKethericStone_bcaea7b6-28cf-4491-a8df-49191427a9b2, _Player);
+ToInventory(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d, _Player);
+
+IF
+FlagSet(Debug_GLO_EmperorPrelude_GetGortashStone_796febf0-7a23-4aa7-9946-49c7d5d2246c, _Player, _)
+AND
+GetHostCharacter((CHARACTER)_Player)
+THEN
+ClearFlag(Debug_GLO_EmperorPrelude_GetGortashStone_796febf0-7a23-4aa7-9946-49c7d5d2246c, _Player);
+ToInventory(S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7, _Player);
+
+IF
+FlagSet(Debug_GLO_EmperorPrelude_GetOrinStone_19065fd0-7583-4866-ba65-211420fde7a2, _Player, _)
+AND
+GetHostCharacter((CHARACTER)_Player)
+THEN
+ClearFlag(Debug_GLO_EmperorPrelude_GetOrinStone_19065fd0-7583-4866-ba65-211420fde7a2, _Player);
+ToInventory(S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b, _Player);
+
+IF
+TextEvent("end_tomorphicboat")
+THEN
+PROC_TeleportPartiesTo(S_Debug_Teleport_END_MorphicPoolBoat_6e077331-d6b4-4b72-bcea-fbe6e095d366, "");
+
+IF
+TextEvent(_String)
+AND
+DB_END_DEBUG_EmperorPrelude_Hooks(_String)
+THEN
+PROC_END_DEBUG_EmperorPrelude_ReadyStones(_String);
+
+PROC
+PROC_END_DEBUG_EmperorPrelude_ReadyStones("glo_emperorprelude_pact")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d, _Player);
+ToInventory(S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b, _Player);
+SetFlag(WYR_KillDirectorGortash_State_AgreedToMeetInUndercity_1375d542-cf0a-49fd-927b-5c6bbce13ce4);
+
+PROC
+PROC_END_DEBUG_EmperorPrelude_ReadyStones("glo_emperorprelude_gortash")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d, _Player);
+ToInventory(S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b, _Player);
+ToInventory(S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7, _Player);
+PROC_GLO_EmperorPrelude_ReadyEmperor();
+PROC_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player);
+
+PROC
+PROC_END_DEBUG_EmperorPrelude_ReadyStones("glo_emperorprelude_orin")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d, _Player);
+ToInventory(S_WYR_CrownController_Gortash_383be300-d328-4152-86df-4927482d1fd7, _Player);
+ToInventory(S_LOW_CrownController_Orin_360b0dfd-8e0b-48d2-a079-fcf68c104d6b, _Player);
+PROC_GLO_EmperorPrelude_ReadyEmperor();
+PROC_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player);
+
+IF
+TextEvent("end_boatpassage")
+AND
+GetHostCharacter(_Player)
+AND
+QRY_StartDialogCustom_Fixed(END_MorphicPool_BoatPassage_9459b1e4-f0b7-aab9-ae56-6c7089155d89, _Player,0,0,0,0)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Stone Tracking
+
+//Hooking flow into Act2>Act3 transition
+IF
+LevelLoaded(_Level)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_, _, _, _,_, _MarkerID)
+THEN
+MapMarkerChangeLevel(_MarkerID, _Level);
+
+IF
+FlagCleared(_HasItemFlag, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _HasItemFlag, _HadItemFlag, _, _, _MarkerID)
+AND
+DB_GlobalFlag(_HadItemFlag)
+AND
+NOT QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp(_Netherstone)
+AND
+DB_CurrentLevel(_Level)
+THEN
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone((ITEM)_Netherstone, (CHARACTER)_Player, _Level);
+ShowMapMarker((CHARACTER)_Player, _MarkerID, 1); 
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone((ITEM)_Netherstone, (CHARACTER)_Player, (STRING)_Level)
+THEN
+DB_NOOP(1);
+
+//TODO: Maybe different way to handle the flags (currently handled in dialog with character flag on Daisy/Emperor)
+//Possibly reset flags after X amount of time passed without dropping.
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone((ITEM)_Netherstone, (CHARACTER)_Player, _)
+AND
+NOT DB_CurrentLevel("INT_Main_A") //Emperor is too occupied at this moment to do the AD
+AND
+NOT DB_GlobalFlag(END_MorphicPool_Event_ConfrontationStarted_5f683240-a9ab-449d-9847-a3ed0dc9a23f) //Stones combine after this, which is then handled by a different script for dropping AD
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers((ITEM)_Netherstone, _, _, _, _, _)
+AND
+DB_Players(_Player)
+AND
+NOT DB_PlayerInCamp(_Player)
+AND
+NOT DB_GLO_EmperorPrelude_DroppedStoneADPlayer(_Player)
+THEN
+DB_GLO_EmperorPrelude_DroppedStoneADPlayer(_Player);
+PROC_GLO_EmperorPrelude_PlayDroppedStoneAD((CHARACTER)_Player);
+
+//Mainly for debug if the user loads past intermezzo
+PROC
+PROC_LevelLoadedOnce(_Level)
+AND
+DB_GLO_EmperorPrelude_EmperorRevealedLevels(_Level)
+AND
+NOT DB_GlobalFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562)
+THEN
+SetFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayDroppedStoneAD((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562)
+THEN
+PROC_DaisyAD(_Player, GLO_EmperorPrelude_DaisyAD_DroppedStone_2687c132-2393-ad82-0d06-58ae6b77fc80);
+RealtimeObjectTimerLaunch(_Player, "GLO_EmperorPrelude_DroppedADBuffer", 10000);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayDroppedStoneAD((CHARACTER)_Player)
+AND
+DB_GlobalFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562)
+THEN
+PROC_EmperorAD(_Player, GLO_EmperorPrelude_EmperorAD_DroppedStone_5f8a4246-2141-960e-a2ac-43aa831caa9d);
+RealtimeObjectTimerLaunch(_Player, "GLO_EmperorPrelude_DroppedADBuffer", 10000);
+
+IF
+ObjectTimerFinished(_Player, "GLO_EmperorPrelude_DroppedADBuffer")
+AND
+DB_GLO_EmperorPrelude_DroppedStoneADPlayer((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562)
+THEN
+NOT DB_GLO_EmperorPrelude_DroppedStoneADPlayer(_Player);
+PROC_RemoveDaisyAD(_Player, GLO_EmperorPrelude_DaisyAD_DroppedStone_2687c132-2393-ad82-0d06-58ae6b77fc80);
+
+IF
+ObjectTimerFinished(_Player, "GLO_EmperorPrelude_DroppedADBuffer")
+AND
+DB_GLO_EmperorPrelude_DroppedStoneADPlayer((CHARACTER)_Player)
+AND
+DB_GlobalFlag(INT_EmperorRevealed_State_DaisyTrueIdentity_4e234132-dafe-4e81-8c68-6b8a90778562)
+THEN
+NOT DB_GLO_EmperorPrelude_DroppedStoneADPlayer(_Player);
+PROC_ResetEmperorAD(_Player, GLO_EmperorPrelude_EmperorAD_DroppedStone_5f8a4246-2141-960e-a2ac-43aa831caa9d);
+
+//Leaving stones at camp
+//TODO: Handing of stones being moved around camps
+//Clean-up currently only happens in mini-camps, possible code to implment this in main camps
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone((ITEM)_Netherstone, (CHARACTER)_Player, _)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers((ITEM)_Netherstone, _, _, _, _ItemAtCampFlag, _)
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_GlobalFlag(_ItemAtCampFlag)
+THEN
+// The SetFlag event may not arrive before we check this with DB_GlobalFlag in QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp
+PROC_GlobalSetFlagAndCache(_ItemAtCampFlag);
+
+IF
+AddedTo(_Netherstone, _CampChest, _)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers((ITEM)_Netherstone, _, _, _, _ItemAtCampFlag, _)
+AND
+GetTemplate(_CampChest, _CampChestTemplate)
+AND
+DB_GLO_Tutorials_CampTravellerChestRoots((ITEMROOT)_CampChestTemplate)
+AND
+NOT DB_GlobalFlag(_ItemAtCampFlag)
+THEN
+// The SetFlag event may not arrive before we check this with DB_GlobalFlag in QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp
+PROC_GlobalSetFlagAndCache(_ItemAtCampFlag);
+
+IF
+FlagSet(_HasItemFlag, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _HasItemFlag, _, _, _ItemAtCampFlag, _MarkerID)
+AND
+GetInventoryOwner(_Netherstone,_Player)
+AND
+DB_CurrentLevel(_Level)
+THEN
+ShowMapMarker((CHARACTER)_Player, _MarkerID, 0); 
+ClearFlag(_ItemAtCampFlag);
+PROC_GLO_EmperorPrelude_PlayerPickedUpNetherstone((ITEM)_Netherstone, (CHARACTER)_Player, _Level);
+
+//Mainly to use if there is reactivity that should only happen if it's not the last stone
+QRY
+QRY_GLO_EmperorPrelude_NotLastNetherstone((ITEM)_Netherstone)
+AND
+NOT DB_GLO_EmperorPrelude_LastStone(_, _, _Netherstone)
+THEN
+DB_NOOP(1);
+
+//To check if all the stones are safe, mainly when traversing through points of no return
+QRY
+QRY_GLO_EmperorPrelude_AnyNetherstoneNotInMagicPocketsOrCamp()
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _, _, _, _, _)
+AND
+NOT QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp(_Netherstone)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp((ITEM)_Netherstone)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _, _, _, _, _)
+AND
+DB_PartOfTheTeam(_Player)
+AND
+IsInInventoryOf(_Netherstone, _Player, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp((ITEM)_Netherstone)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _, _, _, _ItemAtCampFlag, _)
+AND
+DB_GlobalFlag(_ItemAtCampFlag)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_EmperorPrelude_DroppedNetherstoneCount()
+AND
+QRY_GLO_EmperorPrelude_ResetDroppedNetherstoneCount()
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _HasItemFlag, _HadItemFlag, _, _ItemAtCampFlag, _)
+AND
+DB_GlobalFlag(_HadItemFlag)
+AND
+NOT QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp((ITEM)_Netherstone)
+AND
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_OldCount)
+AND
+IntegerSum(_OldCount, 1, _NewCount)
+THEN
+NOT DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_OldCount);
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_NewCount);
+
+QRY
+QRY_GLO_EmperorPrelude_ResetDroppedNetherstoneCount()
+AND
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_Count)
+THEN
+NOT DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_Count);
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(0);
+
+//END_REGION
+
+//REGION Emperor Prelude Dialog
+//Determine which stone was picked up last
+IF
+FlagSet(_HasItemFlag, _Player, _)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_, _HasItemFlag, _HadItemFlag, _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(_HadItemFlag)
+THEN
+PROC_GlobalSetFlagAndCache(_HadItemFlag);
+
+IF
+FlagSet(_HadItemFlag, _, _)
+AND
+DB_GLO_EmperorPrelude_LastStoneOrderFlags(_HadItemFlag, _LastStoneFlag, _Character, _Netherstone)
+AND
+NOT DB_GLO_EmperorPrelude_LastStone(_, _, _)
+THEN
+DB_GLO_EmperorPrelude_LastStone(_LastStoneFlag, _Character, _Netherstone);
+
+IF
+DB_GlobalFlag(_HadItemFlag)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_, _, _HadItemFlag, _LastStoneFlag, _, _)
+AND
+DB_GLO_EmperorPrelude_LastStone(_LastStoneFlag, _, _)
+THEN
+SetFlag(_LastStoneFlag);
+SetFlag(GLO_EmperorPrelude_State_AllStonesPickedUp_f5f28f14-985f-449d-a9de-95ee46d2fca8);
+
+//Extra safety net
+IF
+FlagSet(GLO_EmperorPrelude_State_AllStonesPickedUp_f5f28f14-985f-449d-a9de-95ee46d2fca8, _, _)
+AND
+NOT DB_GlobalFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18)
+THEN
+SetFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18);
+
+//On last stone aquired
+//PROC
+//PROC_ProcessLootCorpse(_Player, _Character)
+IF
+AddedTo(_Netherstone, _Player, _)
+AND
+DB_GLO_EmperorPrelude_LastStone(_, _, (ITEM)_Netherstone)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_EmperorPrelude_ReadyEmperor();
+PROC_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player);
+
+//To handle cases such as the player being in combat when they initially looted the stone
+IF
+FlagSet(_HasItemFlag, _Player, _)
+AND
+NOT DB_GLO_EmperorPrelude_DialogStarted(1)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_, _HasItemFlag, _, _LastStoneFlag, _, _)
+AND
+DB_GLO_EmperorPrelude_LastStone(_LastStoneFlag, _, (ITEM)_Netherstone)
+AND
+IsInInventoryOf(_Netherstone, _Player, 1) //Only care about the character actually holding the stone (magic pockets sets all party members with the flag)
+THEN
+PROC_GLO_EmperorPrelude_ReadyEmperor();
+PROC_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player);
+
+PROC
+PROC_GLO_EmperorPrelude_ReadyPlayerForDialog((CHARACTER)_)
+AND
+DB_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player)
+THEN
+NOT DB_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player);
+
+PROC
+PROC_GLO_EmperorPrelude_ReadyPlayerForDialog((CHARACTER)_Player)
+THEN
+DB_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player);
+
+IF
+DB_GLO_EmperorPrelude_ReadyPlayerForDialog(_Player)
+AND
+NOT DB_CantAct(_Player)
+AND
+NOT DB_GlobalFlag(END_MorphicPool_Event_ConfrontationStarted_5f683240-a9ab-449d-9847-a3ed0dc9a23f) 
+THEN
+PROC_GLO_EmperorPrelude_TryStartPreludeDialog((CHARACTER)_Player);
+
+PROC
+PROC_GLO_EmperorPrelude_ReadyEmperor()
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_GLO_EmperorPrelude_EmperorLocation(_Level, _Point)
+THEN
+SetOnStage(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, 1);
+TeleportTo(S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, _Point);
+
+//Try source player
+PROC
+PROC_GLO_EmperorPrelude_TryStartPreludeDialog((CHARACTER)_Player)
+AND
+NOT DB_GLO_EmperorPrelude_DialogStarted(1)
+AND
+QRY_StartDialogCustom_Fixed(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, _Player, 0, 0, 0, 0)
+THEN
+DB_GLO_EmperorPrelude_DialogStarted(1);
+
+//Try nearest available avatar
+PROC
+PROC_GLO_EmperorPrelude_TryStartPreludeDialog((CHARACTER)_Player)
+AND
+QRY_GetClosestAvailableCharacterTo(_Player, 0)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_ClosestAvatar, _Player, _Dist, 1)
+AND
+NOT DB_GLO_EmperorPrelude_DialogStarted(1)
+AND
+QRY_StartDialogCustom_Fixed(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, _ClosestAvatar, 0, 0, 0, 0)
+THEN
+DB_GLO_EmperorPrelude_DialogStarted(1);
+
+//Try any nearby player
+PROC
+PROC_GLO_EmperorPrelude_TryStartPreludeDialog((CHARACTER)_SourcePlayer)
+AND
+DB_Players(_Player)
+AND
+GetDistanceTo(_SourcePlayer, _Player, _Dist)
+AND
+_Dist <= 20
+AND
+NOT DB_GLO_EmperorPrelude_DialogStarted(1)
+AND
+QRY_StartDialogCustom_Fixed(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, S_GLO_Emperor_73d49dc5-8b8b-45dc-a98c-927bb4e3169b, _Player, 0, 0, 0, 0)
+THEN
+DB_GLO_EmperorPrelude_DialogStarted(1);
+
+PROC
+PROC_GLO_EmperorPrelude_TryStartPreludeDialog((CHARACTER)_)
+AND
+NOT DB_GLO_EmperorPrelude_DialogStarted(1)
+AND
+NOT DB_GlobalFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18)
+THEN
+SetFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18);
+DebugBreak("GLO_EmperorPrelude_EndReady failed to find a valid speaker!");
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, _ID)
+AND
+DB_GLO_EmperorPrelude_ReadyPlayerForDialog(_SourcePlayer)
+AND
+DB_Players(_Player)
+AND
+NOT DB_CantTalk_IgnoreStatuses(_Player)
+AND
+GetDistanceTo(_SourcePlayer, _Player, _Dist)
+AND
+_Dist <= 20
+AND
+IsSpeakerReserved(_Player,0)
+THEN
+PROC_DialogAddSpeakingActor(_ID, _Player, 1);
+
+IF
+DialogEnded(GLO_EmperorPrelude_EndReady_27c34570-216b-3b6d-928e-938948d3591d, _)
+THEN
+SetFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18);
+
+//Made Gortash Pact
+IF
+DB_GlobalFlag(GLO_EmperorPrelude_State_OrinStoneCollected_3e629422-74fd-49d0-9e15-d078f6a9c02c)
+AND
+DB_GlobalFlag(WYR_KillDirectorGortash_State_AgreedToMeetInUndercity_1375d542-cf0a-49fd-927b-5c6bbce13ce4)
+AND
+NOT DB_GlobalFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18)
+THEN
+SetFlag(END_MorphicPool_State_UnlockedAccess_b65fedb8-ed89-4ccf-b20f-3338474bda18);
+PROC_GLO_EmperorPrelude_GortashMoveToMorphicPool();
+
+//All stones in party inventory management
+IF
+FlagCleared(_HasItemFlag, _, _)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_, _HasItemFlag, _, _, _, _)
+THEN
+PROC_GLO_EmperorPrelude_CheckAllStonesInInventory();
+
+IF
+FlagSet(_HasItemFlag, _Player, _)
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_, _HasItemFlag, _, _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_EmperorPrelude_CheckAllStonesInInventory();
+
+QRY
+QRY_GLO_EmperorPrelude_AnyNetherstonesNotInActivePartyInventory()
+AND
+DB_GLO_EmperorPrelude_NetherStoneTrackers(_Netherstone, _HasItemFlag, _, _, _, _)
+AND
+NOT QRY_GLO_EmperorPrelude_HasItemFlagSetOnAnyPlayer(_HasItemFlag)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_EmperorPrelude_HasItemFlagSetOnAnyPlayer((FLAG)_HasItemFlag)
+AND
+DB_Players(_Player)
+AND
+GetFlag(_HasItemFlag, _Player, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_EmperorPrelude_CheckAllStonesInInventory()
+AND
+QRY_GLO_EmperorPrelude_AnyNetherstonesNotInActivePartyInventory()
+THEN
+ClearFlag(GLO_EmperorPrelude_State_AllStonesInPartyInventory_1106e99b-273e-4d19-b3cc-7a9667cf3d53);
+
+PROC
+PROC_GLO_EmperorPrelude_CheckAllStonesInInventory()
+AND
+NOT QRY_GLO_EmperorPrelude_AnyNetherstonesNotInActivePartyInventory()
+THEN
+SetFlag(GLO_EmperorPrelude_State_AllStonesInPartyInventory_1106e99b-273e-4d19-b3cc-7a9667cf3d53);
+
+//Both stones and Gortash Pact
+IF
+FlagCleared(_HasItemFlag, _, _)
+AND
+DB_GLO_EmperorPrelude_GortashPactTracker(_HasItemFlag, _)
+THEN
+PROC_GLO_EmperorPrelude_CheckGortashPactStones();
+
+IF
+FlagSet(_HasItemFlag, _Player, _)
+AND
+DB_GLO_EmperorPrelude_GortashPactTracker(_HasItemFlag, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_GLO_EmperorPrelude_CheckGortashPactStones();
+
+PROC
+PROC_GLO_EmperorPrelude_CheckGortashPactStones()
+AND
+QRY_GLO_EmperorPrelude_GortashPactAnyNetherstoneNotInInventory()
+THEN
+ClearFlag(GLO_EmperorPrelude_State_GortashPactAndBothStoneInInventory_07352366-dcc0-4424-a9df-c94512ba76c0);
+
+IF
+FlagSet(WYR_KillDirectorGortash_State_AgreedToMeetInUndercity_1375d542-cf0a-49fd-927b-5c6bbce13ce4, _, _)
+THEN
+PROC_GLO_EmperorPrelude_CheckGortashPactStones();
+
+PROC
+PROC_GLO_EmperorPrelude_CheckGortashPactStones()
+AND
+NOT QRY_GLO_EmperorPrelude_GortashPactAnyNetherstoneNotInInventory()
+AND
+DB_GlobalFlag(WYR_KillDirectorGortash_State_AgreedToMeetInUndercity_1375d542-cf0a-49fd-927b-5c6bbce13ce4)
+THEN
+SetFlag(GLO_EmperorPrelude_State_GortashPactAndBothStoneInInventory_07352366-dcc0-4424-a9df-c94512ba76c0);
+
+QRY
+QRY_GLO_EmperorPrelude_GortashPactAnyNetherstoneNotInInventory()
+AND
+DB_GLO_EmperorPrelude_GortashPactTracker(_HasItemFlag, _)
+AND
+NOT QRY_GLO_EmperorPrelude_HasItemFlagSetOnAnyPlayer((FLAG)_HasItemFlag)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Intermezzo
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d, _Player, "INT_Main_A")
+AND
+DB_GLO_EmperorPrelude_LastIntermezzoStoneDropper(_LastPlayer)
+THEN
+NOT DB_GLO_EmperorPrelude_LastIntermezzoStoneDropper(_LastPlayer);
+DB_GLO_EmperorPrelude_LastIntermezzoStoneDropper(_Player);
+
+PROC
+PROC_GLO_EmperorPrelude_CheckForIntermezzoStone()
+AND
+NOT QRY_GLO_EmperorPrelude_NetherstoneIsInMagicPocketsOrCamp(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d)
+AND
+DB_GLO_EmperorPrelude_LastIntermezzoStoneDropper(_Player)
+THEN
+SendToCampChest(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d, _Player);
+NOT DB_GLO_EmperorPrelude_LastIntermezzoStoneDropper(_Player);
+DB_GLO_EmperorPrelude_WaitForBGOLoad(1);
+
+//Fallback rule
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A")
+AND
+GetRegion(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d,"SCL_Main_A")
+AND
+DB_Avatars(_Player)
+AND
+QRY_OnlyOnce("GLO_EmperorPrelude_FallbackKethericNetherstone")
+THEN
+PROC_ToInventoryAndOnStage(S_COL_CrownController_Ketheric_06b8891b-e71c-423b-8482-2680c3c16a4d,_Player,1,1,1);
+
+IF
+LevelLoaded("BGO_Main_A")
+AND
+DB_GLO_EmperorPrelude_WaitForBGOLoad(1)
+THEN
+NOT DB_GLO_EmperorPrelude_WaitForBGOLoad(1);
+TimerLaunch("GLO_IntermezzoStoneEmperorAD", 10000); //A buffer for the fade from black transition
+
+IF
+TimerFinished("GLO_IntermezzoStoneEmperorAD")
+AND
+DB_Avatars(_Avatar)
+THEN
+DB_GLO_EmperorPrelude_ReadyIntermezzoEmperorAD(_Avatar);
+
+IF
+DB_GLO_EmperorPrelude_ReadyIntermezzoEmperorAD(_Avatar)
+AND
+NOT DB_CantAct(_Avatar)
+AND
+NOT DB_CantTalk(_Avatar)
+THEN
+PROC_EmperorAD(_Avatar, GLO_EmperorPrelude_EmperorAD_LostIntermezzoStone_877040f7-7355-d846-aabc-ab50e13bfd34);
+NOT DB_GLO_EmperorPrelude_ReadyIntermezzoEmperorAD(_Avatar);
+//END_REGION
+
+//REGION Iron Throne
+//Thrall of the Absolute does not really work with the Iron Throne flow, so the stones will appear at the Sahuagin Attack Booster if the player dropped them.
+//If the attack has not happened yet, it will be in the inventory of S_LOW_BeachSahuagin_Sahuagin_Champion_01
+//If it has happened and S_LOW_BeachSahuagin_Civilian_Fishmonger is alive, he will sell it to the player
+//If the Fishmonger is dead, a dead fish will be found on shore with the stones in it's inventory
+IF
+LevelLoaded("CTY_Main_A")
+AND
+QRY_OnlyOnce("GLO_EmperorPrelude_SetFishOffStage")
+THEN
+SetOnStage(S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc, 0);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone((ITEM)_Netherstone, (CHARACTER)_, "IRN_Main_A")
+AND
+NOT DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone)
+THEN
+DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone(_, _, "IRN_Main_A")
+AND
+NOT DB_GlobalFlag(GLO_EmperorPrelude_State_StoneInIronThrone_30d5fc8d-fcdf-4d99-9b35-b681d13c1dd1)
+THEN
+SetFlag(GLO_EmperorPrelude_State_StoneInIronThrone_30d5fc8d-fcdf-4d99-9b35-b681d13c1dd1);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerDroppedNetherstone(_, _, "IRN_Main_A")
+AND
+QRY_GLO_EmperorPrelude_DroppedNetherstoneCount()
+AND
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_Count)
+AND
+_Count > 1
+THEN
+SetFlag(GLO_EmperorPrelude_State_MoreThanOneStoneInIronThrone_b3d54fb1-6865-2c02-e977-8f3cbf3e76c7);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerPickedUpNetherstone((ITEM)_Netherstone, (CHARACTER)_, "IRN_Main_A")
+AND
+DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone)
+THEN
+NOT DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerPickedUpNetherstone(_, _, "IRN_Main_A")
+AND
+QRY_GLO_EmperorPrelude_DroppedNetherstoneCount()
+AND
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_Count)
+AND
+_Count == 0
+THEN
+ClearFlag(GLO_EmperorPrelude_State_StoneInIronThrone_30d5fc8d-fcdf-4d99-9b35-b681d13c1dd1);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerPickedUpNetherstone(_, _, "IRN_Main_A")
+AND
+QRY_GLO_EmperorPrelude_DroppedNetherstoneCount()
+AND
+DB_QRTN_GLO_EmperorPrelude_DroppedNetherstoneCount(_Count)
+AND
+_Count <= 1
+THEN
+ClearFlag(GLO_EmperorPrelude_State_MoreThanOneStoneInIronThrone_b3d54fb1-6865-2c02-e977-8f3cbf3e76c7);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "BackAtDocks")
+AND
+DB_GlobalFlag(GLO_EmperorPrelude_State_StoneInIronThrone_30d5fc8d-fcdf-4d99-9b35-b681d13c1dd1)
+THEN
+SetFlag(GLO_EmperorPrelude_State_IronThoneStonesAtBeach_8a4d87d3-7db5-410b-bbab-aea04b9ef1f2);
+DB_OneShotPlayerTrigger(S_LOW_LostStoneArrivalBox_f93d0238-e539-415b-b47f-eddd34a35b6b);
+PROC_GLO_EmperorPrelude_CheckSahuaginAttackStatus();
+
+PROC
+PROC_GLO_EmperorPrelude_CheckSahuaginAttackStatus()
+AND
+NOT DB_GlobalFlag(LOW_SahuaginAttack_State_SahuaginAttacked_0b56687e-e5b1-4e26-b546-5cf95418423a)
+THEN
+SetFlag(GLO_EmperorPrelude_State_IronThroneStonesToSahuagin_6125b3a8-2154-4878-9c7f-1b7f1d984dab);
+PROC_GLO_EmperorPrelude_MoveLostStonesToInventory(S_LOW_BeachSahuagin_Sahuagin_Champion_01_36902e83-9823-418a-8481-8835e95d481c);
+
+PROC
+PROC_GLO_EmperorPrelude_CheckSahuaginAttackStatus()
+AND
+DB_GlobalFlag(LOW_SahuaginAttack_State_SahuaginAttacked_0b56687e-e5b1-4e26-b546-5cf95418423a)
+AND
+NOT DB_PermaDefeated(S_LOW_BeachSahuagin_Civilian_Fishmonger_ecba853d-f96a-4252-912e-3bf030b10482)
+THEN
+SetFlag((FLAG)GLO_EmperorPrelude_State_IronThroneStoneToFishmonger_661809de-55ed-4455-b4d2-8ae0db487e3a);
+PROC_GLO_EmperorPrelude_MoveLostStonesToInventory(S_LOW_BeachSahuagin_Civilian_Fishmonger_ecba853d-f96a-4252-912e-3bf030b10482);
+
+PROC
+PROC_GLO_EmperorPrelude_CheckSahuaginAttackStatus()
+AND
+DB_GlobalFlag(LOW_SahuaginAttack_State_SahuaginAttacked_0b56687e-e5b1-4e26-b546-5cf95418423a)
+AND
+DB_PermaDefeated(S_LOW_BeachSahuagin_Civilian_Fishmonger_ecba853d-f96a-4252-912e-3bf030b10482)
+THEN
+SetFlag(GLO_EmperorPrelude_State_IronThroneStoneToDeadFish_d9c42773-628c-4c96-b0e8-158b7a9df412);
+SetOnStage(S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc, 1);
+PROC_GLO_EmperorPrelude_SetUpNetherstoneFish();
+PROC_GLO_EmperorPrelude_MoveLostStonesToInventory(S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc);
+
+PROC
+PROC_GLO_EmperorPrelude_SetUpNetherstoneFish()
+AND
+GetPosition(S_LOW_NetherstoneFishPoint_2bd91805-7324-4e5e-8d7a-6fe56d33337a, _X, _Y, _Z)
+AND
+FindValidPosition(_X, _Y, _Z, 5.0, S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc, 0, _VX, _VY, _VZ)
+THEN
+DB_GLO_EmperorPrelude_NetherstoneFishTeleported(1);
+TeleportToPosition(S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc, _VX, _VY, _VZ, "", 0);
+//In case something was placed in the way before it appears
+
+PROC
+PROC_GLO_EmperorPrelude_SetUpNetherstoneFish()
+AND
+DB_GLO_EmperorPrelude_NetherstoneFishTeleported(1)
+AND
+GetPosition(S_LOW_NetherstoneFishPoint_2bd91805-7324-4e5e-8d7a-6fe56d33337a, _X, _Y, _Z)
+THEN
+TeleportToPosition(S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc, _X, _Y, _Z, "", 0);
+//In case something was placed in the way before it appears
+
+IF
+Teleported(S_LOW_NetherstoneFish_698b7ef0-9b7f-4c71-9f88-e90cbbfa9cfc, _, _, _, _, _, _, _, _)
+AND
+DB_GLO_EmperorPrelude_NetherstoneFishTeleported(1)
+THEN
+NOT DB_GLO_EmperorPrelude_NetherstoneFishTeleported(1);
+
+PROC
+PROC_GLO_EmperorPrelude_MoveLostStonesToInventory((GUIDSTRING)_StoneHolder)
+AND
+DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone)
+THEN
+ToInventory(_Netherstone, _StoneHolder, 1, 0, 0);
+
+IF
+AddedTo(_Netherstone, S_LOW_BeachSahuagin_Civilian_Fishmonger_ecba853d-f96a-4252-912e-3bf030b10482, _)
+AND
+DB_GLO_EmperorPrelude_LostIronThroneNetherstones((ITEM)_Netherstone)
+THEN
+SetIsTradable(_Netherstone, TRADABLETYPE.Tradable);
+
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "Finished")
+AND
+DB_GlobalFlag(GLO_EmperorPrelude_State_StoneInIronThrone_30d5fc8d-fcdf-4d99-9b35-b681d13c1dd1)
+AND
+DB_Avatars(_Avatar)
+THEN
+DB_GLO_EmperorPrelude_ReturnFromIronThroneADAvatar(_Avatar);
+
+IF
+DB_GLO_EmperorPrelude_ReturnFromIronThroneADAvatar(_Avatar)
+AND
+NOT DB_CantAct(_Avatar)
+THEN
+NOT DB_GLO_EmperorPrelude_ReturnFromIronThroneADAvatar(_Avatar);
+PROC_EmperorAD(_Avatar, GLO_EmperorPrelude_EmperorAD_LeftStonesInIronThrone_670c30a1-0c85-5a09-b804-7016441a97fd);
+
+PROC
+PROC_OneShotTriggerEntered(_Avatar, S_LOW_LostStoneArrivalBox_f93d0238-e539-415b-b47f-eddd34a35b6b)
+AND
+DB_Avatars(_Avatar)
+AND
+DB_GlobalFlag(GLO_EmperorPrelude_State_IronThoneStonesAtBeach_8a4d87d3-7db5-410b-bbab-aea04b9ef1f2)
+AND
+NOT DB_GlobalFlag(GLO_EmperorPrelude_State_IronThroneStonesToSahuagin_6125b3a8-2154-4878-9c7f-1b7f1d984dab)
+THEN
+PROC_EmperorAD(_Avatar, GLO_EmperorPrelude_EmperorAD_AtBeachForLostStones_97c56406-4be3-73cc-8d0d-cbead48a2847);
+
+IF
+TurnStarted(_Avatar)
+AND
+DB_GlobalFlag(GLO_EmperorPrelude_State_IronThoneStonesAtBeach_8a4d87d3-7db5-410b-bbab-aea04b9ef1f2)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+DB_Is_InCombat(S_LOW_BeachSahuagin_Sahuagin_Champion_01_36902e83-9823-418a-8481-8835e95d481c, _ID)
+AND
+DB_Is_InCombat(_Avatar, _ID)
+THEN
+PROC_EmperorAD(_Avatar, GLO_EmperorPrelude_EmperorAD_AtBeachForLostStones_97c56406-4be3-73cc-8d0d-cbead48a2847);
+
+PROC
+PROC_GLO_EmperorPrelude_PlayerPickedUpNetherstone((ITEM)_Netherstone, (CHARACTER)_Player, _)
+AND
+DB_GlobalFlag(GLO_EmperorPrelude_State_IronThoneStonesAtBeach_8a4d87d3-7db5-410b-bbab-aea04b9ef1f2)
+AND
+DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone)
+THEN
+NOT DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_Netherstone);
+ResetIsTradable(_Netherstone); //TODO: There is a bug where the first stone traded is not removed from the trade UI
+PROC_GLO_EmperorPrelude_CheckAllIronThroneStonesReceived((CHARACTER)_Player);
+
+PROC
+PROC_GLO_EmperorPrelude_CheckAllIronThroneStonesReceived((CHARACTER)_Player)
+AND
+NOT DB_GLO_EmperorPrelude_LostIronThroneNetherstones(_)
+THEN
+ClearFlag(GLO_EmperorPrelude_State_StoneInIronThrone_30d5fc8d-fcdf-4d99-9b35-b681d13c1dd1);
+ClearFlag(GLO_EmperorPrelude_State_MoreThanOneStoneInIronThrone_b3d54fb1-6865-2c02-e977-8f3cbf3e76c7);
+ClearFlag(GLO_EmperorPrelude_State_IronThoneStonesAtBeach_8a4d87d3-7db5-410b-bbab-aea04b9ef1f2);
+PROC_GLO_EmperorPrelude_IronThroneStonesBackAD((CHARACTER)_Player);
+
+PROC
+PROC_GLO_EmperorPrelude_IronThroneStonesBackAD((CHARACTER)_Player)
+AND
+DB_Avatars(_Avatar)
+AND
+GetDistanceTo(_Avatar, _Player, _Dist)
+AND
+_Dist <= 20.0
+THEN
+DB_GLO_EmperorPrelude_IronThroneStonesBackADAvatar(_Avatar);
+
+IF
+DB_GLO_EmperorPrelude_IronThroneStonesBackADAvatar(_Avatar)
+AND
+NOT DB_CantTalk(_Avatar)
+THEN
+NOT DB_GLO_EmperorPrelude_IronThroneStonesBackADAvatar(_Avatar);
+PROC_EmperorAD(_Avatar, GLO_EmperorPrelude_EmperorAD_ReceivedIronThroneStones_f0bdc2ed-2265-e427-7f74-62b6008fe338);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

@@ -1,0 +1,113 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+Documentation
+Sunlight is created via functor GameplayLight(<radius>,<bool LOS>,<0..1 sharpening>, <bool isSunlight>); - - the last parameter marks the created light as Sunlight.
+SunlightHypersensitivity is a passive of vampires and vampire spawns that ensures they get damaged every turn they are in sunlight. That includes natural sunlight and sunlight created by spells / items / auras etc.
+
+To properly react on the players affecting them with sunlight vampires need to know which player affected them with sunlight. Since SunlightHypersensitivity is a trait of vampries themselves, 
+that means that generaly speaking we can't get the source of the damage when they are damaged by sunlight (the game reports them as the source)
+
+To track the source of the sunlight we use a helper status SUNLIGHT_FROM_SPELL_TECHNICAL. This status allows us to track the "owner" of sunlight, which means any spell/aura etc that creates Sunlight MUST also assign this status to vampires
+for the crime system to work properly.
+
+Some examples of usage:
+1. Item "Blood of Lathander" creates sunlight via a functor:
+	data "Boosts" "GameplayLight(6,false,0.1,true)". 
+Therefore, it must assign SUNLIGHT_FROM_SPELL_TECHINCAL as well. We use an Aura for that:
+	data "AuraRadius" "6"
+	data "AuraStatuses" TARGET:IF(Character() and not Dead() and HasPassive('SunlightHypersensitivity')):ApplyStatus(SUNLIGHT_FROM_SPELL_TECHNICAL)"
+
+2. Spell "Sunbeam" is a concentration spell creates an area of sunlight around the caster via status SUNBEAM_OWNER with functor:
+	data "Boosts" "GameplayLight(9,false,0.1,true)"
+Therefore, it must assign SUNLIGHT_FROM_SPELL_TECHINCAL as well. We use an Aura for that:
+	data "AuraRadius" "9"
+	data "AuraStatuses" "TARGET:IF(Character() and not Dead() and HasPassive('SunlightHypersensitivity')):ApplyStatus(SUNLIGHT_FROM_SPELL_TECHNICAL)"
+
+3. Spell Target_Daylight creates a sphere of sunlight on the ground with radius of 15 via this thoth expression:	
+	data "AreaRadius" "15"
+	data "SpellProperties" "GROUND:Summon(f662449b-057a-477c-a80e-9083aff62b00, -1,,,Daylight,DAYLIGHT_GROUND);GROUND:SurfaceChange(Daylight)"
+Summon f662449b-057a-477c-a80e-9083aff62b00 is a root template of the helper for Daylight spehere. This root template has another helper status assigned to it as its default status - DAYLIGHT_SUNLIGHT_AURA_TECHNICAL
+which has an aura that applies SUNLIGHT_FROM_SPELL_TECHNICAL:
+	data "AuraRadius" "15"
+	data "AuraStatuses" "TARGET:IF(Character() and not Dead() and HasPassive('SunlightHypersensitivity')):ApplyStatus(SUNLIGHT_FROM_SPELL_TECHNICAL)"
+ 
+4. Spell Target_Daylight_Enchantment applies Daylight to equipped weapons (both to NPCs and Party Members) had this thoth expression:
+	data "SpellSuccess" "IF(Item()):ApplyStatus(DAYLIGHT,100,20);IF(HasWeaponInMainHand()):ApplyEquipmentStatus(MainHand,DAYLIGHT,100,-1)"
+It was changed to ensure that it also applies DAYLIGHT_SUNLIGHT_AURA_TECHNICAL which in turn applies SUNLIGHT_FROM_SPELL_TECHNICAL when needed:
+	data "SpellSuccess" "IF(Item()):ApplyStatus(DAYLIGHT,100,20);IF(Item()):ApplyStatus(DAYLIGHT_SUNLIGHT_AURA_TECHNICAL,100,20);
+		IF(HasWeaponInMainHand()):ApplyEquipmentStatus(MainHand,DAYLIGHT,100,-1);IF(HasWeaponInMainHand()):ApplyEquipmentStatus(MainHand,DAYLIGHT_SUNLIGHT_AURA_TECHNICAL,100,-1);"
+*/
+
+DB_CRIME_AssaultSilenced("Assault_Sunlight");
+DB_CRIME_AssaultSilenced("Assault_Monster_Sunlight");
+KBSECTION
+//REGION From a source that is 'equipped' by a party member (party member passed as the source)
+IF
+StatusApplied(_NPC, "SUNLIGHT_FROM_SPELL_TECHNICAL", _Source, _ID)
+AND
+DB_PartyMembers((CHARACTER)_Source)
+THEN
+DB_Spells_SunlightFromSpell((CHARACTER)_NPC, (CHARACTER)_Source);
+//END_REGION
+
+//REGION From an item that is not 'equipped' by a party member
+IF
+StatusApplied(_Item, "DAYLIGHT_SUNLIGHT_AURA_TECHNICAL", (CHARACTER)_PartyMember, _)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+IsItem(_Item, 1)
+THEN
+DB_Spells_ItemsWithDaylightEnchantment(_Item, _PartyMember);
+
+IF
+StatusApplied(_NPC, "SUNLIGHT_FROM_SPELL_TECHNICAL", _Item, _)
+AND
+DB_Spells_ItemsWithDaylightEnchantment(_Item, _PartyMember)
+THEN
+DB_Spells_SunlightFromSpell((CHARACTER)_NPC, (CHARACTER)_PartyMember);
+//END_REGION
+
+//REGION Cleanup
+IF
+StatusRemoved(_Item, "DAYLIGHT", _, _)
+AND
+HasActiveStatus(_Item, "DAYLIGHT", 0)
+AND
+HasActiveStatus(_Item, "DAYLIGHT_SUNLIGHT_AURA_TECHNICAL", 1)
+THEN
+RemoveStatus(_Item, "DAYLIGHT_SUNLIGHT_AURA_TECHNICAL", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusRemoved(_Item, "DAYLIGHT_SUNLIGHT_AURA_TECHNICAL", _, _)
+AND
+HasActiveStatus(_Item, "DAYLIGHT_SUNLIGHT_AURA_TECHNICAL", 0)
+AND
+DB_Spells_ItemsWithDaylightEnchantment(_Item, _PartyMember)
+THEN
+NOT DB_Spells_ItemsWithDaylightEnchantment(_Item, _PartyMember);
+
+IF
+StatusRemoved((CHARACTER)_NPC, "SUNLIGHT_FROM_SPELL_TECHNICAL", _, _)
+AND
+HasActiveStatus(_NPC, "SUNLIGHT_FROM_SPELL_TECHNICAL", 0)
+AND
+DB_Spells_SunlightFromSpell(_NPC, _PartyMember)
+THEN
+NOT DB_Spells_SunlightFromSpell((CHARACTER)_NPC, (CHARACTER)_PartyMember);
+//END_REGION
+
+//REGION Registering a crime
+IF
+StatusApplied(_NPC, "SUNLIGHT_HYPERSENSITIVITY", _, _StoryActionID)
+AND
+DB_Spells_SunlightFromSpell((CHARACTER)_NPC, (CHARACTER)_PartyMember)
+THEN
+PROC_CRIME_TryRegisterAssaultLikeCrime(_PartyMember, _NPC, _StoryActionID, "_Sunlight");
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

@@ -1,0 +1,154 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, (DIALOGRESOURCE)GLO_CursedIronFlask_a9a90b77-e020-86fb-cc42-e45da013f778);
+
+DB_FlagReactionAfterDialog((FLAG)GLO_CursedIronFlask_Event_BreakSeal_6497257d-de38-50d5-f863-79446f292272, (DIALOGRESOURCE)GLO_CursedIronFlask_a9a90b77-e020-86fb-cc42-e45da013f778);
+
+DB_HasItemEvent(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, GLO_CursedIronFlask_State_HasFlask_9c9d36f1-eadb-4e45-a4ad-61edf52364a7);
+DB_GiveItemToEventWithClear(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, GLO_CursedIronFlask_Event_GiveFlask_d8cc1663-f56f-44bf-b28c-e99a8b5218ce);
+
+PROC_GLO_CursedIronFlask_InitCreature((CHARACTER)S_PLA_ZhentShipment_Spectator_2c214b80-1d72-431d-bc0b-1997a646c99b);
+KBSECTION
+//REGION Debug
+IF
+TextEvent("debug_ironFlask_get")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, _Player, 1, 1, 1);
+
+IF
+TextEvent("debug_ironFlask_reset")
+AND
+GetHostCharacter(_Player)
+THEN
+Resurrect(S_PLA_ZhentShipment_Spectator_2c214b80-1d72-431d-bc0b-1997a646c99b);
+PROC_GLO_CursedIronFlask_InitCreature((CHARACTER)S_PLA_ZhentShipment_Spectator_2c214b80-1d72-431d-bc0b-1997a646c99b);
+//END_REGION Debug
+
+//REGION Init
+PROC
+PROC_GLO_CursedIronFlask_InitCreature((CHARACTER)_Creature)
+AND
+NOT DB_IronFlasked(_)
+THEN
+DB_IronFlasked(_Creature);
+PROC_SetOnStage(_Creature, 0);
+PROC_GlobalSetFlagAndCache((FLAG)GLO_CursedIronFlask_State_HasCreature_3e4af18c-8227-6100-34e0-716d7a3be27c);
+ApplyStatus(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, "GLO_CURSEDIRONFLASK_GLOW", -1.0);
+//END_REGION
+
+//REGION Triggering the crature release
+// By popping up the cork in the dialog
+IF
+DialogEnded(GLO_CursedIronFlask_a9a90b77-e020-86fb-cc42-e45da013f778, _ID)
+AND
+DB_GlobalFlag((FLAG)GLO_CursedIronFlask_Event_Open_8f328b7c-0c75-b1c6-84d4-e9eac4292aca)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)GLO_CursedIronFlask_Event_Open_8f328b7c-0c75-b1c6-84d4-e9eac4292aca);
+PROC_GLO_CursedIronFlask_ReleaseCreatureAtPosition((REAL)_X, (REAL)_Y, (REAL)_Z, (CHARACTER)_Player);
+
+IF
+EnteredChasm(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, _, _, _, _, _)
+THEN
+DB_GLO_CursedIronFlask_EnteredChasm(1);
+
+IF
+OnThrown(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, _, _Player, _, _X, _Y, _Z)
+AND
+NOT DB_GLO_CursedIronFlask_EnteredChasm(1)
+THEN
+PROC_GLO_CursedIronFlask_ReleaseCreatureAtPosition((REAL)_X, (REAL)_Y, (REAL)_Z, (CHARACTER)_Player);
+//END_REGION
+
+//REGION On releasing a creature
+PROC
+PROC_GLO_CursedIronFlask_ReleaseCreatureAtPosition((REAL)_X, (REAL)_Y, (REAL)_Z, (CHARACTER)_Player)
+AND
+DB_IronFlasked(_Creature)
+THEN
+NOT DB_IronFlasked(_Creature);
+PlayEffect(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2,  VFX_Script_IronFlask_Poof_01_e770f08f-38d7-a1a7-91ca-380b3444f834, "", 1.0);
+AppearAtPosition(_Creature, _X, _Y, _Z, 1, CUST_Spawn_01_e37e9b01-bb97-45d8-b3ce-0e81a58b7a6e, "");
+SetFaction(_Creature, GLO_CreaturesFromFlask_26291f6a-132f-4c44-845e-8594e9b25152);
+DB_GLO_CursedIronFlask_ADAfterRelease((CHARACTER)_Creature);
+PROC_GlobalClearFlagAndCache((FLAG)GLO_CursedIronFlask_State_HasCreature_3e4af18c-8227-6100-34e0-716d7a3be27c);
+PROC_GlobalSetFlagAndCache((FLAG)GLO_CursedIronFlask_State_WasOpened_0ae70cae-7a4a-709c-dc66-d7b38899af12);
+PROC_GLO_CursedIronFlask_CreatureWasReleased(_Creature, _Player);
+RealtimeObjectTimerLaunch(_Creature, "GLO_CursedIronFlask_Timer_MakeCreatureEvil", 1000);
+RealtimeObjectTimerLaunch(_Player, "GLO_CursedIronFlask_Timer_PlayReactionVoiceBark", 1000);
+
+PROC
+PROC_GLO_CursedIronFlask_CreatureWasReleased((CHARACTER)_Character,(CHARACTER)_)
+THEN
+Transform(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, QUEST_GLO_CursedIronFlask_Empty_c5f0d632-be10-4a64-9482-f3df021a3654, (SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+RemoveStatus(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, "GLO_CURSEDIRONFLASK_GLOW");
+
+IF
+ObjectTimerFinished(_Player, "GLO_CursedIronFlask_Timer_PlayReactionVoiceBark")
+AND
+QRY_OnlyOnce("GLO_CursedIronFlask_ReflectionDialog")
+THEN
+StartVoiceBark(GLO_CursedIronFlask_VB_PlayerAfterReleasingCreatureFirstTime_41c94871-68bc-d8e2-b698-151f7e64fc07, (CHARACTER)_Player);
+
+IF
+EntityEvent((CHARACTER)_Creature, "GLO_CursedIronFlask_Event_CreatureCreated")
+AND
+DB_GLO_CursedIronFlask_ADAfterRelease(_Creature)
+THEN
+NOT DB_GLO_CursedIronFlask_ADAfterRelease(_Creature);
+PROC_TryStartAD(GLO_CursedIronFlask_AD_CapturedCreatureOnRelease_3c601aee-6d8d-2a5c-12c6-0dcf015b1bcb, _Creature);
+
+IF
+ObjectTimerFinished(_Creature, "GLO_CursedIronFlask_Timer_MakeCreatureEvil")
+THEN
+DB_CursedIronFlask_Spotting(_Creature);
+
+PROC
+PROC_StateSet_PermaDefeated(_Creature)
+AND
+DB_CursedIronFlask_Spotting(_Creature)
+THEN
+NOT DB_CursedIronFlask_Spotting(_Creature);
+//END_REGION
+
+//REGION Hostility
+IF
+DB_Sees(_Creature, _Enemy)
+AND
+DB_CursedIronFlask_Spotting(_Creature)
+AND
+NOT DB_PermaDefeated(_Enemy)
+AND
+GetFaction(_Enemy, _EnemyFaction)
+AND
+GetRelation(GLO_CreaturesFromFlask_26291f6a-132f-4c44-845e-8594e9b25152, _EnemyFaction, _Relation)
+AND
+_Relation > 0
+THEN
+PROC_SetRelationMutual(GLO_CreaturesFromFlask_26291f6a-132f-4c44-845e-8594e9b25152, _EnemyFaction, 0);
+
+IF
+BaseFactionChanged(_Enemy, _, _EnemyFaction)
+AND
+DB_CursedIronFlask_Spotting(_Creature)
+AND
+DB_Sees((CHARACTER)_Creature, _Enemy)
+AND
+NOT DB_PermaDefeated(_Enemy)
+AND
+GetRelation(GLO_CreaturesFromFlask_26291f6a-132f-4c44-845e-8594e9b25152, _EnemyFaction, _Relation)
+AND
+_Relation > 0
+THEN
+PROC_SetRelationMutual(GLO_CreaturesFromFlask_26291f6a-132f-4c44-845e-8594e9b25152, _EnemyFaction, 0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "ModWrapper_Gustav"

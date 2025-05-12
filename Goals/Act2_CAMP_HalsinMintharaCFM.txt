@@ -1,0 +1,126 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Halsin and Minthara night
+DB_CAMP_HalsinAlternatePositions("SCL_Main_A", "SCLMAIN", S_Spawnpoint_Halsin_Fallback_SCLMain_A_ace27f95-a2a8-47b7-af83-287dd088bdf6);
+DB_CAMP_HalsinAlternatePositions("SCL_Main_A", "SHARTEMPLE", S_Spawnpoint_Halsin_Fallback_SharTemple_A_f9cfd474-036d-4fe8-bdb1-0f8c916b563d);
+DB_CAMP_HalsinAlternatePositions("SCL_Main_A", "HAVEN", S_Spawnpoint_Halsin_Fallback_Haven_A_7a60ed5c-b61a-49ee-a76d-1d15ebd4545e);
+DB_CAMP_HalsinAlternatePositions("SCL_Main_A", "MOONRISE", S_Spawnpoint_Halsin_Fallback_Moonrise_A_d5ff68c8-73bd-4775-98ba-6ec7105caeec);
+DB_CAMP_HalsinAlternatePositions("INT_Main_A", "INTMAIN", S_Spawnpoint_Halsin_Fallback_Int_A_cf74b25f-8428-4f22-8a4e-cf00fe0b532e);
+DB_CAMP_HalsinAlternatePositions("BGO_Main_A", "FARM", S_Spawnpoint_Halsin_Fallback_Farm_A_8c491e2c-a407-421c-bd11-fe21f666e557);
+DB_CAMP_HalsinAlternatePositions("CTY_Main_A", "SLUMS", S_Spawnpoint_Halsin_Fallback_Slums_A_a5f3d75a-74b2-49e0-90a9-54a2c50bdfa0);
+DB_CAMP_HalsinAlternatePositions("CTY_Main_A", "ELFSONG", S_Spawnpoint_Halsin_Fallback_Elfsong_A_19c8c3a3-d5c0-4ab1-af37-e054ec4c5346);
+
+DB_CAMP_ThanielAlternatePositions("SCL_Main_A", "SCLMAIN", S_Spawnpoint_Thaniel_Fallback_SCLMain_A_53d6717e-0212-4631-bfba-3b81229b0e15);
+DB_CAMP_ThanielAlternatePositions("SCL_Main_A", "SHARTEMPLE", S_Spawnpoint_Thaniel_Fallback_SharTemple_A_c404a6bf-273c-4869-a2d4-00b6fdbd3fd4);
+DB_CAMP_ThanielAlternatePositions("SCL_Main_A", "HAVEN", S_Spawnpoint_Thaniel_Fallback_Haven_A_86b896c3-74a0-4baa-8b5f-125ea4274f50);
+DB_CAMP_ThanielAlternatePositions("SCL_Main_A", "MOONRISE", S_Spawnpoint_Thaniel_Fallback_Moonrise_A_4278d06e-985b-4df0-8660-3a7240741df9);
+
+//END_REGION
+KBSECTION
+//REGION ACT2_CAMP
+//Halsin Minthara Camp Position swaps
+//Should catch if they are both camp followers
+
+IF
+DB_PartOfTheTeam(S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+DB_PartOfTheTeam(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+NOT DB_GlobalFlag(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc)
+THEN
+PROC_GlobalSetFlagAndCache(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc);
+
+
+//In case Halsin is travelling with the party, this should make sure the flag is set before the party travels to camp as Halsin could otherwise hit DB_InCamp too late to set the positions properly
+IF
+DB_InCamp(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+DB_GlobalFlag(GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa)
+AND
+NOT DB_GlobalFlag(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc)
+THEN
+PROC_GlobalSetFlagAndCache(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc);
+//END_REGION
+
+
+
+//REGION Trigger Swap Logic
+IF
+LevelGameplayStarted(_Level, _)
+AND
+DB_GlobalFlag(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc)
+AND
+DB_CAMP_HalsinAlternatePositions(_Level, _Camp, _NewTrigger)
+AND
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Camp, _OldTrigger)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_Camp, (CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _LevelTemplate)
+THEN
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Camp, (TRIGGER)_NewTrigger);
+PROC_CacheUnloadLevelTemplate(_LevelTemplate);
+NOT DB_Camp_PersonalCornerLevelTemplate(_Camp, (CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _LevelTemplate);
+NOT DB_ORI_OriginCampData((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Camp, _OldTrigger);
+NOT DB_CAMP_HalsinAlternatePositions(_Level, _Camp, _NewTrigger);
+
+
+IF
+FlagSet(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc, _, _)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CAMP_HalsinAlternatePositions(_Level, _Camp, _NewTrigger)
+AND
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Camp, _OldTrigger)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_Camp, (CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _LevelTemplate)
+THEN
+DB_ORI_OriginCampData((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Camp, (TRIGGER)_NewTrigger);
+PROC_CacheUnloadLevelTemplate(_LevelTemplate);
+NOT DB_ORI_OriginCampData((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _Camp, _OldTrigger);
+NOT DB_Camp_PersonalCornerLevelTemplate(_Camp, (CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323, _LevelTemplate);
+NOT DB_CAMP_HalsinAlternatePositions(_Level, _Camp, _NewTrigger);
+
+IF
+LevelGameplayStarted(_Level, _)
+AND
+DB_GlobalFlag(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc)
+AND
+DB_CAMP_ThanielAlternatePositions(_Level, _Camp, _NewTrigger)
+AND
+DB_ORI_OriginCampData((CHARACTER)S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, _Camp, _OldTrigger)
+THEN
+DB_ORI_OriginCampData((CHARACTER)S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, _Camp, (TRIGGER)_NewTrigger);
+NOT DB_ORI_OriginCampData((CHARACTER)S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, _Camp, _OldTrigger);
+NOT DB_CAMP_ThanielAlternatePositions(_Level, _Camp, _NewTrigger);
+
+
+IF
+FlagSet(CAMP_Halsin_Minthara_BothPresent_6e984e21-ad6b-4c1a-b038-473a6420dbdc, _, _)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_CAMP_ThanielAlternatePositions(_Level, _Camp, _NewTrigger)
+AND
+DB_ORI_OriginCampData((CHARACTER)S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, _Camp, _OldTrigger)
+THEN
+DB_ORI_OriginCampData((CHARACTER)S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, _Camp, (TRIGGER)_NewTrigger);
+NOT DB_ORI_OriginCampData((CHARACTER)S_HAV_SpiritOfTheLand_1403cdfd-0660-4592-90c6-bfe4607ccd3a, _Camp, _OldTrigger);
+NOT DB_CAMP_ThanielAlternatePositions(_Level, _Camp, _NewTrigger);
+
+IF
+LevelGameplayStarted(_, _)
+AND
+NOT DB_CAMP_HalsinAlternatePositions(_, _, _)
+AND
+NOT DB_CAMP_ThanielAlternatePositions(_, _, _)
+THEN
+GoalCompleted;
+
+//END_REGION
+
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

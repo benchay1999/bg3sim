@@ -1,0 +1,73 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Triggers for Summons
+PROC
+PROC_ApplySavegamePatches()
+AND
+QRY_BG3_SaveGameIsOlderThan("Release Patch 7")
+THEN
+PROC_SavegamePatches_CleanUpTriggersForSummons();
+
+// There can be a _lot_ of these, so timeslice their clearing
+PROC
+PROC_SavegamePatches_CleanUpTriggersForSummons()
+AND
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Summon)
+AND
+NOT DB_PartyMembers(_Summon)
+THEN
+DB_SavegamePatches_ClearSummon((CHARACTER)_Summon);
+
+PROC
+PROC_SavegamePatches_CleanUpTriggersForSummons()
+THEN
+TimerLaunch("SavegamePatches_ClearSummons",500);
+
+IF
+TimerFinished("SavegamePatches_ClearSummons")
+AND
+SysCount("DB_TriggerRegisteredForPartyMember",3,_Count)
+AND
+ConcatenateInteger("Remaining RegisteredTriggers: ",_Count,_RegisteredTriggerMessage)
+THEN
+DebugLog(_RegisteredTriggerMessage);
+NOT DB_OnlyOnce("SavegamePatches_ClearSummons_Once");
+
+IF
+TimerFinished("SavegamePatches_ClearSummons")
+AND
+DB_SavegamePatches_ClearSummon(_Summon)
+AND
+NOT DB_OnlyOnce("SavegamePatches_ClearSummons_Once")
+AND
+DB_TriggerRegisteredForPartyMember(_Level,_Trigger,(CHARACTER)_Summon)
+THEN
+DB_OnlyOnce("SavegamePatches_ClearSummons_Once");
+NOT DB_SavegamePatches_ClearSummon(_Summon);
+NOT DB_TriggerRegisteredForPartyMember(_Level,_Trigger,_Summon);
+
+
+IF
+TimerFinished("SavegamePatches_ClearSummons")
+AND
+NOT QRY_IsEmptyDB("DB_SavegamePatches_ClearSummon",1)
+AND
+Random(100,_Variance)
+AND
+IntegerSum(450,_Variance,_Delay)
+THEN
+TimerLaunch("SavegamePatches_ClearSummons",_Delay);
+
+IF
+TimerFinished("SavegamePatches_ClearSummons")
+AND
+NOT DB_SavegamePatches_ClearSummon(_)
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

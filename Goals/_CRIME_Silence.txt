@@ -1,0 +1,156 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRIME_AssaultSilenced("Assault_Silenced");
+DB_CRIME_AssaultSilenced("Assault_Beast_LowPrio_Silenced");
+DB_CRIME_AssaultSilenced("Assault_Beast_HighPrio_Silenced");
+DB_CRIME_AssaultSilenced("Assault_Monster_Silenced");
+
+// All silenced assault crimes are defined to only let the victim react, so don't prevent
+// others from reacting to silenced crimes caused by the same silence dome
+DB_CRIME_StoryActionHandled_NeverCombine("Assault_Silenced", "Assault_Beast_LowPrio_Silenced");
+DB_CRIME_StoryActionHandled_NeverCombine("Assault_Silenced", "Assault_Beast_HighPrio_Silenced");
+DB_CRIME_StoryActionHandled_NeverCombine("Assault_Silenced", "Assault_Monster_Silenced");
+DB_CRIME_StoryActionHandled_NeverCombine("Assault_Beast_LowPrio_Silenced", "Assault_Beast_HighPrio_Silenced");
+DB_CRIME_StoryActionHandled_NeverCombine("Assault_Beast_LowPrio_Silenced", "Assault_Monster_Silenced");
+DB_CRIME_StoryActionHandled_NeverCombine("Assault_Beast_HighPrio_Silenced", "Assault_Monster_Silenced");
+KBSECTION
+//REGION Init
+IF
+DB_CRIME_AssaultSilenced(_SilencedAssault)
+THEN
+DB_LinkedCrimes("Assault",_SilencedAssault);
+//END_REGION
+
+//REGION Silenced "assault"
+// Depending on the flow, UsingSpell or CastSpell may arrive before the EnteredLevel of the silence helper -> handle both cases
+IF
+UsingSpell(_PartyMember,_,_,_,_StoryactionID)
+AND
+DB_CRIME_Casting((CHARACTER)_PartyMember,_AnyStoryActionID)
+THEN
+NOT DB_CRIME_Casting(_PartyMember,_AnyStoryActionID);
+
+IF
+UsingSpell(_PartyMember,_,_,_,_StoryactionID)
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+THEN
+DB_CRIME_Casting(_PartyMember,_StoryactionID);
+
+IF
+CastSpell(_PartyMember,_,_,_,_StoryactionID)
+AND
+DB_CRIME_Casting((CHARACTER)_PartyMember,_AnyStoryActionID)
+THEN
+NOT DB_CRIME_Casting(_PartyMember,_AnyStoryActionID);
+
+IF
+CastSpell(_PartyMember,_,_,_,_StoryactionID)
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+THEN
+DB_CRIME_Casting(_PartyMember,_StoryactionID);
+
+IF
+DB_CRIME_Casting(_PartyMember,_StoryactionID)
+AND
+NOT DB_PartyMembers(_PartyMember)
+THEN
+NOT DB_CRIME_Casting(_PartyMember,_StoryactionID);
+
+QRY
+QRY_CRIME_GetItemOwnerOwnerOrChar((GUIDSTRING)_HelperOrPartyMember)
+AND
+DB_QRY_RTN_CRIME_GetItemOwnerOwnerOrChar((CHARACTER)_Result)
+THEN
+NOT DB_QRY_RTN_CRIME_GetItemOwnerOwnerOrChar((CHARACTER)_Result);
+
+QRY
+QRY_CRIME_GetItemOwnerOwnerOrChar((GUIDSTRING)_HelperOrPartyMember)
+AND
+IsItem(_HelperOrPartyMember,1)
+AND
+GetOwner((ITEM)_HelperOrPartyMember,_Owner)
+THEN
+DB_QRY_RTN_CRIME_GetItemOwnerOwnerOrChar(_Owner);
+
+QRY
+QRY_CRIME_GetItemOwnerOwnerOrChar((GUIDSTRING)_HelperOrPartyMember)
+AND
+IsCharacter(_HelperOrPartyMember,1)
+THEN
+DB_QRY_RTN_CRIME_GetItemOwnerOwnerOrChar((CHARACTER)_HelperOrPartyMember);
+
+// To avoid triggering an assault whenever someone wanders into a dome of silence,
+// just iterate everyone around the silence helper when it gets created. It's ugly,
+// but we don't have a better way right now (catching StatusAttempt/StatusApplied(SILENCE)
+// between UsingSpell/CastedSpell does not work, as they may arrive after CastedSpell
+// even for characters that were in the dome when the spell was cast).
+IF
+EnteredLevel(_Helper, (ROOT)Helper_Spell_Silence_edca6656-dc8c-410b-9f16-fcc02d5ed803, _)
+AND
+DB_CRIME_Casting(_Owner,_StoryActionID)
+THEN
+DB_CRIME_PotentialSilenceCasting(_Owner,(ITEM)_Helper,_StoryActionID);
+// When the EnteredLevel event triggers, the owner of the helper hasn't been set
+// yet in code. This happens one frame later by a deferred system update -> timer
+TimerCancel("CRIME_CheckSilenceHelperOwner");
+TimerLaunch("CRIME_CheckSilenceHelperOwner",0);
+
+IF
+TimerFinished("CRIME_CheckSilenceHelperOwner")
+AND
+DB_CRIME_PotentialSilenceCasting(_Owner,_Helper,_StoryActionID)
+AND
+GetOwner(_Helper,_Owner)
+AND
+IsPartyMember((CHARACTER)_Owner,1,1)
+AND
+GUIDToString(_Helper,_HelperString)
+AND
+Concatenate("CRIME_SilenceAssault_",_HelperString,_AssaultEvent)
+AND
+Concatenate("CRIME_SilenceAssault_Finished_",_HelperString,_FinishEvent)
+THEN
+DB_CRIME_SilenceCaster(_Helper,_Owner,_AssaultEvent,_FinishEvent,_StoryActionID);
+IterateCharactersAround(_Helper,6.0,_AssaultEvent,_FinishEvent);
+
+IF
+TimerFinished("CRIME_CheckSilenceHelperOwner")
+AND
+DB_CRIME_PotentialSilenceCasting(_Owner,_Helper,_StoryActionID)
+THEN
+NOT DB_CRIME_PotentialSilenceCasting(_Owner,_Helper,_StoryActionID);
+
+IF
+EntityEvent(_,_FinishEvent)
+AND
+DB_CRIME_SilenceCaster(_Helper,_Owner,_AssaultEvent,_FinishEvent,_StoryActionID)
+THEN
+NOT DB_CRIME_SilenceCaster(_Helper,_Owner,_AssaultEvent,_FinishEvent,_StoryActionID);
+
+IF
+EntityEvent(_NPC,_SilenceAssaultEvent)
+AND
+DB_CRIME_SilenceCaster(_Helper,_Assailant,_SilenceAssaultEvent,_FinishEvent,_StoryActionID)
+THEN
+PROC_CRIME_TryRegisterAssaultLikeCrime(_Assailant,_NPC,_StoryActionID,"_Silenced");
+//END_REGION
+
+//REGION Silence for Items
+IF
+StatusApplied(_Item, "SILENCED", _Causee, _)
+AND
+IsItem(_Item, 1)
+AND
+IsTagged(_Item, FORBIDDEN_FOR_SILENCE_ff5acb44-0a6e-435a-968a-586bd03dd611, 1)
+AND
+GetOwner((ITEM)_Causee, _Player)
+THEN
+PROC_CrimeRegisterVandalise((ITEM)_Item, _Player, _Player);
+//END_REGION Silence for Items
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

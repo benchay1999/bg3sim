@@ -1,0 +1,428 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Disturbance types that should never be combined even if all properties match
+DB_CRIME_StoryActionHandled_NeverCombine("","");
+NOT DB_CRIME_StoryActionHandled_NeverCombine("","");
+KBSECTION
+//REGION Top-level interface to check whether a story action has been handled already
+// First try specific handling for this type of crime
+QRY
+QRY_CRIME_StoryActionHandled((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+_StoryActionID != -1
+AND
+QRY_CRIME_StoryActionHandled_Specific(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+DB_StoryActionHandled(1);
+
+// Otherwise generic handling
+QRY
+QRY_CRIME_StoryActionHandled((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+_StoryActionID != -1
+AND
+NOT DB_StoryActionHandled(1)
+AND
+QRY_CRIME_StoryActionHandled_Generic(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+DB_StoryActionHandled(1);
+
+// Clean up
+QRY
+QRY_CRIME_StoryActionHandled((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_StoryActionHandled(1)
+THEN
+NOT DB_StoryActionHandled(1);
+//END_REGION
+
+//REGION Top-level interface to clear any record of a story action having been handled
+PROC
+PROC_CRIME_StoryActionHandled_Reset((INTEGER)_StoryActionID,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+PROC
+PROC_CRIME_StoryActionHandled_Reset((INTEGER)_StoryActionID,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+PROC
+PROC_CRIME_StoryActionHandled_ResetAll((INTEGER)_StoryActionID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+PROC
+PROC_CRIME_StoryActionHandled_ResetAll((INTEGER)_StoryActionID)
+AND
+DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+PROC
+PROC_CRIME_StoryActionHandled_ResetAll((INTEGER)_StoryActionID)
+AND
+DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID)
+THEN
+NOT DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID);
+//END_REGION
+
+//REGION Helpers for combining crimes related to the same story action
+QRY
+QRY_CRIME_StoryActionHandled_Combine((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_OldTension,(INTEGER)_NewTension,(INTEGER)_OldCrimeID,(INTEGER)_NewCrimeID)
+AND
+_NewTension <= _OldTension
+AND
+_Evidence != NULL_00000000-0000-0000-0000-000000000000
+AND
+// Returns 0 if the crime already had the evidence; we don't care about that, since then it's also already handled
+CrimeAddEvidence(_OldCrimeID,_Evidence,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_StoryActionHandled_Combine((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_OldTension,(INTEGER)_NewTension,(INTEGER)_OldCrimeID,(INTEGER)_NewCrimeID)
+AND
+_NewTension <= _OldTension
+AND
+_Evidence == NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_StoryActionHandled_Combine((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_OldTension,(INTEGER)_NewTension,(INTEGER)_OldCrimeID,(INTEGER)_NewCrimeID)
+AND
+_NewTension > _OldTension
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_OldCrimeType,_StoryActionID,_OldEvidence,_OldVictim,_OldCrimeID)
+AND
+// Record that we should combine the old crime's data with the new one
+// (can't do this now, because the new crime hasn't been registered yet)
+QRY_CRIME_StoryActionHandled_CombineOverride(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldCrimeID,_NewCrimeID)
+AND
+// Don't succeed so the new crime still gets registered
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_StoryActionHandled_CombineOverride((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_OldCrimeID,(INTEGER)_NewCrimeID)
+AND
+_NewCrimeID != -1
+THEN
+DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_NewCrimeID);
+
+// If the new crime got blocked, just discard it
+PROC
+PROC_CharacterRegisterCrime_Blocked((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+
+// Otherwise add the evidence of the old crime to the new one, and stop the old crime
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_OldCrimeType,_StoryActionID,_OldEvidence,_OldVictim,_OldCrimeID)
+THEN
+CrimeMergeEvidenceFrom(_CrimeID,_OldCrimeID);
+
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_NewCrimeID)
+AND
+DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_NewCrimeID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_OldCrimeType,_StoryActionID,_OldEvidence,_OldVictim,_OldCrimeID)
+AND
+_NewCrimeID != _OldCrimeID
+THEN
+NOT DB_CRIME_StoryActionHandle_CombineQueued(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_NewCrimeID);
+NOT DB_CRIME_StoryActionHandled(_Criminal,_OldCrimeType,_StoryActionID,_OldEvidence,_OldVictim,_OldCrimeID);
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_NewCrimeID);
+CharacterStopCrimeWithID(_Criminal,_OldCrimeID);
+
+//END_REGION
+
+//REGION Specific - vandalise (only crimetype needs to be similar)
+QRY
+QRY_CRIME_StoryActionHandled_Specific((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Vandalise")
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_OtherCrimeType,_StoryActionID,_,_,_OldCrimeID)
+AND
+NOT DB_CRIME_StoryActionHandled_NeverCombine(_CrimeType,_OtherCrimeType)
+AND
+NOT DB_CRIME_StoryActionHandled_NeverCombine(_OtherCrimeType,_CrimeType)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_OtherCrimeType,"Vandalise")
+AND
+CrimeGetTension(_OldCrimeID,_OldTension)
+AND
+CrimeTypeGetTension(_CrimeType,_NewTension)
+AND
+QRY_CRIME_StoryActionHandled_Combine(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldTension,_NewTension,_OldCrimeID,_CrimeID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Specific - assault which then becomes murder (victim needs to match)
+QRY
+QRY_CRIME_IsAssaultOrMurder((STRING)_CrimeType)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Assault")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_IsAssaultOrMurder((STRING)_CrimeType)
+AND
+// These are not linked to the Assault crime because they shouldn't be considered as harmful
+DB_CRIME_Assault_NoFallback(_CrimeType)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_IsAssaultOrMurder((STRING)_CrimeType)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Murder")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_StoryActionHandled_Specific((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_CRIME_IsAssaultOrMurder(_CrimeType)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_OtherCrimeType,_StoryActionID,_,_Victim,_OldCrimeID)
+AND
+NOT DB_CRIME_StoryActionHandled_NeverCombine(_CrimeType,_OtherCrimeType)
+AND
+NOT DB_CRIME_StoryActionHandled_NeverCombine(_OtherCrimeType,_CrimeType)
+AND
+QRY_CRIME_IsAssaultOrMurder(_OtherCrimeType)
+AND
+CrimeGetTension(_OldCrimeID,_OldTension)
+AND
+CrimeTypeGetTension(_CrimeType,_NewTension)
+AND
+QRY_CRIME_StoryActionHandled_Combine(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldTension,_NewTension,_OldCrimeID,_CrimeID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Specific - AoE spell resulting in multiple assaults/murders with different victims
+// Conditions:
+//   - old and new crimetype must be of same family (both assault or both murder)
+//   - victims must be allied (so that if you kill characters of two different factions, both can become hostile at you)
+QRY
+QRY_CRIME_StoryActionHandled_Specific((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+QRY_CRIME_IsAssaultOrMurder(_CrimeType)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_OtherCrimeType,_StoryActionID,_,_OldVictim,_OldCrimeID)
+AND
+NOT DB_CRIME_StoryActionHandled_NeverCombine(_CrimeType,_OtherCrimeType)
+AND
+NOT DB_CRIME_StoryActionHandled_NeverCombine(_OtherCrimeType,_CrimeType)
+AND
+QRY_CRIME_GetCrimeFamily(_CrimeType)
+AND
+DB_QRYRTN_CRIME_GetCrimeFamily(_Family)
+AND
+QRY_CRIME_GetCrimeFamily(_OtherCrimeType)
+AND
+DB_QRYRTN_CRIME_GetCrimeFamily(_Family)
+AND
+IsAlly(_Victim,_OldVictim,1)
+AND
+CrimeGetTension(_OldCrimeID,_OldTension)
+AND
+CrimeTypeGetTension(_CrimeType,_NewTension)
+AND
+QRY_CRIME_StoryActionHandled_Combine(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldTension,_NewTension,_OldCrimeID,_CrimeID)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Generic (everything needs to match)
+QRY
+QRY_CRIME_StoryActionHandled_Generic((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_)
+THEN
+DB_NOOP(1);
+
+// Fallback: record new crime for this story action, but fail the query (so the crime will still be registered)
+QRY
+QRY_CRIME_StoryActionHandled_Generic((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+NOT DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_)
+AND
+QRY_CRIME_StoryActionHandled_Register(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_StoryActionHandled_Register((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+THEN
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_CrimeID);
+//END_REGION
+
+//REGION Crime merging
+IF
+OnCrimeMergedWith(_OldCrimeID,_NewCrimeID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldCrimeID)
+AND
+NOT DB_CRIME_StoryActionHandled(_,_CrimeType,_StoryActionID,_,_,_NewCrimeID)
+THEN
+// Criminal, evidence and/or victim may be different between the two crimes, but if this needs special handling
+// then it should be done per crime type. This just ensures the StoryActionID -> CrimeID mapping stays valid
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_NewCrimeID);
+
+IF
+OnCrimeMergedWith(_OldCrimeID,_NewCrimeID)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldCrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Evidence,_Victim,_OldCrimeID);
+//END_REGION
+
+//REGION Clean up on resolve
+IF
+OnCrimeResolved(_CrimeID,_,_,_,_,_)
+AND
+DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Victim,_Evidence,_CrimeID)
+THEN
+NOT DB_CRIME_StoryActionHandled(_Criminal,_CrimeType,_StoryActionID,_Victim,_Evidence,_CrimeID);
+//END_REGION
+
+//REGION Manual registration for handled Story Action IDs
+// NULL character means "for everyone" -> clear existing individual entries
+PROC
+PROC_CRIME_StoryActionHandled((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (INTEGER)_StoryActionID)
+AND
+DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID)
+THEN
+NOT DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID);
+
+PROC
+PROC_CRIME_StoryActionHandled((CHARACTER)_Victim, (INTEGER)_StoryActionID)
+AND
+NOT DB_CRIME_StoryActionHandledManually((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,_StoryActionID)
+THEN
+DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID);
+
+QRY
+QRY_CRIME_StoryActionHandled_Specific((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_StoryActionHandled_Specific((CHARACTER)_Criminal,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_CRIME_StoryActionHandledManually((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,_StoryActionID)
+THEN
+DB_NOOP(1);
+
+// Clean up on victim death (no other way to know when it times out)
+IF
+Died(_Victim)
+AND
+DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID)
+THEN
+NOT DB_CRIME_StoryActionHandledManually(_Victim,_StoryActionID);
+//END_REGION
+
+//REGION Prevent crimes getting registered for attacks that may have effects after combat ends (e.g. bleeding)
+// Also for spells that don't necessarily hit anyone, but that e.g. transform surfaces in a way that triggers
+// a passive from a player when someone gets hit. E.g. cast Call Lightning which electrifies surface, and have
+// the thunderbolt passive -> when friendly NPC walks into the surface after combat ends we don't react to the
+// AttackedBy of walking into the surface (SurfaceMove context), but that triggers the thunderbolt passive which
+// results in a shockwave status that does trigger an attack. That status will have the same story action ID
+// as the initial spell cast, so record story action IDs of spells successfully cast in combat.
+IF
+CastedSpell(_Caster,_,_,_,_StoryActionID)
+AND
+DB_Is_InCombat(_Caster,_CombatID)
+AND
+QRY_IsPartyMember(_Caster,0)
+THEN
+DB_CRIME_CastedInCombat(_StoryActionID,_CombatID);
+
+IF
+SwitchedCombat(_,_OldCombat,_NewCombat)
+AND
+DB_CRIME_CastedInCombat(_StoryActionID,_OldCombat)
+THEN
+DB_CRIME_CastedInCombat(_StoryActionID,_NewCombat);
+
+// After the combat ends, start ignoring the spell's effects. Not during combat, because casting a fireball
+// on NPCs that are not in the combat should still result in crime reactions, and the AttackedBy events
+// from the spellcast will arrive only after the CastedSpell event (code only sends them once it knows
+// whether or not the attacks killed the targets so we can check IsDead at that point, which takes a
+// few frames).
+IF
+CombatEnded(_CombatID)
+AND
+DB_CRIME_CastedInCombat(_StoryActionID,_CombatID)
+AND
+NOT QRY_CRIME_StoryActionID_OtherCombats(_StoryActionID,_CombatID)
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_GLO_LevelNameIndexMap(_Level,_Index)
+THEN
+PROC_CRIME_StoryActionHandled(NULL_00000000-0000-0000-0000-000000000000,_StoryActionID);
+DB_CRIME_CleanupStoryActionIDOnLevelUnreachable(_Index,_StoryActionID);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_CRIME_CastedInCombat(_StoryActionID,_CombatID)
+THEN
+NOT DB_CRIME_CastedInCombat(_StoryActionID,_CombatID);
+
+QRY
+QRY_CRIME_StoryActionID_OtherCombats((INTEGER)_StoryActionID,(GUIDSTRING)_CombatID)
+AND
+DB_CRIME_CastedInCombat(_StoryActionID,_OtherCombatID)
+AND
+_OtherCombatID != _CombatID
+THEN
+DB_NOOP(1);
+
+// Clean up when level becomes unreachable (technically, the effect of a spell
+// could survive leaving and returning to a level). There's still the edge
+// case where a global with such a spell effect afterwards gets teleported
+// to the current level, but let's leave that for now.
+PROC
+PROC_LevelBecameUnreachable((STRING)_Level)
+AND
+DB_GLO_LevelNameIndexMap(_Level,_Index)
+AND
+DB_CRIME_CleanupStoryActionIDOnLevelUnreachable(_Index,_StoryActionID)
+THEN
+PROC_CRIME_StoryActionHandled_ResetAll(_StoryActionID);
+NOT DB_CRIME_CleanupStoryActionIDOnLevelUnreachable(_Index,_StoryActionID);
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

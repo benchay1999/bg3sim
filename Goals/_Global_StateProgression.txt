@@ -1,0 +1,222 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Define initial state of an object in a situation:
+//   DB_State_Current((GUIDSTRING)_Obj, (STRING)_Situation, (STRING)_CurrentState)
+//
+// Define the possible states and their priorities for a particular object+situation (priority is
+// explained in PROC_State_Progress section).
+//   DB_State_Priority((GUIDSTRING)_Obj, (STRING)_Situation, (STRING)_State, (INTEGER)_Priority)
+
+// Optional DB with Global Flags associated with States. Transitioning to a State that has an associated
+// with it flag will set this flag.
+// In addition transitioning to a new state also clears the previous state flag even if the new state doesn't
+// have a flag associated with it.
+//   DB_State_Flags((GUIDSTRING)_Obj, (STRING)_Situation, (STRING)_State, (FLAG)_GlobalStateFlag)
+
+// Transition from an object's current state in a situation to a new state, *if* the new
+// state's priority is state's priority is the same or higher than the current state's priority.
+//   PROC_State_Progress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState)
+
+// Same as above, but only try to progress if the object is currently in _CurrentState
+//   PROC_State_IfCurrentProgress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_CurrentState,(STRING)_NewState)
+
+// Same as above, but provide an alternate state to try to progress to if the current state does not match
+//   PROC_State_IfCurrentProgressElse((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_CurrentState,(STRING)_NewState,(STRING)_ElseNewState)
+
+// Called whenever an object's state has actually changed
+//   PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState)
+//   PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState)
+
+// Call this if the situation doesn't need the state manager anymore. It'll clear all 'DB_State_[Current/Priority/Flags]' DBs linked to this obj and situation
+// By default it'll also clear the current state flag, but if you prefer it doesn't do that, pass 0 to _ClearFlags
+//	PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation)
+//	PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation, (INTEGER)_ClearFlags)
+KBSECTION
+//REGION State Progress
+PROC
+PROC_State_Progress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState)
+AND
+DB_State_Current(_Obj,_Situation,_CurrentState)
+AND
+_CurrentState != _NewState
+AND
+DB_State_Priority(_Obj,_Situation,_CurrentState,(INTEGER)_CurrentPriority)
+AND
+DB_State_Priority(_Obj,_Situation,_NewState,_NewPriority)
+AND
+_CurrentPriority <= _NewPriority
+THEN
+PROC_State_Changed(_Obj,_Situation,_CurrentState,_NewState);
+
+PROC
+PROC_State_IfCurrentProgress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_CurrentState,(STRING)_NewState)
+AND
+DB_State_Current(_Obj,_Situation,_CurrentState)
+THEN
+PROC_State_Progress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState);
+
+PROC
+PROC_State_IfCurrentProgressElse((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_CurrentState,(STRING)_NewState,(STRING)_ElseNewState)
+AND
+DB_State_Current(_Obj,_Situation,_CurrentState)
+THEN
+DB_State_IfCurrentElseProgressed(1);
+PROC_State_Progress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState);
+
+PROC
+PROC_State_IfCurrentProgressElse((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_CurrentState,(STRING)_NewState,(STRING)_ElseNewState)
+AND
+NOT DB_State_IfCurrentElseProgressed(1)
+THEN
+PROC_State_Progress((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_ElseNewState);
+
+PROC
+PROC_State_IfCurrentProgressElse((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_CurrentState,(STRING)_NewState,(STRING)_ElseNewState)
+AND
+DB_State_IfCurrentElseProgressed(1)
+THEN
+NOT DB_State_IfCurrentElseProgressed(1);
+
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState)
+THEN
+NOT DB_State_Current(_Obj,_Situation,_OldState);
+DB_State_Current(_Obj,_Situation,_NewState);
+// This PROC_State_Changed() runs before any of the overloaded ones of campaigns(goal starts with _),
+// so make sure the above DB_State_Current() update has also been performed already when the
+// version with only the _NewState parameter gets called
+PROC_State_Changed(_Obj,_Situation,_NewState);
+
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState,(FLAG)_NewGlobalFlag)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Flags
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState)
+AND
+DB_State_Flags((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState,(FLAG)_NewGlobalFlag)
+THEN
+PROC_GlobalSetFlagAndCache(_NewGlobalFlag);
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState,(FLAG)_NewGlobalFlag);
+
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState)
+AND
+NOT DB_State_Flags((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState,(FLAG)_)
+THEN
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState,(FLAG)_NewGlobalFlag)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_State_Changed((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(STRING)_NewState)
+AND
+DB_State_Flags((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_OldState,(FLAG)_OldGlobalFlag)
+AND
+NOT DB_State_Flags((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_NewState,(FLAG)_OldGlobalFlag)
+AND
+DB_GlobalFlag(_OldGlobalFlag)
+THEN
+PROC_GlobalClearFlagAndCache(_OldGlobalFlag);
+//END_REGION Flags
+
+//REGION Sound States
+PROC
+PROC_State_Changed((GUIDSTRING)_,(STRING)_Situation,(STRING)_NewState)
+AND
+DB_SoundStates_StateGroups((STRING)_Situation,(STRING)_StateGroup)
+AND
+DB_SoundStates((TRIGGER)_Trigger,_Situation,_NewState,(STRING)_SoundState)
+THEN
+TriggerSetSoundState(_Trigger,_StateGroup,_SoundState,1);
+
+//END_REGION
+
+//REGION Queries
+
+//The situation's current state has a lower priority than the state passed in the query
+QRY
+QRY_State_IsBeforeState((GUIDSTRING)_Obj,(STRING)_Situation,(STRING)_StateToCheck)
+AND
+DB_State_Priority(_Obj, _Situation, _StateToCheck, _Priority)
+AND
+DB_State_Current(_Obj, _Situation, _CurrentState)
+AND
+DB_State_Priority(_Obj, _Situation, _CurrentState, _CurrentPriority)
+AND
+_CurrentPriority < _Priority
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Remove all states
+
+PROC
+PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation)
+THEN
+PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation, 1);
+
+PROC
+PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation, 1)
+AND
+DB_State_Current(_Obj, _Situation, _CurrentState)
+AND
+DB_State_Flags(_Obj, _Situation, _CurrentState, _GlobalStateFlag)
+AND
+DB_GlobalFlag(_GlobalStateFlag)
+THEN
+ClearFlag(_GlobalStateFlag);
+
+PROC
+PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation, (INTEGER)_ClearFlags)
+AND
+DB_State_Current(_Obj, _Situation, _CurrentState)
+THEN
+NOT DB_State_Current(_Obj, _Situation, _CurrentState);
+
+PROC
+PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation, (INTEGER)_ClearFlags)
+AND
+DB_State_Priority(_Obj, _Situation, _State, _Priority)
+THEN
+NOT DB_State_Priority(_Obj, _Situation, _State, _Priority);
+
+PROC
+PROC_State_Remove((GUIDSTRING)_Obj, (STRING)_Situation, (INTEGER)_ClearFlags)
+AND
+DB_State_Flags(_Obj, _Situation, _State, _GlobalStateFlag)
+THEN
+NOT DB_State_Flags(_Obj, _Situation, _State, _GlobalStateFlag);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("state_progress")
+AND
+GetTextEventParamUUID(1,_Object)
+AND
+GetTextEventParamString(2,_Situation)
+AND
+GetTextEventParamString(3,_State)
+THEN
+PROC_State_Progress(_Object,_Situation,_State);
+//END_REGION Debug
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Start"

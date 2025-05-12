@@ -1,0 +1,4521 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence:
+// -[Link Redacted]
+// -[Link Redacted]
+
+//Any camp must be defined using DB_Camp(_CampName,_Campfire,_AreaTrigger,_EntranceTrigger)
+NOT DB_Camp_PersonalCornerGear("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_NightOnly_Decoration("",(ITEM)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_NightOnly_LevelTemplate("",(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_DayOnly_LevelTemplate("",(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampBed("",0,(ITEM)NULL_00000000-0000-0000-0000-000000000000,(ITEM)NULL_00000000-0000-0000-0000-000000000000,(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000,(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_MainCamp("","");
+NOT DB_MiniCampTrigger("",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_Ambiance("",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000,"","",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000,"","",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_RegionSafeSpot("",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_LeaveCamp_ForbiddenReturnArea("", (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_PersonalCornerLevelTemplate("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_PersonalCornerLevelTemplate("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000,(LEVELTEMPLATE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_Combatants((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_RequiredTalks((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_RequiredTalks((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_ORI_OriginCampData((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, "", (TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_BedAlternative((ITEM)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_Camp_WaitingToComeOnStage((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+
+//Use to prevent a character from switching armorsets during a specific camp dialog - QRY_CAMP_VanityArmour_BlockChangeForCharacter(_Player, _Dialogue)
+
+//Use if you dont want a camp character to ever change their set to vanity when night starts - QRY_CAMP_VanityArmour_BlockAutoChangeAtNightForCamper(_Character)
+KBSECTION
+//REGION Camp Init
+IF
+DB_Camp((STRING)_CampName,(ITEM)_Campfire,(TRIGGER)_AreaTrigger,(TRIGGER)_CampEntrance)
+AND
+DB_OriginCampFlags(_Character,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+AND
+Exists(_Character,1) //there could be local-only characters registered for camp
+THEN
+TriggerRegisterForCharacter(_AreaTrigger,_Character);
+
+IF
+DB_Camp((STRING)_CampName,(ITEM)_Campfire,(TRIGGER)_AreaTrigger,(TRIGGER)_CampEntrance)
+AND
+DB_Origins(_Character)
+THEN
+TriggerRegisterForCharacter(_AreaTrigger,_Character);
+
+IF
+DB_Camp((STRING)_,(ITEM)_,(TRIGGER)_AreaTrigger,(TRIGGER)_)
+THEN
+PROC_TriggerRegisterForPlayers(_AreaTrigger);
+DB_CorpseCleanup_Area(_AreaTrigger);
+
+PROC
+PROC_GLO_PartyMembers_MakeNPCHook((CHARACTER)_Character)
+AND
+DB_Camp((STRING)_CampName,(ITEM)_Campfire,(TRIGGER)_AreaTrigger,(TRIGGER)_CampEntrance)
+AND
+DB_OriginCampFlags(_Character,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+THEN
+TriggerRegisterForCharacter(_AreaTrigger,_Character);
+
+IF
+DB_MiniCampTrigger(_,_Trigger)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+//END_REGION
+
+//REGION Level Swaps
+//Save all characters who were in camp so we can move them to the new camp after LevelLoaded
+IF
+LevelUnloading(_Level)
+AND
+DB_InCamp(_Camper)
+AND
+NOT DB_PartyMembers(_Camper)
+THEN
+DB_CampLevelSwap_WasInCamp(_Camper);
+
+//Clear return positions. The coordinates are for a different level
+IF
+LevelUnloading(_Level)
+AND
+DB_LeaveCamp_ReturnPos(_Player,_X, _Y, _Z)
+THEN
+NOT DB_LeaveCamp_ReturnPos(_Player,_X, _Y, _Z);
+
+//Clean up the Active Camp
+IF
+LevelUnloading(_Level)
+AND
+DB_ActiveCamp(_OldCamp)
+AND
+DB_Camp(_OldCamp,_,_CampArea,_)
+THEN
+DeclutterArea(_CampArea,0,1);
+
+//Cleaning up the Main Camp (if it wasn't the active camp)
+IF
+LevelUnloading(_Level)
+AND
+DB_MainCamp(_Level,_MainCamp)
+AND
+DB_ActiveCamp(_CurrentCamp)
+AND
+_CurrentCamp != _MainCamp
+AND
+DB_Camp(_MainCamp,_,_CampArea,_)
+THEN
+DeclutterArea(_CampArea,0,1);
+
+//Throw away Active Camp. After loading the Main camp for the new region will be set.
+IF
+LevelUnloading(_Level)
+AND
+DB_ActiveCamp(_OldCamp)
+THEN
+NOT DB_ActiveCamp(_OldCamp);
+
+//Set DB_InCamp again on anyone who was in camp. This will make sure that they get teleported after the new camp is selected in the next rule.
+IF
+LevelLoaded(_Region)
+AND
+DB_CampLevelSwap_WasInCamp(_Camper)
+AND
+DB_PartOfTheTeam(_Camper)
+THEN
+DB_InCamp(_Camper);
+
+IF
+LevelLoaded(_Region)
+AND
+DB_CampLevelSwap_WasInCamp(_Camper)
+THEN
+NOT DB_CampLevelSwap_WasInCamp(_Camper);
+
+//Set camp to the main camp of the new region
+IF
+LevelLoaded(_Region)
+AND
+NOT DB_ActiveCamp(_)
+AND
+DB_MainCamp(_Region,_MainCamp)
+THEN
+DB_ActiveCamp(_MainCamp); //This will inherently call PROC_CampSwapped("",_MainCamp); & Teleport the campers
+//END_REGION
+
+//REGION Camp State - Tracking DB_InCamp
+//First player enters camp: update deco.
+IF
+TeleportedToCamp(_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_PlayerInCamp(_)
+THEN
+TimerLaunch("Camp_UpdateDeco_FrameDelay",0);
+
+IF
+TimerFinished("Camp_UpdateDeco_FrameDelay")
+THEN
+PROC_Camp_UpdateDeco();
+
+IF
+TeleportedToCamp(_Character)
+THEN
+SetFlag((FLAG)CAMP_GLO_State_InCamp_161b7223-039d-4ebe-986f-1dcd9a66733f, _Character);
+SetTag(_Character, (TAG)IN_CAMP_7fe47378-d9dc-48b4-b7be-53efbfbdca20);
+DB_InCamp(_Character);
+
+//If going to camp as a controlled companion, switch to an uncontrolled avatar (if available)
+IF
+TeleportedToCamp(_Avatar)
+AND
+DB_Avatars(_Avatar)
+AND
+IsControlled(_Avatar,0)
+AND
+IsDead(_Avatar,0)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+IsControlled(_Companion,1)
+AND
+DB_InCamp(_Companion)
+AND
+GetReservedUserID(_Avatar,_ID)
+AND
+GetReservedUserID(_Companion,_ID)
+AND
+QRY_Camp_GetCamperPos(_Companion)
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Companion,(TRIGGER)_CampPos)
+THEN
+MakePlayerActive(_Avatar);
+PROC_Camp_TeleportToCamp(_Companion, _CampPos);
+
+PROC
+PROC_Camp_ForceAvatarControl()
+AND
+DB_PlayerInCamp(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+IsControlled(_Companion,1)
+AND
+DB_Avatars(_Avatar)
+AND
+IsControlled(_Avatar,0)
+AND
+GetReservedUserID(_Avatar,_ID)
+AND
+GetReservedUserID(_Companion,_ID)
+THEN
+MakePlayerActive(_Avatar);
+
+IF
+TeleportedToCamp(_Camper)
+AND
+NOT DB_Camp_BlockCamperPosAdjustment(_Camper)
+AND
+NOT DB_Avatars(_Camper)
+AND
+QRY_Camp_GetCamperPos(_Camper)
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Camper,(TRIGGER)_CampPos)
+AND
+IsControlled(_Camper,0)
+THEN
+PROC_Camp_TeleportToCamp(_Camper, _CampPos);
+
+IF
+TeleportedToCamp(_Summon)
+AND
+DB_Camp_BlockCamperPosAdjustment(_Summon)
+AND
+IsSummon(_Summon,1)
+THEN
+NOT DB_Camp_BlockCamperPosAdjustment(_Summon);
+ 
+//Summoning inside camp - start timer
+//TeleportedToCamp arrives before summons are added to DB_PartyMembers
+//CharacterMadePlayer arrives before TeleportedToCamp
+//This way we check for a newly created summon without doing the IsSummon query
+//for every object that sends the EnteredLevel event, which arrives first
+IF
+CharacterMadePlayer(_Summon)
+AND
+IsSummon(_Summon,1)
+THEN
+DB_Camp_BlockCamperPosAdjustment((CHARACTER)_Summon);
+RealtimeObjectTimerLaunch(_Summon,"GLO_Camp_BlockSummonPosAdjust",2000);
+
+//Summoning inside camp - object timer
+IF
+ObjectTimerFinished(_Summon,"GLO_Camp_BlockSummonPosAdjust")
+AND
+DB_Camp_BlockCamperPosAdjustment((CHARACTER)_Summon)
+THEN
+NOT DB_Camp_BlockCamperPosAdjustment((CHARACTER)_Summon);
+
+PROC
+PROC_Camp_TeleportToCamp((CHARACTER)_Char, (GUIDSTRING)_Target)
+AND
+NOT DB_CantMove(_Char)
+THEN
+PROC_Helper_SafeTeleportTo(_Char, _Target,"",0);
+
+IF
+TeleportedFromCamp(_Character)
+THEN
+ClearFlag((FLAG)CAMP_GLO_State_InCamp_161b7223-039d-4ebe-986f-1dcd9a66733f, _Character);
+ClearTag(_Character, (TAG)IN_CAMP_7fe47378-d9dc-48b4-b7be-53efbfbdca20);
+NOT DB_InCamp(_Character);
+PROC_CAMP_LeftCamp(_Character);
+
+IF
+TeleportedToCamp(_Player)
+AND
+DB_Players(_Player)
+THEN
+NOT DB_CAMP_JustWokeUp(1);
+
+IF
+DB_InCamp(_Player)
+AND
+DB_Players(_Player)
+THEN
+DB_PlayerInCamp(_Player);
+PROC_Camp_PlayerInCampChanged();
+
+IF
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_Players(_Player)
+THEN
+NOT DB_PlayerInCamp(_Player);
+PROC_Camp_PlayerInCampChanged();
+
+IF
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_InCamp(_Player)
+THEN
+NOT DB_PlayerInCamp(_Player);
+PROC_Camp_PlayerInCampChanged();
+
+// If players left the camp while the character was still moving to their camp position after a Withers resurrection.
+PROC
+PROC_CAMP_LeftCamp((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_CharacterMovement(_Player, "Origin_RestoreDialog", _ID)
+THEN
+PROC_CharacterMoveTo_Clear(_Player, _ID, "Cancelled");
+// Since we're cancelling the "Origin_RestoreDialog", we need to trigger what it was suppose to execute.
+PROC_SetOnStage(_Player,1);
+SetHasDialog(_Player,1);
+
+PROC
+PROC_CAMP_LeftCamp((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_PlayerInCamp(_)
+THEN
+PROC_CAMP_LastPlayerLeftCamp();
+
+//END_REGION
+
+//REGION Camp Buttons - Unlocking Camp (after first companion is recruited or sent to camp)
+IF
+TextEvent("campon")
+THEN
+DB_Camp_Unlocked(1);
+
+IF
+TextEvent("campoff")
+THEN
+NOT DB_Camp_Unlocked(1);
+
+IF
+DB_Camp(_,_,_,_)
+THEN
+DB_Camp_Unlocked(1);
+
+IF
+DB_Camp_Unlocked(1)
+THEN
+DB_Camp_Unlocked_Triggered(1);
+EnableSendToCamp(1);
+EnableCampWaypoint(1);
+SetEndTheDayState(1);
+
+IF
+DB_Camp_Unlocked_Triggered(1)
+AND
+NOT DB_Camp_Unlocked(1)
+THEN
+NOT DB_Camp_Unlocked_Triggered(1);
+EnableSendToCamp(0);
+EnableCampWaypoint(0);
+SetEndTheDayState(0);
+
+//END_REGION
+
+//REGION Camp Buttons - Tracking world position if going to camp
+IF
+Teleported(_Player, _, _OldX, _OldY, _OldZ, _NewX, _NewY, _NewZ, _Reason)
+AND
+_Reason != "RegionSwap"
+AND
+DB_Players(_Player)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_Campfire,_AreaTrigger,_)
+AND
+NOT QRY_Real3Compare(_OldX, _OldY, _OldZ,0.0,0.0,0.0)
+AND
+PositionIsInTrigger(_NewX, _NewY, _NewZ,_AreaTrigger,1)
+AND
+NOT QRY_CAMP_PositionIsInACamp(_OldX, _OldY, _OldZ)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_OldX, _OldY, _OldZ);
+
+IF
+DB_LeaveCamp_ReturnPos(_FormerPlayer,_X,_Y,_Z)
+AND
+NOT DB_Players(_FormerPlayer)
+THEN
+NOT DB_LeaveCamp_ReturnPos(_FormerPlayer,_X,_Y,_Z);
+
+//New pos is better than old pos
+IF
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z)
+AND
+DB_LeaveCamp_ReturnPos(_Player,_X2,_Y2,_Z2)
+AND
+NOT QRY_Real3Compare(_X,_Y,_Z,_X2,_Y2,_Z2)
+THEN
+NOT DB_LeaveCamp_ReturnPos(_Player,_X2,_Y2,_Z2);
+
+QRY
+QRY_CAMP_PositionIsInACamp((REAL)_X, (REAL)_Y, (REAL)_Z)
+AND
+DB_Camp(_,_Campfire,_AreaTrigger,_)
+AND
+GetRegion(_Campfire,_Level)
+AND
+DB_CurrentLevel(_Level)
+AND
+PositionIsInTrigger(_X, _Y, _Z,_AreaTrigger,1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Camp Buttons - Camp Waypoint Selected
+//Go To Camp
+IF
+TeleportToFromCamp(_Player)
+AND
+DB_Players(_Player)
+THEN
+PROC_TeleportToFromCamp(_Player);
+
+IF
+TeleportToFromCamp(_NonPlayer)
+AND
+NOT DB_Players(_NonPlayer)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b, _NonPlayer);
+
+//Enter Camp
+PROC
+PROC_TeleportToFromCamp((CHARACTER)_Player)
+AND
+NOT DB_PlayerInCamp(_Player)
+AND
+NOT QRY_Camp_IsPlayerBlockedFromTeleportToCamp(_Player)
+AND
+QRY_Camp_SwapCampIfNecessary(_Player)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_,_CampEntrance)
+THEN
+PROC_WaypointTeleportTo(_Player,_CampEntrance);
+
+//Leave Camp
+PROC
+PROC_TeleportToFromCamp((CHARACTER)_UIPlayer)
+AND
+DB_PlayerInCamp(_UIPlayer)
+AND
+GetReservedUserID(_UIPlayer,_UserID)
+AND
+DB_PlayerInCamp(_MyPlayer)
+AND
+GetReservedUserID(_MyPlayer,_UserID)
+AND
+NOT DB_Camp_NightMode(1)
+THEN
+PROC_Camp_Leave(_MyPlayer);
+
+// All players leave camp
+PROC
+PROC_Camp_AllPlayersLeave()
+AND
+NOT DB_Camp_NightMode(1)
+AND
+DB_PlayerInCamp(_Player)
+THEN
+PROC_Camp_Leave(_Player);
+//END_REGION
+
+//REGION Camp Buttons - `End The Day` Button Pressed
+IF 
+EndTheDayRequested(_Player)
+AND
+NOT DB_InCamp(_Player)
+THEN
+NOT DB_CAMP_JustWokeUp(1);
+
+IF 
+EndTheDayRequested(_Player)
+THEN
+PROC_Camp_SwitchNightMode(_Player);
+//END_REGION
+
+//REGION Camp Buttons - Campfire/bed Pressed
+IF
+UseFinished(_Player,_Campfire, 1)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_Campfire,_,_)
+AND
+_Campfire != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_Camp_SwitchNightMode(_Player);
+
+IF
+UseStarted(_Player,_DayBed)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_CampBed(_ActiveCamp,_,_DayBed,_,_,_,_)
+THEN
+PROC_Camp_SwitchNightMode(_Player);
+
+IF
+UseStarted(_Player,_NightBed)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_CampBed(_ActiveCamp,_,_,_NightBed,_,_,_)
+THEN
+PROC_Camp_SwitchNightMode(_Player);
+//END_REGION
+
+//REGION Camp Buttons - Day <-> Night switch requested
+PROC
+PROC_Camp_SwitchNightMode((CHARACTER)_NonPlayer)
+AND
+NOT DB_Players(_NonPlayer)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Muted_79fe3a97-7e74-6f79-9afb-6a5d947a4b0b, _NonPlayer);
+
+PROC
+PROC_Camp_SwitchNightMode((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Camp_NightMode(1)
+THEN
+PROC_Camp_TryEnterNightMode(_Player);
+
+PROC
+PROC_Camp_SwitchNightMode((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_Camp_NightMode(1)
+THEN
+PROC_Camp_TryLeaveNightMode(_Player);
+//END_REGION
+
+//Going from day to night flow
+//1. Code sends UI buttonpress call (EndTheDayRequested) to Osiris
+//2. Osiris checks what needs to happen and if actual end the day should start, sends RequestGatherAtCamp to Code
+//3. Code does a bunch of EndTheDay capability checks and either sends RequestGatherAtCampSuccess or RequestGatherAtCampFail to Osiris
+//4. Osiris does Story specific End The Day checks and if succesful sends RequestEndTheDay to Code
+//5. Code does the supply checks and ready checks and sends RequestEndTheDaySuccess or RequestEndTheDayFail event to Osiris
+//6. Osiris starts night mode.
+
+//REGION Rest Flow - End The Day - Checks & Code Handshake
+PROC
+PROC_Camp_TryEnterNightMode((CHARACTER)_Player)
+AND
+DB_GoingToCamp(1)	
+THEN
+DB_CampRequestHandled(1);
+
+//If after a camp night you remain in camp (morning phase), clicking the bed or button again should just make you leave.
+PROC
+PROC_Camp_TryEnterNightMode((CHARACTER)_Player)
+AND
+NOT DB_CampRequestHandled(1)
+AND
+DB_CAMP_JustWokeUp(1)
+AND
+DB_InCamp(_Player)
+AND
+NOT DB_CantMove(_Player)
+THEN
+DB_CampRequestHandled(1);
+PROC_TeleportToFromCamp((CHARACTER)_Player);
+
+//Else Gather at camp request
+PROC
+PROC_Camp_TryEnterNightMode((CHARACTER)_Player)
+AND
+NOT DB_CampRequestHandled(1)
+THEN
+DB_GoingToCamp(1);
+DB_CampRequestHandled(1);
+DB_GatherAtCampRequester(_Player);
+RequestGatherAtCamp(_Player);
+
+IF
+DB_GatherAtCampRequester(_Player)
+AND
+DB_GatherAtCampRequester(_OldPlayer)
+AND
+_Player != _OldPlayer
+THEN
+NOT DB_GatherAtCampRequester(_OldPlayer);
+
+PROC
+PROC_Camp_TryEnterNightMode((CHARACTER)_Player)
+THEN
+NOT DB_CampRequestHandled(1);
+
+IF
+RequestGatherAtCampFail((CHARACTER)_Player)
+THEN
+NOT DB_GoingToCamp(1);
+
+IF
+RequestGatherAtCampSuccess((CHARACTER)_Player)
+AND
+NOT DB_RequestGatherAtCampSuccessHandled(1)
+AND
+QRY_Camp_AllPlayersReadyForNightMode()
+THEN
+DB_RequestGatherAtCampSuccessHandled(1);
+DB_GoingToCamp(1);
+RequestEndTheDay(_Player);
+
+IF
+RequestGatherAtCampSuccess((CHARACTER)_Player)
+AND
+NOT DB_RequestGatherAtCampSuccessHandled(1)
+AND
+DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason(_Reason)
+THEN
+DB_RequestGatherAtCampSuccessHandled(1);
+NOT DB_GoingToCamp(1);
+PROC_Camp_TryEnterNightModeFailed(_Player, _Reason);
+NOT DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason(_Reason);
+
+IF
+RequestGatherAtCampSuccess((CHARACTER)_Player)
+THEN
+NOT DB_RequestGatherAtCampSuccessHandled(1);
+
+PROC
+PROC_Camp_TryEnterNightModeFailed((CHARACTER)_Player, (STRING)_Reason)
+THEN
+DB_NOOP(1);
+
+IF
+RequestEndTheDaySuccess()
+THEN
+PROC_Camp_EnterNightMode();
+
+IF
+RequestEndTheDayFail()
+THEN
+NOT DB_GoingToCamp(1);
+
+IF
+SavegameLoaded()
+AND
+DB_GoingToCamp(1)
+THEN
+NOT DB_GoingToCamp(1);
+DB_BUGFIX_Marker("GUS-150045");
+
+IF
+SavegameLoaded()
+AND
+DB_Camp_GoingToSleep(1)
+THEN
+NOT DB_Camp_GoingToSleep(1);
+DB_BUGFIX_Marker("GUS-169355");
+
+IF
+DialogActorJoined(_,_,_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GoingToCamp(1)
+THEN
+NOT DB_GoingToCamp(1);
+
+IF
+EnteredCombat(_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GoingToCamp(1)
+THEN
+NOT DB_GoingToCamp(1);
+
+//Campfire/bedroll interaction text
+IF
+DB_ActiveCamp(_Camp)
+AND
+NOT DB_Camp_NightMode(1)
+AND
+NOT DB_CAMP_JustWokeUp(1)
+THEN
+PROC_Camp_SetCampfireText((STRING)_Camp,"CAMP_EndTheDay");
+
+IF
+DB_ActiveCamp(_Camp)
+AND
+DB_Camp_NightMode(1)
+AND
+NOT DB_CAMP_JustWokeUp(1)
+THEN
+PROC_Camp_SetCampfireText((STRING)_Camp,"CAMP_TakeALongRest");
+
+IF
+DB_ActiveCamp(_Camp)
+AND
+DB_CAMP_JustWokeUp(1)
+THEN
+PROC_Camp_SetCampfireText((STRING)_Camp,"CAMP_LeaveCamp");
+
+PROC
+PROC_Camp_SetCampfireText((STRING)_Camp,(STRING)_TranslatedStringKey)
+AND
+DB_Camp(_Camp,_Campfire,_,_)
+AND
+Exists(_Campfire,1)
+THEN
+DB_Camp_CampfireText(_TranslatedStringKey);
+SetStoryDisplayName(_Campfire,_TranslatedStringKey);
+
+IF
+DB_Camp_CampfireText(_TranslatedStringKey)
+AND
+DB_Camp_CampfireText(_OldTranslatedStringKey)
+AND
+_TranslatedStringKey != _OldTranslatedStringKey
+THEN
+NOT DB_Camp_CampfireText(_OldTranslatedStringKey);
+
+PROC
+PROC_Camp_SetCampfireText((STRING)_Camp,(STRING)_TranslatedStringKey)
+AND
+DB_CampBed(_ActiveCamp,_,_DayBed,_,_,_,_)
+AND
+NOT DB_OffStage(_DayBed)
+AND
+Exists(_DayBed,1)
+THEN
+SetStoryDisplayName(_DayBed,_TranslatedStringKey);
+
+PROC
+PROC_Camp_SetCampfireText((STRING)_Camp,(STRING)_TranslatedStringKey)
+AND
+DB_CampBed(_ActiveCamp,_,_,_NightBed,_,_,_)
+AND
+NOT DB_OffStage(_NightBed)
+AND
+Exists(_NightBed,1)
+THEN
+SetStoryDisplayName(_NightBed,_TranslatedStringKey);
+
+IF
+LevelTemplateLoaded(_DayLT)
+AND
+DB_CampBed(_,_,_DayBed,_,_DayLT,_,_)
+AND
+DB_Camp_CampfireText(_TranslatedStringKey)
+THEN
+SetStoryDisplayName(_DayBed,_TranslatedStringKey);
+
+IF
+WentOnStage(_DayBed,1)
+AND
+DB_CampBed(_,_,(ITEM)_DayBed,_,_,_,_)
+AND
+DB_Camp_CampfireText(_TranslatedStringKey)
+THEN
+SetStoryDisplayName(_DayBed,_TranslatedStringKey);
+
+IF
+WentOnStage(_NightBed,1)
+AND
+DB_CampBed(_,_,_,(ITEM)_NightBed,_,_,_)
+AND
+DB_Camp_CampfireText(_TranslatedStringKey)
+THEN
+SetStoryDisplayName(_NightBed,_TranslatedStringKey);
+//END_REGION
+
+//Forcefully going to camp removes a lot of the message boxes and safety checks:
+//- No camp supply checks
+//- No character state checks
+//- No Ready Checks
+//- Resurrect players
+//- Teleport them out of Danger Zones, Blocked Zones, Prisons, ...
+
+//REGION Rest Flow - Force End the Day
+PROC
+PROC_Camp_ForceEndTheDay((CHARACTER)_MainPlayer,(STRING)_CampOverride)
+AND
+NOT DB_Camp_NightMode(1)
+AND
+NOT DB_GoingToCamp(1)
+THEN
+DB_GatherAtCampRequester(_MainPlayer);
+DB_GoingToCamp(1);
+DB_Camp_ForceNextLongRest(1);
+NOT DB_OnlyOnce("GLO_Camp_GoToNight_Fade_Out_FORCED");
+PROC_Camp_EnterNight_PreFadeout_Hook();
+SetJoinBlock(JOINBLOCKTYPE.BlockNew); //Do not let new players join while in night mode, too many fragile systems would break. (This is automatically turned on again in code on long rest).
+PROC_Camp_ForceEndTheDay_SetCampOverride(_CampOverride);
+PROC_Camp_ForceEndTheDay_Fadeout();
+
+PROC
+PROC_Camp_ForceEndTheDay_SetCampOverride((STRING)_CampOverride)
+AND
+_CampOverride != ""
+AND
+DB_Camp(_CampOverride,_,_,_)
+THEN
+DB_Camp_ForceEndTheDay_CampOverride(_CampOverride);
+
+PROC
+PROC_Camp_EnterNight_PreFadeout_Hook()
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Camp_ForceEndTheDay_Fadeout()
+AND
+DB_Players(_Player)
+THEN
+PROC_ForceStopDialog(_Player);
+ScreenFadeTo(_Player,0.5,0,"GLO_Camp_GoToNight_Fade_Out_FORCED");
+DB_Camp_Faded(_Player,"GLO_Camp_GoToNight_Fade_Out_FORCED");
+
+PROC
+PROC_CAMP_SafeFadeOutDone("GLO_Camp_GoToNight_Fade_Out_FORCED")
+AND
+QRY_OnlyOnce("GLO_Camp_GoToNight_Fade_Out_FORCED")
+THEN
+NOT DB_GoingToCamp(1);
+PROC_Camp_SetModeToNight();
+PROC_Camp_ForcePlayersToCamp();
+PROC_Camp_RemoveSplatterFromCampers();
+PROC_Camp_ClearDisruptiveStatusses();
+PROC_Camp_DropAllPolymorphs();
+TimerLaunch("Camp_GoToNight_ClearStatusses_Fallback",3000);
+DB_Camp_WaitingForPlayersCleaned("GoToNight");
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+PROC
+PROC_Camp_ForcePlayersToCamp()
+AND
+DB_Camp_ForceEndTheDay_CampOverride(_Name)
+THEN
+DB_ActiveCamp_Override(_Name);
+DB_ActiveCamp(_Name); //<--Setting this will cause a camp swap if needed
+
+PROC
+PROC_Camp_ForcePlayersToCamp()
+AND
+NOT DB_Camp_ForceEndTheDay_CampOverride(_)
+AND
+DB_GatherAtCampRequester(_Player)
+AND
+QRY_Camp_SwapCampIfNecessary(_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Camp_ForcePlayersToCamp()
+AND
+DB_Players(_Player)
+THEN
+PROC_ForceStopDialog(_Player);
+PROC_Camp_PlayerForcedToCamp_Hook(_Player);
+PROC_Camp_GoToNight_Teleport(_Player);
+
+// only full restore companions/avatars except Hirelings
+PROC
+PROC_Camp_ForcePlayersToCamp()
+AND
+DB_Players(_Player)
+AND
+NOT DB_Hirelings_Hired(_Player)
+THEN
+PROC_CharacterFullRestore(_Player);
+
+PROC
+PROC_Camp_ForcePlayersToCamp()
+AND
+DB_Camp_ForceEndTheDay_CampOverride(_CampOverride)
+THEN
+NOT DB_Camp_ForceEndTheDay_CampOverride(_CampOverride);
+NOT DB_ActiveCamp_Override(_CampOverride);
+
+PROC
+PROC_Camp_PlayerForcedToCamp_Hook((CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Rest Flow - End The Day - Fade out, Time of Day Switch (Day -> Evening), Start Evening Campnight Dialogues
+PROC
+PROC_Camp_EnterNightMode()
+THEN
+PROC_Camp_EnterNight_PreFadeout_Hook();
+NOT DB_OnlyOnce("GLO_Camp_GoToNight_Fade_Out");
+SetJoinBlock(JOINBLOCKTYPE.BlockNew); //Do not let new players join while in night mode, too many fragile systems would break. (This is automatically turned on again in code on long rest).
+
+PROC
+PROC_Camp_EnterNightMode()
+AND
+DB_Players(_Player)
+THEN
+ScreenFadeTo(_Player,0.5,0,"GLO_Camp_GoToNight_Fade_Out");
+DB_Camp_Faded(_Player,"GLO_Camp_GoToNight_Fade_Out");
+
+PROC
+PROC_CAMP_SafeFadeOutDone("GLO_Camp_GoToNight_Fade_Out")
+AND
+QRY_OnlyOnce("GLO_Camp_GoToNight_Fade_Out")
+THEN
+NOT DB_GoingToCamp(1);
+PROC_Camp_SetModeToNight();
+PROC_Camp_ClearDisruptiveStatusses();
+PROC_Camp_RemoveSplatterFromCampers();
+PROC_Camp_DropAllPolymorphs();
+TimerLaunch("Camp_GoToNight_ClearStatusses_Fallback",3000);
+DB_Camp_WaitingForPlayersCleaned("GoToNight");
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+QRY
+QRY_Camp_PlayerNotReadyToTalk()
+AND
+DB_Players(_Player)
+AND
+QRY_TemporarilyMuted(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_PlayerNotReadyToTalk()
+AND
+DB_Players(_Player)
+AND
+DB_PolymorphedInto(_Player,_,_,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_PlayerNotReadyToTalk()
+AND
+DB_Players(_Player)
+AND
+DB_Prone(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_PlayerNotReadyToTalk()
+AND
+DB_Players(_Player)
+AND
+DB_Shapeshifting_DialoguesBlocked(_Player, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_PlayerNotReadyToTalk()
+AND
+DB_Camp_WaitingToComeOnStage(_)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StateCleared_CantTalk((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_Camp_WaitingForPlayersCleaned(_)
+THEN
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+IF
+ShapeshiftChanged(_Player,_,_,"")
+AND
+DB_Players(_Player)
+AND
+DB_Camp_WaitingForPlayersCleaned(_)
+THEN
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+PROC
+PROC_Shapeshifting_RemovedDialoguesBlocked(_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Camp_WaitingForPlayersCleaned(_)
+THEN
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+PROC
+PROC_StateCleared_CantTalk((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_Camp_WaitingForPlayersCleaned(_)
+THEN
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+IF
+WentOnStage(_Object, 1)
+AND
+DB_Camp_WaitingToComeOnStage(_Object)
+THEN
+NOT DB_Camp_WaitingToComeOnStage(_Object);
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+IF
+TimerFinished("Camp_GoToNight_ClearStatusses_Fallback")
+THEN
+DebugBreak("Camp Error #1: Endless waiting to EndTheDay.");
+NOT DB_Camp_WaitingForPlayersCleaned("GoToNight");
+PROC_Camp_TeleportAllToCamp();
+
+PROC
+PROC_Camp_DropAllPolymorphs()
+AND
+DB_Players(_Player)
+THEN
+PROC_RemoveAllPolymorphs(_Player);
+
+PROC
+PROC_Camp_RemoveSplatterFromCampers()
+AND
+DB_InCamp(_Character)
+THEN
+RemoveSplatters(_Character);
+
+PROC
+PROC_Camp_ClearDisruptiveStatusses()
+AND
+DB_Players(_Player)
+THEN
+PROC_GLO_BreakConcentration(_Player);
+PROC_RemoveMutingStatusses(_Player);
+RemoveStatus(_Player,"PRONE",_Player);
+
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+NOT DB_CAMP_WalkingToCamp(_)
+AND
+NOT QRY_Camp_PlayerNotInCamp() //AKA If all players are already in camp, don't wait.
+AND
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player)
+THEN
+MakePlayerActive(_Player);
+PROC_Camp_PlayCampNight();
+
+PROC
+PROC_Camp_PlayCampNight()
+THEN
+PROC_Camp_ChangeToVanityArmor();
+PROC_CampNight_DecideCampNight();
+PROC_CAMP_METRIC_RECORD();
+PROC_CampNight_StartSelected();
+
+PROC
+PROC_Camp_ChangeToVanityArmor()
+AND
+DB_InCamp(_Camper)
+AND
+NOT DB_Defeated(_Camper)
+AND
+NOT QRY_CAMP_VanityArmour_BlockAutoChangeAtNightForCamper(_Camper)
+THEN
+PROC_Camp_StoreArmourSet(_Camper);
+PROC_SetArmourSet(_Camper, ARMOURSET.Vanity);
+
+QRY
+QRY_CAMP_VanityArmour_BlockAutoChangeAtNightForCamper((CHARACTER)_Character)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+DB_GatherAtCampRequester(_Player)
+AND
+QRY_Camp_SwapCampIfNecessary(_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+DB_Players(_Player)
+AND
+NOT DB_PlayerInCamp(_Player)
+AND
+QRY_Camp_IsPlayerBlockedFromTeleportToCamp(_Player)
+AND
+DB_Camp_Faded(_Player,_Reason)
+THEN
+ApplyStatus(_Player,"LONG_REST",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+PROC_Camp_ClearFade(_Player,_Reason);
+
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+DB_Players(_Player)
+AND
+NOT DB_PlayerInCamp(_Player)
+AND
+NOT QRY_Camp_IsPlayerBlockedFromTeleportToCamp(_Player)
+THEN
+DB_Camp_WaitForTeleporters(1);
+PROC_Camp_GoToNight_Teleport(_Player);
+
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+DB_CAMP_WalkingToCamp(_)
+THEN
+DB_Camp_WaitForTeleporters(1);
+
+//Edge case: Noone can make it to camp -> Start Long Rest.
+PROC
+PROC_Camp_TeleportAllToCamp()
+AND
+NOT DB_PlayerInCamp(_)
+AND
+NOT DB_Camp_WaitForTeleporters(1)
+AND
+DB_GatherAtCampRequester(_Player)
+THEN
+TimerCancel("CAMP_SAFETYCHECK_EMPTYCAMP_AT_NIGHT");
+PROC_Camp_TryLeaveNightMode((CHARACTER)_Player);
+
+PROC
+PROC_Camp_GoToNight_Teleport((CHARACTER)_Player)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_CampArea,_CampEntrance)
+AND
+IsInTrigger(_Player,_CampArea,0)
+THEN
+PROC_WaypointTeleportTo(_Player,_CampEntrance);
+
+IF
+TeleportedToCamp(_)
+AND
+DB_Camp_WaitForTeleporters(1)
+AND
+NOT QRY_Camp_PlayerNotInCamp()
+AND
+NOT DB_CAMP_WalkingToCamp(_)
+AND
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player)
+THEN
+NOT DB_Camp_WaitForTeleporters(1);
+MakePlayerActive(_Player);
+PROC_Camp_PlayCampNight();
+
+PROC
+PROC_CampRelationshipDialog(_,_,_,_,_)
+AND
+DB_Camp_Faded(_Player,_Reason)
+THEN
+PROC_Camp_ClearFade(_Player,_Reason);
+
+IF
+DialogActorJoined(_,_Inst,_Player,_)
+AND
+NOT DB_AutomatedDialog(_Inst) //ensures it's not an AD
+AND
+DB_Camp_Faded((CHARACTER)_Player,_)
+AND
+GetReservedUserID(_Player,_UserID)
+AND
+DB_Camp_Faded((CHARACTER)_Player2,_Reason)
+AND
+GetReservedUserID(_Player2,_UserID)
+THEN
+PROC_Camp_ClearFade(_Player2,_Reason);
+
+PROC
+PROC_Camp_NoEveningDialogs()
+AND
+DB_Camp_Faded(_Player,_Reason)
+THEN
+PROC_Camp_ClearFade(_Player,_Reason);
+
+//Fallback camp + no queued camp nights + no required talks?
+//Throw the players out of camp and let the region swap happen
+//This will be covered up by the fade out/in
+PROC
+PROC_Camp_NoEveningDialogs()
+AND
+DB_FallbackCamp_InCamp(_)
+THEN
+NOT DB_Camp_ForceNextLongRest(1);
+PROC_Camp_SetModeToDay();
+PROC_FallbackCamp_AllPlayersLeave();
+PROC_Camp_RestoreArmourSets();
+SetJoinBlock(JOINBLOCKTYPE.None);
+
+PROC
+PROC_FallbackCamp_AllPlayersLeave()
+AND
+DB_PlayerInCamp(_Player)
+THEN
+RemoveStatus(_Player,"LONG_REST");
+PROC_Camp_Leave(_Player);
+
+//Safety fallback for unknown stuck DB_Camp_Faded
+IF
+ScreenFadeCleared(_UserID,_Reason)
+AND
+DB_Camp_Faded(_Player,_Reason)
+AND
+GetReservedUserID(_Player,_UserID)
+THEN
+DebugBreak("Camp Error #3: Remnant DB_Camp_Faded.");
+PROC_Camp_ClearFade(_Player,_Reason);
+
+IF
+DB_Camp_Faded(_Player,_Reason)
+THEN
+DB_Camp_Faded_Timer(_Player,_Reason);
+RealtimeObjectTimerLaunch(_Player,"GLO_Camp_Fade_EmergencyTimeout",5000);
+
+IF
+DB_Camp_Faded_Timer(_Player,_Reason)
+AND
+NOT DB_Camp_Faded(_Player,_Reason)
+THEN
+NOT DB_Camp_Faded_Timer(_Player,_Reason);
+RealtimeObjectTimerCancel(_Player,"GLO_Camp_Fade_EmergencyTimeout");
+
+IF
+ObjectTimerFinished(_,"GLO_Camp_Fade_EmergencyTimeout")
+AND
+DB_Camp_Faded(_Player,_Reason)
+THEN
+PROC_Camp_ClearFade(_Player,_Reason);
+
+IF
+ScreenFadeDone(_,_Reason)
+AND
+DB_Camp_Faded(_Player,_Reason)
+THEN
+PROC_CAMP_SafeFadeOutDone(_Reason);
+
+PROC
+PROC_Camp_ClearFade((CHARACTER)_Player,(STRING)_Reason)
+AND
+DB_Camp_Faded(_Player,_Reason)
+THEN
+ClearScreenFade(_Player,1.0,_Reason);
+NOT DB_Camp_Faded(_Player,_Reason);
+PROC_CAMP_SafeFadeOutDone(_Reason);
+
+//END_REGION
+
+//REGION Rest Flow - Go to Bed / Long Rest - Checks & Code Handshake
+PROC
+PROC_Camp_TryLeaveNightMode((CHARACTER)_Player)
+AND
+NOT DB_Camp_GoingToSleep(1)
+AND
+NOT DB_Camp_LongRest_CodeIsWaiting(1)
+AND
+NOT QRY_Camp_PreventLeaveNightHook((CHARACTER)_Player)
+AND
+NOT QRY_Camp_WouldPassLongRestCapabilities(_Player)
+THEN
+DB_Camp_GoingToSleep(1);
+DB_Camp_LongRestRequestedBy(_Player);
+RequestLongRestDeny(""); //Safety measure: Reset the rest state, just in case it was still set from previous night
+PROC_RequestLongRest(_Player);
+
+QRY
+QRY_Camp_PreventLeaveNightHook((CHARACTER)_Player)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_WouldPassLongRestCapabilities((CHARACTER)_TriggeringPlayer)
+AND
+CanAllPartiesLongRest(1)
+THEN
+DB_Camp_GoingToSleep(1);
+DB_Camp_LongRestRequestedBy(_TriggeringPlayer);
+PROC_Camp_TryLeaveNightMode_CampNightCheck(_TriggeringPlayer);
+
+IF
+DB_Camp_LongRestRequestedBy(_Player)
+AND
+DB_Camp_LongRestRequestedBy(_Player2)
+AND
+_Player != _Player2
+THEN
+NOT DB_Camp_LongRestRequestedBy(_Player2);
+
+PROC
+PROC_Camp_InstantLongRest()
+AND
+GetHostCharacter(_Player)
+THEN
+DB_Camp_InstantLongRest_Requested(1);
+NOT DB_Camp_ForceNextLongRest(1);
+NOT DB_Camp_WokeUpAtNight(1);
+RequestLongRest(_Player, 1);
+
+PROC
+PROC_Camp_InstantLongRestWithFade()
+AND
+GetHostCharacter(_Player)
+THEN
+NOT DB_Camp_ForceNextLongRest(1);
+NOT DB_Camp_WokeUpAtNight(1);
+DB_CAMP_SkipSleepCutscene(1);
+RequestLongRest(_Player, 1);
+
+//REGION Required talks
+
+IF
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo)
+THEN
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, _)
+THEN
+PROC_ExclamationMark_Show((GUIDSTRING)_TalkTo,"GLO_Camp_RequiredTalk");
+
+IF
+AttackedBy(_TalkTo,_Player,_,_,_,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, _)
+AND
+NOT QRY_SelectAndStartDialog(_TalkTo,_Player)
+THEN
+PROC_Camp_RequiredTalks_Complete(_TalkTo);
+
+IF
+DB_Is_InCombat(_TalkTo,_)
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, _)
+THEN
+PROC_Camp_RequiredTalks_Complete(_TalkTo);
+
+IF
+DB_Defeated(_TalkTo)
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, _)
+THEN
+PROC_Camp_RequiredTalks_Complete(_TalkTo);
+
+IF
+DialogActorJoined(_,_DialogId,_TalkTo,_)
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000)
+AND
+NOT DB_AutomatedDialog(_DialogId) //ensures it's not an AD
+THEN
+PROC_Camp_RequiredTalks_Complete(_TalkTo);
+
+IF
+DialogActorJoined(_Dialog,_,_TalkTo,_)
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, (DIALOGRESOURCE)_Dialog)
+THEN
+PROC_Camp_RequiredTalks_Complete(_TalkTo);
+
+PROC
+PROC_LongRest()
+AND
+DB_Camp_RequiredTalks(_Character,_)
+THEN
+PROC_Camp_RequiredTalks_Complete(_Character);
+
+PROC
+PROC_FallbackCamp_LeftCamp(_)
+AND
+DB_Camp_RequiredTalks(_Character,_)
+THEN
+PROC_Camp_RequiredTalks_Complete(_Character);
+
+PROC
+PROC_CAMP_LeftCamp(_Character)
+AND
+DB_Camp_RequiredTalks(_Character,_)
+THEN
+PROC_Camp_RequiredTalks_Complete(_Character);
+
+IF
+TextEvent("clearrequiredtalks")
+AND
+DB_Camp_RequiredTalks(_Character,_)
+THEN
+PROC_Camp_RequiredTalks_Complete(_Character);
+
+PROC
+PROC_Camp_RequiredTalks_Complete((GUIDSTRING)_TalkTo)
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, (DIALOGRESOURCE)_Dialog)
+THEN
+PROC_ExclamationMark_Hide(_TalkTo,"GLO_Camp_RequiredTalk");
+NOT DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo);
+NOT DB_Camp_RequiredTalks((GUIDSTRING)_TalkTo, (DIALOGRESOURCE)_Dialog);
+
+//END_REGION
+
+PROC
+PROC_Camp_TryLeaveNightMode_CampNightCheck((CHARACTER)_Player)
+AND
+QRY_OnlyOnce_Reset("ReadyCheckContent_EndNight_TalksLeft")
+AND
+DB_Camp_RequiredTalks((GUIDSTRING)_, (DIALOGRESOURCE)_)
+AND
+QRY_OnlyOnce("ReadyCheckContent_EndNight_TalksLeft")
+THEN
+OpenMessageBox(_Player,"ReadyCheck_EndNight_RequiredTalksLeft");
+NOT DB_Camp_GoingToSleep(1);
+
+PROC
+PROC_Camp_TryLeaveNightMode_CampNightCheck((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("ReadyCheckContent_EndNight_TalksLeft")
+AND
+DB_HandlingRelationshipDialog(_Companion,_,_,"CAMP",_, _)
+AND
+DB_LoopEffect(_Companion, _,"RelationshipMarker",_,_,_,_)
+AND
+QRY_OnlyOnce("ReadyCheckContent_EndNight_TalksLeft")
+THEN
+ReadyCheckGlobal("ReadyCheckContent_EndNight_TalksLeft", "ReadyCheck_EndNight_TalksLeft", 1, _Player);
+
+PROC
+PROC_Camp_TryLeaveNightMode_CampNightCheck((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("ReadyCheckContent_EndNight_TalksLeft")
+AND
+QRY_IsMultiPlayer()
+AND
+QRY_OnlyOnce("ReadyCheckContent_EndNight_TalksLeft")
+THEN
+ReadyCheckGlobal("ReadyCheckContent_EndNight", "ReadyCheck_EndNight", 1, _Player);
+
+PROC
+PROC_Camp_TryLeaveNightMode_CampNightCheck((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("ReadyCheckContent_EndNight_TalksLeft")
+AND
+DB_Camp_LongRestRequestedBy(_Player)
+THEN
+RequestLongRestDeny(""); //Safety measure: Reset the rest state, just in case it was still set from previous night
+PROC_RequestLongRest(_Player);
+
+IF
+ReadyCheckPassed("ReadyCheckContent_EndNight")
+AND
+DB_Camp_LongRestRequestedBy(_Player)
+THEN
+RequestLongRestDeny(""); //Safety measure: Reset the rest state, just in case it was still set from previous night
+PROC_RequestLongRest(_Player);
+
+IF
+ReadyCheckPassed("ReadyCheckContent_EndNight_TalksLeft")
+AND
+DB_Camp_LongRestRequestedBy(_Player)
+THEN
+RequestLongRestDeny(""); //Safety measure: Reset the rest state, just in case it was still set from previous night
+PROC_RequestLongRest(_Player);
+
+PROC
+PROC_RequestLongRest((CHARACTER)_Player)
+AND
+NOT DB_Camp_ForceNextLongRest(1)
+THEN
+RequestLongRest(_Player, 0);
+
+PROC
+PROC_RequestLongRest((CHARACTER)_Player)
+AND
+DB_Camp_ForceNextLongRest(1)
+THEN
+RequestLongRest(_Player, 1);
+
+IF
+ReadyCheckFailed("ReadyCheckContent_EndNight")
+THEN
+NOT DB_Camp_GoingToSleep(1);
+
+IF
+ReadyCheckFailed("ReadyCheckContent_EndNight_TalksLeft")
+THEN
+NOT DB_Camp_GoingToSleep(1);
+
+IF
+LongRestCancelled()
+THEN
+NOT DB_Camp_GoingToSleep(1);
+
+IF
+LongRestStartFailed()
+THEN
+NOT DB_Camp_GoingToSleep(1);
+
+IF
+LongRestStarted()
+AND
+DB_Camp_InstantLongRest_Requested(1)
+THEN
+DB_Camp_RestRequestHandled(1);
+NOT DB_Camp_InstantLongRest_Requested(1);
+RequestLongRestConfirmed();
+PROC_Camp_InstantLongRest_FinishForAllPlayers();
+
+PROC
+PROC_Camp_InstantLongRest_FinishForAllPlayers()
+AND
+DB_Players(_Player)
+THEN
+RequestLongRestFinish(_Player);
+
+IF
+LongRestStarted()
+AND
+NOT DB_Camp_RestRequestHandled(1)
+THEN
+DB_Camp_RestRequestHandled(1);
+NOT DB_Camp_GoingToSleep(1);
+RequestLongRestConfirmed();
+RequestLongRestWaiting();
+RequestLongRestSyncedFinish();
+DB_Camp_LongRest_CodeIsWaiting(1);
+PROC_Camp_EndEvening(); //This queues up the camp nights for the night section
+PROC_Camp_Rest();
+NOT DB_Camp_ForceNextLongRest(1);
+NOT DB_Camp_WokeUpAtNight(1);
+
+IF
+LongRestStarted()
+THEN
+NOT DB_Camp_RestRequestHandled(1);
+//END_REGION
+
+//REGION Rest Flow - Go to Bed / Long Rest - Fade out, Time of Day Switch (Evening -> Night), Start Night Campnight Dialogues
+PROC
+PROC_Camp_Rest()
+THEN
+PROC_Camp_FadeOutForRest();
+
+PROC
+PROC_Camp_FadeOutForRest()
+THEN
+NOT DB_OnlyOnce("GLO_Camp_StartRest_Fade_Out");
+
+PROC
+PROC_Camp_FadeOutForRest()
+AND
+DB_Players(_Player)
+THEN
+ScreenFadeTo(_Player,0.5,0,"GLO_Camp_StartRest_Fade_Out");
+DB_Camp_Faded(_Player,"GLO_Camp_StartRest_Fade_Out");
+
+PROC
+PROC_CAMP_SafeFadeOutDone("GLO_Camp_StartRest_Fade_Out")
+AND
+QRY_OnlyOnce("GLO_Camp_StartRest_Fade_Out")
+THEN
+PROC_Camp_DropAllPolymorphs();
+PROC_Camp_RemoveSplatterFromCampers();
+PROC_Camp_ClearDisruptiveStatusses();
+TimerLaunch("Camp_StartRest_ClearStatusses_Fallback",3000);
+DB_Camp_WaitingForPlayersCleaned("StartRest");
+PROC_Camp_CheckIfPlayersReadyToTransition();
+
+PROC
+PROC_Camp_CheckIfPlayersReadyToTransition()
+AND
+DB_Camp_WaitingForPlayersCleaned("GoToNight")
+AND
+NOT QRY_Camp_PlayerNotReadyToTalk()
+THEN
+TimerCancel("Camp_GoToNight_ClearStatusses_Fallback");
+NOT DB_Camp_WaitingForPlayersCleaned("GoToNight");
+PROC_Camp_TeleportAllToCamp();
+
+PROC
+PROC_Camp_CheckIfPlayersReadyToTransition()
+AND
+DB_Camp_WaitingForPlayersCleaned("StartRest")
+AND
+NOT QRY_Camp_PlayerNotReadyToTalk()
+THEN
+TimerCancel("Camp_StartRest_ClearStatusses_Fallback");
+NOT DB_Camp_WaitingForPlayersCleaned("StartRest");
+PROC_Camp_PlacePlayersInBed();
+PROC_CampNight_StartSleepMoments_PreHook();
+PROC_CampNight_StartSleepMoments();
+
+IF
+TimerFinished("Camp_StartRest_ClearStatusses_Fallback")
+THEN
+DebugBreak("Camp Error #2: Endless waiting to Start Rest.");
+NOT DB_Camp_WaitingForPlayersCleaned("StartRest");
+PROC_Camp_PlacePlayersInBed();
+PROC_CampNight_StartSleepMoments_PreHook();
+PROC_CampNight_StartSleepMoments();
+
+PROC
+PROC_Camp_PlacePlayersInBed()
+THEN
+PROC_Camp_UpdateDeco();
+PROC_Camp_HideAllNonPlayers();
+
+PROC
+PROC_Camp_HideAllNonPlayers()
+AND
+DB_InCamp(_Camper)
+AND
+DB_PartOfTheTeam(_Camper) //Only characters added through PROC_ORI_SetupCamp
+AND
+NOT DB_Defeated(_Camper)
+AND
+NOT DB_Players(_Camper)
+AND
+NOT QRY_Camp_DoNotHideCamper(_Camper)
+THEN
+PROC_Camp_ForceHideNonPlayer(_Camper);
+
+PROC
+PROC_Camp_ForceHideAllNonPlayers()
+AND
+DB_InCamp(_Camper)
+AND
+DB_PartOfTheTeam(_Camper) //Only characters added through PROC_ORI_SetupCamp
+AND
+NOT DB_Defeated(_Camper)
+AND
+NOT DB_Players(_Camper)
+AND
+NOT DB_Camp_InvisibleCamper(_Camper)
+THEN
+PROC_Camp_ForceHideNonPlayer(_Camper);
+
+//Hide summons/followers
+PROC
+PROC_Camp_HideAllNonPlayers()
+AND
+DB_InCamp(_Camper)
+AND
+DB_PartyMembers(_Camper)
+AND
+NOT DB_Defeated(_Camper)
+AND
+NOT DB_Players(_Camper)
+AND
+NOT QRY_Camp_DoNotHideCamper(_Camper)
+THEN
+PROC_Camp_ForceHideNonPlayer(_Camper);
+
+//Hide summons/followers
+PROC
+PROC_Camp_ForceHideAllNonPlayers()
+AND
+DB_InCamp(_Camper)
+AND
+DB_PartyMembers(_Camper)
+AND
+NOT DB_Defeated(_Camper)
+AND
+NOT DB_Players(_Camper)
+AND
+NOT DB_Camp_InvisibleCamper(_Camper)
+THEN
+PROC_Camp_ForceHideNonPlayer(_Camper);
+
+PROC
+PROC_Camp_ForceHideNonPlayer((GUIDSTRING)_Camper)
+THEN
+PROC_SetOnStage(_Camper,0);
+
+PROC
+PROC_Camp_ForceHideNonPlayer((GUIDSTRING)_Camper)
+AND
+NOT DB_AvatarDismissal_WaitingForAnimFinished((CHARACTER)_Camper)
+THEN
+DB_Camp_InvisibleCamper(_Camper);
+
+PROC
+PROC_Camp_ForceHideNonPlayer((GUIDSTRING)_Camper)
+AND
+DB_AvatarDismissal_WaitingForAnimFinished((CHARACTER)_Camper)
+AND
+IsOnStage(_Camper, 1)
+THEN
+StopAnimation(_Camper,1);
+ObjectTimerCancel(_Camper,"GLO_DismissedAvatar_AnimFinished_Fallback");
+SetEntityEvent(_Camper, "GLO_DismissedAvatar_AnimFinished", 1);
+
+QRY
+QRY_Camp_DoNotHideCamper((CHARACTER)_Camper)
+AND
+DB_Camp_QueuedRomanceNight(_Camper,_,_)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Camp_PlacePlayersInBed()
+AND
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player)
+AND
+QRY_CAMP_GetPlayerInCamp(_Player,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_QRYRTN_CAMP_GetPlayerInCamp((CHARACTER)_Player2)
+AND
+QRY_CAMP_GetPlayerInCamp(_Player,_Player2,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_QRYRTN_CAMP_GetPlayerInCamp((CHARACTER)_Player3)
+AND
+QRY_CAMP_GetPlayerInCamp(_Player,_Player2,_Player3)
+AND
+DB_QRYRTN_CAMP_GetPlayerInCamp((CHARACTER)_Player4)
+THEN
+PROC_Camp_PlacePlayerInBed(_Player,4);
+PROC_Camp_PlacePlayerInBed(_Player2,2);
+PROC_Camp_PlacePlayerInBed(_Player3,1);
+PROC_Camp_PlacePlayerInBed(_Player4,3);
+
+IF
+TextEvent("campbed")
+AND
+GetHostCharacter(_Player)
+AND
+GetTextEventParamInteger(1,_Bed)
+THEN
+PROC_Camp_PlacePlayerInBed(_Player,_Bed);
+
+IF
+TextEvent("campbedoff")
+AND
+GetHostCharacter(_Player)
+THEN
+SysClear("DB_Camp_PlayerInBed",3);
+RemoveStatus(_Player,"LONG_REST",NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("sleepcutscene")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_Camp_TryDefaultSleepCutscene((CHARACTER)_Player);
+
+PROC
+PROC_Camp_PlacePlayerInBed((CHARACTER)_Player,(INTEGER)_Index)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_CampBed(_Camp,_Index,_,_NightBed,_,_,_WakeUpTrigger)
+AND
+QRY_Camp_BedAlternative(_NightBed)
+AND
+DB_QRYRTN_Camp_BedAlternative((GUIDSTRING)_NightBedAlt)
+THEN
+PROC_Camp_StoreArmourSetIfNotPJ(_Player);
+PROC_SetArmourSet(_Player, ARMOURSET.Vanity);
+TeleportTo(_Player,_NightBedAlt,"",0,0,0);
+ApplyStatus(_Player,"LONG_REST",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger);
+
+QRY
+QRY_Camp_BedAlternative((ITEM)_NightBed)
+AND
+DB_QRYRTN_Camp_BedAlternative((GUIDSTRING)_NightBedAlt)
+THEN
+NOT DB_QRYRTN_Camp_BedAlternative((GUIDSTRING)_NightBedAlt);
+
+QRY
+QRY_Camp_BedAlternative((ITEM)_NightBed)
+AND
+DB_Camp_BedAlternative(_NightBed,(TRIGGER)_NightBedAlt)
+THEN
+DB_QRYRTN_Camp_BedAlternative((GUIDSTRING)_NightBedAlt);
+
+QRY
+QRY_Camp_BedAlternative((ITEM)_NightBed)
+AND
+NOT DB_QRYRTN_Camp_BedAlternative(_)
+THEN
+DB_QRYRTN_Camp_BedAlternative((GUIDSTRING)_NightBed);
+
+PROC
+PROC_Camp_PlacePlayerInBed((CHARACTER)_Player,(INTEGER)_Index)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_Camp_PlayerInBed((CHARACTER)_Player,_,_)
+AND
+GUIDToString(_Player,_PlayerString)
+AND
+Concatenate("Failed to find bed for player: ",_PlayerString,_Error)
+THEN
+DebugBreak(_Error);
+
+IF
+StatusApplied(_Player,"LONG_REST",_,_)
+THEN
+DB_Camp_SleepingPlayer(_Player);
+
+IF
+StatusRemoved(_Player,"LONG_REST",_,_)
+THEN
+NOT DB_Camp_SleepingPlayer(_Player);
+
+IF
+DB_Camp_SleepingPlayer(_)
+AND
+NOT DB_Camp_PlayersAreDreaming(1)
+THEN
+DB_Camp_PlayersAreDreaming(1);
+SetPlayersAreDreaming(1);
+
+IF
+DB_Camp_PlayersAreDreaming(1)
+AND
+NOT DB_Camp_SleepingPlayer(_)
+THEN
+NOT DB_Camp_PlayersAreDreaming(1);
+SetPlayersAreDreaming(0);
+//END_REGION
+
+//REGION Rest Flow - Sleep - Post Moments Outcome : Wake up or Sleep til Morning
+PROC
+PROC_Campnight_SleepMomentsDone()
+AND
+NOT DB_Camp_PreventEndOfNight(1)
+THEN
+PROC_Camp_SleepUntilMorning();
+
+PROC
+PROC_Campnight_SleepMomentsDone()
+AND
+DB_Camp_PreventEndOfNight(1)
+THEN
+PROC_Camp_WakeUpAtNight();
+
+//END_REGION
+
+//REGION Rest Flow - Sleep - Wake up in the middle of the night
+PROC
+PROC_Camp_WakeUpAtNight()
+AND
+DB_PlayerInCamp(_Player)
+THEN
+RemoveStatus(_Player,"LONG_REST");
+
+PROC
+PROC_Camp_WakeUpAtNight()
+THEN
+NOT DB_Camp_PreventEndOfNight(1);
+NOT DB_Camp_LongRest_CodeIsWaiting(1);
+RequestLongRestDeny("");
+DB_Camp_ForceNextLongRest(1); //If we wake you up at night, you'll need to go to rest again to wake up. This rest shouldn't cost supplies again.
+PROC_Camp_WakeUpAtNightHook();
+
+PROC
+PROC_Camp_WakeUpAtNightHook()
+THEN
+DB_Camp_WokeUpAtNight(1);
+//END_REGION
+
+//REGION Rest Flow - Sleep - Sleep til morning - Sleep Cutscene, Fade out
+PROC
+PROC_Camp_SleepUntilMorning()
+THEN
+NOT DB_OnlyOnce("CampNightFade_NightToMorning");
+NOT DB_Camp_AtLeastOnePlayerHasSleepCutscene(1);
+PROC_Camp_ForceHideAllNonPlayers(); //Hide all the characters that were still visible for a night scene but now really need to go to bed!
+
+PROC
+PROC_Camp_SleepUntilMorning()
+AND
+DB_Players(_Player)
+THEN
+PROC_Camp_TryDefaultSleepCutscene(_Player);
+
+PROC
+PROC_Camp_TryDefaultSleepCutscene((CHARACTER)_Player)
+AND
+NOT DB_CAMP_SkipSleepCutscene(1)
+AND
+DB_PlayerInCamp(_Player)
+AND
+IsSpeakerReserved(_Player,0)
+AND
+IsControlled(_Player,1)
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_Camp_CustomSleepCutscene(_Camp,_SleepCustcene)
+AND
+QRY_StartDialog_Fixed(_SleepCustcene,_Player)
+THEN
+DB_Camp_AtLeastOnePlayerHasSleepCutscene(1);
+
+PROC
+PROC_Camp_TryDefaultSleepCutscene((CHARACTER)_Player)
+AND
+NOT DB_CAMP_SkipSleepCutscene(1)
+AND
+DB_PlayerInCamp(_Player)
+AND
+IsSpeakerReserved(_Player,0)
+AND
+IsControlled(_Player,1)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CAMP_SleepCutscene_69f925cf-1afd-4680-9532-8e80221aa93a,_Player)
+THEN
+DB_Camp_AtLeastOnePlayerHasSleepCutscene(1);
+
+IF
+DB_Camp_AtLeastOnePlayerHasSleepCutscene(1)
+AND
+NOT DB_DialogPlayers(_,_,_)
+AND
+NOT DB_DialogRequestCache_SpeakerList_Players(_,_,_,_)
+THEN
+NOT DB_Camp_AtLeastOnePlayerHasSleepCutscene(1);
+PROC_CAMP_SafeFadeOutDone("CampNightFade_NightToMorning");
+
+//Fallback: No player in camp -> No sleep cutscenes -> No point in waiting for DialogEnded -> Just fade out.
+PROC
+PROC_Camp_SleepUntilMorning()
+AND
+NOT DB_Camp_AtLeastOnePlayerHasSleepCutscene(1)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Camp_Faded((CHARACTER)_Player,_)
+THEN
+ScreenFadeTo((CHARACTER)_Player,0.5,0,"CampNightFade_NightToMorning");
+DB_Camp_Faded((CHARACTER)_Player,"CampNightFade_NightToMorning");
+
+PROC
+PROC_Camp_SleepUntilMorning()
+AND
+NOT DB_Camp_AtLeastOnePlayerHasSleepCutscene(1)
+AND
+NOT DB_Camp_Faded(_,"CampNightFade_NightToMorning")
+THEN
+PROC_Camp_LongRestFinishForAllPlayers();
+
+PROC
+PROC_CAMP_SafeFadeOutDone("CampNightFade_NightToMorning")
+AND
+QRY_OnlyOnce("CampNightFade_NightToMorning")
+THEN
+PROC_Camp_LongRestFinishForAllPlayers();
+
+PROC
+PROC_Camp_LongRestFinishForAllPlayers()
+AND
+DB_Players(_Player)
+THEN
+RequestLongRestFinish((CHARACTER)_Player);
+
+//Faded out until Everyone Wake up
+
+QRY
+QRY_Inclusion_BlockCompanionInclusion((GUIDSTRING)_Companion,(DIALOGRESOURCE)CAMP_SleepCutscene_69f925cf-1afd-4680-9532-8e80221aa93a)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Inclusion_BlockCompanionInclusion((GUIDSTRING)_Companion,(DIALOGRESOURCE)_SleepCustcene)
+AND
+DB_Camp_CustomSleepCutscene(_Camp,_SleepCustcene)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_DaisyDreams_BlockInclusion((DIALOGRESOURCE)CAMP_SleepCutscene_69f925cf-1afd-4680-9532-8e80221aa93a)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_DaisyDreams_BlockInclusion((DIALOGRESOURCE)_SleepCustcene)
+AND
+DB_Camp_CustomSleepCutscene(_Camp,_SleepCustcene)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Team members leaving the team during a camp night
+IF
+TeleportedFromCamp(_Player)
+AND
+DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger)
+THEN
+NOT DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger);
+
+IF
+FlagSet((FLAG)GLO_Companion_Leave_363c71f4-8b46-c0c0-4bbb-0e5a85e4652d, _Player, _)
+AND
+DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger)
+THEN
+NOT DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger);
+
+IF
+FlagSet((FLAG)GLO_Companion_LeaveDisappearInstantly_8d15c1c9-fa85-4c67-8f85-c5c1bb672b28, _Player, _)
+AND
+DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger)
+THEN
+NOT DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger);
+
+IF
+FlagSet((FLAG)GLO_Companion_Murder_2b416989-93e2-4853-b48a-7aeed3e69f7c, _Player, _)
+AND
+DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger)
+THEN
+NOT DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_NightBed,(TRIGGER)_WakeUpTrigger);
+
+IF
+FlagSet((FLAG)GLO_Companion_Leave_363c71f4-8b46-c0c0-4bbb-0e5a85e4652d, _Player, _)
+AND
+DB_Camp_InvisibleCamper((CHARACTER)_Player)
+THEN
+NOT DB_Camp_InvisibleCamper((CHARACTER)_Player);
+
+IF
+FlagSet((FLAG)GLO_Companion_LeaveDisappearInstantly_8d15c1c9-fa85-4c67-8f85-c5c1bb672b28, _Player, _)
+AND
+DB_Camp_InvisibleCamper((CHARACTER)_Player)
+THEN
+NOT DB_Camp_InvisibleCamper((CHARACTER)_Player);
+
+IF
+FlagSet((FLAG)GLO_Companion_Murder_2b416989-93e2-4853-b48a-7aeed3e69f7c, _Player, _)
+AND
+DB_Camp_InvisibleCamper((CHARACTER)_Player)
+THEN
+NOT DB_Camp_InvisibleCamper((CHARACTER)_Player);
+
+IF
+Dying(_Camper)
+AND
+DB_Camp_InvisibleCamper((CHARACTER)_Camper)
+THEN
+NOT DB_Camp_InvisibleCamper((CHARACTER)_Camper);
+
+//END_REGION
+
+//REGION Rest Flow - Morning - Wake up, Time of Day Switch (Night -> Morning), Start Morning Campnight Dialogues
+/*
+IF
+UserCharacterLongRested((CHARACTER)_Player, (INTEGER)_IsFullRest)
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_Camp_StayInCampAfterLongRest(1)
+THEN
+RemoveStatus(_Player,"LONG_REST");
+PROC_Camp_Leave(_Player);
+*/
+
+IF
+UserCharacterLongRested((CHARACTER)_Player, (INTEGER)_IsFullRest)
+THEN
+DB_CAMP_CharacterLongRested(_Player);
+PROC_LongRest_Player(_Player,_IsFullRest);
+
+IF
+UserCharacterLongRested((CHARACTER)_Player, (INTEGER)_)
+AND
+NOT DB_Defeated(_Player)
+AND
+DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_Bed,(TRIGGER)_WakeUpTrigger)
+THEN
+TeleportTo(_Player,_WakeUpTrigger,"CAMP_WakeUpAtTrigger",0,0,0,0,1);
+NOT DB_Camp_PlayerInBed((CHARACTER)_Player,(ITEM)_Bed,(TRIGGER)_WakeUpTrigger);
+
+//Hook for scripter who want to react to player longresting.
+PROC
+PROC_LongRest_Player((CHARACTER)_Player,(INTEGER)_IsFullRest)
+THEN
+DB_NOOP(1);
+
+//Get HUNGOVER status if you use only alcohol as camp supplies
+IF
+SupplyTemplateSpent(_Template,_)
+THEN
+DB_Camp_LongRest_SupplySpent(_Template);
+
+IF
+LongRestFinished()
+AND
+NOT QRY_Camp_LongRest_UsedNonAlcohol()
+THEN
+PROC_Camp_LongRest_UsedOnlyAlcohol();
+
+IF
+LongRestFinished()
+AND
+DB_Camp_LongRest_SupplySpent((GUIDSTRING)_Template)
+THEN
+NOT DB_Camp_LongRest_SupplySpent((GUIDSTRING)_Template);
+
+QRY
+QRY_Camp_LongRest_UsedNonAlcohol()
+AND
+DB_Camp_LongRest_SupplySpent((GUIDSTRING)_Template)
+AND
+IsTagged(_Template,(TAG)ALCOHOL_b8496c62-4ecb-45de-860c-ae3aab0ed7da,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_LongRest_UsedNonAlcohol()
+AND
+NOT DB_Camp_LongRest_SupplySpent((GUIDSTRING)_)
+THEN
+DB_NOOP(1); //also fail when no supplies were spent
+
+PROC
+PROC_Camp_LongRest_UsedOnlyAlcohol()
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player,"HUNGOVER",60.0,0,_Player);
+
+
+//Edge case handling first: For some reason, character does not have a return position
+
+//Attempt 0: Clear invalid return position
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z)
+AND
+NOT FindValidPosition(_X,_Y,_Z,15.0,_Player,1,_,_,_)
+THEN
+NOT DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 1: Steal assigned avatar's position
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+QRY_GetBestAvatarForCompanion(_Player)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Player,_Avatar)
+AND
+DB_LeaveCamp_ReturnPos(_Avatar,_X,_Y,_Z)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 1b: Go to assigned avatar outside of camp
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+QRY_GetBestAvatarForCompanion(_Player)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Player,_Avatar)
+AND
+GetPosition(_Avatar,_X,_Y,_Z)
+AND
+NOT QRY_CAMP_PositionIsInACamp(_X, _Y, _Z)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 2: Steal someone else's return pos
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+DB_LeaveCamp_ReturnPos(_AnyPlayer,_X,_Y,_Z)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 3a: Teleport to another GROUPED player outside of camp
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_AreaTrigger,_)
+AND
+DB_Players(_AnyPlayer)
+AND
+_Player != _AnyPlayer
+AND
+InSamePartyGroup(_Player,_AnyPlayer,1)
+AND
+GetPosition(_AnyPlayer,_X,_Y,_Z)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+NOT QRY_CAMP_PositionIsInACamp(_X,_Y,_Z)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 3b: Teleport to another player (same user) outside of camp
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_AreaTrigger,_)
+AND
+DB_Players(_AnyPlayer)
+AND
+_Player != _AnyPlayer
+AND
+QRY_SameUser(_Player,_AnyPlayer)
+AND
+GetPosition(_AnyPlayer,_X,_Y,_Z)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+NOT QRY_CAMP_PositionIsInACamp(_X,_Y,_Z)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 3c: Teleport to another player outside of camp
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_AreaTrigger,_)
+AND
+DB_Players(_AnyPlayer)
+AND
+_Player != _AnyPlayer
+AND
+GetPosition(_AnyPlayer,_X,_Y,_Z)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+NOT QRY_CAMP_PositionIsInACamp(_X,_Y,_Z)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Attempt 4: Take the region's safe spot
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+NOT DB_LeaveCamp_ReturnPos(_Player,_,_,_)
+AND
+DB_CurrentLevel(_RegionName)
+AND
+DB_RegionSafeSpot(_RegionName,_Spot)
+AND
+GetPosition(_Spot,_X,_Y,_Z)
+THEN
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+//Edge case handling: The return position is a forbidden area.
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z)
+AND
+DB_CurrentLevel(_RegionName)
+AND
+DB_LeaveCamp_ForbiddenReturnArea(_RegionName, _Area, _FallbackPosition)
+AND
+PositionIsInTrigger(_X, _Y, _Z, _Area, 1)
+AND
+GetPosition(_FallbackPosition, _FallbackX, _FallbackY, _FallbackZ)
+THEN
+NOT DB_LeaveCamp_ReturnPos((CHARACTER)_Player, _X, _Y, _Z);
+DB_LeaveCamp_ReturnPos((CHARACTER)_Player, _FallbackX, _FallbackY, _FallbackZ);
+
+
+//Normal case: Return player to last world position
+PROC
+PROC_Camp_Leave((CHARACTER)_Player)
+AND
+DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z)
+THEN
+SetSubRegionName(_Player,"",0);
+PROC_TeleportToSafePositionAndRestoreLinks(_Player,_X,_Y,_Z);
+NOT DB_LeaveCamp_ReturnPos(_Player,_X,_Y,_Z);
+
+IF
+DB_CAMP_CharacterLongRested(_Player)
+AND
+NOT QRY_CAMP_CharacterNOTLongRested()
+THEN
+PROC_Camp_EveryoneWakeup();
+
+QRY
+QRY_CAMP_CharacterNOTLongRested()
+AND
+DB_Players(_Player)
+AND
+NOT DB_CAMP_CharacterLongRested(_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Camp_EveryoneWakeup()
+AND
+DB_CAMP_CharacterLongRested(_Player)
+THEN
+NOT DB_CAMP_CharacterLongRested(_Player);
+
+PROC
+PROC_Camp_EveryoneWakeup()
+AND
+DB_Players(_Player)
+THEN
+RemoveStatus(_Player,"LONG_REST");
+
+PROC
+PROC_Camp_EveryoneWakeup()
+AND
+DB_Camp_InvisibleCamper(_Camper)
+AND
+IsOnStage(_Camper,1)
+THEN
+NOT DB_Camp_InvisibleCamper(_Camper);
+
+//This one is needed for all the DB_InCamp hacks (Mizora etc.) 
+//Normally going off stage would have removed them from the camp trigger and cleared DB_InCamp.
+//but if they are not in a camp trigger but in DB_InCamp (hacks) they will not send TeleportedFromCamp/TeleportedToCamp events on being set off/onstage and block the Wakeup pipeline 
+PROC
+PROC_Camp_EveryoneWakeup()
+AND
+DB_Camp_InvisibleCamper(_Camper)
+AND
+DB_InCamp(_Camper)
+THEN
+PROC_SetOnStage(_Camper,1);
+NOT DB_Camp_InvisibleCamper(_Camper);
+
+PROC
+PROC_Camp_EveryoneWakeup()
+AND
+DB_Camp_InvisibleCamper(_Camper)
+THEN
+PROC_SetOnStage(_Camper,1);
+
+IF
+TeleportedToCamp(_Camper)
+AND
+DB_Camp_InvisibleCamper((CHARACTER)_Camper)
+THEN
+NOT DB_Camp_InvisibleCamper(_Camper);
+
+PROC
+PROC_Camp_EveryoneWakeup()
+THEN
+PROC_Camp_RestoreArmourSets(); //Get Dressed
+NOT DB_Camp_LongRest_CodeIsWaiting(1);
+DB_CAMP_JustWokeUp(1);
+DB_CAMP_WaitForEveryoneAwake(1);
+NOT DB_CAMP_SkipSleepCutscene(1);
+TimerLaunch("Camp_EveryoneWakeup_SafetyTimeout",3000); //We're just waiting for everyone to come on stage. this really shouldn't take longer than 3 seconds.
+
+IF
+TimerFinished("Camp_EveryoneWakeup_SafetyTimeout")
+AND
+DB_Camp_InvisibleCamper(_Camper)
+AND
+GUIDToString(_Camper,_GUIDstring)
+AND
+Concatenate("PROC_Camp_EveryoneWakeup() timed out waiting for camper to come on stage: ",_GUIDstring,_Error)
+THEN
+NOT DB_Camp_InvisibleCamper(_Camper);
+DebugBreak(_Error);
+
+IF
+DB_CAMP_WaitForEveryoneAwake(1)
+AND
+NOT DB_Camp_InvisibleCamper(_)
+THEN
+TimerCancel("Camp_EveryoneWakeup_SafetyTimeout");
+PROC_Camp_EveryoneAwake();
+NOT DB_CAMP_WaitForEveryoneAwake(1);
+
+//In case fade was started by the timeline
+PROC
+PROC_Camp_EveryoneAwake()
+THEN
+AutoSave();
+
+//In case fade was started by script
+PROC
+PROC_Camp_EveryoneAwake()
+AND
+DB_Camp_Faded(_Player,_Any)
+THEN
+PROC_Camp_ClearFade(_Player,_Any);
+
+PROC
+PROC_Camp_EveryoneAwake()
+THEN
+PROC_Camp_EveryoneWakeupEndHook();
+
+PROC
+PROC_Camp_EveryoneAwake()
+AND
+DB_Camp_NightMode(1)
+THEN
+PROC_Camp_SetModeToDay();
+PROC_LongRest();
+
+PROC
+PROC_Camp_EveryoneAwake()
+AND
+DB_Camp_StayInCampAfterLongRest(1)
+THEN
+NOT DB_Camp_StayInCampAfterLongRest(1);
+
+PROC
+PROC_Camp_EveryoneAwake()
+THEN
+PROC_CampNight_StartMorningMoments();
+
+IF
+FlagSet(GLO_Camp_Event_SetDay_2d1a001d-2416-4b9c-b929-66b6367eceb4, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+ClearFlag(GLO_Camp_Event_SetDay_2d1a001d-2416-4b9c-b929-66b6367eceb4, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_Camp_SetModeToDay();
+
+PROC
+PROC_Camp_EveryoneWakeupEndHook()
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Rest - Camp Metric - Record and save when a long rest happens
+PROC
+PROC_CAMP_METRIC_RECORD()
+AND
+QRY_IncreaseCounter("Camp_Rest_Count")
+AND
+DB_GlobalCounter("Camp_Rest_Count",_Count)
+AND
+DB_ActiveCamp(_CampType)
+AND
+DB_GatherAtCampRequester(_Requester)
+AND
+DB_LeaveCamp_ReturnPos(_Requester,_X,_Y,_Z)
+AND
+RealToInteger(_X,_XFlat)
+AND
+RealToInteger(_Y,_YFlat)
+AND
+RealToInteger(_Z,_ZFlat)
+THEN
+DB_CAMP_METRIC(_Count,_CampType,_XFlat,_YFlat,_ZFlat);
+
+PROC
+PROC_CAMP_METRIC_RECORD()
+AND
+DB_GlobalCounter("Camp_Rest_Count",_Count)
+AND
+DB_Camp_QueuedNight(_NightFlag)
+THEN
+DB_CAMP_METRIC_NIGHT(_Count,_NightFlag);      //This copy remains for OsirisLog purposes
+
+//Camp Night Analysis CSV string v1:
+//1.   FormatVersion
+//2.   Actual Night Count
+//3.   Active Camp
+//4-6. Requester Leave Camp Position (X,Y,Z)
+//7.   Amount of Queued Camp Nights
+//8-X. QueuedNightFlag
+// e.g. "FormatVersion:CNA1,NightIndex:1,ActiveCamp:WLDMAIN,X:123,Y:456,Z:789,3,NIGHT1,NIGHT2,NIGHT3"
+
+PROC
+PROC_CAMP_METRIC_RECORD()
+AND
+DB_GlobalCounter("Camp_Rest_Count",_Count)
+AND
+DB_CAMP_METRIC(_Count,_CampType,_X,_Y,_Z)
+AND
+ConcatenateInteger("FormatVersion:CNA1,NightIndex:",_Count,_SubString1)
+AND
+Concatenate(_SubString1,",ActiveCamp:",_SubString2)
+AND
+Concatenate(_SubString2,_CampType,_SubString3)
+AND
+Concatenate(_SubString3,",X:",_SubString4)
+AND
+ConcatenateInteger(_SubString4,_X,_SubString5)
+AND
+Concatenate(_SubString5,",Y:",_SubString6)
+AND
+ConcatenateInteger(_SubString6,_Y,_SubString7)
+AND
+Concatenate(_SubString7,",Z:",_SubString8)
+AND
+ConcatenateInteger(_SubString8,_Z,_SubString9)
+AND
+SysCount("DB_Camp_QueuedNight",1,_NightFlagCount)
+AND
+Concatenate(_SubString9,",CampNightAmount:",_SubString10)
+AND
+ConcatenateInteger(_SubString10,_NightFlagCount,_SubString11)
+THEN
+DB_CAMP_METRIC_SubString(_SubString11);
+PROC_CAMP_METRIC_RECORD_Nights(_Count);
+
+//No nights
+PROC
+PROC_CAMP_METRIC_RECORD_Nights((INTEGER)_Count)
+AND
+NOT DB_CAMP_METRIC_NIGHT(_Count,_)
+AND
+DB_CAMP_METRIC_SubString(_SubString)
+AND
+Concatenate(_SubString,",CampNights:None",_Substring2)
+THEN
+NOT DB_CAMP_METRIC_SubString(_SubString);
+DB_CAMP_METRIC_SubString(_SubString2);
+
+//1+ nights
+PROC
+PROC_CAMP_METRIC_RECORD_Nights((INTEGER)_Count)
+AND
+QRY_OnlyOnce_Reset("QRY_CAMP_METRIC_RECORD_Nights_AddPrefix")
+AND
+DB_CAMP_METRIC_NIGHT(_Count,_NightFlag)
+AND
+QRY_CAMP_METRIC_RECORD_Nights_AddPrefix()
+AND
+DB_CAMP_METRIC_SubString(_SubString)
+AND
+GetFlagName(_NightFlag,_NightString)
+AND
+Concatenate(_SubString,_NightString,_Substring2)
+THEN
+NOT DB_CAMP_METRIC_SubString(_SubString);
+DB_CAMP_METRIC_SubString(_SubString2);
+
+QRY
+QRY_CAMP_METRIC_RECORD_Nights_AddPrefix()
+AND
+DB_CAMP_METRIC_SubString(_SubString)
+AND
+DB_OnlyOnce("QRY_CAMP_METRIC_RECORD_Nights_AddPrefix")
+AND
+Concatenate(_SubString,";",_Substring2)
+THEN
+NOT DB_CAMP_METRIC_SubString(_SubString);
+DB_CAMP_METRIC_SubString(_SubString2);
+
+QRY
+QRY_CAMP_METRIC_RECORD_Nights_AddPrefix()
+AND
+DB_CAMP_METRIC_SubString(_SubString)
+AND
+QRY_OnlyOnce("QRY_CAMP_METRIC_RECORD_Nights_AddPrefix")
+AND
+Concatenate(_SubString,",CampNights:",_Substring2)
+THEN
+NOT DB_CAMP_METRIC_SubString(_SubString);
+DB_CAMP_METRIC_SubString(_SubString2);
+
+
+PROC
+PROC_CAMP_METRIC_RECORD_Nights((INTEGER)_Count)
+AND
+DB_CAMP_METRIC_SubString(_SubString)
+THEN
+TrackAnalyticsInfo("long_rest",_Substring,NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CAMP_METRIC_SubString(_SubString);
+
+IF
+TextEvent("printrests")
+THEN
+PROC_CAMP_METRIC_PRINTRECURSIVE(1);
+
+PROC
+PROC_CAMP_METRIC_PRINTRECURSIVE((INTEGER)_Index)
+AND
+DB_CAMP_METRIC(_Index,_CampType,_X,_Y,_Z)
+AND //"Camp Rest 1 in camptype WLDMAIN started from position 123.45 456.78"
+ConcatenateInteger("CAMP REST METRIC: Camp Rest ",_Index,_SubString1)
+AND
+Concatenate(_SubString1," in camp ",_SubString2)
+AND
+Concatenate(_SubString2,_CampType,_SubString3)
+AND
+Concatenate(_SubString3," started from position ",_SubString4)
+AND
+ConcatenateInteger(_SubString4,_X,_SubString5)
+AND
+Concatenate(_SubString5," ",_SubString6)
+AND
+ConcatenateInteger(_SubString6,_Z,_FinalString)
+THEN
+DebugBreak(_FinalString);
+
+PROC
+PROC_CAMP_METRIC_PRINTRECURSIVE((INTEGER)_Index)
+AND
+DB_CAMP_METRIC_NIGHT(_Index,_NightFlag)
+AND
+GetFlagName(_NightFlag,_FlagName)
+AND
+Concatenate("CAMP REST METRIC: -- Queued Night: ",_FlagName,_FinalString)
+THEN
+DebugBreak(_FinalString);
+
+PROC
+PROC_CAMP_METRIC_PRINTRECURSIVE((INTEGER)_Index)
+AND
+DB_CAMP_METRIC(_Index,_,_,_,_)
+AND
+NOT DB_CAMP_METRIC_NIGHT(_Index,_)
+THEN
+DebugBreak("CAMP REST METRIC: -- No Nights queued: No valid nights found.");
+
+PROC
+PROC_CAMP_METRIC_PRINTRECURSIVE((INTEGER)_Index)
+AND
+DB_CAMP_METRIC(_Index,_,_,_,_)
+AND
+IntegerSum(_Index,1,_NewIndex)
+THEN
+PROC_CAMP_METRIC_PRINTRECURSIVE(_NewIndex);
+//END_REGION
+
+//REGION Camp State - Camp Atmosphere Modes
+IF
+TextEvent("campnight")
+THEN
+PROC_Camp_SetModeToNight();
+
+IF
+TextEvent("campday")
+THEN
+PROC_Camp_SetModeToDay();
+
+PROC
+PROC_Camp_SetModeToDay()
+AND
+DB_Camp(_Camp, _, _CampArea, _)
+AND
+DB_Camp_Ambiance(_Camp,_AtmosphereTrigger,_DayAtmo,_NightAtmo,_LightingTrigger,_DayLight,_NightLight,_SoundTrigger)
+AND
+Exists(_CampArea,1)
+AND
+GetRegion(_CampArea, _Region)
+AND
+DB_CurrentLevel(_Region)
+THEN
+TriggerSetAtmosphere(_AtmosphereTrigger,_DayAtmo);
+TriggerSetLighting(_LightingTrigger,_DayLight);
+TriggerSetSoundState(_SoundTrigger,"AMB_TimeofDay","Day",0);
+
+PROC
+PROC_Camp_SetModeToDay()
+AND
+DB_Camp(_Camp,_Campfire,_CampArea,_)
+AND
+Exists(_CampArea,1)
+AND
+GetRegion(_CampArea, _Region)
+AND
+DB_CurrentLevel(_Region)
+AND
+_Campfire != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetEntityEvent(_Campfire,"turnOff", 1);
+
+PROC
+PROC_Camp_SetModeToDay()
+THEN
+NOT DB_Camp_NightMode(1);
+ClearFlag((FLAG)GLO_CAMP_State_NightMode_fb53edc2-9a89-4ad2-af83-20b5fe425cdd, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_Camp_SetModeToNight()
+AND
+DB_Camp(_Camp, _, _CampArea, _)
+AND
+DB_Camp_Ambiance(_Camp,_AtmosphereTrigger,_DayAtmo,_NightAtmo,_LightingTrigger,_DayLight,_NightLight,_SoundTrigger)
+AND
+Exists(_CampArea,1)
+AND
+GetRegion(_CampArea, _Region)
+AND
+DB_CurrentLevel(_Region)
+THEN
+TriggerSetAtmosphere(_AtmosphereTrigger,_NightAtmo);
+TriggerSetLighting(_LightingTrigger,_NightLight);
+TriggerSetSoundState(_SoundTrigger,"AMB_TimeofDay","Night",0);
+
+PROC
+PROC_Camp_SetModeToNight()
+THEN
+DB_Camp_NightMode(1);
+SetFlag((FLAG)GLO_CAMP_State_NightMode_fb53edc2-9a89-4ad2-af83-20b5fe425cdd, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_Camp_SetModeToNight()
+AND
+DB_Camp(_ActiveCamp,_Campfire,_CampArea,_)
+AND
+Exists(_CampArea,1)
+AND
+GetRegion(_CampArea, _Region)
+AND
+DB_CurrentLevel(_Region)
+AND
+_Campfire != NULL_00000000-0000-0000-0000-000000000000
+THEN
+SetEntityEvent(_Campfire,"turnOn",1);
+//END_REGION
+
+//REGION Camp State - Nightmode Stuck Fallback
+IF
+DB_Camp_NightMode(1)
+AND
+DB_ActiveCamp(_)
+AND
+NOT DB_PlayerInCamp(_)
+AND
+NOT QRY_Camp_PreventEmptyCampAtNightSafetyCheck()
+THEN
+TimerCancel("CAMP_SAFETYCHECK_EMPTYCAMP_AT_NIGHT");
+TimerLaunch("CAMP_SAFETYCHECK_EMPTYCAMP_AT_NIGHT",5000);
+
+IF
+TimerFinished("CAMP_SAFETYCHECK_EMPTYCAMP_AT_NIGHT")
+AND
+DB_Camp_NightMode(1)
+AND
+NOT DB_PlayerInCamp(_)
+AND
+NOT QRY_Camp_PreventEmptyCampAtNightSafetyCheck()
+THEN
+DB_CampSafetyCheckTriggered("CAMP_SAFETYCHECK_EMPTYCAMP_AT_NIGHT");
+DebugBreak("CAMP_SAFETYCHECK_EMPTYCAMP_AT_NIGHT. Send Osirislog to @Greever");
+PROC_Camp_SetModeToDay();
+
+QRY
+QRY_Camp_PreventEmptyCampAtNightSafetyCheck()
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Camp State - Faction adjustments
+IF
+DB_InCamp(_Character)
+AND
+DB_OriginCampFlags(_Character, _, _, _, _, _)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+NOT DB_OriginNPCAlignment(_Character, _)
+AND
+NOT DB_CAMP_BlockCampFaction(_Character)
+AND
+NOT DB_Camp_PreCampFaction(_Character, _)
+AND
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character)
+AND
+GetFaction(_Character, _OldFaction)
+AND
+CanFight(_Character, 1) //No use setting factions of character that can't fight and risk having them become hostile.
+THEN
+DB_Camp_PreCampFaction(_Character, _OldFaction);
+SetFaction(_Character, (FACTION)GLO_CampFollowers_4bfd476c-55f7-48e5-b078-e71adfc4624d);
+
+IF
+DB_Camp_PreCampFaction(_Character, _PreCampFaction)
+AND
+NOT DB_InCamp(_Character)
+AND
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character)
+THEN
+PROC_Camp_ClearCampFaction(_Character);
+SetFaction(_Character, _PreCampFaction);
+NOT DB_Camp_PreCampFaction(_Character, _PreCampFaction);
+
+IF
+DB_InCamp(_Character)
+AND
+DB_OriginCampFlags(_Character, _, _, _, _, _)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+DB_OriginNPCAlignment(_Character, _Faction)
+AND
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character)
+AND
+NOT DB_CAMP_BlockCampFaction(_Character)
+THEN
+PROC_SetRelationToPlayers(_Faction, 100);
+PROC_SetRelation(_Faction, GLO_CampFollowers_4bfd476c-55f7-48e5-b078-e71adfc4624d, 100);
+
+IF
+DB_InCamp(_Character)
+AND
+DB_OriginCampFlags(_Character, _, _, _, _, _)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+DB_OriginNPCAlignment(_Character, _Faction)
+AND
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character)
+AND
+NOT DB_CAMP_BlockCampFaction(_Character)
+AND
+DB_InCamp(_OtherCharacter)
+AND
+NOT DB_CAMP_BlockCampFaction(_OtherCharacter)
+AND
+NOT DB_PartyMembers(_OtherCharacter)
+AND
+_OtherCharacter != _Character
+AND
+DB_OriginNPCAlignment(_OtherCharacter, _OtherFaction)
+THEN
+PROC_SetRelationMutual(_Faction, _OtherFaction, 100);
+
+PROC
+PROC_CAMP_LeftCamp(_Character)
+AND
+DB_OriginCampFlags(_Character, _, _, _, _, _)
+AND
+DB_OriginNPCAlignment(_Character, _)
+AND
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character)
+AND
+NOT DB_PartyMembers(_Character)
+THEN
+PROC_Camp_ClearCampFaction(_Character);
+
+IF
+LeftCombat(_Character, _)
+AND
+DB_CAMP_CampFaction_TemporaryHostile((CHARACTER)_Character)
+AND
+NOT DB_InCamp(_Character)
+THEN
+PROC_Camp_ClearCampFaction((CHARACTER)_Character);
+
+IF
+EnterCombatFailed(_Character, _)
+AND
+DB_CAMP_CampFaction_TemporaryHostile((CHARACTER)_Character)
+AND
+NOT DB_InCamp(_Character)
+THEN
+PROC_Camp_ClearCampFaction((CHARACTER)_Character);
+
+IF
+LeftCombat(_Character, _)
+AND
+DB_CAMP_CampFaction_TemporaryHostile((CHARACTER)_Character)
+AND
+DB_InCamp(_Character)
+AND
+DB_CAMP_BlockCampFaction(_Character)
+THEN
+PROC_Camp_ClearCampFaction((CHARACTER)_Character);
+
+IF
+EnterCombatFailed(_Character, _)
+AND
+DB_CAMP_CampFaction_TemporaryHostile((CHARACTER)_Character)
+AND
+DB_InCamp(_Character)
+AND
+DB_CAMP_BlockCampFaction(_Character)
+THEN
+PROC_Camp_ClearCampFaction((CHARACTER)_Character);
+
+IF
+EnterCombatFailed(_Character, _)
+AND
+DB_CAMP_CampFaction_TemporaryHostile((CHARACTER)_Character)
+THEN
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character);
+
+IF
+LeftCombat(_Character, _)
+AND
+DB_CAMP_CampFaction_TemporaryHostile((CHARACTER)_Character)
+THEN
+NOT DB_CAMP_CampFaction_TemporaryHostile(_Character);
+
+PROC
+PROC_Camp_ClearCampFaction((CHARACTER)_Character)
+AND
+DB_OriginNPCAlignment(_Character, _Faction)
+THEN
+PROC_SetRelationToPlayers(_Faction, 50);
+PROC_SetRelation(_Faction, GLO_CampFollowers_4bfd476c-55f7-48e5-b078-e71adfc4624d, 50);
+
+PROC
+PROC_Camp_ClearCampFaction((CHARACTER)_Character)
+AND
+DB_OriginNPCAlignment(_Character, _Faction)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+DB_InCamp(_OtherCharacter)
+AND
+NOT DB_PartyMembers(_OtherCharacter)
+AND
+_OtherCharacter != _Character
+AND
+DB_OriginNPCAlignment(_OtherCharacter, _OtherFaction)
+THEN
+PROC_SetRelationMutual(_Faction, _OtherFaction, 50);
+
+PROC
+PROC_Camp_ClearCampFaction(_Character)
+AND
+DB_Camp_PreCampFaction(_Character, _PreCampFaction)
+THEN
+SetFaction(_Character, _PreCampFaction);
+NOT DB_Camp_PreCampFaction(_Character, _PreCampFaction);
+
+IF
+DB_HostileToIndivPlayerAfterDialog(_Character, _)
+AND
+DB_InCamp(_Character)
+THEN
+PROC_Camp_ClearCampFaction(_Character);
+
+IF
+DB_HostileToPlayerGroupAfterDialog(_Character, _)
+AND
+DB_InCamp(_Character)
+THEN
+PROC_Camp_ClearCampFaction(_Character);
+
+IF
+DB_PartyMembers(_Character)
+AND
+DB_InCamp(_Character)
+THEN
+PROC_Camp_ClearCampFaction(_Character);
+
+PROC
+PROC_SetRelationTemporaryHostile(_Character, _Target)
+AND
+NOT DB_PartyMembers(_Character)
+AND
+DB_InCamp(_Character)
+AND
+NOT DB_CAMP_BlockCampFaction(_Character)
+THEN
+DB_CAMP_CampFaction_TemporaryHostile(_Character);
+PROC_Camp_ClearCampFaction(_Character);
+
+PROC
+PROC_CAMP_BlockCampFaction((CHARACTER)_Character)
+THEN
+DB_CAMP_BlockCampFaction(_Character);
+PROC_Camp_ClearCampFaction(_Character);
+
+//END_REGION
+
+//REGION Camp State - Dynamic Camp Decoration
+IF
+DB_Camp_PersonalCornerGear(_Camp,_Companion,_Gear)
+THEN
+SetOnStage(_Gear,0);
+
+IF
+DB_PartOfTheTeam(_Camper)
+AND
+NOT DB_Avatars(_Camper)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerGear(_ActiveCamp,_Camper,_Gear)
+THEN
+SetOnStage(_Gear,1);
+DeclutterArea(_Gear,1,1);
+
+IF
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate)
+AND
+DB_PartOfTheTeam(_Camper)
+AND
+NOT DB_Avatars(_Camper)
+AND
+NOT DB_DismissedAvatar(_Camper)
+THEN
+PROC_CacheLoadLevelTemplate(_CornerLevelTemplate);
+
+IF
+LevelTemplateLoaded(_CornerLevelTemplate)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+NOT DB_Avatars(_Camper)
+AND
+NOT DB_DismissedAvatar(_Camper)
+AND
+DB_InCamp(_Camper)
+AND
+DB_Camper_TeleportOnLevelTemplateLoad((CHARACTER)_Camper, _ActiveCamp)
+AND
+QRY_Camp_GetCamperPos(_Camper)
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Camper,_CampPos)
+THEN
+NOT DB_Camper_TeleportOnLevelTemplateLoad(_Camper, _ActiveCamp);
+TeleportTo(_Camper,_CampPos,"",0,0,1,1,1);
+
+IF
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate)
+AND
+NOT DB_PartOfTheTeam(_Camper)
+AND
+NOT DB_Avatars(_Camper)
+AND
+NOT DB_DismissedAvatar(_Camper)
+THEN
+PROC_CacheUnloadLevelTemplate(_CornerLevelTemplate);
+
+IF
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate)
+AND
+DB_Avatars(_Camper)
+THEN
+PROC_CacheUnloadLevelTemplate(_CornerLevelTemplate);
+
+
+IF
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate,_EmptyLevelTemplate)
+AND
+DB_PartOfTheTeam(_Camper)
+AND
+NOT DB_Avatars(_Camper)
+AND
+NOT DB_DismissedAvatar(_Camper)
+THEN
+PROC_CacheLoadLevelTemplate(_CornerLevelTemplate);
+PROC_CacheUnloadLevelTemplate(_EmptyLevelTemplate);
+
+IF
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate,_EmptyLevelTemplate)
+AND
+NOT DB_PartOfTheTeam(_Camper)
+AND
+NOT DB_Avatars(_Camper)
+AND
+NOT DB_DismissedAvatar(_Camper)
+THEN
+PROC_CacheUnloadLevelTemplate(_CornerLevelTemplate);
+PROC_CacheLoadLevelTemplate(_EmptyLevelTemplate);
+
+IF
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate,_EmptyLevelTemplate)
+AND
+DB_Avatars(_Camper)
+THEN
+PROC_CacheUnloadLevelTemplate(_CornerLevelTemplate);
+PROC_CacheLoadLevelTemplate(_EmptyLevelTemplate);
+
+IF
+TextEvent("unloadcamplts")
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate,_EmptyLevelTemplate)
+THEN
+DB_LevelTemplateLoaded(_CornerLevelTemplate);
+PROC_CacheUnloadLevelTemplate(_CornerLevelTemplate);
+DB_LevelTemplateLoaded(_EmptyLevelTemplate);
+PROC_CacheUnloadLevelTemplate(_EmptyLevelTemplate);
+
+IF
+TextEvent("unloadcamplts")
+AND
+DB_Camp_PersonalCornerLevelTemplate(_ActiveCamp,_Camper,_CornerLevelTemplate)
+THEN
+DB_LevelTemplateLoaded(_CornerLevelTemplate);
+PROC_CacheUnloadLevelTemplate(_CornerLevelTemplate);
+
+IF
+TextEvent("unloadcamplts")
+AND
+DB_CampBed(_Camp,_Index,_DayBed,_NightBed,_DayLT,_EmptyLT,_WakeUpTrigger)
+THEN
+DB_LevelTemplateLoaded(_DayLT);
+PROC_CacheUnloadLevelTemplate(_DayLT);
+DB_LevelTemplateLoaded(_EmptyLT);
+PROC_CacheUnloadLevelTemplate(_EmptyLT);
+
+IF
+LevelTemplateLoaded(_LevelTemplate)
+AND
+DB_Camp_LevelTemplateToDeclutter(_LevelTemplate)
+THEN
+DeclutterLevelTemplate(_LevelTemplate, 1, 1);
+NOT DB_Camp_LevelTemplateToDeclutter(_LevelTemplate);
+
+IF
+DB_Camp_NightMode(1)
+AND
+DB_ActiveCamp(_Camp)
+THEN
+PROC_Camp_ShowNightDeco(_Camp);
+
+IF
+DB_ActiveCamp(_Camp)
+AND
+NOT DB_Camp_NightMode(1)
+THEN
+PROC_Camp_ShowDayDeco(_Camp);
+
+PROC
+PROC_Camp_UpdateDeco()
+AND
+NOT DB_Camp_NightMode(1)
+AND
+DB_ActiveCamp(_Camp)
+THEN
+PROC_Camp_ShowDayDeco(_Camp);
+
+PROC
+PROC_Camp_UpdateDeco()
+AND
+DB_Camp_NightMode(1)
+AND
+DB_ActiveCamp(_Camp)
+THEN
+PROC_Camp_ShowNightDeco(_Camp);
+
+PROC
+PROC_Camp_ShowNightDeco((STRING)_Camp)
+AND
+DB_Camp_NightOnly_Decoration(_Camp,_Item)
+THEN
+SetOnStage(_Item,1);
+
+PROC
+PROC_Camp_ShowDayDeco((STRING)_Camp)
+AND
+DB_Camp_NightOnly_Decoration(_Camp,_Item)
+THEN
+SetOnStage(_Item,0);
+
+PROC
+PROC_Camp_ShowNightDeco((STRING)_Camp)
+AND
+DB_Camp_NightOnly_LevelTemplate(_Camp,_LevelTemplate)
+THEN
+PROC_CacheLoadLevelTemplate(_LevelTemplate);
+
+PROC
+PROC_Camp_ShowDayDeco((STRING)_Camp)
+AND
+DB_Camp_NightOnly_LevelTemplate(_Camp,_LevelTemplate)
+THEN
+PROC_CacheUnloadLevelTemplate(_LevelTemplate);
+
+PROC
+PROC_Camp_ShowNightDeco((STRING)_Camp)
+AND
+DB_Camp_DayOnly_LevelTemplate(_Camp,_LevelTemplate)
+THEN
+PROC_CacheUnloadLevelTemplate(_LevelTemplate);
+
+PROC
+PROC_Camp_ShowDayDeco((STRING)_Camp)
+AND
+DB_Camp_DayOnly_LevelTemplate(_Camp,_LevelTemplate)
+THEN
+PROC_CacheLoadLevelTemplate(_LevelTemplate);
+
+PROC
+PROC_Camp_ShowDayDeco((STRING)_Camp)
+AND
+DB_CampBed(_Camp,_Index,_DayBed,_NightBed,_DayLT,_EmptyLT,_WakeUpTrigger)
+AND
+QRY_CampBed_PlayerPresent(_Index)
+THEN
+PROC_CacheUnloadLevelTemplate(_EmptyLT);
+PROC_CacheLoadLevelTemplate(_DayLT);
+PROC_Camp_HideBedIfDifferent(_NightBed,_DayBed);
+PROC_Camp_ShowBed(_DayBed,1);
+
+PROC
+PROC_Camp_ShowDayDeco((STRING)_Camp)
+AND
+DB_CampBed(_Camp,_Index,_DayBed,_NightBed,_DayLT,_EmptyLT,_WakeUpTrigger)
+AND
+NOT QRY_CampBed_PlayerPresent(_Index)
+THEN
+PROC_CacheUnloadLevelTemplate(_DayLT);
+PROC_CacheLoadLevelTemplate(_EmptyLT);
+PROC_Camp_HideBedIfDifferent(_NightBed,_DayBed);
+PROC_Camp_ShowBed(_DayBed,0);
+
+PROC
+PROC_Camp_ShowNightDeco((STRING)_Camp)
+AND
+DB_CampBed(_Camp,_Index,_DayBed,_NightBed,_DayLT,_EmptyLT,_WakeUpTrigger)
+AND
+QRY_CampBed_PlayerPresent(_Index)
+THEN
+PROC_CacheUnloadLevelTemplate(_DayLT);
+PROC_CacheUnloadLevelTemplate(_EmptyLT);
+PROC_Camp_HideBedIfDifferent(_DayBed,_NightBed);
+PROC_Camp_ShowBed(_NightBed,1);
+
+PROC
+PROC_Camp_ShowNightDeco((STRING)_Camp)
+AND
+DB_CampBed(_Camp,_Index,_DayBed,_NightBed,_DayLT,_EmptyLT,_WakeUpTrigger)
+AND
+NOT QRY_CampBed_PlayerPresent(_Index)
+THEN
+PROC_CacheUnloadLevelTemplate(_DayLT);
+PROC_CacheLoadLevelTemplate(_EmptyLT);
+PROC_Camp_HideBedIfDifferent(_DayBed,_NightBed);
+PROC_Camp_ShowBed(_NightBed,0);
+
+PROC
+PROC_Camp_HideBedIfDifferent((ITEM)_Bed,(ITEM)_OtherBed)
+AND
+_Bed != _OtherBed
+AND
+Exists(_Bed,1)
+THEN
+PROC_SetOnStage(_Bed,0);
+
+PROC
+PROC_Camp_ShowBed((ITEM)_Bed,1)
+AND
+DB_OffStage(_Bed)
+AND
+Exists(_Bed,1)
+THEN
+PROC_SetOnStage(_Bed,1);
+
+PROC
+PROC_Camp_ShowBed((ITEM)_Bed,0)
+AND
+NOT DB_OffStage(_Bed)
+AND
+Exists(_Bed,1)
+THEN
+PROC_SetOnStage(_Bed,0);
+
+PROC
+PROC_CacheLoadLevelTemplate((LEVELTEMPLATE)_LT)
+AND
+_LT != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_LevelTemplateLoaded(_LT)
+THEN
+LoadLevelTemplate(_LT);
+DB_LevelTemplateLoaded(_LT);
+DB_Camp_LevelTemplateToDeclutter(_LT);
+
+PROC
+PROC_CacheUnloadLevelTemplate((LEVELTEMPLATE)_LT)
+AND
+_LT != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_LevelTemplateLoaded(_LT)
+THEN
+UnloadLevelTemplate(_LT);
+NOT DB_LevelTemplateLoaded(_LT);
+
+QRY
+QRY_CampBed_PlayerPresent(4)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampBed_PlayerPresent(2)
+AND
+DB_GlobalFlag((FLAG)CAMP_PartySize_AtLeast2_3bf26823-3143-4d1a-85e6-8a7e04273d77)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampBed_PlayerPresent(1)
+AND
+DB_GlobalFlag((FLAG)CAMP_PartySize_AtLeast3_ed6c9959-36e4-4235-a841-63b395f0fe4e)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CampBed_PlayerPresent(3)
+AND
+DB_GlobalFlag((FLAG)CAMP_PartySize_AtLeast4_62130ed1-4567-4f3a-82ed-7801dc58e01a)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Camp State - Companion Camp Positions
+PROC
+PROC_Camp_CamperPosOverride((CHARACTER)_Camper,(TRIGGER)_CampPosOverride) //Please be careful with this. This overrides ALL camp positions. Be sure to clear it in time!
+THEN
+PROC_Camp_CamperPosOverride_Clear(_Camper);
+DB_Camp_CamperPosOverride(_Camper,_CampPosOverride);
+
+PROC
+PROC_Camp_CamperPosOverride_Clear((CHARACTER)_Camper)
+AND
+DB_Camp_CamperPosOverride(_Camper,_CampPosOverride)
+THEN
+NOT DB_Camp_CamperPosOverride(_Camper,_CampPosOverride);
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,(TRIGGER)_CampPos)
+THEN
+NOT DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,(TRIGGER)_CampPos);
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+DB_Camp_CamperPosOverride(_Camper,_CampPosOverride)
+THEN
+DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,(TRIGGER)_CampPosOverride);
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+NOT DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,_)
+AND
+DB_CampNight_SetPosition(_NightFlag, _Camper, _Camp, _Trigger)
+AND
+DB_Camp_QueuedNight((FLAG)_NightFlag)
+AND
+DB_ActiveCamp(_Camp)
+THEN
+DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,(TRIGGER)_Trigger);
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+NOT DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,_)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_ORI_OriginCampData((CHARACTER)_Camper, (STRING)_ActiveCamp, (TRIGGER)_CampPos)
+AND
+Exists(_CampPos,_Value)
+AND
+QRY_Camp_GetCamperPos_ReactToExists(_Camper,_ActiveCamp,_Value)
+AND
+_Value == 1
+THEN
+DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,(TRIGGER)_CampPos);
+
+QRY
+QRY_Camp_GetCamperPos_ReactToExists((CHARACTER)_Camper, (STRING)_ActiveCamp,1)
+THEN
+NOT DB_Camper_TeleportOnLevelTemplateLoad((CHARACTER)_Camper, (STRING)_ActiveCamp);
+
+QRY
+QRY_Camp_GetCamperPos_ReactToExists((CHARACTER)_Camper, (STRING)_ActiveCamp,0)
+THEN
+DB_Camper_TeleportOnLevelTemplateLoad((CHARACTER)_Camper, (STRING)_ActiveCamp);
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+QRY_Camp_GetCamperPos_Custom((CHARACTER)_Camper)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+NOT DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,_)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+DB_Camp(_ActiveCamp,_,_,_CampEntrance)
+THEN
+DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,(TRIGGER)_CampEntrance);
+
+
+
+QRY
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+NOT DB_QRYRTN_Camp_GetCamperPos((CHARACTER)_Camper,_)
+AND
+GetUUID(_Camper,_UUID)
+AND
+Concatenate("Could not find a Camper Position for ",_UUID,_GetCamperPosAssert)
+THEN
+DebugBreak(_GetCamperPosAssert);
+
+QRY
+QRY_Camp_GetCamperPos_Custom((CHARACTER)_Camper)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Camp State - Camp Quality
+PROC
+PROC_IncreaseCampQuality((INTEGER)_NewValue)
+AND
+DB_CampQuality(_OldValue)
+AND
+_NewValue > _OldValue
+THEN
+NOT DB_CampQuality(_OldValue);
+DB_CampQuality(_NewValue);
+SetCampQuality(_NewValue);
+
+PROC
+PROC_IncreaseCampQuality((INTEGER)_NewValue)
+AND
+NOT DB_CampQuality(_)
+THEN
+DB_CampQuality(_NewValue);
+SetCampQuality(_NewValue);
+//END_REGION
+
+//REGION Camp Swap - Tracking Active Camp
+IF
+TextEvent("campswap")
+AND
+GetTextEventParamString(1,_NewCamp)
+AND
+DB_Camp(_NewCamp,_,_,_)
+THEN
+DB_ActiveCamp(_NewCamp);
+
+IF
+DB_ActiveCamp_Override(_New)
+AND
+DB_ActiveCamp_Override(_Old)
+AND
+_New != _Old
+THEN
+NOT DB_ActiveCamp_Override(_Old);
+
+IF
+LevelLoaded(_)
+AND
+DB_ActiveCamp_Override(_Old)
+THEN
+NOT DB_ActiveCamp_Override(_Old);
+
+QRY
+QRY_Camp_SwapCampIfNecessary((CHARACTER)_Player)
+AND
+NOT DB_ActiveCamp_Override(_)
+AND
+NOT DB_PlayerInCamp(_)
+AND
+QRY_OnlyOnce_Reset("CAMP_SwapCamp_MinicampFound")
+AND
+DB_InRegion(_Player,_Trigger)
+AND
+DB_MiniCampTrigger(_MiniCamp,_Trigger)
+AND
+QRY_OnlyOnce("CAMP_SwapCamp_MinicampFound")
+THEN
+DB_ActiveCamp(_MiniCamp);
+
+QRY
+QRY_Camp_SwapCampIfNecessary((CHARACTER)_Player)
+AND
+NOT DB_ActiveCamp_Override(_)
+AND
+NOT DB_PlayerInCamp(_)
+AND
+NOT DB_OnlyOnce("CAMP_SwapCamp_MinicampFound")
+AND
+DB_CurrentLevel(_Region)
+AND
+DB_MainCamp(_Region,_MainCamp)
+THEN
+DB_ActiveCamp(_MainCamp);
+
+QRY
+QRY_Camp_SwapCampIfNecessary((CHARACTER)_Player)
+AND
+NOT DB_ActiveCamp_Override(_)
+AND
+QRY_Camp_SwapCampIfNecessary_Custom((CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_SwapCampIfNecessary_Custom((CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_SwapCampIfNecessary((CHARACTER)_Player)
+THEN
+DB_NOOP(1);
+
+IF
+DB_ActiveCamp(_FirstCamp)
+AND
+SysCount("DB_ActiveCamp",1,1)
+THEN
+PROC_CampSwapped("",_FirstCamp);
+
+IF 
+DB_ActiveCamp(_NewCamp)
+AND
+DB_ActiveCamp(_OldCamp)
+AND
+_NewCamp != _OldCamp
+THEN
+NOT DB_ActiveCamp(_OldCamp);
+PROC_CampSwapped(_OldCamp,_NewCamp);
+
+PROC
+PROC_CampSwapped((STRING)_OldCamp,(STRING)_NewCamp)
+AND
+QRY_OnlyOnce_Reset("DeclutterMiniCamp")
+AND
+DB_MiniCampTrigger(_OldCamp,_)
+AND
+DB_Camp(_OldCamp,_,_CampArea,_)
+AND
+QRY_OnlyOnce("DeclutterMiniCamp")
+THEN
+DeclutterArea(_CampArea,0,1);
+
+PROC
+PROC_CampSwapped((STRING)_OldCamp,(STRING)_NewCamp)
+AND
+DB_PlayerInCamp(_)
+THEN
+DebugBreak("CampSwap Requested while player is in camp! This is not allowed");
+
+//New camp -> make sure the atmosphere matches the internal state.
+PROC
+PROC_CampSwapped((STRING)_OldCamp,(STRING)_NewCamp)
+AND
+DB_Camp_NightMode(1)
+THEN
+PROC_Camp_SetModeToNight();
+
+PROC
+PROC_CampSwapped((STRING)_OldCamp,(STRING)_NewCamp)
+AND
+NOT DB_Camp_NightMode(1)
+THEN
+PROC_Camp_SetModeToDay();
+
+PROC
+PROC_CampSwapped((STRING)_OldCamp,(STRING)_NewCamp)
+AND
+DB_InCamp(_Camper)
+AND
+NOT DB_DismissedAvatar(_Camper)
+AND
+QRY_Camp_GetCamperPos(_Camper)
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Camper,_CampPos)
+THEN
+TeleportTo(_Camper,_CampPos,"",0,0,1,1,1);
+
+PROC
+PROC_CampSwapped((STRING)_OldCamp,(STRING)_NewCamp)
+AND
+DB_PartOfTheTeam(_Camper)
+THEN
+PROC_CampSwap_UpdateAnubisCampPos(_NewCamp,_Camper);
+
+PROC
+PROC_ORI_SetupCamp((CHARACTER)_Camper, _)
+AND
+DB_ActiveCamp(_Camp)
+THEN
+PROC_CampSwap_UpdateAnubisCampPos(_Camp,_Camper);
+
+IF
+LevelTemplateLoaded(_CampCorner)
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_Camp,_Camper,_CampCorner)
+THEN
+PROC_CampSwap_UpdateAnubisCampPos(_Camp,_Camper);
+
+IF
+LevelTemplateLoaded(_CampCorner)
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_Camp_PersonalCornerLevelTemplate(_Camp,_Camper,_CampCorner,_)
+THEN
+PROC_CampSwap_UpdateAnubisCampPos(_Camp,_Camper);
+
+PROC
+PROC_CampSwap_UpdateAnubisCampPos((STRING)_NewCamp,(CHARACTER)_Camper)
+AND
+Concatenate("CampSwapped_",_NewCamp,_CampSwapEvent)
+AND
+QRY_Camp_GetCamperPos(_Camper)
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Camper,_NewPos)
+AND
+Concatenate("CAMP_CamperInCamp_", _NewCamp, _ActiveCampEvent)
+THEN
+SetEntityEvent(_Camper,_CampSwapEvent,1);
+SetDualEntityEvent(_Camper,_NewPos,"CampPositionChange",1);
+SetEntityEvent(_Camper,_ActiveCampEvent,1);
+
+IF
+EntityEvent(_Camper,"CampPosRequest")
+AND
+QRY_Camp_GetCamperPos((CHARACTER)_Camper)
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Camper,_Pos)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+Concatenate("CAMP_CamperInCamp_", _ActiveCamp, _ActiveCampEvent)
+THEN
+SetDualEntityEvent(_Camper,_Pos,"CampPositionChange",1);
+SetEntityEvent(_Camper,_ActiveCampEvent,1);
+
+//END_REGION
+
+//REGION Misc - Combat in Camp
+IF
+EnteredCombat(_Character,_)
+AND
+DB_InCamp((CHARACTER)_Character)
+AND
+NOT DB_Defeated(_Character)
+AND
+NOT QRY_CAMP_VanityArmour_BlockChangeForCharacterDuringFight(_Character)
+THEN
+PROC_SetArmourSet(_Character,ARMOURSET.Normal);
+
+QRY
+QRY_CAMP_VanityArmour_BlockChangeForCharacterDuringFight((CHARACTER)_Character)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+EnteredCombat(_Character,_)
+AND
+DB_Camp_WokeUpAtNight(1)
+AND
+DB_PlayerInCamp((CHARACTER)_Character)
+AND
+NOT DB_Camp_GotFreeShortRestAtNightBeforeCombat(_Character)
+THEN
+ApplyStatus(_Character, "ALCH_POTION_REST_SLEEP_LESSER_RESTORATION", 1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_Camp_GotFreeShortRestAtNightBeforeCombat(_Character);
+
+IF
+LeftCombat(_,_)
+AND
+DB_Camp_NightMode(1)
+AND
+NOT QRY_CamperInCombat()
+AND
+DB_InCamp(_Camper)
+AND
+NOT DB_Defeated(_Camper)
+THEN
+PROC_SetArmourSet(_Camper, ARMOURSET.Vanity);
+
+QRY
+QRY_CamperInCombat()
+AND
+DB_InCamp(_Camper)
+AND
+DB_Is_InCombat(_Camper,_)
+THEN
+DB_NOOP(1);
+
+//Prevent abuse of getting it more than once per night
+PROC
+PROC_LongRest()
+AND
+DB_Camp_GotFreeShortRestAtNightBeforeCombat(_Character)
+THEN
+NOT DB_Camp_GotFreeShortRestAtNightBeforeCombat(_Character);
+
+//END_REGION
+
+//REGION Misc - Camp Crimes
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, _, _, _)
+AND
+DB_InCamp(_Criminal)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Vandalise")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, _, _, _)
+AND
+DB_InCamp(_Criminal)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "DroppedOwnedCorpse")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, _, _, _)
+AND
+DB_InCamp(_Criminal)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "PickUpOwnedCorpse")
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Misc - Camp Queries
+QRY
+QRY_Camp_PlayerNotInCamp()
+AND
+DB_Players(_Player)
+AND
+NOT DB_InCamp(_Player)
+AND
+NOT QRY_Camp_IsPlayerBlockedFromTeleportToCamp(_Player)
+THEN
+DB_NOOP(1);
+
+//A player can't travel to camp if
+// -He can't travel
+// -There's no camp
+QRY
+QRY_Camp_IsPlayerBlockedFromTeleportToCamp((CHARACTER)_Player, _)
+AND
+QRY_WaypointTeleport_PlayerBlocked(_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_IsPlayerBlockedFromTeleportToCamp((CHARACTER)_Player, _)
+AND
+DB_ActiveCamp(_ActiveCamp)
+AND
+NOT DB_Camp(_ActiveCamp,_,_,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_IsPlayerBlockedFromTeleportToCamp((CHARACTER)_Player, _)
+AND
+NOT DB_ActiveCamp(_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_AllPlayersReadyForNightMode()
+AND
+QRY_Camp_CheckPlayersReadyForNightMode()
+AND
+NOT DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason(_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_CheckPlayersReadyForNightMode()
+AND
+DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason(_AnyReason)
+THEN
+NOT DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason(_AnyReason);
+
+QRY
+QRY_Camp_CheckPlayersReadyForNightMode()
+AND
+QRY_Camp_CheckPlayersReadyForNightModeStoryReasons()
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_CheckPlayersReadyForNightModeStoryReasons()
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player)
+THEN
+NOT DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player);
+
+//First choice: A controlled Avatar in camp
+QRY
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_)
+AND
+DB_Avatars(_Player)
+AND
+IsControlled(_Player,1)
+AND
+QRY_SpeakerIsAvailable(_Player,0,1)
+THEN
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player);
+
+//Second Choice: Any avatar in camp
+QRY
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_)
+AND
+DB_Avatars(_Player)
+AND
+QRY_SpeakerIsAvailable(_Player)
+THEN
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player);
+
+//Third Choice: Any controlled player in camp
+QRY
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_)
+AND
+IsControlled(_Player,1)
+AND
+QRY_SpeakerIsAvailable(_Player)
+THEN
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player);
+
+//Fourth Choice: Any player in camp
+QRY
+QRY_Camp_GetPreferredPlayerForDialogs()
+AND
+DB_PlayerInCamp(_Player)
+AND
+NOT DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_)
+AND
+QRY_SpeakerIsAvailable(_Player)
+THEN
+DB_QRYRTN_Camp_GetPreferredPlayerForDialogs(_Player);
+
+//For preventing the player from leaving the night in a "woken up at night" scenario. Default always fails so that night continues as normal. See ACT2b_INT_ for usecase.
+QRY
+QRY_CampPreventLeaveNightModeHook((CHARACTER)_Player)
+AND
+1==2
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Camp_AnyAvatarInCamp()
+AND
+DB_Avatars(_Avatar)
+AND
+DB_InCamp(_Avatar)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Misc - Companion tired of talking
+
+//--- Set the flag on the avatar whom the origin is tired of talking to.
+IF
+FlagSet(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,(CHARACTER)_Player,_Inst)
+AND
+_Inst != 0 //extra check, it would fail at DB_DialogName too
+AND
+NOT QRY_CAMP_TiredOfTalkingTo_WrongLocation(_Player) 
+AND
+DB_DialogName(_CampDialog, _Inst)
+AND
+NOT QRY_CAMP_TiredOfTalkingTo_WrongDialog(_Player,_CampDialog)
+THEN
+PROC_CAMP_TiredOfTalkingTo_CheckSpeaker(_Player,_CampDialog);
+
+PROC
+PROC_CAMP_TiredOfTalkingTo_CheckSpeaker((CHARACTER)_Player,(DIALOGRESOURCE)_CampDialog)
+AND
+DB_OriginInPartyDialog(_Origin,_CampDialog)
+AND
+NOT QRY_CAMP_TiredOfTalkingTo_WrongSpeaker(_Player,_Origin)
+THEN
+DB_CampTiredOfTalkingTo(_Origin, _Player);
+
+PROC
+PROC_CAMP_TiredOfTalkingTo_CheckSpeaker((CHARACTER)_Player,(DIALOGRESOURCE)_CampDialog)
+AND
+DB_CampNight_CRD(_,_Origin,_CampDialog,_)
+AND
+NOT QRY_CAMP_TiredOfTalkingTo_WrongSpeaker(_Player,_Origin)
+THEN
+DB_CampTiredOfTalkingTo(_Origin, _Player);
+
+
+//Blocking common mistakes
+QRY
+QRY_CAMP_TiredOfTalkingTo_WrongLocation((CHARACTER)_Player)
+AND
+NOT DB_InCamp(_Player)
+THEN
+ClearFlag(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,_Player);
+//Don't assert since these dialogues are also playing outside of the camp
+
+QRY
+QRY_CAMP_TiredOfTalkingTo_WrongDialog((CHARACTER)_Player,(DIALOGRESOURCE)_CampDialog)
+AND
+NOT QRY_CAMP_TiredOfTalkingTo_ValidDialog(_CampDialog)
+THEN
+ClearFlag(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,_Player);
+DebugBreak("The flag 'CAMP_Origin_State_TiredOfTalkingTo' was set in a wrong dialog (it can only be used in an origin in party dialog or CRD).");
+
+QRY
+QRY_CAMP_TiredOfTalkingTo_WrongSpeaker((CHARACTER)_Player,(CHARACTER)_)
+AND
+NOT DB_Avatars(_Player)
+THEN
+ClearFlag(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,_Player);
+DebugBreak("The flag 'CAMP_Origin_State_TiredOfTalkingTo' was set on the wrong speaker (it must be set on the avatar).");
+
+QRY
+QRY_CAMP_TiredOfTalkingTo_WrongSpeaker((CHARACTER)_Player,(CHARACTER)_Origin)
+AND
+_Origin == _Player
+THEN
+ClearFlag(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,_Player);
+DebugBreak("The flag 'CAMP_Origin_State_TiredOfTalkingTo' was set on the wrong speaker (it must be set on the avatar, not on the companion).");
+
+
+// Clear flag on leaving the dialog / Set it back on dialog starts
+// (clearing it only when the character leaves the dialog, because this allow the writers to set and use the flag in the same dialog instance)
+IF
+DialogActorLeft(_CampDialog,_,(CHARACTER)_Player,_)
+AND
+DB_Avatars(_Player)
+AND
+QRY_CAMP_TiredOfTalkingTo_ValidDialog(_CampDialog)
+THEN
+ClearFlag(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,_Player);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_CampDialog,(GUIDSTRING)_Origin,(GUIDSTRING)_Player) //works as long as InParty and CRD are started with 2 speakers
+AND
+DB_CampTiredOfTalkingTo((CHARACTER)_Origin, (CHARACTER)_Player)
+AND
+QRY_CAMP_TiredOfTalkingTo_ValidDialog(_CampDialog)
+THEN
+SetFlag(CAMP_Origin_State_TiredOfTalkingTo_40225d88-6220-43ec-9427-c2ee73a3deb7,_Player, 0);
+
+QRY
+QRY_CAMP_TiredOfTalkingTo_ValidDialog((DIALOGRESOURCE)_Dialog)
+AND
+DB_OriginInPartyDialog(_,_Dialog)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CAMP_TiredOfTalkingTo_ValidDialog((DIALOGRESOURCE)_Dialog)
+AND
+DB_CampNight_CRD(_,_,_Dialog,_)
+THEN
+DB_NOOP(1);
+
+// Not tired anymore: entering camp & long rest
+IF
+TeleportedToCamp(_Player)
+AND
+DB_CampTiredOfTalkingTo(_Origin, _Player)
+THEN
+NOT DB_CampTiredOfTalkingTo(_Origin, _Player);
+
+PROC
+PROC_LongRest()
+AND
+DB_CampTiredOfTalkingTo(_Origin, _Player)
+THEN
+NOT DB_CampTiredOfTalkingTo(_Origin, _Player);
+
+//END_REGION
+
+//REGION Misc - Camp followers hiding during combat encounters
+PROC
+PROC_Camp_HideCampFollowers()
+AND
+DB_Camp_Combatants(_) // Only hide if there are any combatants.
+THEN
+PROC_Camp_HideCampFollowers_Internal();
+
+PROC
+PROC_Camp_HideCampFollowers_Internal()
+AND
+DB_InCamp(_Char)
+AND
+NOT DB_Camp_Combatants(_Char)
+AND
+NOT DB_PartyMembers(_Char)
+THEN
+DB_Camp_HiddenDuringCombat(_Char);
+SetOnStage(_Char, 0);
+
+PROC
+PROC_Camp_RevealCampFollowers()
+AND
+DB_Camp_HiddenDuringCombat(_Char)
+THEN
+NOT DB_Camp_HiddenDuringCombat(_Char);
+SetOnStage(_Char, 1);
+
+// Fail-safe: always reveal them after a long rest.
+PROC
+PROC_LongRest()
+AND
+DB_CAMP_HiddenDuringCombat(_)
+THEN
+PROC_CAMP_RevealCampFollowers();
+//END_REGION
+
+//REGION Misc - Camp chest tracking
+
+IF
+SavegameLoadStarted()
+AND
+DB_Camp_UserCampChest(_UserId,_Chest)
+THEN
+NOT DB_Camp_UserCampChest(_UserId,_Chest);
+
+IF
+UserCampChestChanged(_UserId,_NewChest)
+AND
+DB_Camp_UserCampChest(_UserId,_Chest)
+AND
+_Chest != _NewChest
+THEN
+NOT DB_Camp_UserCampChest(_UserId,_Chest);
+
+IF
+UserCampChestChanged(_UserId,_Chest)
+AND
+_Chest != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_Camp_UserCampChest(_UserId,_Chest);
+
+//END_REGION
+
+//REGION Misc - DEBUG CALLS
+IF
+TextEvent("fullcamp")
+AND
+DB_OriginCampFlags(_Character,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_,(FLAG)_)
+AND
+NOT DB_Players(_Character)
+THEN
+SetEntityEvent(_Character,"DebugTeleportedToCamp");
+
+IF
+EntityEvent((CHARACTER)_Character,"DebugTeleportedToCamp")
+AND
+DB_OriginInPartyGlobal((CHARACTER)_Character,_)
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_CheckFirstTimeRecruited(_Character);
+RegisterAsCompanion(_Character,_Player);
+
+IF
+TextEvent("campnow")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_Camp_ForceEndTheDay(_Player,"");
+
+IF
+TextEvent("fixrest")
+AND
+DB_Players(_Player)
+THEN
+RequestLongRestFinish(_Player);
+
+IF
+TextEvent("skipsleep")
+THEN
+DB_CAMP_SkipSleepCutscene(1);
+
+IF
+TextEvent("preventsleep")
+THEN
+DB_Camp_PreventEndOfNight(1);
+
+//END_REGION
+
+//REGION Sound
+IF
+DB_Camp_Ambiance(_ActiveCamp,_AtmosphereTrigger,_DayAtmo,_NightAtmo,_LightingTrigger,_DayLight,_NightLight,_SoundTrigger)
+AND
+_SoundTrigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+TriggerSetSoundState(_SoundTrigger,"State_InCamp","InCamp",1);
+//END_REGION
+
+//REGION Misc - Camp Pajamas / Vanity Armor
+PROC
+PROC_SetArmourSet((CHARACTER)_Player,(ARMOURSET)_ArmourSet)
+AND
+QRY_GetArmourSet(_Player)
+AND
+DB_QRYRTN_GetArmourSet(_CurrentArmourSet)
+AND
+_ArmourSet != _CurrentArmourSet
+THEN
+SetArmourSet(_Player,_ArmourSet);
+DB_CachedArmourSet(_Player,_ArmourSet);
+
+IF
+DB_CachedArmourSet(_Player,_NewArmourSet)
+AND
+DB_CachedArmourSet(_Player,_OldArmourSet)
+AND
+_NewArmourSet != _OldArmourSet
+THEN
+NOT DB_CachedArmourSet(_Player,_OldArmourSet);
+
+IF
+ArmorSetChanged(_Player,_ArmourSet)
+AND
+DB_CachedArmourSet(_Player,_ArmourSet)
+THEN
+NOT DB_CachedArmourSet(_Player,_ArmourSet);
+
+QRY
+QRY_GetArmourSet((CHARACTER)_Player)
+AND
+DB_QRYRTN_GetArmourSet((ARMOURSET)_ArmourSet)
+THEN
+NOT DB_QRYRTN_GetArmourSet((ARMOURSET)_ArmourSet);
+
+QRY
+QRY_GetArmourSet((CHARACTER)_Player)
+AND
+DB_CachedArmourSet(_Player,_ArmourSet)
+THEN
+DB_QRYRTN_GetArmourSet(_ArmourSet);
+
+QRY
+QRY_GetArmourSet((CHARACTER)_Player)
+AND
+NOT DB_CachedArmourSet(_Player,_)
+AND
+GetArmourSet(_Player,_ArmourSet)
+THEN
+DB_QRYRTN_GetArmourSet(_ArmourSet);
+
+PROC
+PROC_Camp_StoreArmourSet((CHARACTER)_Player)
+AND
+QRY_GetArmourSet(_Player)
+AND
+DB_QRYRTN_GetArmourSet(_Set)
+THEN
+DB_Camp_StoredArmourSet(_Player,_Set);
+
+PROC
+PROC_Camp_StoreArmourSetIfNotPJ((CHARACTER)_Player)
+AND
+QRY_GetArmourSet(_Player)
+AND
+DB_QRYRTN_GetArmourSet(_Set)
+AND
+_Set != ARMOURSET.Vanity
+THEN
+DB_Camp_StoredArmourSet(_Player,_Set);
+
+PROC
+PROC_Camp_RestoreArmourSets()
+AND
+DB_Camp_StoredArmourSet(_Player,_Set)
+THEN
+PROC_SetArmourSet(_Player,_Set);
+NOT DB_Camp_StoredArmourSet(_Player,_Set);
+
+IF
+DB_Camp_StoredArmourSet(_Player,_NewSet)
+AND
+DB_Camp_StoredArmourSet(_Player,_OldSet)
+AND
+_NewSet != _OldSet
+THEN
+NOT DB_Camp_StoredArmourSet(_Player,_OldSet);
+
+
+//If player starts a dialog in camp during night mode and they manually swapped to armour, switch to vanity for the duration of the dialogue)
+PROC
+PROC_StartDialog_ChangeClothing((DIALOGRESOURCE)_Dialog,(INTEGER)_DialogInstance)
+AND
+DB_Camp_NightMode(1)
+AND
+DialogIsAutomated(_Dialog, 0)
+AND
+DB_DialogRequestCache_SpeakerList_Players(_Dialog,_DialogInstance,_Player,_)
+AND
+DB_PlayerInCamp((CHARACTER)_Player)
+AND
+NOT DB_Camp_TempVanityArmour(_Player,_)
+AND
+NOT QRY_CAMP_VanityArmour_BlockChangeForCharacter(_Player, _Dialog)
+AND
+QRY_GetArmourSet(_Player)
+AND
+DB_QRYRTN_GetArmourSet(ARMOURSET.Normal)
+THEN
+PROC_SetArmourSet(_Player,ARMOURSET.Vanity);
+DB_Camp_TempVanityArmour(_Player,_DialogInstance);
+
+QRY
+QRY_CAMP_VanityArmour_BlockChangeForCharacter((CHARACTER)_Player, (DIALOGRESOURCE)_Dialog)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+IF
+DialogActorLeft(_,_Inst,_Player,_)
+AND
+DB_Camp_TempVanityArmour((CHARACTER)_Player,_Inst)
+THEN
+NOT DB_Camp_TempVanityArmour(_Player,_Inst);
+PROC_SetArmourSet(_Player,ARMOURSET.Normal);
+
+//END_REGION
+
+//REGION Force sheathing of weapons for non-avatar origins so they don't interfere with their camp behaviors
+IF
+TeleportedToCamp(_Character)
+AND
+DB_Origins(_Character)
+AND
+NOT DB_Avatars(_Character)
+THEN
+DB_Camp_ForceSheathedWeaponsCharacter(_Character);
+PROC_Camp_PushUnsheathedState(_Character,UNSHEATHSTATE.Sheathed);
+
+IF
+TeleportedFromCamp(_Character)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter(_Character)
+THEN
+PopUnsheathedState(_Character);
+NOT DB_Camp_ForceSheathedWeaponsCharacter(_Character);
+
+IF
+DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_UserID)
+AND
+NOT DB_Camp_ForceSheathedWeaponsCharacter(_Character)
+THEN
+NOT DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_UserID);
+PopUnsheathedState(_Character);
+
+IF
+EnteredCombat(_Character,_CombatID)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter((CHARACTER)_Character)
+THEN
+PopUnsheathedState(_Character);
+
+IF
+EnteredCombat(_Character,_CombatID)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter_Controlled((CHARACTER)_Character,_UserID)
+THEN
+NOT DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_UserID);
+
+IF
+LeftCombat(_Character,_CombatID)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter((CHARACTER)_Character)
+AND
+IsControlled(_Character,0)
+THEN
+PROC_Camp_PushUnsheathedState(_Character,UNSHEATHSTATE.Sheathed);
+
+IF
+CharacterReservedUserIDChanged(_Character,_OldUser,_NewUser)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_OldUser)
+AND
+IsControlled(_Character,0)
+THEN
+NOT DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_OldUser);
+PROC_Camp_PushUnsheathedState(_Character,UNSHEATHSTATE.Sheathed);
+
+IF
+GainedControl(_Character)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter(_Character)
+AND
+NOT DB_Is_InCombat(_Character,_)
+AND
+GetReservedUserID(_Character,_UserID)
+THEN
+DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_UserID);
+PopUnsheathedState(_Character);
+
+IF
+GainedControl(_ControlledCharacter)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_SheathedWeaponsCharacter,_SheathedWeaponsCharacterUserID)
+AND
+_ControlledCharacter != _SheathedWeaponsCharacter
+AND
+QRY_SameUser(_ControlledCharacter,_SheathedWeaponsCharacter)
+THEN
+NOT DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_SheathedWeaponsCharacter,_SheathedWeaponsCharacterUserID);
+PROC_Camp_PushUnsheathedState(_SheathedWeaponsCharacter,UNSHEATHSTATE.Sheathed);
+
+IF
+Equipped(_Weapoon,_Character)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_)
+AND
+IsWeapon(_Weapoon,1)
+AND
+IsControlled(_Character,1)
+THEN
+PopUnsheathedState(_Character);
+
+IF
+Equipped(_Weapoon,_Character)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter(_Character)
+AND
+NOT DB_Camp_ForceSheathedWeaponsCharacter_Controlled(_Character,_)
+AND
+IsWeapon(_Weapoon,1)
+AND
+IsControlled(_Character,0)
+AND
+HasActiveStatus(_Weapoon,"BURNING",1)
+THEN
+// TODO: Doesn't work with torches as they get BURNING applied from their EquippableTorch constellation script 
+RemoveStatus(_Weapoon,"BURNING");
+
+PROC
+PROC_Camp_PushUnsheathedState((CHARACTER)_Character,(UNSHEATHSTATE)_EState)
+THEN
+PushUnsheathedState(_Character,_EState);
+
+PROC
+PROC_Camp_PushUnsheathedState((CHARACTER)_Character,(UNSHEATHSTATE)_EState)
+AND
+DB_Camp_ForceSheathedWeaponsCharacter(_Character)
+AND
+DB_GLO_WeaponSlots(_Slot)
+AND
+GetEquippedItem(_Character,_Slot,_Weapoon)
+AND
+HasActiveStatus(_Weapoon,"BURNING",1)
+THEN
+RemoveStatus(_Weapoon,"BURNING");
+
+IF
+TextEvent("Camp_TestUnsheath")
+AND
+DB_Players(_Player)
+AND
+GetTextEventParamInteger(1,_Enable)
+AND
+GetTextEventParamInteger(2,_Immediate)
+THEN
+SetWeaponUnsheathed(_Player,_Enable,_Immediate);
+
+IF
+TextEvent("Camp_TestUnsheath_Push")
+AND
+DB_Players(_Player)
+THEN
+PushUnsheathedState(_Player,UNSHEATHSTATE.Sheathed);
+
+IF
+TextEvent("Camp_TestUnsheath_Pop")
+AND
+DB_Players(_Player)
+THEN
+PopUnsheathedState(_Player);
+//END_REGION
+
+//REGION Return to Camp Pos
+PROC
+PROC_CAMP_ReturnToCampPos((CHARACTER)_Character)
+THEN
+PROC_CAMP_ReturnToCampPos(_Character, "Walk");
+
+PROC
+PROC_CAMP_ReturnToCampPos((CHARACTER)_Character, (STRING)_Speed)
+THEN
+PROC_CAMP_ReturnToCampPos(_Character, _Speed, "CAMP_ReturnToPos_DefaultEvent");
+
+PROC
+PROC_CAMP_ReturnToCampPos((CHARACTER)_Character, (STRING)_Speed, (STRING) _Event)
+AND
+QRY_CAMP_ReturnToCampPos(_Character, _Speed, _Event)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CAMP_ReturnToCampPos((CHARACTER)_Character)
+AND
+QRY_CAMP_ReturnToCampPos(_Character, "Walk")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CAMP_ReturnToCampPos((CHARACTER)_Character, (STRING)_Speed)
+AND
+QRY_CAMP_ReturnToCampPos(_Character, _Speed, "CAMP_ReturnToPos_DefaultEvent")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CAMP_ReturnToCampPos((CHARACTER)_Character, (STRING)_Speed, (STRING)_Event)
+AND
+QRY_Camp_GetCamperPos(_Character) 
+AND
+DB_QRYRTN_Camp_GetCamperPos(_Character, _CharacterPos)
+THEN
+PROC_CharacterMoveTo(_Character, _CharacterPos, _Speed, _Event);
+DB_CAMP_ReturnToPos_RecordInfo((STRING)_Event, (TRIGGER)_CharacterPos);
+
+IF
+EntityEvent(_Character, _Event)
+AND
+DB_CAMP_ReturnToPos_RecordInfo(_Event, (TRIGGER)_CharacterPos)
+THEN
+NOT DB_CAMP_ReturnToPos_RecordInfo(_Event, _CharacterPos);
+LookFromTrigger((CHARACTER)_Character, (TRIGGER)_CharacterPos, 0);
+
+QRY
+QRY_CAMP_ReturnToCampPos((CHARACTER)_Character, _, _)
+AND
+NOT DB_ActiveCamp(_)
+AND
+GUIDToString(_Character, _CharacterString)
+AND
+Concatenate("Trying to move character to camp position while there is no active camp - Character: ", _CharacterString, _ErrorString)
+THEN
+DebugBreak(_ErrorString);
+
+QRY
+QRY_CAMP_ReturnToCampPos((CHARACTER)_Character, _, _)
+AND
+QRY_Camp_GetCamperPos(_Character) 
+AND
+NOT DB_QRYRTN_Camp_GetCamperPos(_Character, _)
+AND
+GUIDToString(_Character, _CharacterString)
+AND
+Concatenate("Trying to move character to camp position while there is no valid camp position defined - Character: ", _CharacterString, _ErrorString)
+THEN
+DebugBreak(_ErrorString);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

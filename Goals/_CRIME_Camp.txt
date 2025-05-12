@@ -1,0 +1,120 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Companions that are "part of the team" but not currently in the party
+// should ignore crimes by party members, since they do the same while
+// in the party.
+
+// To have some reactivity, the still play an AD
+
+DB_CRIME_OriginTeam_AnnoyedReaction(0,"AnnoyedCompanionReaction");
+DB_CRIME_OriginTeam_AnnoyedReaction(1,"AnnoyedCompanionReaction_Forced");
+KBSECTION
+//REGION General rule: PartOfTheTeam ignores non-background crimes
+PROC
+PROC_CharacterRegisterCrime_Success((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_PartyMembers(_Char)
+AND
+CrimeHasProperty(_CrimeID,(DISTURBANCEPROPERTY)BackgroundReaction_db918cfb-a484-437c-93bb-8bc36fe98a9c,0)
+AND
+CrimeIsContinuous(_CrimeID,_Continuous)
+AND
+CrimeHasProperty(_CrimeID,(DISTURBANCEPROPERTY)VictimAlwaysNotices_f18ff657-d522-448a-bcbf-866604ed6423,_VictimAlwaysNotices)
+AND
+DB_CRIME_OriginTeam_AnnoyedReaction(_VictimAlwaysNotices,_Reaction)
+THEN
+PROC_CRIME_OriginTeam_Ignore(_Char,_Victim,_CrimeID,_Continuous);
+PROC_CRIME_OriginTeam_Fallback(_Char,_Victim,_Reaction);
+
+PROC
+PROC_CRIME_OriginTeam_Fallback((CHARACTER)_Char,(CHARACTER)_Victim,(STRING)_Reaction)
+AND
+DB_PartOfTheTeam(_Victim)
+AND
+DB_Origins(_Victim)
+AND
+NOT DB_PartyMembers(_Victim)
+THEN
+PROC_CharacterRegisterCrime(_Char,_Reaction,NULL_00000000-0000-0000-0000-000000000000,_Victim,0);
+
+// Attacking an origin that's part of the team -> no one cares
+PROC
+PROC_CRIME_OriginTeam_Ignore((CHARACTER)_Char,(CHARACTER)_Victim,(INTEGER)_CrimeID,0)
+AND
+DB_Origins(_Victim)
+AND
+DB_PartOfTheTeam(_Team)
+AND
+// Player characters don't react to crimes, so no need to ignore for them
+NOT DB_PartyMembers(_Team)
+THEN
+CrimeIgnoreCrime(_CrimeID,_Team);
+
+// Attacking another camp follower -> origins part of the team don't care
+PROC
+PROC_CRIME_OriginTeam_Ignore((CHARACTER)_Char,(CHARACTER)_Victim,(INTEGER)_CrimeID,0)
+AND
+NOT DB_Origins(_Victim)
+AND
+DB_PartOfTheTeam(_Team)
+AND
+// Player characters don't react to crimes, so no need to ignore for them
+NOT DB_PartyMembers(_Team)
+AND
+DB_Origins(_Team)
+THEN
+CrimeIgnoreCrime(_CrimeID,_Team);
+
+
+PROC
+PROC_CRIME_OriginTeam_Ignore((CHARACTER)_Char,(CHARACTER)_Victim,(INTEGER)_CrimeID,1)
+THEN
+DB_CRIME_OriginTeam_Ignored(_CrimeID,_Victim);
+
+IF
+DB_CRIME_OriginTeam_Ignored(_CrimeID,_Victim)
+AND
+DB_Origins(_Victim)
+AND
+DB_PartOfTheTeam(_PartyMember)
+AND
+NOT DB_PartyMembers(_PartyMember)
+THEN
+CrimeIgnoreCrime(_CrimeID,_PartyMember);
+
+IF
+DB_CRIME_OriginTeam_Ignored(_CrimeID,_Victim)
+AND
+NOT DB_Origins(_Victim)
+AND
+DB_PartOfTheTeam(_PartyMember)
+AND
+DB_Origins(_PartyMember)
+AND
+NOT DB_PartyMembers(_PartyMember)
+THEN
+CrimeIgnoreCrime(_CrimeID,_PartyMember);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_OriginTeam_Ignored(_CrimeID,_Victim)
+THEN
+NOT DB_CRIME_OriginTeam_Ignored(_CrimeID,_Victim);
+//END_REGION
+
+//REGION No keeping an eye out either (it's a background reaction, so needs to be blocked separately)
+QRY
+QRY_CRIME_KeepingAnEyeOut_Block((CHARACTER)_Char,(INTEGER)_CrimeID)
+AND
+DB_PartOfTheTeam(_Char)
+AND
+NOT DB_PartyMembers(_Char)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

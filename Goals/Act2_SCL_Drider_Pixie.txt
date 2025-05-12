@@ -1,0 +1,271 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Pixie screams timers
+DB_SCL_Pixie_ScreamingTimers(120.0); // 2 minutes
+DB_SCL_Pixie_ScreamingTimers(180.0); // 3 minutes
+DB_SCL_Pixie_ScreamingTimers(600.0); // 10 minutes
+
+//REGION Debug
+DB_FlagReactionAfterDialog((FLAG)SCL_Drider_Debug_GiveMoonlantern_ed328cac-241f-1b35-de89-03c7b4e72ae0, (DIALOGRESOURCE)DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea);
+//END_REGION Debug
+KBSECTION
+//REGION Pixie calls for help
+// Disable Pixie AD for now
+IF
+DB_PermaDefeated(_Char)
+AND
+DB_SCL_Pixie_MoonlanternHolder(_Char)
+THEN
+PROC_SCL_Drider_StartPixieCall();
+
+IF
+FlagCleared(SCL_Drider_State_HasDriderMoonlantern_a48372d0-609f-48a4-9774-956f6f614c3c, (CHARACTER)_Char, _)
+AND
+DB_SCL_Pixie_MoonlanternHolder(_Char)
+THEN
+NOT DB_SCL_Pixie_MoonlanternHolder(_Char);
+
+IF
+FlagSet(SCL_Drider_State_HasDriderMoonlantern_a48372d0-609f-48a4-9774-956f6f614c3c, (CHARACTER)_Char, _)
+AND
+IsInInventoryOf(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _Char, 1)
+THEN
+DB_SCL_Pixie_MoonlanternHolder(_Char);
+
+IF
+FlagSet(SCL_Drider_State_HasDriderMoonlantern_a48372d0-609f-48a4-9774-956f6f614c3c, (CHARACTER)_Char, _)
+AND
+NOT DB_Players(_Char)
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+
+IF
+FlagSet(SCL_Drider_State_HasDriderMoonlantern_a48372d0-609f-48a4-9774-956f6f614c3c, _Container, _)
+AND
+IsCharacter(_Container, 0)
+THEN
+PROC_SCL_Drider_StartPixieCall();
+
+PROC
+PROC_SCL_Drider_StartPixieCall()
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+AND
+NOT DB_GlobalFlag(GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651)
+THEN
+DB_SCL_Drider_StartPixieCall(1);
+PROC_SCL_Drider_TryStartPixieAD(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4);
+ObjectTimerLaunch(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_Drider_PixieAD", 12000);
+
+IF
+ObjectTimerFinished(_Moonlantern, "SCL_Drider_PixieAD")
+AND
+DB_GlobalFlag(GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651)
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+
+IF
+ObjectTimerFinished(_Moonlantern, "SCL_Drider_PixieAD")
+AND
+DB_GlobalFlag(SCL_Drider_State_StopPixieCallingForHelp_86f63aa8-84bc-45b7-a7e2-0501a359c14b)
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+
+IF
+ObjectTimerFinished(_Moonlantern, "SCL_Drider_PixieAD")
+AND
+DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+
+IF
+ObjectTimerFinished(_Moonlantern, "SCL_Drider_PixieAD")
+AND
+DB_SCL_Drider_StartPixieCall(1)
+THEN
+PROC_SCL_Drider_TryStartPixieAD(_Moonlantern);
+ObjectTimerLaunch(_Moonlantern, "SCL_Drider_PixieAD", 12000);
+
+PROC
+PROC_SCL_Drider_TryStartPixieAD((GUIDSTRING)_Moonlantern)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+AND
+NOT DB_SCL_Drider_DriderCombatInProgress(_)
+THEN
+PROC_TryStartAD(SCL_Pixie_AD_AsksForHelp_efb1e2c4-9a8a-36bd-60fd-a4a86bfe1e77, _Moonlantern);
+
+IF
+EnteredCombat(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, _CombatID)
+THEN
+DB_SCL_Drider_DriderCombatInProgress(_CombatID);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_SCL_Drider_DriderCombatInProgress(_CombatID)
+THEN
+NOT DB_SCL_Drider_DriderCombatInProgress(_CombatID);
+
+IF
+DB_PermaDefeated(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4)
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+
+IF
+FlagSet(GLO_Pixie_Event_Released_8b8a6c7b-fc40-94a5-0139-1c6c43762651, _, _DialogID)
+THEN
+SetFlag(SCL_Drider_State_StopPixieCallingForHelp_86f63aa8-84bc-45b7-a7e2-0501a359c14b, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GLO_Pixie_BreakMoonlantern()
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+
+//END_REGION
+
+//REGION Pixie inclusions
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)_Dialog, (INTEGER)_ID)
+AND
+DB_SCL_Drider_HarpersDialoguesAfterAmbush(_, _Dialog)
+AND
+DB_GlobalFlag(SCL_Drider_Event_StartCaravanEscort_26062990-9018-4845-a520-d737837fa207)
+AND
+NOT DB_SCL_Drider_BlockPixieInclusion(1)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4);
+
+IF
+DialogActorJoined(_Dialog, _, S_GLO_Pixie_250b9342-fd7d-4a1d-a320-aa5e0dfbf2d5, _)
+AND
+DB_SCL_Drider_HarpersDialoguesAfterAmbush(_, _Dialog)
+THEN
+DB_SCL_Drider_BlockPixieInclusion(1);
+
+IF
+DialogActorJoined(SCL_Drider_HarperNarrator_AfterAmbush_7a3a0060-6ec0-ca87-01a9-b27a0ac5d8e7, _, S_GLO_Pixie_250b9342-fd7d-4a1d-a320-aa5e0dfbf2d5, _)
+THEN
+DB_SCL_Drider_BlockPixieInclusion(1);
+
+IF
+DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+THEN
+DB_SCL_Drider_BlockPixieInclusion(1);
+//END_REGION
+
+//REGION Pixie inisde the moonlantern dialog
+IF
+FlagSet(SCL_Drider_State_HasDriderMoonlantern_a48372d0-609f-48a4-9774-956f6f614c3c, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+IsInInventoryOf(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _Player, 1)
+AND
+NOT QRY_GLO_Pixie_BlockPixieDialog(_Player)
+THEN
+DB_SCL_Drider_PixieDialogStartWith(_Player);
+RealtimeObjectTimerLaunch(_Player, "SCL_Drider_TryStartPixieDialog", 200); // Give a moment in case combat is about to start
+
+QRY
+QRY_GLO_Pixie_BlockPixieDialog((CHARACTER)_Player)
+AND
+DB_SCL_Drider_PixieDialogStartWith(_)
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "SCL_Drider_TryStartPixieDialog")
+AND
+DB_SCL_Drider_PixieDialogStartWith(_Player)
+THEN
+NOT DB_SCL_Drider_PixieDialogStartWith(_Player);
+PROC_GLO_Drider_PixieDialog(_Player);
+//END_REGION
+
+//REGION ADs
+IF
+FlagSet(SCL_Pixie_State_SwearingAndScreaming_e2d2f9a6-4311-442b-bb7c-78584ef4102b, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+AND
+NOT DB_SCL_Pixie_BlockScreams(1)
+AND
+NOT DB_SCL_Pixie_Screaming(1)
+THEN
+NOT DB_SCL_Drider_StartPixieCall(1);
+DB_SCL_Pixie_Screaming(1);
+PROC_SCL_Pixie_ScreamTimer();
+
+IF
+StatusApplied(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_PIXIE_SCREAMING", _, _)
+AND
+NOT DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)SCL_Pixie_AD_ScreamingInsideLantern_0ed0e64e-7cb3-5916-aeff-bd361b0a4c39, S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4);
+
+IF
+StatusRemoved(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_PIXIE_SCREAMING", _, _)
+AND
+DB_SCL_Pixie_Screaming(1)
+AND
+NOT DB_SCL_Pixie_BlockScreams(1)
+THEN
+PROC_SCL_Pixie_ScreamTimer();
+
+PROC
+PROC_SCL_Pixie_ScreamTimer()
+AND
+NOT DB_SCL_Pixie_ScreamingTimers(_)
+THEN
+ApplyStatus(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_PIXIE_SCREAMING", 1200.0, 1); // 20 minutes
+
+PROC
+PROC_SCL_Pixie_ScreamTimer()
+AND
+QRY_OnlyOnce_Reset("SCL_Pixie_Timer")
+AND
+DB_SCL_Pixie_ScreamingTimers(_Timer)
+AND
+QRY_OnlyOnce("SCL_Pixie_Timer")
+THEN
+NOT DB_SCL_Pixie_ScreamingTimers(_Timer);
+ApplyStatus(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, "SCL_PIXIE_SCREAMING", _Timer, 1);
+
+IF
+DB_GlobalFlag((FLAG)SCL_Pixie_State_Dead_379ba580-46dc-db81-dae1-581117e54e03)
+THEN
+DB_SCL_Pixie_BlockScreams(1);
+
+IF
+FlagCleared(GLO_Pixie_State_InsideLantern_5b43c283-e984-421b-972f-e046e79749ec, _, _)
+THEN
+DB_SCL_Pixie_BlockScreams(1);
+
+PROC
+PROC_GLO_Pixie_BreakMoonlantern()
+THEN
+DB_SCL_Pixie_BlockScreams(1);
+ClearFlag(SCL_Pixie_State_SwearingAndScreaming_e2d2f9a6-4311-442b-bb7c-78584ef4102b, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Curse
+IF
+FlagSet(SCL_Pixie_Event_ApplyCurse_ccf8052d-33a6-ebed-621e-6847b412845b, _Player, _)
+THEN
+ApplyStatus(_Player, "GLO_PIXIECURSE", -1.0, 1, S_GLO_Pixie_250b9342-fd7d-4a1d-a320-aa5e0dfbf2d5);
+//END_REGION
+
+//REGION Debug
+PROC
+PROC_FlagReactionAfterDialog(_Player, SCL_Drider_Debug_GiveMoonlantern_ed328cac-241f-1b35-de89-03c7b4e72ae0)
+THEN
+ClearFlag(SCL_Drider_Debug_GiveMoonlantern_ed328cac-241f-1b35-de89-03c7b4e72ae0, _Player);
+ToInventory(S_GLO_DriderMoonlantern_4591d212-8f1b-4b85-880c-dc94f76702f4, _Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

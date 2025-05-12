@@ -1,0 +1,266 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_HardcoreCharacter("",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+//  DB_HardcoreCharacter(LevelName,HardcoreCharacter,BuddyCharacter);
+NOT DB_HardcoreItem("",(ITEM)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+//  DB_HardcoreItem(LevelName,HardcoreItem,BuddyCharacter);
+
+//These characters & items will only appear if you have the hardcore mode active. They are linked to a buddy so that we can add them to 
+//the correct defeatcounter/ambush or prevent their addition if the buddy has already been defeated etc.
+
+//For hardcore characters/items that are not linked to an existing encounter, you can add NULL_00000000-0000-0000-0000-000000000000 as a buddy.
+KBSECTION
+//REGION Debugcommands
+IF
+TextEvent("hardcore")
+AND
+CheckRulesetModifierString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,"HARD",_Return)
+AND
+ConcatenateInteger("Hardcore mode: ",_Return,_String)
+AND
+GetHostCharacter(_Player)
+THEN
+DebugText(_Player,_String);
+
+IF
+TextEvent("hardcoreon")
+AND
+DB_CurrentLevel(_LevelName)
+THEN
+PROC_Hardcore_Enable(_LevelName);
+
+IF
+TextEvent("hardcoreoff")
+AND
+DB_CurrentLevel(_LevelName)
+THEN
+PROC_Hardcore_Disable(_LevelName);
+//END_REGION
+
+//REGION Activators
+IF
+LevelLoaded(_LevelName)
+AND
+CheckRulesetModifierString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,"HARD",1)
+THEN
+PROC_Hardcore_Enable(_LevelName);
+
+IF
+RulesetModifierChangedString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,_,"HARD")
+AND
+DB_CurrentLevel(_LevelName)
+THEN
+PROC_Hardcore_Enable(_LevelName);
+
+IF
+LevelLoaded(_LevelName)
+AND
+CheckRulesetModifierString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,"HARD",0)
+THEN
+PROC_Hardcore_Disable(_LevelName);
+
+IF
+RulesetModifierChangedString(SCRIPTED_COMBAT_MECHANICS_cac2d8bd-c197-4a84-9df1-f86f54ad4521,"HARD",_NotHard)
+AND
+_NotHard != "HARD" //not sure if it would send a "HARD" to "HARD" event but better safe than sorry
+AND
+DB_CurrentLevel(_LevelName)
+THEN
+PROC_Hardcore_Disable(_LevelName);
+//END_REGION
+
+//REGION Showing/Hiding hardcore objects
+//Characters
+PROC
+PROC_Hardcore_Enable((STRING)_LevelName)
+AND
+DB_HardcoreCharacter(_LevelName,_HardcoreChar,_Buddy)
+AND
+NOT QRY_Hardcore_PartOfFinishedDefeatCounter(_Buddy)
+AND
+NOT DB_Defeated(_Buddy)
+AND
+NOT DB_Is_InCombat(_Buddy,_)
+AND
+NOT DB_OffStage(_Buddy)
+AND
+NOT QRY_Hardcore_PreventGoingOnStage(_HardcoreChar,_Buddy)
+THEN
+SetOnStage(_HardcoreChar,1);
+PROC_Hardcore_MimicGroupState(_HardcoreChar,_Buddy);
+
+//Items
+PROC
+PROC_Hardcore_Enable((STRING)_LevelName)
+AND
+DB_HardcoreItem(_LevelName,(ITEM)_HardcoreItem,_Buddy)
+AND
+NOT QRY_Hardcore_PartOfFinishedDefeatCounter(_Buddy)
+AND
+NOT DB_Defeated(_Buddy)
+AND
+NOT DB_Is_InCombat(_Buddy,_)
+AND
+NOT DB_OffStage(_Buddy)
+THEN
+SetOnStage(_HardcoreItem,1);
+
+//Defeatcounter
+PROC
+PROC_Hardcore_MimicGroupState((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_GLO_DefeatCounter(_Buddy, _ID)
+THEN
+DB_GLO_DefeatCounter(_HardcoreChar, _ID);
+
+//SceneManager
+PROC
+PROC_Hardcore_MimicGroupState((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_SceneManager(_Buddy, _Scene)
+THEN
+DB_SceneManager(_HardcoreChar, _Scene);
+
+//Characters
+PROC
+PROC_Hardcore_Disable((STRING)_LevelName)
+AND
+DB_HardcoreCharacter(_LevelName,_HardcoreChar,_Buddy)
+AND
+NOT DB_Defeated(_HardcoreChar)
+AND
+NOT DB_Is_InCombat(_HardcoreChar,_)
+AND
+NOT DB_InteractiveDialogSpeaker(_,_HardcoreChar)
+AND
+NOT QRY_Hardcore_InvestigatingImportantCrime(_HardcoreChar)
+THEN
+SetOnStage(_HardcoreChar,0);
+PROC_Hardcore_LeaveGroupState(_HardcoreChar,_Buddy);
+
+//Items
+PROC
+PROC_Hardcore_Disable((STRING)_LevelName)
+AND
+DB_HardcoreItem(_LevelName,(ITEM)_HardcoreItem,_Buddy)
+AND
+NOT DB_Defeated(_HardcoreItem)
+AND
+NOT DB_Is_InCombat(_HardcoreItem,_)
+AND
+NOT DB_InteractiveDialogSpeaker(_,_HardcoreItem)
+THEN
+SetOnStage(_HardcoreItem,0);
+
+//Defeatcounter
+PROC
+PROC_Hardcore_LeaveGroupState((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_GLO_DefeatCounter(_HardcoreChar, _ID)
+THEN
+NOT DB_GLO_DefeatCounter(_HardcoreChar, _ID);
+
+QRY
+QRY_Hardcore_PartOfFinishedDefeatCounter((CHARACTER)_Buddy)
+AND
+DB_GLO_DefeatCounter(_Buddy, _ID)
+AND
+DB_GLO_DefeatCounter_PermaCountMet(_ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Hardcore_PartOfFinishedDefeatCounter((CHARACTER)_HardcoreChar)
+AND
+DB_GLO_DefeatCounter(_HardcoreChar, _ID)
+AND
+DB_GLO_DefeatCounter_CountMet(_ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Hardcore_InvestigatingImportantCrime((CHARACTER)_HardcoreChar)
+AND
+_HardcoreChar != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetHandlingCrimeID(_HardcoreChar ,_CrimeID)
+AND
+CrimeHasProperty(_CrimeID, (DISTURBANCEPROPERTY)BackgroundReaction_db918cfb-a484-437c-93bb-8bc36fe98a9c, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Hardcore_PreventGoingOnStage((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _Buddy, _ManageInvisibility)
+THEN
+SetOnStage(_HardcoreChar, 1);
+PROC_GLO_Hardcore_SyncStatus(_HardcoreChar, _Buddy, "AMBUSHING");
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _HardcoreChar, _ManageInvisibility);
+
+QRY
+QRY_Hardcore_PreventGoingOnStage((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _HardcoreChar, 1)
+THEN
+PROC_GLO_Hardcore_SyncStatus(_HardcoreChar, _Buddy, "INVISIBLE");
+
+QRY
+QRY_Hardcore_PreventGoingOnStage((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_AmbushTrigger, _Buddy, _AppearAt, _PlaySpawn, _Animation, _AppearEvent)
+AND
+NOT QRY_Hardcore_OverrideAmbushAppearAt( _HardcoreChar, _Buddy)
+THEN
+DB_AmbushTrigger_Ambusher_Appear(_AmbushTrigger, _HardcoreChar, _AppearAt, _PlaySpawn, _Animation, _AppearEvent);
+
+QRY
+QRY_Hardcore_OverrideAmbushAppearAt((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+0 == 1
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_Hardcore_LeaveGroupState((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _HardcoreChar, 1)
+THEN
+RemoveStatus(_HardcoreChar, "INVISIBLE", _HardcoreChar);
+
+PROC
+PROC_Hardcore_LeaveGroupState((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_AmbushTrigger_Ambusher(_AmbushTrigger, _HardcoreChar, _ManageInvisibility)
+THEN
+NOT DB_AmbushTrigger_Ambusher(_AmbushTrigger, _HardcoreChar, _ManageInvisibility);
+RemoveStatus(_HardcoreChar, "AMBUSHING", _HardcoreChar);
+SetOnStage(_HardcoreChar, 0);
+
+PROC
+PROC_Hardcore_LeaveGroupState((CHARACTER)_HardcoreChar,(CHARACTER)_Buddy)
+AND
+DB_AmbushTrigger_Ambusher_Appear(_AmbushTrigger, _HardcoreChar, _AppearAt, _PlaySpawn, _Animation, _AppearEvent)
+THEN
+NOT DB_AmbushTrigger_Ambusher_Appear(_AmbushTrigger, _HardcoreChar, _AppearAt, _PlaySpawn, _Animation, _AppearEvent);
+
+PROC
+PROC_GLO_Hardcore_SyncStatus((GUIDSTRING)_Target, (GUIDSTRING)_Origin, (STRING)_Status)
+AND
+HasAppliedStatus(_Origin, _Status, 1)
+AND
+GetStatusCurrentLifetime(_Origin, _Status, _Duration)
+THEN
+ApplyStatus(_Target, _Status, _Duration, 1, _Target);
+
+PROC
+PROC_GLO_Hardcore_SyncStatus((GUIDSTRING)_Target, (GUIDSTRING)_Origin, (STRING)_Status)
+AND
+HasAppliedStatus(_Origin, _Status, 0)
+THEN
+RemoveStatus(_Target, _Status, _Target);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

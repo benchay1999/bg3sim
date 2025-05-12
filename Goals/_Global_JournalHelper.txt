@@ -1,0 +1,394 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/* Journal tip: "State", "Update", "Step" and "Entry" are synonyms in our context. */
+
+// DB_QuestDef_State(_Flag, _Quest, _Update):
+	// When _Flag is set, unlock _Update in _Quest.
+	// If _Flag is global, _Update is unlocked for everyone.
+	// Otherwise, it is unlocked for the character on whom the update is set.
+
+// DB_QuestDef_State_ConditionalFlag(_Flag,_Quest,_Entry,_ConditionalGlobalFlagState,_ConditionalGlobalFlag)
+	// Similar as DB_QuestDef_State, but you can define a global flag to check.
+	// Typically, you define it twice with 0 and 1 in _FlagState and different _Entry accordingly.
+
+// DB_QuestDef_ChainedState(_Quest, _Step, _NewStep):
+	// When step _Step in quest _Quest is unlocked, so is step _NewStep. 
+// DB_QuestDef_ChainedState(_Quest, _Step, _NewQuest, _NewStep):
+	// When step _Step in quest _Quest is unlocked, so is step _NewStep in quest _NewQuest. 
+
+// DB_QuestDef_ConditionalState(_Quest, _UnlockedStep, _NewStep, _ConditionalStep, _ConditionalBool) 					-- _NewQuest & _ConditionalQuest = _Quest
+// DB_QuestDef_ConditionalState(_Quest, _UnlockedStep, _NewQuest, _NewStep, _ConditionalStep, _ConditionalBool) 		-- _ConditionalQuest = _Quest
+// DB_QuestDef_ConditionalState(_Quest, _UnlockedStep, _NewQuest, _NewStep, _ConditionalQuest, _ConditionalStep, _ConditionalBool)
+	// Similar to DB_QuestDef_ChainedState, but can be defined multiple times.
+	// When step _Step in quest _Quest is unlocked, so is step _NewStep... IF all the conditions are met.
+	// For example, define it twice to do: Give entry WyllGaveQuest_AfterZev when receiving DEN_LearntGoblinLeaderWyll after receiving ZevGaveQuest, unless we already have WyllGaveQuest_BeforeZev
+
+//DB_QuestDef_SawDeadState(_Quest, _Update, _NPC);
+	//When the players see the dead NPC, unlock _Update in _Quest.
+	//Alternatively, you could use DB_QuestDef_State with either DB_DeadOnceFlag, DB_KilledEvent or DB_SeenDeadNPCGlobalFlag, depending on your needs.
+
+//DB_QuestDef_SawDefeatedState(_Quest, _Update, _NPC);
+	//When the players see the defeated NPC, unlock _Update in _Quest.
+
+//DB_QuestDef_SawPermaDefeatedState(_Quest, _Update, _NPC);
+	//When the players see the perma-defeated NPC, unlock _Update in _Quest.
+
+//DB_QuestDef_DefeatedState(_Quest, _Update, _NPC);
+	//Set as soon as the NPC is defeated, without requiring a line of sight
+
+//DB_QuestDef_PermaDefeatedState(_Quest, _Update, _NPC);
+	//Set as soon as the NPC is permanently defeated, without requiring a line of sight
+
+//DB_QuestDef_BookReadState((STRING)_Quest, (STRING)_Update, (ITEM)_Book);
+	//Update given on GameBookInterfaceClosed
+
+//DB_QuestDef_LevelLoaded((STRING)_Quest, (STRING)_Update, (STRING)_Level);
+	//On PROC_LevelLoadedOnce, the update is given to all players.
+	//Typical use: for closing entries, when a quest must close when the player progresses to the next region.
+
+//DB_QuestDef_LevelUnloading((STRING)_Quest, (STRING)_Update, (STRING)_Level);
+	//On PROC_LevelUnloading, the update is given to all players.
+	//Typical use: for closing entries, when a quest must close when the player progresses to the next region.
+
+//DB_QuestDef_State_CompanionLeft((TAG)_CompanionTag, (STRING)_Quest, (STRING)_Reason)
+	// Defined in a companion's goal - Example, defined inside GLO_Origin_Shadowheart
+	// _CompanionTag refers to the REALLY_ORIGIN tag a companion has - Example, REALLY_SHADOWHEART
+	// _Quest refers to the companion's quest in the journal - Example, ORI_COM_Shadowheart
+	// _Reason is the reason for the companion leaving and refers to a closing quest step defined in the journal - Example, CompanionLowRelation
+	// PROC_Origins_CompanionLeavePermanently((CHARACTER)_Companion, (STRING)_Reason) will update the journal with the _Reason step when called
+	// The following _Reason steps are generic and can be defined in any companions journal; CompanionLowRelation, CompanionMurdered, CompanionHostile
+	// PROC_Origins_CompanionLeavePermanently() is called using a generic _Reason step when a DB_OriginMayLeaveDialog() dialog concludes
+		// By default uses the CompanionLowRelation _Reason
+		// If GLO_Companion_Murder is set then the CompanionMurder _Reason is set
+		// if GLO_Companion_Combat then the CompanionHostile _Reason is set
+	// Custom _Reason steps can be added to the DB and defined in the journal - Example, ShadowHeartDead_SUB_Justiciar
+		// Call PROC_Origins_CompanionLeavePermanently() passing in this custom _Reason
+
+NOT DB_QuestDef_PermaDefeatedState("","",(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_QuestDef_LevelUnloading("","","");
+KBSECTION
+//REGION Debug
+
+IF
+TextEvent("qupd")
+AND
+GetTextEventParamString(1,_Quest)
+AND
+GetTextEventParamString(2,_State)
+AND
+GetHostCharacter(_Player)
+THEN
+QuestUpdate(_Player,_Quest,_State);
+
+//END_REGION
+
+//REGION Flag Set
+
+// Give entry on flag set
+//Flag set on a player
+IF
+FlagSet(_Flag, _Player, _)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_Player, 1)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestDef_State(_Flag,(STRING)_Quest,(STRING)_Update)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+//Global flag
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_QuestDef_State(_Flag,(STRING)_Quest,(STRING)_Update)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+
+// Give entry on flag set, according to the current state of a global flag
+//Flag set on a player
+IF
+FlagSet(_Flag, _Player, _)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestDef_State_ConditionalFlag((FLAG)_Flag,(STRING)_Quest,(STRING)_Entry,(INTEGER)_FlagState,(FLAG)_ConditionalFlag)
+AND
+GetFlag(_ConditionalFlag, NULL_00000000-0000-0000-0000-000000000000, _FlagState)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Entry);
+
+//Global flag
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_QuestDef_State_ConditionalFlag((FLAG)_Flag,(STRING)_Quest,(STRING)_Entry,(INTEGER)_FlagState,(FLAG)_ConditionalFlag)
+AND
+GetFlag(_ConditionalFlag, NULL_00000000-0000-0000-0000-000000000000, _FlagState)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Entry);
+
+//END_REGION
+
+//REGION Chaining Entries
+//Within one quest
+
+IF
+QuestUpdateUnlocked(_Character, _Quest, _Step)
+AND
+DB_QuestDef_ChainedState((STRING)_Quest, (STRING)_Step, (STRING)_NewStep)
+THEN
+PROC_QuestDef_QuestUpdate(_Character, _Quest, _NewStep);
+
+IF
+QuestUpdateUnlocked(_Character, _Quest, _Step)
+AND
+DB_QuestDef_ChainedState((STRING)_Quest, (STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep)
+THEN
+PROC_QuestDef_QuestUpdate(_Character, _NewQuest, _NewStep);
+
+//END_REGION
+//REGION Chaining Entries - with conditions
+
+IF
+DB_QuestDef_ConditionalState((STRING)_Quest, (STRING)_Step, (STRING)_NewStep, (STRING)_ConditionalStep, (INTEGER)_ConditionalBool)
+THEN
+DB_QuestDef_ConditionalState((STRING)_Quest, (STRING)_Step, (STRING)_Quest, (STRING)_NewStep, (STRING)_Quest, (STRING)_ConditionalStep, (INTEGER)_ConditionalBool);
+
+IF
+DB_QuestDef_ConditionalState((STRING)_Quest, (STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep, (STRING)_ConditionalStep, (INTEGER)_ConditionalBool)
+THEN
+DB_QuestDef_ConditionalState((STRING)_Quest, (STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep, (STRING)_Quest, (STRING)_ConditionalStep, (INTEGER)_ConditionalBool);
+
+IF
+QuestUpdateUnlocked(_Character, _Quest, _Step)
+AND
+DB_QuestDef_ConditionalState((STRING)_Quest, (STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep, (STRING)_, (STRING)_, (INTEGER)_)
+AND
+QRY_QuestDef_AllConditionsMet((CHARACTER)_Character,(STRING)_Quest,(STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep)
+THEN
+PROC_QuestDef_QuestUpdate(_Character, _NewQuest, _NewStep);
+
+QRY
+QRY_QuestDef_AllConditionsMet((CHARACTER)_Character,(STRING)_Quest,(STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep)
+AND
+NOT QRY_QuestDef_AnyConditionsMissing(_Character,_Quest,_Step, _NewQuest, _NewStep)
+THEN
+DB_NOOP(1);
+
+//Any entry is in the wrong state (locked/unlocked)
+QRY
+QRY_QuestDef_AnyConditionsMissing((CHARACTER)_Character,(STRING)_Quest, (STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep)
+AND
+DB_QuestDef_ConditionalState((STRING)_Quest, (STRING)_Step, (STRING)_NewQuest, (STRING)_NewStep, (STRING)_ConditionalQuest, (STRING)_ConditionalStep, (INTEGER)_ConditionalBool)
+AND
+DB_Negate(_ConditionalBool, _WrongBool)
+AND
+QuestUpdateIsUnlocked(_Character, _ConditionalQuest, _ConditionalStep, _WrongBool)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Dead/Defeated NPC
+
+// Seeing the Dead NPC
+IF
+DB_Dead(_NPC)
+AND
+DB_QuestDef_SawDeadState((STRING)_Quest, (STRING)_Update, _NPC)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, _NPC)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+IF
+Dying(_NPC)
+AND
+DB_QuestDef_SawDeadState((STRING)_Quest, (STRING)_Update, _NPC)
+AND
+DB_Is_InCombat(_NPC, _ID)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+// Seeing the Defeated NPC
+IF
+DB_Defeated(_NPC)
+AND
+DB_QuestDef_SawDefeatedState((STRING)_Quest, (STRING)_Update, (CHARACTER)_NPC)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, (CHARACTER)_NPC)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+IF
+Dying(_NPC)
+AND
+DB_QuestDef_SawDefeatedState((STRING)_Quest, (STRING)_Update, _NPC)
+AND
+DB_Is_InCombat(_NPC, _ID)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+// NPC being defeated
+PROC
+PROC_StateSet_Defeated(_NPC)
+AND
+DB_QuestDef_DefeatedState((STRING)_Quest, (STRING)_Update, (CHARACTER)_NPC)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+// NPC being permanently defeated
+PROC
+PROC_StateSet_PermaDefeated(_NPC)
+AND
+DB_QuestDef_PermaDefeatedState((STRING)_Quest, (STRING)_Update, (CHARACTER)_NPC)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+// Seeing the Perma-Defeated NPC
+IF
+DB_PermaDefeated(_NPC)
+AND
+DB_QuestDef_SawPermaDefeatedState((STRING)_Quest, (STRING)_Update, (CHARACTER)_NPC)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, (CHARACTER)_NPC)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+//END_REGION
+
+//REGION Reading book
+
+IF
+GameBookInterfaceClosed(_Book,_Player)
+AND
+DB_QuestDef_BookReadState((STRING)_Quest,(STRING)_Update,_Book)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+//END_REGION
+
+//REGION Conditioned quest update
+// allow a QRY to block the quest update
+PROC
+PROC_QuestDef_QuestUpdate((CHARACTER)_Player, (STRING)_Quest, (STRING)_Update)
+AND
+NOT QRY_QuestDef_BlockQuestUpdate(_Player, _Quest, _Update)
+THEN
+QuestUpdate(_Player, _Quest, _Update);
+
+QRY
+QRY_QuestDef_BlockQuestUpdate((CHARACTER)_Player, (STRING)_Quest, (STRING)_Update)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Region started
+
+PROC
+PROC_LevelLoadedOnce(_Level)
+AND
+DB_QuestDef_LevelLoaded((STRING)_Quest,(STRING)_Update, _Level)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+//END_REGION
+
+//REGION Region left
+
+PROC
+PROC_LevelUnloading(_Level)
+AND
+DB_QuestDef_LevelUnloading((STRING)_Quest,(STRING)_Update, _Level)
+AND
+DB_Players(_Player)
+THEN
+PROC_QuestDef_QuestUpdate(_Player, _Quest, _Update);
+
+//END_REGION
+
+//REGION Quests accepted / closed
+
+//DB_QuestIsAccepted = quest started at any moment, might be opened or closed by now.
+//DB_QuestIsOpened = quest was accepted and is not closed yet.
+//DB_QuestIsClosed = quest ended, it's still accepted, but not opened anymore.
+
+//Note: subquests are also added in these
+
+//Caveat: this was done with shared party quests in mind, which are predominent in Gustav. 
+//Do not use to check on character or user quests.
+
+//--- Main quest
+IF
+QuestAccepted(_, _QuestID)
+AND
+NOT DB_QuestIsAccepted(_QuestID)
+THEN
+DB_QuestIsAccepted(_QuestID);
+DB_QuestIsOpened(_QuestID);
+
+IF
+QuestClosed(_QuestID)
+AND
+NOT DB_QuestIsClosed(_QuestID)
+THEN
+NOT DB_QuestIsOpened(_QuestID);
+DB_QuestIsClosed(_QuestID);
+
+//END_REGION
+
+//REGION Updating global/shared party quest
+PROC
+QuestUpdate((STRING)_Quest, (STRING)_Entry)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, _Quest, _Entry);
+
+//END_REGION
+
+//REGION Quest update is unlocked for any player
+QRY
+QRY_QuestUpdateIsUnlockedForAny((STRING)_Quest, (STRING)_Update)
+AND
+QuestUpdateIsUnlocked((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, _Quest, _Update, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

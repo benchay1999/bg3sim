@@ -1,0 +1,360 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Character DB Initialization
+DB_SCE_GnomeFollowUp_Gnomes((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5);
+DB_SCE_GnomeFollowUp_Gnomes((CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5);
+
+DB_SCE_Debrief_Participant((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, S_SCE_UnfortunateGnomePoint_bef88552-b2a8-4d6f-95a2-e1835cb40ed4, (DIALOGRESOURCE)SCE_UnfortunateGnome_7abbfa7a-1570-4fb4-a4ad-85229255a758);
+DB_SCE_Debrief_Participant((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, S_SCE_WulbrenPoint_91e4717f-a731-470e-82ac-d4b73fdbde0e, (DIALOGRESOURCE)SCE_Wulbren_4faea1b8-5b42-702c-8e42-40b0a6e9b770); 
+DB_SCE_Debrief_Participant((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5, S_SCE_GnomePrisonerPoint_001_72f56a99-c8f9-4e5c-bd10-29a0a08aa5e0, (DIALOGRESOURCE)SCE_GnomePrisoner_001_970b199a-81ce-a6ea-fd2e-972f3816112a); //TO-DO Add ADs/One Liners
+DB_SCE_Debrief_Participant((CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5, S_SCE_GnomePrisonerPoint_002_634f4056-78be-47af-8b0f-23f968d6a1c9, (DIALOGRESOURCE)SCE_GnomePrisoner_002_3f727684-977c-2cd8-1578-ba01482b67c1);
+
+DB_SCE_Debrief_Participant_Config((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"SCE_Barcus");
+DB_SCE_Debrief_Participant_Config((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf,"SCE_Wulbren");
+DB_SCE_Debrief_Participant_Config((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5,"SCE_GnomePrisoner001");
+DB_SCE_Debrief_Participant_Config((CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5,"SCE_GnomePrisoner002");
+
+PROC_TriggerRegisterForParty(S_SCE_GnomeFollowUp_PartyNearby_Box_5d968fcc-1ff6-47be-a0a7-8c174c45c412);
+KBSECTION
+//REGION DEBUG
+IF
+TextEvent("SCE_SetupGnomes_AllGnomes")
+AND
+DB_Players(_Player)
+THEN
+PROC_GlobalSetFlagAndCache(FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6);
+PROC_GlobalSetFlagAndCache(HAV_SavingPrisoners_State_WulbrenReturned_73a0c737-a7d1-9945-01d3-003fde6ed946);
+SetFlag(HAV_WrootRequest_Wulbren_AskedAboutPlan_44f2df08-02a6-9ceb-1b8b-28012a8981e2, _Player);
+SetFlag(HAV_WrootRequest_Wulbren_AskedAboutBarcus_ffac8e24-6f7f-d59c-84e3-a6391dbb9d7e, _Player);
+PROC_SetAnubisConfig(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, "SCE_Wulbren");
+PROC_SetAnubisConfig(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "SCE_Barcus");
+
+IF
+TextEvent("SCE_SetupGnomes_NoBarcus")
+THEN
+PROC_GlobalSetFlagAndCache(HAV_SavingPrisoners_State_WulbrenReturned_73a0c737-a7d1-9945-01d3-003fde6ed946);
+Die(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976);
+PROC_SetAnubisConfig(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, "SCE_Wulbren");
+
+IF
+TextEvent("SCE_SetupGnomes_DeadN")
+THEN
+PROC_GlobalSetFlagAndCache(FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6);
+PROC_GlobalSetFlagAndCache(HAV_SavingPrisoners_State_WulbrenReturned_73a0c737-a7d1-9945-01d3-003fde6ed946);
+PROC_SetAnubisConfig(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, "SCE_Wulbren");
+PROC_SetAnubisConfig(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "SCE_Barcus");
+Die(S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5);
+Die(S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5);
+
+IF
+TextEvent("SCE_SetupGnomes_DeadWulbren")
+THEN
+PROC_GlobalSetFlagAndCache(FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6);
+PROC_GlobalSetFlagAndCache(HAV_SavingPrisoners_State_WulbrenReturned_73a0c737-a7d1-9945-01d3-003fde6ed946);
+PROC_GlobalSetFlagAndCache(GLO_Wulbren_State_Defeated_1e67b51c-a13d-484b-9bf4-65fbc178b152);
+ClearFlag(MOO_Jailbreak_State_WulbrenFreed_f2b40211-ba53-43c1-a0a1-9827c5910018);
+PROC_SetAnubisConfig(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "SCE_Barcus");
+Die(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf);
+
+IF
+TextEvent("SCE_SetupGnomes_SetFlags")
+THEN
+PROC_GlobalSetFlagAndCache(HAV_Nightsong_State_AtInn_a54c06a7-2b9f-47fa-9821-3d346f378237);
+
+PROC
+PROC_SCE_DEBUG_SituationSpecificFlagSet()
+THEN
+PROC_SetAnubisConfig(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf, "SCE_Wulbren");
+PROC_SetAnubisConfig(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "SCE_Barcus");
+
+IF
+TextEvent("SCE_Gnomes_Assault")
+AND
+DB_MOO_Assault_DynamicObject(_SourceItem, _NewItem)
+AND
+IsOnStage(_SourceItem, _SourceBool)
+AND
+IsOnStage(_NewItem, _NewBool)
+AND
+DB_Negate(_SourceBool, _SourceBoolInvert)
+AND
+DB_Negate(_NewBool, _NewBoolInvert)
+AND
+GetHostCharacter(_Player)
+THEN
+SetOnStage(_SourceItem, _SourceBoolInvert);
+SetOnStage(_NewItem, _NewBoolInvert);
+DebugText(_Player, "Assault Dynamic Item Toggled");
+
+IF
+TextEvent("SCE_Gnomes_Assault")
+AND
+DB_MOO_Assault_DynamicObject(NULL_00000000-0000-0000-0000-000000000000, _NewItem)
+AND
+IsOnStage(_NewItem, _NewBool)
+AND
+DB_Negate(_NewBool, _NewBoolInvert)
+AND
+GetHostCharacter(_Player)
+THEN
+SetOnStage(_NewItem, _NewBoolInvert);
+DebugText(_Player, "Assault Dynamic Item Toggled");
+//END_REGION
+
+//REGION Who's placed by Setup
+//Evaluate if a given character should be blocked from being placed in Epilogue
+//The goal is to have the queries fail as the epilogue placement is NOT QRY_SCE_Debrief_BlockCharacter
+
+//Block Zombie Wulbren from being placed
+//Result: If Wulbren isn't dead and isn't a zombie, he'll be placed in Epilogue
+QRY
+QRY_SCE_Debrief_BlockCharacter((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+AND
+DB_COL_NecromancerLab_AllZombies(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+THEN
+DB_NOOP(1);
+
+//Result: If Wulbren was freed and isn't dead and Nimble and Nickles aren't dead, they'll be placed.
+QRY
+QRY_SCE_Debrief_BlockCharacter((CHARACTER)_Char)
+AND
+DB_SCE_GnomeFollowUp_Gnomes(_Char)
+AND
+NOT DB_GlobalFlag(HAV_SavingPrisoners_State_WulbrenReturned_73a0c737-a7d1-9945-01d3-003fde6ed946)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SCE_Debrief_BlockCharacter((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976)
+AND
+NOT DB_GlobalFlag((FLAG)HAV_WrootRequest_State_ReunionDone_fa69c782-5b10-aab3-1d15-7f14d3e8016d)
+THEN
+SetOnStage(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, 0);
+//END_REGION
+
+//REGION Behaviours/AD queue
+
+//For debug purposes - so they get the right anubis configs when level traveling
+PROC
+PROC_SCE_SetupDebrief()
+THEN
+NOT DB_GLO_LevelTraveler((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"SCL_Main_A","GLO_UnfortunateGnome_Act2");
+DB_GLO_LevelTraveler((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"SCL_Main_A","SCE_Barcus");
+
+PROC
+PROC_SCE_CharacterInEpilogueHook(S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+THEN
+SetFlag(SCE_GnomeFollowUp_Wulbren_State_AtStoneWork_b728e652-c3f2-44b4-bd50-a86ed0f9d8cb);
+
+IF
+FlagSet(SCE_GnomeFollowUp_Wulbren_HasMet_cf7be0bc-042f-cc79-18e1-a5c294a12955,_,_)
+THEN
+ClearFlag(SCE_GnomeFollowUp_Wulbren_State_AtStoneWork_b728e652-c3f2-44b4-bd50-a86ed0f9d8cb);
+
+//This should happen after the gnomes are added to DB_SCE_Debrief_CharactersInEpilogue
+PROC
+PROC_SCE_UpdateBehaviours()
+AND
+NOT QRY_SCE_GnomeFollowUp_AnyADInQueue()
+THEN
+PROC_SCE_GnomeFollowUp_DetermineADQueue();
+
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2)
+THEN
+NOT DB_SCE_GnomeFollowUp_ADQueue(_AD,_Speaker1,_Speaker2);
+
+//SCE_AD_Wulbren
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+THEN
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Wulbren_b39f6eda-5163-2fba-bb27-2f9cd000ea78,(CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf,NULL_00000000-0000-0000-0000-000000000000);
+
+//SCE_AD_UnfortunateGnome
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976)
+THEN
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_UnfortunateGnome_338d2580-cf52-5856-aa1e-a059d3ac2a98,(CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,NULL_00000000-0000-0000-0000-000000000000);
+
+//SCE_AD_Nimble - Wulbren dead OR Nickels dead
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5)
+AND
+DB_Dead((CHARACTER)S_GLO_Wulbren_2d70edbf-1a70-4047-8099-48f3e75d93bf)
+THEN
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Nimble_45a03c8a-e545-4988-7c2d-ddfee3fbc074,(CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Nimble_45a03c8a-e545-4988-7c2d-ddfee3fbc074,_,_)
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5)
+AND
+DB_Dead((CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5)
+THEN
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Nimble_45a03c8a-e545-4988-7c2d-ddfee3fbc074,(CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5,NULL_00000000-0000-0000-0000-000000000000);
+
+//SCE_AD_Nickels - Nimble dead
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5)
+AND
+DB_Dead((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5)
+THEN
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Nickels_a0816ebe-450d-d4c2-8ab3-d739bc2ebc4f,(CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5,NULL_00000000-0000-0000-0000-000000000000);
+
+//SCE_AD_NimbleAndNickels - Nimble and Nickels alive
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Nimble_45a03c8a-e545-4988-7c2d-ddfee3fbc074,_,_)
+AND
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_Nickels_a0816ebe-450d-d4c2-8ab3-d739bc2ebc4f,_,_)
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5)
+AND
+DB_SCE_Debrief_CharactersInEpilogue((CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5)
+THEN
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)SCE_AD_NimbleAndNickels_eeffcf38-74c1-e4e2-aa07-889662b08681,(CHARACTER)S_GLO_GnomePrisoner_001_4fbd62e8-a486-471e-8a65-00966b058dd5,(CHARACTER)S_GLO_GnomePrisoner_002_c9a7d921-bef0-4829-8792-d48c529daee5);
+
+//Launch timer
+PROC
+PROC_SCE_GnomeFollowUp_DetermineADQueue()
+AND
+QRY_SCE_GnomeFollowUp_AnyADInQueue()
+THEN
+TimerCancel("SCE_GnomeFollowUp_ADQueue");
+TimerLaunch("SCE_GnomeFollowUp_ADQueue",8000);
+
+//AD queue
+IF
+TimerFinished("SCE_GnomeFollowUp_ADQueue")
+AND
+QRY_AnyCharacterInTrigger(S_SCE_GnomeFollowUp_PartyNearby_Box_5d968fcc-1ff6-47be-a0a7-8c174c45c412)
+AND
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2)
+AND
+QRY_OnlyOnce("SCE_GnomeFollowUp_SelectedAD")
+AND
+QRY_SCE_AvailableForBehaviorAD(_Speaker1)
+AND
+QRY_SCE_AvailableForBehaviorAD(_Speaker2)
+AND
+NOT QRY_SCE_GnomeFollowUp_StartDialog(_AD,_Speaker1,_Speaker2) //doesn't matter if speaker 2 is NULL
+THEN
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2);
+PROC_SCE_GnomeFollowUp_AdvanceADQueue(3000);
+
+//Could not select AD
+IF
+TimerFinished("SCE_GnomeFollowUp_ADQueue")
+AND
+NOT DB_OnlyOnce("SCE_GnomeFollowUp_SelectedAD")
+THEN
+PROC_SCE_GnomeFollowUp_AdvanceADQueue(3000);
+
+//Selected AD but failed to play
+IF
+TimerFinished("SCE_GnomeFollowUp_ADQueue")
+AND
+DB_OnlyOnce("SCE_GnomeFollowUp_SelectedAD")
+AND
+NOT DB_SCE_GnomeFollowUp_PlayingDialog(_)
+AND
+QRY_OnlyOnce_Reset("SCE_GnomeFollowUp_SelectedAD")
+AND
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2)
+AND
+QRY_OnlyOnce("SCE_GnomeFollowUp_SelectedAD")
+THEN
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2); //AD failed, remove from queue
+PROC_SCE_GnomeFollowUp_AdvanceADQueue(3000);
+
+IF
+TimerFinished("SCE_GnomeFollowUp_ADQueue")
+AND
+DB_OnlyOnce("SCE_GnomeFollowUp_SelectedAD")
+THEN
+NOT DB_OnlyOnce("SCE_GnomeFollowUp_SelectedAD");
+
+QRY
+QRY_SCE_GnomeFollowUp_StartDialog((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2)
+AND
+QRY_StartDialog(_AD,_Speaker1,_Speaker2)
+THEN
+DB_SCE_GnomeFollowUp_PlayingDialog(_AD);
+
+IF
+AutomatedDialogEnded(_AD,_)
+AND
+DB_SCE_GnomeFollowUp_PlayingDialog((DIALOGRESOURCE)_AD)
+AND
+DB_SCE_GnomeFollowUp_ADQueue(_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2)
+THEN
+NOT DB_SCE_GnomeFollowUp_PlayingDialog((DIALOGRESOURCE)_AD);
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_AD,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2);
+PROC_SCE_GnomeFollowUp_AdvanceADQueue(15000);
+
+QRY
+QRY_SCE_AvailableForBehaviorAD((CHARACTER)_Speaker)
+AND
+NOT DB_CantTalk(_Speaker)
+AND
+NOT DB_CRIME_MusicalPerformance(_,_Speaker,_)
+AND
+NOT DB_CRIME_MusicalPerformance_NPCs(_,_,_Speaker)
+AND
+NOT DB_CRIME_HandlingCrime(_,_Speaker)
+AND
+NOT HasActiveStatus(_Speaker,"PERFORM_POSITIVE",1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SCE_AvailableForBehaviorAD((CHARACTER)NULL_00000000-0000-0000-0000-000000000000)
+THEN
+DB_NOOP(1);
+
+//Advance AD queue
+PROC
+PROC_SCE_GnomeFollowUp_AdvanceADQueue((INTEGER)_Duration)
+AND
+QRY_SCE_GnomeFollowUp_AnyADInQueue()
+THEN
+TimerLaunch("SCE_GnomeFollowUp_ADQueue",_Duration);
+
+PROC
+PROC_SCE_GnomeFollowUp_AdvanceADQueue((INTEGER)_)
+AND
+NOT DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_,(CHARACTER)_,(CHARACTER)_)
+THEN
+PROC_SCE_GnomeFollowUp_DetermineADQueue();
+
+QRY
+QRY_SCE_GnomeFollowUp_AnyADInQueue()
+AND
+DB_SCE_GnomeFollowUp_ADQueue((DIALOGRESOURCE)_,(CHARACTER)_,(CHARACTER)_)
+THEN
+DB_NOOP(1);
+
+IF
+LevelLoaded("INT_Main_A")
+THEN
+TimerCancel("SCE_GnomeFollowUp_ADQueue");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

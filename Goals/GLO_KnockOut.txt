@@ -1,0 +1,570 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//Documentation on Confluence: [Link Redacted]
+
+NOT DB_SurrenderOnKnockedOutDialog((CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_DoNotRemoveKnockedOutCharacterOnLongRest((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+// Normally if a character should have dialogs after getting knocked out, they should surrender instead
+// (cinematic cameras do not handle characters lying on the floor very well). All dialogs of regular
+// knocked out characters get removed, so that the default action becomes looting them.
+// If you have an exception, use this database to prevent this dialog removal.
+NOT DB_DontRemoveDialogsOnKnockedOut((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+// if this DB is filled then PROC_GLO_DefeatCounter_AllDefeated will set the global flag and PROC_GLO_DefeatCounter_AllNoLongerDefeated will clear it
+NOT DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("", (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+// if this DB is filled then PROC_GLO_DefeatCounter_AllPermaDefeated will set the global flag
+NOT DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("", (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+// if this DB is filled then PROC_GLO_DefeatCounter_AllDead will set the global flag and PROC_GLO_DefeatCounter_AllNoLongerDead will clear it
+NOT DB_GLO_DefeatCounter_AllDeadGlobalFlag("", (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+// if this DB is filled then PROC_GLO_DefeatCounter_Notify will not wait for combat to end in order to call PROC_GLO_DefeatCounter_All(Perma/NoLonger)Defeated
+NOT DB_GLO_DefeatCounter_IgnoreWaitForCombatEnd("");
+
+// If defined, then dialogs won't be stopped when a character gets knocked out. Gets cleared after the next time the character gets knocked out
+// (i.e., set in the dialog during which this should be taken into account).
+NOT DB_DialogKnockedOut((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_ForceTemporaryKnockedOut_Applied((GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Defeated counter - keeps track of objects that are dead, destroyed, unconscious, or have surrendered.
+IF
+DB_GLO_DefeatCounter(_Object, _ID)
+AND
+NOT DB_Defeated(_Object)
+AND
+NOT DB_PermaDefeated(_Object)
+THEN
+DB_GLO_DefeatCounter_State(_Object, _ID,"Active");
+PROC_GLO_DefeatCounter_CheckFinished(_ID);
+
+IF
+DB_GLO_DefeatCounter_State(_Object, _ID,_State)
+AND
+NOT DB_GLO_DefeatCounter(_Object, _ID)
+THEN
+NOT DB_GLO_DefeatCounter_State(_Object, _ID,_State);
+
+IF
+DB_GLO_DefeatCounter(_Object, _ID)
+AND
+DB_Defeated(_Object)
+AND
+NOT DB_PermaDefeated(_Object)
+THEN
+DB_GLO_DefeatCounter_State(_Object, _ID,"Defeated");
+PROC_GLO_DefeatCounter_CheckFinished(_ID);
+
+IF
+DB_GLO_DefeatCounter(_Object, _ID)
+AND
+DB_PermaDefeated(_Object)
+THEN
+DB_GLO_DefeatCounter_State(_Object, _ID,"PermaDefeated");
+PROC_GLO_DefeatCounter_CheckFinished(_ID);
+
+IF
+DB_GLO_DefeatCounter(_Object, _ID)
+AND
+DB_Dead((CHARACTER)_Object)
+THEN
+PROC_GLO_DefeatCounter_CheckAllDead(_ID);
+
+IF
+DB_GLO_DefeatCounter_State(_Object, _ID,_New)
+AND
+DB_GLO_DefeatCounter_State(_Object, _ID,_Old)
+AND
+_New != _Old
+THEN
+NOT DB_GLO_DefeatCounter_State(_Object, _ID,_Old);
+
+PROC
+PROC_GLO_DefeatCounter_CheckAllDead((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_Target(_ID,_DesiredCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Dead")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_DeadCount)
+AND
+_DeadCount >= _DesiredCount
+THEN
+PROC_GLO_DefeatCounter_AllDead((STRING)_ID);
+
+PROC
+PROC_GLO_DefeatCounter_CheckAllDead((STRING)_ID)
+AND
+NOT DB_GLO_DefeatCounter_Target(_ID,_)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Active")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_AliveCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Defeated")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_DefeatedCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"PermaDefeated")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_PermaDefeatedCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Dead")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_DeadCount)
+AND
+IntegerSum(_AliveCount,_DefeatedCount,_SubTotalCount)
+AND
+IntegerSum(_SubTotalCount,_PermaDefeatedCount,_DesiredCount)
+AND
+_DeadCount >= _DesiredCount
+THEN
+PROC_GLO_DefeatCounter_AllDead((STRING)_ID);
+
+IF
+Resurrected((CHARACTER)_Object)
+AND
+DB_GLO_DefeatCounter_State(_Object, _ID,_)
+THEN
+PROC_GLO_DefeatCounter_AllNoLongerDead((STRING)_ID);
+
+//Case 1: Custom target defined
+PROC
+PROC_GLO_DefeatCounter_CheckFinished((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_Target(_ID,_DesiredCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Defeated")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_DefeatedCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"PermaDefeated")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_PermaDefeatedCount)
+THEN
+PROC_GLO_DefeatCounter_Notify(_ID,_DesiredCount,_DefeatedCount,_PermaDefeatedCount);
+
+//Case 2: No custom target defined
+PROC
+PROC_GLO_DefeatCounter_CheckFinished((STRING)_ID)
+AND
+NOT DB_GLO_DefeatCounter_Target(_ID,_)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Active")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_AliveCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"Defeated")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_DefeatedCount)
+AND
+QRY_GLO_DefeatCounter_Count(_ID,"PermaDefeated")
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_PermaDefeatedCount)
+AND
+IntegerSum(_AliveCount,_DefeatedCount,_SubTotalCount)
+AND
+IntegerSum(_SubTotalCount,_PermaDefeatedCount,_DesiredCount)
+THEN
+PROC_GLO_DefeatCounter_Notify(_ID,_DesiredCount,_DefeatedCount,_PermaDefeatedCount);
+
+PROC
+PROC_GLO_DefeatCounter_Notify((STRING)_ID,(INTEGER)_DesiredCount,(INTEGER)_DefeatedCount,(INTEGER)_PermaDefeatedCount)
+AND
+_PermaDefeatedCount >= _DesiredCount
+AND
+NOT DB_GLO_DefeatCounter_PermaCountMet(_ID)
+AND
+NOT QRY_GLO_DefeatCounter_WaitForCombatEnd(_ID)
+THEN
+DB_GLO_DefeatCounter_PermaCountMet(_ID);
+PROC_GLO_DefeatCounter_AllPermaDefeated(_ID);
+
+PROC
+PROC_GLO_DefeatCounter_Notify((STRING)_ID,(INTEGER)_DesiredCount,(INTEGER)_DefeatedCount,(INTEGER)_PermaDefeatedCount)
+AND
+IntegerSum(_DefeatedCount,_PermaDefeatedCount,_TotalDefeated)
+AND
+_TotalDefeated >= _DesiredCount
+AND
+NOT DB_GLO_DefeatCounter_CountMet(_ID)
+AND
+NOT QRY_GLO_DefeatCounter_WaitForCombatEnd(_ID)
+THEN
+DB_GLO_DefeatCounter_CountMet(_ID);
+PROC_GLO_DefeatCounter_AllDefeated(_ID);
+
+PROC
+PROC_GLO_DefeatCounter_Notify((STRING)_ID,(INTEGER)_DesiredCount,(INTEGER)_DefeatedCount,(INTEGER)_PermaDefeatedCount)
+AND
+IntegerSum(_DefeatedCount,_PermaDefeatedCount,_TotalDefeated)
+AND
+_TotalDefeated < _DesiredCount
+AND
+DB_GLO_DefeatCounter_CountMet(_ID)
+AND
+NOT QRY_GLO_DefeatCounter_WaitForCombatEnd(_ID)
+THEN
+NOT DB_GLO_DefeatCounter_CountMet(_ID);
+PROC_GLO_DefeatCounter_AllNoLongerDefeated(_ID);
+
+QRY
+QRY_GLO_DefeatCounter_WaitForCombatEnd((STRING)_ID)
+AND
+NOT DB_GLO_DefeatCounter_IgnoreWaitForCombatEnd(_ID)
+AND
+DB_GLO_DefeatCounter_State(_Object, _ID, _)
+AND
+DB_Is_InCombat(_Object, _Combat)
+THEN
+DB_GLO_DefeatCounter_WaitForCombatEnd(_ID, _Combat);
+
+IF
+CombatEnded(_Combat)
+AND
+DB_GLO_DefeatCounter_WaitForCombatEnd(_ID, _Combat)
+THEN
+NOT DB_GLO_DefeatCounter_WaitForCombatEnd(_ID, _Combat);
+PROC_GLO_DefeatCounter_CheckFinished(_ID);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag(_ID, _Flag)
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag(_ID, _Flag)
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+
+PROC
+PROC_GLO_DefeatCounter_AllDead((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_AllDeadGlobalFlag(_ID, _Flag)
+THEN
+PROC_GlobalSetFlagAndCache(_Flag);
+
+PROC
+PROC_GLO_DefeatCounter_AllNoLongerDefeated((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag(_ID, _Flag)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+PROC_GlobalClearFlagAndCache(_Flag);
+
+PROC
+PROC_GLO_DefeatCounter_AllNoLongerDead((STRING)_ID)
+AND
+DB_GLO_DefeatCounter_AllDeadGlobalFlag(_ID, _Flag)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+PROC_GlobalClearFlagAndCache(_Flag);
+
+QRY
+QRY_GLO_DefeatCounter_Count((STRING)_ID,(STRING)_State)
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_Count)
+THEN
+NOT DB_QRYRTN_GLO_DefeatCounter_Count(_Count);
+
+QRY
+QRY_GLO_DefeatCounter_Count((STRING)_ID,(STRING)_State)
+THEN
+DB_QRYRTN_GLO_DefeatCounter_Count(0);
+
+QRY
+QRY_GLO_DefeatCounter_Count((STRING)_ID,(STRING)_State)
+AND
+DB_GLO_DefeatCounter_State(_NPC, _ID,_State)
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_QRYRTN_GLO_DefeatCounter_Count(_Count);
+DB_QRYRTN_GLO_DefeatCounter_Count(_NewCount);
+
+QRY
+QRY_GLO_DefeatCounter_Count((STRING)_ID,"Any")
+AND
+DB_GLO_DefeatCounter(_NPC, _ID)
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_QRYRTN_GLO_DefeatCounter_Count(_Count);
+DB_QRYRTN_GLO_DefeatCounter_Count(_NewCount);
+
+QRY
+QRY_GLO_DefeatCounter_Count((STRING)_ID,"Dead")
+AND
+DB_GLO_DefeatCounter_State(_NPC, _ID, _)
+AND
+DB_Dead((CHARACTER)_NPC)
+AND
+DB_QRYRTN_GLO_DefeatCounter_Count(_Count)
+AND
+IntegerSum(_Count,1,_NewCount)
+THEN
+NOT DB_QRYRTN_GLO_DefeatCounter_Count(_Count);
+DB_QRYRTN_GLO_DefeatCounter_Count(_NewCount);
+
+//Handles combat switching
+IF
+SwitchedCombat(_, _OldCombat, _NewCombat)
+AND
+DB_GLO_DefeatCounter_WaitForCombatEnd(_ID, _OldCombat)
+AND
+NOT DB_GLO_DefeatCounter_WaitForCombatEnd(_ID, _NewCombat)
+THEN
+DB_GLO_DefeatCounter_WaitForCombatEnd(_ID, _NewCombat);
+//END_REGION
+
+//REGION Applying KO status to character in dialog 
+IF
+FlagSet(GLO_KnockOut_Event_SetKO_a182fdbb-fecf-90b7-1c12-dd52eca53f65, _Character, _ID) // flagType: Object
+THEN
+ClearFlag((FLAG)GLO_KnockOut_Event_SetKO_a182fdbb-fecf-90b7-1c12-dd52eca53f65, _Character); // flagType: Object
+ApplyStatus(_Character, "KNOCKED_OUT", -1.0);
+//END_REGION
+
+IF
+DB_KnockedOut(_Trader)
+AND
+IsTagged(_Trader,(TAG)TRADER_91d5ebc6-91ea-44db-8a51-216860d69b5b,1)
+THEN
+PROC_ClearGeneratedItems(_Trader);
+
+//REGION Tracking and stopping Knocked Out
+//Bad guys/NPCs that are permanently hostile leave
+PROC
+PROC_LongRestOrLevelUnloading((STRING)_)
+THEN
+PROC_GLO_Knockout_Cleanup();
+
+PROC
+PROC_KnockedOut((CHARACTER)_NPC,(GUIDSTRING)_)
+THEN
+DB_GLO_KnockOut_CleanUp((CHARACTER)_NPC);
+
+PROC
+PROC_KnockedOut_Ended((CHARACTER)_NPC)
+THEN
+NOT DB_GLO_KnockOut_CleanUp((CHARACTER)_NPC);
+
+IF
+DB_GLO_KnockOut_CleanUp((CHARACTER)_NPC)
+AND
+NOT DB_KnockedOut(_NPC) //just to be sure
+THEN
+NOT DB_GLO_KnockOut_CleanUp((CHARACTER)_NPC);
+
+PROC
+PROC_GLO_Knockout_Cleanup()
+AND
+DB_GLO_KnockOut_CleanUp(_NPC)
+AND
+HasActiveStatus(_NPC,"KNOCKED_OUT_TEMPORARILY",0) //query succeeds = either in current level or global
+AND
+NOT DB_DoNotRemoveKnockedOutCharacterOnLongRest(_NPC)
+THEN
+ScatterStoryItems(_NPC);
+PurgeOsirisQueue(_NPC);
+SetOnStage(_NPC,0);
+PROC_Surrender_Fled(_NPC);
+NOT DB_GLO_KnockOut_CleanUp((CHARACTER)_NPC);
+
+//Good guys/NPCs who were only temporarily hostile wake up the next morning
+PROC
+PROC_GLO_Knockout_Cleanup()
+AND
+DB_KnockedOut(_NPC)
+AND
+HasActiveStatus(_NPC,"KNOCKED_OUT_TEMPORARILY",1)
+THEN
+// Will also remove KNOCKED_OUT_TEMPORARILY
+RemoveStatus(_NPC,"KNOCKED_OUT");
+
+PROC
+PROC_GLO_Knockout_Cleanup()
+AND
+DB_GLO_Knockout_HadDialog(_NPC,_HadDialog)
+THEN
+SetHasDialog(_NPC,_HadDialog);
+NOT DB_GLO_Knockout_HadDialog(_NPC,_HadDialog);
+
+PROC
+PROC_GLO_Knockout_Cleanup()
+AND
+DB_KnockedOut(_NPC)
+AND
+DB_ForceRemoveKnockedOutCharacterOnLongRest(_NPC)
+THEN
+ScatterStoryItems(_NPC);
+PurgeOsirisQueue(_NPC);
+SetOnStage(_NPC,0);
+PROC_Surrender_Fled(_NPC);
+
+IF
+FlagSet((FLAG)GLO_KnockedOut_Event_Wake_4095904d-ce99-1d77-7dfd-a77f04005032,_NPC,_ID)
+THEN
+ClearFlag((FLAG)GLO_KnockedOut_Event_Wake_4095904d-ce99-1d77-7dfd-a77f04005032,_NPC,_ID);
+RemoveStatus(_NPC,"KNOCKED_OUT");
+//END_REGION
+
+//REGION Dialogs
+// Default action will be looting
+PROC
+PROC_KnockedOut((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+AND
+NOT DB_DontRemoveDialogsOnKnockedOut(_NPC)
+AND
+HasAppliedStatus(_NPC,"KNOCKED_OUT_TEMPORARILY",_Temporarily)
+THEN
+PROC_GLO_Knockout_RemoveDialog(_NPC, _Temporarily);
+
+PROC
+PROC_GLO_Knockout_RemoveDialog((CHARACTER)_NPC,0)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_NPC);
+SetHasDialog(_NPC,0);
+
+PROC
+PROC_GLO_Knockout_RemoveDialog((CHARACTER)_NPC,1)
+AND
+QRY_GetHasDialogAny(_NPC)
+AND
+DB_QRYRTN_GetHasDialogAny(_HasDialog)
+THEN
+DB_GLO_Knockout_HadDialog(_NPC,_HasDialog);
+SetHasDialog(_NPC,0);
+
+PROC
+PROC_KnockedOut((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+AND
+NOT DB_DialogKnockedOut(_NPC)
+THEN
+PROC_ForceStopDialog(_NPC);
+
+PROC
+PROC_KnockedOut((CHARACTER)_NPC,(GUIDSTRING)_Cause)
+AND
+DB_DialogKnockedOut(_NPC)
+THEN
+NOT DB_DialogKnockedOut(_NPC);
+
+//END_REGION
+
+//REGION Knockout behavior overriding
+
+//REGION Forced Permanent KNOCKED_OUT
+IF
+DB_ForceRemoveKnockedOutCharacterOnLongRest(_NPC)
+THEN
+DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC);
+ApplyStatus(_NPC,"FORCE_KNOCKED_OUT_PERMANENTLY",-1.0);
+
+IF
+DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC)
+AND
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest(_NPC)
+THEN
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC);
+RemoveStatus(_NPC,"FORCE_KNOCKED_OUT_PERMANENTLY");
+
+IF
+StatusRemoved((CHARACTER)_NPC,"FORCE_KNOCKED_OUT_PERMANENTLY",_,_)
+AND
+DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC)
+THEN
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC);
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest(_NPC);
+
+IF
+StatusAttemptFailed((CHARACTER)_NPC,"FORCE_KNOCKED_OUT_PERMANENTLY",_,_)
+AND
+DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC)
+THEN
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied(_NPC);
+NOT DB_ForceRemoveKnockedOutCharacterOnLongRest(_NPC);
+
+//END_REGION
+
+//REGION Forced Temporary KNOCKED_OUT
+IF
+DB_ForceTemporaryKnockedOut(_NPC)
+THEN
+DB_ForceTemporaryKnockedOut_Applied(_NPC);
+ApplyStatus(_NPC,"FORCE_KNOCKED_OUT_TEMPORARILY",-1.0);
+
+IF
+DB_ForceTemporaryKnockedOut_Applied(_NPC)
+AND
+NOT DB_ForceTemporaryKnockedOut(_NPC)
+THEN
+NOT DB_ForceTemporaryKnockedOut_Applied(_NPC);
+RemoveStatus(_NPC,"FORCE_KNOCKED_OUT_TEMPORARILY");
+
+IF
+StatusRemoved((CHARACTER)_NPC,"FORCE_KNOCKED_OUT_TEMPORARILY",_,_)
+AND
+DB_ForceTemporaryKnockedOut_Applied(_NPC)
+THEN
+NOT DB_ForceTemporaryKnockedOut_Applied(_NPC);
+NOT DB_ForceTemporaryKnockedOut(_NPC);
+
+IF
+StatusAttemptFailed((CHARACTER)_NPC,"FORCE_KNOCKED_OUT_TEMPORARILY",_,_)
+AND
+DB_ForceTemporaryKnockedOut_Applied(_NPC)
+THEN
+NOT DB_ForceTemporaryKnockedOut_Applied(_NPC);
+NOT DB_ForceTemporaryKnockedOut(_NPC);
+
+//END_REGION
+
+//REGION Resolving conflicts
+
+IF
+StatusApplied(_Character, "FORCE_KNOCKED_OUT_TEMPORARILY", _, _)
+AND
+DB_ForceRemoveKnockedOutCharacterOnLongRest_Applied((CHARACTER)_Character)
+AND
+GetUUID(_Character, _UUID)
+AND
+Concatenate("Applying forced Temporary Knockout on character while forced Permanent Knockout is active for character ", _UUID, _Message)
+THEN
+RemoveStatus(_Character, "FORCE_KNOCKED_OUT_PERMANENTLY", NULL_00000000-0000-0000-0000-000000000000);
+DebugBreak(_Message);
+
+IF
+StatusApplied(_Character, "FORCE_KNOCKED_OUT_PERMANENTLY", _, _)
+AND
+DB_ForceTemporaryKnockedOut_Applied(_Character)
+AND
+GetUUID(_Character, _UUID)
+AND
+Concatenate("Applying forced Permanent Knockout on character while forced Temporary Knockout is active for character ", _UUID, _Message)
+THEN
+RemoveStatus(_Character, "FORCE_KNOCKED_OUT_TEMPORARILY", NULL_00000000-0000-0000-0000-000000000000);
+DebugBreak(_Message);
+
+//END_REGION
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

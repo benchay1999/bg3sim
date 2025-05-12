@@ -1,0 +1,332 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// In normal playthrough these entries won't be added as they are already added in UND scripting
+DB_HasItemEvent(S_UND_MushroomHunter_Noblestalk_09561b3f-f556-4a01-b289-9b362bc0d43a, (FLAG)UND_MushroomHunter_State_HasMushroom_7b86b816-a97c-4500-9398-ef4c7f344e0b);
+DB_GiveItemToEvent(S_UND_MushroomHunter_Noblestalk_09561b3f-f556-4a01-b289-9b362bc0d43a, (FLAG)UND_MushroomHunter_Event_GiveMushroom_d5da8505-841d-4d3f-8f56-00b2e31896ef);
+
+DB_LOW_Bonecloak_Couple((CHARACTER)S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,(DIALOGRESOURCE)LOW_BonecloakApothecary_Derryth_810507dc-0586-8e62-c23f-fa810bd30181);
+DB_LOW_Bonecloak_Couple(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b,LOW_BonecloakApothecary_Baelen_4d5f1a1b-f719-fd89-b6df-48f1bc016d2a);
+
+DB_LOW_Bonecloak_MetDerrythUNDFlags((FLAG)UND_MyconidCircle_DwarvenAlchemist_BaelenRestoredHasmet_f65f25cc-7c80-55b9-9908-c8347fd7ff01);
+DB_LOW_Bonecloak_MetDerrythUNDFlags(UND_MyconidCircle_DwarvenAlchemist_BaelenReturned_Hasmet_dc0fee5d-5d21-742d-fa41-4b40c09e38d9);
+DB_LOW_Bonecloak_MetDerrythUNDFlags(UND_MyconidCircle_DwarvenAlchemist_HasMet_36bd2810-bc90-7910-2a3d-eaff664ac2b9);
+
+DB_Dialogs((GUIDSTRING)S_LOW_BonecloakApothecary_Mohan_f28c5212-4eaa-476b-bfa7-9c43302d54aa,(DIALOGRESOURCE)LOW_BonecloakApothecary_Mohan_68e60f47-38e1-1f80-0b56-f29c23c0dbba);
+DB_Dialogs(S_LOW_BonecloakApothecary_CatForDerryth01_43dc449e-80a5-40fc-bad5-6901287424be,(DIALOGRESOURCE)LOW_BonecloakApothecary_Cat01_5c0a7383-0ec6-3a3b-ff40-c20041ed40fa);
+DB_Dialogs(S_LOW_BonecloakApothecary_CatForDerryth02_330c690f-6cbb-43f3-854d-c0a9b28b03e5,(DIALOGRESOURCE)LOW_BonecloakApothecary_Cat02_807cfd51-dc16-4d66-1edc-16711a170fc3);
+DB_Dialogs(S_LOW_BonecloakApothecary_CatForDerryth03_dc7f3ee1-14c7-4912-8c1e-1c2807c6b62d,(DIALOGRESOURCE)LOW_BonecloakApothecary_Cat03_137c3a94-1747-8f68-301c-b5e1418ca9ae);
+
+DB_QuestDef_State((FLAG)LOW_BonecloakApothecary_State_CatArrived_97f0d528-039a-4665-ab9f-95ba2f3c0272,"HIDDEN_CTY_Boosters","LOW_Bonecloak_CatForDerryth");
+
+DB_FlagReactionAfterDialog((FLAG)LOW_BonecloakApothecary_State_Housecat_74e6c7e1-00fc-88ba-2a7d-1b14edfb8491,(DIALOGRESOURCE)LOW_BonecloakApothecary_Cat01_5c0a7383-0ec6-3a3b-ff40-c20041ed40fa);
+DB_FlagReactionAfterDialog((FLAG)LOW_BonecloakApothecary_State_Housecat_74e6c7e1-00fc-88ba-2a7d-1b14edfb8491,(DIALOGRESOURCE)LOW_BonecloakApothecary_Cat02_807cfd51-dc16-4d66-1edc-16711a170fc3);
+DB_FlagReactionAfterDialog((FLAG)LOW_BonecloakApothecary_State_Housecat_74e6c7e1-00fc-88ba-2a7d-1b14edfb8491,(DIALOGRESOURCE)LOW_BonecloakApothecary_Cat03_137c3a94-1747-8f68-301c-b5e1418ca9ae);
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_LOW_BonecloakArea_88e89a0e-da6d-4f25-8277-dc0a7f1906e3);
+
+DB_ItemOwnerShipClearItem("CTY_Main_A",S_LOW_BonecloakApothecary_DoorBonecloakFront_9a13061a-6ac5-4cd2-9252-bac669fa6128);
+DB_ItemOwnerShipClearItem("CTY_Main_A",S_LOW_BonecloakApothecary_DoorUpstairs_0d10bf70-f416-477b-8370-486b92c7e4a1);
+
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_ClosedNotice_fce5168c-5046-4728-a74c-342a6f3b393d,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenUnhealed_000_ac804c87-5b3f-4df1-8ece-6140fc079197,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenHealed_b24e763d-b511-4c7a-9fd4-098fc2515099,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenDead_2ab9c86e-4add-4ee2-9420-90de17046dfa,0);
+
+PROC_LOW_Bonecloak_Setup();
+KBSECTION
+//REGION Generic Setup
+PROC
+PROC_LOW_Bonecloak_Setup()
+AND
+DB_PermaDefeated(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7)
+THEN
+DB_LOW_Bonecloak_ShopIsAbandoned(1);
+PROC_ItemCloseAndLock((ITEM)S_LOW_BonecloakApothecary_DoorBonecloakFront_9a13061a-6ac5-4cd2-9252-bac669fa6128,"NoKey");
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_ClosedNotice_fce5168c-5046-4728-a74c-342a6f3b393d,1);
+
+PROC
+PROC_LOW_Bonecloak_Setup()
+AND
+NOT DB_LOW_Bonecloak_ShopIsAbandoned(1)
+AND
+DB_LOW_Bonecloak_Couple(_Character,_Dialog)
+AND
+NOT DB_PermaDefeated(_Character)
+THEN
+SetFaction(_Character,(FACTION)Act3_LOW_Bonecloak_Civilians_8c64b097-10d6-4bd1-945a-34b4d216ce9e);
+PROC_CharacterFullRestore(_Character);
+PROC_RemoveAllDialogEntriesForSpeaker(_Character);
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse(_Character);
+DB_Dialogs(_Character,_Dialog);
+
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)_Character)
+AND
+DB_GLO_CharacterCorpseDialog(_Character,_Dialog)
+THEN
+NOT DB_GLO_CharacterCorpseDialog(_Character,_Dialog);
+
+PROC
+PROC_LOW_Bonecloak_SetupShopOwner((CHARACTER)_Character)
+THEN
+DB_ItemOwnerShipTriggers("CTY_MAIN_A",(TRIGGER)S_LOW_BonecloakApothecary_OwnershipTrigger_45894b20-6361-4a59-9be5-af2f8d1f7ef6,_Character);
+DB_ItemShopTrigger((TRIGGER)S_LOW_BonecloakApothecary_OwnershipTrigger_45894b20-6361-4a59-9be5-af2f8d1f7ef6,(CHARACTER)_Character);
+PROC_SetCustomTradeTreasure(_Character,"LOW_Apothecary_Bonecloak_NoNobleStalk");
+//END_REGION
+
+//REGION Derryth's Setup
+// Check whether Derryth kept Noblestalk till LOW
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7)
+AND
+DB_GlobalFLag((FLAG)UND_DwarvenAlchemist_State_AlchemistGotNoblestalk_db341d2b-ba62-0ad6-0bcb-35eb5104b5f7)
+AND
+GetFlag((FLAG)UND_MushroomHunter_State_HasMushroom_7b86b816-a97c-4500-9398-ef4c7f344e0b,S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,0)
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)UND_DwarvenAlchemist_State_AlchemistGotNoblestalk_db341d2b-ba62-0ad6-0bcb-35eb5104b5f7);
+
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7)
+AND
+NOT DB_GlobalFlag((FLAG)UND_MushroomHunter_Event_AteMushroom_617a7a68-9ce9-26e8-883d-7cb98665540c)
+THEN
+TeleportTo(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7, S_LOW_Bonecloak_VendorPos_06bb0f42-b895-43d9-91c9-dd0604aecf3a);
+PROC_LOW_Bonecloak_SetupShopOwner(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7);
+
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7)
+AND
+DB_GlobalFlag((FLAG)UND_MushroomHunter_Event_AteMushroom_617a7a68-9ce9-26e8-883d-7cb98665540c)
+THEN
+TeleportTo(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7, S_LOW_BonecloakApothecary_DerrythDivorcedPos_91eb375c-9cdc-44e4-bb6c-9c6888ec2783);
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BonecloakApothecary_State_DerrythDivorced_0d0124ea-d047-1c62-5e0d-4e3bd26d8a17);
+
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7)
+AND
+QRY_LOW_Bonecloak_BaelenDidntReachBG()
+THEN
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenDead_2ab9c86e-4add-4ee2-9420-90de17046dfa,1);
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BonecloakApothecary_State_BaelenDidntReachBG_0f67d8bd-7395-42bb-a55d-cadecd4ba489);
+
+QRY
+QRY_LOW_Bonecloak_BaelenDidntReachBG()
+AND
+NOT DB_GlobalFlag((FLAG)UND_MushroomHunter_State_Saved_cd1f8012-322b-4135-bb40-54580bf5cea1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_LOW_Bonecloak_BaelenDidntReachBG()
+AND
+DB_PermaDefeated(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b)
+THEN
+DB_NOOP(1);
+
+// Override for Derryth's LOW trade treasure in case she has Noblestalk
+PROC
+PROC_LOW_Bonecloak_SetupShopOwner(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7)
+AND
+DB_GlobalFlag((FLAG)UND_DwarvenAlchemist_State_AlchemistGotNoblestalk_db341d2b-ba62-0ad6-0bcb-35eb5104b5f7)
+THEN
+Die(S_UND_MushroomHunter_Noblestalk_09561b3f-f556-4a01-b289-9b362bc0d43a);
+PROC_SetCustomTradeTreasure(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,"LOW_Apothecary_Bonecloak_HasNobleStalk");
+
+// Giving Noblestalk in Act 3
+PROC
+PROC_LongRest()
+AND
+NOT DB_LOW_BonecloakApothecary_NoblestalkPropagated(1)
+AND
+DB_GlobalFlag((FLAG)LOW_BonecloakApothecary_Derryth_GaveNoblestalkAct3_e427da7e-40fa-960d-1100-8e12fb432a9e)
+AND
+GetFlag((FLAG)UND_MushroomHunter_State_HasMushroom_7b86b816-a97c-4500-9398-ef4c7f344e0b,S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,1)
+THEN
+DB_LOW_BonecloakApothecary_NoblestalkPropagated(1);
+PROC_SetCustomTradeTreasure((CHARACTER)S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,"LOW_Apothecary_Bonecloak_HasNobleStalk");
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BonecloakApothecary_State_Propagated_3ee2784c-c2d3-c5e2-d448-8f6b9fb260d8);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)LOW_BonecloakApothecary_Derryth_810507dc-0586-8e62-c23f-fa810bd30181,S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,_Player)
+AND
+GetFlag((FLAG)LOW_BonecloakApothecary_HasMet_DerrythInUND_9937c63a-93cb-4006-a0f8-abdbcea3e8a7,_Player,0)
+AND
+DB_LOW_Bonecloak_MetDerrythUNDFlags(_HasMetFlag)
+AND
+GetFlag(_HasMetFlag,_Player,1)
+THEN
+SetFlag((FLAG)LOW_BonecloakApothecary_HasMet_DerrythInUND_9937c63a-93cb-4006-a0f8-abdbcea3e8a7,_Player);
+//END_REGION
+
+//REGION  Baelen's Setup
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BonecloakApothecary_State_BaelenDidntReachBG_0f67d8bd-7395-42bb-a55d-cadecd4ba489)
+AND
+DB_GlobalFlag((FLAG)UND_MushroomHunter_Event_AteMushroom_617a7a68-9ce9-26e8-883d-7cb98665540c)
+THEN
+TeleportTo(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b, S_LOW_Bonecloak_VendorPos_06bb0f42-b895-43d9-91c9-dd0604aecf3a);
+PROC_LOW_Bonecloak_SetupShopOwner(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenHealed_b24e763d-b511-4c7a-9fd4-098fc2515099,1);
+
+PROC
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse((CHARACTER)S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_BonecloakApothecary_State_BaelenDidntReachBG_0f67d8bd-7395-42bb-a55d-cadecd4ba489)
+AND
+NOT DB_GlobalFlag((FLAG)UND_MushroomHunter_Event_AteMushroom_617a7a68-9ce9-26e8-883d-7cb98665540c)
+THEN
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenUnhealed_000_ac804c87-5b3f-4df1-8ece-6140fc079197,1);
+TeleportTo(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b, S_LOW_Bonecloak_BaelenAssistantPos_21aaa7de-5392-407f-8129-9f605dc90b65);
+DB_OneShot_ADTrigger((TRIGGER)S_LOW_BonecloakArea_88e89a0e-da6d-4f25-8277-dc0a7f1906e3,(DIALOGRESOURCE)LOW_BonecloakApothecary_AD_DerrythBossingBaelen_ab83155d-07ea-83dc-1b77-f3b274bc8ab8,S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b);
+
+// Adding Derryth in Baelen's Dialog in case he's her assistant
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)LOW_BonecloakApothecary_Baelen_4d5f1a1b-f719-fd89-b6df-48f1bc016d2a,_ID)
+AND
+NOT DB_GlobalFlag((FLAG)UND_MushroomHunter_Event_AteMushroom_617a7a68-9ce9-26e8-883d-7cb98665540c)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7);
+//END_REGION
+
+//REGION If Derryth is the shop owner, spouses go perma hostile if see one of them killed by the player
+IF
+KilledBy(_Victim,_PartyMember,_,_)
+AND
+DB_LOW_Bonecloak_Couple(_Victim,_VictimDialog)
+AND
+DB_LOW_Bonecloak_Couple(_OtherSpouse,_OtherSpouseDialog)
+AND
+_Victim != _OtherSpouse
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+AND
+DB_Sees(_OtherSpouse,_PartyMember)
+THEN
+PROC_SetRelationToPlayers((FACTION)Act3_LOW_Bonecloak_Civilians_8c64b097-10d6-4bd1-945a-34b4d216ce9e,0);
+//END_REGION
+
+//REGION Cats
+IF
+FlagSet((FLAG)LOW_BonecloakApothecary_State_Housecat_74e6c7e1-00fc-88ba-2a7d-1b14edfb8491,_Cat,_)
+THEN
+TriggerRegisterForCharacter((TRIGGER)S_LOW_BonecloakApothecary_OwnershipTrigger_45894b20-6361-4a59-9be5-af2f8d1f7ef6,(CHARACTER)_Cat);
+
+IF
+EnteredTrigger(_Cat,(TRIGGER)S_LOW_BonecloakApothecary_OwnershipTrigger_45894b20-6361-4a59-9be5-af2f8d1f7ef6)
+AND
+NOT DB_Defeated(_Cat)
+AND
+GetFlag((FLAG)LOW_BonecloakApothecary_State_Housecat_74e6c7e1-00fc-88ba-2a7d-1b14edfb8491,_Cat,1)
+THEN
+DB_LOW_Bonecloak_DerrythsCat(_Cat);
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BonecloakApothecary_State_CatArrived_97f0d528-039a-4665-ab9f-95ba2f3c0272);
+
+PROC
+PROC_StateSet_PermaDefeated(_DerrythsCat)
+AND
+DB_LOW_Bonecloak_DerrythsCat((CHARACTER)_DerrythsCat)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BonecloakApothecary_State_DerrythsCat_PermaDefeated_1b026228-5423-48f0-8377-726f2e3efd26);
+
+IF
+FlagSet((FLAG)LOW_BonecloakApothecary_State_CatArrived_97f0d528-039a-4665-ab9f-95ba2f3c0272,_,_)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)LOW_BonecloakApothecary_AD_DerrythMeetsCat_ebbb4c8e-7887-1be2-c9cc-d540408c4d91,S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7);
+
+IF
+KilledBy(_DerrythsCat,_PartyMember,_,_)
+AND
+DB_LOW_Bonecloak_DerrythsCat(_DerrythsCat)
+AND
+DB_PartyMembers((CHARACTER)_PartyMember)
+AND
+DB_Sees(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,_PartyMember)
+THEN
+PROC_SetRelationToPlayers((FACTION)Act3_LOW_Bonecloak_Civilians_8c64b097-10d6-4bd1-945a-34b4d216ce9e,0);
+
+IF
+FlagSet((FLAG)LOW_BonecloakApothecary_Event_Cat_01_FollowsPlayer_c4b141f9-5b6c-2428-d402-8c58f3b3df96,_Player,_)
+THEN
+SetFlag((FLAG)LOW_BonecloakApothecary_State_Cat_01_FollowsPlayer_9759e855-dbb6-4f93-9920-8ba67c6778be);
+SetDualEntityEvent(S_LOW_BonecloakApothecary_CatForDerryth01_43dc449e-80a5-40fc-bad5-6901287424be,_Player,"LOW_BonecloakApothecary_Cat01FollowPlayer",1);
+
+IF
+FlagCleared((FLAG)LOW_BonecloakApothecary_Event_Cat_01_FollowsPlayer_c4b141f9-5b6c-2428-d402-8c58f3b3df96,_,_)
+THEN
+ClearFlag((FLAG)LOW_BonecloakApothecary_State_Cat_01_FollowsPlayer_9759e855-dbb6-4f93-9920-8ba67c6778be);
+//END_REGION
+
+//REGION Debug
+IF
+FlagSet((FLAG)LOW_BonecloakApothecary_Debug_DerrythPermaDefeatedInAct1_d83e9954-9eb2-4999-889e-31b5518aa52c,_,_)
+THEN
+PROC_SetOnStage(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,0);
+PROC_SetOnStage(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b,0);
+PROC_ItemCloseAndLock((ITEM)S_LOW_BonecloakApothecary_DoorBonecloakFront_9a13061a-6ac5-4cd2-9252-bac669fa6128,"NoKey");
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_ClosedNotice_fce5168c-5046-4728-a74c-342a6f3b393d,1);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenUnhealed_000_ac804c87-5b3f-4df1-8ece-6140fc079197,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenHealed_b24e763d-b511-4c7a-9fd4-098fc2515099,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenDead_2ab9c86e-4add-4ee2-9420-90de17046dfa,0);
+
+IF
+FlagSet((FLAG)LOW_BonecloakApothecary_Debug_BaelenPermaDefeatedAct1_eafb6fda-0459-44ea-9a51-c1ff3316a13f,_,_)
+THEN
+Die(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b,DEATHTYPE.Necrotic,1);
+PROC_SetOnStage(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b,0);
+PROC_GlobalClearFlagAndCache((FLAG)LOW_BonecloakApothecary_State_BaelenDidntReachBG_0f67d8bd-7395-42bb-a55d-cadecd4ba489);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenDead_2ab9c86e-4add-4ee2-9420-90de17046dfa,1);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenHealed_b24e763d-b511-4c7a-9fd4-098fc2515099,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenUnhealed_000_ac804c87-5b3f-4df1-8ece-6140fc079197,0);
+
+IF
+FlagSet((FLAG)UND_MushroomHunter_State_Saved_cd1f8012-322b-4135-bb40-54580bf5cea1,_,_)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+PROC_GlobalClearFlagAndCache((FLAG)LOW_BonecloakApothecary_State_BaelenDidntReachBG_0f67d8bd-7395-42bb-a55d-cadecd4ba489);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenHealed_b24e763d-b511-4c7a-9fd4-098fc2515099,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenUnhealed_000_ac804c87-5b3f-4df1-8ece-6140fc079197,1);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenDead_2ab9c86e-4add-4ee2-9420-90de17046dfa,0);
+PROC_LOW_Bonecloak_Setup_SurvivedSpouse(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b);
+
+IF
+FlagSet((FLAG)UND_DwarvenAlchemist_State_AlchemistGotNoblestalk_db341d2b-ba62-0ad6-0bcb-35eb5104b5f7,_,_)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+Die(S_UND_MushroomHunter_Noblestalk_09561b3f-f556-4a01-b289-9b362bc0d43a);
+PROC_SetCustomTradeTreasure(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7,"LOW_Apothecary_Bonecloak_HasNobleStalk");
+
+IF
+FlagSet((FLAG)UND_MushroomHunter_Event_AteMushroom_617a7a68-9ce9-26e8-883d-7cb98665540c,_,_)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+Die(S_UND_MushroomHunter_Noblestalk_09561b3f-f556-4a01-b289-9b362bc0d43a);
+TeleportTo(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b, S_LOW_Bonecloak_VendorPos_06bb0f42-b895-43d9-91c9-dd0604aecf3a);
+TeleportTo(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7, S_LOW_BonecloakApothecary_DerrythDivorcedPos_91eb375c-9cdc-44e4-bb6c-9c6888ec2783);
+PROC_GlobalSetFlagAndCache((FLAG)LOW_BonecloakApothecary_State_DerrythDivorced_0d0124ea-d047-1c62-5e0d-4e3bd26d8a17);
+PROC_LOW_Bonecloak_DebugClearShopOwner(S_GLO_Derryth_2b537d2a-14c8-43b3-ab71-d537c925a2a7);
+PROC_LOW_Bonecloak_SetupShopOwner(S_GLO_Baelen_711bd763-780d-4132-9662-3a8a06da6b1b);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenHealed_b24e763d-b511-4c7a-9fd4-098fc2515099,1);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenUnhealed_000_ac804c87-5b3f-4df1-8ece-6140fc079197,0);
+PROC_SetOnStage((ITEM)S_LOW_BonecloakApothecary_Journal_BaelenDead_2ab9c86e-4add-4ee2-9420-90de17046dfa,0);
+
+PROC
+PROC_LOW_Bonecloak_DebugClearShopOwner((CHARACTER)_Character)
+THEN
+DB_ItemOwnerShipClearItem("CTY_Main_A",S_LOW_BonecloakApothecary_DoorBonecloakFront_9a13061a-6ac5-4cd2-9252-bac669fa6128);
+DB_ItemOwnerShipClearItem("CTY_Main_A",S_LOW_BonecloakApothecary_DoorUpstairs_0d10bf70-f416-477b-8370-486b92c7e4a1);
+NOT DB_ItemOwnerShipTriggers("CTY_MAIN_A",(TRIGGER)S_LOW_BonecloakApothecary_OwnershipTrigger_45894b20-6361-4a59-9be5-af2f8d1f7ef6,_Character);
+NOT DB_ItemShopTrigger((TRIGGER)S_LOW_BonecloakApothecary_OwnershipTrigger_45894b20-6361-4a59-9be5-af2f8d1f7ef6,(CHARACTER)_Character);
+ClearTradeGeneratedItems(_Character);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act3b"

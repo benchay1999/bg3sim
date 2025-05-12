@@ -1,0 +1,56 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//apply a visual status when shortresting
+IF
+ShortRested(_Char)
+AND
+DB_PartyMembers(_Char)
+THEN
+ApplyStatus(_Char,"SHORT_REST",6.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+ShortRested(_Char)
+AND
+IsControlled(_Char, 1)
+THEN
+PROC_GLO_DoShortRestPAD(_Char);
+
+PROC
+PROC_GLO_DoShortRestPAD((CHARACTER)_Char)
+AND
+DB_Players(_Player)
+AND
+QRY_IsInRange(_Player, _Char, 10.0)
+AND
+NOT DB_Defeated((CHARACTER)_Player)
+THEN
+DB_DoShortRestPAD_Candidates((CHARACTER)_Player);
+
+PROC
+PROC_GLO_DoShortRestPAD(_Char)
+AND
+QRY_GetRandom("DB_DoShortRestPAD_Candidates", 1, "DB_DoShortRestPAD_RandomCandidate")
+AND
+DB_DoShortRestPAD_RandomCandidate((CHARACTER)_Player)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_PAD_PartyCommentsAfterShortRest_d08505e7-9c2d-7fc4-95ab-1a340692ac84, _Player);
+
+PROC
+PROC_GLO_DoShortRestPAD(_Char)
+AND
+DB_DoShortRestPAD_Candidates(_Candidates)
+THEN
+NOT DB_DoShortRestPAD_Candidates(_Candidates);
+
+PROC
+PROC_GLO_DoShortRestPAD(_Char)
+AND
+DB_DoShortRestPAD_RandomCandidate(_Player)
+THEN
+NOT DB_DoShortRestPAD_RandomCandidate(_Player);
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,1011 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+/*
+Databases used for this events
+DB_HasItemEvent((ITEM)_Item,(FLAG)_HasItemEvent);
+DB_GiveItemToEvent(_Item,(FLAG)_GiveItemToStoryEvent);
+DB_SetStoryFlagWhenEquipped((ITEM)_Item,(FLAG)_EquippedItemFlag);
+*/
+
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_41179aa7-bc85-02b5-1399-71a651d9dc85,1);
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_2_6e07cd32-5bde-85c8-6c0d-18b83f465a21,2);
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_3_74658cac-b888-ddaa-a306-ffa04dc42645,3);
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_4_1fde8abb-e22a-85a5-4971-4b0bae93879e,4);
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_5_07487248-1537-4a10-9588-f69ec72da4b9,5);
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_6_c639ec94-24d1-45a0-9a37-caa9b21a86de,6);
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)GEN_TransferNPCPayment_7_07d97ab6-4a6c-44ba-a593-77ce1498fcff,7); 
+
+DB_EquippedItemSlots("Melee Main Weapon");
+DB_EquippedItemSlots("Melee Offhand Weapon");
+DB_EquippedItemSlots("Ranged Main Weapon");
+DB_EquippedItemSlots("Ranged Offhand Weapon");
+DB_EquippedItemSlots("Helmet");
+DB_EquippedItemSlots("Breast");
+DB_EquippedItemSlots("Cloak");
+DB_EquippedItemSlots("Ring");
+DB_EquippedItemSlots("Underwear");
+DB_EquippedItemSlots("Boots");
+DB_EquippedItemSlots("Gloves");
+DB_EquippedItemSlots("Amulet");
+DB_EquippedItemSlots("Ring2");
+DB_EquippedItemSlots("VanityBody");
+DB_EquippedItemSlots("VanityBoots");
+
+//Mod-specific statuses that should be removed by the SOAP_WASH status can be defined in this database
+//For non-Shared statuses, database entries can be defined in the mod
+NOT DB_Splatters_Statuses("");
+
+// story build warning fixes
+NOT DB_RemoveItemFromTemplateEvent((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,0);
+NOT DB_GiveNewItemFromTemplateEvent((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,0);
+NOT DB_GiveTemplateFromNpcToPlayerDialogEvent((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,0);
+NOT DB_GiveTemplateFromPlayerDialogEvent((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000,0);
+NOT DB_ItemTemplateDialog((ITEMROOT)NULL_00000000-0000-0000-0000-000000000000,(DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000,0);
+KBSECTION
+//REGION Event Recheck triggers
+//see also ZZZ_ItemEvents for a trigger
+IF
+CharacterMadePlayer(_Player)
+THEN
+DB_IgnoreReservedChanged(_Player);
+
+IF
+DB_CharacterCreationDummy((CHARACTER)_Char)
+THEN
+DB_IgnoreReservedChanged(_Char);
+
+// Assign existing player character to a different user
+IF
+CharacterReservedUserIDChanged(_Char,_,_)
+AND
+DB_Players(_Char)
+AND
+NOT DB_IgnoreReservedChanged(_Char)
+THEN
+PROC_ItemEventCheck(1);
+
+IF
+CharacterReservedUserIDChanged(_Char,_,_)
+THEN
+NOT DB_IgnoreReservedChanged(_Char);
+
+IF
+InventorySharingChanged(_Char,_SharingEnabled)
+AND
+NOT DB_IgnoreReservedChanged(_Char)
+THEN
+PROC_ItemEventCheck(_SharingEnabled);
+
+IF
+SavegameLoaded()
+THEN
+PROC_ItemEventCheck(0);
+
+// This party member may have had an item that no one else had -> call PROC_ItemEventCheck(0)
+// This (now) NPC may also no longer have access to party items, but that has to be (and gets)
+// checked for each tracking type individually.
+IF
+CharacterLeftParty((CHARACTER)_Char)
+AND
+NOT DB_BlockOwnershipChecks(1)
+THEN
+PROC_ItemEventCheck(1);
+
+IF
+CharacterJoinedParty((CHARACTER)_Origin)
+AND
+NOT DB_BlockOwnershipChecks(1)
+THEN
+PROC_ItemEventCheck(1);
+
+IF
+TextEvent("recheckitems")
+THEN
+PROC_ItemEventCheck(0);
+//END_REGION
+
+//REGION Private
+PROC
+PROC_SetMagicPocketsItemTemplatecount((CHARACTER)_Player,(GUIDSTRING)_Template,(INTEGER)_)
+AND
+DB_MagicPocketsItemTemplateCount(_Player,_Template,_Count)
+THEN
+NOT DB_MagicPocketsItemTemplateCount(_Player,_Template,_Count);
+
+PROC
+PROC_SetMagicPocketsItemTemplatecount((CHARACTER)_Player,(GUIDSTRING)_Template,(INTEGER)_Count)
+THEN
+DB_MagicPocketsItemTemplateCount(_Player,_Template,_Count);
+//END_REGION
+
+//REGION Magic Pockets procedures
+QRY
+QRY_ItemInMagicPockets((CHARACTER)_Char,(ITEM)_Item)
+AND
+IsInMagicPockets(_Item,_Char,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ItemTemplateInMagicPockets((CHARACTER)_Char,(ITEMROOT)_ItemTemplate)
+AND
+TemplateGetCountInMagicPockets(_ItemTemplate,_Char,_Count)
+AND
+_Count > 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TaggedItemInMagicPockets((CHARACTER)_Character,(STRING)_Tag)
+AND
+TaggedItemsGetCountInMagicPockets(_Tag,_Character,_Count)
+AND
+_Count > 0
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ItemTemplateInMagicPocketsCount((CHARACTER)_Player,(ITEMROOT)_Template)
+AND
+TemplateGetCountInMagicPockets(_Template,_Player,_Count)
+AND
+_Count > 0
+THEN
+PROC_SetMagicPocketsItemTemplatecount(_Player,_Template,_Count);
+
+QRY
+QRY_TakeItemFromMagicPockets((CHARACTER)_Player,(ITEM)_Item,(CHARACTER)_TargetCharacter)
+AND
+IsInMagicPockets(_Item,_Player,1)
+THEN
+ToInventory(_Item,_TargetCharacter);
+
+QRY
+QRY_TakeItemTemplateFromMagicPockets((CHARACTER)_Character,(ITEMROOT)_ItemTemplate,(INTEGER)_Amount,(CHARACTER)_TargetCharacter)
+AND
+TemplateGetCountInMagicPockets(_ItemTemplate,_Character,_TotalAmount)
+AND
+_TotalAmount >= _Amount
+THEN
+MagicPocketsMoveToByTemplate(_Character,_ItemTemplate,_Amount,_TargetCharacter,0,0);
+
+QRY
+QRY_RemoveLocalItemsByTemplateFromMagicPockets((CHARACTER)_Character,(ITEMROOT)_ItemTemplate,(INTEGER)_Amount)
+AND
+TemplateGetCountInMagicPockets(_ItemTemplate,_Character,_HaveAmount)
+AND
+_HaveAmount >= _Amount
+THEN
+MagicPocketsDestroyLocalItemsByTemplate(_Character,_ItemTemplate,_Amount);
+
+QRY
+QRY_EvaluateMagicPocketGold((CHARACTER)_Character,"<",(INTEGER)_Amount)
+AND
+GetGoldInMagicPockets(_Character,_Gold)
+AND
+_Gold < _Amount
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_EvaluateMagicPocketGold((CHARACTER)_Character,"<=",(INTEGER)_Amount)
+AND
+GetGoldInMagicPockets(_Character,_Gold)
+AND
+_Gold <= _Amount
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_EvaluateMagicPocketGold((CHARACTER)_Character,">",(INTEGER)_Amount)
+AND
+GetGoldInMagicPockets(_Character,_Gold)
+AND
+_Gold > _Amount
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_EvaluateMagicPocketGold((CHARACTER)_Character,">=",(INTEGER)_Amount)
+AND
+GetGoldInMagicPockets(_Character,_Gold)
+AND
+_Gold >= _Amount
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_EvaluateMagicPocketGold((CHARACTER)_Character,"==",(INTEGER)_Amount)
+AND
+GetGoldInMagicPockets(_Character,_Gold)
+AND
+_Gold == _Amount
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_AddGoldToMagicPockets((CHARACTER)_Char,(INTEGER)_Gold)
+THEN
+AddGoldToMagicPockets(_Char,_Gold);
+
+PROC
+PROC_SetMagicPocketsOwnershipFlag((GUIDSTRING)_Owner,(FLAG)_Flag)
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Owner,_Flag,1);
+
+PROC
+PROC_SetMagicPocketsOwnershipFlag((GUIDSTRING)_Owner,(FLAG)_Flag,(INTEGER)_SendChangedEvents)
+THEN
+SetMagicPocketsFlag(_Owner,_Flag,_SendChangedEvents);
+
+PROC
+PROC_ClearMagicPocketsOwnershipFlag((GUIDSTRING)_Owner,(FLAG)_Flag)
+THEN
+PROC_ClearMagicPocketsOwnershipFlag(_Owner,_Flag,1);
+
+PROC
+PROC_ClearMagicPocketsOwnershipFlag((GUIDSTRING)_Owner,(FLAG)_Flag,(INTEGER)_SendChangedEvents)
+THEN
+ClearMagicPocketsFlag(_Owner,_Flag,_SendChangedEvents);
+
+QRY
+QRY_ItemInTeamMagicPocketsOrCampChest((GUIDSTRING)_Object)
+AND
+DB_Players(_Character)
+AND
+IsInMagicPockets(_Object,_Character,1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION General Give - Take Gold in dialogs
+
+// Usage:
+//   DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Amount)
+//   DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Amount,_CheckSpeakerIndex)
+//   DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Amount,_CheckSpeakerIndex,_TargetDBIndex)
+//
+// Parameters:
+//   - _MoneyVarIndex: 1 - 7 (use different GEN_CheckMagicPocketGold variables)
+//   - _Dialog: name of the dialog
+//   - _Amount: amount of money transfer
+//   - _CheckSpeakerIndex: the speaker index on which the money should be checked by the
+//     GEN_CheckPocketGold* script flags. If not specified, defaults to 2 (player in most cases).
+//      ** NOTE: this Speaker index is a dialog speaker index, as assigned in the dialog
+//   - _TargetDBIndex: when the GEN_TransferNPCPayment/GEN_TransferNPCPayment_2/../GEN_TransferNPCPayment_5 flag
+//     is set on a player in a dialog, transfer the money from that player to DB_DialogNPCs(_ID,_NPC,_TargetDBIndex).
+//     When set on an NPC in a dialog, transfer from that NPC to DB_DialogPlayers(_ID,_Player,_TargetDBIndex).
+//     If not specified, defaults to 1 (first NPC/player in dialog)
+//      ** NOTE: this index is an index in DB_DialogNPCs resp. DB_DialogPlayers, and hence is unrelated to the
+//               the speaker indices in the dialog editor!
+//
+//  If someone does not have enough gold and a transfer is requested, all of their gold will be transferred instead.
+//
+//   DB_DialogMoneyTransfer_ForInstance(_MoneyVarIndex,_Dialog,_NPC)
+//     If defined, the information will be cached at the start of the dialog, so that in case multiple instances of the dialog
+//     run at the same time, they won't overwrite each other's values. The (first) NPC speaker has to be specified because
+//     this will be set only when the DialogStarted event arrives, and the same dialog could be started with multiple characters
+//     at the same time (e.g. generics)
+
+//REGION Default speaker to check and target Player/NPC for the money transfer if unspecified
+PROC
+PROC_ItemEvents_DialogMoneyTransfer_New((INTEGER)_MoneyVarIndex,(DIALOGRESOURCE)_Dialog,(INTEGER)_Amount,(INTEGER)_CheckSpeakerIndex,(INTEGER)_TargetDBIndex)
+AND
+DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_AnyAmount,_AnyCheckSpeakerIndex,_AnyTargetDBIndex)
+THEN
+NOT DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_AnyAmount,_AnyCheckSpeakerIndex,_AnyTargetDBIndex);
+
+PROC
+PROC_ItemEvents_DialogMoneyTransfer_New((INTEGER)_MoneyVarIndex,(DIALOGRESOURCE)_Dialog,(INTEGER)_Amount,(INTEGER)_CheckSpeakerIndex,(INTEGER)_TargetDBIndex)
+THEN
+DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Amount,_CheckSpeakerIndex,_TargetDBIndex);
+
+// Default to most common player speaker index (2) and transfer to the first NPC or Player in the dialog (1)
+IF
+DB_DialogMoneyTransfer((INTEGER)_MoneyVarIndex,(DIALOGRESOURCE)_Dialog,(INTEGER)_Amount)
+THEN
+PROC_ItemEvents_DialogMoneyTransfer_New(_MoneyVarIndex,_Dialog,_Amount,2,1);
+
+IF
+DB_DialogMoneyTransfer((INTEGER)_MoneyVarIndex,(DIALOGRESOURCE)_Dialog,(INTEGER)_Amount,(INTEGER)_CheckSpeakerIndex)
+THEN
+PROC_ItemEvents_DialogMoneyTransfer_New(_MoneyVarIndex,_Dialog,_Amount,_CheckSpeakerIndex,1);
+//END_REGION
+
+//REGION Transfer gold between player and NPC
+// If the transfer flag is set on a player, transfer from player to NPC. Otherwise vice versa.
+IF
+FlagSet((FLAG)_TransferMoneyInDialogEvent, _Source, _ID) // flagType: Object
+AND
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)_TransferMoneyInDialogEvent,_MoneyVarIndex)
+AND
+NOT DB_DialogMoneyTransfer_InstanceData(_ID,_MoneyVarIndex,_,_,_)
+AND
+DB_DialogName(_Dialog,_ID)
+AND
+DB_DialogMoneyTransfer(_MoneyVarIndex,_Dialog,_Amount,_CheckSpeakerIndex,_TargetDBIndex)
+THEN
+PROC_TransferMoneyInDialog(_ID,_Amount,(CHARACTER)_Source,_TargetDBIndex);
+
+IF
+FlagSet((FLAG)_TransferMoneyInDialogEvent, _Source, _ID) // flagType: Object
+AND
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)_TransferMoneyInDialogEvent,_MoneyVarIndex)
+AND
+DB_DialogMoneyTransfer_InstanceData(_ID,_MoneyVarIndex,_Amount,_CheckSpeakerIndex,_TargetDBIndex)
+THEN
+PROC_TransferMoneyInDialog(_ID,_Amount,(CHARACTER)_Source,_TargetDBIndex);
+
+
+//Player -> NPC
+PROC
+PROC_TransferMoneyInDialog((INTEGER)_ID,(INTEGER)_Amount,(CHARACTER)_Source,(INTEGER)_TargetIndex)
+AND
+DB_DialogPlayers(_ID,_Source,_)
+AND
+DB_DialogNPCs(_ID,_NPC,_TargetIndex)
+AND
+QRY_EvaluateMagicPocketGold((CHARACTER)_Source,">=",_Amount)
+THEN
+RemoveGoldFromMagicPockets(_Source,_Amount);
+AddGold((CHARACTER)_NPC,_Amount);
+DB_TransferMoneyInDialog_Succeeded(1);
+
+//NPC -> Player
+PROC
+PROC_TransferMoneyInDialog(_ID,_Amount,_Source,_TargetIndex)
+AND
+DB_DialogNPCs(_ID,_Source,_)
+AND
+DB_DialogPlayers(_ID,_Player,_TargetIndex)
+AND
+GetGold(_Source,_NPCGold)
+AND
+_Amount <= _NPCGold
+AND
+IntegerSubtract(0,_Amount,_RemoveGold)
+THEN
+AddGoldToMagicPockets((CHARACTER)_Player,_Amount);
+AddGold(_Source,_RemoveGold);
+DB_TransferMoneyInDialog_Succeeded(1);
+
+//END_REGION
+
+//REGION Reset transfer flag
+//Throw assert if transfer failed (not enough money, database not defined,...)
+IF
+FlagSet((FLAG)_TransferMoneyInDialogEvent, _Source, _ID) // flagType: Object
+AND
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)_TransferMoneyInDialogEvent,_)
+AND
+NOT DB_TransferMoneyInDialog_Succeeded(1)
+AND
+DB_DialogName(_Dialog,_ID)
+AND
+GUIDToString(_Dialog, _DialogName)
+AND
+Concatenate("GEN_TransferNPCPayment failed for: ",_DialogName,_ErrorMessage)
+THEN
+DebugBreak(_ErrorMessage);
+
+//Reset everything
+IF
+FlagSet((FLAG)_TransferMoneyInDialogEvent, _Source, _ID) // flagType: Object
+AND
+DB_ItemEvents_TransferFlagToMoneyVarIndex((FLAG)_TransferMoneyInDialogEvent,_)
+THEN
+NOT DB_TransferMoneyInDialog_Succeeded(1);
+ClearFlag((FLAG)_TransferMoneyInDialogEvent, _Source); // flagType: Object
+//END_REGION
+
+//END_REGION
+
+//REGION Has, lose and give items
+IF
+AddedTo(_Item,_Owner, _)
+AND
+DB_HasItemEvent((ITEM)_Item,_Event)
+AND
+Exists(_Item,1)
+THEN
+SetOnStage(_Item,1);
+PROC_SetMagicPocketsOwnershipFlag(_Owner,_Event);
+
+IF
+RemovedFrom(_Item,_Owner)
+AND
+DB_HasItemEvent((ITEM)_Item,_Event)
+THEN
+PROC_ClearMagicPocketsOwnershipFlag(_Owner,_Event);
+
+IF
+DB_HasItemEvent((ITEM)_Item,(FLAG)_Event)
+THEN
+DB_CheckNewHasItemEvent((ITEM)_Item,(FLAG)_Event);
+
+PROC
+PROC_CheckNewHasItemEvent((ITEM)_Item,(FLAG)_Event)
+AND
+Exists(_Item, 1)
+AND
+GetInventoryOwner(_Item,_Owner)
+AND
+_Owner!=NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Owner,_Event);
+
+IF
+DB_CheckNewHasItemEvent((ITEM)_Item,(FLAG)_Event)
+AND
+DB_ActiveLevel(_Level)
+AND
+Exists(_Item,1)
+AND
+GetRegion(_Item,_Level)
+THEN
+NOT DB_CheckNewHasItemEvent((ITEM)_Item,(FLAG)_Event);
+PROC_CheckNewHasItemEvent((ITEM)_Item,(FLAG)_Event);
+
+IF
+FlagSet(_Event, _Char, _) // flagType: Object
+AND
+DB_GiveItemToEvent((ITEM)_Item,_Event)
+THEN
+ToInventory(_Item,_Char,1);
+
+//For giving the same item multiple times
+IF
+FlagSet(_Event, _Char, _) // flagType: Object
+AND
+DB_GiveItemToEventWithClear((ITEM)_Item,_Event)
+THEN
+ToInventory(_Item,_Char,1);
+ClearFlag(_Event, _Char, 0); // flagType: Object
+
+// This PROC is only called when party conditions have changed, so limit it to players
+// First clear the flag for everyone if it is possible that some characters lost access,
+// then (always) set it for the ones that need it
+PROC
+PROC_ItemEventCheck((INTEGER)_ExpandOnly)
+AND
+_ExpandOnly == 0
+AND
+DB_HasItemEvent(_Item,_Event)
+AND
+DB_Players(_Char)
+THEN
+PROC_ClearMagicPocketsOwnershipFlag(_Char,_Event,_ExpandOnly);
+
+PROC
+PROC_ItemEventCheck((INTEGER)_ExpandOnly)
+AND
+DB_HasItemEvent(_Item,_Event)
+AND
+Exists(_Item,1)
+AND
+GetInventoryOwner(_Item,_Owner)
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Owner,_Event,_ExpandOnly);
+//END_REGION
+
+//REGION Items that have flag when equipped (per-character flag)
+
+IF
+Equipped(_Item,_Char)
+AND
+DB_SetStoryFlagWhenEquipped(_Item,(FLAG)_Event)
+THEN
+SetFlag(_Event, _Char); // flagType: Object
+
+IF
+Unequipped(_Item,_Char)
+AND
+DB_SetStoryFlagWhenEquipped(_Item,(FLAG)_Event)
+THEN
+ClearFlag(_Event, _Char); // flagType: Object
+
+//END_REGION
+
+
+//REGION On item template on gain and lose
+//DB_PlayerHasTemplateItem((ITEMROOT)_template,(FLAG)_HasItemFlag)
+//If item is added to inventory
+IF
+TemplateAddedTo(_template,_item,_Owner, _)
+AND
+DB_PlayerHasTemplateItem((ITEMROOT)_template,(FLAG)_flag)
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Owner,_flag);
+
+//If item is removed from inventory
+IF
+TemplateRemovedFrom((ITEMROOT)_template,_item,_Owner)
+AND
+DB_PlayerHasTemplateItem(_template,_flag)
+THEN
+PROC_CheckItemTemplateEvents(_template,_flag,1);
+
+IF
+DB_PlayerHasTemplateItem((ITEMROOT)_template,(FLAG)_flag)
+THEN
+PROC_CheckItemTemplateEvents(_template,_flag,1);
+
+PROC
+PROC_ItemEventCheck((INTEGER)_ExpandOnly)
+AND
+DB_PlayerHasTemplateItem(_template,_flag)
+THEN
+PROC_CheckItemTemplateEvents(_template,_flag,1);
+
+//Because of how SetMagicPocketsFlag propagates, we can't use TemplateGetCountInMagicPockets (Player A has Avatar1 and Companion1. Player B has Avatar2. Companion1 has the templated item AND a locked inventory. So Avatar1 can access it but Avatar2 can't. But if we call TemplateGetCountInMagicPockets on Avatar1 (count > 1) and then call SetMagicPocketsFlag on Avatar 1, it would propagate the flag to Avatar2 as well since Avatar1 does not have their inventory locked.
+//Instead we'll do:
+//1. Clear all flags for all players
+//2. Check all players, camp chests and dismissedcompanions individually and propagate the flag out from them.
+PROC
+PROC_CheckItemTemplateEvents((ITEMROOT)_Template,(FLAG)_Flag,(INTEGER)_SendEvents)
+AND
+DB_Players(_Player)
+THEN
+PROC_ClearMagicPocketsOwnershipFlag(_Player,_Flag,_SendEvents);
+
+//Players
+PROC
+PROC_CheckItemTemplateEvents((ITEMROOT)_Template,(FLAG)_Flag,(INTEGER)_SendEvents)
+AND
+DB_Players(_Player)
+AND
+TemplateIsInInventory(_Template,_Player,_Count)
+AND
+_Count >= 1
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Player,_Flag,_SendEvents);
+
+//Camp Chests
+PROC
+PROC_CheckItemTemplateEvents((ITEMROOT)_Template,(FLAG)_Flag,(INTEGER)_SendEvents)
+AND
+DB_Camp_UserCampChest(_,_Chest)
+AND
+TemplateIsInInventory(_Template,_Chest,_Count)
+AND
+_Count >= 1
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Chest,_Flag,_SendEvents);
+
+//Dismissed Companions (in camp)
+PROC
+PROC_CheckItemTemplateEvents((ITEMROOT)_Template,(FLAG)_Flag,(INTEGER)_SendEvents)
+AND
+DB_InCamp(_Character)
+AND
+DB_GLO_Playable(_Character)
+AND
+NOT DB_Players(_Character)
+AND
+TemplateIsInInventory(_Template,_Character,_Count)
+AND
+_Count >= 1
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Character,_Flag,_SendEvents);
+
+//Dismissed Companions (on their way to camp)
+PROC
+PROC_CheckItemTemplateEvents((ITEMROOT)_Template,(FLAG)_Flag,(INTEGER)_SendEvents)
+AND
+DB_CAMP_WalkingToCamp(_Character)
+AND
+DB_GLO_Playable(_Character)
+AND
+NOT DB_Players(_Character)
+AND
+TemplateIsInInventory(_Template,_Character,_Count)
+AND
+_Count >= 1
+THEN
+PROC_SetMagicPocketsOwnershipFlag(_Character,_Flag,_SendEvents);
+//END_REGION
+
+//REGION Have item template check via scriptflag
+PROC
+PROC_ItemEvents_ItemTemplateScriptFlag_New((INTEGER)_TemplateVarIndex,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount, (INTEGER)_MoveAndReport)
+AND
+DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport)
+AND
+_AnyItemTemplate != _ItemTemplate
+THEN
+NOT DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport);
+
+PROC
+PROC_ItemEvents_ItemTemplateScriptFlag_New((INTEGER)_TemplateVarIndex,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount, (INTEGER)_MoveAndReport)
+AND
+DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport)
+AND
+_AnySpeakerIndex != _SpeakerIndex
+THEN
+NOT DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport);
+
+PROC
+PROC_ItemEvents_ItemTemplateScriptFlag_New((INTEGER)_TemplateVarIndex,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount, (INTEGER)_MoveAndReport)
+AND
+DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport)
+AND
+_AnyAmount != _Amount
+THEN
+NOT DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport);
+
+PROC
+PROC_ItemEvents_ItemTemplateScriptFlag_New((INTEGER)_TemplateVarIndex,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount, (INTEGER)_MoveAndReport)
+AND
+DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport)
+AND
+_AnyMoveAndReport != _MoveAndReport
+THEN
+NOT DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _AnyItemTemplate, _AnySpeakerIndex, _AnyAmount, _AnyMoveAndReport);
+
+PROC
+PROC_ItemEvents_ItemTemplateScriptFlag_New((INTEGER)_TemplateVarIndex,(DIALOGRESOURCE)_Dialog,(GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount, (INTEGER)_MoveAndReport)
+THEN
+DB_HasItemTemplateScriptFlag(_TemplateVarIndex, _Dialog, _ItemTemplate, _SpeakerIndex, _Amount, _MoveAndReport);
+
+// Default to one item
+IF
+DB_HasItemTemplateScriptFlag((INTEGER)_TemplateVarIndex, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex)
+THEN
+PROC_ItemEvents_ItemTemplateScriptFlag_New(_TemplateVarIndex, _Dialog, _ItemTemplate, _SpeakerIndex, 1, 0);
+
+IF
+DB_HasItemTemplateScriptFlag((INTEGER)_TemplateVarIndex, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount)
+THEN
+PROC_ItemEvents_ItemTemplateScriptFlag_New(_TemplateVarIndex, _Dialog, _ItemTemplate, _SpeakerIndex, _Amount, 0);
+
+IF
+DB_HasItemTemplateScriptFlag((INTEGER)_TemplateVarIndex, (DIALOGRESOURCE)_Dialog, (GUIDSTRING)_ItemTemplate, (INTEGER)_SpeakerIndex, (INTEGER)_Amount, (INTEGER)_MoveAndReport)
+THEN
+PROC_ItemEvents_ItemTemplateScriptFlag_New(_TemplateVarIndex, _Dialog, _ItemTemplate, _SpeakerIndex, _Amount, _MoveAndReport);
+
+//END_REGION
+
+//REGION Give/remove Item template
+//Gives item when flag is set
+IF
+FlagSet((FLAG)_event, (CHARACTER)_target, _inst) // flagType: Object
+AND
+DB_GiveTemplateFromPlayerDialogEvent((ITEMROOT)_template,(FLAG)_event,(FLAG)_success,(INTEGER)_quantity)
+AND
+DialogGetInvolvedPlayer(_inst, 1, (CHARACTER)_player)
+THEN
+ClearFlag((FLAG)_event, _target, 0); // flagType: Object //Flag is cleared again
+PROC_PlayerGivesItemFromTemplate(_player,_target,_template,(FLAG)_success,_quantity);
+
+
+//Gives item when flag is set
+IF
+FlagSet((FLAG)_event, (CHARACTER)_target, _inst) // flagType: Object
+AND
+DB_GiveTemplateFromNpcToPlayerDialogEvent((ITEMROOT)_template,(FLAG)_event,(FLAG)_success,(INTEGER)_quantity)
+AND
+DialogGetInvolvedPlayer(_inst, 1, (CHARACTER)_player)
+THEN
+ClearFlag((FLAG)_event, _target, 0); // flagType: Object //Flag is cleared again
+PROC_NPCGivesItemFromTemplate(_target,_player,_template,(FLAG)_success,_quantity);
+
+
+//Gives item when flag is set
+IF
+FlagSet((FLAG)_event, _char, _) // flagType: Object
+AND
+DB_GiveNewItemFromTemplateEvent((ITEMROOT)_template,(FLAG)_event,(INTEGER)_quantity)
+THEN
+ClearFlag((FLAG)_event, (CHARACTER)_char, 0); // flagType: Object //Flag is cleared again
+TemplateAddTo(_template,_char,_quantity);
+
+
+//Remove item when flag set
+IF
+FlagSet((FLAG)_event, (CHARACTER)_char, _) // flagType: Object
+AND
+DB_RemoveItemFromTemplateEvent((ITEMROOT)_template,(FLAG)_event,(FLAG)_success,(INTEGER)_quantity)
+AND
+NOT DB_RemoveItemFromTemplate_InProgress((FLAG)_event)
+THEN
+DB_RemoveItemFromTemplate_InProgress((FLAG)_event);
+ClearFlag((FLAG)_event, _char, 0); // flagType: Object //Flag is cleared again
+PROC_RemoveItemFromTemplate(_char,_template,(FLAG)_success,(INTEGER)_quantity);
+PROC_RemoveItemFromTemplateContinueIfFailed(_char,(FLAG)_event,(FLAG)_success);
+
+PROC
+PROC_RemoveItemFromTemplateContinueIfFailed((CHARACTER)_char,(FLAG)_event,(FLAG)_success)
+AND
+GetFlag((FLAG)_success, _char, 0) // flagType: Object
+THEN
+NOT DB_RemoveItemFromTemplate_InProgress((FLAG)_event);
+
+IF
+FlagSet((FLAG)_event, (CHARACTER)_char, _) // flagType: Object
+AND
+DB_RemoveItemFromTemplateEvent((ITEMROOT)_template,(FLAG)_event,(FLAG)_success,(INTEGER)_quantity)
+AND
+DB_RemoveItemFromTemplate_InProgress((FLAG)_event)
+THEN
+NOT DB_RemoveItemFromTemplate_InProgress((FLAG)_event);
+
+//END_REGION
+
+//REGION Give/Remove Template Proc
+//Giving Item
+PROC
+PROC_PlayerGivesItemFromTemplate((CHARACTER)_Player,(CHARACTER)_Target,(ITEMROOT)_Template,(FLAG)_Success,(INTEGER)_Quantity)
+AND
+QRY_RemoveLocalItemsByTemplateFromMagicPockets(_Player,_Template,1)
+THEN
+TemplateAddTo(_Template,_Target,_Quantity);
+SetFlag((FLAG)_Success, _Target); // flagType: Object
+
+//Mirrored Give to set _success on NPC instead of player
+PROC
+PROC_NPCGivesItemFromTemplate((CHARACTER)_Giver,(CHARACTER)_Target,(ITEMROOT)_Template,(FLAG)_Success,(INTEGER)_Quantity)
+AND
+TemplateIsInInventory(_Template,_Giver,_Amount)
+AND
+_Amount > 0
+THEN
+TemplateRemoveFrom(_Template,_Giver,1);
+TemplateAddTo(_Template,_Target,_Quantity);
+SetFlag((FLAG)_Success, _Giver); // flagType: Object
+
+//Remove Item
+PROC
+PROC_RemoveItemFromTemplate((CHARACTER)_Char,(ITEMROOT)_Template,(FLAG)_Success,(INTEGER)_Quantity)
+AND
+DB_Players(_Char)
+AND
+QRY_RemoveLocalItemsByTemplateFromMagicPockets(_Char,(ITEMROOT)_Template,_Quantity)
+THEN
+SetFlag((FLAG)_Success, _Char); // flagType: Object
+
+PROC
+PROC_RemoveItemFromTemplate((CHARACTER)_char,(ITEMROOT)_template,(FLAG)_success,(INTEGER)_quantity)
+AND
+NOT DB_Players(_Char)
+AND
+TemplateIsInInventory(_template,_char,_amount)
+AND
+_amount > 0
+THEN
+TemplateRemoveFrom(_template,_char,_quantity);
+SetFlag((FLAG)_success, _char); // flagType: Object
+//END_REGION
+
+//REGION Automated dialog on item used
+//DB_ItemDialog_PlayerVB: voicebark will play
+//DB_ItemDialog_NarratorAD: AD will play on the item (use narrator nodes)
+	//signs and plaques. Previously we had these played as ADs on the player, spoken by the player. 
+	//Now that we have a unified narrator, we'd like them played them on the item, spoken by the narrator.
+
+IF
+UseStarted(_Player,_Item)
+AND
+DB_Players(_Player)
+AND
+DB_ItemDialog_PlayerVB((ITEM)_Item,(VOICEBARKRESOURCE)_VB)
+THEN
+PROC_ItemDialog_ProcessItemUsed(_Player,_Item);
+
+IF
+UseStarted(_Player,_Item)
+AND
+DB_Players(_Player)
+AND
+DB_ItemDialog_NarratorAD((ITEM)_Item,(DIALOGRESOURCE)_AD)
+THEN
+PROC_ItemDialog_ProcessItemUsed(_Player,_Item);
+
+//in combat
+PROC
+PROC_ItemDialog_ProcessItemUsed((CHARACTER)_Player,(ITEM)_Item)
+AND
+DB_Is_InCombat(_Player,_)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+
+//not in combat
+PROC
+PROC_ItemDialog_ProcessItemUsed((CHARACTER)_Player,(ITEM)_Item)
+AND
+NOT DB_Is_InCombat(_Player,_)
+THEN
+PROC_ItemDialog_TryStartADOrVB(_Item,_Player);
+
+// starting AD on item or VB with player
+PROC
+PROC_ItemDialog_TryStartADOrVB((ITEM)_Item,(CHARACTER)_Player)
+AND
+DB_ItemDialog_PlayerVB(_Item,(VOICEBARKRESOURCE)_VB)
+AND
+NOT DB_ItemDialog_ActiveVB(_VB)
+THEN
+DB_ItemDialog_ActiveVB(_VB);
+StartVoiceBark(_VB, _Player);
+
+PROC
+PROC_ItemDialog_TryStartADOrVB((ITEM)_Item,(CHARACTER)_Player)
+AND
+DB_ItemDialog_NarratorAD(_Item,(DIALOGRESOURCE)_AD)
+AND
+NOT DB_ItemDialog_ActiveAD(_AD)
+AND
+QRY_StartDialog_Fixed(_AD,_Item)
+THEN
+DB_ItemDialog_ActiveAD(_AD);
+
+//AD/VB ends
+IF
+VoiceBarkFailed(_VB)
+AND
+DB_ItemDialog_ActiveVB(_VB)
+THEN
+NOT DB_ItemDialog_ActiveVB(_VB);
+
+IF
+VoiceBarkEnded(_VB,_)
+AND
+DB_ItemDialog_ActiveVB(_VB)
+THEN
+NOT DB_ItemDialog_ActiveVB(_VB);
+
+IF
+AutomatedDialogEnded(_AD,_)
+AND
+DB_ItemDialog_ActiveAD(_AD)
+THEN
+NOT DB_ItemDialog_ActiveAD(_AD);
+
+IF
+AutomatedDialogRequestFailed(_AD,_)
+AND
+DB_ItemDialog_ActiveAD(_AD)
+THEN
+NOT DB_ItemDialog_ActiveAD(_AD);
+
+//END_REGION
+
+//REGION Automated dialog on item template being used
+//DB_ItemTemplateDialog:
+// an AD to play on a click. Last argument determines is it a NarratorAD (played on the item itself) 
+// or a PAD for the character to say.
+
+IF
+TemplateUseFinished(_Player,_ItemRoot,_Item,1)
+AND
+DB_Players(_Player)
+AND
+DB_ItemTemplateDialog((ITEMROOT)_ItemRoot,(DIALOGRESOURCE)_AD,_)
+AND
+NOT DB_ItemTemplateDialog_TemplateBeingUsed(_,_Item)
+THEN
+DB_ItemTemplateDialog_TemplateBeingUsed((ITEMROOT)_ItemRoot,(ITEM)_Item);
+PROC_ItemDialog_ProcessItemUsed(_Player,_Item);
+
+// starting AD on item or a PAD with player
+PROC
+PROC_ItemDialog_TryStartADOrVB((ITEM)_Item,(CHARACTER)_Player)
+AND
+DB_ItemTemplateDialog_TemplateBeingUsed(_ItemRoot,_Item)
+AND
+DB_ItemTemplateDialog((ITEMROOT)_ItemRoot,(DIALOGRESOURCE)_AD, 1)
+AND
+NOT DB_ItemDialog_ActiveAD(_AD)
+AND
+QRY_StartDialog_Fixed(_AD,_Item)
+THEN
+DB_ItemDialog_ActiveAD(_AD);
+
+PROC
+PROC_ItemDialog_TryStartADOrVB((ITEM)_Item,(CHARACTER)_Player)
+AND
+DB_ItemTemplateDialog_TemplateBeingUsed(_ItemRoot,_Item)
+AND
+DB_ItemTemplateDialog((ITEMROOT)_ItemRoot,(DIALOGRESOURCE)_AD, 0)
+AND
+NOT DB_ItemDialog_ActiveAD(_AD)
+AND
+QRY_StartDialog_Fixed(_AD,_Player)
+THEN
+DB_ItemDialog_ActiveAD(_AD);
+
+PROC
+PROC_ItemDialog_ProcessItemUsed(_Player,_Item)
+AND
+DB_ItemTemplateDialog_TemplateBeingUsed(_ItemRoot,_Item)
+THEN
+NOT DB_ItemTemplateDialog_TemplateBeingUsed(_ItemRoot,_Item);
+
+//END_REGION
+
+//REGION Item template story events
+
+//Bells
+IF
+EnteredLevel(_Bell,(ROOT)TOOL_GEN_Tower_Bell_A_6051a6d2-88e9-4ab4-999c-f463632453eb,_)
+AND
+NOT DB_GLO_ItemEvents_Bells((ITEM)_Bell)
+THEN
+DB_GLO_ItemEvents_Bells((ITEM)_Bell);
+
+IF
+TemplateUseFinished(_,TOOL_GEN_Tower_Bell_A_6051a6d2-88e9-4ab4-999c-f463632453eb,_Bell,1)
+THEN
+PROC_Bell_Sound(_Bell);
+
+IF
+AttackedBy(_Bell,_,_,_,_,_,_)
+AND
+DB_GLO_ItemEvents_Bells((ITEM)_Bell)
+THEN
+PROC_Bell_Sound(_Bell);
+
+PROC
+PROC_Bell_Sound((ITEM)_Bell)
+AND
+GetCanInteract(_Bell,1)
+THEN
+PlaySoundResource(_Bell,GEN_Tower_Bell_A_aef8a3e0-1ede-487c-9483-65881022c49e);
+PROC_CameraShakeAroundObject(_Bell,200,5.0);
+SetCanInteract(_Bell,0);
+RealtimeObjectTimerLaunch(_Bell,"GLO_ItemEvents_BellCooldown",2000);
+
+IF
+ObjectTimerFinished(_Bell,"GLO_ItemEvents_BellCooldown")
+THEN
+SetCanInteract((ITEM)_Bell,1);
+
+//Player cleaning items
+IF
+StatusApplied(_Object,"SOAP_WASH",_Causee,_)
+AND
+DB_Splatters_Statuses(_Status)
+AND
+HasActiveStatus(_Object,_Status,1)
+THEN
+RemoveStatus(_Object,_Status,_Causee);
+
+//END_REGION
+
+IF
+DialogEnded(_,_ID)
+AND
+DialogGetInvolvedNPC(_ID,1,(ITEM)_Item)
+AND
+IsItem(_Item,1)
+AND
+GetFlag((FLAG)ItemPickup_5a79a482-ff4d-4e5e-95a4-b972af80077d, _Item, 1) // flagType: Object
+AND
+DialogGetInvolvedPlayer(_ID,1,(CHARACTER)_Player)
+THEN
+Pickup(_Player,_Item,"");
+ClearFlag((FLAG)ItemPickup_5a79a482-ff4d-4e5e-95a4-b972af80077d, _Item, 0); // flagType: Object
+
+//REGION Play Activate animation from Script
+
+IF
+EntityEvent((CHARACTER)_Player,"GEN_Animation_Activate")
+THEN
+PlayAnimation(_Player,ANIMATION_UTIL_Use_Activate_01_f891c618-1706-44e0-88ee-b08c4f0e191d);
+
+//END_REGION
+
+//REGION Remove Equipment Permanently
+PROC
+PROC_CharacterRemoveEquipmentPermanently((CHARACTER)_Character)
+AND
+DB_EquippedItemSlots(_Slot)
+AND
+GetEquippedItem(_Character, _Slot, _Item)
+THEN
+RequestDelete(_Item);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

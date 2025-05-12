@@ -1,0 +1,623 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRIME_LookingForSuspectsStates("LookingForSuspectsToInterrogate");
+DB_CRIME_LookingForSuspectsStates("LookingForSuspectsToConfront");
+DB_CRIME_LookingForSuspectsStates("LookingForCriminalsToConfront");
+
+DB_CRIME_InvestigationConfrontationStates("LookingForSuspectsToConfront");
+DB_CRIME_InvestigationConfrontationStates("LookingForCriminalsToConfront");
+
+DB_CRIME_InvestigationStates("LookingForSuspectsToInterrogate");
+DB_CRIME_InvestigationStates("LookingForSuspectsToConfront");
+DB_CRIME_InvestigationStates("LookingForCriminalsToConfront");
+
+DB_CRIME_NoImmediateInvestigationAbort("UseForbiddenItem");
+DB_CRIME_NoImmediateInvestigationAbort("MusicalPerformance_Bad");
+DB_CRIME_NoImmediateInvestigationAbort("MusicalPerformance_Good");
+
+// _CrimeID, _Investigator, _Criminal
+// Force interrogation even if the investigation state says to confront criminals/suspects.
+NOT DB_CRIME_InvestigateForceCriminalInterrogate(0,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+KBSECTION
+//REGION Interruptions
+// DB_SpotPlayers can only disable spotting when both the spotter and spotted player are in combat,
+// not when only the spotter is in combat. We can easily handle that here though.
+
+// Interrogator in combat -> pause spotting for interrogation
+IF
+DB_CRIME_LookingForInterrogationSuspects((INTEGER)_CrimeID, (CHARACTER)_Interrogator, _, _)
+AND
+DB_Is_InCombat(_Interrogator, _)
+THEN
+PROC_CRIME_Interrogation_CancelTimer(_Interrogator);
+PROC_SpotPlayers_StopSpotting(_Interrogator, "CRIME_CrimeInterrogation");
+
+// DB_CRIME_LookingForInterrogationSuspects gets cleared in case the crime gets resolved,
+// or when the confrontation is done for this interrogator
+IF
+DB_CRIME_LookingForInterrogationSuspects((INTEGER)_CrimeID, (CHARACTER)_Interrogator, _, _)
+AND
+NOT DB_Is_InCombat(_Interrogator, _)
+THEN
+PROC_SpotPlayers_RestartSpotting(_Interrogator, "CRIME_CrimeInterrogation");
+
+IF
+DB_CRIME_LookingForInterrogationSuspects((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (DIALOGRESOURCE)_InterrogateDialog, _)
+AND
+DB_CRIME_Interrogation_Criminal(_Interrogator, _Criminal)
+AND
+DB_SpotPlayers_Spotted(_Interrogator, "CRIME_CrimeInterrogation", _Criminal, "LookingForSuspects")
+AND
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Criminal)
+AND
+DB_Is_InCombat(_Criminal, _)
+THEN
+PROC_CRIME_Interrogation_CleanUpInterrogator((CHARACTER)_Interrogator);
+PROC_ThrowCrimeSawCriminalInCombat(_CrimeID, _Interrogator, _Criminal);
+
+PROC
+PROC_ThrowCrimeSawCriminalInCombat((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (CHARACTER)_Criminal)
+AND
+CrimeGetLeadInvestigator(_CrimeID, _Interrogator)
+THEN
+// In code, this cleared the crime being investigated for the criminal in case it was not the lead investigator.
+// However, the "crime being investigated" only gets set on a criminal once we enter the confrontation phase.
+// This code is/was only active during the "looking for criminals" phase -> unnecessary
+CrimeConfrontationDone(_CrimeID, _Interrogator);
+
+PROC
+PROC_ThrowCrimeSawCriminalInCombat((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (CHARACTER)_Criminal)
+AND
+IsTagged(_Interrogator,(TAG)CIVILIAN_71120d5d-3853-46e4-9762-33f59aa6b4ae,0)
+THEN
+PROC_MakeNPCHostile(_Interrogator,_Criminal);
+
+PROC
+PROC_CRIME_Interrogation_CleanUpInterrogator((CHARACTER)_Interrogator)
+AND
+DB_CRIME_LookingForInterrogationSuspects((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (DIALOGRESOURCE)_InterrogateDialog, _ReactionType)
+THEN
+NOT DB_CRIME_LookingForInterrogationSuspects((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (DIALOGRESOURCE)_InterrogateDialog, _ReactionType);
+PROC_CRIME_Interrogation_ClearRetryOnDialogEnd(_Interrogator);
+PROC_CRIME_Interrogation_CancelTimer(_Interrogator);
+PROC_SpotPlayers_StopSpotting(_Interrogator, "CRIME_CrimeInterrogation");
+
+// If we switch to a different crime, we will always switch at least momentarily to the idle state
+// before again ending up in LookingForSuspectsToInterrogate/LookingForSuspectsToConfront/Confronting (see esv::CrimeHandler::CharacterSetInvestigatingCrimeHandle)
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID, _Interrogator, _, _NewState)
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _ReactionType)
+AND
+NOT DB_CRIME_LookingForSuspectsStates(_NewState)
+AND
+_NewState != "Investigation"
+AND
+_NewState != "Alarmed"
+THEN
+PROC_CRIME_Interrogation_CleanUpInterrogator(_Interrogator);
+
+IF
+OnCrimeResetInterrogationForCriminal(_CrimeID, _Criminal)
+THEN
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Criminal);
+
+IF
+OnCrimeResolved(_CrimeID, _, _, _, _, _)
+AND
+DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Criminal)
+THEN
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Criminal);
+
+IF
+OnCrimeMergedWith(_OldCrimeID, _NewCrimeID)
+AND
+DB_CRIME_Interrogation_InterrogatedSuspect(_OldCrimeID, _Criminal)
+THEN
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_OldCrimeID, _Criminal);
+DB_CRIME_Interrogation_InterrogatedSuspect(_NewCrimeID, _Criminal);
+//END_REGION
+
+//REGION Look for players to interrogate
+QRY
+QRY_CRIME_LookingForSuspects((CHARACTER)_Interrogator, (INTEGER)_CrimeID, "LookingForSuspectsToInterrogate")
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_LookingForSuspects((CHARACTER)_Interrogator, (INTEGER)_CrimeID, (STRING)_InvestigationState)
+AND
+DB_CRIME_InvestigationConfrontationStates(_InvestigationState)
+THEN
+DB_NOOP(1);
+
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID, _Interrogator, _, _NewState)
+AND
+QRY_CRIME_LookingForSuspects(_Interrogator, _CrimeID, _NewState)
+AND
+CrimeGetCriminals(_CrimeID, _Criminal1, _Criminal2, _Criminal3, _Criminal4)
+AND
+CrimeGetInterrogationDialog(_CrimeID, _Interrogator, _InterrogateDialog)
+THEN
+PROC_CRIME_Interrogation_ResetSuspects(_Interrogator);
+PROC_CRIME_Interrogation_RegisterSuspect(_Interrogator, _Criminal1);
+PROC_CRIME_Interrogation_RegisterSuspect(_Interrogator, _Criminal2);
+PROC_CRIME_Interrogation_RegisterSuspect(_Interrogator, _Criminal3);
+PROC_CRIME_Interrogation_RegisterSuspect(_Interrogator, _Criminal4);
+DB_SpotPlayers_Continuous(_Interrogator, "CRIME_CrimeInterrogation");
+DB_SpotPlayers_IgnoreSpotterCrimeHandling(_Interrogator, "CRIME_CrimeInterrogation");
+DB_SpotPlayers_TargetIgnoreCantTalk(_Interrogator, "CRIME_CrimeInterrogation");
+DB_SpotPlayers_IncludeWildshapedPlayers(_Interrogator, "CRIME_CrimeInterrogation");
+DB_SpotPlayers_IgnoreCombat(_Interrogator, "CRIME_CrimeInterrogation");
+DB_SpotPlayers_IncludeInconspicuous(_Interrogator, "CRIME_CrimeInterrogation");
+DB_SpotPlayers_SpotEvent(_Interrogator, "CRIME_CrimeInterrogation", "LookingForSuspects");
+DB_SpotPlayers(_Interrogator, "CRIME_CrimeInterrogation", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_CRIME_LookingForInterrogationSuspects((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (DIALOGRESOURCE)_InterrogateDialog, _NewState);
+
+PROC
+PROC_CRIME_Interrogation_ResetSuspects((CHARACTER)_Interrogator)
+AND
+DB_CRIME_Interrogation_Criminal(_Interrogator, _Criminal)
+THEN
+NOT DB_CRIME_Interrogation_Criminal(_Interrogator, _Criminal);
+
+PROC
+PROC_CRIME_Interrogation_ResetSuspects((CHARACTER)_Interrogator)
+AND
+DB_SpotPlayers_IncludeExtra(_Interrogator, "CRIME_CrimeInterrogation", _Criminal)
+THEN
+NOT DB_SpotPlayers_IncludeExtra(_Interrogator, "CRIME_CrimeInterrogation", _Criminal);
+
+PROC
+PROC_CRIME_Interrogation_RegisterSuspect((CHARACTER)_Interrogator, (CHARACTER)_Criminal)
+AND
+_Criminal != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_CRIME_Interrogation_Criminal(_Interrogator, _Criminal);
+
+PROC
+PROC_CRIME_Interrogation_RegisterSuspect((CHARACTER)_Interrogator, (CHARACTER)_Criminal)
+AND
+_Criminal != NULL_00000000-0000-0000-0000-000000000000
+AND
+NOT DB_Players(_Criminal)
+THEN
+DB_SpotPlayers_IncludeExtra(_Interrogator, "CRIME_CrimeInterrogation", _Criminal);
+
+IF
+DB_SpotPlayers_Spotted(_Interrogator, "CRIME_CrimeInterrogation", _Criminal, "LookingForSuspects")
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _)
+AND
+// Check "can't talk", except for being in an interactive dialog (we will interrupt it), combat (handled as separate flow),
+// or statuses (checked by crime handler whether we support wildshape/summon/silenced/...)
+NOT DB_CantTalk_IgnoreDialogsCombatStatusesDead(_Criminal)
+AND
+NOT DB_Defeated(_Criminal)
+AND
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Criminal)
+AND
+NOT DB_CRIME_Interrogation_RetryOnDialogEnd(_Interrogator, _)
+THEN
+// Don't act on it immediately, so that we can add all ~simultaneously spotted players to the dialog
+PROC_CRIME_Interrogation_StartTimer(_Interrogator);
+
+PROC
+PROC_CRIME_Interrogation_StartTimer((CHARACTER)_Interrogator)
+AND
+NOT DB_CRIME_Interrogation_TimerRunning(_Interrogator,_)
+THEN
+// Record the timer is running, and indicate whether or not we need to rerun sight checks afterwards
+// (sight events are unreliable, they might not arrive in time since it only rechecks every 500ms
+//   -> force them in case a teleport happens in between)
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,0);
+
+PROC
+PROC_CRIME_Interrogation_StartTimer((CHARACTER)_Interrogator)
+THEN
+ObjectTimerCancel(_Interrogator, "CRIME_Interrogate");
+ObjectTimerLaunch(_Interrogator, "CRIME_Interrogate", 100);
+
+PROC
+PROC_CRIME_Interrogation_CancelTimer((CHARACTER)_Interrogator)
+AND
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight)
+THEN
+ObjectTimerCancel(_Interrogator, "CRIME_Interrogate");
+NOT DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight);
+
+PROC
+PROC_CRIME_Interrogation_ResetSpotProcessing()
+AND
+DB_CRIME_Interrogation_Confront(_Suspect)
+THEN
+NOT DB_CRIME_Interrogation_Confront(_Suspect);
+
+PROC
+PROC_CRIME_Interrogation_ResetSpotProcessing()
+AND
+DB_CRIME_Interrogation_Suspects(_Suspect)
+THEN
+NOT DB_CRIME_Interrogation_Suspects(_Suspect);
+
+PROC
+PROC_CRIME_Interrogation_ResetSpotProcessing()
+AND
+DB_CRIME_Interrogation_User(_User)
+THEN
+NOT DB_CRIME_Interrogation_User(_User);
+
+PROC
+PROC_CRIME_Interrogation_ResetSpotProcessing()
+AND
+DB_CRIME_Interrogation_CanConfront(_Suspect, _Interrogate)
+THEN
+NOT DB_CRIME_Interrogation_CanConfront(_Suspect, _Interrogate);
+
+IF
+Teleported(_Criminal,_,_,_,_,_,_,_,_)
+AND
+DB_CRIME_Interrogation_Criminal(_Interrogator,_Criminal)
+AND
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight)
+THEN
+NOT DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight);
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,1);
+
+IF
+Teleported(_Interrogator,_,_,_,_,_,_,_,_)
+AND
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight)
+THEN
+NOT DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight);
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,1);
+
+
+IF
+ObjectTimerFinished(_Interrogator, "CRIME_Interrogate")
+THEN
+PROC_CRIME_Interrogation_ResetSpotProcessing();
+
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,1)
+AND
+DB_CRIME_Interrogation_Criminal(_Interrogator,_Criminal)
+THEN
+PROC_ForceUpdateDBSees(_Interrogator,_Criminal);
+
+// First add seen criminals 
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+DB_CRIME_Interrogation_Criminal(_Interrogator, _Criminal)
+AND
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight)
+AND
+DB_SpotPlayers_Spotted(_Interrogator, "CRIME_CrimeInterrogation", _Criminal, "LookingForSuspects")
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _)
+AND
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Criminal)
+AND
+NOT QRY_CRIME_PlayerConfrontationDialogActive(_Criminal)
+THEN
+DB_CRIME_Interrogation_Confront(_Criminal);
+
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight)
+THEN
+NOT DB_CRIME_Interrogation_TimerRunning(_Interrogator,_RecheckSight);
+
+// Then other seen players (if we're looking for suspects and not just for criminals, and the main criminal
+// is a party member)
+QRY
+QRY_CRIME_Interrogation_HavePartyMemberCriminal((CHARACTER)_Interrogator)
+AND
+DB_CRIME_Interrogation_Criminal(_Interrogator, _Criminal)
+AND
+DB_PartyMembers(_Criminal)
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+NOT DB_CRIME_LookingForInterrogationSuspects(_, _Interrogator, _, "LookingForCriminalsToConfront")
+AND
+QRY_CRIME_Interrogation_HavePartyMemberCriminal(_Interrogator)
+AND
+DB_SpotPlayers_Spotted(_Interrogator, "CRIME_CrimeInterrogation", _Player, "LookingForSuspects")
+AND
+NOT DB_CRIME_Interrogation_Confront(_Player)
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _)
+AND
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Player)
+AND
+NOT QRY_CRIME_PlayerConfrontationDialogActive(_Player)
+THEN
+DB_CRIME_Interrogation_Confront(_Player);
+
+// Now check whether we can react or interrogate
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _)
+AND
+DB_CRIME_Interrogation_Confront(_Suspect)
+AND
+NOT QRY_CRIME_Interrogation_ForceInterrogation(_CrimeID, _Interrogator, _Suspect)
+AND
+NOT DB_CRIME_Interrogation_CanConfront(_, _)
+AND
+CrimeInvestigatorConfrontSuspect(_CrimeID, _Interrogator, _Suspect, _Interrogate, 1)
+THEN
+// If we don't have to interrogate, the above call already started the confrontation
+// -> nothing else to do
+DB_CRIME_Interrogation_CanConfront(_Suspect, _Interrogate);
+
+QRY
+QRY_CRIME_Interrogation_ForceInterrogation((INTEGER)_CrimeID, (CHARACTER)_Interrogator, (CHARACTER)_Suspect)
+AND
+DB_CRIME_InvestigateForceCriminalInterrogate(_CrimeID, _Interrogator, _Suspect)
+THEN
+DB_CRIME_Interrogation_CanConfront(_Suspect, 1);
+
+// Interrogate
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+DB_CRIME_Interrogation_CanConfront(_Suspect, 1)
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _)
+THEN
+PROC_CRIME_Interrogation_Interrogate(_CrimeID, _Interrogator);
+
+// If we didn't find anyone to whom we could react and all spotted players
+// were in a crime dialog, retry when they leave the dialog
+IF
+ObjectTimerFinished((CHARACTER)_Interrogator, "CRIME_Interrogate")
+AND
+NOT DB_CRIME_Interrogation_Confront(_)
+AND
+DB_SpotPlayers_Spotted(_Interrogator, "CRIME_CrimeInterrogation", _Criminal, "LookingForSuspects")
+AND
+DB_DialogPlayers(_Inst, _Criminal, _)
+THEN
+DB_CRIME_Interrogation_RetryOnDialogEnd(_Interrogator, _Inst);
+//END_REGION
+
+//REGION Interrogate collected suspects
+PROC
+PROC_CRIME_Interrogation_Interrogate((INTEGER)_CrimeID, (CHARACTER)_Interrogator)
+AND
+DB_CRIME_Interrogation_CanConfront(_Suspect, 1)
+AND
+// To initialiase DB_CRIME_Interrogation_User()
+QRY_CRIME_Interrogation_SameUser(_CrimeID, _Suspect)
+THEN
+DB_CRIME_Interrogation_Suspects(_Suspect);
+PROC_CRIME_Interrogation_CollectInterrogatedSuspects(_CrimeID, _Suspect);
+
+PROC
+PROC_CRIME_Interrogation_Interrogate((INTEGER)_CrimeID, (CHARACTER)_Interrogator)
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _)
+AND
+DB_CRIME_Interrogation_CanConfront(_Suspect, 1)
+AND
+DB_CRIME_Interrogation_Confront(_Criminal)
+AND
+_Criminal != _Suspect
+AND
+QRY_CRIME_Interrogation_SameUser(_CrimeID, _Criminal)
+THEN
+// These will be a subset of the ones collected above by PROC_CRIME_Interrogation_CollectInterrogatedSuspects,
+// so no need to call PROC_CRIME_Interrogation_CollectInterrogatedSuspects again
+DB_CRIME_Interrogation_Suspects(_Criminal);
+
+PROC
+PROC_CRIME_Interrogation_Interrogate((INTEGER)_CrimeID, (CHARACTER)_Interrogator)
+THEN
+PROC_UnpackDB("DB_CRIME_Interrogation_Suspects", "CRIME_Interrogation_Suspects", _Interrogator, 4, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_UnpackDB_Callback("CRIME_Interrogation_Suspects", _Interrogator, _Suspect1, _Suspect2, _Suspect3, _Suspect4)
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, (CHARACTER)_Interrogator, (DIALOGRESOURCE)_InterrogateDialog, _)
+AND
+CharacterGetCrimeRegion((CHARACTER)_Suspect1, _RegionID)
+AND
+QRY_GetIsTelepath(_Interrogator)
+AND
+DB_QRYRTN_GetIsTelepath(_IgnoreCantTalk)
+AND
+CrimeInvestigatorEnterInterrogationState(_CrimeID, _Interrogator, _IgnoreCantTalk, 1)
+THEN
+PROC_CrimeInterrogationRequest(_RegionID,_CrimeID,_Interrogator,(CHARACTER)_Suspect1,(CHARACTER)_Suspect2,(CHARACTER)_Suspect3,(CHARACTER)_Suspect4,_InterrogateDialog);
+// If we fail to enter the interrogation state, we just keep investigating/looking for criminals
+
+// Once we interrogate an innocent player character of a particular user, don't interrogate any other innocent ones of the same user
+PROC
+PROC_CRIME_Interrogation_CollectInterrogatedSuspects((INTEGER)_CrimeID, (CHARACTER)_Suspect)
+THEN
+PROC_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Suspect);
+
+PROC
+PROC_CRIME_Interrogation_CollectInterrogatedSuspects((INTEGER)_CrimeID, (CHARACTER)_Suspect)
+AND
+CrimeGetCriminals(_CrimeID, _Criminal1, _Criminal2, _Criminal3, _Criminal4)
+AND
+GetReservedUserID(_Suspect,_UserID)
+AND
+DB_Players(_AllPlayers)
+AND
+NOT DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _AllPlayers)
+AND
+_AllPlayers != _Criminal1
+AND
+_AllPlayers != _Criminal2
+AND
+_AllPlayers != _Criminal3
+AND
+_AllPlayers != _Criminal4
+AND
+GetReservedUserID(_AllPlayers,_UserID)
+THEN
+PROC_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _AllPlayers);
+
+PROC
+PROC_CRIME_Interrogation_InterrogatedSuspect((INTEGER)_CrimeID, (CHARACTER)_Suspect)
+THEN
+DB_CRIME_Interrogation_InterrogatedSuspect(_CrimeID, _Suspect);
+//END_REGION
+
+//REGION Handle waiting for players that were in crime dialogs
+IF
+DialogEnded(_, _Inst)
+AND
+DB_CRIME_Interrogation_RetryOnDialogEnd(_Interrogator, _Inst)
+AND
+DB_CRIME_LookingForInterrogationSuspects(_CrimeID, _Interrogator, _InterrogateDialog, _ReactionType)
+THEN
+PROC_CRIME_Interrogation_ClearRetryOnDialogEnd(_Interrogator);
+PROC_CRIME_Interrogation_StartTimer(_Interrogator);
+
+PROC
+PROC_CRIME_Interrogation_ClearRetryOnDialogEnd((CHARACTER)_Interrogator)
+AND
+DB_CRIME_Interrogation_RetryOnDialogEnd(_Interrogator, _Inst)
+THEN
+NOT DB_CRIME_Interrogation_RetryOnDialogEnd(_Interrogator, _Inst);
+//END_REGION
+
+//REGION Only add player characters from the same user to a single interrogation dialog
+QRY
+QRY_CRIME_Interrogation_SameUser((INTEGER)_CrimeID, (CHARACTER)_Criminal)
+AND
+DB_CRIME_Interrogation_User(_UserID)
+AND
+GetReservedUserID(_Criminal, _UserID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRIME_Interrogation_SameUser((INTEGER)_CrimeID, (CHARACTER)_Criminal)
+AND
+NOT DB_CRIME_Interrogation_User(_)
+AND
+GetReservedUserID(_Criminal, _UserID)
+THEN
+DB_CRIME_Interrogation_User(_UserID);
+
+QRY
+QRY_CRIME_Interrogation_SameUser((INTEGER)_CrimeID, (CHARACTER)_Criminal)
+AND
+CrimeHasProperty(_CrimeID, AllowMultiUser_844c56dc-81ec-478a-ad46-a3ec49152f36, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Enable sight events for characters that investigate
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,_OldState,_NewState)
+AND
+NOT DB_CRIME_LookingForSuspectsStates(_OldState)
+AND
+DB_CRIME_LookingForSuspectsStates(_NewState)
+THEN
+// Won't do anything on the code side for character with permanent sight events
+PROC_StartNPCSightEvents(_NPC);
+
+IF
+OnCrimeInvestigatorSwitchedState(_ID,_NPC,_OldState,_NewState)
+AND
+DB_CRIME_LookingForSuspectsStates(_OldState)
+AND
+NOT DB_CRIME_LookingForSuspectsStates(_NewState)
+THEN
+// Won't do anything on the code side for character with permanent sight events
+PROC_StopNPCSightEvents(_NPC);
+//END_REGION
+
+//REGION Clean up DB_CRIME_InvestigateForceCriminalInterrogate
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_InvestigateForceCriminalInterrogate(_CrimeID,_Guard,_Criminal)
+THEN
+NOT DB_CRIME_InvestigateForceCriminalInterrogate(_CrimeID,_Guard,_Criminal);
+//END_REGION
+
+//REGION Continuous crime stopped while investigating -> keep investigating for a while to avoid abrupt end
+QRY
+QRY_CRIME_NoImmediateInvestigationAbort((INTEGER)_CrimeID)
+AND
+CrimeGetType(_CrimeID,_CrimeType)
+AND
+QRY_CRIME_GetCrimeFamily(_CrimeType)
+AND
+DB_QRYRTN_CRIME_GetCrimeFamily(_CrimeFamily)
+AND
+DB_CRIME_NoImmediateInvestigationAbort(_CrimeFamily)
+THEN
+DB_NOOP(1);
+
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_Investigator,_InvestigationState,"Idle")
+AND
+DB_CRIME_InvestigationStates(_InvestigationState)
+AND
+QRY_CRIME_NoImmediateInvestigationAbort(_CrimeID)
+AND
+GetVarFloat3(_Investigator,"CrimePos",_X,_Y,_Z)
+AND
+ConcatenateInteger("CRIME_InvestigationExtension_",_CrimeID,_TimerName)
+AND
+Random(5000,_RandVal)
+AND
+IntegerSum(10000,_RandVal,_Delay)
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+PROC_CharacterRegisterCrimeWithPosition(_Investigator,"DummyInvestigation",NULL_00000000-0000-0000-0000-000000000000,_X,_Y,_Z,_Investigator,_NewCrimeID);
+// And stop after a random period of time to not have the same issue here that all investigators stop at the same time
+ObjectTimerLaunch(_Investigator,_TimerName,_Delay);
+DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_NewCrimeID);
+
+IF
+OnCrimeInvestigatorSwitchedState(_CrimeID,_Investigator,_InvestigationState,"Confronting")
+AND
+DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_CrimeID)
+THEN
+// Don't cancel once they start their AD
+NOT DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_CrimeID);
+ObjectTimerCancel(_Investigator,_TimerName);
+
+IF
+ObjectTimerFinished((CHARACTER)_Investigator,_TimerName)
+AND
+DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_CrimeID)
+THEN
+PROC_CRIME_StopForAllCriminals(_CrimeID);
+NOT DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_CrimeID);
+
+PROC
+PROC_CRIME_Finished((INTEGER)_CrimeID)
+AND
+DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_CrimeID)
+THEN
+NOT DB_CRIME_InvestigatorExtension(_Investigator,_TimerName,_CrimeID);
+ObjectTimerCancel(_Investigator,_TimerName);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

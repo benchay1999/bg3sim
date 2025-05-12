@@ -1,0 +1,45 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_SHA_CloakerPhantasmSpawnTrigger((TRIGGER)S_SHA_PhantasmSpawnTrigger_001_2dba8259-86ea-4a77-b484-a8b2d495ba3b);
+DB_SHA_CloakerPhantasmSpawnTrigger((TRIGGER)S_SHA_PhantasmSpawnTrigger_002_05f9c4d1-81e2-41bc-aba4-f496380546cd);
+DB_SHA_CloakerPhantasmSpawnTrigger((TRIGGER)S_SHA_PhantasmSpawnTrigger_003_e420cfd1-5c49-4adb-8dbf-c5aa5db9a960);
+DB_SHA_CloakerPhantasmSpawnTrigger((TRIGGER)S_SHA_PhantasmSpawnTrigger_Tactician_d9822968-38fb-49e9-bfc6-4c5e7edc82bc);
+
+DB_AmbushTrigger((TRIGGER)S_SHA_CloakerAmbushTrigger_9cc4fafa-9a72-46c1-b43a-857b5158c947, (TRIGGER)S_SHA_CloakerPerceptionTrigger_48dd7901-2efd-4db7-91f8-92df98bec37c, (DIFFICULTYCLASS)Act2_Hard_91fb3598-dd68-4fa8-a306-2c7284709b08);
+DB_AmbushTrigger_Ambusher((TRIGGER)S_SHA_CloakerAmbushTrigger_9cc4fafa-9a72-46c1-b43a-857b5158c947, (CHARACTER)S_SHA_Cloaker_c8119fa9-0b73-421d-a5fc-b163e399a185, 1);
+KBSECTION
+PROC
+PROC_LaunchAmbush((TRIGGER)S_SHA_CloakerAmbushTrigger_9cc4fafa-9a72-46c1-b43a-857b5158c947,(CHARACTER)_Player)
+AND
+QRY_OnlyOnce("SHA_Cloaker_LaunchedAmbush")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)SHA_Cloaker_PAD_Ambush_b7c576a9-09e9-a564-4fb8-5b44e0c029f8, _Player);
+
+IF
+StatusApplied((CHARACTER)_Phantasm,"CLOAKER_PHANTASM_VFX",_,_)
+AND
+IsInTrigger(_Phantasm,(TRIGGER)S_SHA_CloakerCombatTrigger_9d44c59a-083e-471d-9710-216305b5d849,1)
+AND
+DB_SHA_CloakerPhantasmSpawnTrigger((TRIGGER)_Trigger)
+AND
+NOT DB_SHA_CloakerPhantasmSpawnTrigger_InUse(_,(TRIGGER)_Trigger)
+AND
+NOT DB_SHA_CloakerPhantasmSpawnTrigger_InUse(_Phantasm,_)
+THEN
+SetCanJoinCombat(_Phantasm,0);
+SetCanFight(_Phantasm,0);
+RealtimeObjectTimerLaunch(_Phantasm,"SHA_PhantasmJoinCombat",200);
+DB_SHA_CloakerPhantasmSpawnTrigger_InUse(_Phantasm,_Trigger);
+UseSpell(_Phantasm,"Projectile_Fly",_Trigger);
+
+//Hack to use jump outside of turn
+IF
+ObjectTimerFinished(_Phantasm,"SHA_PhantasmJoinCombat")
+THEN
+SetCanFight(_Phantasm,1);
+SetCanJoinCombat(_Phantasm,1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

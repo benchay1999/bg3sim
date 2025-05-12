@@ -1,0 +1,271 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// DB_TriggerEvents_AllPlayersLeft((TRIGGERGUID)_Trigger, (STRING)_Event);
+// Also available as DB_TriggerEvents_AllPartyMembersLeft((TRIGGERGUID)_Trigger, (STRING)_Event);
+
+// These DBs allow to send EntityEvent when all players leave a set of triggers (think a region spread across subregions)
+// For instance, a building is spread across triggers Ground, Subground, Roof and you'd like to be notified when players leave the building
+// But not when they move between floors
+// Add all of them here:
+//   DB_TriggerEvents_TriggerSet("My_Building", Ground);
+//   DB_TriggerEvents_TriggerSet("My_Building", Subground);
+//   DB_TriggerEvents_TriggerSet("My_Building", Roof);
+// And add an event: DB_TriggerEvents_AllPlayersLeftAllTriggersInSet("My_Building","BuildingIsEmpty")
+// Also available as DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet("My_Building","BuildingIsEmpty")
+NOT DB_TriggerEvents_TriggerSet("",(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_TriggerEvents_AllPlayersLeftAllTriggersInSet("","");
+NOT DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet("","");
+
+
+NOT DB_TriggerEvents_AllPlayersLeft((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,"");
+NOT DB_TriggerEvents_AllPartyMembersLeft((TRIGGER)NULL_00000000-0000-0000-0000-000000000000,"");
+KBSECTION
+IF
+DB_TriggerEvents_AllPlayersLeft((TRIGGER)_Trigger,(STRING)_Event)
+THEN
+DB_TriggerEvents_AllPlayersLeft_RemoveHelper(_Trigger);
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_TriggerEvents_AllPartyMembersLeft((TRIGGER)_Trigger,(STRING)_Event)
+THEN
+DB_TriggerEvents_AllPartyMembersLeft_RemoveHelper(_Trigger);
+PROC_TriggerRegisterForParty(_Trigger);
+
+IF
+DB_TriggerEvents_AllPlayersLeft_RemoveHelper((TRIGGER)_Trigger)
+AND
+NOT DB_TriggerEvents_AllPlayersLeft(_Trigger,_)
+THEN
+NOT DB_TriggerEvents_AllPlayersLeft_RemoveHelper(_Trigger);
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+IF
+DB_TriggerEvents_AllPartyMembersLeft_RemoveHelper((TRIGGER)_Trigger)
+AND
+NOT DB_TriggerEvents_AllPartyMembersLeft(_Trigger,_)
+THEN
+NOT DB_TriggerEvents_AllPartyMembersLeft_RemoveHelper(_Trigger);
+PROC_TriggerUnregisterForParty(_Trigger);
+
+IF
+LeftTrigger(_Player,_Trigger)
+AND
+DB_TriggerEvents_AllPlayersLeft(_Trigger,_Event)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTrigger(_Trigger)
+THEN
+SetEntityEvent(_Player,_Event);
+
+IF
+LeftTrigger(_PartyMember,_Trigger)
+AND
+DB_TriggerEvents_AllPartyMembersLeft(_Trigger,_Event)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTrigger(_Trigger)
+THEN
+SetEntityEvent(_PartyMember,_Event);
+
+QRY
+QRY_TriggerEvents_AnyPlayerInTrigger((TRIGGER)_Trigger)
+AND
+DB_Players(_OtherPlayer)
+AND
+IsInTrigger(_OtherPlayer,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TriggerEvents_AnyPartyMemberInTrigger((TRIGGER)_Trigger)
+AND
+DB_PartyMembers(_OtherMember)
+AND
+IsInTrigger(_OtherMember,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TriggerEvents_AnyNotDefeatedPartyMemberInTrigger((TRIGGER)_Trigger)
+AND
+DB_PartyMembers(_OtherMember)
+AND
+NOT DB_Defeated(_OtherMember)
+AND
+IsInTrigger(_OtherMember,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TriggerEvents_InTriggerSet((GUIDSTRING)_Entity, (STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet, _Trigger)
+AND
+IsInTrigger(_Entity,_Trigger,1)
+THEN
+DB_NOOP(1);
+
+//REGION Trigger set
+
+IF
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet((STRING)_TriggerSet,(STRING)_Event)
+AND
+NOT DB_TriggerEvents_AllPlayersLeftAllTriggersInSet_Helper(_TriggerSet,_)
+AND
+Concatenate("TriggerSet_",_TriggerSet,_StrId)
+THEN
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId);
+PROC_TriggerRegisterTriggerSetForPlayers(_TriggerSet);
+
+IF
+DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet((STRING)_TriggerSet,(STRING)_Event)
+AND
+NOT DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet_Helper(_TriggerSet,_)
+AND
+Concatenate("TriggerSet_",_TriggerSet,_StrId)
+THEN
+DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId);
+PROC_TriggerRegisterTriggerSetForParty(_TriggerSet);
+
+IF
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet_Helper((STRING)_TriggerSet,(STRING)_StrId)
+AND
+NOT DB_TriggerEvents_AllPlayersLeftAllTriggersInSet(_TriggerSet,_)
+THEN
+NOT DB_TriggerEvents_AllPlayersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId);
+
+IF
+DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet_Helper((STRING)_TriggerSet,(STRING)_StrId)
+AND
+NOT DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet(_TriggerSet,_)
+THEN
+NOT DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId);
+
+PROC
+PROC_TriggerRegisterTriggerSetForPlayers((STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+PROC
+PROC_TriggerRegisterTriggerSetForParty((STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+
+PROC
+PROC_TriggerUnregisterTriggerSetForPlayers((STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+PROC
+PROC_TriggerUnregisterTriggerSetForParty((STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+THEN
+PROC_TriggerUnregisterForParty(_Trigger);
+
+IF
+LeftTrigger(_Player,_Trigger)
+AND
+DB_Players(_Player)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+AND
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId)
+THEN
+RealtimeObjectTimerCancel(_Player,_StrId);
+RealtimeObjectTimerLaunch(_Player,_StrId,500);
+ 
+IF
+LeftTrigger(_PartyMember,_Trigger)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+AND
+DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId)
+THEN
+RealtimeObjectTimerCancel(_PartyMember,_StrId);
+RealtimeObjectTimerLaunch(_PartyMember,_StrId,500);
+
+IF
+ObjectTimerFinished(_Player,_StrId)
+AND
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId)
+AND
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet(_TriggerSet,_Event)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTriggerSet(_TriggerSet)
+THEN
+SetEntityEvent(_Player,_Event);
+
+IF
+ObjectTimerFinished(_PartyMember,_StrId)
+AND
+DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet_Helper(_TriggerSet,_StrId)
+AND
+DB_TriggerEvents_AllPartyMembersLeftAllTriggersInSet(_TriggerSet,_Event)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTriggerSet(_TriggerSet)
+THEN
+SetEntityEvent(_PartyMember,_Event);
+
+QRY
+QRY_TriggerEvents_AnyPlayerInTriggerSet((STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+AND
+QRY_TriggerEvents_AnyPlayerInTrigger(_Trigger)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_TriggerEvents_AnyPartyMemberInTriggerSet((STRING)_TriggerSet)
+AND
+DB_TriggerEvents_TriggerSet(_TriggerSet,_Trigger)
+AND
+QRY_TriggerEvents_AnyPartyMemberInTrigger(_Trigger)
+THEN
+DB_NOOP(1);
+//END_REGION Trigger set
+
+
+QRY
+QRY_InRegions((CHARACTER)_Character,(TRIGGER)_Trigger1,(TRIGGER)_Trigger2)
+AND
+DB_InRegion(_Character,_Trigger1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InRegions((CHARACTER)_Character,(TRIGGER)_Trigger1,(TRIGGER)_Trigger2)
+AND
+DB_InRegion(_Character,_Trigger2)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InRegions((CHARACTER)_Character,(TRIGGER)_Trigger1,(TRIGGER)_Trigger2,(TRIGGER)_Trigger3)
+AND
+DB_InRegion(_Character,_Trigger1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_InRegions((CHARACTER)_Character,(TRIGGER)_Trigger1,(TRIGGER)_Trigger2,(TRIGGER)_Trigger3)
+AND
+QRY_InRegions(_Character,_Trigger2,_Trigger3)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION

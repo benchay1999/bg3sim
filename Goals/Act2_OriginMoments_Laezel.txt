@@ -1,0 +1,246 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Leave if not done Creche
+DB_ORI_Laezel_MoonriseLeaveTriggers((TRIGGER)S_MOO_Docks_SUB_b4608370-46b8-4ba3-a3e7-192a6aa509ee);
+DB_ORI_Laezel_MoonriseLeaveTriggers((TRIGGER)S_ORI_Laezel_InPartyOneTime_EnterMoonriseArea_1da26546-81d7-429e-a5f6-5317b5035202);
+DB_ORI_Laezel_SharLeaveTriggers((TRIGGER)S_SHA_LaezelLeaveArea_65139bad-f576-4cc6-b1f0-832ba2d69bbc);
+
+DB_TriggerEvents_TriggerSet("ORI_Laezel_MoonriseAreas", S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6);
+DB_TriggerEvents_TriggerSet("ORI_Laezel_MoonriseAreas", S_MOO_Prison_SUB_b262cbea-f40c-47da-9f34-ba8ce5bf782b);
+DB_TriggerEvents_TriggerSet("ORI_Laezel_MoonriseAreas", S_COL_Colony_SUB_c72269e5-0719-4379-a8ea-ca2ca199d0a3);
+
+//END_REGION
+
+//REGION Dead Githyanki in Town
+DB_OneShot_ADTrigger((TRIGGER)S_ORI_Laezel_DeadGithyankiArea_36925a49-d565-4867-9cc1-df9c718c748d, (DIALOGRESOURCE)TWN_Laezel_AD_DeadGithyankiBodyWithMap_66c84401-c0c9-a740-52e9-aa923b82edeb, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+TriggerRegisterForCharacter((TRIGGER)S_ORI_Laezel_DeadGithyankiArea_36925a49-d565-4867-9cc1-df9c718c748d, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+//END_REGION
+
+DB_PartyProgress_Trigger((TRIGGER)S_HAV_Haven_SUB_6ac001f4-9c56-4a1b-963d-a509e158ffab,(FLAG)ORI_Laezel_State_EnteredHaven_940dbf33-3265-4b23-84a1-f53e478cb407);
+KBSECTION
+//REGION Trigger Leave Dialog
+IF
+DB_ORI_Laezel_MoonriseLeaveTriggers(_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_ORI_Laezel_SharLeaveTriggers(_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_GlobalFlag((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257)
+AND
+DB_ORI_Laezel_MoonriseLeaveTriggers(_Trigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+IF
+DB_GlobalFlag((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257)
+AND
+DB_ORI_Laezel_SharLeaveTriggers(_Trigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+//Next time player leaves Moonrise towers and the execution is over, Laezel leaves the party
+IF
+DB_InRegion((CHARACTER)_Player, (TRIGGER)_LeaveTrigger)
+AND
+DB_Players(_Player)
+AND
+DB_ORI_Laezel_MoonriseLeaveTriggers(_LeaveTrigger)
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257)
+AND
+DB_GlobalFlag((FLAG)MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb)
+AND
+QRY_GetBestAvatarForCompanion((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Avatar)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee);
+
+//When the players reach the entrance to the Shar Temple, Laezel will want to leave
+IF
+DB_InRegion((CHARACTER)_Player, (TRIGGER)_LeaveTrigger)
+AND
+DB_Players(_Player)
+AND
+DB_ORI_Laezel_SharLeaveTriggers(_LeaveTrigger)
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257)
+AND
+QRY_GetBestAvatarForCompanion((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Avatar)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee);
+
+//If players left Moonrise in any other way after the execution is over and the Laezel Leaving conversation has not played
+IF
+DB_GlobalFlag((FLAG)MOO_GroundFloor_State_ExecutionOver_1560c0ae-5fec-4e7c-a6e7-35e9c33bbbeb)
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257)
+THEN
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet("ORI_Laezel_MoonriseAreas", "ORI_Laezel_LeftMoonriseAfterExecution");
+
+IF
+EntityEvent(_, "ORI_Laezel_LeftMoonriseAfterExecution")
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee)
+AND
+DB_GlobalFlag((FLAG)CURRENTREGION_SCL_Main_A_f76b85b5-b557-4409-98fd-cc7b22f8292b)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee);
+
+IF
+EntityEvent(_, "ORI_Laezel_LeftMoonriseAfterExecution")
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee)
+AND
+NOT DB_GlobalFlag((FLAG)CURRENTREGION_SCL_Main_A_f76b85b5-b557-4409-98fd-cc7b22f8292b)
+THEN
+DB_ORI_Laezel_WantingToGoBackToCrecheInSCL(1);
+
+IF
+DB_ORI_Laezel_WantingToGoBackToCrecheInSCL(1)
+AND
+DB_GlobalFlag((FLAG)CURRENTREGION_SCL_Main_A_f76b85b5-b557-4409-98fd-cc7b22f8292b)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee);
+NOT DB_ORI_Laezel_WantingToGoBackToCrecheInSCL(1);
+
+IF
+FlagSet((FLAG)ORI_Laezel_State_ProgressedAct2WithoutCreche_fab091d9-6841-40d8-8ba7-28974f39e9ee, _, _)
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+//Whenever Laezel next sees the avatar, she will try to start a dialog about leaving
+
+IF
+DialogRequestFailed((DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, _)
+AND
+NOT DB_GlobalFlag((FLAG)Laezel_InParty_Event_TalkedAboutGoingBackToCreche_2ed119bc-45c6-47c4-a525-99dc65d673bf)
+THEN
+TimerLaunch("ORI_Laezel_ProgressInAct2WithoutCreche_DialogRequestFailed_RetryDelay", 2000);
+
+IF
+TimerFinished("ORI_Laezel_ProgressInAct2WithoutCreche_DialogRequestFailed_RetryDelay")
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+IF
+FlagSet((FLAG)ORI_Laezel_State_CanProceedToAct3_64850ffe-e278-4742-91f2-3cecd77d1257, _, _)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_ExclamationDialog_NeverStop((DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_RelationshipDialog_Autostart((DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _ , _)
+THEN
+PROC_CancelRelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_ExclamationDialog_NeverStop((DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_RelationshipDialog_Autostart((DIALOGRESOURCE)GLO_Laezel_WRD_ProgressInAct2WithoutCreche_aa6fdbc8-6a7f-dd46-4a6f-366e36eeb4ab, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Dead Gith in Town
+IF
+DB_GlobalFlag((FLAG)ORI_Laezel_Knows_FoundCreche_1ea76d79-24c5-4d63-a9cd-178266f1673d)
+THEN
+NOT DB_OneShot_ADTrigger((TRIGGER)S_ORI_Laezel_DeadGithyankiArea_36925a49-d565-4867-9cc1-df9c718c748d, (DIALOGRESOURCE)TWN_Laezel_AD_DeadGithyankiBodyWithMap_66c84401-c0c9-a740-52e9-aa923b82edeb, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+//While the Drider escort is ongoing, block the AD from playing
+IF
+DB_State_Current(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "EscortingCaravan")
+THEN
+PROC_RemoveOneShotAD((TRIGGER)S_ORI_Laezel_DeadGithyankiArea_36925a49-d565-4867-9cc1-df9c718c748d);
+DB_ORI_Laezel_PreventDeadGithADDuringDriderEscord(1);
+
+//Once the Drider escort is finished and the AD hasn't played already, enable the AD again
+IF
+DB_ORI_Laezel_PreventDeadGithADDuringDriderEscord(1)
+AND
+NOT DB_State_Current(S_SCL_Drider_aa59ce01-3d2e-42e8-a539-c07e0ea292ab, "SCL_TheDrider", "EscortingCaravan")
+AND
+NOT DB_GlobalFlag((FLAG)TWN_Laezel_State_SawDeadGithBody_2d432bc9-0199-4f5b-a46f-041e32b82ebb)
+AND
+NOT DB_PermaDefeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+NOT DB_ORI_Laezel_PreventDeadGithADDuringDriderEscord(1);
+DB_OneShot_ADTrigger((TRIGGER)S_ORI_Laezel_DeadGithyankiArea_36925a49-d565-4867-9cc1-df9c718c748d, (DIALOGRESOURCE)TWN_Laezel_AD_DeadGithyankiBodyWithMap_66c84401-c0c9-a740-52e9-aa923b82edeb, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+IF
+AutomatedDialogStarted((DIALOGRESOURCE)TWN_Laezel_AD_DeadGithyankiBodyWithMap_66c84401-c0c9-a740-52e9-aa923b82edeb, _)
+THEN
+PROC_PlayPerceptionRevealEffect((CHARACTER)S_ORI_Laezel_DeadGithyankiWithMap_b6172751-f0fa-4c7b-aa71-45956fa2f918, "SCL_DeadGithWithCrecheMap", 6000);
+
+IF
+GameBookInterfaceClosed((ITEM)S_ORI_Laezel_DeadGithyankiMapForCreche_7c48ba55-4644-4e41-ae1a-f056222f6580, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_BetrayedByVlaakith_175d8487-99dc-4009-9b45-6e9f29708cd7)
+AND
+QRY_OnlyOnce("TWN_Laezel_DeadGithMapRead")
+THEN
+PROC_StartPartyOriginMoment((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)TWN_DeadGithMap_OM_Laezel_AOM_ACM_COM_OOM_d4f08733-b8a3-a1ba-73ce-fd564e19ac07);
+
+//END_REGION
+
+//REGION Return To Creche Refelction flag logic
+//If the player enters Moonrise towers or the Shar Temple, a flag is set to remind the avatar the next time they sleep to return to the Creche
+IF
+EnteredTrigger(_Player, (TRIGGER)S_MOO_MoonriseTower_SUB_14187ad9-cf83-44f9-81bf-bb46cb4cd8e6)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_StartedMoonrise_7cf55703-f947-4fd2-98b0-c03afb9bac5f)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_StartedMoonrise_7cf55703-f947-4fd2-98b0-c03afb9bac5f);
+
+IF
+EnteredTrigger(_Player, (TRIGGER)S_SHA_Temple_SUB_348b76ee-33d8-471b-a95d-7ded0d6cdfd5)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_StartedMoonrise_7cf55703-f947-4fd2-98b0-c03afb9bac5f)
+THEN
+SetFlag((FLAG)ORI_Laezel_State_StartedMoonrise_7cf55703-f947-4fd2-98b0-c03afb9bac5f);
+//END_REGION
+
+//REGION Vlaakith Ambush in SCL
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("TWN_VlaakithAttack")
+THEN
+PROC_RelationshipDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, TWN_Laezel_WRD_AmbushedByVlaakithsGith_1f0867aa-2061-975e-06a3-c7d7133cf6de, (FLAG)NULL_00000000-0000-0000-0000-000000000000, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+//END_REGION
+
+//REGION Deprecate Creche banters
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+THEN
+ClearFlag((FLAG)ORI_Laezel_State_HasNotPassedCreche_946ca251-adb9-4177-9e12-64499d02cff1, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

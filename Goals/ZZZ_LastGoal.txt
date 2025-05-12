@@ -1,0 +1,237 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_ClearAutomatedDialog((INTEGER)_Inst)
+THEN
+PROC_ClearDialogPlayers(_Inst);
+PROC_ClearDialogNPCs(_Inst);
+PROC_ClearDialogSpeakers(_Inst);
+PROC_ClearDialogCounts(_Inst);
+NOT DB_AutomatedDialog(_Inst);
+
+IF
+VoiceBarkEnded(_,_Inst)
+THEN
+NOT DB_AutomatedDialogIsVB(_Inst);
+PROC_ClearAutomatedDialog(_Inst);
+
+IF
+AutomatedDialogEnded(_,_Inst)
+AND
+NOT DB_AutomatedDialogIsVB(_Inst)
+THEN
+PROC_ClearAutomatedDialog(_Inst);
+
+IF
+AutomatedDialogEnded(_Dialog,_Inst)
+THEN
+NOT DB_DialogName(_Dialog,_Inst);
+NOT DB_DialogRequestFailed(_Dialog,_Inst);
+NOT DB_DialogEnding(_Dialog,_Inst);
+
+IF
+DialogEnded(_Dialog,_Inst)
+THEN
+PROC_ClearDialogPlayers(_Inst);
+PROC_ClearDialogNPCs(_Inst);
+PROC_ClearDialogSpeakers(_Inst);
+PROC_ClearDialogCounts(_Inst);
+NOT DB_DialogName(_Dialog,_Inst);
+NOT DB_DialogRequestFailed(_Dialog,_Inst);
+NOT DB_DialogEnding(_Dialog,_Inst);
+
+IF
+DialogActorLeft(_Dialog,_Inst,_Actor, 0)
+AND
+DB_DialogPlayers(_Inst,_Actor,_Index)
+THEN
+NOT DB_DialogPlayers(_Inst,_Actor,_Index);
+
+IF
+DialogActorLeft(_Dialog,_Inst,_Actor, 0)
+AND
+DB_DialogNPCs(_Inst,_Actor,_Index)
+THEN
+NOT DB_DialogNPCs(_Inst,_Actor,_Index);
+
+IF
+DialogActorLeft(_Dialog,_Inst,_Actor, 0)
+AND
+DB_DialogSpeakers(_Inst,_Actor,_SpeakerIndex)
+THEN
+NOT DB_DialogSpeakers(_Inst,_Actor,_SpeakerIndex);
+
+IF
+DialogActorLeft(_Dialog,_Inst,_Actor, 0)
+THEN
+PROC_SetNumberOfInvolvedActors(_Inst);
+
+PROC
+PROC_ClearDialogPlayers((INTEGER)_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,_Index)
+THEN
+NOT DB_DialogPlayers(_Inst,_Player,_Index);
+
+PROC
+PROC_ClearDialogNPCs((INTEGER)_Inst)
+AND
+DB_DialogNPCs(_Inst,_Player,_Index)
+THEN
+NOT DB_DialogNPCs(_Inst,_Player,_Index);
+
+PROC
+PROC_ClearDialogSpeakers((INTEGER)_Inst)
+AND
+DB_DialogSpeakers(_Inst,_Player,_Index)
+THEN
+NOT DB_DialogSpeakers(_Inst,_Player,_Index);
+
+PROC
+PROC_ClearDialogCounts((INTEGER)_Inst)
+AND
+DB_DialogNumPlayers(_Inst,_NumPlayers)
+AND
+DB_DialogNumNPCs(_Inst,_NumNPCs)
+THEN
+NOT DB_DialogNumPlayers(_Inst,_NumPlayers);
+NOT DB_DialogNumNPCs(_Inst,_NumNPCs);
+
+IF
+CharacterCreationFinished()
+THEN
+NotifyCharacterCreationFinished();
+
+//REGION Helper if you need to trigger at all possible ways a crime could end
+// Warning: can be triggered multiple times for the same crime, e.g. if an
+// undiscovered crime gets merged with another crime
+
+// Merged with another crime
+IF
+OnCrimeMergedWith(_OldCrimeID, _NewCrimeID)
+THEN
+PROC_CRIME_Finished(_OldCrimeID);
+
+// Aborted before it was discovered
+IF
+OnCrimeRemoved(_CrimeID, _, _, _, _, _)
+THEN
+PROC_CRIME_Finished(_CrimeID);
+
+// Investigated and successfully or unsuccessfully resolved
+IF
+OnCrimeResolved(_CrimeID, _, _, _, _, _)
+THEN
+PROC_CRIME_Finished(_CrimeID);
+
+// Prevented from getting registered
+PROC
+PROC_CharacterRegisterCrime_Blocked((CHARACTER)_Char,(STRING)_CrimeType,(INTEGER)_StoryActionID,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+THEN
+PROC_CRIME_Finished(_CrimeID);
+//END_REGION
+
+//REGION Summon & follower tracking
+// Handles both dying and calls to RemoveSummons(_Character, 0)
+IF
+CharacterLeftParty(_Summon)
+AND
+DB_PlayerSummons(_Summon)
+THEN
+// Summons no longer exist after they leave the party
+NOT DB_IsOrWasInParty(_Summon);
+NOT DB_PlayerSummons(_Summon);
+
+IF
+CharacterLeftParty(_Follower)
+AND
+DB_PartyFollowers(_Follower)
+THEN
+NOT DB_PartyFollowers(_Follower);
+
+IF
+DB_PartyMembers(_Character)
+AND
+NOT DB_Players(_Character)
+AND
+NOT DB_PlayerSummons(_Character)
+AND
+NOT DB_PartyFollowers(_Character)
+AND
+NOT DB_TutorialCompanion(_Character)
+THEN
+NOT DB_PartyMembers(_Character);
+//END_REGION
+
+//REGION Crime system waiting for dialog ends to start crime dialog
+// In last goal to ensure that if story wants to start a new dialog on DialogEnded, it
+// can do so before the crime system starts its own dialog
+IF
+DialogEnded(_,_DialogID)
+AND
+DB_CRIME_WaitingForDialogStop(_CrimeID,_DialogID)
+THEN
+NOT DB_CRIME_WaitingForDialogStop(_CrimeID,_DialogID);
+
+IF
+AutomatedDialogEnded(_,_DialogID)
+AND
+DB_CRIME_WaitingForDialogStop(_CrimeID,_DialogID)
+THEN
+NOT DB_CRIME_WaitingForDialogStop(_CrimeID,_DialogID);
+//END_REGION
+
+//REGION PROC_LevelLoadedOnce / PROC_LevelGameplayLoadedOnce
+// Do in ZZZ_LastGoal so that goals completing on LevelLoaded will activate their children
+// before PROC_LevelLoadedOnce gets called
+// PROC_LevelGameplayLoadedOnce arrives after the client has finished loading as well
+IF
+LevelLoaded((STRING)_Region)
+THEN
+DB_ZZZ_LevelLoaded(_Region);
+
+IF
+DB_ZZZ_LevelLoaded(_Region)
+AND
+DB_CharacterCreationStarted(_)
+AND
+NOT DB_LevelLoadedOnce(_Region)
+THEN
+DB_LevelLoadedOnce(_Region);
+PROC_LevelLoadedOnce(_Region);
+
+PROC
+PROC_LevelLoadedOnce((STRING)_Region)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GLO_Origins_SetupRecruitment((STRING)_Region)
+THEN
+DB_LevelGameplayLoadedOnce_WaitForGameplay(_Region);
+
+IF
+LevelGameplayStarted(_Region, _)
+AND
+DB_LevelGameplayLoadedOnce_WaitForGameplay(_Region)
+THEN
+NOT DB_LevelGameplayLoadedOnce_WaitForGameplay(_Region);
+PROC_LevelGameplayLoadedOnce(_Region);
+
+PROC
+PROC_LevelGameplayLoadedOnce((STRING)_Region)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+
+IF
+EnteredChasm(_Object, _, _, _, _, _)
+THEN
+EnterChasmProcessed(_Object, 0); 
+EXITSECTION
+
+ENDEXITSECTION

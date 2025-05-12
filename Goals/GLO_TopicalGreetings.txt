@@ -1,0 +1,200 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_TopicalGreeting((FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+// DB_TopicalGreetingStartCondition_FlagSet(_TG_Flag, _ConditionalFlag) - sets _TG_Flag when _ConditionalFlag is set
+NOT DB_TopicalGreetingStartCondition_FlagSet((FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+// DB_TopicalGreetingStartCondition_FlagSetForAvatarOrigin(_TG_Flag, _ConditionalFlag, _Origin) - sets _TG_Flag when _ConditionalFlag is set and Origin is an Avatar
+NOT DB_TopicalGreetingStartCondition_FlagSetForAvatarOrigin((FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+// DB_TopicalGreetingStartCondition_FlagSetForCompanionOrigin(_TG_Flag, _ConditionalFlag, _Origin) - sets _TG_Flag when _ConditionalFlag is set and Origin is a Companion
+NOT DB_TopicalGreetingStartCondition_FlagSetForCompanionOrigin((FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+
+NOT DB_TopicalGreetingEndCondition_LongRest((FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_TopicalGreetingEndCondition_LeaveCamp((FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_TopicalGreetingEndCondition_LeaveTrigger((FLAG)NULL_00000000-0000-0000-0000-000000000000,(TRIGGER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_TopicalGreetingEndCondition_LeaveTriggerSet((FLAG)NULL_00000000-0000-0000-0000-000000000000,"");
+NOT DB_TopicalGreetingEndCondition_FlagSet((FLAG)NULL_00000000-0000-0000-0000-000000000000,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_TopicalGreetingEndCondition_CharacterLeftParty((FLAG)NULL_00000000-0000-0000-0000-000000000000, (CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Base Algorithm: Avatar gets flag, passes it on to companions. No queuing supported. Only most recent subject is valid.
+IF
+FlagSet(_TG_Flag,_Avatar,_)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+QRY_TopicalGreeting_IsValidNewTopic(_TG_Flag)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+PROC_TopicalGreeting_SetNewTopic(_TG_Flag);
+DB_TopicalGreeting_Current(_TG_Flag);
+
+IF
+FlagSet(_TG_OldFlag,_Avatar,_)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+DB_TopicalGreeting(_TG_OldFlag)
+THEN
+ClearFlag(_TG_OldFlag,_Avatar,0);
+
+PROC
+PROC_TopicalGreeting_UnlockTopic((FLAG)_TG_Flag)
+AND
+QRY_TopicalGreeting_IsValidNewTopic(_TG_Flag)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+PROC_TopicalGreeting_SetNewTopic(_TG_Flag);
+DB_TopicalGreeting_Current(_TG_Flag);
+
+QRY
+QRY_TopicalGreeting_IsValidNewTopic((FLAG)_TG_Flag)
+AND
+DB_TopicalGreeting(_TG_Flag)
+AND
+NOT DB_TopicalGreeting_Current(_TG_Flag)
+AND
+NOT DB_TopicalGreeting_Old(_TG_Flag)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TopicalGreeting_ClearOldTopic()
+AND
+DB_TopicalGreeting_Current(_TG_OldFlag)
+AND
+DB_OriginPartOfTheTeamFlag(_Companion,_,_, _)
+AND
+NOT DB_Avatars(_Companion)
+THEN
+ClearFlag(_TG_OldFlag,_Companion,0);
+
+PROC
+PROC_TopicalGreeting_ClearOldTopic()
+AND
+DB_TopicalGreeting_Current(_TG_OldFlag)
+THEN
+NOT DB_TopicalGreeting_Current(_TG_OldFlag);
+DB_TopicalGreeting_Old(_TG_OldFlag);
+
+PROC
+PROC_TopicalGreeting_SetNewTopic((FLAG)_TG_Flag)
+AND
+DB_OriginPartOfTheTeamFlag(_Companion, _, _, _)
+AND
+NOT DB_Avatars(_Companion)
+AND
+DB_PartOfTheTeam(_Companion)
+THEN
+SetFlag(_TG_Flag,_Companion,0);
+//END_REGION
+
+//REGION Optional Early End Conditions
+//LongRest
+PROC
+PROC_LongRest()
+AND
+DB_TopicalGreeting_Current(_TG_Flag)
+AND
+DB_TopicalGreetingEndCondition_LongRest(_TG_Flag)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+
+//LeaveCamp
+PROC
+PROC_CAMP_LastPlayerLeftCamp()
+AND
+DB_TopicalGreeting_Current(_TG_Flag)
+AND
+DB_TopicalGreetingEndCondition_LeaveCamp(_TG_Flag)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+
+//LeaveTrigger
+IF
+LeftTrigger(_Player,_Trigger)
+AND
+DB_Players(_Player)
+AND
+DB_TopicalGreetingEndCondition_LeaveTrigger(_TG_Flag,_Trigger)
+AND
+DB_TopicalGreeting_Current(_TG_Flag)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(_Player,_Trigger)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+
+//LeaveTriggerSet
+
+IF
+DB_TopicalGreetingEndCondition_LeaveTriggerSet(_,_TriggerSet)
+AND
+Concatenate("TopicalGreeting_LeftTriggerSet_",_TriggerSet,_StrId)
+THEN
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet(_TriggerSet, _StrId);
+
+IF
+EntityEvent(_, _StrId)
+AND
+DB_TriggerEvents_AllPlayersLeftAllTriggersInSet(_TriggerSet, _StrId)
+AND
+DB_TopicalGreetingEndCondition_LeaveTriggerSet(_TG_Flag,_TriggerSet)
+AND
+DB_TopicalGreeting_Current(_TG_Flag)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+
+//FlagSet
+IF
+FlagSet(_EndFlag,_,_)
+AND
+DB_TopicalGreetingEndCondition_FlagSet(_TG_Flag,_EndFlag)
+AND
+DB_TopicalGreeting_Current(_TG_Flag)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+
+//Character left party
+IF
+CharacterLeftParty(_Character)
+AND
+DB_TopicalGreeting_Current(_TG_Flag)
+AND
+DB_TopicalGreetingEndCondition_CharacterLeftParty(_TG_Flag, _Character)
+THEN
+PROC_TopicalGreeting_ClearOldTopic();
+//END_REGION
+
+//REGION Conditional Topical Greetings
+IF
+FlagSet(_ConditionalFlag, _, _)
+AND
+DB_TopicalGreetingStartCondition_FlagSet(_TG_Flag, _ConditionalFlag)
+THEN
+PROC_TopicalGreeting_UnlockTopic(_TG_Flag);
+
+// Avatar Origin only
+IF
+FlagSet(_ConditionalFlag, _, _)
+AND
+DB_TopicalGreetingStartCondition_FlagSetForAvatarOrigin(_TG_Flag, _ConditionalFlag, _AvatarOrigin)
+AND
+DB_Avatars(_AvatarOrigin)
+THEN
+PROC_TopicalGreeting_UnlockTopic(_TG_Flag);
+
+// Companion Origin only
+IF
+FlagSet(_ConditionalFlag, _, _)
+AND
+DB_TopicalGreetingStartCondition_FlagSetForCompanionOrigin(_TG_Flag, _ConditionalFlag, _CompanionOrigin)
+AND
+NOT DB_Avatars(_CompanionOrigin)
+THEN
+PROC_TopicalGreeting_UnlockTopic(_TG_Flag);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

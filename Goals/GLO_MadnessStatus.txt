@@ -1,0 +1,52 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+StatusApplied(_Object, _Status, _, _)
+AND
+NOT DB_GLO_Mad(_Object)
+AND
+IsStatusFromGroup(_Status, "SG_Mad", 1)
+THEN
+DB_GLO_Mad(_Object);
+
+IF
+StatusRemoved(_Object, _Status, _, _)
+AND
+DB_GLO_Mad(_Object)
+AND
+IsStatusFromGroup(_Status, "SG_Mad", 1)
+AND
+HasAppliedStatusWithGroup(_Object, "SG_Mad", 0)
+THEN
+NOT DB_GLO_Mad(_Object);
+PROC_GLO_Mad_RestoreIndivRelation(_Object);
+
+PROC
+PROC_GLO_Mad_RestoreIndivRelation((GUIDSTRING)_Object)
+AND
+DB_GLO_Mad_IndividualRelation(_Object, _TargetFaction)
+THEN
+NOT DB_GLO_Mad_IndividualRelation(_Object, _TargetFaction);
+
+PROC
+PROC_GLO_Mad_RestoreIndivRelation((GUIDSTRING)_Object)
+THEN
+PROC_ClearIndividualRelations(_Object, "GLO_Mad");
+
+IF
+DB_Sees(_Object, _Target)
+AND
+DB_GLO_Mad(_Object)
+AND
+GetFaction(_Target, _TargetFaction)
+AND
+NOT DB_GLO_Mad_IndividualRelation((GUIDSTRING)_Object, _TargetFaction)
+THEN
+PROC_SetIndividualRelation(_Object, _TargetFaction, 0, "GLO_Mad", 0);
+DB_GLO_Mad_IndividualRelation(_Object, _TargetFaction);
+EXITSECTION
+
+ENDEXITSECTION

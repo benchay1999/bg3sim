@@ -1,0 +1,284 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// ------------------Anubis config assignement------------------
+// For setting a new anubis config that will change the default behaviour of a character:
+// 		- PROC_SetAnubisConfig((CHARACTER)_Char, (STRING)_NewConfig)
+//
+// Sometimes a custom behaviour might be added to override a default behaviour but that it's too complex for just adding a new StatusOverride.
+// In that case create a new anubis config and assign/remove it to the character using the next procs:
+//
+// 		- QRY_OverrideAnubisConfig((CHARACTER)_Char, (STRING)_AnubisConfig) -> Returns DB_QRYRTN_AnubisConfigOverrideIndex((INTEGER)_Index)
+//		- PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_Index)
+//		- PROC_ClearAnubisOverrideStack((CHARACTER)_Char)
+//
+// This proc will store any behaviours that should override the default one in a stack and apply and update them.
+// The same behaviour can be applied multiple times, overriding other behaviours depending on the order they are applied.
+// It will also track a reference count, and it won't apply the default behaviour of a character till the stack for them is not empty.
+// 
+// Example:
+//	* Initial stack:
+// 		- Default behaviour (in DB_AnubisConfigs()).
+//		- Override config A, 1.
+//		- Override config B, 2.
+//		- Override config A, 3.
+// 	Removing config in index 3  will update the character and change his behaviour to B and leave the stack like.
+// 		- Default behaviour (in DB_AnubisConfigs()).
+//		- Override config A, 1.
+//		- Override config B, 2.
+// 	But instead, if we remove 2:
+// 		- Default behaviour (in DB_AnubisConfigs()).
+//		- Override config A, 1
+//		- Override config A, 3
+// 	Character keeps behaviour A, and will only go to their default behaviour after removing 1 and 3.
+//
+// 	Note that DB_AnubisConfigs() has to be initialized for a character first by calling to any of the next procs:
+//		- PROC_SetAnubisConfig((CHARACTER)_Char, (STRING)_NewConfig)
+//		- PROC_AddAnubisConfigDB((CHARACTER)_Char)
+// 		- PROC_OverrideAnubisConfig((CHARACTER)_Char, (STRING)_AnubisConfig)
+//
+
+NOT DB_AnubisConfigsOverrideStack((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, "", 0);
+KBSECTION
+//REGION Initialization and anubis config assignement
+// Initialize if no config found
+PROC
+PROC_SetAnubisConfig((CHARACTER)_Char, (STRING)_NewConfig)
+AND
+NOT DB_AnubisConfigs(_Char, _)
+THEN
+PROC_AddAnubisConfigDB(_Char);
+
+PROC
+PROC_AddAnubisConfigDB((CHARACTER)_Char)
+AND
+GetAnubisConfig(_Char, _AnubisConfig)
+THEN
+DB_AnubisConfigs(_Char, _AnubisConfig);
+
+PROC
+PROC_SetAnubisConfig((CHARACTER)_Char, (STRING)_NewConfig)
+AND
+NOT DB_AnubisConfigs(_Char, _NewConfig)
+THEN
+PROC_SetAnubisConfig_Internal(_Char, _NewConfig);
+
+PROC
+PROC_SetAnubisConfig_Internal((CHARACTER)_Char, (STRING)_NewConfig)
+AND
+NOT DB_AnubisConfigsOverrideStack(_Char, _, _)
+THEN
+DEV_EnableAnubis(_Char, _NewConfig);
+
+PROC
+PROC_SetAnubisConfig_Internal((CHARACTER)_Char, (STRING)_)
+THEN
+PROC_SetAnubisConfig_ClearTracking(_Char);
+
+PROC
+PROC_SetAnubisConfig_Internal((CHARACTER)_Char, (STRING)_NewConfig)
+THEN
+DB_AnubisConfigs(_Char, _NewConfig);
+
+//END_REGION Initialization and anubis config assignement
+
+//REGION Overrides
+// Update reference count
+QRY
+QRY_OverrideAnubisConfig((CHARACTER)_Char, (STRING)_AnubisConfig)
+THEN
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig);
+
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+DB_QRYRTN_AnubisConfigOverrideIndex(_Index)
+THEN
+NOT DB_QRYRTN_AnubisConfigOverrideIndex(_Index);
+
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+NOT DB_AnubisConfigs(_Char, _)
+THEN
+PROC_AddAnubisConfigDB(_Char);
+
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+THEN
+DB_QRYRTN_AnubisConfigOverrideIndex(0); // Start with 0
+
+// Update index
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+DB_AnubisConfigsOverrideStack(_Char, _, _Index)
+AND
+DB_QRYRTN_AnubisConfigOverrideIndex(_PrevIndex)
+AND
+_Index > _PrevIndex
+THEN
+NOT DB_QRYRTN_AnubisConfigOverrideIndex(_PrevIndex);
+DB_QRYRTN_AnubisConfigOverrideIndex(_Index);
+
+// Add entry with new index
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+DB_QRYRTN_AnubisConfigOverrideIndex(_Index)
+AND
+IntegerSum(_Index, 1, _NewIndex)
+THEN
+NOT DB_QRYRTN_AnubisConfigOverrideIndex(_Index);
+DB_QRYRTN_AnubisConfigOverrideIndex(_NewIndex);
+DB_AnubisConfigsOverrideStack(_Char, _AnubisConfig, _NewIndex);
+
+// Save state if base anubis behaviour and override with new config if needed
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+DB_AnubisConfigs(_Char, _AssignedAnubisConfig)
+AND
+GetAnubisConfig(_Char, _AssignedAnubisConfig)
+AND
+_AnubisConfig != _AssignedAnubisConfig
+THEN
+SaveAnubisState(_Char);
+DB_AnubisConfigs_CharacterSavedStates(_Char, _AssignedAnubisConfig);
+PROC_AnubisConfigs_DelayAssignment(_Char, _AnubisConfig);
+
+PROC
+PROC_AnubisConfigs_DelayAssignment((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+DB_AnubisConfigs_DelayAssignment(_Char, _OtherAnubisConfig)
+THEN
+NOT DB_AnubisConfigs_DelayAssignment(_Char, _OtherAnubisConfig);
+
+PROC
+PROC_AnubisConfigs_DelayAssignment((CHARACTER)_Char, (STRING)_AnubisConfig)
+THEN
+DB_AnubisConfigs_DelayAssignment(_Char, _AnubisConfig);
+RealtimeObjectTimerCancel(_Char, "GLO_AnubisConfig_DelayAssignemnt");
+RealtimeObjectTimerLaunch(_Char, "GLO_AnubisConfig_DelayAssignemnt", 100);
+
+IF
+ObjectTimerFinished((CHARACTER)_Char, "GLO_AnubisConfig_DelayAssignemnt")
+AND
+DB_AnubisConfigs_DelayAssignment(_Char, _AnubisConfig)
+THEN
+NOT DB_AnubisConfigs_DelayAssignment(_Char, _AnubisConfig);
+DEV_EnableAnubis(_Char, _AnubisConfig);
+
+PROC
+PROC_OverrideAnubisConfig_Internal((CHARACTER)_Char, (STRING)_AnubisConfig)
+AND
+NOT DB_AnubisConfigs_DelayAssignment(_Char, _)
+AND
+NOT GetAnubisConfig(_Char, _AnubisConfig)
+THEN
+DEV_EnableAnubis(_Char, _AnubisConfig);
+
+// Removing overrides
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_Index)
+AND
+DB_AnubisConfigsOverrideStack(_Char, _AnubisConfig, _Index)
+THEN
+NOT DB_AnubisConfigsOverrideStack(_Char, _AnubisConfig, _Index);
+
+// Get last character config in the DB and override if needed
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_, (INTEGER)_)
+AND
+DB_AnubisConfigOverride_NewConfig(_Char, _AnubisConfig, _Index)
+THEN
+NOT DB_AnubisConfigOverride_NewConfig(_Char, _AnubisConfig, _Index);
+
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_)
+THEN
+DB_AnubisConfigOverride_NewConfig(_Char, "", -1);
+NOT DB_AnubisConfigOverride_UpdatedConfig(1);
+
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_)
+AND
+DB_AnubisConfigsOverrideStack(_Char, _NewAnubisConfig, _Index)
+AND
+DB_AnubisConfigOverride_NewConfig(_Char, _PrevAnubisConfig, _PrevIndex)
+THEN
+NOT DB_AnubisConfigOverride_NewConfig(_Char, _PrevAnubisConfig, _PrevIndex);
+DB_AnubisConfigOverride_NewConfig(_Char, _NewAnubisConfig, _Index);
+
+// If found a config override: update assigned config
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_)
+AND
+DB_AnubisConfigOverride_NewConfig(_Char, _NewAnubisConfig, _Index)
+AND
+_Index != -1
+AND
+NOT GetAnubisConfig(_Char, _NewAnubisConfig)
+THEN
+DEV_EnableAnubis(_Char, _NewAnubisConfig);
+DB_AnubisConfigOverride_UpdatedConfig(1);
+
+// If new config is the same that the one already set, block updating it
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_)
+AND
+NOT DB_AnubisConfigOverride_UpdatedConfig(1)
+AND
+DB_AnubisConfigOverride_NewConfig(_Char, _NewAnubisConfig, _)
+AND
+GetAnubisConfig(_Char, _NewAnubisConfig)
+THEN
+DB_AnubisConfigOverride_UpdatedConfig(1);
+
+// If not: update with base config
+PROC
+PROC_RemoveAnubisConfigOverride((CHARACTER)_Char, (INTEGER)_)
+AND
+NOT DB_AnubisConfigOverride_UpdatedConfig(1)
+AND
+DB_AnubisConfigs(_Char, _DefaultConfig)
+AND
+NOT GetAnubisConfig(_Char, _DefaultConfig)
+THEN
+PROC_AnubisRestoreBaseConfig(_Char);
+
+// If base config was changed while there was another config assigned don't restore
+PROC
+PROC_AnubisRestoreBaseConfig((CHARACTER)_Char)
+AND
+DB_AnubisConfigs(_Char, _DefaultConfig)
+AND
+DB_AnubisConfigs_CharacterSavedStates(_Char, _SavedState)
+AND
+_DefaultConfig != _SavedState
+THEN
+DEV_EnableAnubis(_Char, _DefaultConfig);
+NOT DB_AnubisConfigs_CharacterSavedStates(_Char, _SavedState);
+
+PROC
+PROC_AnubisRestoreBaseConfig((CHARACTER)_Char)
+AND
+DB_AnubisConfigs(_Char, _DefaultConfig)
+AND
+DB_AnubisConfigs_CharacterSavedStates(_Char, _DefaultConfig)
+THEN
+RestoreAnubisState(_Char);
+NOT DB_AnubisConfigs_CharacterSavedStates(_Char, _DefaultConfig);
+//END_REGION Overrides
+
+//REGION Helpers
+PROC
+PROC_SetAnubisConfig_ClearTracking((CHARACTER)_Char)
+AND
+DB_AnubisConfigs(_Char, _PrevConfig)
+THEN
+NOT DB_AnubisConfigs(_Char, _PrevConfig);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION

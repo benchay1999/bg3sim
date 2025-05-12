@@ -1,0 +1,110 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// _MovingObject, MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits
+NOT DB_GLO_MovingObject((ITEM)NULL_00000000-0000-0000-0000-000000000000, "", (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, 0.0, 0.0, 0, "", 0);
+KBSECTION
+IF
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+AND
+NOT DB_GLO_MovingObject_CurrentPos(_MovingObject, _)
+THEN
+DB_GLO_MovingObject_CurrentPos((ITEM)_MovingObject, (TRIGGER)_FirstPos);
+
+// levers, buttons
+IF
+DualEntityEvent(_, _, _MoveObjectEvent)
+AND
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+THEN
+PROC_GLO_MovingObject_Move(_MovingObject);
+
+// can be called in Osiris manually
+PROC
+PROC_GLO_MovingObject_Move((ITEM)_MovingObject)
+AND
+NOT DB_GLO_MovingObject_IsMoving(_MovingObject, _, _, _)
+AND
+DB_GLO_MovingObject_CurrentPos(_MovingObject, _CurrentPos)
+AND
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _CurrentPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+THEN
+DB_GLO_MovingObject_IsMoving((ITEM)_MovingObject, (TRIGGER)_CurrentPos, (TRIGGER)_FirstPos, _MovementFinishedEvent);
+ItemMoveTo(_MovingObject, _FirstPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+PROC_GLO_MovingObject_StartedMovement(_MovingObject, _CurrentPos, _FirstPos, _MovementFinishedEvent);
+
+PROC
+PROC_GLO_MovingObject_Move((ITEM)_MovingObject)
+AND
+NOT DB_GLO_MovingObject_IsMoving(_MovingObject, _, _, _)
+AND
+DB_GLO_MovingObject_CurrentPos(_MovingObject, _CurrentPos)
+AND
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _CurrentPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+THEN
+DB_GLO_MovingObject_IsMoving((ITEM)_MovingObject, (TRIGGER)_CurrentPos, (TRIGGER)_SecondPos, _MovementFinishedEvent);
+ItemMoveTo(_MovingObject, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+PROC_GLO_MovingObject_StartedMovement(_MovingObject, _CurrentPos, _SecondPos, _MovementFinishedEvent);
+
+PROC
+PROC_GLO_MovingObject_StartedMovement((ITEM)_MovingObject, (TRIGGER)_FromPos, (TRIGGER)_ToPos, (STRING)_MovementFinishedEvent)
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent((ITEM)_MovingObject, _MovementFinishedEvent)
+AND
+DB_GLO_MovingObject_IsMoving((ITEM)_MovingObject, (TRIGGER)_FromPos, (TRIGGER)_ToPos, _MovementFinishedEvent)
+THEN
+NOT DB_GLO_MovingObject_IsMoving(_MovingObject, _FromPos, _ToPos, _MovementFinishedEvent);
+NOT DB_GLO_MovingObject_CurrentPos(_MovingObject, _FromPos);
+DB_GLO_MovingObject_CurrentPos(_MovingObject, _ToPos);
+PROC_GLO_MovingObject_FinishedMovement(_MovingObject, _FromPos, _ToPos, _MovementFinishedEvent);
+
+PROC
+PROC_GLO_MovingObject_FinishedMovement((ITEM)_MovingObject, (TRIGGER)_FromPos, (TRIGGER)_ToPos, (STRING)_MovementFinishedEvent)
+THEN
+DB_NOOP(1);
+
+IF
+DB_PermaDefeated(_MovingObject)
+AND
+DB_GLO_MovingObject((ITEM)_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+THEN
+NOT DB_GLO_MovingObject((ITEM)_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+
+//REGION Debug commands
+// Helpers that allow to change the speed and acceleration of the object without reloading level / story
+IF
+EntityEvent((ITEM)_MovingObject, "movobj_select")
+THEN
+SysClear("DB_GLO_Debug_CurrentMovingObject", 1);
+DB_GLO_Debug_CurrentMovingObject(_MovingObject);
+
+IF
+TextEvent("movobj_speed")
+AND
+DB_GLO_Debug_CurrentMovingObject(_MovingObject)
+AND
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+AND
+GetTextEventParamReal(1, _NewSpeed)
+THEN
+NOT DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _NewSpeed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+
+IF
+TextEvent("movobj_accel")
+AND
+DB_GLO_Debug_CurrentMovingObject(_MovingObject)
+AND
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits)
+AND
+GetTextEventParamReal(1, _NewAcceleration)
+THEN
+NOT DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _Acceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+DB_GLO_MovingObject(_MovingObject, _MoveObjectEvent, _FirstPos, _SecondPos, _Speed, _NewAcceleration, _UseRotation, _MovementFinishedEvent, _DoHits);
+//END_REGION Debug commands
+EXITSECTION
+
+ENDEXITSECTION

@@ -1,0 +1,123 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION SHA_OldEnemy
+DB_QuestDef_State((FLAG)SHA_Orthon_Knows_RaphaelWillMeetAtCamp_7ecee74c-b77e-2e29-5f54-2b0aeac214ab, "SHA_OldEnemy", "FoundRaphael");
+DB_QuestDef_State((FLAG)SHA_Orthon_Event_SearchPersuasionSuccess_115ec894-0132-c67e-9eb6-baa4d44afbcc, "SHA_OldEnemy", "PromisedToHelp");
+DB_QuestDef_State_ConditionalFlag((FLAG)SHA_Orthon_State_Defeated_f9b8bab6-c2ce-4051-9a3f-5b6c7846ff34, "SHA_OldEnemy", "DefeatedOrphon", 0, (FLAG)SHA_OrthonLair_Event_OrthonKillsSelf_5779d2a2-1676-463d-905b-699e9c7b1bc7);
+DB_QuestDef_State_ConditionalFlag((FLAG)SHA_Orthon_State_Defeated_f9b8bab6-c2ce-4051-9a3f-5b6c7846ff34, "SHA_OldEnemy", "OrphonSuicide", 1, (FLAG)SHA_OrthonLair_Event_OrthonKillsSelf_5779d2a2-1676-463d-905b-699e9c7b1bc7);
+DB_QuestDef_State((FLAG)SHA_Orthon_State_ContractEnded_26c35edd-3617-82b3-b4d7-1b7bb6410485, "SHA_OldEnemy", "BrokeContract");
+DB_QuestDef_LevelLoaded("SHA_OldEnemy", "EnemyLeftAlive", "INT_Main_A");
+
+//REGION SHA_OldEnemy_SUB_BreakContract
+DB_QuestDef_ChainedState("SHA_OldEnemy", "PromisedToHelp", "ToldAboutContract");
+DB_QuestDef_State((FLAG)SHA_LastJusticiar_Knows_InfernalRitual_4ca0b9a8-503a-4a5e-990e-17d86762b0ca, "SHA_OldEnemy", "FoundRitual");
+DB_QuestDef_State((FLAG)SHA_LastJusticiar_Knows_RatsAreMany_354c4533-8ff4-4795-a0d3-017fea1483bc, "SHA_OldEnemy", "JusticiarMany");
+DB_QuestDef_State((FLAG)SHA_LastJusticiar_Knows_JusticiarStateBedReveal_6fbc2e53-9664-46b8-832e-2175a43631e9, "SHA_OldEnemy", "AskedDead");
+DB_QuestDef_State((FLAG)SHA_LastJusticiar_State_JusticiarAppeared_1bb2fe4b-2c35-48d8-93ed-3e9e834557f6, "SHA_OldEnemy", "DefeatLastJusticiar");
+DB_QuestDef_State((FLAG)SHA_LastJusticiar_State_KilledJusticiar_95b1ac4a-c978-3288-a192-d294b70229c4, "SHA_OldEnemy", "ReturnToOrthon");
+DB_QuestDef_ChainedState("SHA_OldEnemy", "DefeatedOrthon", "DefeatedOrthon");
+DB_QuestDef_ChainedState("SHA_OldEnemy", "BrokeContract", "LiftedContract");
+DB_QuestDef_ChainedState("SHA_OldEnemy", "EnemyLeftAlive", "ContractUnbroken");
+
+DB_SHA_LastJusticiar_KnowledgeFlag((FLAG)SHA_LastJusticiar_Knows_JusticiarStateBedReveal_6fbc2e53-9664-46b8-832e-2175a43631e9);
+DB_SHA_LastJusticiar_KnowledgeFlag((FLAG)SHA_LastJusticiar_Knows_InfernalRitual_4ca0b9a8-503a-4a5e-990e-17d86762b0ca);
+//END_REGION
+
+//END_REGION
+
+//REGION SHA_Nightsong
+DB_QuestDef_BookReadState("SHA_Nightsong", "BalthazarSentForNightsong", S_MOO_BalthazarSecretBook_8f90de22-6a7c-4579-a966-73c0d80d7a54);
+DB_QuestDef_State((FLAG)SHA_Necromancer_Knows_InvulnerabilitySource_0e33cbbe-18b6-ac57-8ec3-35f296bc6734, "SHA_Nightsong", "BalthazarSentForNightsong");
+DB_QuestDef_State((FLAG)SHA_PartyProgress_EnteredSharTemple_d212e499-d006-4043-9dee-8aac504098e5, "SHA_Nightsong", "FoundSHA");
+DB_QuestDef_State((FLAG)SHA_NightsongPrison_State_PlayerEnteredPrison_f2cbe7cf-5223-4522-a649-879d08638282, "SHA_Nightsong", "EnteredShadowfell");
+DB_QuestDef_State((FLAG)SCE_IsobelNightsongReunion_JoiningCamp_cea17782-fc15-19d3-e658-7f2f955ebd9f, "SHA_Nightsong", "NightsongInCamp");
+DB_QuestDef_State((FLAG)LOW_SorcerousSundries_Knows_AradinCameToShopForNightsong_95e27813-2470-40a1-83ec-bca72863d88f, "SHA_Nightsong", "MetAradinInBG");
+DB_QuestDef_State((FLAG)LOW_Nightsong_Event_GoToRamazithTower_59fab159-060f-424c-9fd9-43cc00a88db9, "SHA_Nightsong", "ToldNightsongAboutWizard");
+DB_QuestDef_State((FLAG)LOW_Lorroakan_State_BelievesNightsongIsDead_8aee8177-d2f2-48f0-947b-8c33892152b8, "SHA_Nightsong", "LorroakanBelievedLies");
+//END_REGION
+KBSECTION
+//REGION SHA_OldEnemy
+
+IF
+DialogEnded((DIALOGRESOURCE)SHA_Orthon_TrespassLair_68842a58-e440-fb14-4f64-21c1783469de, _)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_OrthonLair_Event_OrthonKillsSelf_5779d2a2-1676-463d-905b-699e9c7b1bc7)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_Orthon_Event_SearchPersuasionSuccess_115ec894-0132-c67e-9eb6-baa4d44afbcc)
+THEN
+QuestUpdate("SHA_OldEnemy", "FightOrphon");
+
+IF
+VoiceBarkEnded((VOICEBARKRESOURCE)SHA_OrthonLair_VB_EnteredLair_346062d4-71c6-7cbf-e6de-e46ddc9a68a6, _)
+THEN
+QuestUpdate("SHA_OldEnemy", "FoundCarnage");
+
+IF
+DB_GlobalFlag((FLAG)SHA_LastJusticiar_State_PlayerTruce_1d54b03b-926a-c36d-7480-e29659f6c506)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)SHA_LastJusticiar_RatsNegotiate_592f63db-b2b3-9383-9160-1643321f02ce, _)
+AND
+DB_GlobalFlag((FLAG)SHA_LastJusticiar_State_SharedTreasure_bbd04557-5cae-4802-aa7e-9cb86af7b698)
+AND
+DB_SHA_LastJusticiar_KnowledgeFlag(_KnowledgeFlag)
+AND
+DB_GlobalFlag(_KnowledgeFlag)
+THEN
+QuestUpdate("SHA_OldEnemy", "RatDeal");
+
+IF
+DB_GlobalFlag((FLAG)SHA_LastJusticiar_State_PlayerTruce_1d54b03b-926a-c36d-7480-e29659f6c506)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)SHA_LastJusticiar_RatsNegotiate_592f63db-b2b3-9383-9160-1643321f02ce, _)
+AND
+NOT DB_GlobalFlag((FLAG)SHA_LastJusticiar_State_SharedTreasure_bbd04557-5cae-4802-aa7e-9cb86af7b698)
+AND
+DB_SHA_LastJusticiar_KnowledgeFlag(_KnowledgeFlag)
+AND
+DB_GlobalFlag(_KnowledgeFlag)
+THEN
+QuestUpdate("SHA_OldEnemy", "RatPacifism");
+
+//END_REGION
+
+//REGION SHA_Nightsong
+IF
+DialogStarted(SHA_NightsongPrison_NightsongsFate_309684a3-b0e7-9a5b-68fb-63c802c2240c, _)
+THEN
+QuestUpdate("SHA_Nightsong", "NightsongIsAPersonPrison");
+
+IF
+DialogStarted(SHA_NightsongPrison_NecroAndNightsong_500474d5-3855-9b12-29d1-b6e7645d7385, _)
+THEN
+QuestUpdate("SHA_Nightsong", "NightsongIsAPersonPrison");
+
+IF
+DialogEnded(SHA_NightsongPrison_NecroAndNightsong_500474d5-3855-9b12-29d1-b6e7645d7385, _)
+AND
+DB_GlobalFlag(SHA_NightsongPrison_Event_NightsongSentToMoonrise_685b9761-43b6-9004-8655-073096c62731)
+THEN
+QuestUpdate("SHA_Nightsong", "NightsongWithBalthazar");
+QuestSetCategory("SHA_Nightsong", "BaldursGate");
+
+IF
+DialogStarted(SHA_NightsongsFate_OM_Shadowheart_AOM_OOM_COM_7c1dc5a3-0410-ebf4-3b3b-b2ee753562db, _)
+THEN
+QuestUpdate("SHA_Nightsong", "NightsongIsAPersonPrison");
+
+IF
+FlagSet(SHA_NightsongPrison_Event_StartNightsongFreedDialog_737d8c1e-7970-2c6c-06ec-8ccb3a9bf25e, _, _)
+THEN
+QuestUpdate("SHA_Nightsong", "NightsongFreed");
+QuestSetCategory("SHA_Nightsong", "BaldursGate");
+
+IF
+FlagSet(SHA_NightsongPrison_State_ShadowheartKilledNightsong_3cac3cd6-4c16-44a6-8246-a91922821169, _, _)
+THEN
+QuestUpdate("SHA_Nightsong","NightsongDead");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act2"

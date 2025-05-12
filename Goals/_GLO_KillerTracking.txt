@@ -1,0 +1,325 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_KilledByPartyEvent((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+KBSECTION
+//REGION Report killer
+// Report when player X is considered to be the killer of NPC Y
+// Trigger: DB_ReportKiller((CHARACTER)_NPC, (GUIDSTRING)_ReportID)
+//   - _NPC: report when _NPC gets killed
+//   - _ReportID: an extra parameter passed to PROC_ReportKiller (see below) as reference/context
+// Callback: PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_KillerOwner, (CHARACTER)_Victim, (GUIDSTRING)_ReportID)
+IF
+EnteredCombat((CHARACTER)_NPC, _ID)
+AND
+DB_ReportKiller(_NPC, (GUIDSTRING)_)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+IsEnemy(_Player, _NPC, 1)
+THEN
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _ID);
+
+IF
+EnteredCombat((CHARACTER)_Player, _ID)
+AND
+DB_Players(_Player)
+AND
+DB_ReportKiller(_NPC, (GUIDSTRING)_)
+AND
+DB_Is_InCombat(_NPC, _ID)
+AND
+IsEnemy(_Player, (CHARACTER)_NPC, 1)
+THEN
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _ID);
+
+// If just one of them switches to a new combat, nothing changes.
+// We will clear the database when the old combat ends, and
+// nothing will be reported. If both switch, we update the
+// database and we will report events for the new combat.
+IF
+SwitchedCombat((CHARACTER)_NPC, _OldID, _NewID)
+AND
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _OldID)
+AND
+DB_Is_InCombat(_Player, _NewID)
+THEN
+NOT DB_ReportKiller_HostileToTarget(_Player, _NPC, _OldID);
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _NewID);
+
+IF
+SwitchedCombat((CHARACTER)_Player, _OldID, _NewID)
+AND
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _OldID)
+AND
+DB_Is_InCombat(_NPC, _NewID)
+THEN
+NOT DB_ReportKiller_HostileToTarget(_Player, _NPC, _OldID);
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _NewID);
+
+IF
+CombatEnded(_ID)
+AND
+DB_ReportKiller_HostileToTarget(_Player, _NPC, _ID)
+THEN
+NOT DB_ReportKiller_HostileToTarget(_Player, _NPC, _ID);
+
+// The actual kill detection
+IF
+KilledBy(_Victim, _AttackerOwner, _Attacker, _)
+AND
+DB_Players((CHARACTER)_AttackerOwner)
+AND
+DB_ReportKiller(_Victim, (GUIDSTRING)_ReportID) 
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_Killer)
+THEN
+PROC_ReportKiller(_Killer, _AttackerOwner, _Victim, _ReportID);
+
+IF
+Dying(_Victim)
+AND
+DB_ReportKiller(_Victim, (GUIDSTRING)_ReportID)
+AND
+DB_Is_InCombat(_Victim, _ID)
+AND
+DB_Players(_Killer)
+AND
+DB_Is_InCombat(_Killer, _ID)
+AND
+QRY_ReportKiller_WasEnemy((CHARACTER)_Victim,(CHARACTER)_Killer, _ID)
+THEN
+PROC_ReportKiller(_Killer, _Killer, _Victim, _ReportID);
+
+QRY
+QRY_ReportKiller_WasEnemy((CHARACTER)_Killed, (CHARACTER)_Killer, (GUIDSTRING)_ID)
+AND
+DB_ReportKiller_HostileToTarget(_Killer, _Killed, _ID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_ReportKiller_WasEnemy((CHARACTER)_Killed, (CHARACTER)_Killer, (GUIDSTRING)_ID)
+AND
+IsEnemy(_Killed, _Killer, 1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION //Killed Event
+IF
+DB_KilledEvent((CHARACTER)_Victim, (FLAG)_Event)
+THEN
+DB_ReportKiller(_Victim, _Event);
+
+IF
+DB_KilledByPartyEvent((CHARACTER)_Victim, (FLAG)_Event)
+THEN
+DB_ReportKiller(_Victim, _Event);
+
+// Object KilledEvent flag
+PROC
+PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_KillerOwner, (CHARACTER)_Victim, (GUIDSTRING)_ReportID)
+AND
+DB_KilledEvent(_Victim, (FLAG)_ReportID)
+THEN
+SetFlag(_ReportID, _KillerOwner, 0);
+
+// Global KilledEvent flag
+PROC
+PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_KillerOwner, (CHARACTER)_Victim, (GUIDSTRING)_ReportID)
+AND
+DB_KilledByPartyEvent(_Victim, (FLAG)_ReportID)
+THEN
+SetFlag(_ReportID, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION
+
+//REGION Killer tracking
+// Report when _Witness sees _Victim getting killed by a player (_Victim and _Witness can be the same)
+// Trigger: DB_WitnessKiller(_Victim, _Witness)
+// Callback: PROC_WitnessedKiller((CHARACTER)_Witness, (CHARACTER)_Killer, (STRING)_Race, (STRING)_Gender, (CHARACTER)_Victim) (for every Killer/Race combination that is held responsible for the death)
+//
+// NOTE: makes use of DB_ReportKiller() using the Witness as the event parameter
+IF
+DB_WitnessKiller((CHARACTER)_Witness, (CHARACTER)_Victim)
+AND
+NOT DB_PermaDefeated(_Victim)
+THEN
+DB_ReportKiller(_Victim, _Witness);
+
+IF
+DB_WitnessKiller_SawAsShape((CHARACTER)_Witness, (CHARACTER)_Player, (STRING)_Race, (STRING)_Gender, (CHARACTER)_Victim, (GUIDSTRING)_CombatID)
+AND
+NOT DB_WitnessKiller(_Witness, _Victim)
+THEN
+NOT DB_WitnessKiller_SawAsShape(_Witness, _Player, _Race, _Gender, _Victim, _CombatID);
+
+IF
+DB_WitnessKiller_ReportWhenBodyFound((CHARACTER)_Witness, (CHARACTER)_Enemy, (STRING)_Race, (STRING)_Gender, (CHARACTER)_Victim)
+AND
+NOT DB_WitnessKiller(_Witness, _Victim)
+THEN
+NOT DB_WitnessKiller_ReportWhenBodyFound(_Witness, _Enemy, _Race, _Gender, _Victim);
+
+// Record race when first seen in combat with victim
+IF
+DB_ReportKiller_HostileToTarget(_Player, _Victim, _CombatID)
+AND
+DB_WitnessKiller(_Witness, _Victim)
+AND
+DB_Sees(_Witness, _Player)
+AND
+GetRace(_Player, 1, _Race)
+AND
+GetGender(_Player, 1, _Gender)
+THEN
+DB_WitnessKiller_SawAsShape(_Witness, _Player, _Race, _Gender, _Victim, _CombatID);
+
+// Record form when polymorphing while seen in combat
+IF
+ShapeshiftChanged(_Player, _Race, _Gender, _Status)
+AND
+_Status != ""
+AND
+DB_Players(_Player)
+AND
+DB_ReportKiller_HostileToTarget(_Player, _Victim, _CombatID)
+AND
+DB_WitnessKiller(_Witness, _Victim)
+AND
+DB_Sees(_Witness, _Player)
+AND
+NOT DB_WitnessKiller_SawAsShape(_Witness, _Player, _Race, _Gender, _Victim, _CombatID)
+THEN
+DB_WitnessKiller_SawAsShape(_Witness, _Player, _Race, _Gender, _Victim, _CombatID);
+
+// And when stopping polymorph
+IF
+ShapeshiftChanged(_Player, _, _, "")
+AND
+DB_Players(_Player)
+AND
+DB_ReportKiller_HostileToTarget(_Player, _Victim, _CombatID)
+AND
+DB_WitnessKiller(_Witness, _Victim)
+AND
+DB_Sees(_Witness, _Player)
+THEN
+DB_WitnessKiller_SawAsShape(_Witness, _Player, "", "", _Victim, _CombatID);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_WitnessKiller_SawAsShape(_Witness, _Player, _Race, _Gender, _Victim, _CombatID)
+AND
+// If the victim is dead, we'll clean it after reporting the killer
+NOT DB_PermaDefeated(_Victim)
+THEN
+NOT DB_WitnessKiller_SawAsShape(_Witness, _Player, _Race, _Gender, _Victim, _CombatID);
+
+// Report the killer in their current form if they can be seen
+PROC
+PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_KillerOwner, (CHARACTER)_Victim, (GUIDSTRING)_Witness)
+AND
+DB_WitnessKiller((CHARACTER)_Witness, _Victim)
+AND
+// This works even if _Witness == _KillerOwner, because the KilledBy event gets set when
+// the character dies, and the LostSight event only during the next update of the sight
+// manager when the character is found to be dead (= by definition after the character
+// died)
+DB_Sees(_Witness, _KillerOwner)
+AND
+GetRace(_KillerOwner, 1, _Race)
+AND
+GetGender(_KillerOwner, 1, _Gender)
+AND
+NOT DB_WitnessKiller_SawAsShape(_Witness, _KillerOwner, _Race, _Gender, _Victim, _)
+THEN
+PROC_WitnessedKiller(_Witness, _KillerOwner, _Race, _Gender, _Victim);
+
+// If the Victim and witness were the same, then it's enough that both killer and the victim
+// were in the same combat as enemies (all enemies will be held responsible for the death)
+PROC
+PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_, (CHARACTER)_Victim, (GUIDSTRING)_Witness)
+AND
+_Witness == _Victim
+AND
+DB_WitnessKiller((CHARACTER)_Witness, _Victim)
+AND
+DB_WitnessKiller_SawAsShape(_Victim, _Enemy, _Race, _Gender, _Victim, _)
+THEN
+PROC_WitnessedKiller(_Victim, _Enemy, _Race, _Gender, _Victim);
+
+// If the victim and witness are different, we only report the killer(s) once the witness sees the dead victim
+PROC
+PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_, (CHARACTER)_Victim, (GUIDSTRING)_Witness)
+AND
+_Victim != _Witness
+AND
+DB_WitnessKiller((CHARACTER)_Witness, _Victim)
+AND
+DB_WitnessKiller_SawAsShape(_Witness, _Enemy, _Race, _Gender, _Victim, _)
+THEN
+DB_WitnessKiller_ReportWhenBodyFound(_Witness, _Enemy, _Race, _Gender, _Victim);
+
+
+// DB_WitnessKiller clean up
+PROC
+PROC_ReportKiller((CHARACTER)_Killer, (CHARACTER)_KillerOwner, (CHARACTER)_Victim, (GUIDSTRING)_Witness)
+AND
+DB_WitnessKiller((CHARACTER)_Witness, _Victim)
+AND
+NOT DB_WitnessKiller_ReportWhenBodyFound(_Witness, _, _, _, _Victim)
+THEN
+NOT DB_WitnessKiller(_Witness, _Victim);
+NOT DB_ReportKiller(_Victim, _Witness);
+
+// After the fact reporting (witness saw killer and victim in same combat -> report when
+// finding body)
+IF
+DB_Sees(_Witness, _Victim)
+AND
+DB_WitnessKiller_ReportWhenBodyFound(_Witness, _Enemy, _Race, _Gender, _Victim)
+THEN
+PROC_WitnessedKiller(_Witness, _Enemy, _Race, _Gender, _Victim);
+
+IF
+DB_Sees(_Witness, _Victim)
+AND
+DB_WitnessKiller_ReportWhenBodyFound(_Witness, _Enemy, _Race, _Gender, _Victim)
+AND
+DB_WitnessKiller(_Witness, _Victim)
+THEN
+NOT DB_WitnessKiller(_Witness, _Victim);
+NOT DB_ReportKiller(_Victim, _Witness);
+
+
+// Clean up when witness dies
+IF
+DB_PermaDefeated(_Witness)
+AND
+DB_WitnessKiller_ReportWhenBodyFound((CHARACTER)_Witness, _KillerOwner, _Race, _Gender, _Victim)
+THEN
+PROC_WitnessedKiller_CleanUpAfterTheFact(_Witness);
+
+PROC
+PROC_WitnessedKiller_CleanUpAfterTheFact((CHARACTER)_Witness)
+AND
+DB_WitnessKiller_ReportWhenBodyFound(_Witness, _KillerOwner, _Race, _Gender, _Victim)
+THEN
+NOT DB_WitnessKiller_ReportWhenBodyFound(_Witness, _KillerOwner, _Race, _Gender, _Victim);
+
+// Dummy callback
+PROC
+PROC_WitnessedKiller((CHARACTER)_Witness, (CHARACTER)_KillerOwner, (STRING)_Race, (STRING)_Gender, (CHARACTER)_Victim)
+THEN
+DB_NOOP(1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"

@@ -1,0 +1,74 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Summoning a trap
+IF
+EnteredLevel(_Item,_,_Level)
+AND
+DB_CurrentLevel(_Level)
+AND
+QRY_IsExistingSummon(_Item,1)
+AND
+IsItem(_Item,1)
+AND
+IsTrap((ITEM)_Item,1)
+THEN
+// When the EnteredLevel event triggers, the owner of the helper hasn't been set
+// yet in code. This happens one frame later by a deferred system update -> timer
+// Additionally, wait a bit longer in case the trap gets summoned on the location
+// of the NPC and explodes immediately, so we don't generate a skill check in that
+// case (the timer for the check is 0.5 seconds, so wait a but longer)
+ObjectTimerCancel(_Item,"CRIME_TrapSummoned");
+DB_CRIME_SummonedTrap(_Item,0);
+ObjectTimerLaunch(_Item,"CRIME_TrapSummoned",700);
+
+IF
+CastSpell(_Item,_,_,_,_)
+AND
+DB_CRIME_SummonedTrap((ITEM)_Item,0)
+THEN
+NOT DB_CRIME_SummonedTrap((ITEM)_Item,0);
+DB_CRIME_SummonedTrap((ITEM)_Item,1);
+SetTrapArmed(_Item,1);
+// If it casts a spell, it reveals itself as a trap
+// (it will probably destroy itself afterwards, but that's fine)
+SetTrapDiscovered(_Item,1);
+
+IF
+ObjectTimerFinished(_Item,"CRIME_TrapSummoned")
+AND
+NOT DB_CRIME_SummonedTrap((ITEM)_Item,1)
+AND
+Exists(_Item,1)
+AND
+IsDestroyed((ITEM)_Item,0)
+AND
+GetPosition(_Item,_X,_Y,_Z)
+AND
+GetOwner(_Item,_Caster)
+AND
+DB_PartyMembers(_Caster)
+AND
+CrimeGetNewID(_CrimeID)
+THEN
+SetCanInteract((ITEM)_Item,0);
+SetTrapArmed(_Item,1);
+SetTrapDiscovered(_Item,0);
+// The caster is specified as the "victim" so that we can let NPCs allied with the "victim" ignore it
+// (so that they won't perform skill checks that may reveal the mine; the mine won't explode either
+//  when allies step on it)
+PROC_CharacterRegisterCrimeWithPosition(_Caster,"SpellTrapPlaced",_Item,_X,_Y,_Z,_Caster,_CrimeID);
+
+IF
+ObjectTimerFinished(_Item,"CRIME_TrapSummoned")
+AND
+DB_CRIME_SummonedTrap((ITEM)_Item,_CastSpell)
+THEN
+NOT DB_CRIME_SummonedTrap((ITEM)_Item,_CastSpell);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "__Shared_Campaign"
