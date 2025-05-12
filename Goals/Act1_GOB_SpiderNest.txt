@@ -1,0 +1,1388 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GOB_GiantSpiders((CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a, (DIALOGRESOURCE)GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78);
+DB_GOB_GiantSpiders(S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990, (DIALOGRESOURCE)GOB_GiantSpider_Tiny_24bb8c15-de88-28f9-1bde-34a88ad8d4e2);
+
+DB_GOB_SpiderNest_Executioner((CHARACTER)S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+DB_GOB_SpiderNest_Escort((CHARACTER)S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7);
+DB_GOB_SpiderNest_Victim((CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82);
+
+DB_GOB_SpiderNest_VictimDialog((CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82, (DIALOGRESOURCE)GOB_SpiderNest_Adventurer_48f2682f-1538-817c-d21c-dcf3db7349ab);
+
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)GOB_SpiderNest_Spiders_CantSpeak_c32b02b0-2cea-c630-1eb1-2b3c6a0d4553);
+
+DB_GlobalFlagReactionAfterDialog(
+	(FLAG)GOB_SpiderNest_State_SpidersChill_7e28b817-42cc-2d7c-8bca-9f4b6fd9c35e,
+	DIALOGRESOURCEGUID_GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78);
+
+DB_CustomForbiddenItemCrimes(
+	S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b,
+	"GOB_SpiderNest_SpiderCage_UseForbiddenItem","");
+
+PROC_TriggerRegisterForPlayers(S_GOB_SpiderNest_StartTrigger_65516e12-f318-40fb-b70e-8033fe48778c);
+
+PROC_TriggerRegisterForPlayers(S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef);
+
+PROC_ItemCloseAndLock((ITEM)S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b,"GOB_SpiderNest_Key");
+
+DB_GLO_DefeatCounter((CHARACTER)S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86, "GOB_SpiderNest_Goblins");
+DB_GLO_DefeatCounter((CHARACTER)S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7, "GOB_SpiderNest_Goblins");
+DB_GOB_SpiderNest_ExecutionGoblins((CHARACTER)S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+DB_GOB_SpiderNest_ExecutionGoblins((CHARACTER)S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7);
+KBSECTION
+//REGION Preparations
+
+IF
+DB_InRegion(_Player, (TRIGGER)S_GOB_TempleBox_001_754d69fd-f1aa-486d-8f9f-ee8957215780)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("GOB_SpiderNest_PrepareExecution")
+THEN
+PROC_GOB_SpiderNest_Prepare();
+
+IF
+DB_GOB_SpiderNest_Victim((CHARACTER)_NewVictim)
+AND
+IsDead(_NewVictim,0)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_NewVictim);
+PROC_CharacterDisableAllCrimes(_NewVictim, 1);
+
+QRY
+QRY_CRIME_Guards_GuardKillerExcludeWitness(_Victim)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GOB_SpiderNest_Prepare()
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+DB_GOB_SpiderNest_Executioner(_Executioner)
+THEN
+SetFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,_Victim,0);
+SetFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,_Executioner,0);
+SetFlag((FLAG)GOB_SpiderNest_State_ExecutionPreparing_53989983-ba47-4544-80ba-715c05194150,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_CharacterMoveTo(
+    _Executioner,
+    S_GOB_SpiderNest_ExecutionerTrigger_1c0ebbe4-1d5f-4812-8480-1db89bfa9dfb,
+    "Run",
+    "GOB_SpiderNest_Event_ReadyToExecute");
+PROC_CharacterMoveTo(
+    _Victim,
+    S_GOB_SpiderNest_VictimTrigger_584ac09e-0fd4-452c-b4de-579f72487227,
+    "Walk",
+    "GOB_SpiderNest_Event_ReadyToExecute");
+
+PROC
+PROC_GOB_SpiderNest_Prepare()
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+DB_GOB_SpiderNest_Escort(_Escort)
+THEN
+PROC_CharacterMoveTo(
+    _Escort,
+    TRIGGERGUID_S_GOB_SpiderNest_EscortTrigger_eb00da31-be33-4477-a6d6-3455ced88da5,
+    "Walk",
+    "GOB_SpiderNest_Event_EscortAtCage");
+
+IF
+EntityEvent((CHARACTER)_Escort, "GOB_SpiderNest_Event_EscortAtCage")
+AND
+DB_GOB_SpiderNest_Escort(_Escort)
+THEN
+SteerTo(_Escort, S_GOB_SpiderNest_VictimTrigger_584ac09e-0fd4-452c-b4de-579f72487227, 1);
+
+IF
+EntityEvent((CHARACTER)_Executioner, "GOB_SpiderNest_Event_ReadyToExecute")
+AND
+DB_GOB_SpiderNest_Executioner(_Executioner)
+THEN
+SteerTo(_Executioner, S_GOB_SpiderNest_VictimTrigger_584ac09e-0fd4-452c-b4de-579f72487227, 1);
+
+
+//END_REGION
+
+
+//REGION execution start conditions
+IF
+EntityEvent(_Entity,"GOB_SpiderNest_Event_ReadyToExecute")
+AND
+DB_GOB_SpiderNest_Executioner((CHARACTER)_Entity)
+THEN
+SetFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985);
+
+IF
+EntityEvent((CHARACTER)_Entity,"GOB_SpiderNest_Event_ReadyToExecute")
+AND
+NOT DB_GOB_SpiderNest_ReadyCheck((CHARACTER)_Entity)
+THEN
+DB_GOB_SpiderNest_ReadyCheck((CHARACTER)_Entity);
+
+IF
+EntityEvent((CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,"GOB_SpiderNest_Event_ReadyToExecute")
+THEN
+DB_GOB_SpiderNest_VictimDialog(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, (DIALOGRESOURCE)GOB_SpiderNest_CapturedGoblin_88941bf9-f6bc-7b9c-9f77-20a684bdf7a0);
+
+IF
+DB_GOB_SpiderNest_ReadyCheck(_NewEntity)
+AND
+QRY_GOB_SpiderNest_ReadyToExecute()
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+DB_GOB_SpiderNest_Executioner(_Exec)
+THEN
+PROC_GOB_SpiderNest_PlayAD(_Victim,_Exec);
+
+IF
+EnteredTrigger(_Player,S_GOB_SpiderNest_StartTrigger_65516e12-f318-40fb-b70e-8033fe48778c)
+AND
+DB_Players(_Player)
+AND
+QRY_GOB_SpiderNest_ReadyToExecute()
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+DB_GOB_SpiderNest_Executioner(_Exec)
+THEN
+PROC_TriggerUnregisterForPlayers(S_GOB_SpiderNest_StartTrigger_65516e12-f318-40fb-b70e-8033fe48778c);
+PROC_GOB_SpiderNest_PlayAD(_Victim,_Exec);
+
+QRY
+QRY_GOB_SpiderNest_ReadyToExecute()
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+DB_GOB_SpiderNest_ReadyCheck(_Victim)
+AND
+DB_GOB_SpiderNest_Executioner(_Executioner)
+AND
+DB_GOB_SpiderNest_ReadyCheck(_Executioner)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+IsInTrigger(_Player,S_GOB_SpiderNest_StartTrigger_65516e12-f318-40fb-b70e-8033fe48778c,1)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Execution
+PROC
+PROC_GOB_SpiderNest_PlayAD((CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,(CHARACTER)_Executioner)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc)
+THEN
+SteerTo((CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,(CHARACTER)_Executioner, 1);
+SteerTo((CHARACTER)_Executioner,(CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82, 1);
+PROC_TryStartAD(
+    DIALOGRESOURCEGUID_GOB_SpiderNest_AD_Execution_2ab0b77a-8c8d-ee7e-a300-bc5b59b20d4b,
+    (CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,
+    _Executioner);
+SetFlag((FLAG)GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_GOB_SpiderNest_PlayAD((CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,(CHARACTER)_Executioner)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc)
+THEN
+SteerTo((CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,(CHARACTER)_Executioner, 1);
+SteerTo((CHARACTER)_Executioner,(CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, 1);
+PROC_TryStartAD(
+    GOB_SpiderNest_AD_GoblinExecution_60a4be1e-953a-a4e9-8b40-bcbd6baad8f0,
+    (CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,
+    _Executioner);
+SetFlag((FLAG)GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+PROC
+PROC_GOB_SpiderNest_PlayAD((CHARACTER)_Victim,_)
+AND
+DB_GOB_SpiderNest_Escort(_Escort)
+THEN
+LookAtEntity(_Escort,(CHARACTER)_Victim);
+
+
+
+IF
+DialogActorLeft(_,_,S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,1)
+AND
+DB_GlobalFlag((FLAG)GOB_SpiderNest_Event_Executioner_Push_802d4c43-f7d8-47b0-aeaa-68e38f032d36)
+AND
+DB_GOB_SpiderNest_Victim((CHARACTER)_Victim)
+AND
+NOT DB_GOB_SpiderNest_VictimInPit(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86)
+THEN
+DebugText(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"DialogActorLeft");
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_GOB_SpiderNest_ShortShove",(CHARACTER)_Victim,NULL_00000000-0000-0000-0000-000000000000);
+ObjectTimerLaunch(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"GOB_SpiderNest_PushRetry",1000,1);
+ObjectTimerLaunch(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"GOB_SpiderNest_PushFallback",4000,1);
+
+IF
+DB_GOB_SpiderNest_VictimInPit(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86)
+THEN
+PROC_TryStopDialogFor(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+
+IF
+ObjectTimerFinished((CHARACTER)_Executioner,"GOB_SpiderNest_PushRetry")
+AND
+IsInCombat(_Executioner,0)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)  //victim is removed from DB when they fall in the pit
+AND
+DB_GlobalFlag((FLAG)GOB_SpiderNest_Event_Executioner_Push_802d4c43-f7d8-47b0-aeaa-68e38f032d36)
+THEN
+DebugText(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"GOB_SpiderNest_PushRetry");
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_GOB_SpiderNest_ShortShove",(CHARACTER)_Victim,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagCleared((FLAG)GOB_SpiderNest_Event_Executioner_Push_802d4c43-f7d8-47b0-aeaa-68e38f032d36,_,_)
+AND
+DB_GOB_SpiderNest_Victim((CHARACTER)_Victim)
+THEN
+DebugText(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"clear");
+
+IF
+CastSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_GOB_SpiderNest_ShortShove",_,_,_)
+THEN
+ClearFlag((FLAG)GOB_SpiderNest_Event_Executioner_Push_802d4c43-f7d8-47b0-aeaa-68e38f032d36,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+FlagSet((FLAG)GOB_SpiderNest_Event_Executioner_Push_802d4c43-f7d8-47b0-aeaa-68e38f032d36,_,_)
+AND
+DB_GOB_SpiderNest_Victim((CHARACTER)_Victim)
+THEN
+DebugText(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"push");
+PROC_GOB_SpiderNest_ClearReadinessCheck();
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_GOB_SpiderNest_ShortShove",(CHARACTER)_Victim,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("shortshove")
+THEN
+TeleportTo(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_GOB_SpiderNest_ShortShove",S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("theshove")
+THEN
+TeleportTo(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_Shove",S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("resshove")
+THEN
+Resurrect(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82);
+TeleportTo(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_Shove",S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_GOB_SpiderNest_ClearReadinessCheck()
+AND
+DB_GOB_SpiderNest_ReadyCheck(_Character)
+THEN
+NOT DB_GOB_SpiderNest_ReadyCheck(_Character);
+
+IF 
+EnteredTrigger(_Player,S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef)
+AND
+DB_Players(_Player)
+THEN
+SetFlag(GOB_SpiderNest_Event_Executioner_Push_802d4c43-f7d8-47b0-aeaa-68e38f032d36,NULL_00000000-0000-0000-0000-000000000000,0);
+
+
+IF
+EntityEvent(_Victim,"GOB_SpiderNest_VictimFell")
+AND
+DB_GOB_SpiderNest_Victim((CHARACTER)_Victim)
+THEN
+NOT DB_GOB_SpiderNest_Victim(_Victim);
+ClearFlag(GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,_Victim,0);
+ClearFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,0);
+ClearFlag((FLAG)GOB_SpiderNest_State_ExecutionPreparing_53989983-ba47-4544-80ba-715c05194150,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985);
+//END_REGION
+
+//REGION Execution fallbacks
+//starting dialog with goblin
+
+PROC
+PROC_StateSet_CantAct(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86)
+AND
+DB_GlobalFlag(GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GOB_SpiderNest_State_PauseExecution_c41fb37d-7684-4ef8-ac42-bcc1b44342ac);
+FlushOsirisQueue(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+DialogRequestStop(_Victim);
+ClearFlag((FLAG)GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_NotifyWhenReadyToMoveOn((CHARACTER)S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86, "GOB_SpiderNest_GuardReady");
+
+PROC
+PROC_ReadyToMoveOn((CHARACTER)S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86, "GOB_SpiderNest_GuardReady")
+AND
+DB_GlobalFlag(GOB_SpiderNest_State_PauseExecution_c41fb37d-7684-4ef8-ac42-bcc1b44342ac)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+DB_GOB_SpiderNest_Executioner((CHARACTER)_Executioner)
+AND
+NOT DB_EnterCombatRequested(_Executioner)
+THEN
+PROC_GOB_SpiderNest_PlayAD(_Victim,(CHARACTER)_Executioner);
+ClearFlag(GOB_SpiderNest_State_PauseExecution_c41fb37d-7684-4ef8-ac42-bcc1b44342ac, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+
+//failed to shove victim
+//idk, sometimes shove is just naughty and I'm tired
+//inb4 "programmers should do that" I still need a fallback for the situation, players are stronger than programmers
+//TODO - ask edouard if it's actually possible to set up a mini-fight instead of scripting a one-shot
+
+IF
+ObjectTimerFinished((CHARACTER)_Executioner,"GOB_SpiderNest_PushFallback")
+AND
+IsInCombat(_Executioner,0)
+AND
+DB_GOB_SpiderNest_Victim(_Victim) //victim is removed from DB when they fall in the pit
+THEN
+Attack(_Executioner,_Victim,1);
+
+IF
+AttackedBy((CHARACTER)_Victim,(CHARACTER)_Executioner,_,_,_,"Attack",_)
+AND
+DB_GOB_SpiderNest_Executioner(_Executioner)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+THEN
+DB_GOB_SpiderNest_VictimWasAttackedByExecutioner(_Executioner);
+
+IF
+DB_InRegion(_Victim, (TRIGGER)S_GOB_SpiderNest_ThePit_0f3188b4-5cfe-4353-8bf0-d528cda0a446)
+AND
+DB_GOB_SpiderNest_VictimWasAttackedByExecutioner(_Executioner)
+AND
+DB_GOB_SpiderNest_Executioner(_Executioner)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+THEN
+NOT DB_GOB_SpiderNest_VictimWasAttackedByExecutioner(_Executioner);
+Die(_Victim,DEATHTYPE.DoT,_Executioner,0,1);
+
+IF
+Dying(_Victim)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+THEN
+SetEntityEvent(_Victim,"GOB_SpiderNest_VictimFell"); //won't screw over anything, bc anubis sends this event, but doesn't react to it
+//END_REGION
+
+//REGION Victim Fall Process
+
+IF
+EntityEvent((CHARACTER)_Victim,"GOB_SpiderNest_VictimFell")
+AND
+NOT DB_GOB_SpiderNest_VictimInPit(_Victim)
+AND
+NOT DB_GOB_SpiderNest_Victim(_Victim)
+AND
+NOT DB_PlayerSummons(_Victim)
+THEN
+PROC_GOB_SpiderNest_ProcessVictimFall(_Victim);
+
+PROC
+PROC_GOB_SpiderNest_ProcessVictimFall((CHARACTER)_Victim)
+AND
+IsOpened(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b, 0)
+THEN
+DB_GOB_SpiderNest_VictimInPit(_Victim);
+
+PROC
+PROC_GOB_SpiderNest_ProcessVictimFall((CHARACTER)_Victim)
+AND
+IsOpened(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b, 0)
+AND
+IsInCombat(_Victim, 0)
+AND
+NOT DB_Players(_Victim)
+AND
+GetAnubisConfig(_Victim, _Config)
+THEN
+DB_GOB_SpiderNest_VictimBehaviours(_Victim, _Config);
+
+IF
+DB_GOB_SpiderNest_VictimBehaviours(_Victim,_)
+THEN
+PROC_SetAnubisConfig(_Victim, "GOB_PitVictim");
+
+IF
+EntityEvent((CHARACTER)_Victim, "GOB_SpiderNest_VictimLeft")
+THEN
+PROC_GOB_SpiderNest_ProcessVictimLeft(_Victim);
+
+PROC
+PROC_GOB_SpiderNest_ProcessVictimLeft((CHARACTER)_Victim)
+AND
+DB_GOB_SpiderNest_VictimBehaviours(_Victim, _Config)
+THEN
+PROC_GOB_SpiderNest_RestoreFactions(_Victim);
+PROC_SetAnubisConfig(_Victim, _Config);
+NOT DB_GOB_SpiderNest_VictimBehaviours(_Victim, _Config);
+
+
+//END_REGION
+
+//REGION Victim Faction change
+
+PROC
+PROC_GOB_SpiderNest_ProcessVictimFall((CHARACTER)_Victim)
+AND
+DB_GOB_GiantSpiders(_Spider,_)
+AND
+IsInCombat(_Spider, 1)
+AND
+NOT DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Victim, _)
+THEN
+SetEntityEvent(_Victim, "GOB_SpiderNest_VictimHostile", 1);
+
+IF
+EnteredCombat((CHARACTER)_Spider,_)
+AND
+DB_GOB_GiantSpiders(_Spider,_)
+AND
+DB_GOB_SpiderNest_VictimInPit(_Victim)
+AND
+NOT DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Victim, _)
+THEN
+SetEntityEvent(_Victim, "GOB_SpiderNest_VictimHostile", 1);
+
+IF
+EntityEvent((CHARACTER)_Victim, "GOB_SpiderNest_VictimHostile")
+AND
+DB_GOB_SpiderNest_VictimInPit(_Victim)
+AND
+NOT DB_GOB_SpiderNest_VictimFactions(_Victim, _)
+AND
+IsInCombat(_Victim, 0)
+AND
+GetFaction(_Victim,_Faction)
+THEN
+DB_GOB_SpiderNest_VictimFactions(_Victim, _Faction);
+SetFaction(_Victim,(FACTION)Act1_GOB_SpiderNest_Victim_24af511f-39bc-4819-981e-ea1875da99c0);
+
+IF
+EntityEvent((CHARACTER)_Victim, "GOB_SpiderNest_VictimHostile")
+AND
+DB_GOB_SpiderNest_VictimInPit(_Victim)
+AND
+IsInCombat(_Victim, 1)
+AND
+GetFaction(_Victim,_Faction)
+AND
+NOT DB_GOB_SpiderNest_SpidersHostileToFaction(_Victim, _Faction)
+THEN
+DB_GOB_SpiderNest_SpidersHostileToFaction(_Victim, _Faction);
+PROC_SetRelationMutual(_Faction, (FACTION)ACT1_GOB_SpiderNest_Spiders_153d18a3-3fc5-9b92-0039-04f8953f68a9, 0);
+
+IF
+EntityEvent((CHARACTER)_Victim, "GOB_SpiderNest_VictimHostile")
+AND
+NOT DB_GOB_SpiderNest_GoblinsNoLikeySpidersAnymore(1)
+AND
+NOT DB_GOB_SpiderNest_Victim(_Victim)
+AND
+IsInCombat(_Victim, 1)
+THEN
+DB_GOB_SpiderNest_GoblinsNoLikeySpidersAnymore(1);
+PROC_SetRelationMutual((FACTION)ACT1_GOB_SpiderNest_Spiders_153d18a3-3fc5-9b92-0039-04f8953f68a9, (FACTION)ACT1_GOB_Goblins_General_633245e8-cbb8-b0c4-12ec-32d2ff9424e2, 50);
+
+QRY
+QRY_GOB_SpiderNest_ShouldRespectBattlestations((CHARACTER)_Character)
+AND
+DB_GOB_BattleStations_CombatGroupCharacters(_Character, _, _)
+AND
+NOT DB_GOB_BattleStations_Zhentarim(_Character)
+AND
+DB_GlobalFlag(GOB_BattleStations_Event_ToStation_03a8bd66-c23f-4989-9a7b-775cf475104b)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_GOB_SpiderNest_RestoreFactions((CHARACTER)_Character)
+AND
+DB_GOB_SpiderNest_VictimFactions(_Character,_OldFaction) 
+AND
+QRY_GOB_SpiderNest_ShouldRespectBattlestations((CHARACTER)_Character)
+THEN
+SetFaction(_Character, ACT1_GOB_BattleStations_55f55a92-c2bf-4d69-a9aa-03f1178e5812);
+NOT DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Character,_OldFaction);
+
+PROC
+PROC_GOB_SpiderNest_RestoreFactions((CHARACTER)_Character)
+AND
+DB_GOB_SpiderNest_VictimFactions(_Character,_OldFaction) 
+AND
+NOT QRY_GOB_SpiderNest_ShouldRespectBattlestations((CHARACTER)_Character)
+THEN
+SetFaction(_Character,_OldFaction);
+NOT DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Character,_OldFaction);
+
+IF
+DB_PermaDefeated(_Victim)
+AND
+DB_GOB_SpiderNest_SpidersHostileToFaction((CHARACTER)_Victim, _Faction)
+THEN
+PROC_GOB_SpiderNest_RestoreFactions(_Victim);
+
+PROC
+PROC_GOB_SpiderNest_RestoreFactions((CHARACTER)_Character)
+AND
+DB_GOB_SpiderNest_SpidersHostileToFaction(_Character, _Faction)
+AND
+NOT QRY_GOB_SpiderNest_AnyVictimsSameFaction(_Character)
+THEN
+PROC_SetRelationMutual(_Faction, (FACTION)ACT1_GOB_SpiderNest_Spiders_153d18a3-3fc5-9b92-0039-04f8953f68a9, 50);
+
+PROC
+PROC_GOB_SpiderNest_RestoreFactions((CHARACTER)_Character)
+AND
+DB_GOB_SpiderNest_SpidersHostileToFaction(_Character, _Faction)
+THEN
+NOT DB_GOB_SpiderNest_SpidersHostileToFaction(_Character, _Faction);
+
+PROC
+PROC_GOB_SpiderNest_RestoreFactions((CHARACTER)_Character)
+AND
+NOT DB_GOB_SpiderNest_SpidersHostileToFaction(_,_)
+AND
+NOT QRY_AnyPartyMemberInTrigger(S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef)
+AND
+DB_GOB_GiantSpiders(_Spider,_)
+AND
+IsInCombat(_Spider, 1)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8)
+THEN
+LeaveCombat(_Spider);
+
+QRY
+QRY_GOB_SpiderNest_AnyVictimsSameFaction((CHARACTER)_Character)
+AND
+GetFaction(_Character,_Faction)
+AND
+DB_GOB_SpiderNest_SpidersHostileToFaction(_OtherCharacter, _Faction)
+AND
+_OtherCharacter != _Character
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent(_Victim,"GOB_SpiderNest_Left")
+AND
+DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Victim,_OldFaction)
+THEN
+PROC_GOB_SpiderNest_RestoreFactions(_Victim);
+
+PROC
+PROC_GOB_SpiderNest_RestoreFactions((CHARACTER)_Character)
+AND
+DB_GOB_SpiderNest_VictimInPit(_Character)
+THEN
+NOT DB_GOB_SpiderNest_VictimInPit(_Character);
+
+PROC
+PROC_GOB_SpiderNest_RestoreAllFactions()
+AND
+DB_GOB_SpiderNest_VictimFactions(_Character,_OldFaction)
+THEN
+PROC_GOB_SpiderNest_RestoreFactions(_Character);
+
+IF
+FlagSet(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8,_,_)
+AND
+DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Victim,_OldFaction)
+THEN
+PROC_GOB_SpiderNest_RestoreAllFactions();
+
+IF
+FlagSet(GOB_SpiderNest_State_SpidersDead_4259e686-af00-4188-b477-c5f931c5058a,_,_)
+AND
+DB_GOB_SpiderNest_VictimFactions((CHARACTER)_Victim,_OldFaction)
+THEN
+PROC_GOB_SpiderNest_RestoreAllFactions();
+
+
+//END_REGION
+
+//REGION Free Victim
+
+IF
+TextEvent("GOB_SpiderNest_FreedVictim")
+AND
+DB_GOB_SpiderNest_Victim(_Character)
+THEN
+SetFlag(GOB_SpiderNest_State_Freed_c3a960f6-6488-4e5a-831e-66bde4715d5c, _Character, 0);
+FlushOsirisQueue(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+DialogRequestStop(_Character);
+DialogRequestStop(GOB_GuardPolite_ba253afd-624a-1d51-4c80-32cac8580bde);
+ClearFlag((FLAG)GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+FlagSet(GOB_SpiderNest_State_Freed_c3a960f6-6488-4e5a-831e-66bde4715d5c, _Character, _)
+AND
+DB_GOB_SpiderNest_VictimDialog((CHARACTER)_Character, _Dialog)
+AND
+GetFaction(_Character, _Faction)
+THEN
+DB_Dialogs(_Character, _Dialog);
+PROC_SetRelationToPlayers(_Faction, 100);
+ObjectTimerLaunch(_Character, "GOB_SpiderNest_Freed", 3000); //Add an organic-seeming reaction to liberation.
+
+IF
+FlagSet(GOB_SpiderNest_State_Freed_c3a960f6-6488-4e5a-831e-66bde4715d5c, _Character, _)
+AND
+NOT DB_GOB_SpiderNest_VictimDialog((CHARACTER)_Character, _) //The character has nothing to say to the player because they don't consider the player to be their rescuer.
+THEN
+ObjectTimerLaunch(_Character, "GOB_SpiderNest_Freed", 3000); //Add an organic-seeming reaction to liberation.
+
+IF
+ObjectTimerFinished(_Character, "GOB_SpiderNest_Freed")
+AND
+GetFlag(GOB_SpiderNest_State_Freed_c3a960f6-6488-4e5a-831e-66bde4715d5c, _Character, 1)
+THEN
+DB_SpotPlayers((CHARACTER)_Character, "GOB_SpiderNest_Freed", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+PROC_SpotPlayers_RestartSpotting(_Character, "GOB_SpiderNest_Freed");
+
+IF
+FlagCleared(GOB_SpiderNest_State_Freed_c3a960f6-6488-4e5a-831e-66bde4715d5c, _Character, _)
+AND
+GetFaction(_Character, _Faction)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)_Character, "GOB_SpiderNest_Freed");
+PROC_RemoveAllDialogEntriesForSpeaker(_Character);
+PROC_SetRelationToPlayers(_Faction, 50);
+
+PROC
+PROC_SpotPlayers_Spotted(_Character, "GOB_SpiderNest_Freed", _Player)
+AND
+DB_GOB_SpiderNest_VictimDialog(_Character, _Dialog)
+AND
+NOT QRY_StartDialog(_Dialog, _Character, _Player)
+THEN
+PROC_CharacterMoveTo(_Character, S_GOB_DrowLeavePos_d3fc3f03-0cf7-4f1d-930c-247ac08d654f, "Run", "GOB_SpiderNest_StopRunning");
+
+IF
+DialogStarted(_Dialog, _)
+AND
+DB_GOB_SpiderNest_VictimDialog(_Character, _Dialog)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)_Character, "GOB_SpiderNest_Freed");
+ObjectTimerCancel(_Character, "GOB_SpiderNest_Freed");
+
+IF
+DialogEnded(_Dialog, _)
+AND
+DB_GOB_SpiderNest_VictimDialog(_Character, _Dialog)
+THEN
+ObjectTimerCancel(_Character, "GOB_SpiderNest_Freed");
+PROC_CharacterMoveTo(_Character, S_GOB_DrowLeavePos_d3fc3f03-0cf7-4f1d-930c-247ac08d654f, "Run", "GOB_SpiderNest_StopRunning");
+
+IF
+EntityEvent((CHARACTER)_Character, "GOB_SpiderNest_StopRunning")
+THEN
+PROC_DisappearOutOfSightTo(_Character, (ITEM)S_GOB_ThroneRoom_Door_Exit_7cfeb44e-e17e-44ea-b42e-b2a4a4fca58c, "Run", 0, "GOB_SpiderNest_Victim_RanAway");
+
+IF
+EntityEvent(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,"GOB_SpiderNest_Victim_RanAway")
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"HIDDEN_WLD_Boosters","GOB_SpiderNest_Saved");
+
+IF
+EntityEvent(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,"GOB_SpiderNest_Victim_RanAway")
+THEN
+ClearFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985);
+
+//END_REGION
+
+//REGION Sazza resolution
+
+//So that escorting goblin is closer to Sazza when sit is resolved
+IF
+DialogStarted(GOB_DrowAndCaptured_ThreeWayDialog_46a73870-54c1-902c-fc27-c967c2093ac5,_)
+AND
+DB_GOB_SpiderNest_Escort(_Escort)
+THEN
+PROC_CharacterMoveTo(_Escort,S_GOB_SpiderNest_EscortPoint_NearDrow_4cb3978d-adf5-471f-8135-0539d818ad39,"Run","GOB_SpiderNest_EscortAtDrow");
+SetFlag((FLAG)GOB_SpiderNest_State_ExecutionPreparing_53989983-ba47-4544-80ba-715c05194150,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//So that he won't leave back to his post while dialog in progress, but is free to return if sit is resolved peacefully
+IF
+DialogEnded(GOB_DrowAndCaptured_ThreeWayDialog_46a73870-54c1-902c-fc27-c967c2093ac5,_ID)
+THEN
+ClearFlag((FLAG)GOB_SpiderNest_State_ExecutionPreparing_53989983-ba47-4544-80ba-715c05194150,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+DialogEnded(GOB_DrowAndCaptured_ThreeWayDialog_46a73870-54c1-902c-fc27-c967c2093ac5,_ID)
+AND
+DB_GlobalFlag((FLAG)GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3) // flagType: Global
+THEN
+PROC_TryStartAD(GOB_DrowCommander_AD_CapturedExecuted_71781cc1-42e5-d40a-8b82-66378b9a88cf,S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_GOB_SpiderNest_Victim(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+
+IF
+DialogEnded(GOB_DrowAndCaptured_ThreeWayDialog_46a73870-54c1-902c-fc27-c967c2093ac5,_ID)
+AND
+DB_GlobalFlag((FLAG)GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3) // flagType: Global
+AND
+NOT DB_CantTalk((CHARACTER)S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7)
+THEN
+PROC_CharacterMoveTo(
+	S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7,
+	S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,
+	"Run","GOB_SpiderNest_Event_EscortArrived");
+
+IF
+DialogEnded(GOB_DrowAndCaptured_ThreeWayDialog_46a73870-54c1-902c-fc27-c967c2093ac5,_ID)
+AND
+DB_GlobalFlag((FLAG)GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3) // flagType: Global
+AND
+DB_CantTalk((CHARACTER)S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7)
+THEN
+SetFlag(GOB_SpiderNest_State_GoblinEscortFailed_8a05de38-c4ea-4a32-b600-bd4603afeb22, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+// If executioners have been defeated, try free her
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("GOB_SpiderNest_Goblins")
+THEN
+PROC_GOB_SpiderNest_TryFreeCapturedGoblin();
+
+IF
+EnteredCombat((CHARACTER)_Goblin, _CombatID)
+AND
+DB_GOB_SpiderNest_ExecutionGoblins(_Goblin)
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_GlobalFlag(GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_GoblinExecutionOver_7d89d850-e52f-47f6-891f-c85c7e7f0241)
+THEN
+PROC_SetRelationMutual((FACTION)ACT1_DEN_CapturedGoblin_40d6a49e-806c-4bce-8214-6228cc0ded72, (FACTION)ACT1_GOB_Goblins_General_633245e8-cbb8-b0c4-12ec-32d2ff9424e2, 50); // Make Sazza neutral towards the other goblins.
+PROC_SetRelationToPlayers((FACTION)ACT1_DEN_CapturedGoblin_40d6a49e-806c-4bce-8214-6228cc0ded72, 100); // Make Sazza friendly towards players.
+
+IF
+EnteredCombat(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, _CombatID)
+AND
+DB_Is_InCombat(_Goblin, _CombatID)
+AND
+DB_GOB_SpiderNest_ExecutionGoblins((CHARACTER)_Goblin)
+AND
+DB_GlobalFlag(GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_GoblinExecutionOver_7d89d850-e52f-47f6-891f-c85c7e7f0241)
+THEN
+PROC_SetRelationMutual((FACTION)ACT1_DEN_CapturedGoblin_40d6a49e-806c-4bce-8214-6228cc0ded72, (FACTION)ACT1_GOB_Goblins_General_633245e8-cbb8-b0c4-12ec-32d2ff9424e2, 50); // Make Sazza neutral towards the other goblins.
+PROC_SetRelationToPlayers((FACTION)ACT1_DEN_CapturedGoblin_40d6a49e-806c-4bce-8214-6228cc0ded72, 100); // Make Sazza friendly towards players.
+
+IF
+EnteredCombat(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, _CombatID)
+AND
+DB_GlobalFlag(GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_GoblinExecutionOver_7d89d850-e52f-47f6-891f-c85c7e7f0241)
+THEN
+DB_DrowAndCaptured_CombatResolution(_CombatID);
+
+IF
+Died((CHARACTER)_ExecutionGoblin)
+AND
+DB_GOB_SpiderNest_ExecutionGoblins(_ExecutionGoblins)
+AND
+DB_GlobalFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985)
+THEN
+ClearFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985);
+
+PROC
+PROC_GOB_SpiderNest_TryFreeCapturedGoblin()
+AND
+NOT DB_GOB_SpiderNest_VictimDialog(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, GOB_SpiderNest_CapturedGoblin_88941bf9-f6bc-7b9c-9f77-20a684bdf7a0)
+THEN
+DB_GOB_SpiderNest_VictimDialog(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, GOB_SpiderNest_CapturedGoblin_88941bf9-f6bc-7b9c-9f77-20a684bdf7a0);
+
+PROC
+PROC_GOB_SpiderNest_TryFreeCapturedGoblin()
+AND
+DB_GlobalFlag(GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3)
+AND
+NOT DB_GlobalFlag(GOB_SpiderNest_State_GoblinExecutionOver_7d89d850-e52f-47f6-891f-c85c7e7f0241)
+THEN
+SetFlag(GOB_SpiderNest_State_Freed_c3a960f6-6488-4e5a-831e-66bde4715d5c, S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+PROC_GOB_SpiderNest_FreedCapturedGoblinJournalEntry();
+
+PROC
+PROC_GOB_SpiderNest_FreedCapturedGoblinJournalEntry()
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "DEN_CapturedGoblin", "SavedFromSpider");
+
+IF
+FlagSet(GOB_CapturedGoblin_QuestReward_8b396662-ad3b-1485-e6e0-2c0995ab0bb3, _, _)
+AND
+DB_Dialogs((CHARACTER)S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, (DIALOGRESOURCE)DEN_CapturedGoblin_db2b1587-8297-6a2c-4355-86664ddb3264)
+THEN
+PROC_GOB_SpiderNest_FreedCapturedGoblinJournalEntry();
+
+IF
+WentOnStage(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, 0)
+AND
+DB_Defeated(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b)
+AND
+DB_GlobalFlag((FLAG)GOB_CapturedGoblin_State_Executed_5505345c-482d-cfc5-3a2b-987611beb4e3)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "DEN_CapturedGoblin", "SavedFromSpider");
+
+// Only take into account that she dies INSIDE the spider's nest.
+IF
+Dying(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb)
+AND
+DB_InRegion(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, S_GOB_SpiderNest_ThePit_0f3188b4-5cfe-4353-8bf0-d528cda0a446)
+AND
+DB_Players(_Player)
+THEN
+SetFlag(GOB_SpiderNest_State_GoblinExecutionOver_7d89d850-e52f-47f6-891f-c85c7e7f0241);
+QuestUpdate(_Player, "DEN_CapturedGoblin", "DiedSpiders");
+
+IF
+EntityEvent(_Escort,"GOB_SpiderNest_Event_EscortArrived")
+THEN
+SetFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985);
+PROC_TryStartAD(DIALOGRESOURCEGUID_GOB_SpiderNest_AD_Escort_17375920-5e2a-c28f-9f06-a432afda2156,_Escort);
+
+IF
+DialogActorLeft(
+	DIALOGRESOURCEGUID_GOB_SpiderNest_AD_Escort_17375920-5e2a-c28f-9f06-a432afda2156,
+	_,_,_)
+THEN
+PROC_GOB_SpiderNest_Prepare();
+
+//END_REGION
+
+//REGION if Sazza is freed - no introductory scene
+IF
+FlagSet(DEN_CapturedGoblin_Event_GoblinEscaped_cbb09299-e736-437b-d93b-5f18f1a9f9df, _, _) // flagType: Global
+AND
+NOT DB_GlobalFlag((FLAG)GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc) // flagType: Global
+THEN
+SetOnStage(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,0);
+NOT DB_GOB_SpiderNest_Victim((CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82);
+ClearFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,0);
+ClearFlag((FLAG)GOB_SpiderNest_State_ExecutionPreparing_53989983-ba47-4544-80ba-715c05194150,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag(GOB_SpiderNest_State_Executioner_Ready_b9a547ef-b244-47d6-a78d-22b2c7410985);
+
+//END_REGION
+
+//REGION after execution
+IF
+FlagCleared(
+	(FLAG)GOB_SpiderNest_State_ExecutionInProgress_de1118ca-c0ed-4f2d-8257-68280aacaefc,
+	_,_) //global
+AND
+NOT DB_GOB_SpiderNest_Victim(_)
+AND
+DB_GOB_SpiderNest_Escort(_Escort)
+AND
+DB_GOB_SpiderNest_Executioner(_Executioner)
+THEN
+PROC_CharacterMoveTo(
+	_Escort,
+	S_GOB_SpiderNest_VulgarGuard_IdleTrigger_23f98ae3-3b89-4162-868f-ee573432e255,
+	"Walk",
+	"GOB_SpiderNest_Event_EscortIdle");
+PROC_CharacterMoveTo(
+	_Executioner,
+	S_GOB_SpiderNest_PoliteGuard_IdleTrigger_e0f65325-b667-49f5-bcb4-a14da2626c64,
+	"Walk",
+	"GOB_SpiderNest_Event_ExecutionerIdle");
+
+//END_REGION
+
+//REGION pit door
+IF
+DualEntityEvent(_,_,"GOB_SpiderNest_CageLever")
+AND
+IsClosed(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b,_Int)
+THEN
+PROC_GOB_SpiderNest_CageLever(_Int);
+
+PROC
+PROC_GOB_SpiderNest_CageLever(1)
+THEN
+Open(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b);
+
+PROC
+PROC_GOB_SpiderNest_CageLever(0)
+THEN
+Close(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b);
+
+//END_REGION
+
+//REGION spiders dialog
+IF
+DB_GOB_GiantSpiders(_Spider, _Dialog)
+THEN
+SetHasDialog(_Spider, 1);
+DB_SpotPlayers(_Spider, "GOB_SpiderNest_SpotterID", NULL_00000000-0000-0000-0000-000000000000, (FLAG)GOB_SpiderNest_Event_StopSpotting_ff49cc86-9124-4eb5-82d2-5555c65aed45);
+DB_SpotPlayers_SpotTrigger((CHARACTER)_Spider, "GOB_SpiderNest_SpotterID", (TRIGGER)S_GOB_SpiderNest_ThePit_0f3188b4-5cfe-4353-8bf0-d528cda0a446);
+DB_SpotPlayers_IgnoreCombat(_Spider, "GOB_SpiderNest_SpotterID");
+DB_GLO_DefeatCounter(_Spider, "GOB_SpiderNest_Spiders");
+DB_CustomDialogRange(_Spider,30);
+DB_Dialogs(_Spider, _Dialog);
+
+IF
+DB_SpotPlayers(_Spider,"GOB_SpiderNest_SpotterID",_,_)
+THEN
+DB_SpotPlayers_IncludeWildshapedPlayers(_Spider,"GOB_SpiderNest_SpotterID");
+DB_SpotPlayers_TargetIgnoreCantTalk((CHARACTER)_Spider, "GOB_SpiderNest_SpotterID");
+
+IF
+DialogStarted(_Dialog,_)
+AND
+DB_GOB_GiantSpiders(_,_Dialog)
+THEN
+SetFlag(GOB_SpiderNest_Event_StopSpotting_ff49cc86-9124-4eb5-82d2-5555c65aed45,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+TextEvent("GOB_SpiderNest_ThreeWay")
+AND
+QRY_StartDialog((DIALOGRESOURCE)GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78, 
+	(CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a, (CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 
+	S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, "GOB_SpiderNest_SpotterID", (CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+IsInCombat(_Player, 1)
+THEN
+SetRelationTemporaryHostile(_Spotter, _Player);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, "GOB_SpiderNest_SpotterID", (CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+IsInCombat(_Spotter, 1)
+THEN
+SetRelationTemporaryHostile(_Spotter, _Player);
+
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)_Spotter, "GOB_SpiderNest_SpotterID", (CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+IsInCombat(_Player, 0)
+THEN
+PROC_GOB_SpiderNest_TryStartSpiderDialog((CHARACTER)_Spotter,(CHARACTER)_Player);
+
+PROC
+PROC_GOB_SpiderNest_TryStartSpiderDialog((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+QRY_GOB_SpiderNest_GetPlayer((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+DB_GOB_SpiderNest_SelectedPlayer(_SelectedPlayer)
+AND
+QRY_GOB_SpiderNest_GetDialog((CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer)
+AND
+DB_GOB_SpiderNest_SelectedDialog((DIALOGRESOURCE)_Dialog,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3)
+AND
+NOT QRY_StartDialog(_Dialog,_Speaker1,_Speaker2,_Speaker3)
+THEN
+SetRelationTemporaryHostile(_Spotter, _Player);
+
+
+
+QRY
+QRY_GOB_SpiderNest_GetPlayer((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+DB_GOB_SpiderNest_SelectedPlayer(_Any)
+THEN
+NOT DB_GOB_SpiderNest_SelectedPlayer(_Any);
+
+QRY
+QRY_GOB_SpiderNest_GetPlayer((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)_Player,0,1)
+AND
+HasActiveStatus(_Player,"SILENCED",0) // shenanigans with SILENCED are needed to make sure that wildshaped characters will have a chance to be in the dialog
+THEN
+DB_GOB_SpiderNest_SelectedPlayer((CHARACTER)_Player);
+
+QRY
+QRY_GOB_SpiderNest_GetPlayer((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+NOT QRY_SpeakerIsAvailable((CHARACTER)_Player,0,1)
+AND
+QRY_GetClosestAvailableCharacterTo(_Spotter,1,1,_Player,NULL_00000000-0000-0000-0000-000000000000,0,1)
+AND
+DB_ClosestAvailableCharacterTo(_SelectedPlayer,_Spotter,_Dist)
+AND
+IsInTrigger(_SelectedPlayer,S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef,1)
+THEN
+DB_GOB_SpiderNest_SelectedPlayer((CHARACTER)_SelectedPlayer);
+
+QRY
+QRY_GOB_SpiderNest_GetPlayer((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)_Player,0,1)
+AND
+HasActiveStatus(_Player,"SILENCED",1)
+AND
+QRY_GetClosestAvailableCharacterTo(_Spotter,1,1,_Player,NULL_00000000-0000-0000-0000-000000000000,0,1)
+AND
+DB_ClosestAvailableCharacterTo(_SelectedPlayer,_Spotter,_Dist)
+AND
+IsInTrigger(_SelectedPlayer,S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef,1)
+THEN
+DB_GOB_SpiderNest_SelectedPlayer((CHARACTER)_SelectedPlayer);
+
+QRY
+QRY_GOB_SpiderNest_GetPlayer((CHARACTER)_Spotter,(CHARACTER)_Player)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)_Player,0,1)
+AND
+HasActiveStatus(_Player,"SILENCED",1)
+AND
+NOT DB_GOB_SpiderNest_SelectedPlayer(_)
+THEN
+DB_GOB_SpiderNest_SelectedPlayer((CHARACTER)_Player);
+
+QRY
+QRY_GOB_SpiderNest_GetDialog((CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer)
+AND
+DB_GOB_SpiderNest_SelectedDialog((DIALOGRESOURCE)_Dialog,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3)
+THEN
+NOT DB_GOB_SpiderNest_SelectedDialog((DIALOGRESOURCE)_Dialog,(CHARACTER)_Speaker1,(CHARACTER)_Speaker2,(CHARACTER)_Speaker3);
+
+QRY
+QRY_GOB_SpiderNest_GetDialog((CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990)
+AND
+HasActiveStatus(_SelectedPlayer,"SILENCED",0)
+THEN
+DB_GOB_SpiderNest_SelectedDialog(
+	(DIALOGRESOURCE)GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78, 
+	(CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a, _SelectedPlayer, 
+	(CHARACTER)S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990);
+
+QRY
+QRY_GOB_SpiderNest_GetDialog((CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a)
+AND
+NOT QRY_SpeakerIsAvailable((CHARACTER)S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990)
+AND
+HasActiveStatus(_SelectedPlayer,"SILENCED",0)
+THEN
+DB_GOB_SpiderNest_SelectedDialog(
+	(DIALOGRESOURCE)GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78, 
+	(CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a, _SelectedPlayer, 
+	NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GOB_SpiderNest_GetDialog((CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer)
+AND
+NOT QRY_SpeakerIsAvailable((CHARACTER)S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990)
+AND
+HasActiveStatus(_SelectedPlayer,"SILENCED",0)
+THEN
+DB_GOB_SpiderNest_SelectedDialog(
+	(DIALOGRESOURCE)GOB_GiantSpider_Tiny_24bb8c15-de88-28f9-1bde-34a88ad8d4e2, 
+	(CHARACTER)S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990, _SelectedPlayer, 
+	NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GOB_SpiderNest_GetDialog((CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer)
+AND
+NOT DB_GOB_SpiderNest_SelectedDialog(_, _, _, _)
+THEN
+DB_GOB_SpiderNest_SelectedDialog((DIALOGRESOURCE)GOB_SpiderNest_Spiders_CantSpeak_c32b02b0-2cea-c630-1eb1-2b3c6a0d4553,(CHARACTER)_Spotter,(CHARACTER)_SelectedPlayer,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8,_,_)
+AND
+DB_GlobalFlag((FLAG)GOB_SpiderNest_State_SpidersChill_7e28b817-42cc-2d7c-8bca-9f4b6fd9c35e)
+AND
+NOT DB_GOB_SpiderNest_SpidersFriendlyToGoblinKing(1)
+AND
+DB_GOB_GiantSpiders(_Spiders,_)
+THEN
+SetFaction(_Spiders,(FACTION)ACT1_GOB_SpiderNest_Spiders_GobEnemy_f33cb6aa-adee-4586-9155-929689e2858c);
+
+IF
+FlagSet(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8,_,_)
+AND
+NOT DB_GlobalFlag((FLAG)GOB_SpiderNest_State_SpidersChill_7e28b817-42cc-2d7c-8bca-9f4b6fd9c35e)
+AND
+NOT DB_GOB_SpiderNest_SpidersFriendlyToGoblinKing(1)
+AND
+DB_GOB_GiantSpiders(_Spiders,_)
+THEN
+SetFaction(_Spiders,(FACTION)ACT1_GOB_SpiderNest_Spiders_Hostile_0cb09f62-3efb-4b26-a4b1-72ff22ee269c);
+
+IF
+FlagSet(GOB_SpiderNest_Spiders_PCPinnedByWeb_79d4eada-19ef-9a28-94a1-718b61763b70,(GUIDSTRING)_Player,_)
+THEN
+ApplyStatus((GUIDSTRING)_Player,"WEB",6.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(GOB_SpiderNest_Spiders_PCToreWeb_f7ca9f95-1650-46a6-bba7-870255e34997,(GUIDSTRING)_Player,_)
+THEN
+RemoveStatus((GUIDSTRING)_Player,"WEB");
+//END_REGION
+
+//REGION Combat with spiders
+IF
+EnteredCombat(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,_Id)
+AND
+DB_Is_InCombat(S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7,_Id)
+AND
+DB_GOB_GiantSpiders((CHARACTER)_Spider, _)
+AND
+DB_Is_InCombat(_Spider,_Id)
+AND
+DB_GlobalFlag(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8)
+AND
+QRY_OnlyOnce("GOB_SpiderNest_SawSpiders_AD")
+THEN
+PROC_TryStartAD(
+	(DIALOGRESOURCE)GOB_SpiderNest_AD_SawSpiders_c41019ee-6f3b-1548-556f-ddefd901e375,
+	S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,
+	S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7);
+
+IF
+EnteredCombat(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,_Id)
+AND
+DB_GOB_GiantSpiders((CHARACTER)_Spider, _)
+AND
+DB_Is_InCombat(_Spider,_Id)
+AND
+NOT DB_Is_InCombat(S_GOB_GuardVulgar_a063d18e-d513-4d30-80ea-40a5bffb4bd7,_Id)
+AND
+DB_GlobalFlag(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8)
+THEN
+PROC_TryStartAD(
+	(DIALOGRESOURCE)GOB_SpiderNest_AD_SawSpiders_c41019ee-6f3b-1548-556f-ddefd901e375,
+	S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("GOB_SpiderNest_Spiders")
+THEN
+SetFlag(GOB_SpiderNest_State_SpidersDead_4259e686-af00-4188-b477-c5f931c5058a,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+EntityEvent((CHARACTER)_Spider,"GOB_SpiderNest_Left")
+AND
+DB_GOB_GiantSpiders(_Spider, _)
+THEN
+SetFlag(GOB_SpiderNest_State_SpidersOut_0aa86afb-0304-871a-a943-2e93ada3b6f8,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+Opened(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b)
+THEN
+SetFlag(GOB_SpiderNest_State_DoorOpen_a86f4402-d1b3-4fc2-8056-0995f9b10b7c,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+DestroyingBy(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b,_,_,_)
+THEN
+SetFlag(GOB_SpiderNest_State_DoorOpen_a86f4402-d1b3-4fc2-8056-0995f9b10b7c,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+Closed(S_GOB_SpiderNest_CageDoor_5c819af6-4db1-459f-8f83-ce9bf2bae07b)
+THEN
+ClearFlag(GOB_SpiderNest_State_DoorOpen_a86f4402-d1b3-4fc2-8056-0995f9b10b7c,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+EnteredTrigger(_Player, (TRIGGER)S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef)
+AND
+NOT DB_GOB_SpiderNest_GoblinsNoLikeySpidersAnymore(1)
+AND
+DB_Players(_Player)
+THEN
+PROC_SetRelation((FACTION)ACT1_GOB_Goblins_General_633245e8-cbb8-b0c4-12ec-32d2ff9424e2, (FACTION)ACT1_GOB_SpiderNest_Spiders_153d18a3-3fc5-9b92-0039-04f8953f68a9, 50);
+
+IF
+LeftTrigger(_Player, (TRIGGER)S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef)
+AND
+NOT DB_GOB_SpiderNest_GoblinsNoLikeySpidersAnymore(1)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_AnyPlayerInTrigger((TRIGGER)S_GOB_SpiderNest_EventTrigger_764aa320-8fd2-40f2-b6c5-fa3b82fa79ef)
+THEN
+PROC_SetRelation((FACTION)ACT1_GOB_Goblins_General_633245e8-cbb8-b0c4-12ec-32d2ff9424e2, (FACTION)ACT1_GOB_SpiderNest_Spiders_153d18a3-3fc5-9b92-0039-04f8953f68a9, 100);
+
+//END_REGION 
+
+//REGION Ending goal - TODO
+ 
+//END_REGION
+
+//REGION Debug
+IF
+FlagSet(Debug_GOB_SpiderNest_SazzaFree_9bd209f1-3924-3ecd-5127-5155ac09d78e, _, _) // flagType: Global
+THEN
+DB_OnlyOnce("DEN_CapturedGoblin_LeftDenThank");
+//SetFlag((FLAG)DEN_CapturedGoblin_State_Released_63535870-e8f0-6b53-4194-0ca66bc2416e, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+//SetFlag((FLAG)DEN_CapturedGoblin_State_LeftDen_2a64c50f-45b6-8bd2-e980-77fb4b11fce3, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+SetFlag((FLAG)DEN_CapturedGoblin_Event_GoblinEscaped_cbb09299-e736-437b-d93b-5f18f1a9f9df, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+TeleportTo(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,S_GOB_CapturedGoblin_PositionAtDrow_6ec111da-a53a-447a-a29e-8ab4963c0d16,"Debug_GOB_CapturedGoblinTeleported",0,0,1);
+
+IF
+TextEvent("GOB_SpiderNest_Debug_Start")
+THEN
+PROC_GOB_SpiderNest_Prepare();
+
+IF
+TextEvent("GOB_SpiderNest_Debug_Reset")
+AND
+DB_GOB_GiantSpiders(_Spiders,_)
+THEN
+Resurrect(S_GOB_GiantSpider_Small_c3184d85-1e3f-4e64-85bd-5841fef2e27a,NULL_00000000-0000-0000-0000-000000000000,0);
+Resurrect(S_GOB_GiantSpider_Tiny_03d2278d-f1fa-41ff-bdbe-03045725d990,NULL_00000000-0000-0000-0000-000000000000,0);
+Resurrect(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)GOB_SpiderNest_State_SpidersHostile_9b39e276-628d-eae0-b499-0d69c7c1aaff,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)GOB_SpiderNest_State_SpidersChill_7e28b817-42cc-2d7c-8bca-9f4b6fd9c35e,NULL_00000000-0000-0000-0000-000000000000,0);
+DB_GOB_SpiderNest_Victim((CHARACTER)S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82);
+DB_GlobalFlagReactionAfterDialog(
+	(FLAG)GOB_SpiderNest_State_SpidersChill_7e28b817-42cc-2d7c-8bca-9f4b6fd9c35e,
+	DIALOGRESOURCEGUID_GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78);
+DB_GlobalFlagReactionAfterDialog(
+	(FLAG)GOB_SpiderNest_State_SpidersHostile_9b39e276-628d-eae0-b499-0d69c7c1aaff,
+	DIALOGRESOURCEGUID_GOB_SpiderNest_Spiders_fde26c73-ced0-afa0-c332-9437d8457f78);
+TeleportTo(S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82,S_GOB_SpiderNest_VictimTrigger_584ac09e-0fd4-452c-b4de-579f72487227,"",0,0,1);
+SetFaction(_Spiders,(FACTION)ACT1_GOB_SpiderNest_Spiders_153d18a3-3fc5-9b92-0039-04f8953f68a9);
+
+
+IF
+FlagSet(Debug_GOB_SpiderNest_CalmSpiders_c1d95a63-90d0-6d21-a5b4-01ce29e309b5, _, _) // flagType: Global
+THEN
+SetFlag((FLAG)GOB_SpiderNest_State_SpidersChill_7e28b817-42cc-2d7c-8bca-9f4b6fd9c35e, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+EntityEvent((CHARACTER)_Entity,"GOB_SpiderNest_VictimFell")
+THEN
+DebugText(_Entity,"GOB_SpiderNest_VictimFell");
+
+IF
+TextEvent("Debug_GOB_SpiderNest_AnimationLoop")
+THEN
+PROC_PlayLoopingAnimation(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000,(ANIMATION)CUST_ForcedPrisonWalk_01_d0294295-0d8f-4400-8362-3fc1d8759eb0,(ANIMATION)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+TextEvent("Debug_GOB_SpiderNest_Shove")
+THEN
+UseSpell(S_GOB_GuardPolite_56540e3d-f1ac-441b-a690-5f9602c04b86,"Target_GOB_SpiderNest_ShortShove",S_GOB_SpiderNest_Adventurer_692ebd77-cfe7-4cac-8022-bd835e9e5a82);
+//END_REGION
+
+//REGION custom crime
+
+QRY
+QRY_CrimeGetCustomWarning(_Goblin,_Crime,_Dialog,_CrimeID)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+IsTagged(_Goblin,(TAG)GOBLIN_608597d9-bf00-4ede-aabe-767457280925,1)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Assault")
+THEN
+DB_CrimeWarning_CustomDialog(_Goblin,_CrimeID,GOB_SpiderNest_CustomCrime_714c15eb-cd01-2f7f-9fbf-a7aedd1be65e);
+
+QRY
+QRY_CrimeGetCustomArrestDialog(_Goblin,_CrimeID,_Dialog,_Criminal1,_Criminal2,_Criminal3,_Criminal4)
+AND
+CrimeGetVictim(_CrimeID,_Victim)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+IsTagged(_Goblin,(TAG)GOBLIN_608597d9-bf00-4ede-aabe-767457280925,1)
+AND
+CrimeGetType(_CrimeID,_Crime)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Assault")
+THEN
+DB_CrimeArrest_CustomDialog(_Goblin,_CrimeID,GOB_SpiderNest_CustomCrime_714c15eb-cd01-2f7f-9fbf-a7aedd1be65e);
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, (GUIDSTRING)_Evidence, (CHARACTER)_Victim, _)
+AND
+DB_GOB_SpiderNest_Victim(_Victim)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Murder")
+THEN
+PROC_CharacterRegisterCrime(_Criminal,"GOB_SpiderNest_CustomMurder",_Evidence,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+DebugText(_Criminal,"GOB_SpiderNest_CustomMurder");
+
+/*
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, (GUIDSTRING)_Evidence, (CHARACTER)_Victim, _)
+AND
+DB_GOB_GiantSpiders(_Victim,_)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Assault")
+THEN
+PROC_CharacterRegisterCrime(_Criminal,"GOB_SpiderNest_CustomMurder",_Evidence,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+DebugText(_Criminal,"GOB_SpiderNest_CustomMurder"); 
+*/
+//END_REGION
+
+//REGION Make Spiders Friendly
+
+PROC
+PROC_GOB_SpiderNest_ProcessVictimFall((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54)
+AND
+DB_HonorMode_Enabled(1)
+THEN
+ApplyStatus((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54, "GOB_DROR_UNLOCK_SPIDER_SPELL", -1.0);
+
+PROC
+PROC_GOB_SpiderNest_ProcessVictimLeft((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54)
+AND
+DB_HonorMode_Enabled(1)
+THEN
+RemoveStatus((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54, "GOB_DROR_UNLOCK_SPIDER_SPELL");
+
+IF
+CastedSpell(S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54, "Target_GOB_Dror_MakeSpidersFriendly", _,_,_)
+AND
+QRY_OnlyOnce("GOB_Dror_MakeSpidersFriendly")
+THEN
+DB_GOB_SpiderNest_SpidersFriendlyToGoblinKing(1);
+SetCanInteract((ITEM)TOOL_Ladder_Web_10n5H_A_000_399920b9-8948-45be-b0ec-2c8d838536dd, 1);
+SetCanInteract((ITEM)TOOL_Web_Ladder_10n5H_A_000_d92bbd40-84eb-404b-8b7f-97690ab10dff, 1);
+SetCanInteract((ITEM)TOOL_Ladder_Web_10n5H_A_002_272ee7f8-92be-402b-9667-5ceab523e39b, 1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

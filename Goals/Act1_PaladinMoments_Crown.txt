@@ -1,0 +1,49 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+// Betray the Myconid Sovereign - Avenge Glut's Circle
+IF
+FlagSet((FLAG)UND_MyconidCircle_BroodingSovereign_Done_f80e93f9-53b5-4537-96a7-583508ba1cb8, _, _)
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+// Letting Sazza get killed while imprisoned (in dialog) OR helping her escape - Save the Goblin Saza
+IF
+FlagSet(DEN_CapturedGoblin_Follow_8df7d87d-1b18-7be5-1003-f4ce70ff1f25, _Player, _DialogID)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player, _DialogID);
+
+//REGION Betrayals
+// Players betrays tieflings during attack on Den.
+PROC
+PROC_DEN_AttackOnDen_BetrayTieflings()
+AND
+DB_GlobalFlag((FLAG)DEN_TieflingLeader_Quest_GobHuntAccepted_324e0e74-f2f5-3e9b-bdfd-463d47134605)
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+
+// Players betrays Minthara during attack on Den.
+PROC
+PROC_DEN_AttackOnDen_SideWithTieflings_JournalHook()
+AND
+DB_GlobalFlag((FLAG)GLO_PaladinMoments_State_SidedWithMinthara_9629c6c5-53c9-48c4-acb6-393e8b035174)
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)GLO_PaladinOathbreaker_Event_CrownBrokeOath_b6344b22-0d02-489f-acc8-04a18671fe5b, _Player);
+//END_REGION Betrayals
+
+PROC
+PROC_LevelLoadedOnce("INT_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

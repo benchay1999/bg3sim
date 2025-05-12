@@ -1,0 +1,189 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3);
+DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarGuardBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9);
+DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarRebelGuard_03_baac0ae3-7b2e-47e6-85e4-579f70d4b4fa);
+
+//Last Int - killed eye or not
+DB_UND_DuergarCamp_RebelReinforcements((CHARACTER)S_UND_DuergarMason_01_d09aecce-fad1-4aa8-9c40-c370a0ac8835,(TRIGGER)S_UND_DuergarRebelMason_01_CaveInTrigger_89e1dc10-411c-4d82-abdf-c93afee2e1a5,0);
+DB_UND_DuergarCamp_RebelReinforcements((CHARACTER)S_UND_DuergarMason_02_6b07558b-09ef-449c-8dd2-b0c2cbe809f1,(TRIGGER)S_UND_DuergarRebelMason_02_CaveInTrigger_0bda046b-dc08-4b4e-876c-9d18265e952b,0);
+DB_UND_DuergarCamp_RebelReinforcements((CHARACTER)S_UND_DuergarRebel_AtPier_01_5ff28d97-e070-4805-a856-3112df670e1f,(TRIGGER)S_UND_DuergarRebel_AtPier_01_CaveInTrigger_65cd31b7-3bb1-40b3-a279-5469acecf1c0,1);
+DB_UND_DuergarCamp_RebelReinforcements((CHARACTER)S_UND_DuergarRebel_AtPier_02_2dd2a840-35ff-4ed6-bf43-f9aae0e69c32,(TRIGGER)S_UND_DuergarRebel_AtPier_02_CaveInTrigger_c11579f4-c26e-4203-825b-3ac83347c3a3,1);
+
+/*DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarMason_01_d09aecce-fad1-4aa8-9c40-c370a0ac8835);
+DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarMason_02_6b07558b-09ef-449c-8dd2-b0c2cbe809f1);
+DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarPatroller_01_0c7758f9-ed35-49cb-926c-8b24195ee978);
+DB_UND_DuergarCamp_Rebels((CHARACTER)S_UND_DuergarPatroller_02_407307ff-6adb-488c-9576-534e2c158e29);
+*/
+
+DB_UND_DuergarCamp_Absolutists((CHARACTER)S_UND_DuergarGuardSergeant_0aeb5411-5f13-4263-acb0-87f0689de2e5);
+DB_UND_DuergarCamp_Absolutists((CHARACTER)S_UND_DuergarGuardWry_dd93e23c-c62d-4927-9ea7-50e11621825e);
+DB_UND_DuergarCamp_Absolutists((CHARACTER)S_UND_DuergarGuardNervous_908f6096-360e-44dc-b2ff-63a7d32c015b);
+DB_UND_DuergarCamp_Absolutists((CHARACTER)S_UND_DuergarGuardFocused_ccf9ef29-3d8e-4751-a7ae-203bec7352c3);
+DB_UND_DuergarCamp_Absolutists((CHARACTER)S_UND_DuergarGuard_03_cc942779-3d2d-4327-9704-c6c385c12c82);
+/*DB_UND_DuergarCamp_Absolutists((CHARACTER)S_UND_DuergarPatroller_03_a38319cb-c9ed-460a-bba2-1788d1cad20c);
+*/
+
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("UND_PermaDefeatedDuergarAbsolutists",(FLAG)UND_DuergarCamp_State_Absolutists_PermaDefeated_9d806192-5464-42ed-9a39-596698b33ae2);
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("UND_PermaDefeatedDuergarRebels",(FLAG)UND_DuergarCamp_State_Rebels_PermaDefeated_b6a21d83-2b49-45c6-a89d-ddccddcf413a);
+KBSECTION
+//REGION Greedy & Bored
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)UND_DuergarCamp_State_CaveInCleared_e0d8a48b-e0cf-4cc8-96bc-b637b79ce9bd)
+AND
+QRY_OnlyOnce("UND_DuergarCamp_TalkedMutineers")
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3, _Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_UND_DuergarGuardBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9, _Player)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)UND_DuergarCamp_Mutineers_4e1248fa-2286-b0f2-15fe-df78062693da,(CHARACTER)S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3,(CHARACTER)S_UND_DuergarGuardBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9, _Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_UND_DuergarGuardBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9, _Player)
+AND
+NOT DB_GlobalFlag((FLAG)UND_DuergarCamp_State_CaveInCleared_e0d8a48b-e0cf-4cc8-96bc-b637b79ce9bd)
+AND
+QRY_OnlyOnce("UND_DuergarCamp_TalkedMutineers")
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3, _Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_UND_DuergarGuardBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9, _Player)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)UND_DuergarCamp_Mutineers_4e1248fa-2286-b0f2-15fe-df78062693da,(CHARACTER)S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3,(CHARACTER)S_UND_DuergarGuardBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9, _Player);
+
+IF
+DialogEnded(UND_DuergarCamp_Mutineers_4e1248fa-2286-b0f2-15fe-df78062693da,_)
+AND
+DB_GlobalFlag((FLAG)UND_DuergarCamp_Event_MutineersSkirmish_14ed75cc-41a2-fa96-da3a-18c161e139a7)
+THEN
+SetCombatGroupID(S_UND_DuergarRebelGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3,"");
+SetCombatGroupID(S_UND_DuergarRebelBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9,"");
+SetFaction(S_UND_DuergarRebelGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3,(FACTION)ACT1_UND_Duergar_TempSkirmish_6e1b983c-d555-4c86-ae84-6cddebcf5aec);
+SetFaction(S_UND_DuergarRebelBored_30fb7e6e-40d2-4e77-b5ea-887f8eb345c9,(FACTION)ACT1_UND_Duergar_TempSkirmish_6e1b983c-d555-4c86-ae84-6cddebcf5aec);
+
+IF
+DB_GlobalFlag(UND_DuergarCamp_State_RecruitedRebels_057e4757-ad98-6af9-7a44-700b871d2482)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_UND_DuergarRebels_018d62a0-5ce2-45fd-857f-7ca88b3095db,100);
+
+//END_REGION
+
+//REGION Defeat counters
+IF
+DB_UND_DuergarCamp_Absolutists(_Duergar)
+THEN
+DB_GLO_DefeatCounter(_Duergar,"UND_PermaDefeatedDuergarAbsolutists");
+
+IF
+DB_UND_DuergarCamp_Rebels(_Duergar)
+THEN
+DB_GLO_DefeatCounter(_Duergar,"UND_PermaDefeatedDuergarRebels");
+
+//END_REGION
+
+
+//REGION Post Combat 'at least one alive' flags
+IF
+DB_OnlyOnce("UND_Mutineer_Spot_PostNereCombat_OnlyOnce")
+AND
+DB_UND_DuergarCamp_Rebels(_Rebel)
+AND
+_Rebel != S_UND_DuergarGuardGreedy_379fd131-79ab-4588-a8f0-28cdb51546e3
+THEN
+SetFlag(UND_DuergarCamp_State_Rebels_Alive_304e80cc-4c07-4c37-831b-b17c44af7570,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+DB_OnlyOnce("UND_Drow_Spot_PostCombat")
+AND
+DB_UND_DuergarCamp_Absolutists(_Loyal)
+AND
+_Loyal != S_UND_DuergarLoyalSergeant_0aeb5411-5f13-4263-acb0-87f0689de2e5
+THEN
+SetFlag(UND_DuergarLoyal_State_Alive_36771476-8386-4638-beab-8987d5492448,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//END_REGION
+
+
+//REGION Reinforcements
+IF
+CombatRoundStarted(_CombatID,2)
+AND
+DB_DuergarCamp_MutinyBattle_CombatID(_CombatID)
+AND
+DB_GlobalFlag((FLAG)UND_Mutineers_Quest_Accepted_d37a860e-a0ea-9d9a-7dc0-d73a66f8663e)
+AND
+NOT QRY_UND_DuergarCamp_KilledEye()
+AND
+DB_UND_DuergarCamp_RebelReinforcements(_Character,_CaveInTrigger,0)
+AND
+NOT DB_CantMove(_Character)
+THEN
+PROC_CharacterMoveTo(_Character,_CaveInTrigger,"Run","ReachedConfrontation");
+SetFlag(UND_DuergarRebelReinforcement_State_JoinMutiny_1f9f867f-0b12-4013-9b6d-08736fc62356,_Character,0);
+
+QRY
+QRY_UND_DuergarCamp_KilledEye()
+AND
+DB_GlobalFlag(UND_ScryingEye_DiedBeforeCaveIn_b48f4d8c-374b-44e4-879c-73a5a7e7a2ea)
+AND
+DB_UND_DuergarCamp_RebelReinforcements(_Character,_CaveInTrigger,1)
+AND
+NOT DB_CantMove(_Character)
+THEN
+PROC_CharacterMoveTo(_Character,_CaveInTrigger,"Run","ReachedConfrontation");
+SetFlag(UND_DuergarRebelReinforcement_State_JoinMutiny_1f9f867f-0b12-4013-9b6d-08736fc62356,_Character,0);
+
+IF
+EntityEvent((CHARACTER)_Character,"ReachedConfrontation")
+AND
+DB_UND_DuergarCamp_RebelReinforcements(_Character,_,_KilledEye)
+AND
+QRY_OnlyOnce("UND_DuergarCamp_ReachedConfrontation_RebelsAD")
+THEN
+SetCombatGroupID(_Character,"00f902af-d72c-7dd6-0606-1c61aede2fa9");
+PROC_UND_DuergarCamp_RebelReinforcementsAD((CHARACTER)_Character,(INTEGER)_KilledEye);
+
+IF
+EnteredCombat((CHARACTER)_Character,_CombatID)
+AND
+DB_DuergarCamp_MutinyBattle_CombatID(_CombatID)
+AND
+DB_UND_DuergarCamp_RebelReinforcements(_Character,_,_KilledEye)
+AND
+QRY_OnlyOnce("UND_DuergarCamp_ReachedConfrontation_RebelsAD")
+THEN
+PROC_UND_DuergarCamp_RebelReinforcementsAD((CHARACTER)_Character,(INTEGER)_KilledEye);
+
+PROC
+PROC_UND_DuergarCamp_RebelReinforcementsAD((CHARACTER)_Character,0)
+THEN
+PROC_TryStartAD(UND_DuergarRebels_AD_ArrivedToCaveIn_5ac0ade4-2fe4-9241-889b-ec6905e1fac6,_Character);
+
+PROC
+PROC_UND_DuergarCamp_RebelReinforcementsAD((CHARACTER)_Character,1)
+THEN
+PROC_TryStartAD(UND_DuergarRebels_AD_ArrivedToCaveIn_FromPier_9809f713-3055-d6e8-6d32-cb2cbd794d20,_Character);
+
+
+//END_REGION
+
+//REGION
+
+IF
+DB_GlobalFlag(UND_DuergarCamp_State_BattleStarted_ff6b8579-5926-4406-a983-b9843f875159)
+AND
+DB_GlobalFlag(UND_DuergarCamp_State_SidedMutineers_581443f0-b4bd-d3c2-7122-a4d2aa7fb5f9)
+AND
+DB_UND_DuergarCamp_Rebels(_Rebel)
+THEN
+DB_GLO_ScryingEye_IgnoredByEye(_Rebel);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

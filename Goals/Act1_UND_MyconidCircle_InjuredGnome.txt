@@ -1,0 +1,791 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(
+	(CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,
+	(DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c);
+
+Equip(	
+	S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,
+	S_UND_MyconidCircle_BootsOfSpeed_fca76ec8-f3dd-446c-bd69-dc2f6ccca285,
+	1);
+PROC_UND_InjuredGnome_UnequipCurrentWeapon();
+
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,25.0);
+
+//REGION Item events for Gnome's dialog
+DB_HasItemEvent(
+	S_UND_MyconidCircle_BootsOfSpeed_fca76ec8-f3dd-446c-bd69-dc2f6ccca285,
+	UND_MyconidCircle_InjuredGnome_HasBoots_162c2df2-dd25-407d-a5f1-0c78d09ef515);
+
+DB_GiveItemToEvent(S_UND_MyconidCircle_BootsOfSpeed_fca76ec8-f3dd-446c-bd69-dc2f6ccca285, UND_InjuredGnome_Event_GiveBoots_c917e56b-1335-481c-9062-6f46dfa90cea);
+
+// Different poison cures the player can give to the gnome:
+DB_HasItemEvent((ITEM)S_UND_InjuredGnome_DuergarAntidote_a176e33f-37f4-4035-a172-310749dcebfa,(FLAG)UND_InjuredGnome_HasAntidote_21aaaceb-b2f6-4c7b-83c9-68dba011ecc5);
+DB_GiveItemToEvent(S_UND_InjuredGnome_DuergarAntidote_a176e33f-37f4-4035-a172-310749dcebfa,(FLAG)UND_InjuredGnome_GiveAntidote_541d149c-ba4f-41f3-9e02-409c1daeb4e0);
+
+DB_HasItemTemplateScriptFlag(1, (DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c, (ITEMROOT)CONS_Potion_Antitoxin_f0c7d8bb-85e9-4937-96bb-49ba69d28631, 2, 1);
+DB_GiveTemplateFromPlayerDialogEvent((ITEMROOT)CONS_Potion_Antitoxin_f0c7d8bb-85e9-4937-96bb-49ba69d28631, (FLAG)UND_InjuredGnome_GiveAntitoxin_d0f30b66-3ac7-4457-9172-e8035943a8f6, NULL_00000000-0000-0000-0000-000000000000, 1);
+
+DB_HasItemTemplateScriptFlag(2, (DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c, (ITEMROOT)UNI_Apprentice_Antidote_25fea821-5ec1-4052-bd6c-60c249e72a79, 2, 1);
+DB_GiveTemplateFromPlayerDialogEvent((ITEMROOT)UNI_Apprentice_Antidote_25fea821-5ec1-4052-bd6c-60c249e72a79, (FLAG)UND_InjuredGnome_GiveSilvanusAntidote_791b514b-c61b-47c1-a29a-fb5674926a2d, NULL_00000000-0000-0000-0000-000000000000, 1);
+
+DB_HasItemTemplateScriptFlag(3, (DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c, (ITEMROOT)ALCH_Solution_Potion_Remedy_ae9a9360-7cbe-4f72-8bea-1dd5747c180d, 2, 1);
+DB_GiveTemplateFromPlayerDialogEvent((ITEMROOT)ALCH_Solution_Potion_Remedy_ae9a9360-7cbe-4f72-8bea-1dd5747c180d, (FLAG)UND_InjuredGnome_Event_GiveRemedy_690c267c-e4c4-4636-be80-5700520f6539, NULL_00000000-0000-0000-0000-000000000000, 1);
+
+DB_HasItemTemplateScriptFlag(4, (DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c, (ITEMROOT)CONS_Potion_Poison_Resistance_ae28b14c-0881-45fe-8237-9fcb1c951d3d, 2, 1);
+DB_GiveTemplateFromPlayerDialogEvent((ITEMROOT)CONS_Potion_Poison_Resistance_ae28b14c-0881-45fe-8237-9fcb1c951d3d, (FLAG)UND_InjuredGnome_Event_GivePoisonResistance_f6b94c44-5168-4330-a1d3-434bda4b71d1, NULL_00000000-0000-0000-0000-000000000000, 1);
+//END_REGION
+
+DB_SeenDeadNPCGlobalFlag((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, UND_InjuredGnome_State_Dead_0e3a6eae-7ff2-4cca-9122-47e6ea2ac1fd);
+ToInventory(S_UND_InjuredGnome_DuergarAntidote_a176e33f-37f4-4035-a172-310749dcebfa,S_UND_LoneDuergar_05c338d9-4590-4c4b-b87e-8c27ea2c2b18,1,0,1);
+
+ApplyStatus(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UND_INJUREDGNOME_POISONED",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+BlockNewCrimeReactions((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,1);
+PROC_CharacterDisableCrime(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"EmptyPocketNoticedInvestigation");
+SetFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,0);
+DB_DoNotFace(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+DB_FlagReactionAfterDialog((FLAG)UND_InjuredGnome_Event_Murder_bf9ad6b1-fb10-493f-a1a2-a1719b02bbf7, (DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c);
+
+DB_DoNotRemoveKnockedOutCharacterOnLongRest((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+DB_PreventPermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96); // prevent her permaDefeated so that she can still be talked to after becoming a SporeServant
+
+//REGION Blocking dialog while not in a right cinematic position
+DB_UND_InjuredGnome_ReposeRemovedDialogBlocked((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+//END_REGION
+
+//REGION Cure Poison journal
+DB_QuestDef_State(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4, "UND_DuergarPoison", "GnomeCured");
+DB_QuestDef_State((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, "UND_DuergarPoison", "ReachedNoReturn");
+
+DB_UND_InjuredGnone_Journal_HasCureUpdates("FoundAntidote");
+DB_UND_InjuredGnone_Journal_HasCureUpdates("FoundNoblestalk");
+//END_REGION Cure Poison journal
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_UND_InjuredGnome_FirstADZone_7b0e2617-28a4-45ba-b720-2e5412c6cc63);
+KBSECTION
+IF
+DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_WasPermaDefeated_b73fbcdc-e526-4c1e-b236-4e2ea49a1c27);
+
+IF
+FlagSet((FLAG)UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4,_,_)
+THEN
+RemoveStatus(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UND_INJUREDGNOME_POISONED");
+ClearFlag(GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,0);
+PROC_CharacterDisableAllCrimes((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, 1); //only react to certain crimes (can't react to everything because paralyzed off start)
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"EmptyPocketNoticedInvestigation");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"MoveForbiddenItem");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UseForbiddenItem");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"SneakUseForbiddenItem");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"Steal");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"PickPocketFailed");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"Vandalise");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"ItemDestroy");
+PROC_CharacterEnableCrime((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"WaitingForCalledGuard");
+BlockNewCrimeReactions((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,0);
+
+IF
+HitpointsChanged(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, 100.0)
+AND
+DB_GlobalFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+THEN
+PROC_SelfHealing_Enable(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+PROC_SelfHealing_Enable(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+IF
+FlagSet(UND_InjuredGnome_GiveAntidote_541d149c-ba4f-41f3-9e02-409c1daeb4e0,_,_)
+THEN
+SetOnStage(S_UND_InjuredGnome_DuergarAntidote_a176e33f-37f4-4035-a172-310749dcebfa,0);
+
+IF
+FlagSet((FLAG)UND_InjuredGnome_GiveAntitoxin_d0f30b66-3ac7-4457-9172-e8035943a8f6, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _)
+THEN
+DB_UND_InjuredGnone_RemoveTemplateOnReceived((ROOT)CONS_Potion_Antitoxin_f0c7d8bb-85e9-4937-96bb-49ba69d28631);
+
+IF
+FlagSet((FLAG)UND_InjuredGnome_GiveSilvanusAntidote_791b514b-c61b-47c1-a29a-fb5674926a2d, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _)
+THEN
+DB_UND_InjuredGnone_RemoveTemplateOnReceived((ROOT)UNI_Apprentice_Antidote_25fea821-5ec1-4052-bd6c-60c249e72a79);
+
+IF
+TemplateAddedTo(_Template, (ITEM)_Item, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _)
+AND
+DB_UND_InjuredGnone_RemoveTemplateOnReceived(_Template)
+THEN
+NOT DB_UND_InjuredGnone_RemoveTemplateOnReceived(_Template);
+RequestDelete(_Item);
+
+//REGION Boots
+
+IF
+FlagSet((FLAG)UND_MyconidCircle_InjuredGnome_GiveBoots_c917e56b-1335-481c-9062-6f46dfa90cea,_Player,_)
+THEN
+SetFlag((FLAG)UND_MyconidCircle_InjuredGnome_GaveBoots_be8b4448-dba7-997a-f108-ef6033834f21,_Player,0);
+
+IF
+FlagSet(UND_MyconidCircle_InjuredGnome_HasBoots_162c2df2-dd25-407d-a5f1-0c78d09ef515, (CHARACTER)_Player, _)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Defeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_TookBootsByForce_f9ad16f0-b105-cac5-efec-6df53d91cdde);
+
+PROC
+PROC_UND_InjuredGnome_UnequipCurrentWeapon()
+AND
+GetEquippedWeapon(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _Weapon)
+THEN
+Unequip(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _Weapon);
+//END_REGION
+
+//REGION First AD
+
+IF
+EnteredTrigger(_,(TRIGGER)S_UND_InjuredGnome_FirstADZone_7b0e2617-28a4-45ba-b720-2e5412c6cc63)
+AND
+NOT DB_Defeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+PROC_TryStartAD(UND_MyconidCircle_InjuredGnome_AD_PainGrunt_8c2b1a77-093a-43d3-cb3a-e5b1a2475a37,S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_UND_InjuredGnome_FirstADZone_7b0e2617-28a4-45ba-b720-2e5412c6cc63);
+SetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_StartedGrunting_5f321763-24c2-40aa-97f8-613a0cc48d85,NULL_00000000-0000-0000-0000-000000000000,0);
+//END_REGION
+
+//REGION Healing gnome outside of dialog
+
+IF
+StatusRemoved(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UND_INJUREDGNOME_POISONED",_Causee,_)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+_Causee != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_GlobalSetFlagAndCache(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4);
+SetFlag(UND_MyconidCircle_InjuredGnome_Healer_c4385d59-5115-4218-ad4d-b9e4cbc7f8b5,_Causee,0);
+
+IF
+StatusRemoved(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UND_INJUREDGNOME_POISONED",NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+GetHitpoints(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _HP)
+AND
+_HP > 0
+THEN
+PROC_GlobalSetFlagAndCache(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4);
+
+IF
+StatusRemoved(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UND_INJUREDGNOME_POISONED",(CHARACTER)_Causee,_)
+AND
+DB_Players(_Causee)
+AND
+QRY_StartDialog_Fixed(UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _Causee)
+THEN
+DB_NOOP(1);
+
+
+IF
+FlagSet(UND_MyconidCircle_InjuredGnome_Healer_c4385d59-5115-4218-ad4d-b9e4cbc7f8b5,_,0)
+THEN
+RemoveStatus(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,"UND_INJUREDGNOME_POISONED");
+
+IF
+FlagSet(UND_MyconidCircle_InjuredGnome_Event_AteNoblestalk_fe616c56-097e-49ee-aa9b-e1b68a9917e9, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _)
+THEN
+TemplateRemoveFrom(PUZ_Underdark_Mushroom_Noblestalk_A_48c679c1-b713-4d2f-9bba-1c43ed654404, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, 1);
+
+IF
+FlagSet(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4, _, _)
+THEN
+NOT DB_DoNotRemoveKnockedOutCharacterOnLongRest((CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+//END_REGION
+
+//REGION Resting while gnome isnt healed
+// Poison effect progresses step by step
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag(UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+PROC_UND_InjuredGnome_ProgressPoison();
+
+PROC
+PROC_UND_EbonLake_Raft_Arrived_Hook(UND_EbonLake_State_RaftAtCamp_526b966d-e826-4290-8331-e4747c1df3a5)
+THEN
+PROC_UND_InjuredGnome_ProgressPoison();
+
+// Order is reversed:
+// Insane -> Die
+PROC
+PROC_UND_InjuredGnome_ProgressPoison()
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5,
+	NULL_00000000-0000-0000-0000-000000000000,1)
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7);
+
+// Worse -> Insane
+PROC
+PROC_UND_InjuredGnome_ProgressPoison()
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Worse_cd8d77ec-a873-4761-b7d8-0c8a1eb6ef83,
+	NULL_00000000-0000-0000-0000-000000000000,1)
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)UND_MyconidCircle_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5);
+
+// Worsening -> Worse
+PROC
+PROC_UND_InjuredGnome_ProgressPoison()
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)UND_MyconidCircle_InjuredGnome_State_Worse_cd8d77ec-a873-4761-b7d8-0c8a1eb6ef83);
+
+// None -> Worsening
+IF
+DB_GlobalFlag(UND_InjuredGnome_Knows_Poisoned_4caa2745-4ed6-c4d8-d07b-48d4d199a5c3)
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c);
+
+// clearing if healed
+IF
+FlagSet(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4,_,_)
+THEN
+PROC_GlobalClearFlagAndCache(UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c);
+PROC_GlobalClearFlagAndCache(UND_MyconidCircle_InjuredGnome_State_Worse_cd8d77ec-a873-4761-b7d8-0c8a1eb6ef83);
+PROC_GlobalClearFlagAndCache(UND_MyconidCircle_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5);
+
+// fast-tracking after saving the gnomes in the Grymforge 
+IF
+DB_GlobalFlag(UND_GnomeWorkers_Event_Leave_ad897c6f-87d5-4a30-88f0-41c92b965bc8)
+AND
+NOT DB_GlobalFlag(UND_MyconidCircle_State_BothSovereignsDead_84a1008e-f3a0-4136-b085-8eb43be8aa93)
+AND
+NOT DB_GlobalFlag((FLAG)UND_InjuredGnome_State_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+THEN
+PROC_GlobalSetFlagAndCache(UND_MyconidCircle_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5);
+
+// we don't have support for gnomes commenting on Thulla being sick
+IF
+DB_GlobalFlag((FLAG)UND_GnomeWorkers_Event_Leave_ad897c6f-87d5-4a30-88f0-41c92b965bc8)
+AND
+NOT DB_GlobalFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTrigger(S_UND_MyconidCircle_SUB_4b5cc8fc-88f4-465e-bf82-4c20b055c019)
+THEN
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7);
+
+IF
+LeftTrigger(_PartyMember, S_UND_MyconidCircle_SUB_4b5cc8fc-88f4-465e-bf82-4c20b055c019)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_GlobalFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+AND
+DB_GlobalFlag(UND_GnomeWorkers_Event_Leave_ad897c6f-87d5-4a30-88f0-41c92b965bc8)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+NOT QRY_CheckOtherPartyMembersInTrigger(_PartyMember, S_UND_MyconidCircle_SUB_4b5cc8fc-88f4-465e-bf82-4c20b055c019)
+THEN
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7);
+
+// Edgae-case: long resting reasults in her death if defeated
+PROC
+PROC_LongRest()
+AND
+DB_Defeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+NOT DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+THEN
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7);
+
+// Dying from poison
+IF
+FlagSet((FLAG)UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7,_,_)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+Die(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, DEATHTYPE.Acid, NULL_00000000-0000-0000-0000-000000000000,1,1);
+
+IF
+DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+ClearFlag(UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_GlobalFlag(UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_GlobalFlag(UND_MyconidCircle_State_BothSovereignsDead_84a1008e-f3a0-4136-b085-8eb43be8aa93)
+THEN
+PROC_UND_InjuredGnome_FindSovereignAndRiseGnome();
+
+PROC
+PROC_LongRest()
+AND
+DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96) //she has to be specifically dead
+AND
+NOT DB_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_GlobalFlag(UND_MyconidCircle_State_BothSovereignsDead_84a1008e-f3a0-4136-b085-8eb43be8aa93)
+THEN
+DB_ExecuteInLevel("UND_InjuredGnome_FindSovereignAndRiseGnome","WLD_Main_A");
+
+PROC
+PROC_ExecuteInLevel("UND_InjuredGnome_FindSovereignAndRiseGnome","WLD_Main_A")
+THEN
+PROC_UND_InjuredGnome_FindSovereignAndRiseGnome();
+
+// Rising Thulla as a Spore Servant
+PROC
+PROC_UND_InjuredGnome_FindSovereignAndRiseGnome()
+AND
+DB_UND_MyconidCircle_CurrentSovereign(_Sovereign)
+AND
+NOT DB_UND_InjuredGnome_RiseGnome(_)
+AND
+QRY_UND_InjuredGnome_GnomeInPlaceForResurrection()
+THEN
+DB_UND_InjuredGnome_RiseGnome(_Sovereign);
+
+QRY
+QRY_UND_InjuredGnome_GnomeInPlaceForResurrection()
+AND
+IsInTrigger(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, S_UND_MyconidCircle_CorpsesOwnershipTrigger_4baf1005-3455-44e3-bd6d-4a165c75f826, 1)
+THEN
+DB_NOOP(1);
+
+// Background resurrection - no actual spell is used
+IF
+DB_UND_InjuredGnome_RiseGnome((CHARACTER)_Sovereign)
+AND
+DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96) //has to be specifically dead
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_UND_InjuredGnome_SporeServant_Awaiting(_, _)
+AND
+QRY_OnlyOnce("UND_MyconidCircle_InjuredGnome_SporeServantRise")
+THEN
+DB_SporeServantDialogExceptions(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+DB_SporeServantBehaviourExceptions(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+Resurrect(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+DB_UND_InjuredGnome_SporeServant_Awaiting(_Sovereign, "Status");
+
+IF
+Resurrected(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+DB_UND_InjuredGnome_SporeServant_Awaiting(_Sovereign, "Status")
+AND
+HasAppliedStatus(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, "CREATURE_SPORE_SERVANT", 0)
+THEN
+ApplyStatus(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, "CREATURE_SPORE_SERVANT", -1.0, 1, _Sovereign);
+
+IF
+StatusApplied(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, "CREATURE_SPORE_SERVANT", (CHARACTER)_Caster, _)
+AND
+NOT DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96) //has to be specifically dead
+AND
+NOT DB_PartyMembers(_Caster)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+DB_UND_InjuredGnome_SporeServant_Awaiting(_Sovereign, "Status")
+THEN
+NOT DB_UND_InjuredGnome_SporeServant_Awaiting(_Sovereign, "Status");
+PROC_UND_InjuredGnome_SetupSporeServant(_Sovereign);
+
+// Rusurrection via spell 
+IF
+StatusAttempt(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, "CREATURE_SPORE_SERVANT", (CHARACTER)_Caster, _)
+AND
+DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96) //has to be specifically dead
+AND
+NOT DB_PartyMembers(_Caster)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_UND_InjuredGnome_SporeServant_Awaiting(_, _)
+THEN
+DB_UND_InjuredGnome_SporeServant_Awaiting(_Caster, "Resurrection");
+DB_SporeServantDialogExceptions(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+DB_SporeServantBehaviourExceptions(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+IF
+Resurrected(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+DB_UND_InjuredGnome_SporeServant_Awaiting(_Caster, "Resurrection")
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+THEN
+NOT DB_UND_InjuredGnome_SporeServant_Awaiting(_Caster, "Resurrection");
+PROC_UND_InjuredGnome_SetupSporeServant(_Caster);
+
+PROC
+PROC_UND_InjuredGnome_SetupSporeServant((CHARACTER)_Caster)
+AND
+GetFaction(_Caster, _Faction)
+THEN
+NOT DB_PreventPermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+DB_Dialogs(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, UND_MyconidCircle_InjuredGnome_SporeServant_3d6c85c2-e7bb-cd0e-8728-88c3f8eecce7);
+SetFaction(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _Faction);
+
+IF
+FlagSet((FLAG)UND_MyconidCircle_State_BothSovereignsDead_84a1008e-f3a0-4136-b085-8eb43be8aa93,_,_)
+THEN
+NOT DB_PreventPermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+
+// Debug
+IF
+TextEvent("debug_getflags")
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4,NULL_00000000-0000-0000-0000-000000000000,_int1)
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Worsening_a3421777-b741-454c-81df-2efef3c1502c,NULL_00000000-0000-0000-0000-000000000000,_int2)
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Worse_cd8d77ec-a873-4761-b7d8-0c8a1eb6ef83,NULL_00000000-0000-0000-0000-000000000000,_int3)
+AND
+GetFlag((FLAG)UND_MyconidCircle_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5,NULL_00000000-0000-0000-0000-000000000000,_int4)
+AND
+IntegerToString(_int1,_str1)
+AND
+IntegerToString(_int2,_str2)
+AND
+IntegerToString(_int3,_str3)
+AND
+IntegerToString(_int4,_str4)
+AND
+Concatenate("UND_MyconidCircle_InjuredGnome_Healed ",_str1,_msg1)
+AND
+Concatenate("UND_MyconidCircle_InjuredGnome_Worsening ",_str2,_msg2)
+AND
+Concatenate("UND_MyconidCircle_InjuredGnome_Worse ",_str3,_msg3)
+AND
+Concatenate("UND_MyconidCircle_InjuredGnome_Insane ",_str4,_msg4)
+THEN
+DebugText(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,_msg1);
+DebugText(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,_msg2);
+DebugText(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,_msg3);
+DebugText(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,_msg4);
+
+IF
+TextEvent("debug_Gnome_killpoison")
+THEN
+PROC_GlobalSetFlagAndCache(UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7);
+
+IF
+TextEvent("debug_Gnome_servant")
+THEN
+DB_UND_InjuredGnome_RiseGnome(S_UND_MyconidSovereign_ea0f222f-eaad-4d83-bbcd-cbae51ccf265);
+//END_REGION
+
+//REGION Cure Poison Journal
+IF
+QuestAccepted(_Player, "UND_DuergarPoison")
+THEN
+PROC_UND_InjuredGnome_CheckIfHasCureAlready(_Player);
+
+// antitoxin template
+IF
+TemplateAddedTo(CONS_Potion_Antitoxin_f0c7d8bb-85e9-4937-96bb-49ba69d28631, _, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestIsOpened("UND_DuergarPoison")
+THEN
+PROC_UND_InjuredGnome_CheckIfHasCureAlready(_Player);
+
+PROC
+PROC_UND_InjuredGnome_CheckIfHasCureAlready((CHARACTER)_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_ItemTemplateInMagicPockets(_Player, CONS_Potion_Antitoxin_f0c7d8bb-85e9-4937-96bb-49ba69d28631)
+THEN
+QuestUpdate(_Player, "UND_DuergarPoison", "FoundAntidote");
+
+// duergar antidote
+IF
+FlagSet(UND_InjuredGnome_HasAntidote_21aaaceb-b2f6-4c7b-83c9-68dba011ecc5, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestIsOpened("UND_DuergarPoison")
+THEN
+PROC_UND_InjuredGnome_CheckIfHasCureAlready(_Player);
+
+PROC
+PROC_UND_InjuredGnome_CheckIfHasCureAlready((CHARACTER)_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(UND_InjuredGnome_HasAntidote_21aaaceb-b2f6-4c7b-83c9-68dba011ecc5, _Player, 1)
+THEN
+QuestUpdate(_Player, "UND_DuergarPoison", "FoundAntidote");
+
+// noblestalk
+IF
+FlagSet(UND_MushroomHunter_State_HasMushroom_7b86b816-a97c-4500-9398-ef4c7f344e0b, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestIsOpened("UND_DuergarPoison")
+THEN
+PROC_UND_InjuredGnome_CheckIfHasCureAlready(_Player);
+
+PROC
+PROC_UND_InjuredGnome_CheckIfHasCureAlready((CHARACTER)_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(UND_MushroomHunter_State_HasMushroom_7b86b816-a97c-4500-9398-ef4c7f344e0b, _Player, 1)
+THEN
+QuestUpdate(_Player, "UND_DuergarPoison", "FoundNoblestalk");
+
+// Nettie's antidote (Elixir of Silvanus) template
+IF
+TemplateAddedTo(UNI_Apprentice_Antidote_25fea821-5ec1-4052-bd6c-60c249e72a79, _, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_QuestIsOpened("UND_DuergarPoison")
+THEN
+PROC_UND_InjuredGnome_CheckIfHasCureAlready(_Player);
+
+PROC
+PROC_UND_InjuredGnome_CheckIfHasCureAlready((CHARACTER)_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_ItemTemplateInMagicPockets(_Player, UNI_Apprentice_Antidote_25fea821-5ec1-4052-bd6c-60c249e72a79)
+THEN
+QuestUpdate(_Player, "UND_DuergarPoison", "FoundAntidote");
+
+// Poison progresses, reminding player that they need to hurry up
+IF
+QuestUpdateUnlocked(_, "UND_DuergarPoison", _StateID)
+AND
+DB_UND_InjuredGnone_Journal_HasCureUpdates(_StateID)
+AND
+NOT DB_UND_InjuredGnome_Journal_HasCureQuestUpdate(1)
+THEN
+DB_UND_InjuredGnome_Journal_HasCureQuestUpdate(1);
+
+IF
+DB_GlobalFlag(UND_InjuredGnome_State_Worse_cd8d77ec-a873-4761-b7d8-0c8a1eb6ef83)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5)
+THEN
+PROC_UND_InjuredGnome_UpdateWeakened();
+
+PROC
+PROC_UND_InjuredGnome_UpdateWeakened()
+AND
+NOT DB_UND_InjuredGnome_Journal_HasCureQuestUpdate(1)
+THEN
+QuestUpdate("UND_DuergarPoison", "Weakened");
+
+PROC
+PROC_UND_InjuredGnome_UpdateWeakened()
+AND
+DB_UND_InjuredGnome_Journal_HasCureQuestUpdate(1)
+THEN
+QuestUpdate("UND_DuergarPoison", "Weakened_Cure");
+
+IF
+DialogEnded(UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c, _InstanceID)
+AND
+DB_GlobalFlag(UND_InjuredGnome_State_Insane_07812982-c5e3-49a4-bfdf-22bfc8621ba5)
+THEN
+PROC_UND_InjuredGnome_UpdateDelirious();
+
+PROC
+PROC_UND_InjuredGnome_UpdateDelirious()
+AND
+NOT DB_UND_InjuredGnome_Journal_HasCureQuestUpdate(1)
+THEN
+QuestUpdate("UND_DuergarPoison", "Delirious");
+
+PROC
+PROC_UND_InjuredGnome_UpdateDelirious()
+AND
+DB_UND_InjuredGnome_Journal_HasCureQuestUpdate(1)
+THEN
+QuestUpdate("UND_DuergarPoison", "Delirious_Cure");
+
+// Completing
+IF
+DialogEnded(UND_MyconidCircle_InjuredGnome_SporeServant_3d6c85c2-e7bb-cd0e-8728-88c3f8eecce7, _InstanceID)
+THEN
+QuestUpdate("UND_DuergarPoison", "TurnedSporeServant");
+
+IF
+DB_Dead(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+DB_Sees(_Player, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+DB_Players(_Player)
+AND
+NOT DB_UND_InjuredGnome_RiseGnome(_)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+NOT DB_GlobalFlag(UND_InjuredGnome_State_DeadFromPoison_776bb0b7-80b5-4353-8777-a021f2624ab7)
+THEN
+QuestUpdate(_Player, "UND_DuergarPoison", "GnomeDied");
+
+PROC
+PROC_StateSet_PermaDefeated(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+QuestUpdate("UND_DuergarPoison", "GnomeDied");
+
+IF
+DB_GlobalFlag((FLAG)UND_InjuredGnome_State_SporeServant_4a1d7911-e00d-4e32-8dff-3352a0a7af63)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, (CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+AND
+DB_QuestIsOpened("UND_DuergarPoison")
+THEN
+QuestUpdate(_Player, "UND_DuergarPoison", "SawServant");
+//END_REGION Cure Poison Journal
+
+//REGION Blocking Gnome-s standard dialog while she is not sitting/laying
+IF
+ReposeRemoved((CHARACTER)_Character, _)
+AND
+DB_UND_InjuredGnome_ReposeRemovedDialogBlocked(_Character)
+AND
+NOT DB_UND_InjuredGnome_Busy(_Character)
+THEN
+DB_UND_InjuredGnome_Busy(_Character);
+PROC_GenericsSetBusyDialog(_Character);
+ 
+IF
+ReposeAdded((CHARACTER)_Character, _)
+AND
+DB_UND_InjuredGnome_ReposeRemovedDialogBlocked(_Character)
+AND
+DB_UND_InjuredGnome_Busy(_Character)
+THEN
+NOT DB_UND_InjuredGnome_Busy(_Character);
+PROC_GenericsClearBusyDialog(_Character);
+
+IF
+DB_UND_InjuredGnome_Busy(_Character)
+AND
+NOT DB_UND_InjuredGnome_ReposeRemovedDialogBlocked(_Character)
+THEN
+NOT DB_UND_InjuredGnome_Busy(_Character);
+PROC_GenericsClearBusyDialog(_Character);
+
+IF
+FlagSet((FLAG)UND_DuergarCamp_State_GnomeAtMyconids_f48d9c4e-e6eb-46dc-93a7-89326d11829b, _, _)
+AND
+DB_UND_InjuredGnome_ReposeRemovedDialogBlocked(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96)
+THEN
+NOT DB_UND_InjuredGnome_ReposeRemovedDialogBlocked(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96);
+PROC_SceneDialogOnly("UND_InjuredGnome_SceneDialogOnly", S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, S_UND_InjuredGnome_SceneDialogOnlyTrigger_c4e6171c-4000-4d26-8f71-3ebbfcc57453);
+//END_REGION
+
+//REGION Custom crime reaction when kill Injured gnome
+PROC
+PROC_FlagReactionAfterDialog(_Player, (FLAG)UND_InjuredGnome_Event_Murder_bf9ad6b1-fb10-493f-a1a2-a1719b02bbf7, (DIALOGRESOURCE)UND_MyconidCircle_InjuredGnome_7752324a-db86-dfd3-30b5-4a2edde65d6c)
+THEN
+Die(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, DEATHTYPE.Physical, _Player, 1, 0);
+QuestUpdate("UND_DuergarPoison", "GnomeDied");
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Player,(STRING)_CrimeType,_,(CHARACTER)S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,(INTEGER)_CrimeID)
+AND
+NOT DB_GlobalFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_CrimeType,"Murder")
+AND
+CrimeGetNewID(_Id)
+THEN
+PROC_CharacterRegisterCrime((CHARACTER)_Player, "UND_InjuredGnome_Murder", NULL_00000000-0000-0000-0000-000000000000, S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96, _Id);
+//END_REGION
+
+//REGION Start resurrection when Myconids are pacified
+IF
+FlagSet((FLAG)GEB_UND_MyconidCircle_PersuadedOnce_60941490-fad3-a6c5-184f-261e7c2843c0,_,_)
+AND
+DB_UND_MyconidCircle_CurrentSovereign(_Sovereign)
+THEN
+SetEntityEvent(S_UND_MyconidSovereign_ea0f222f-eaad-4d83-bbcd-cbae51ccf265, "UND_MyconidSovereign_ResurrectGnome", 1);
+SetEntityEvent(S_UND_Myconid_BroodingSovereign_82af0858-d739-4c9d-84c8-5e6760e22e46, "UND_MyconidSovereign_ResurrectGnome", 1);
+//END_REGION
+
+//REGION Debug
+IF
+FlagSet((FLAG)Debug_UND_InjuredGnome_KillGnome_35fb7b62-ac90-4508-949d-301e51543cbe,_,_)
+THEN
+Die(S_GLO_InjuredGnome_fcf53ac7-1805-4e57-b6ed-4f7b0f90cf96,DEATHTYPE.DoT,NULL_00000000-0000-0000-0000-000000000000,1,1);
+SetFlag(UND_InjuredGnome_State_Dead_0e3a6eae-7ff2-4cca-9122-47e6ea2ac1fd,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+FlagSet((FLAG)Debug_UND_InjuredGnome_GetBoots_ad9b347c-3764-40d0-a887-fa7078569ec1,_Player,_)
+THEN
+PROC_ToInventoryAndOnStage(S_UND_MyconidCircle_BootsOfSpeed_fca76ec8-f3dd-446c-bd69-dc2f6ccca285,_Player,1,1,1);
+SetFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4,NULL_00000000-0000-0000-0000-000000000000,0); //global
+SetFlag(UND_MyconidCircle_InjuredGnome_Healer_c4385d59-5115-4218-ad4d-b9e4cbc7f8b5,_Player,0);//dialog
+
+IF
+TextEvent("Debug_UND_MyconidCircle_HealInjuredGnome")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_ToInventoryAndOnStage(S_UND_MyconidCircle_BootsOfSpeed_fca76ec8-f3dd-446c-bd69-dc2f6ccca285,_Player,1,1,1);
+SetFlag(UND_MyconidCircle_InjuredGnome_Healed_6dd9c64e-a6b0-47d5-87f6-b1a1c49d3ab4,NULL_00000000-0000-0000-0000-000000000000,0); //global
+SetFlag(UND_MyconidCircle_InjuredGnome_Healer_c4385d59-5115-4218-ad4d-b9e4cbc7f8b5,_Player,0);//dialog
+
+IF
+TextEvent("Debug_UND_MyconidCircle_SetMurderThullaFlag")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(UND_InjuredGnome_Event_Murder_bf9ad6b1-fb10-493f-a1a2-a1719b02bbf7, _Player, 0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

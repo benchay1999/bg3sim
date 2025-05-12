@@ -1,0 +1,24 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_HasItemEvent((ITEM)S_TUT_InfernalMetal_829eb90b-0d1c-4266-9e3f-41b9a601106c, (FLAG)TUT_UpperDeck_State_HasInfernalMetal_f0a5546c-ff03-40fd-8150-dac63dc226c7);
+DB_GiveItemToEvent((ITEM)S_TUT_InfernalMetal_829eb90b-0d1c-4266-9e3f-41b9a601106c, (FLAG)TUT_UpperDeck_Event_GiveInfernalMetal_32a16600-7d37-42b8-b8af-bfa928f9da1b);
+KBSECTION
+IF
+AddedTo((ITEM)S_TUT_InfernalMetal_829eb90b-0d1c-4266-9e3f-41b9a601106c, _Player, _)
+AND
+QRY_OnlyOnce("TUT_UpperDeck_AddedInfernalMetal")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)TUT_UpperDeck_VB_FoundInfernalMetal_513a5c2c-d289-12d2-3e60-4571522c5858, (CHARACTER)_Player);
+
+//Don't do Daisy inclusions in tutorial because that level is not setup for them
+QRY
+QRY_GLO_DaisyDreams_BlockInclusion((DIALOGRESOURCE)_DialogResource)
+AND
+DB_CurrentLevel("TUT_Avernus_C")
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Tutorial"

@@ -1,0 +1,123 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//DB_AutoSaveTrigger(S_CRA_AutoSave_2416dedb-8fad-49dc-8f41-221539e04de1);
+
+PROC_CRA_WakeUpCheckSkip();
+
+DB_DialogStarted_IgnoreStopConditions((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036);
+KBSECTION
+PROC
+PROC_CRA_WakeUpCheckSkip()
+AND
+DB_CRA_SkipCrashCinematic(1)
+THEN
+GoalCompleted;
+
+//REGION Start movie
+PROC
+PROC_LevelLoadedOnce("WLD_Main_A")
+AND
+NOT DB_IsEditor(1)
+AND
+DB_Avatars(_Player)
+AND
+NOT DB_CRA_Crash_Started(1)
+AND
+QRY_StartDialog((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036, _Player)
+THEN
+DB_CRA_Crash_Started(1);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036, (INTEGER)_DialogInstanceID)
+AND
+DB_Avatars(_OtherAvatars)
+AND
+NOT DB_InteractiveDialogSpeaker(_,_OtherAvatars)
+THEN
+PROC_DialogAddListeningActor(_DialogInstanceID,_OtherAvatars);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036, (INTEGER)_DialogInstanceID)
+THEN
+SetLevelStartingDialog(_DialogInstanceID, 1);
+
+PROC
+PROC_LevelLoadedOnce("WLD_Main_A")
+AND
+NOT DB_CRA_Crash_Started(1)
+THEN
+PROC_CRA_WakeupDone();
+//END_REGION
+
+//REGION Getting up
+IF
+DialogEnded((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036,_Inst)
+AND
+DB_DialogPlayers(_Inst,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,_)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRA_LaezelWakingUp_1994eda9-c2bb-cc14-554a-72883d7331eb,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036,_Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+AND
+_Player != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)CRA_AvatarWakesUp_c67aba56-f03c-06a3-2f3c-a6a0a8625680,_Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)CRA_LaezelWakingUp_1994eda9-c2bb-cc14-554a-72883d7331eb,_)
+THEN
+PROC_CRA_Escape_CheckDone();
+
+IF
+DialogEnded((DIALOGRESOURCE)CRA_AvatarWakesUp_c67aba56-f03c-06a3-2f3c-a6a0a8625680,_)
+THEN
+PROC_CRA_Escape_CheckDone();
+
+PROC
+PROC_CRA_Escape_CheckDone()
+AND
+NOT QRY_CRA_WakeupOngoing()
+THEN
+PROC_CRA_WakeupDone();
+
+QRY
+QRY_CRA_WakeupOngoing()
+AND
+DB_DialogName(CRA_AvatarWakesUp_c67aba56-f03c-06a3-2f3c-a6a0a8625680, _ID)
+AND
+DB_InteractiveDialogSpeaker(_ID, _)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CRA_WakeupOngoing()
+AND
+DB_DialogName(CRA_LaezelWakingUp_1994eda9-c2bb-cc14-554a-72883d7331eb, _ID)
+AND
+DB_InteractiveDialogSpeaker(_ID, _)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+PROC
+PROC_CRA_WakeupDone()
+THEN
+QuestUpdate("TUT_NautiloidEscape", "EscapedHell");
+
+PROC
+PROC_CRA_WakeupDone()
+THEN
+GoalCompleted;
+EXITSECTION
+NOT DB_CRA_Crash_Started(1);
+ENDEXITSECTION
+ParentTargetEdge "Act1"

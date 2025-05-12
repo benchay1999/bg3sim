@@ -1,0 +1,131 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs((CHARACTER)S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, (DIALOGRESOURCE)DEN_TieflingBard_Bard_9305b0e8-673f-8bff-9bd4-6b644fc0b210);
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, (DIALOGRESOURCE)DEN_TieflingBard_Dead_ae310491-7101-9d40-0698-003c2a74a47d);
+ 
+DB_DEN_TieflingBard_Animals((CHARACTER)S_DEN_BardSquirrel2_73f18550-4755-4e3c-9326-c328d34478af);
+DB_DEN_TieflingBard_Animals((CHARACTER)S_DEN_BardSquirrel_efc0ba71-b3fa-4bb5-8a38-10bd0dd8b923);
+
+DB_DEN_TieflingBard_StopMusicFlags((FLAG)DEN_TieflingBard_State_ConvincedToQuit_43352c49-25c4-1e6c-4531-e6469a9e71c3);
+DB_DEN_TieflingBard_StopMusicFlags(DEN_TieflingBard_State_Sulking_96b64af5-89ee-4e0f-ac67-a56bf4f2f752);
+
+DB_HasItemEvent((ITEM)S_DEN_BardInstrument_45a48cf7-baed-4d48-aaf4-1399948314e6, (FLAG)DEN_TieflingBard_State_HasInstrument_48ea8eec-28a1-4482-961b-98ee6db25f14);
+
+PROC_DEN_TieflingBard_Init();
+PROC_TriggerRegisterForPlayers(S_DEN_BardSingArea_d06a1e6d-2420-490c-a72b-f811c0014576);
+Use(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, S_DEN_BardSeat_7ba74a7c-4d13-4a67-8713-861024e3ca56, "");
+DB_DefeatedStateFlag((CHARACTER)S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c,(FLAG)DEN_TieflingBard_State_Unavailable_99e83ea4-4b03-2e22-0fb0-8cbbcd68e665);
+
+PROC_CharacterDisableCrime(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, "EmptyPocketNoticed");
+KBSECTION
+PROC
+PROC_DEN_TieflingBard_Init()
+AND
+DB_DEN_TieflingBard_Animals(_Animal)
+THEN
+SetHasDialog(_Animal, 1);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(_Animal, _Player)
+AND
+DB_DEN_TieflingBard_Animals((CHARACTER)_Animal)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)DEN_TieflingBard_Animals_e2105ca7-dcb3-f9de-dff0-2ddb4d26998e, (CHARACTER)S_DEN_BardSquirrel2_73f18550-4755-4e3c-9326-c328d34478af, (CHARACTER)S_DEN_BardSquirrel_efc0ba71-b3fa-4bb5-8a38-10bd0dd8b923, _Player);
+
+IF
+EnteredTrigger(_Player, S_DEN_BardSingArea_d06a1e6d-2420-490c-a72b-f811c0014576)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEN_RangerDen_AddToTrackedSoundEntity")
+THEN
+PROC_AddToTrackedSoundEntity(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c,(TRIGGER)S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211);
+
+IF
+FlagSet((FLAG)DEN_TieflingBard_Event_TransferInstrument_6b7b6778-aaea-0ba1-6eec-65944e8c5022, _Char, _)
+AND
+IsInInventoryOf((ITEM)S_DEN_BardInstrument_45a48cf7-baed-4d48-aaf4-1399948314e6, S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, 1)
+THEN
+ToInventory(S_DEN_BardInstrument_45a48cf7-baed-4d48-aaf4-1399948314e6, _Char, 1);
+
+IF
+EnteredTrigger(_Player, S_DEN_BardSingArea_d06a1e6d-2420-490c-a72b-f811c0014576)
+AND
+DB_Players(_Player)
+THEN
+SetEntityEvent(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, "DEN_TieflingBard_StartSinging");
+PROC_TriggerUnregisterForPlayers(S_DEN_BardSingArea_d06a1e6d-2420-490c-a72b-f811c0014576);
+
+IF
+AttackedBy(_Animal, _, _, _, _, _, _)
+AND
+DB_DEN_TieflingBard_Animals((CHARACTER)_Animal)
+THEN
+PROC_DEN_TieflingBard_CrittersLeave();
+
+IF
+AttackedBy(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, _, _, _, _, _, _)
+THEN
+PROC_DEN_TieflingBard_CrittersLeave();
+
+IF
+Dying(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c)
+THEN
+PROC_DEN_TieflingBard_CrittersLeave();
+
+IF
+DialogEnded(DEN_TieflingBard_Animals_e2105ca7-dcb3-f9de-dff0-2ddb4d26998e, _)
+THEN
+PROC_DEN_TieflingBard_CrittersLeave();
+
+IF
+EntityEvent(_, "DEN_TieflingBard_AnimalsLeave")
+THEN
+PROC_DEN_TieflingBard_CrittersLeave();
+
+IF
+FlagSet(_StopMusicFlag, _, _)
+AND
+DB_DEN_TieflingBard_StopMusicFlags(_StopMusicFlag)
+THEN
+PROC_DEN_TieflingBard_CrittersLeave();
+PROC_RemoveFromTrackedSoundEntity((CHARACTER)S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c);
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State)
+AND
+NOT DB_DEN_DefaultStates(_State)
+THEN
+PROC_RemoveFromTrackedSoundEntity((CHARACTER)S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c);
+PROC_DEN_TieflingBard_CrittersLeave();
+
+PROC
+PROC_DEN_TieflingBard_CrittersLeave()
+AND
+DB_DEN_TieflingBard_Animals(_Critter)
+AND
+NOT DB_OffStage(_Critter)
+THEN
+PROC_DisappearOutOfSight(_Critter, "Run", 1, "");
+
+IF
+FlagSet((FLAG)DEN_TieflingBard_Event_GiveProficiency_da7a54f9-091d-9276-2a76-3abec2b701a7, _Player, _)
+THEN
+ApplyStatus(_Player, "DEN_ALFIRA_PROFICIENCY", -1.0, 1, S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c);
+
+IF
+AnimationEvent(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, "ScriptSheath", _)
+THEN
+SetEntityEvent(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, "DEN_TieflingBard_SheatheInstrument", 1);
+
+QRY
+QRY_CRIME_Guards_InvestigationRelocationPos((CHARACTER)_Guard, S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c)
+AND
+IsInTrigger(S_DEN_Bard_4a405fba-3000-4c63-97e5-a8001ebb883c, S_DEN_BardSingArea_d06a1e6d-2420-490c-a72b-f811c0014576, 1)
+THEN
+DB_QRYRTN_CRIME_Guards_InvestigationRelocationPos(_Guard, S_DEN_AlfiraGuardPos_efd8c29f-2903-41a0-b26a-b91eac490f46);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

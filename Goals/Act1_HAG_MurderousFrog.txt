@@ -1,0 +1,142 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//DB_Dialogs(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, (DIALOGRESOURCE)HAG_MurderousFrog_Frog_a5c071d3-5438-99bc-0119-12e0baf31e3f);
+SetHasDialog(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, 1);
+DB_IgnoreAssault(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8);
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90);
+TriggerRegisterForCharacter((TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90, (CHARACTER)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8);
+TriggerRegisterForItems((TRIGGER)S_HAG_FrogBagPosition_086cc3e4-294b-426f-ab45-81b42b950df1);
+KBSECTION
+//REGION Combat
+
+IF
+EnteredCombat(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _)
+AND
+HasActiveStatus(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8,"MIRROR_IMAGE_1",0)
+THEN
+ApplyStatus(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8,"MIRROR_IMAGE_3",-1.0,1);
+ApplyStatus(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8,"MIRROR_IMAGE_2",-1.0,1);
+ApplyStatus(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8,"MIRROR_IMAGE_1",-1.0,1);
+
+//END_REGION
+
+//REGION Attacking the frog makes it automatically hostile
+IF
+AttackedBy(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _AttackerOwner, _Attacker, _, _, _, _)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_ResolvedAttacker)
+AND
+NOT QRY_IsEnemy(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _ResolvedAttacker)
+AND
+GetFaction(_ResolvedAttacker, _AttackerFaction)
+THEN
+PROC_SetRelationMutual((FACTION)ACT1_HAG_MurderousFrog_1e90ac19-a71f-4434-a14e-630dafdb9334, _AttackerFaction, 0);
+//END_REGION
+
+//REGION Bag reward
+IF
+DialogEnded(HAG_MurderousFrog_Frog_a5c071d3-5438-99bc-0119-12e0baf31e3f, _)
+AND
+DB_GlobalFlag(HAG_MurderousFrog_State_FrogAtStash_9ad6aa27-c882-4e78-b2f6-86b9d21e5d10)
+THEN
+PROC_DisappearOutOfSight((CHARACTER)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, "Walk", 0, "");
+
+IF
+DB_GlobalFlag(HAG_MurderousFrog_State_FrogAtStash_9ad6aa27-c882-4e78-b2f6-86b9d21e5d10)
+AND
+DB_InRegion((CHARACTER)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, (TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90)
+AND
+NOT DB_CantAct((CHARACTER)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8)
+AND
+DB_InRegion(_Player, (TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90)
+AND
+DB_Players(_Player)
+THEN
+PROC_HAG_MurderousFrog_RevealBag();
+
+IF
+DB_PermaDefeated(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8)
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90);
+TriggerUnregisterForCharacter((TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90, (CHARACTER)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8);
+
+PROC
+PROC_HAG_MurderousFrog_RevealBag()
+AND
+NOT DB_HAG_MurderousFrog_BagFound(1)
+THEN
+SetEntityEvent(S_HAG_FrogBag_da3d4785-dd78-41c5-b623-1915f4b24d7e, "StoryReveal");
+
+PROC
+PROC_HAG_MurderousFrog_RevealBag()
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90);
+TriggerUnregisterForCharacter((TRIGGER)S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90, (CHARACTER)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8);
+
+// Don't reveal it again in case for any reason players succeed on the perception roll.
+IF
+EntityEvent(S_HAG_FrogBag_da3d4785-dd78-41c5-b623-1915f4b24d7e, "StoryReveal")
+THEN
+DB_HAG_MurderousFrog_BagFound(1);
+
+IF
+ItemLeftTrigger(S_HAG_FrogBag_da3d4785-dd78-41c5-b623-1915f4b24d7e, S_HAG_FrogBagPosition_086cc3e4-294b-426f-ab45-81b42b950df1, _)
+THEN
+SetFlag((FLAG)HAG_MurderousFrog_Event_BagMovedFromStash_3e661a93-b8e4-4f75-9825-12f6cc041049, NULL_00000000-0000-0000-0000-000000000000);
+TriggerUnregisterForItems((TRIGGER)S_HAG_FrogBagPosition_086cc3e4-294b-426f-ab45-81b42b950df1);
+//END_REGION
+
+//REGION Dialogue
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player)
+AND
+NOT DB_GlobalFlag(HAG_MurderousFrog_Event_MoveToStash_f249294b-793b-4f6d-883a-acb356676954)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)HAG_MurderousFrog_Frog_a5c071d3-5438-99bc-0119-12e0baf31e3f, S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player)
+AND
+DB_GlobalFlag(HAG_MurderousFrog_Event_MoveToStash_f249294b-793b-4f6d-883a-acb356676954)
+AND
+NOT DB_GlobalFlag(HAG_MurderousFrog_State_FrogAtStash_9ad6aa27-c882-4e78-b2f6-86b9d21e5d10)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)HAG_MurderousFrog_AD_Frog_aba51418-734a-33e6-8562-67fc567fe6d4, (DIALOGRESOURCE)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player)
+AND
+DB_GlobalFlag(HAG_MurderousFrog_Event_MoveToStash_f249294b-793b-4f6d-883a-acb356676954)
+AND
+DB_GlobalFlag(HAG_MurderousFrog_State_FrogAtStash_9ad6aa27-c882-4e78-b2f6-86b9d21e5d10)
+AND
+IsInTrigger(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90, 1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)HAG_MurderousFrog_Frog_AtReward_02a1b21b-a4d3-4a12-2d5d-957c4eb4cf73, (DIALOGRESOURCE)S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, _Player)
+AND
+DB_GlobalFlag(HAG_MurderousFrog_Event_MoveToStash_f249294b-793b-4f6d-883a-acb356676954)
+AND
+DB_GlobalFlag(HAG_MurderousFrog_State_FrogAtStash_9ad6aa27-c882-4e78-b2f6-86b9d21e5d10)
+AND
+IsInTrigger(S_HAG_MurderousFrog_307a4abf-cecf-4755-88e1-a20b306fc3a8, S_HAG_FrogBagReveal_72f3d029-5ff8-4b8f-a106-b37829a72d90, 0)
+THEN
+DB_SelectedDialog(HAG_MurderousFrog_AD_Frog_aba51418-734a-33e6-8562-67fc567fe6d4, (DIALOGRESOURCE)HAG_MurderousFrog_Frog_a5c071d3-5438-99bc-0119-12e0baf31e3f);
+
+//END_REGION
+
+IF
+DB_CurrentLevel("CTY_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

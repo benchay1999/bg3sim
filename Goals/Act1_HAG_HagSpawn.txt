@@ -1,0 +1,940 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_OneTimeEventFlag((FLAG)HAG_Hagspawn_Event_SurrogateLeaveHagDen_164218e6-c801-4f40-c687-a476a92e9465);
+
+//DB_SeenDeadNPCPartyFlag(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd,(FLAG)HAG_Hagspawn_Knows_SurrogateMotherDead_8f4738c9-7877-86e4-316a-2447a949e136);
+DB_SeenDeadNPCPartyFlag(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,(FLAG)HAG_Hagspawn_Knows_SurrogateMotherHusbandDead_7ae89d99-c5b4-475c-86d4-88ad80265270);
+
+DB_HasItemEvent(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, (FLAG)HAG_Hagspawn_Event_HasSummoningWand_ff5a4aae-85e1-4982-9f52-2947fd75e6e3);
+DB_GiveItemToEventWithClear(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, (FLAG)HAG_Hagspawn_Event_GiveSummoningWand_abb98209-01cc-4b53-935d-815bec023bf8);
+
+TriggerRegisterForCharacter(S_HAG_HusbandBox_1e7d8561-26f2-4651-b03d-d71422772dce, S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5);
+
+DB_Act1_HAG_HagSpawn_Init(1);
+KBSECTION
+//REGION Surrogate goes to resurrection
+IF
+DialogEnded((DIALOGRESOURCE)HAG_Hagspawn_SurrogateMother_Lair_f7e9efb2-3b82-9e2f-07c4-44f492429a0b, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player, "HAG_HagSpawn", "SavedMayrina", 1)
+AND
+IsInTrigger(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_HagLair_f84e3319-4a1d-483c-a718-dee3bff70d07, 1)
+THEN
+SetHasDialog(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 0);
+PROC_CharacterMoveTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_HagLair_DoublesSpawnPoint_004_bf2efd3b-0fc8-4239-ba6d-dfc57c9662a5, "Walk", "HAG_SurrogateMother_AppearAtResurrection_Safe");
+
+IF
+EntityEvent(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_SurrogateMother_AppearAtResurrection_Safe")
+THEN
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_HagLair_ToLair_5d936bc8-f3cb-40ee-814a-d9291550283c, "Walk", 0, "HAG_SurrogateMother_AppearAtResurrection");
+
+IF
+DialogEnded((DIALOGRESOURCE)HAG_Hagspawn_SurrogateMother_Lair_f7e9efb2-3b82-9e2f-07c4-44f492429a0b, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player, "HAG_HagSpawn", "SavedMayrina", 1)
+AND
+IsInTrigger(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_HagLair_f84e3319-4a1d-483c-a718-dee3bff70d07, 0)
+AND
+GetDistanceTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, _Dist)
+AND
+_Dist > 33
+THEN
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, "Walk", 0, "HAG_SurrogateMother_AppearAtResurrection");
+
+IF
+DialogEnded((DIALOGRESOURCE)HAG_Hagspawn_SurrogateMother_Lair_f7e9efb2-3b82-9e2f-07c4-44f492429a0b, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player, "HAG_HagSpawn", "SavedMayrina", 1)
+AND
+IsInTrigger(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_HagLair_f84e3319-4a1d-483c-a718-dee3bff70d07, 0)
+AND
+GetDistanceTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, _Dist)
+AND
+_Dist <= 33
+THEN
+SetEntityEvent(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_SurrogateMother_AppearedAtResurrection");
+
+IF
+EntityEvent(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_SurrogateMother_AppearAtResurrection")
+THEN
+AppearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 0, NULL_00000000-0000-0000-0000-000000000000, "HAG_SurrogateMother_AppearedAtResurrection");
+
+//END_REGION
+
+//REGION Surrogate mother leaves
+
+PROC
+PROC_OneTimeEventFlag(_, (FLAG)HAG_Hagspawn_Event_SurrogateLeaveHagDen_164218e6-c801-4f40-c687-a476a92e9465, _ID)
+THEN
+DB_HAG_HagSpawn_Event_SurrogateLeaveHagDen(_ID);
+
+IF
+AutomatedDialogEnded(_, _ID)
+AND
+DB_HAG_HagSpawn_Event_SurrogateLeaveHagDen(_ID)
+THEN
+PROC_HAG_HagLair_SurrogateMotherLeaves();
+PROC_RemoveDialog(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+
+IF
+DialogEnded(_, _ID)
+AND
+DB_HAG_HagSpawn_Event_SurrogateLeaveHagDen(_ID)
+THEN
+PROC_HAG_HagLair_SurrogateMotherLeaves();
+PROC_RemoveDialog(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+
+PROC
+PROC_HAG_HagLair_SurrogateMotherLeaves()
+AND
+QRY_OnlyOnce("HAG_SurrogateMother_Leave")
+AND
+QRY_HAG_SiblingDisappearDirection(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_HAG_SiblingDisappearDirection((CHARACTER)_Char)
+AND
+IsInTrigger(_Char,S_HAG_HagLair_f84e3319-4a1d-483c-a718-dee3bff70d07,0)
+THEN
+PROC_DisappearOutOfSightTo(_Char, TRIGGERGUID_S_HAG_Hagspawn_DisappearDirection_8ecbfc14-77a2-4eb6-b86c-1f4501a76767, "Walk", 0, "");
+
+QRY
+QRY_HAG_SiblingDisappearDirection((CHARACTER)_Char)
+AND
+IsInTrigger(_Char,S_HAG_HagLair_f84e3319-4a1d-483c-a718-dee3bff70d07,1)
+THEN
+PROC_DisappearOutOfSightTo(_Char, S_HAG_HagLair_WomanJumpSpot_83bcf3b4-1561-4bf1-beb1-39c1456ec34a, "Walk", 0, "");
+
+//END_REGION
+
+//REGION Players know woman promised baby to hag
+// Two separate flags because if the hag is already dead, there
+// is no quest update anymore (no need to free her from the hag)
+IF
+FlagSet(HAG_Hagspawn_Quest_PromisedBaby_94408504-f658-9616-97ac-d610ecb1f639, _, _) // flagType: Global
+THEN
+SetFlag((FLAG)HAG_Hagspawn_Knows_SurrogatePromisedBaby_74c25c6c-d82c-5e0b-3949-900162a76781, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+//END_REGION
+
+//REGION Start resurrection scene
+IF
+FlagSet(HAG_Hag_State_HagDefeated_7a1acad0-589f-ae02-f712-f0d24080d720, _, _)
+THEN
+SetCanInteract(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 1);
+PROC_SetInvulnerable(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 0);
+SetOnStage(S_HAG_HusbandForcefield_9b9f7ce6-5cd9-49a8-8cd7-57f661bde17f, 0);
+
+IF
+DestroyingBy(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, _, _, _)
+THEN
+SetFlag((FLAG)HAG_HagSpawn_State_DugUpHusband_59a20c10-f5be-47b5-900a-73a8960a062f, NULL_00000000-0000-0000-0000-000000000000);
+SetOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1);
+SetOnStage(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 0);
+
+IF
+UseStarted(_, S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6)
+THEN
+SetFlag((FLAG)HAG_HagSpawn_State_DugUpHusband_59a20c10-f5be-47b5-900a-73a8960a062f, NULL_00000000-0000-0000-0000-000000000000);
+SetOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1);
+SetOnStage(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 0);
+ObjectTimerLaunch(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,"S_HAG_Hagspawn_HusbandJake",100,0);
+
+IF
+ObjectTimerFinished(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,"S_HAG_Hagspawn_HusbandJake")
+THEN
+PlaySound(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,"SE_HAG_Hagspawn_HusbandJake_CoffinOpen");
+
+IF
+FlagSet(HAG_Hag_Event_HagEyed_2ac94597-a234-92c1-f777-aeeda4715594, _Player, _)
+AND
+GetFlag((FLAG)HAG_Hag_State_TookRightEye_9c8b9c4c-9309-32a4-1740-ca1309daebeb, _Player, 1)
+THEN
+AddCustomMaterialOverride((CHARACTER)_Player, "5c386818-daf8-4d54-9a40-1aa29702d968");
+
+IF
+FlagSet(HAG_Hag_Event_HagEyed_2ac94597-a234-92c1-f777-aeeda4715594, _Player, _)
+AND
+GetFlag((FLAG)HAG_Hag_State_TookRightEye_9c8b9c4c-9309-32a4-1740-ca1309daebeb, _Player, 0)
+THEN
+AddCustomMaterialOverride((CHARACTER)_Player, "a2a75f90-4bdf-4009-97f4-e34363c82acc");
+
+IF
+FlagSet(HAG_Hag_Event_HagEyed_2ac94597-a234-92c1-f777-aeeda4715594, _Player, _)
+THEN
+ClearFlag((FLAG)HAG_Hag_Event_HagEyed_2ac94597-a234-92c1-f777-aeeda4715594, _Player, 0);
+ApplyStatus(_Player, "HAG_HAGEYED", -1.0, 1, S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d);
+SetTag(_Player, CANTLOSEEYE_b5de40c5-edec-43a7-a918-1d85c13232de);
+SetTag(_Player, (TAG)HAGEYED_c1f7de2b-7cc5-41bc-a723-011172bbc4ba);
+
+IF
+EntityEvent(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_SurrogateMother_AppearedAtResurrection")
+THEN
+PROC_HAG_Hagspawn_ResurrectJake();
+
+PROC
+PROC_HAG_Hagspawn_ResurrectJake()
+THEN
+SetOwner(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+PROC_SetCorpseOwner((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, (CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+DB_SceneManager((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionScene");
+DB_SceneTriggerManager("HAG_Hagspawn_ResurrectionScene", (TRIGGER)S_HAG_ResurrectionSceneBox_5a710238-f259-4b3c-840c-f070c2fef46c);
+SetFlag((FLAG)HAG_HagSpawn_ResurrectionHappening_14c80b7a-d066-4f8f-944f-196d0c4243c9, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_HAG_Hagspawn_ResurrectJake()
+THEN
+SetHasDialog(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 0);
+PROC_CharacterMoveTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, (TRIGGER)S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, "Walk", "HAG_Hagspawn_Hag_ArrivedGrave");
+//END_REGION
+
+//REGION Husband corpse tracking for resurrection
+IF
+Resurrected(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_GlobalFlag((FLAG)HAG_HagSpawn_State_DugUpHusband_59a20c10-f5be-47b5-900a-73a8960a062f)
+THEN
+PROC_ClearCorpseOwner((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5);
+//END_REGION
+
+//REGION Resurrection
+IF
+EntityEvent(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_Hag_ArrivedGrave")
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+DB_Dialogs((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1);
+DB_SpotPlayers((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_CustomRadius((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart", 4.0);
+SetFlag((FLAG)HAG_HagSpawn_ResurrectionHappening_14c80b7a-d066-4f8f-944f-196d0c4243c9, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_SpotPlayers_Spotted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart", _Player)
+THEN
+NOT DB_HAG_Hagspawn_FailedToStartResurrectDialog(1);
+
+PROC
+PROC_SpotPlayers_Spotted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart", _Player)
+AND
+IsInTrigger(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_ResurrectionSceneBox_5a710238-f259-4b3c-840c-f070c2fef46c, 1)
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, NULL_00000000-0000-0000-0000-000000000000, _Player)
+THEN
+DB_HAG_Hagspawn_FailedToStartResurrectDialog(1);
+TimerLaunch("HAG_HagSpawn_RestartResurrectionSpotting", 500);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, (INTEGER)_ID)
+AND
+DB_Dead(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5) //Explicit DB_Dead check because the dialogue assumes he's dead and resurrectible.
+AND
+QRY_SpeakerIsInDialogRange(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5);
+
+PROC
+PROC_SpotPlayers_Spotted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart", _Player)
+AND
+IsInTrigger(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_ResurrectionSceneBox_5a710238-f259-4b3c-840c-f070c2fef46c, 0)
+THEN
+DB_HAG_Hagspawn_FailedToStartResurrectDialog(1);
+TimerLaunch("HAG_HagSpawn_RestartResurrectionSpotting", 500);
+
+PROC
+PROC_SpotPlayers_Spotted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart", _Player)
+AND
+NOT DB_HAG_Hagspawn_FailedToStartResurrectDialog(1)
+THEN
+PROC_CharacterMoveTo((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, "Walk", "HAG_Hagspawn_ResurrectionBackAtStart");
+
+IF
+DialogStarted(Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _)
+THEN
+PROC_SpotPlayers_StopSpotting(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart");
+TimerCancel("HAG_HagSpawn_RestartResurrectionSpotting");
+
+IF
+FlagSet(HAG_HagSpawn_Event_ResurrectedHusbandWithWand_939cfa41-11e0-4825-a1eb-b2ac5d26f0b8, _, _)
+THEN
+PROC_SpotPlayers_StopSpotting(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart");
+TimerCancel("HAG_HagSpawn_RestartResurrectionSpotting");
+
+IF
+EntityEvent((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionBackAtStart")
+THEN
+LookFromTrigger((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, 0);
+
+IF
+TimerFinished("HAG_HagSpawn_RestartResurrectionSpotting")
+THEN
+PROC_SpotPlayers_RestartSpotting(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionStart");
+
+IF
+Resurrected(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+SetEntityEvent(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "HAG_Hagspawn_JakeAppeared");
+//END_REGION
+
+//REGION Jake resurrected
+
+IF
+FlagSet(HAG_HagSpawn_Event_DoResurrection_fc0e6ac2-447f-4017-a539-ad7c65aff8e3, _Player, _ID)
+AND
+IsOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+TeleportTo(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Resurrection_JakePos_26567fe8-23b2-4a20-b0f7-46f85d482707, "", 0, 0, 0);
+RemoveStatus(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "HAG_CORPSEROOT");
+SetOnStage(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 0);
+Resurrect(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, NULL_00000000-0000-0000-0000-000000000000, 1);
+ApplyStatus((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "UNDEAD_FORTITUDE", -1.0, 1, _Player);
+
+IF
+FlagSet(HAG_HagSpawn_Event_DoResurrection_fc0e6ac2-447f-4017-a539-ad7c65aff8e3, _Player, _)
+AND
+IsOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 0)
+THEN
+SetOnStage(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 0);
+SetOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1);
+
+IF
+WentOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1)
+AND
+DB_DialogName((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+GetFlag(HAG_HagSpawn_Event_DoResurrection_fc0e6ac2-447f-4017-a539-ad7c65aff8e3, _Player, 1)
+THEN
+TeleportTo(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Resurrection_JakePos_26567fe8-23b2-4a20-b0f7-46f85d482707, "", 0, 0, 0);
+RemoveStatus(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "HAG_CORPSEROOT");
+Resurrect(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, NULL_00000000-0000-0000-0000-000000000000, 1);
+ApplyStatus((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "UNDEAD_FORTITUDE", -1.0, 1, _Player);
+
+IF
+Resurrected(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_DialogName((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _ID)
+AND
+NOT QRY_HAG_HagSpawn_HusbandResurrectedInDialog(_ID)
+THEN
+PROC_HAG_HagSpawn_HusbandResurrectedWithWand();
+
+
+QRY
+QRY_HAG_HagSpawn_HusbandResurrectedInDialog((INTEGER)_ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+GetFlag(HAG_HagSpawn_Event_DoResurrection_fc0e6ac2-447f-4017-a539-ad7c65aff8e3, _Player, 1)
+THEN
+DB_NOOP(0);
+
+IF
+Resurrected(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _)
+THEN
+PROC_HAG_HagSpawn_HusbandResurrectedWithWand();
+
+//resurrection
+IF
+Resurrected(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+ApplyStatus((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,"SMELLY",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//dialog resurrection
+IF
+WentOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1)
+AND
+IsDead(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,0)
+THEN
+ApplyStatus((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,"SMELLY",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_HAG_HagSpawn_HusbandResurrectedWithWand()
+AND
+DB_InteractiveDialogSpeaker(_ID, (CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd)
+THEN
+PROC_ForceStopDialog((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+DB_HAG_HagSpawn_HusbandResurrectWithWand_WaitForDialogEnd(_ID);
+
+IF
+DB_HAG_HagSpawn_HusbandResurrectWithWand_WaitForDialogEnd(_ID)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _)
+THEN
+NOT DB_HAG_HagSpawn_HusbandResurrectWithWand_WaitForDialogEnd(_ID);
+DB_HAG_HagSpawn_HusbandResurrectWithWand_WasWaitForDialogEnd(_ID);
+PROC_HAG_HagSpawn_HusbandResurrectedWithWand();
+
+PROC
+PROC_HAG_HagSpawn_HusbandResurrectedWithWand()
+AND
+NOT DB_HAG_HagSpawn_HusbandResurrectWithWand_WaitForDialogEnd(_)
+AND
+NOT QRY_HAG_Hagspawn_HusbandResurrecterDialog()
+THEN
+SetFlag(HAG_HagSpawn_Event_ResurrectedHusbandWithWand_939cfa41-11e0-4825-a1eb-b2ac5d26f0b8, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+QRY
+QRY_HAG_Hagspawn_HusbandResurrecterDialog()
+AND
+QRY_HAG_HagSpawn_FindHusbandResurrecter()
+AND
+DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_Character)
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _Character)
+AND
+QRY_StartDialog_Fixed(HAG_Hagspawn_HusbandResurrected_772cdfca-b029-58f2-e08f-f9ed4ceeec2a, (CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, _Character)
+THEN
+SetFlag(HAG_HagSpawn_Event_ResurrectedHusbandWithWand_939cfa41-11e0-4825-a1eb-b2ac5d26f0b8, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+QRY
+QRY_HAG_Hagspawn_HusbandResurrecterDialog()
+AND
+DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_Character)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _Character)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1,  (CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, (CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, _Character)
+THEN
+SetFlag(HAG_HagSpawn_Event_ResurrectedHusbandWithWand_939cfa41-11e0-4825-a1eb-b2ac5d26f0b8, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+QRY
+QRY_HAG_HagSpawn_FindHusbandResurrecter()
+AND
+DB_HAG_Hagspawn_HusbandResurrecter(_Character)
+AND
+DB_Players(_Character)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Character, (CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_Character);
+
+QRY
+QRY_HAG_HagSpawn_FindHusbandResurrecter()
+AND
+NOT DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_)
+AND
+DB_HAG_Hagspawn_HusbandResurrecter(_Character)
+AND
+NOT DB_Players(_Character)
+AND
+CharacterGetOwner(_Character, _Player)
+AND
+DB_Players(_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Character, (CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_Character);
+
+QRY
+QRY_HAG_HagSpawn_FindHusbandResurrecter()
+AND
+NOT DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_)
+AND
+DB_Players(_Character)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Character, (CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+DB_QRYRTN_HAG_Hagspawn_FindHusbandResurrecter(_Character);
+
+IF
+DialogEnded(HAG_Hagspawn_HusbandResurrected_772cdfca-b029-58f2-e08f-f9ed4ceeec2a, _)
+THEN
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+IF
+EntityEvent(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "HAG_Hagspawn_JakeAppeared")
+THEN
+DB_HAG_Hagspawn_JakeResurrected(1);
+
+IF
+FlagSet(HAG_Hagspawn_Event_RecruitHusband_dcb4aadc-ab53-4641-b5d9-7c61da0b6dbc, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_DialogPlayers(_ID,_Player, 1)
+THEN
+TemplateAddTo(UNI_HAG_Wand_SummonHusband_b1b872db-43f0-45f7-b34f-d814ef9cb64c, _Player, 1, 1);
+PROC_TeleportToAndOffStage(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, _Player); //Force out of inventory
+
+IF
+FlagSet(HAG_HagSpawn_Event_DestroyWand_3ecc6e80-060b-0fb0-58f3-ee8db9f339df, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_DialogPlayers(_ID,_Player, 1)
+THEN
+PROC_TeleportToAndOffStage(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, _Player); //Force out of inventory
+QuestUpdate((CHARACTER)_Player, "HAG_HagSpawn", "DestroyedWand");
+
+IF
+DialogEnded(Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _)
+AND
+DB_GlobalFlag((FLAG)HAG_HagSpawn_Event_DestroyWand_3ecc6e80-060b-0fb0-58f3-ee8db9f339df)
+THEN
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+IF
+FlagSet(HAG_Hagspawn_Event_GiveSummoningWand_abb98209-01cc-4b53-935d-815bec023bf8, _, _)
+THEN
+SetOnStage(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, 1);
+
+PROC
+PROC_StateSet_PermaDefeated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+NOT DB_GlobalFlag(HAG_Hagspawn_Event_RecruitHusband_dcb4aadc-ab53-4641-b5d9-7c61da0b6dbc)
+THEN
+SetOnStage(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, 0);
+
+PROC
+PROC_StateSet_PermaDefeated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+NOT DB_GlobalFlag(HAG_Hagspawn_Event_RecruitHusband_dcb4aadc-ab53-4641-b5d9-7c61da0b6dbc)
+AND
+GetInventoryOwner(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, _Owner)
+THEN
+TeleportTo(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, _Owner);//Force out of inventory
+
+IF
+CastedSpell(_Character, "Teleportation_HAG_HusbandResurrection",_,_,_)
+AND
+_Character != NULL_00000000-0000-0000-0000-000000000000
+AND
+IsCharacter(_Character, 1)
+THEN
+DB_HAG_Hagspawn_HusbandResurrecter((CHARACTER)_Character);
+
+IF
+DialogEnded(Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _ID)
+AND
+NOT DB_HAG_HagSpawn_HusbandResurrectWithWand_WasWaitForDialogEnd(_ID)
+AND
+NOT DB_Dead((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+PROC_NotifyWhenReadyToMoveOn((CHARACTER)_Player, "HAG_Hagspawn_VB_AfterResurrection_ReadyToMoveOn");
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+PROC
+PROC_ReadyToMoveOn(_Player, "HAG_Hagspawn_VB_AfterResurrection_ReadyToMoveOn")
+THEN
+ObjectTimerLaunch(_Player, "HAG_Hagspawn_VB_AfterResurrection_DelayAfterInterrupt", 1000);
+
+IF
+ObjectTimerFinished(_Player, "HAG_Hagspawn_VB_AfterResurrection_DelayAfterInterrupt")
+AND
+NOT DB_Dead((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+IsInTrigger(_Player, (TRIGGER)S_HAG_HagSwamp_Outer_9bdef32b-ddf2-44e8-adfe-75e39639bb75, 1)
+THEN
+// If they're again in combat in another dialogue, too bad. It's a VB after all.
+StartVoiceBark((VOICEBARKRESOURCE)HAG_Hagspawn_VB_AfterResurrection_a4647399-974f-d6cb-70ba-e3f646f6ce2b, (CHARACTER)_Player);
+
+IF
+DB_Sees(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+NOT DB_Dead(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+SetFlag((FLAG)HAG_Hagspawn_State_SurrogateSawResurrectedHusband_4546e55e-b02f-c25c-c740-c1d5dd57b94d, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd); // flagType: Object
+
+IF
+DB_Dead(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_Sees(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+SetFlag((FLAG)HAG_Hagspawn_State_SurrogateKnowsHusbandDead_f85f6f81-d1bd-f70b-a447-cee4478c302f, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd); // flagType: Object
+
+IF
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_WifeHusbandLeave_c85ecfa6-472a-4200-fa39-1bb40b1338be)
+AND
+NOT DB_CantMove(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+IsOnStage(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 1)
+THEN
+PROC_Follow(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+
+// If they were leaving together and he dies, assume she knows
+IF
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_WifeHusbandLeave_c85ecfa6-472a-4200-fa39-1bb40b1338be) // flagType: Global
+AND
+DB_Dead(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+SetFlag((FLAG)HAG_Hagspawn_State_SurrogateKnowsHusbandDead_f85f6f81-d1bd-f70b-a447-cee4478c302f, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd); // flagType: Object
+
+IF
+FlagSet(HAG_HagSpawn_Event_LockWand_ce9337b3-b456-c67b-e332-3634ead25b26, _Player, _ID)
+AND
+QRY_TakeItemFromMagicPockets((CHARACTER)_Player, (ITEM)S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, (CHARACTER)_Player)
+THEN
+SetOnStage(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, 0);
+
+IF
+DialogEnded(Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+GetFlag(HAG_HagSpawn_Event_LockWand_ce9337b3-b456-c67b-e332-3634ead25b26, _Player, 1)
+AND
+NOT DB_GlobalFlag(HAG_Hagspawn_Event_RecruitHusband_dcb4aadc-ab53-4641-b5d9-7c61da0b6dbc)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_HagSpawn_Event_DestroyWand_3ecc6e80-060b-0fb0-58f3-ee8db9f339df)
+THEN
+SetOnStage(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, 1);
+
+IF
+DialogEnded(Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+GetFlag(HAG_HagSpawn_Event_LockWand_ce9337b3-b456-c67b-e332-3634ead25b26, _Player, 1)
+THEN
+ClearFlag(HAG_HagSpawn_Event_LockWand_ce9337b3-b456-c67b-e332-3634ead25b26, _Player, 0);
+
+//END_REGION
+
+//REGION End of scene
+PROC
+PROC_SceneInterrupted(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d, _, "HAG_Hagspawn_ResurrectionScene", "Died")
+THEN
+DB_HAG_Hagspawn_ResurrectionInterrupted(1);
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+PROC
+PROC_SceneInterrupted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _Char, "HAG_Hagspawn_ResurrectionScene", "DisturbanceRegistering")
+AND
+DB_SceneManager_DisturbanceRegistering(_Char,_Reason,_,S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5,_,_ID)
+THEN
+DB_HAG_Hagspawn_ResurrectionInterrupted(_ID);
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+
+PROC
+PROC_SceneInterrupted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _Char, "HAG_Hagspawn_ResurrectionScene", "DisturbanceRegistering")
+AND
+DB_SceneManager_DisturbanceRegistering(_Char,_Reason,_,S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6,_,_ID)
+THEN
+DB_HAG_Hagspawn_ResurrectionInterrupted(_ID);
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+PROC
+PROC_SceneInterrupted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _Char, "HAG_Hagspawn_ResurrectionScene", "DisturbanceRegistering")
+AND
+DB_SceneManager_DisturbanceRegistering(_Char,_Reason,_,_,_,_ID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Reason, "Assault")
+THEN
+DB_HAG_Hagspawn_ResurrectionInterrupted(_ID);
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+PROC
+PROC_SceneInterrupted(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _Char, "HAG_Hagspawn_ResurrectionScene", "DisturbanceRegistering")
+AND
+DB_SceneManager_DisturbanceRegistering(_Char,_Reason,_,_,_,_ID)
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Reason, "Murder")
+THEN
+DB_HAG_Hagspawn_ResurrectionInterrupted(_ID);
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene");
+
+PROC
+PROC_CRIME_Finished(_ID)
+AND
+DB_HAG_Hagspawn_ResurrectionInterrupted(_ID)
+THEN
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_ID);
+PROC_HAG_HagSpawn_ResurrectionRestore();
+
+PROC
+PROC_HAG_HagSpawn_ResurrectionRestore()
+AND
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_)
+AND
+NOT DB_HAG_Hagspawn_JakeResurrected(1)
+AND
+NOT DB_PermaDefeated(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd)
+THEN
+DB_SceneManager((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_ResurrectionScene");
+DB_SceneTriggerManager("HAG_Hagspawn_ResurrectionScene", (TRIGGER)S_HAG_ResurrectionSceneBox_5a710238-f259-4b3c-840c-f070c2fef46c);
+
+IF
+DialogEnded((DIALOGRESOURCE)Hag_Hagspawn_ResurrectHusband_3336606a-6b8c-0b3c-0b91-ba894131e6d1, _)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_WifeLeavesAlone_01ca7f15-bf40-400e-adcd-f6f7324115a5)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_State_JakeBerserk_2ed75333-fe77-4ff7-a005-14cf3ad07f7d)
+THEN
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, TRIGGERGUID_S_HAG_Hagspawn_DisappearDirection_8ecbfc14-77a2-4eb6-b86c-1f4501a76767, "Run", 0,  "");
+
+// Take Jake as summon, Mayrina leaves alone
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_WifeLeavesAlone_01ca7f15-bf40-400e-adcd-f6f7324115a5)
+THEN
+DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1);
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, TRIGGERGUID_S_HAG_Hagspawn_DisappearDirection_8ecbfc14-77a2-4eb6-b86c-1f4501a76767, "Run", 0,  "");
+
+
+// Take Jake as summon, Mayrina leaves alone
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_RecruitHusband_dcb4aadc-ab53-4641-b5d9-7c61da0b6dbc)
+AND
+NOT DB_GlobalFlag((FLAG)HAG_Hagspawn_State_MayrinaLostEverything_9603fd7a-4ab6-4886-8873-c7d9e74ed9c5)
+THEN
+DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1);
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, TRIGGERGUID_S_HAG_Hagspawn_DisappearDirection_8ecbfc14-77a2-4eb6-b86c-1f4501a76767, "Run", 0,  "");
+// Can talk to him until he gets bound to the wand
+DB_Dialogs(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, (DIALOGRESOURCE)HAG_Hagspawn_Husband_f33f2406-b555-e4e1-faf4-5bcfc2d9f8c9);
+
+// Take Jake as summon, Mayrina attacks players for killing her brothers and then taking her husband
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_RecruitHusband_dcb4aadc-ab53-4641-b5d9-7c61da0b6dbc)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_State_MayrinaLostEverything_9603fd7a-4ab6-4886-8873-c7d9e74ed9c5)
+AND
+GetFaction(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _JakesWifeFaction)
+THEN
+DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1);
+PROC_SetRelationToPlayers(_JakesWifeFaction, 0);
+PROC_HAG_Hagspawn_TrackMayrinaAndHusbandDefeat("OnlyMayrina");
+
+// Mayrina and Jake leave together
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_WifeHusbandLeave_c85ecfa6-472a-4200-fa39-1bb40b1338be)
+THEN
+DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1);
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, TRIGGERGUID_S_HAG_Hagspawn_DisappearDirection_8ecbfc14-77a2-4eb6-b86c-1f4501a76767, "Walk", 0,  "");
+DB_HAG_Hagspawn_JakeFollowingMayrina(1);
+PROC_HAG_HagSpawn_JakeStartFollowMayrina();
+
+PROC
+PROC_HAG_HagSpawn_JakeStartFollowMayrina()
+AND
+NOT DB_Dominated((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+PROC_Follow(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+
+PROC
+PROC_StateSet_Dominated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_HAG_Hagspawn_JakeFollowingMayrina(1)
+THEN
+PROC_StopFollow(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5);
+
+PROC
+PROC_StateCleared_Dominated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_HAG_Hagspawn_JakeFollowingMayrina(1)
+AND
+IsOnStage(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 1)
+THEN
+PROC_Follow(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+
+PROC
+PROC_StateCleared_Dominated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_HAG_Hagspawn_JakeFollowingMayrina(1)
+AND
+IsOnStage(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 0)
+THEN
+NOT DB_HAG_Hagspawn_JakeFollowingMayrina(1);
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "Run", 1, "");
+
+IF
+WentOnStage(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 0)
+AND
+DB_HAG_Hagspawn_JakeFollowingMayrina(1)
+AND
+NOT DB_Dominated((CHARACTER)S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+NOT DB_HAG_Hagspawn_JakeFollowingMayrina(1);
+PROC_StopFollow(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5);
+PROC_DisappearOutOfSightTo(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "Run", 1, "");
+
+// Fight Jake and Mayrina
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+NOT DB_HAG_Hagspawn_ResurrectionInterrupted(_)
+AND
+DB_GlobalFlag((FLAG)HAG_Hagspawn_Event_KillHusband_e7b38a2a-a730-420f-bf18-2b44b40fe640)
+AND
+GetFaction(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, _JakeFaction)
+AND
+GetFaction(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _JakesWifeFaction)
+THEN
+DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1);
+PROC_SetRelationMutual(_JakeFaction, _JakesWifeFaction, 100);
+PROC_SetRelationToPlayers(_JakeFaction, 0);
+PROC_SetRelationToPlayers(_JakesWifeFaction, 0);
+PROC_HAG_Hagspawn_TrackMayrinaAndHusbandDefeat("MayrinaAndHusband");
+
+// Other end of scene -> Jake hostile to everyone
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+DB_HAG_Hagspawn_JakeResurrected(1)
+AND
+NOT DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1)
+AND
+NOT DB_Defeated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+GetFaction(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, _JakeFaction)
+AND
+GetFaction(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _JakesWifeFaction)
+THEN
+PROC_HAG_Hagspawn_RestoreMayrinaDialog();
+PROC_SetRelationToPlayers(_JakeFaction, 0);
+// Also hostile to wife now, so she gets involved in case she's nearby
+PROC_SetRelation(_JakeFaction, _JakesWifeFaction, 0);
+// If she's not in the combat or survives it, you should be able to talk to her
+SetHasDialog(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 1);
+// Set flag so she has custom dialog, asking what happened to Jake if she didn't see his dead body yet
+SetFlag((FLAG)HAG_Hagspawn_State_JakeBeserk_2ed75333-fe77-4ff7-a005-14cf3ad07f7d, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+
+// Other end of scene -> Jake hostile to everyone
+PROC
+PROC_SceneOver("HAG_Hagspawn_ResurrectionScene")
+AND
+DB_HAG_Hagspawn_JakeResurrected(1)
+AND
+NOT DB_HAG_Hagspawn_ResurrectionSceneOverHandled(1)
+AND
+NOT DB_Defeated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "HAG_HagSpawn", "DealInterrupted");
+
+PROC
+PROC_HAG_Hagspawn_RestoreMayrinaDialog()
+AND
+NOT DB_DisappearedOutOfSight(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, _, _, _, _, _, _)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd);
+DB_Dialogs((CHARACTER)S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)HAG_Hagspawn_SurrogateMother_93854c48-68de-2a4f-c36e-36a24ab727b8);
+
+IF
+UsingSpell(_, "Target_HAG_Hagspawn_SummonHusband", _, _, _)
+AND
+IsOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 1)
+THEN
+PROC_Poof(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5);
+
+//END_REGION
+
+//REGION Combat against Mayrina and her zombie husband
+PROC
+PROC_HAG_Hagspawn_TrackMayrinaAndHusbandDefeat("OnlyMayrina")
+THEN
+DB_GLO_DefeatCounter(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_MayrinaAndHusband");
+DB_GLO_DefeatCounter_Target("HAG_Hagspawn_MayrinaAndHusband", 1);
+
+PROC
+PROC_HAG_Hagspawn_TrackMayrinaAndHusbandDefeat("MayrinaAndHusband")
+THEN
+DB_GLO_DefeatCounter(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, "HAG_Hagspawn_MayrinaAndHusband");
+DB_GLO_DefeatCounter(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, "HAG_Hagspawn_MayrinaAndHusband");
+DB_GLO_DefeatCounter_Target("HAG_Hagspawn_MayrinaAndHusband", 2);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("HAG_Hagspawn_MayrinaAndHusband")
+AND
+DB_GLO_DefeatCounter_Target("HAG_Hagspawn_MayrinaAndHusband", _Target)
+THEN
+DB_HAG_Hagspawn_HappyFamilyDefeated(_Target);
+
+PROC
+PROC_LongRest()
+AND
+DB_HAG_Hagspawn_HappyFamilyDefeated(_)
+AND
+NOT DB_PermaDefeated(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd)
+THEN
+SetFlag((FLAG)HAG_Hagspawn_State_LeftForBGAfterKnockedOut_657c8ff8-7d32-40a8-b957-17504bdeb21d, NULL_00000000-0000-0000-0000-000000000000);
+SetOnStage(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, 0);
+
+PROC
+PROC_LongRest()
+AND
+DB_HAG_Hagspawn_HappyFamilyDefeated(2)
+AND
+NOT DB_Defeated(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5)
+THEN
+SetOnStage(S_HAG_Hagspawn_HusbandJake_133bf997-7c0d-4c64-88c9-9b9cd439dbb5, 0);
+
+PROC
+PROC_LongRest()
+AND
+DB_HAG_Hagspawn_HappyFamilyDefeated(_Count)
+THEN
+NOT DB_HAG_Hagspawn_HappyFamilyDefeated(_Count);
+
+//END_REGION
+
+//REGION Debug
+ 
+IF
+TextEvent("HAG_SetupResurrection")
+AND
+GetHostCharacter(_Character)
+THEN
+PROC_HAG_TeaSceneOver();
+ToInventory(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, _Character);
+SetEntityEvent(_Character, "DEBUG_HAG_SetupResurrection");
+
+IF
+EntityEvent(_Character, "DEBUG_HAG_SetupResurrection")
+AND
+QRY_OncePerUserAndNearbyPlayers((CHARACTER)_Character, "HAG_ForestIllusion_Investigation")
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent(_Character, "DEBUG_HAG_SetupResurrection")
+THEN
+SetOnStage(S_HAG_HusbandForcefield_9b9f7ce6-5cd9-49a8-8cd7-57f661bde17f, 0);
+Die(S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1);
+TeleportTo(S_HAG_Hagspawn_SurrogateMother_08c970d7-3138-45e8-8965-68eadf4b07cd, S_HAG_Resurrection_MotherPos_36560fcb-e9e7-40f0-8112-2191e4277b6d, "HAG_SurrogateMother_AppearedAtResurrection", 0, 0, 1);
+ToInventory(S_HAG_Wand_SummonHusband_70bc9907-91c1-4e69-ad50-53e402eca22f, _Character, -1, 1, 1);
+SetCanInteract(S_HAG_HusbandGrave_11f47099-24f3-4e40-b905-c45c55fd46a6, 1);
+TeleportTo(_Character, S_HAG_Resurrection_HagPos_c1034bbe-e49f-47e2-b7fe-e3cdb64e6bcb, "", 0, 0, 1);
+SetFlag(HAG_ForestIllusion_Event_DropIllusion_c8a36ee5-68eb-a944-8295-55188d026506, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+
+//END_REGION
+
+IF
+DB_Act1_HAG_HagSpawn_Init(1)
+AND
+DB_CurrentLevel("CTY_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1_HAG_Hagspawn_TriggerInitialScene"

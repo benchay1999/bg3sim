@@ -1,0 +1,313 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_CRA_DiningDevourer((CHARACTER)S_CRA_Escape_IntDevourer1_edd4c1c0-422f-82de-1b22-4a3d734da5c8, (TRIGGER)TRIGGERGUID_S_CRA_Escape_IntDevourer1Pos_c66661fc-7b64-8511-10e1-69728ceaa7ab);
+DB_CRA_DiningDevourer(S_CRA_Escape_IntDevourer2_a2838af7-698b-8761-2004-d118d80cf848, TRIGGERGUID_S_CRA_Escape_IntDevourer2Pos_96872cd5-fb7a-82a1-4f75-e68da83a1444);
+
+DB_CRA_Devourer_Info((CHARACTER)S_CRA_Escape_IntDevourer1_edd4c1c0-422f-82de-1b22-4a3d734da5c8, "CRA_DiningDevourers", 75.0);
+DB_CRA_Devourer_Info(S_CRA_Escape_IntDevourer2_a2838af7-698b-8761-2004-d118d80cf848, "CRA_DiningDevourers", 65.0);
+DB_CRA_Devourer_Info(S_CRA_Escape_IntDevourer3_c158fa86-3ecf-4d1b-a502-34618f77e3a9, "CRA_JumpingDevourer", 60.0);
+
+DB_OneShotPlayerTrigger(S_CRA_Escape_IntDevourer3_JumpStartTrigger_609f8e54-dae3-4599-9bb1-5c85a3186a30);
+DB_OneShot_VoiceBarkTrigger((TRIGGER)S_CRA_Escape_IntDevourer_Area_VB_8e395a3d-1593-4f85-8ddb-c7f2190fd6e8, (VOICEBARKRESOURCE)CRA_Escape_VB_SeeWoundedDevourers_b2951ad5-b9aa-0c78-899c-b69cc73d5ec4, "GlobalIgnoreFailure");
+KBSECTION
+//REGION init
+IF
+DB_CRA_Devourer_Info(_Devourer, _SpotEvent, _HP)
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(_Devourer, _HP);
+DB_SpotPlayers(_Devourer, _SpotEvent, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_IgnoreCombat(_Devourer, _SpotEvent);
+DB_SpotPlayers_IncludeDefeated(_Devourer, _SpotEvent);
+DB_SpotPlayers_IncludeSummons(_Devourer, _SpotEvent);
+DB_SpotPlayers_IncludeWildshapedPlayers(_Devourer, _SpotEvent);
+DB_SpotPlayers_SpotterIgnoreCantTalk(_Devourer, _SpotEvent);
+DB_SpotPlayers_TargetIgnoreCantTalk(_Devourer, _SpotEvent);
+DB_SpotPlayers_IncludeFollowers(_Devourer, _SpotEvent);
+DB_SpotPlayers_SpotTrigger(_Devourer, _SpotEvent, (TRIGGER)S_CRA_Escape_IntDevourer_Area_1e626c0c-8434-8a7c-1d8e-f46fdb60c3ec);
+//END_REGION
+
+//REGION Initial scene
+PROC
+PROC_SpotPlayers_Spotted(_Devourer, "CRA_DiningDevourers", _Player)
+THEN
+PROC_CRA_IntDevVB(_Player);
+PROC_CRA_DevourersStartRun(_Player);
+
+// If the devourers see us before we're in the VB trigger, play the VB at that point (otherwise we can get it after they're long gone)
+PROC
+PROC_CRA_IntDevVB((CHARACTER)_Player)
+AND
+DB_OneShot_VoiceBarkTrigger((TRIGGER)S_CRA_Escape_IntDevourer_Area_VB_8e395a3d-1593-4f85-8ddb-c7f2190fd6e8, (VOICEBARKRESOURCE)CRA_Escape_VB_SeeWoundedDevourers_b2951ad5-b9aa-0c78-899c-b69cc73d5ec4, "GlobalIgnoreFailure")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)CRA_Escape_VB_SeeWoundedDevourers_b2951ad5-b9aa-0c78-899c-b69cc73d5ec4, _Player);
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)S_CRA_Escape_IntDevourer_Area_VB_8e395a3d-1593-4f85-8ddb-c7f2190fd6e8, (VOICEBARKRESOURCE)CRA_Escape_VB_SeeWoundedDevourers_b2951ad5-b9aa-0c78-899c-b69cc73d5ec4);
+
+PROC
+PROC_CRA_DevourersStartRun((CHARACTER)_Player)
+THEN
+PROC_CRA_DevourersStopSpotting();
+
+PROC
+PROC_CRA_DevourersStopSpotting()
+AND
+DB_CRA_Devourer_Info(_Devourer, _SpotEvent, _)
+AND
+DB_SpotPlayers(_Devourer, _SpotEvent, _StartFlag, _StopFlag)
+THEN
+NOT DB_SpotPlayers(_Devourer, _SpotEvent, _StartFlag, _StopFlag);
+
+PROC
+PROC_CRA_DevourersStartRun((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("CRA_Escape_IntDevLookAtPlayer")
+THEN
+DB_CRA_DiningDevourersLookAt(_Player);
+TimerLaunch("CRA_Escape_DevourersLookAtPlayer", 100);
+
+IF
+TimerFinished("CRA_Escape_DevourersLookAtPlayer")
+AND
+DB_CRA_DiningDevourersLookAt(_Player)
+AND
+DB_CRA_DiningDevourer(_Devourer, _)
+AND
+NOT DB_Is_InCombat(_Devourer, _)
+AND
+NOT DB_Defeated(_Devourer)
+THEN
+SteerTo(_Devourer, _Player,0);
+
+IF
+TimerFinished("CRA_Escape_DevourersLookAtPlayer")
+AND
+DB_CRA_DiningDevourersLookAt(_Player)
+THEN
+NOT DB_CRA_DiningDevourersLookAt(_Player);
+
+
+PROC
+PROC_CRA_DevourersStartRun((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("CRA_Escape_IntDevToMindFlayer")
+THEN
+TimerLaunch("CRA_Escape_DevourersGoToMindFlayer", 700);
+
+IF
+TimerFinished("CRA_Escape_DevourersGoToMindFlayer")
+AND
+DB_CRA_DiningDevourer(_Devourer, _Trigger)
+AND
+NOT DB_Is_InCombat(_Devourer, _)
+THEN
+DB_CRA_DiningDevourer_Moving(_Devourer);
+PROC_NotifyWhenReadyToMoveOn(_Devourer,"CRA_Escape_DevourerAtDest");
+
+PROC
+PROC_ReadyToMoveOn(_Devourer,"CRA_Escape_DevourerAtDest")
+AND
+DB_CRA_DiningDevourer(_Devourer, _Trigger)
+THEN
+PROC_CharacterMoveTo(_Devourer, _Trigger, "Sprint", "CRA_Escape_DevourerAtDest");
+
+IF
+TimerFinished("CRA_Escape_DevourersGoToMindFlayer")
+AND
+DB_CRA_DiningDevourer_Moving(_Devourer)
+AND
+QRY_OnlyOnce("CRA_IntDevsRunningSound")
+THEN
+PlaySound(_Devourer, "SE_CRA_IntellectualDevourer_Encounter");
+
+IF
+DB_PermaDefeated(_Devourer)
+AND
+DB_CRA_DiningDevourer_Moving((CHARACTER)_Devourer)
+THEN
+NOT DB_CRA_DiningDevourer_Moving(_Devourer);
+
+IF
+EntityEvent((CHARACTER)_Devourer, "CRA_Escape_DevourerAtDest")
+AND
+DB_CRA_DiningDevourer(_Devourer, _Trigger)
+THEN
+NOT DB_CRA_DiningDevourer_Moving(_Devourer);
+LookFromTrigger(_Devourer, _Trigger, 0);
+
+IF
+EntityEvent((CHARACTER)_Devourer, "CRA_Escape_DevourerAtDest")
+AND
+DB_CRA_DiningDevourer(_Devourer, _Trigger)
+AND
+NOT DB_CRA_DiningDevourer_Moving(_)
+AND
+GetFaction(_Devourer, _Faction)
+THEN
+PROC_SetRelationToPlayers(_Faction, 0);
+//END_REGION
+
+//REGION Cancel scene on attack
+IF
+AttackedBy((CHARACTER)_Devourer, (CHARACTER)_Player, _, _, _, _, _)
+AND
+DB_CRA_DiningDevourer(_Devourer, _)
+AND
+DB_Players(_Player)
+AND
+GetFaction(_Devourer, _DevourerFaction)
+THEN
+PROC_SetRelationToPlayers(_DevourerFaction, 0);
+// This won't do anything if the devourers are in combat (apart from cancelling the spotting),
+// but if you one-shot killed one while out of combat range, then the other should still run away
+PROC_CRA_DevourersStartRun(_Player);
+PROC_RemoveOneShotVoiceBarkTrigger((TRIGGER)S_CRA_Escape_IntDevourer_Area_VB_8e395a3d-1593-4f85-8ddb-c7f2190fd6e8, (VOICEBARKRESOURCE)CRA_Escape_VB_SeeWoundedDevourers_b2951ad5-b9aa-0c78-899c-b69cc73d5ec4);
+
+//END_REGION
+
+//REGION Sneaking past the first two intellect devourers
+PROC
+PROC_SpotPlayers_Spotted(_Devourer, "CRA_JumpingDevourer", _Player)
+AND
+QRY_OnlyOnce("CRA_Escape_IntDevToMindFlayer")
+THEN
+PROC_CRA_DevourersStopSpotting();
+// Make the others come here
+TimerLaunch("CRA_Escape_DevourersGoToMindFlayer",0);
+//END_REGION
+
+
+//REGION VB when fighting intellect devourers
+IF
+TurnStarted((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_LevelLoadedOnce("SCL_Main_A")
+AND
+NOT QRY_OncePerUserAndNearbyPlayers_IsSet(_Player, "CRA_Devourers_DontGetTooCloseVB")
+AND
+DB_Is_InCombat(_Player, _CombatID)
+AND
+DB_Is_InCombat(_OtherChar, _CombatID)
+AND
+IsTagged(_OtherChar, (TAG)INTELLECT_DEVOURER_69901347-23cb-4f60-abf3-527f23cdf0db, 1)
+AND
+QRY_OncePerUserAndNearbyPlayers(_Player, "CRA_Devourers_DontGetTooCloseVB")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)CRA_Escape_VB_FirstIntellectDevourerCombat_1d0a29ec-aa39-0076-31a9-9c5865c0da4c, _Player);
+
+// Center on the player that is speaking the AD, since the VB logic may have selected a different player than the one passed to StartVoicebark
+IF
+AutomatedDialogStarted((DIALOGRESOURCE)CRA_Escape_PAD_FirstIntellectDevourerCombat_6ec32daf-8cd3-d721-d2f4-e03f73472a15, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+MakePlayerActive((CHARACTER)_Player);
+//END_REGION
+
+//REGION Clean up
+IF
+DB_CRA_Devourer_Info(_Devourer,_,_)
+THEN
+DB_GLO_DefeatCounter(_Devourer, "CRA_IntDevourer");
+
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated("CRA_IntDevourer")
+THEN
+GoalCompleted;
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+THEN
+GoalCompleted;
+//END_REGION
+
+//REGION Dynamic difficulty
+// When the game starts if it's a singleplayer session set one of the intellect devourers off-stage
+IF
+LevelGameplayStarted("WLD_Main_A", _)
+AND
+QRY_OnlyOnce("CRA_IntellectDevourers_CheckPartySize")
+AND
+SysCount("DB_Avatars", 1, _PartySize)
+THEN
+PROC_CRA_Devourers_SetCombatDifficulty(_PartySize);
+
+PROC
+PROC_CRA_Devourers_SetCombatDifficulty((INTEGER)_PartySize)
+AND
+_PartySize <= 1 // Just for the editor since if starting in WLD_Main_A PROC_CRA_Devourers_SetCombatDifficulty() is called before DB_Avatars is updated
+THEN
+NOT DB_GLO_DefeatCounter(S_CRA_Escape_IntDevourer3_c158fa86-3ecf-4d1b-a502-34618f77e3a9, "CRA_IntDevourer");
+PROC_TriggerRegisterForParty((TRIGGER)S_CRA_Escape_ReachedIntellectDevourersArena_e59f0422-7dc6-41be-ae39-0b5846aac331);
+SetOnStage(S_CRA_Escape_IntDevourer3_c158fa86-3ecf-4d1b-a502-34618f77e3a9, 0);
+
+PROC
+PROC_CRA_Devourers_SetCombatDifficulty((INTEGER)_PartySize)
+AND
+_PartySize > 1
+THEN
+DB_OnlyOnce("CRA_IntellectDevoureres_BlockIDSpawn");
+
+// If party size increases to two or more spawn the intellect devourer
+// Recruiting an origin
+PROC
+PROC_GLO_PartyMembers_AddHook(_, _)
+THEN
+PROC_CRA_Devourers_SpawnDevourer();
+
+// Recruiting a hireling
+PROC
+PROC_Hirelings_Hire(_, _)
+THEN
+PROC_CRA_Devourers_SpawnDevourer();
+
+// New player joins an ongoing session
+IF
+UserAvatarCreated(_, _, _)
+THEN
+PROC_CRA_Devourers_SpawnDevourer();
+
+PROC
+PROC_CRA_Devourers_SpawnDevourer()
+AND
+QRY_OnlyOnce("CRA_IntellectDevoureres_BlockIDSpawn")
+THEN
+DB_GLO_DefeatCounter(S_CRA_Escape_IntDevourer3_c158fa86-3ecf-4d1b-a502-34618f77e3a9, "CRA_IntDevourer");
+SetOnStage(S_CRA_Escape_IntDevourer3_c158fa86-3ecf-4d1b-a502-34618f77e3a9, 1);
+PROC_TriggerUnregisterForParty((TRIGGER)S_CRA_Escape_ReachedIntellectDevourersArena_e59f0422-7dc6-41be-ae39-0b5846aac331);
+
+// Block Intellect Devourer from appearing if
+// Players start combat with any ID
+IF
+EnteredCombat(_IntellectDevourer, _)
+AND
+DB_CRA_DiningDevourer((CHARACTER)_IntellectDevourer, _)
+THEN
+PROC_CRA_Devourers_BlockDevourerSpawn();
+
+// One-shots one of them
+PROC
+PROC_StateSet_Permadefeated(_IntellectDevourer)
+AND
+DB_CRA_DiningDevourer((CHARACTER)_IntellectDevourer, _)
+THEN
+PROC_CRA_Devourers_BlockDevourerSpawn();
+
+// Enters the combat arena
+IF
+EnteredTrigger(_, S_CRA_Escape_ReachedIntellectDevourersArena_e59f0422-7dc6-41be-ae39-0b5846aac331)
+THEN
+PROC_CRA_Devourers_BlockDevourerSpawn();
+
+PROC
+PROC_CRA_Devourers_BlockDevourerSpawn()
+AND
+QRY_OnlyOnce("CRA_IntellectDevoureres_BlockIDSpawn")
+THEN
+PROC_TriggerUnregisterForParty((TRIGGER)S_CRA_Escape_ReachedIntellectDevourersArena_e59f0422-7dc6-41be-ae39-0b5846aac331);
+//END_REGION
+EXITSECTION
+PROC_TriggerUnregisterForParty((TRIGGER)S_CRA_Escape_ReachedIntellectDevourersArena_e59f0422-7dc6-41be-ae39-0b5846aac331);
+ENDEXITSECTION
+ParentTargetEdge "Act1"

@@ -1,0 +1,1192 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Tadpole
+
+//--- Updating main when a sub starts
+// Apprentice
+DB_GLO_TadpoleQuest_LearnedApprenticeConditions("LearnedNettieNearby_NoName"); //works only if those are set only in dialog... logic will have to change if they start being given outside of dialog
+DB_GLO_TadpoleQuest_LearnedApprenticeConditions("LearnedNettieNearby");
+DB_GLO_TadpoleQuest_LearnedApprenticeConditions("LearnedAboutNettie");
+
+// Halsin / Alive -- these DBs are cleared when Halsin dies (in REGION SUB_Druid). LearnedHalsin is replaced by LearnedPostHalsin
+DB_QuestDef_ChainedState("GLO_Tadpole", "LearnedLostHalsin", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "LearnedResearchHalsin", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "FoundHalsin_Unknown_KillLeaders", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "FoundHalsin_Known_KillLeaders", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "FoundHalsin_Unknown_AoD", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinLeft_NoHelp_Known", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinLeft_NoHelp_Unknown", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known_Asharak", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown_Asharak", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known_Cerys", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown_Cerys", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known_Talked", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown_Talked", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "GoToMoonrise", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "GoToMoonrise_NoIntro", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "GoToMoonrise_SkippedGrove", "LearnedHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "LearnedHalsinDiary", "LearnedHalsin");
+DB_QuestDef_BookReadState("GLO_Tadpole", "ReadHalsinDiary", S_GLO_HalsinDiary_5e4aafd4-f56c-4b05-ad5a-00eccdb87d9d);
+// Halsin / Dead -- these DBs are cleared when the sub GLO_Tadpole_SUB_Druid is unlocked);
+DB_QuestDef_ChainedState("GLO_Tadpole", "ReadHalsinDiary", "LearnedPostHalsin");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HeardHalsinSwD", "LearnedPostHalsin");
+
+//Hag
+DB_QuestDef_SawDeadState("GLO_Tadpole", "EthelDiedEarly", S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d); //cleared once "HagTriedTadpoleHeal" is unlocked
+
+//Gut
+DB_QuestDef_ChainedState("GLO_Tadpole", "LearnPriestess", "LearnedPriestess");
+DB_QuestDef_ChainedState("GLO_Tadpole", "GotBranded", "LearnedPriestess");
+
+//Society
+DB_QuestDef_SawDeadState("GLO_Tadpole", "MFDiedEarly", S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+DB_QuestDef_ChainedState("GLO_Tadpole", "AskedToCheck", "LearnedSociety");
+
+//--- SUB_Apprentice
+DB_GLO_Tadpole_SUB_Apprentice_Died(0, "ApprenticeDied_BeforeTadpoled");
+DB_GLO_Tadpole_SUB_Apprentice_Died(1, "ApprenticeDied_Tadpoled");
+DB_QuestDef_State((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, "GLO_Tadpole", "Apprentice_PointOfNoReturn");
+
+//--- SUB_Society
+//n/a
+
+//--- SUB_Hag
+DB_QuestDef_ChainedState("GLO_Tadpole", "ToldEthelAboutTadpoleInGrove", "LearnedEthel");
+DB_QuestDef_ChainedState("GLO_Tadpole", "ToldEthelAboutTadpoleInTeahouse", "LearnedEthel");
+DB_QuestDef_SawDeadState("GLO_Tadpole", "HagDied", S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d); //cleared once "HagTriedTadpoleHeal" is unlocked
+DB_QuestDef_State((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, "GLO_Tadpole", "Hag_PointOfNoReturn");
+
+//--- SUB_Priestess
+DB_QuestDef_State((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, "GLO_Tadpole", "Priestess_PointOfNoReturn");
+
+//--- SUB_Creche
+DB_QuestDef_ChainedState("ORI_COM_Laezel","FoundZorruLZAbsent","GLO_Tadpole","FoundZorru_LaezelAtCamp");
+DB_QuestDef_State_ConditionalFlag(GLO_GithCreche_State_EverEnteredBefore_3ebdfeaa-4e83-4878-90db-01adb9fdf629, "GLO_Tadpole", "ReachedCreche",0,GLO_Laezel_State_PermaDefeated_43c2fc09-a064-42a9-a722-444b53a768fd);
+DB_QuestDef_State_ConditionalFlag(GLO_GithCreche_State_EverEnteredBefore_3ebdfeaa-4e83-4878-90db-01adb9fdf629, "GLO_Tadpole", "ReachedCreche_LaezelPermaDefeated",1,GLO_Laezel_State_PermaDefeated_43c2fc09-a064-42a9-a722-444b53a768fd);
+DB_QuestDef_State(PLA_GithChokepoint_Event_AllGithsDefeated_b329e2d8-31c8-4861-ae87-224e86f51682,"GLO_Tadpole", "DefeatedCheckpoint");
+DB_QuestDef_State(ORI_Laezel_Knows_CrecheLocation_696c423d-e6da-428e-a7fe-c083fffccad2,"GLO_Tadpole", "LearnedCreche");
+DB_QuestDef_State(GLO_GithChokepoint_Knows_DecipheredMap_604768b9-c983-414d-8c3b-ba1dee3da387,"GLO_Tadpole", "LearnedCreche");
+
+//Go to the Creche Infirmary - Told to get to infirmary by the Creche checkpoint guards
+DB_GLO_Tadpole_SUB_Creche_KnowsAboutCrecheDevice("ReachedCreche");
+DB_GLO_Tadpole_SUB_Creche_KnowsAboutCrecheDevice("ReachedCreche_LaezelPermaDefeated");
+DB_GLO_Tadpole_SUB_Creche_KnowsAboutCrecheDevice("ReachedCreche_BetrayedByVlaakith");
+DB_GLO_Tadpole_SUB_Creche_KnowsAboutCrecheDevice("DirectedToInfirmary");
+DB_GLO_Tadpole_SUB_Creche_KnowsAboutCrecheDevice("DirectedToInfirmary_BetrayedByVlaakith");
+
+//Sit into the Zaith'isk - Told to sit in the Zaithisk by the Creche doctor
+DB_QuestDef_State((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd,"GLO_Tadpole", "UseZaithisk");
+
+//Completion
+DB_QuestDef_State((FLAG)CRE_GithInfirmary_State_UsedDevice_a56d58c6-2a81-4a80-a4f6-4f73f254b40c, "GLO_Tadpole", "UsedPurifier");
+DB_QuestDef_State((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, "GLO_Tadpole", "CrecheNoLongerAccessible");
+DB_QuestDef_State((FLAG)CRE_Lance_Event_Exploded_f7d93dd1-c30e-4ef2-87c0-0cada12f180d, "GLO_Tadpole", "CrecheExploded");
+
+//--- SUB_Druid
+DB_GLO_Halsin_StartingEntries("LearnedLostHalsin");
+DB_GLO_Halsin_StartingEntries("LearnedResearchHalsin");
+DB_GLO_Halsin_StartingEntries("LearnedHalsinDiary");
+DB_GLO_Halsin_StartingEntries("FoundHalsin_Unknown_KillLeaders");
+DB_GLO_Halsin_StartingEntries("FoundHalsin_Known_KillLeaders");
+DB_GLO_Halsin_StartingEntries("FoundHalsin_Unknown_AoD");
+DB_GLO_Halsin_StartingEntries("FoundHalsin_Known_AoD");
+DB_GLO_Halsin_StartingEntries("FoundHalsin_Unknown_LeadershipDead");
+DB_GLO_Halsin_StartingEntries("FoundHalsin_Known_LeadershipDead");
+DB_GLO_Halsin_StartingEntries("HalsinLeft_NoHelp_Known");
+DB_GLO_Halsin_StartingEntries("HalsinLeft_NoHelp_Unknown");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Known");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Unknown");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Known_Asharak");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Known_Cerys");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Unknown_Asharak");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Unknown_Cerys");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Known_Talked");
+DB_GLO_Halsin_StartingEntries("HalsinAtGrove_Unknown_Talked");
+
+DB_GLO_Halsin_ClosingEntries(1, "GoToMoonrise");
+DB_GLO_Halsin_ClosingEntries(0, "GoToMoonrise_NoIntro");
+
+DB_GLO_Halsin_SubquestStarted(0);
+
+DB_GLO_Halsin_FirstHalsinInteraction((FLAG)GLO_Halsin_Quest_AskedKilledLeaders_853122c7-f2e2-a2a0-a2b4-67ae09c3ac73, 1, "FoundHalsin_Known_KillLeaders");
+DB_GLO_Halsin_FirstHalsinInteraction((FLAG)GLO_Halsin_Quest_AskedKilledLeaders_853122c7-f2e2-a2a0-a2b4-67ae09c3ac73, 0, "FoundHalsin_Unknown_KillLeaders");
+DB_GLO_Halsin_FirstHalsinInteraction((FLAG)GLO_Halsin_Quest_AskedDefendGrove_1945d6bc-199a-d8c5-4b1a-641ee942bf78, 1, "FoundHalsin_Known_AoD");
+DB_GLO_Halsin_FirstHalsinInteraction((FLAG)GLO_Halsin_Quest_AskedDefendGrove_1945d6bc-199a-d8c5-4b1a-641ee942bf78, 0, "FoundHalsin_Unknown_AoD");
+DB_GLO_Halsin_FirstHalsinInteraction((FLAG)GLO_Halsin_Quest_LeadershipAlreadyDead_25d57f1d-f24d-17cc-29a4-40fa5b53afa2, 1, "FoundHalsin_Known_LeadershipDead");
+DB_GLO_Halsin_FirstHalsinInteraction((FLAG)GLO_Halsin_Quest_LeadershipAlreadyDead_25d57f1d-f24d-17cc-29a4-40fa5b53afa2, 0, "FoundHalsin_Unknown_LeadershipDead");
+
+DB_QuestDef_BookReadState("GLO_Tadpole", "LearnedResearchHalsin", (ITEM)S_DEN_DruidTadpoleBook_acd84c20-a9f1-4c80-861a-e8636f77e02e);
+DB_QuestDef_State(GLO_Halsin_Knows_StudiedTadpole_de639590-00c8-c4f1-7baf-56f92420ea41, "GLO_Tadpole", "LearnedResearchHalsin");
+DB_QuestDef_State(GLO_Halsin_Knows_WentWithAdventurers_76537faa-016f-f6a9-8136-b236fbefd2e1, "GLO_Tadpole", "LearnedHalsinPosition"); //cleared when LearnedKilledOrCaptured is set
+DB_QuestDef_ConditionalState("GLO_Tadpole", "LearnedHalsinPosition", "LearnedExpeditionGoal", "LearnedResearchHalsin", 1);
+DB_QuestDef_ConditionalState("GLO_Tadpole", "LearnedResearchHalsin", "LearnedExpeditionGoal", "LearnedHalsinPosition", 1);
+DB_QuestDef_State((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, "GLO_Tadpole", "Halsin_PointOfNoReturn");
+
+DB_GLO_TadpoleQuest_Druid_HalsinLeftNoHelp(0, "HalsinLeft_NoHelp_Unknown");
+DB_GLO_TadpoleQuest_Druid_HalsinLeftNoHelp(1, "HalsinLeft_NoHelp_Known");
+DB_GLO_TadpoleQuest_Druid_LeaderDiedEntries(0, "DruidLeaderDied_NoResearch");
+DB_GLO_TadpoleQuest_Druid_LeaderDiedEntries(1, "DruidLeaderDied_Research");
+DB_GLO_TadpoleQuest_Druid_HalsinReturnEntries(0, "HalsinReturned_Unknown");
+DB_GLO_TadpoleQuest_Druid_HalsinReturnEntries(1, "HalsinReturned_Known");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries((CHARACTER)S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, "HalsinAtGrove", 0, "HalsinAtGrove_Unknown");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, "HalsinAtGrove", 1, "HalsinAtGrove_Known");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "HalsinAtGrove", 0, "HalsinAtGrove_Unknown_Asharak");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "HalsinAtGrove", 1, "HalsinAtGrove_Known_Asharak");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "HalsinAtGrove", 0, "HalsinAtGrove_Unknown_Cerys");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "HalsinAtGrove", 1, "HalsinAtGrove_Known_Cerys");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(NULL_00000000-0000-0000-0000-000000000000, "HalsinAtGrove", 1, "HalsinAtGrove_Known_Talked");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(NULL_00000000-0000-0000-0000-000000000000, "HalsinAtGrove", 0, "HalsinAtGrove_Unknown_Talked");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, "HalsinSentToRath", 0, "HalsinSentToRath");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "HalsinSentToRath", 0, "HalsinSentToRath_Asharak");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "HalsinSentToRath", 0, "HalsinSentToRath_Cerys");
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(NULL_00000000-0000-0000-0000-000000000000, "HalsinSentToRath", 0, "HalsinSentToRath_Talked");
+
+// Meeting him at camp
+DB_GLO_TadpoleQuest_Druid_KillLeaders("FoundHalsin_KingDead", S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54);
+DB_GLO_TadpoleQuest_Druid_KillLeaders("FoundHalsin_DrowDead", S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+DB_GLO_TadpoleQuest_Druid_KillLeaders("FoundHalsin_PriestessDead", S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9);
+
+//Parent completion
+DB_QuestDef_ChainedState("GLO_Tadpole", "UsedPurifier", "UsedPurifier_ParentCompletion");
+DB_QuestDef_ChainedState("GLO_Tadpole", "HagTriedTadpoleHeal", "HagTriedTadpoleHeal_ParentCompletion");
+DB_QuestDef_ChainedState("GLO_Tadpole", "PriestessImprisoned", "PriestessImprisoned_ParentCompletion");
+DB_QuestDef_ChainedState("GLO_Tadpole", "PoisonedByApprentice",    "PoisonedByApprenticeSuccess_ParentCompletion");
+DB_QuestDef_ChainedState("GLO_Tadpole", "ApprenticeDied_Tadpoled", "PoisonedByApprentice_ParentCompletion");
+DB_QuestDef_ChainedState("GLO_Tadpole", "ApprenticePersuaded",     "PoisonedByApprentice_ParentCompletion");
+DB_QuestDef_ChainedState("GLO_Tadpole", "ToldAboutRing", "ToldAboutRing_ParentCompletion");
+//END_REGION
+
+//REGION Grand Duke Rescue journal
+DB_QuestDef_State((FLAG)PLA_Desire_State_Freed_1c015349-190c-d49f-1d93-227886976509, "PLA_GrandDukeRescue", "FreedCounsellor");
+DB_QuestDef_State((FLAG)PLA_Desire_State_Freed2_46dbc8ef-61fa-42c4-bc89-4a8f53d53e5b, "PLA_GrandDukeRescue", "FreedCounsellor");
+
+DB_QuestDef_State((FLAG)HAV_Florrick_Event_RavengardInTowers_8ecac57b-2137-36dd-2aee-7a43ec1169df,"PLA_GrandDukeRescue","FlorrickTalkedHaven");
+DB_QuestDef_State((FLAG)COL_PartyProgress_EnteredColony_666abe92-f197-4c38-85a8-d879a9e258b6,"PLA_GrandDukeRescue","ReachedMT");
+DB_QuestDef_State((FLAG)COL_KethericShowdown_Event_SawRavengardTadpoled_4c3514d1-7fe4-6ce5-8cc4-fc061c79d0b7,"PLA_GrandDukeRescue","Tadpoled");
+DB_QuestDef_State((FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496,"PLA_GrandDukeRescue","Kidnapped");
+
+DB_QuestDef_State_ConditionalFlag((FLAG)WYR_Ravengard_State_KilledBeforeIRN_bb43c67a-cc36-4498-9e76-1faaf010cc2a,"PLA_GrandDukeRescue","DiedWyllParty",1,(FLAG)GLO_Origin_PartOfTheTeam_Wyll_24e24ca7-3446-440b-b645-19404845e108);
+DB_QuestDef_State((FLAG)WYR_MeetingMizora_Event_MizoraLeftWYR_03f1d319-d5f4-8aa1-0f0d-d58e5b32bf2e,"PLA_GrandDukeRescue","MizoraWentToCamp");
+
+DB_QuestDef_State_ConditionalFlag((FLAG)CAMP_MizorasPact_State_WyllReleasedFromPact_79a90490-b009-507c-e0d3-f79b0bdd4cb6,"PLA_GrandDukeRescue","PactBroken",0,(FLAG)GLO_Ravengard_State_PermaDefeated_b1b2458c-dd27-4db7-974e-a294ca6e2e9e);
+DB_QuestDef_State((FLAG)CAMP_MizorasPact_State_WyllReleasedFromPact_79a90490-b009-507c-e0d3-f79b0bdd4cb6,"PLA_GrandDukeRescue","BrokenAbandoned");
+DB_QuestDef_State_ConditionalFlag((FLAG)CAMP_MizorasPact_State_WyllEternalPact_8da8b1fb-5aa9-8cf5-8b45-6f8ca31a1227,"PLA_GrandDukeRescue","MizoraHint",0,(FLAG)GLO_Ravengard_State_PermaDefeated_b1b2458c-dd27-4db7-974e-a294ca6e2e9e);
+
+DB_QuestDef_State_ConditionalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c,"PLA_GrandDukeRescue","ReachedIRN",1,(FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+DB_QuestDef_State((FLAG)IRN_IronThrone_Event_RavengardLeftForCamp_c1492418-89a5-4d48-8a39-0f889281a5e2,"PLA_GrandDukeRescue","RescuedIRN");
+//Pact Scene was skipped, Wyll saw dead Ravengard in IRN
+DB_QuestDef_State((FLAG)GLO_Ravengard_State_SeenDeadRavengardDuringIRN_43cea123-9650-46f3-99d4-64c6d284ef1f,"PLA_GrandDukeRescue","FoundDeadInIRN");
+DB_QuestDef_State_ConditionalFlag((FLAG)GLO_Ravengard_Knows_KilledDuringIRNDestruction_479fc5e6-daa9-4e82-b1c4-3dd282e130de,"PLA_GrandDukeRescue","LearnedRavengardDiedInIRNDestruction", 0, (FLAG)CAMP_Ravengard_State_RavengardInCamp_37309008-04cf-493c-8ca6-43034d331a8a);
+
+DB_QuestDef_State((FLAG)WYR_Ravengard_State_Resurrected_86c9572d-84e7-b407-0ce6-84fd263418a1,"PLA_GrandDukeRescue","Resurrected");
+
+// If Ravengard is permadefeated when Wyll is not part of the team
+DB_QuestDef_State_ConditionalFlag((FLAG)GLO_Ravengard_State_PermaDefeated_b1b2458c-dd27-4db7-974e-a294ca6e2e9e,"PLA_GrandDukeRescue","Dead",0,(FLAG)GLO_Origin_PartOfTheTeam_Wyll_24e24ca7-3446-440b-b645-19404845e108);
+// If Ravengard is permadefeated when he's not in the Iron Throne, cannot happen while Ravengard is in DB_CanBeResurrected (until Mizora's Pact)
+DB_QuestDef_State_ConditionalFlag((FLAG)GLO_Ravengard_State_PermaDefeated_b1b2458c-dd27-4db7-974e-a294ca6e2e9e,"PLA_GrandDukeRescue","Dead",0,(FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+// If Ravengard is permadefeated after players have visited the Iron Throne, meaning either the pact has been broken and he can die during or after the escape, or the pact was kept and he died after he was rescued
+DB_QuestDef_State_ConditionalFlag((FLAG)GLO_Ravengard_State_PermaDefeated_b1b2458c-dd27-4db7-974e-a294ca6e2e9e,"PLA_GrandDukeRescue","Dead",1,(FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c);
+
+DB_QuestDef_State_ConditionalFlag((FLAG)CAMP_Ravengard_Event_NoWyll_HasMet_9b370cfa-8be2-9f8e-b6c3-0bb23c165812,"PLA_GrandDukeRescue","RescuedTalked",1,(FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+DB_QuestDef_State_ConditionalFlag((FLAG)CAMP_Ravengard_Event_NoWyll_HasMet_9b370cfa-8be2-9f8e-b6c3-0bb23c165812,"PLA_GrandDukeRescue","ResurrectedTalked",0,(FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+
+DB_QuestDef_State_ConditionalFlag((FLAG)CAMP_Ravengard_Event_HasMetWyll_234fcc9d-b7bd-3ddb-cd16-e842b8a03988,"PLA_GrandDukeRescue","RescuedTalked",1,(FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+DB_QuestDef_State_ConditionalFlag((FLAG)CAMP_Ravengard_Event_HasMetWyll_234fcc9d-b7bd-3ddb-cd16-e842b8a03988,"PLA_GrandDukeRescue","ResurrectedTalked",0,(FLAG)IRN_IronThrone_State_RavengardPresent_2e102a34-500a-4cd2-ba93-51d1a8b96496);
+
+DB_QuestDef_LevelLoaded("PLA_GrandDukeRescue","LeftAct_Duke","END_Main");
+
+DB_GLO_GrandDukeRescue_LearnAboutMoonriseTowers((FLAG)CRE_Knows_DukeAtTowers_e824865c-67e5-ec2d-0778-ccace7ef90cf);
+DB_GLO_GrandDukeRescue_LearnAboutMoonriseTowers((FLAG)PLA_Tavern_Knows_DukeAtTowers_1c79d47a-6054-6de3-68ec-117f76e827ee);
+DB_GLO_GrandDukeRescue_LearnAboutMoonriseTowers((FLAG)GLO_Absolute_Knows_MoonriseTowers_7253b35b-2ac8-ce7f-6181-689ef27536d9);
+DB_GLO_GrandDukeRescue_LearnAboutMoonriseTowers((FLAG)GLO_Moonrise_Knows_Prisoners_118341d6-8821-cd0d-c582-9ace3a6818f6);
+//END_REGION
+KBSECTION
+//REGION Tadpole Main Quest
+
+//--- WokeAtCrash: Give update players wake up at the Crash site and get on their feet
+PROC
+PROC_CRA_WakeupDone()
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "WokeAtCrash");
+
+//Starting in debug from somewhere else
+IF
+TimerFinished("CRA_Escape_Start_WakeUp")
+AND
+DB_Players(_Player)
+AND
+IsInTrigger(_Player, TRIGGERGUID_S_CRA_Escape_StartBox_53d01e20-6685-40f4-be98-5b967bf69e07, 0)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "WokeAtCrash");
+
+
+//Recruited Laezel or invited her to camp
+IF
+FlagSet(ORI_State_Recruited_e78c0aab-fb48-98e9-3ed9-773a0c39988d,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,_)
+AND
+DB_CurrentLevel("WLD_Main_A")
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "LaezelJoined");
+
+IF
+FlagSet(ORI_LaezelRecruitment_Event_InvitedToCamp_5ac352a5-58c2-a8ed-1957-199d8bc284da, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_CurrentLevel("WLD_Main_A")
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "LaezelJoined");
+
+
+//Learning about Nettie in the sub: give LearnedApprentice in the main. The tiefling scouts must not give this one, they set LearnedApprentice_Scouts instead
+IF
+QuestUpdateUnlocked(_Player, "GLO_Tadpole", _Step)
+AND
+DB_GLO_TadpoleQuest_LearnedApprenticeConditions(_Step)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "LearnedApprentice", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "LearnedApprentice_Scouts", 0)
+AND
+DB_DialogPlayers(_Inst, _Player, _)
+THEN
+PROC_GLO_Tadpole_GiveLearnedApprentice(_Inst, _Player);
+
+PROC
+PROC_GLO_Tadpole_GiveLearnedApprentice((INTEGER)_Inst, (CHARACTER)_Player)
+AND
+NOT DB_DialogName(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4,_Inst)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "LearnedApprentice");
+
+PROC
+PROC_GLO_Tadpole_GiveLearnedApprentice((INTEGER)_Inst, (CHARACTER)_Player)
+AND
+DB_DialogName(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4,_Inst)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "LearnedApprentice_Scouts");
+
+
+//Given in DEN_RaidingParty_OpenGate, or after combat if Zevlor is dead or the interactive dialog failed
+PROC
+PROC_DEN_RaidingParty_OpenGate_JournalHook()
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "LearnedGroveSituation");
+
+//Saw a Tadpole (after it left an Absolute Cult affiliated character)
+IF
+DB_OnlyOnce("GLO_Tadpole_Tadpole")
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "SawTrueSoulMeldOrTadpole");
+
+//Saw a Tadpole in the Death of a True Soul cinematic
+IF
+DialogEnded((DIALOGRESOURCE)GLO_Tadpole_TrueSoulCorpse_8ceb5646-8c9b-f8f9-cfea-7e6a9f94159e,_ID)
+AND
+DB_DialogPlayers(_ID,_Player,_)
+THEN
+QuestUpdate((CHARACTER)_Player, "GLO_Tadpole", "SawTrueSoulMeldOrTadpole");
+
+IF
+QuestAccepted(_, "GLO_Moonrise")
+THEN
+QuestUpdate("GLO_Tadpole", "StartedInfiltration");
+
+//COMPLETION
+IF
+DialogEnded((DIALOGRESOURCE)COL_KethericShowdown_CrownController_1bcd7cc6-6b38-3cf7-ca60-686d4eadc2b2, _)
+THEN
+QuestUpdate("GLO_Tadpole", "SeenChosenThree");
+//END_REGION
+
+//REGION SUB_Druid
+
+//Player only gets this update if they have met Halsin before.
+IF
+FlagSet(GLO_Halsin_State_Returned_5af86099-47f9-ba69-199a-fe91292a41bd, _, _)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(_Flag)
+AND
+DB_CAMP_Halsin_HasMetHalsinFlags(_Flag)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", "SavedHalsin_BeforeTadpoled");
+
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_CAMP_Halsin_HasMetHalsinFlags(_Flag)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(GLO_Halsin_State_Returned_5af86099-47f9-ba69-199a-fe91292a41bd)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", "SavedHalsin_BeforeTadpoled");
+
+
+//LearnedHalsinPosition my not be given after LearnedKilledOrCaptured
+IF
+QuestUpdateUnlocked(_, "GLO_Tadpole", "LearnedKilledOrCaptured")
+THEN
+NOT DB_QuestDef_State(GLO_Halsin_Knows_WentWithAdventurers_76537faa-016f-f6a9-8136-b236fbefd2e1, "GLO_Tadpole", "LearnedHalsinPosition");
+
+//Halsin's return
+IF
+FlagSet(DEN_AttackOnDen_Event_HalsinSpotted_40e35270-1762-2c46-ca80-c449802b755f, NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Druid",_Known)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinReturnEntries(_Known, _Entry)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", _Entry);
+
+IF
+DB_KnockedOut((CHARACTER)S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+AND
+NOT DB_GlobalFlag(GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa)
+THEN
+SetFlag(GLO_Halsin_State_PermaDefeated_86bc3df1-08b4-fbc4-b542-6241bcd03df1, NULL_00000000-0000-0000-0000-000000000000);
+
+//Halsin's death
+IF
+QuestUpdateUnlocked(_, _, _HalsinEntry)
+AND
+DB_GLO_Halsin_StartingEntries(_HalsinEntry)
+AND
+NOT DB_GlobalFlag(GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa)
+AND
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+DB_QuestDef_SawDeadState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+IF
+QuestUpdateUnlocked(_, _, _HalsinEntry)
+AND
+DB_GLO_Halsin_StartingEntries(_HalsinEntry)
+AND
+NOT DB_GlobalFlag(GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa)
+AND
+NOT DB_QuestDef_SawDefeatedState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323)
+THEN
+DB_QuestDef_SawDefeatedState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+IF
+FlagSet(GLO_Halsin_State_PermaDefeated_86bc3df1-08b4-fbc4-b542-6241bcd03df1, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+NOT DB_GlobalFlag(GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa)
+THEN
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "LearnedLostHalsin", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "LearnedResearchHalsin", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "FoundHalsin_Unknown_KillLeaders", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "FoundHalsin_Known_KillLeaders", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "FoundHalsin_Unknown_AoD", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinLeft_NoHelp_Known", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinLeft_NoHelp_Unknown", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known_Asharak", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown_Asharak", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known_Cerys", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown_Cerys", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Known_Talked", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HalsinAtGrove_Unknown_Talked", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "GoToMoonrise", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "GoToMoonrise_NoIntro", "LearnedHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "LearnedHalsinDiary", "LearnedHalsin");
+
+
+IF
+QuestUpdateUnlocked(_, "GLO_Tadpole", "GoToMoonrise")
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+NOT DB_QuestDef_SawDefeatedState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+IF
+QuestUpdateUnlocked(_, "GLO_Tadpole", "GoToMoonrise_NoIntro")
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+NOT DB_QuestDef_SawDefeatedState("GLO_Tadpole", "HalsinDiedEarly", S_GLO_Halsin_7628bc0e-52b8-42a7-856a-13a6fd413323);
+
+//Halsin's diary
+IF
+UseStarted(_Player,S_GOB_GoblinPriest_HalsinNote_a10cb81b-ba44-446b-b736-f26d55475150)
+AND
+NOT DB_GlobalFlag(GLO_Halsin_Knows_IsFound_a0d83476-e2d0-4972-a76b-b23c39078cd7)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole","LearnedHalsinDiary");
+
+IF
+QuestAccepted(_, "GLO_Tadpole_SUB_Druid")
+THEN
+NOT DB_GLO_Halsin_SubquestStarted(0);
+DB_GLO_Halsin_SubquestStarted(1);
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "ReadHalsinDiary", "LearnedPostHalsin");
+NOT DB_QuestDef_ChainedState("GLO_Tadpole", "HeardHalsinSwD", "LearnedPostHalsin");
+
+//Finding Halsin, he asks player to eliminate the leaders
+IF
+QuestUpdateUnlocked(_,"GLO_Tadpole",_Entry)
+AND
+DB_QuestDef_State_ConditionalFlag(GLO_Halsin_Quest_AskedKilledLeaders_853122c7-f2e2-a2a0-a2b4-67ae09c3ac73,"GLO_Tadpole",_Entry,_,_)
+THEN
+DB_GLO_TadpoleQuest_Druid_FoundHalsinKillLeaders(1);
+
+//Killing (or defeating in general)
+IF
+DB_GLO_TadpoleQuest_Druid_FoundHalsinKillLeaders(1)
+AND
+DB_Defeated(_Leader)
+AND
+DB_GLO_TadpoleQuest_Druid_KillLeaders(_Entry, _Leader)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+//Wolf pens quest entries from interacting with Halsin for the first time. Several possible outcomes depending on state of the leaders.
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_GLO_Halsin_SubquestStarted(_Known)
+AND
+DB_GLO_Halsin_FirstHalsinInteraction(_Flag, _Known, _Entry)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+//Fallback for Halsin moving to camp after killing goblin leaders
+IF
+FlagSet(GOB_WolfPens_Event_HalsinLeavesGoblinCamp_a247e755-d8a0-4938-d122-d8ad9f48a674,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_GlobalFlag(GOB_State_LeadersAreDead_a1c5b01f-4b7f-47ab-82b0-d24d9c6d8bc6)
+AND
+NOT DB_GlobalFlag(GLO_Halsin_State_WillSkipGrove_5c0de857-1de5-3098-5064-e6afaedb4eb4)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", "HalsinLeft_KilledLeaders");
+
+
+//Fallback for Halsin moving to camp when the grove is already locked down
+IF
+FlagSet(GOB_WolfPens_Event_HalsinLeavesGoblinCamp_a247e755-d8a0-4938-d122-d8ad9f48a674,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_GlobalFlag(DEN_Lockdown_State_Active_0b54c7d2-b7b1-4d0f-b8e4-0cf1ee32b1eb)
+AND
+DB_GLO_Halsin_SubquestStarted(_KnowHalsin)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinLeftNoHelp(_KnowHalsin, _Entry)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+
+//Fallback for Halsin moving to camp when the Attack on Den is in progress
+IF
+FlagSet(GOB_WolfPens_Event_HalsinLeavesGoblinCamp_a247e755-d8a0-4938-d122-d8ad9f48a674,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_GlobalFlag(GOB_DrowCommander_Event_RaidersSortie_26816b01-2d64-b50c-3bf6-bffd7dc5f0b9)
+AND
+NOT DB_GlobalFlag(DEN_Lockdown_State_Active_0b54c7d2-b7b1-4d0f-b8e4-0cf1ee32b1eb)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", "HalsinLeft_AoDStarted");
+
+
+//Close: Halsin died before attempting to heal the tadpole
+IF
+FlagSet(GLO_Halsin_State_PermaDefeated_86bc3df1-08b4-fbc4-b542-6241bcd03df1,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Druid",1)
+AND
+QuestIsClosed("GLO_Tadpole_SUB_Druid",0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "LearnedResearchHalsin", _State)
+AND
+DB_GLO_TadpoleQuest_Druid_LeaderDiedEntries(_State, _Update)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Update);
+
+
+//Reporting back to Halsin after raiders have left
+PROC
+PROC_GOB_DrowCommander_RaidersLeft_JournalHook()
+AND
+DB_GlobalFlag(GLO_Halsin_Quest_AskedKilledLeaders_853122c7-f2e2-a2a0-a2b4-67ae09c3ac73)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "ReportHalsin_AoDStarted");
+
+//Reporting back to Halsin after killing the leaders
+PROC
+PROC_DEN_TieflingRefugees_GobHuntVictory_JournalHook()
+AND
+DB_GlobalFlag(GLO_Halsin_Quest_AskedKilledLeaders_853122c7-f2e2-a2a0-a2b4-67ae09c3ac73)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "ReportHalsin_LeadersDefeated");
+
+//Meeting Halsin in the grove
+IF
+DialogEnded((DIALOGRESOURCE)DEN_AttackOnDen_HalsinReturns_d9c2a89e-13fa-57f7-0fcf-4dfada32d693, _)
+THEN
+PROC_DEN_HalsinReturns_JournalUpdate();
+
+IF
+DialogEnded((DIALOGRESOURCE)DEN_AttackOnDen_HalsinAndDruidLeader_790030b5-e20e-ff34-30e4-740e904fa6c7, _)
+THEN
+PROC_DEN_HalsinReturns_JournalUpdate();
+
+PROC
+PROC_DEN_HalsinReturns_JournalUpdate()
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Halsin_Quest_MeetAgainInCamp_581b214b-2f5f-40e4-6171-8cbed7849026)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "StillNeedToSpeakToHalsin");
+
+IF
+FlagSet((FLAG)GLO_Halsin_Quest_MeetAgainInCamp_581b214b-2f5f-40e4-6171-8cbed7849026, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)DEN_AttackOnDen_Event_TieflingPartyInvitation_545593fd-42e6-15c1-1e96-18e0e0be0443)
+AND
+DB_DEN_CurrentDefenderLeader(_Leader)
+AND
+DB_GLO_Halsin_SubquestStarted(_Known)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(_Leader, "HalsinAtGrove", _Known, _Entry)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+DB_QuestDef_ChainedState("DEN_Conflict", "SidedTieflings_Celebrate", "GLO_Tadpole", "TalkedLeader_Celebrate");
+
+IF
+FlagSet((FLAG)GLO_Halsin_Quest_MeetAgainInCamp_581b214b-2f5f-40e4-6171-8cbed7849026, _, _)
+AND
+DB_GlobalFlag((FLAG)DEN_AttackOnDen_Event_TieflingPartyInvitation_545593fd-42e6-15c1-1e96-18e0e0be0443)
+AND
+DB_GLO_Halsin_SubquestStarted(_Known)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(NULL_00000000-0000-0000-0000-000000000000, "HalsinAtGrove", _Known, _Entry)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+//If the objective changes to speaking to the tieflings
+IF
+QuestUpdateUnlocked(_, "DEN_Conflict", "HalsinSentToRath")
+AND
+NOT DB_GlobalFlag((FLAG)DEN_AttackOnDen_Event_TieflingPartyInvitation_545593fd-42e6-15c1-1e96-18e0e0be0443)
+AND
+DB_DEN_CurrentDefenderLeader(_Leader)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(_Leader, "HalsinSentToRath", 0, _Entry)
+AND
+DB_GlobalFlag((FLAG)GLO_Halsin_Quest_MeetAgainInCamp_581b214b-2f5f-40e4-6171-8cbed7849026)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+IF
+QuestUpdateUnlocked(_, "DEN_Conflict", "HalsinSentToRath")
+AND
+DB_GlobalFlag((FLAG)DEN_AttackOnDen_Event_TieflingPartyInvitation_545593fd-42e6-15c1-1e96-18e0e0be0443)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(NULL_00000000-0000-0000-0000-000000000000, "HalsinSentToRath", 0, _Entry)
+AND
+DB_GlobalFlag((FLAG)GLO_Halsin_Quest_MeetAgainInCamp_581b214b-2f5f-40e4-6171-8cbed7849026)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+//If the objective remains on Halsin, when players did not agree to meet back in camp
+IF
+QuestUpdateUnlocked(_, "DEN_Conflict", "HalsinSentToRath")
+AND
+DB_DEN_CurrentDefenderLeader(_Leader)
+AND
+DB_GLO_TadpoleQuest_Druid_HalsinLeaderEntries(_Leader, "HalsinSentToRath", 0, _Entry)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Halsin_Quest_MeetAgainInCamp_581b214b-2f5f-40e4-6171-8cbed7849026)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "HalsinSentToRath_Return");
+
+IF
+FlagSet(GLO_Halsin_Quest_GoToMoonrise_f334b6de-349a-01e6-2a04-d794a62b38ec, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Halsin_State_WillSkipGrove_5c0de857-1de5-3098-5064-e6afaedb4eb4)
+AND
+GetFlag(GOB_WolfPens_State_HalsinIntroHappened_7d0751b9-1055-4a54-9ccd-f5e95e2a1f69, NULL_00000000-0000-0000-0000-000000000000, _Known)
+AND
+DB_GLO_Halsin_ClosingEntries(_Known, _Entry)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+IF
+FlagSet(GLO_Halsin_Quest_GoToMoonrise_f334b6de-349a-01e6-2a04-d794a62b38ec, _, _)
+AND
+DB_GlobalFlag((FLAG)GLO_Halsin_State_WillSkipGrove_5c0de857-1de5-3098-5064-e6afaedb4eb4)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "GoToMoonrise_SkippedGrove");
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Druid", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "Tadpole_PointOfNoReturn");
+
+//END_REGION
+//REGION SUB_Priestess
+
+//Close: Character is put to sleep by the goblin priestess
+PROC
+PROC_GOB_GoblinPriest_FadeOut(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "PriestessImprisoned");
+
+//Close: Killed priestess before getting imprisoned
+IF
+FlagSet(GOB_GoblinPriest_State_Dead_78f21b35-a10a-4db2-9230-025691645103,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "LearnedPriestess", 1)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "PriestessDied");
+
+
+//Close: goblin camp turned hostile, sided with tieflings...
+PROC
+PROC_DEN_AttackOnDen_SideWithTieflings_JournalHook()
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", "PriestessTurnedHostile");
+
+PROC
+PROC_CAMP_GoblinHuntCelebration_RaidersBetrayal_JournalHook() //goblins turn hostile to the player even if the player sided with them in AoD
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole", "PriestessTurnedHostile");
+
+IF
+QuestUpdateUnlocked(_Player, "GLO_Tadpole", "PriestessImprisoned")
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "PriestessDiedEarly", S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9);
+
+IF
+QuestAccepted(_, "GLO_Tadpole_SUB_Priestess")
+THEN
+DB_QuestDef_SawDeadState("GLO_Tadpole", "PriestessDiedEarly", S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9);
+
+//TODO: when exactly does the goblins turn hostile after siding with them in Attack on Den?
+//The celebration is not always happening (if Minthara is dead it doesn't), so there should be a safer hook.
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Priestess", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "Tadpole_PointOfNoReturn");
+
+//END_REGION
+//REGION SUB_Creche
+
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag((FLAG)ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637)
+THEN
+QuestUpdate("GLO_Tadpole", "LaezelToldCreche_NoZorru");
+
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_ChapelVersionInitiated_e6015bdf-276e-47b2-9a43-9bc0c981e1ad)
+THEN
+QuestUpdate("GLO_Tadpole", "LaezelToldCreche");
+
+PROC
+PROC_StateSet_PermaDefeated((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag(GLO_GithCreche_State_EverEnteredBefore_3ebdfeaa-4e83-4878-90db-01adb9fdf629)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate("GLO_Tadpole", "LaezelPermaDefeatedEarly");
+
+IF
+DB_Dead(S_DEN_Tiefling_011_77439e86-3f60-4456-bd55-931e2f45654f)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, S_DEN_Tiefling_011_77439e86-3f60-4456-bd55-931e2f45654f)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_Knows_CrecheLocation_696c423d-e6da-428e-a7fe-c083fffccad2)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "FoundZorru_LaezelAtCamp", 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TieflingToldCreche", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TadpoleGotNoInfoFromZorru", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TadpoleGotNoInfoFromZorruWithoutKnowingHim", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "TadpoleZorruDied");
+
+IF
+FlagSet((FLAG)ORI_Laezel_Quest_ZorruLeft_f2a667a1-b1c9-4ead-97c3-54cccf099462, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_Knows_CrecheLocation_696c423d-e6da-428e-a7fe-c083fffccad2)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "FoundZorru_LaezelAtCamp", 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TieflingToldCreche", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TadpoleGotNoInfoFromZorru", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TadpoleGotNoInfoFromZorruWithoutKnowingHim", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "TadpoleZorruLeft");
+
+IF
+FlagSet((FLAG)ORI_Laezel_Quest_GotNoInfoFromZorru_2780a235-1089-4135-aa37-6fa03a0467a8, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_CaringAboutZorru_05c85d1f-11e6-4219-a047-901b958c3578)
+THEN
+QuestUpdate("GLO_Tadpole", "TadpoleGotNoInfoFromZorruWithoutKnowingHim");
+
+IF
+FlagSet((FLAG)ORI_Laezel_Quest_GotNoInfoFromZorru_2780a235-1089-4135-aa37-6fa03a0467a8, _, _)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_CaringAboutZorru_05c85d1f-11e6-4219-a047-901b958c3578)
+THEN
+QuestUpdate("GLO_Tadpole", "TadpoleGotNoInfoFromZorru");
+
+IF
+DialogEnded((DIALOGRESOURCE)PLA_GithChokepoint_DragonEvent_3eb22b2c-bc59-03de-7a6e-68940620b16c, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TieflingToldCreche", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "FoundPatrol_KnewAboutPatrol");
+
+IF
+DialogEnded((DIALOGRESOURCE)PLA_GithChokepoint_DragonEvent_3eb22b2c-bc59-03de-7a6e-68940620b16c, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "TieflingToldCreche", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "FoundPatrol_DidntKnowAboutPatrol");
+
+// Gith Chokepoint ended
+PROC
+PROC_GLO_GithChokepoint_Outcome(1)
+AND
+NOT DB_GlobalFlag(PLA_GithChokepoint_State_VossRevealedLocation_8e527ca3-eb01-4fe3-acb3-231c8ad18fcb)
+THEN
+QuestUpdate("GLO_Tadpole", "GithChokepointEnded");
+
+PROC
+PROC_GLO_GithChokepoint_Outcome(0)
+THEN
+QuestUpdate("GLO_Tadpole", "CheckpointCombatStarted");
+
+PROC
+PROC_PLA_GithChokepoint_CheckStartWRD()
+AND
+NOT DB_GlobalFlag(PLA_GithChokepoint_Event_AllGithsDefeated_b329e2d8-31c8-4861-ae87-224e86f51682)
+AND
+DB_GlobalFlag(PLA_GithChokepoint_State_VossRevealedLocation_8e527ca3-eb01-4fe3-acb3-231c8ad18fcb)
+THEN
+QuestUpdate("GLO_Tadpole", "LearnedCreche");
+
+IF
+FlagSet((FLAG)PLA_GithChokepoint_Event_AllGithsDefeated_b329e2d8-31c8-4861-ae87-224e86f51682, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_Knows_CrecheLocation_696c423d-e6da-428e-a7fe-c083fffccad2)
+THEN
+QuestUpdate("GLO_Tadpole", "ChokepointDefeated");
+
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_PlainsVersionInitiated_59bda4f5-708b-4f23-aaba-d5f387ae95c2)
+THEN
+QuestUpdate("GLO_Tadpole", "LaezelToldMap");
+
+IF
+LevelLoaded("CRE_Main_A")
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_Knows_CrecheLocation_696c423d-e6da-428e-a7fe-c083fffccad2)
+THEN
+QuestUpdate("GLO_Tadpole", "ReachedCrecheRegionWithClues");
+
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag((FLAG)ORI_Laezel_State_RecruitmentInCrecheActive_674e1fbb-7174-4c62-9581-08c67aeeaaa4)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_StayedBehindInCreche_9705545c-fb54-4ff4-b16b-3326cce76dd8)
+THEN
+QuestUpdate("GLO_Tadpole", "RecruitedLaezel_Creche");
+
+IF
+FlagSet((FLAG)CRE_ChainofCommand_ToldReportToInfirmary_5c8cfe96-4428-417e-87de-ce1012f1dc30, _, _)
+THEN
+QuestUpdate("GLO_Tadpole", "DirectedToInfirmary");
+
+IF
+FlagSet((FLAG)CRE_GithInfirmary_State_PlayerVisited_6ff86231-2957-4b42-873e-3911adaa5458, _, _)
+THEN
+QuestUpdate("GLO_Tadpole", "FoundInfirmary");
+
+IF
+FlagSet((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd, _, _)
+THEN
+QuestUpdate("GLO_Tadpole", "UseZaithisk");
+
+IF
+DialogEnded((DIALOGRESOURCE)CRE_GithInfirmary_Doctor_9d7953d8-4b2c-93a7-25ab-094c0ed931cd, _)
+AND
+NOT DB_GlobalFlag((FLAG)CRE_GithInfirmary_State_DoctorWaitsAtDevice_2b20d248-1378-432b-88c6-f5b052107afd)
+THEN
+QuestUpdate("GLO_Tadpole", "SpokeToDoctor_NotWaiting");
+
+IF
+FlagSet((FLAG)CRE_ChainOfCommand_State_InquisitorSituationFinished_acc50a19-c0f3-425b-b1a1-ac5bbd466b8f, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "ReachedCreche", 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "DirectedToInfirmary", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "ReachedCreche_BetrayedByVlaakith");
+
+IF
+FlagSet((FLAG)CRE_ChainOfCommand_State_InquisitorSituationFinished_acc50a19-c0f3-425b-b1a1-ac5bbd466b8f, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "ReachedCreche_LaezelPermaDefeated", 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "FoundInfirmary", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "DirectedToInfirmary", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "ReachedCreche_BetrayedByVlaakith");
+
+IF
+FlagSet((FLAG)CRE_ChainOfCommand_State_InquisitorSituationFinished_acc50a19-c0f3-425b-b1a1-ac5bbd466b8f, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "DirectedToInfirmary", 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "FoundInfirmary", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "DirectedToInfirmary_BetrayedByVlaakith");
+
+
+//Go to the Creche Infirmary - Betrayed by Vlaakith
+IF
+FlagSet((FLAG)CRE_ChainOfCommand_State_InquisitorSituationFinished_acc50a19-c0f3-425b-b1a1-ac5bbd466b8f, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "FoundInfirmary", 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "UseZaithisk", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "SpeakToDoctor_BetrayedByVlaakith");
+
+//Sit in the Zaith'isk - Betrayed by Vlaakith
+IF
+FlagSet((FLAG)CRE_ChainOfCommand_State_InquisitorSituationFinished_acc50a19-c0f3-425b-b1a1-ac5bbd466b8f, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "UseZaithisk", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "UseZaithisk_BetrayedByVlaakith");
+
+//Sit in the device 
+PROC
+PROC_StateSet_Defeated(S_CRE_Doctor_c04c1977-d53f-4b5c-a29d-2e8d75024768)
+AND
+DB_Players(_Player)
+AND
+DB_GLO_Tadpole_SUB_Creche_KnowsAboutCrecheDevice(_ValidState)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", _ValidState, 1)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "UseZaithisk", 0)
+THEN
+QuestUpdate("GLO_Tadpole", "UseDevice");
+
+//Sit in the device - Betrayed by Vlaakith
+IF
+FlagSet((FLAG)CRE_ChainOfCommand_State_InquisitorSituationFinished_acc50a19-c0f3-425b-b1a1-ac5bbd466b8f, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "UseDevice", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "UseDevice_BetrayedByVlaakith");
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Creche", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "Tadpole_PointOfNoReturn");
+
+//END_REGION
+//REGION SUB_Apprentice
+
+//Character cured Apprentice's poison by any means
+PROC
+PROC_DEN_Apprentice_ThornCured((CHARACTER)_Player,(INTEGER)_)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "PoisonedByApprentice", 1)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "CuredApprenticePoison");
+
+//Apprentice died :
+PROC
+PROC_StateSet_PermaDefeated(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+AND
+GetFlag(DEN_Apprentice_Event_ReachedCyanideDialog_bcc31a3c-72e6-4720-98f1-6b7c2a40c6ba, NULL_00000000-0000-0000-0000-000000000000, _AfterCyanide)
+AND
+DB_GLO_Tadpole_SUB_Apprentice_Died(_AfterCyanide, _Entry)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "PoisonedByApprentice", 0) //if this entry is unlocked, we are waiting to close the quest with CuredApprenticePoison instead
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", _Entry);
+
+//Apprentice persuaded, poison avoided
+PROC
+PROC_DEN_ApprenticePersuaded_JournalHook()
+AND
+DB_DEN_Apprentice_Tadpoled(_Tadpoled)
+AND
+GetFlag(DEN_Apprentice_Event_ApplyPoison_f4df286d-2866-4acd-818f-6008e8db4212, _Tadpoled, 0) //wasn't poisoned
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+THEN
+QuestUpdate(_Player, "GLO_Tadpole", "ApprenticePersuaded");
+
+//Nettie dying too early
+IF
+QuestAccepted(_, "GLO_Tadpole_SUB_Apprentice")
+THEN
+DB_QuestDef_SawDeadState("GLO_Tadpole", "ApprenticeDiedEarly", S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+IF
+QuestUpdateUnlocked(_, "GLO_Tadpole", "PoisonedByApprentice")
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "ApprenticeDiedEarly", S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+IF
+UnlockedRecipe(_Player, "ALCH_Potion_Antidote_Mugwort")
+AND
+QuestUpdateIsUnlocked(_Player, "GLO_Tadpole", "PoisonedByApprentice", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "LearnedCureDaleland");
+
+IF
+QuestUpdateUnlocked(_Player, "GLO_Tadpole", "PoisonedByApprentice")
+AND
+HasRecipeUnlocked(_Player, "ALCH_Potion_Antidote_Mugwort", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "LearnedCureDaleland");
+
+IF
+FlagSet((FLAG)DEN_Apprentice_Event_ReachedCyanideDialog_bcc31a3c-72e6-4720-98f1-6b7c2a40c6ba,_,_)
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "ApprenticeDiedEarly", S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Apprentice", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "Tadpole_PointOfNoReturn");
+
+//END_REGION
+//REGION SUB_Hag
+IF
+QuestUpdateUnlocked(_, "GLO_Tadpole", "HagTriedTadpoleHeal ")
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "EthelDiedEarly", S_HAG_Hag_c457d064-83fb-4ec6-b74d-1f30dfafd12d);
+
+IF
+FlagSet((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestIsAccepted(_Player, "GLO_Tadpole_SUB_Hag", 1)
+THEN
+QuestUpdate("GLO_Tadpole", "Tadpole_PointOfNoReturn");
+
+//END_REGION
+//REGION SUB_SocietyOfBrilliance
+IF
+QuestUpdateUnlocked(_Player, "GLO_Tadpole", "ToldAboutRing")
+THEN
+NOT DB_QuestDef_SawDeadState("GLO_Tadpole", "MFDiedEarly", S_GLO_SocietyOfBrilliance_MindFlayer_1f9937ef-9207-4db6-a833-e4083d571f53);
+//END_REGION
+
+//REGION MOO_GnomeRescue
+
+IF
+FlagSet(GLO_IronhandGnomes_Knows_WulbrenInMoonrise_28cc20f8-9052-110a-aa87-76b860f038b0, _, _ID)
+AND
+DB_DialogName(UND_GnomeForeman_a59832df-8838-e23b-3106-bb65e599f7fa, _ID)
+THEN
+QuestUpdate("MOO_GnomeRescue", "UND_HeardCaptivesAtMT");
+
+IF
+FlagSet((FLAG)GLO_IronhandGnomes_Knows_WulbrenInMoonrise_28cc20f8-9052-110a-aa87-76b860f038b0, _, _ID)
+AND
+DB_DialogName(UND_UnfortunateGnome_9b485467-6333-15a7-9c79-15757b5fb547, _ID)
+THEN
+QuestUpdate("MOO_GnomeRescue", "UND_HeardCaptivesAtMT_Barcus");
+
+//END_REGION
+
+//REGION Grand Duke Rescue
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_GLO_GrandDukeRescue_LearnAboutMoonriseTowers(_Flag)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "PLA_GrandDukeRescue", "Counsellor_AcceptedHelp_Moonrise", 0)
+THEN
+PROC_GLO_GrandDukeRescue_UpdateLearnedAboutMoonrise();
+
+IF
+QuestUpdateUnlocked(_, "PLA_GrandDukeRescue", "Counsellor_AcceptedHelp_NoLocation")
+THEN
+PROC_GLO_GrandDukeRescue_UpdateLearnedAboutMoonrise();
+
+PROC
+PROC_GLO_GrandDukeRescue_UpdateLearnedAboutMoonrise()
+AND
+NOT DB_OnlyOnce("PLA_GrandDukeRescue_UnlockedLearnedMoonrise")
+AND
+QRY_GLO_GrandDukeRescue_KnowsAboutMoonrise()
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("PLA_GrandDukeRescue_UnlockedLearnedMoonrise")
+THEN
+QuestUpdate(_Player, "PLA_GrandDukeRescue", "LearnedMoonrise");
+
+QRY
+QRY_GLO_GrandDukeRescue_KnowsAboutMoonrise()
+AND
+DB_GLO_GrandDukeRescue_LearnAboutMoonriseTowers(_Flag)
+AND
+DB_GlobalFlag(_Flag)
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet(IRN_IronThrone_State_IndividualPrisonerFree_4c120f58-ad6c-438a-b35b-1bb3d4ed5e87, S_GLO_Ravengard_f6620372-ebd0-4511-a39d-8c2d4ad03f03, _)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"PLA_GrandDukeRescue","EscortIRN");
+
+IF
+QuestUpdateUnlocked(_, "PLA_GrandDukeRescue", "LearnedMoonrise")
+THEN
+QuestSetCategory("PLA_GrandDukeRescue", "Shadowcurse");
+
+IF
+QuestUpdateUnlocked(_, "PLA_GrandDukeRescue", "Tadpoled")
+THEN
+QuestSetCategory("PLA_GrandDukeRescue", "BaldursGate");
+
+//If players enter the Iron Throne while Ravengard is there, killed by Mizora, but leave without seeing him, add journal update
+PROC
+PROC_State_Changed(_, "IRN_IronThrone", "BackAtDocks")
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Destroyed_91795368-af06-4b56-9ac1-b78995aa9ea9)
+AND
+DB_GlobalFlag((FLAG)IRN_IronThrone_State_Visited_5b3fb5a7-61e8-44a9-a0a1-b6b45b59a23c)
+AND
+DB_GlobalFlag((FLAG)IRN_Ravengard_State_KilledOffscreenByMizoraBeforePactScene_f4a0eace-8c06-4d5e-a446-7b5e64d3b80f)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_Ravengard_State_SeenDeadRavengardDuringIRN_43cea123-9650-46f3-99d4-64c6d284ef1f)
+AND
+NOT DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllReleasedFromPact_79a90490-b009-507c-e0d3-f79b0bdd4cb6)
+AND
+NOT DB_GlobalFlag((FLAG)CAMP_MizorasPact_State_WyllEternalPact_8da8b1fb-5aa9-8cf5-8b45-6f8ca31a1227)
+AND
+NOT DB_GlobalFlag((FLAG)CAMP_Ravengard_State_RavengardInCamp_37309008-04cf-493c-8ca6-43034d331a8a)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"PLA_GrandDukeRescue","LeftWithoutSeeingDeadRavengard");
+
+//END_REGION
+
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

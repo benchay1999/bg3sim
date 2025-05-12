@@ -1,0 +1,96 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Shadows summoning
+// On destroying the book.
+IF
+DestroyingBy(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _, _, _)
+AND
+NOT DB_FOR_DangerousBook_BookDestoyedPos(_, _, _)
+AND
+GetPosition(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _BookX, _BookY, _BookZ)
+THEN
+DB_FOR_DangerousBook_BookDestoyedPos(_BookX, _BookY, _BookZ);
+
+IF
+DB_FOR_DangerousBook_DestroyedNoVB(1)
+THEN
+PROC_FOR_DangerousBook_OnBookDestroyed();
+
+IF
+VoiceBarkEnded(FOR_DangerousBook_VB_BookDestroyed_b3dd9bc6-1967-378c-d7dc-9c1b70eddebc, _)
+THEN
+PROC_FOR_DangerousBook_OnBookDestroyed();
+
+IF
+VoiceBarkFailed(FOR_DangerousBook_VB_BookDestroyed_b3dd9bc6-1967-378c-d7dc-9c1b70eddebc)
+THEN
+PROC_FOR_DangerousBook_OnBookDestroyed();
+
+PROC
+PROC_FOR_DangerousBook_OnBookDestroyed()
+AND
+QRY_OnlyOnce("FOR_DangerousBook_BookDestroyed_SummonShades")
+THEN
+TimerLaunch("FOR_DangerousBook_BookDestroyed_SummonShades_Timer", 1200);
+
+IF
+TimerFinished("FOR_DangerousBook_BookDestroyed_SummonShades_Timer")
+AND
+DB_FOR_DangerousBook_BookDestoyedPos(_BookX, _BookY, _BookZ)
+THEN
+CreateSurfaceAtPosition(_BookX, _BookY, _BookZ, "SurfaceDarknessCloud", 3.0, 3.0, NULL_00000000-0000-0000-0000-000000000000);
+PROC_FOR_DangerousBook_SummonShades(3, _BookX, _BookY, _BookZ);
+
+// summoning
+PROC
+PROC_FOR_DangerousBook_SummonShades((INTEGER)_Num, (REAL)_PosX, (REAL)_PosY, (REAL)_PosZ)
+AND
+QRY_DoNTimes(_Num)
+AND
+DB_QRY_RTN_DoNTimes(_)
+AND
+CreateAt(Shadow_A_749b1e7d-63a1-4a3d-b0ca-f237b9ada5c4, _PosX, _PosY, _PosZ, 0, 1, "", _Creature)
+THEN
+DB_FOR_DangerousBook_Shadows((CHARACTER)_Creature);
+SetFaction(_Creature, (FACTION)GLO_DangerousBook_Shadows_df957427-b9f5-4f28-8671-ed5ae2512840);
+
+//If they see someone, become aggressive to their faction.
+IF
+Saw(_Creature,_Enemy,_)
+AND
+DB_FOR_DangerousBook_Shadows(_Creature)
+AND
+NOT DB_PermaDefeated(_Enemy)
+AND
+NOT DB_FOR_DangerousBook_Shadows(_Enemy)
+AND
+GetFaction(_Enemy,_Faction)
+THEN
+PROC_SetRelationMutual((FACTION)GLO_DangerousBook_Shadows_df957427-b9f5-4f28-8671-ed5ae2512840,_Faction,0);
+
+//Edge case: reapply hostility if NPC changes faction after being spotted
+IF
+BaseFactionChanged(_Char,_,_Faction)
+AND
+DB_FOR_DangerousBook_Shadows(_Creature)
+AND
+NOT DB_FOR_DangerousBook_Shadows(_Char)
+AND
+DB_Sees(_Creature,_Char)
+THEN
+PROC_SetRelationMutual((FACTION)GLO_DangerousBook_Shadows_df957427-b9f5-4f28-8671-ed5ae2512840,_Faction,0);
+
+PROC
+PROC_StateSet_PermaDefeated((CHARACTER)_Creature)
+AND
+DB_FOR_DangerousBook_Shadows(_Creature)
+THEN
+NOT DB_FOR_DangerousBook_Shadows(_Creature);
+//END_REGION Shadows summoning
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

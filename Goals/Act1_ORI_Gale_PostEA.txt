@@ -1,0 +1,461 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_ORI_Gale_SetupCurseProgression(2);
+
+DB_ORI_Gale_NeedsMagicItemIPRDFlags((FLAG)ORI_Gale_State_EnoughRegionsToAskMagicItem1_a1faa546-4525-437e-a528-a4ccfd541a93, (FLAG)ORI_Gale_IPRD_NeedMagicItem1_c1899c40-e4c4-72d6-4360-444cea41e72f, (FLAG)ORI_Gale_State_GotOneMagicItem_6fec5439-a66e-4aff-b62b-69f88648c34d);
+DB_ORI_Gale_NeedsMagicItemIPRDFlags((FLAG)ORI_Gale_State_EnoughRegionsToAskMagicItem2_fd8f43cd-a2c1-4211-8978-de2db47fafe8, (FLAG)ORI_Gale_IPRD_NeedMagicItem2_170a6564-a01e-f145-6958-bf84312d0e03, (FLAG)ORI_Gale_State_GotTwoMagicItems_c757086e-4696-441d-b19c-fdb65982776f);
+DB_ORI_Gale_NeedsMagicItemIPRDFlags((FLAG)ORI_Gale_State_EnoughRegionsToAskMagicItem3_40cd9192-878b-480f-9a41-9f69c61f2bd9, (FLAG)ORI_Gale_IPRD_NeedMagicItem3_b2db2afd-74a2-b432-df34-6073d7c78b62, (FLAG)ORI_Gale_State_GotThreeMagicItems_484d97f2-5c79-a557-0635-fbf81e8c0307);
+
+DB_ORI_Gale_SetupArcaneTower(1);
+
+DB_TopicalGreeting((FLAG)TG_ORI_GaleRecruited_62c1a7b9-c95c-4433-a039-79c21cbadd8b);
+
+DB_Dialogs_StartDatingDialog((DIALOGRESOURCE)CAMP_GoblinHuntTieflingCelebration_CRD_Gale3b_a65afd51-538b-3b92-e09a-ea0bb06c36cb);
+DB_ORI_WasDatingFlag((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (FLAG)ORI_Gale_State_WasDating_88021437-235d-4e0f-8abb-b3083cb26ddb);
+
+DB_TopicalGreeting((FLAG)TG_ORI_Gale_LearnedBackstory_2857a62a-e31b-4913-b26d-92cf074ad969);
+
+DB_ORI_Gale_DoubleBHVRTrigger("WLDDUNABB", c8093b0e-c397-8c35-50b5-5306276ce038);
+DB_ORI_Gale_DoubleBHVRTrigger("WLDBAS", bc0853da-e8c1-81b6-5fbc-8b2857a9ce25);
+DB_ORI_Gale_DoubleBHVRTrigger("WLDCAVGRN", 76a88bef-4c6c-881c-31db-50e141aa976e);
+DB_ORI_Gale_DoubleBHVRTrigger("WLDDUNSHA", d9ad528e-6cfb-8d74-41bc-ceeb1dcb17c6);
+DB_ORI_Gale_DoubleBHVRTrigger("WLDMAIN" , 6ce4f604-398f-843a-5ff5-8841a46cda42);
+DB_ORI_Gale_DoubleBHVRTrigger("WLDCAVSND", 697807f2-124b-8512-3505-e0a86896058f);
+DB_ORI_Gale_DoubleBHVRTrigger("WLDUND", 19b48e09-38a1-85c3-315b-0439f501eb89);
+KBSECTION
+//REGION Recruitment
+
+//Cleanup pre-EA recruitment.
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_FindAvatar");
+NOT DB_SpotPlayers((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_FindAvatar", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_HasTag((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_FindAvatar", (TAG)AVATAR_306b9b05-1057-4770-aa17-01af21acd650, 1);
+NOT DB_SpotPlayers_SpotTrigger((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_FindAvatar", S_ORI_Gale_RecruitmentTrigger_22824abf-0652-4313-8caa-3cfc54d0089d);
+NOT DB_SpotPlayers_Continuous((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_Gale_FindAvatar");
+
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+AND
+NOT DB_Players((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+SetOnStage((ITEM)S_CHA_WaypointShrine_Top_8ebd584c-97e3-42fd-b81f-80d7841ebdf3, 0);
+DB_OneShot_VoiceBarkTrigger(S_ORI_Gale_RecruitmentTrigger_22824abf-0652-4313-8caa-3cfc54d0089d, CRA_GaleRecruitment_VB_Approach_95507492-f749-acee-3d5d-dd9de15b9e27);
+
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+AND
+DB_Players((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+SetOnStage(S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0, 0);
+SetOnStage(S_ORI_Gale_Recruitment_UnstablePortal_56384b74-c8fb-452a-9c24-b816a7a5f95f, 0);
+
+IF
+UseFinished(_Character, S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0, 1)
+AND
+DB_Players(_Character)
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)Gale_Recruitment2_4b3ad930-fb84-09ff-eced-37265b7ba8c6, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Character)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_PAD_CantTalk_b38cbc45-e8b5-614d-baf0-79ae565086cb, _Character);
+//TODO: Add sparkle when anyone clicks on it for summons, wildshaped players, etc.
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(Gale_Recruitment2_4b3ad930-fb84-09ff-eced-37265b7ba8c6, _ID)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0);
+
+//FindValidPosition Fallback
+IF
+FlagSet((FLAG)ORI_Gale_Event_Liberated_e731c615-0002-7028-c10b-e7c09d619c2b, _, _)
+AND
+GetPosition(S_CHA_WaypointTrigger_Top_4141c0a2-5ba9-42c0-ab18-082426df45e7, _X, _Y, _Z)
+AND
+FindValidPosition(_X, _Y, _Z, 4.0, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 1, _Vx, _Vy, _Vz)
+THEN
+DB_ORI_Gale_TeleportPosition(_Vx, _Vy, _Vz);
+
+//FindValidPosition Fallback
+IF
+FlagSet((FLAG)ORI_Gale_Event_Liberated_e731c615-0002-7028-c10b-e7c09d619c2b, _, _)
+AND
+NOT DB_ORI_Gale_TeleportPosition(_, _, _)
+AND
+GetPosition(S_CHA_WaypointTrigger_Top_4141c0a2-5ba9-42c0-ab18-082426df45e7, _X, _Y, _Z)
+THEN
+DB_ORI_Gale_TeleportPosition(_X, _Y, _Z);
+
+IF
+FlagSet((FLAG)ORI_Gale_Event_Liberated_e731c615-0002-7028-c10b-e7c09d619c2b, _, _)
+AND
+DB_ORI_Gale_TeleportPosition(_X, _Y, _Z)
+THEN
+SetOnStage(S_ORI_Gale_Recruitment_UnstablePortal_56384b74-c8fb-452a-9c24-b816a7a5f95f, 0);
+SetOnStage(S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0, 0);
+TeleportToPosition(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _X, _Y, _Z, "", 0, 0, 0, 1, 1);
+LookFromTrigger(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, S_CHA_WaypointTrigger_Top_4141c0a2-5ba9-42c0-ab18-082426df45e7, 1);
+PlayEffect(S_CHA_WaypointShrine_Top_8ebd584c-97e3-42fd-b81f-80d7841ebdf3, VFX_Script_Waypoint_Portal_01_f545f66c-87c8-8dde-cd27-16539cb0dc45, "", 1.0);
+PlayAnimation(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, CUST_WaypointAppear_01_b6aa4aaa-66d5-4564-833c-7308dc1c52e3);
+SetDetached((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+SetCanSpotSneakers((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 1);
+PROC_SetInvulnerable(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+SetVisible(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 1);
+PROC_GLO_Origins_SetRecruitmentDialog(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)Gale_Recruitment2_4b3ad930-fb84-09ff-eced-37265b7ba8c6);
+PROC_CharacterEnableAllCrimes((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+
+IF
+FlagSet((FLAG)ORI_Gale_Event_DisruptedWaypoint_eb1df53c-f315-fc93-9d83-af3d3aa7411d, _, _)
+THEN
+SetOnStage(S_ORI_Gale_Recruitment_UnstablePortal_56384b74-c8fb-452a-9c24-b816a7a5f95f, 0);
+SetOnStage(S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0, 0);
+PROC_RemoveOneShotTrigger(S_ORI_Gale_RecruitmentTrigger_22824abf-0652-4313-8caa-3cfc54d0089d);
+
+IF
+DB_Players((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_OffStage(S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0)
+THEN
+SetOnStage(S_ORI_Gale_Recruitment_UnstablePortal_56384b74-c8fb-452a-9c24-b816a7a5f95f, 0);
+SetOnStage(S_CHA_WaypointShrine_Top_8ebd584c-97e3-42fd-b81f-80d7841ebdf3, 1);
+SetOnStage(S_CHA_WaypointShrine_Top_PreRecruitment_b3c94e77-15ab-404c-b215-0340e398dac0, 0);
+PROC_RemoveOneShotTrigger(S_ORI_Gale_RecruitmentTrigger_22824abf-0652-4313-8caa-3cfc54d0089d);
+
+IF
+DialogEnded((DIALOGRESOURCE)Gale_Recruitment2_4b3ad930-fb84-09ff-eced-37265b7ba8c6, _)
+AND
+DB_GlobalFlag((FLAG)ORI_Gale_Event_DisruptedWaypoint_eb1df53c-f315-fc93-9d83-af3d3aa7411d)
+THEN
+SetOnStage(S_CHA_WaypointShrine_Top_8ebd584c-97e3-42fd-b81f-80d7841ebdf3, 1);
+
+//END_REGION
+
+
+//REGION After recruitment, Gale wants to ask the players about their being a wizard
+
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_DialogSpeakers(_, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _)
+AND
+QRY_OnlyOnce("ORI_Gale_AskWizard")
+THEN
+SetFlag((FLAG)ORI_Gale_State_AskWizard_594cdc80-ef90-a33b-081e-683a445c0d75, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//Whatever topic Gale covers in his main dialogue, this one's outdated afterwards.
+IF
+DialogEnded((DIALOGRESOURCE)Gale_InParty2_6beb1b10-845f-49fa-6d6d-f425eaa42574, _)
+THEN
+ClearFlag((FLAG)ORI_Gale_State_AskWizard_594cdc80-ef90-a33b-081e-683a445c0d75, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+
+//REGION Tiefling Celebration
+IF
+FlagSet((FLAG)NIGHT_Gale_LearnSpell_393b05ff-d866-4115-8ece-872232ce44cf, _, _)
+THEN
+DB_CampNight_CRD((FLAG)NIGHT_GoblinHunt_TieflingCelebration_1ad8c357-2695-4d5c-b5f9-8b8c07803121, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)CAMP_GoblinHuntTieflingCelebration_CRD_Gale3_1f3df6ba-3d41-c387-655a-7a39b4159f97,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_CampNight_CRD((FLAG)NIGHT_GoblinHunt_TieflingCelebration_1ad8c357-2695-4d5c-b5f9-8b8c07803121, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)CAMP_GoblinHuntTieflingCelebration_CRD_Gale2_6e83e164-1900-b40d-723d-d2c206ea5a59,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_Camp_QueuedNight(NIGHT_Gale_LearnSpell_393b05ff-d866-4115-8ece-872232ce44cf)
+THEN
+DB_Dialogs_StartDatingDialog(CAMP_Gale_CRD_SpellTeaching_4d0a0d4e-0812-98c1-f2a6-94013578ce97);
+
+//Because this dialogue can also play as a SD in the party and there I don't want it to be blocked.
+IF
+DB_Dialogs_StartDatingDialog(CAMP_Gale_CRD_SpellTeaching_4d0a0d4e-0812-98c1-f2a6-94013578ce97)
+AND
+NOT DB_Camp_QueuedNight(NIGHT_Gale_LearnSpell_393b05ff-d866-4115-8ece-872232ce44cf)
+THEN
+NOT DB_Dialogs_StartDatingDialog(CAMP_Gale_CRD_SpellTeaching_4d0a0d4e-0812-98c1-f2a6-94013578ce97);
+
+IF
+DB_Camp_QueuedNight(NIGHT_Gale_PrePartDev1_85026b27-18d6-4468-b861-4ab84f342385)
+THEN
+DB_Dialogs_DatingDialog(CAMP_GoblinHuntTieflingCelebration_CRD_Gale3_1f3df6ba-3d41-c387-655a-7a39b4159f97);
+
+//Same as above - sometimes this triggers in the Tiefling Hunt celebration, and then it'll trigger always, because that night bends some rules.
+IF
+DB_Dialogs_DatingDialog(CAMP_GoblinHuntTieflingCelebration_CRD_Gale3_1f3df6ba-3d41-c387-655a-7a39b4159f97)
+AND
+NOT DB_Camp_QueuedNight(NIGHT_Gale_PrePartDev1_85026b27-18d6-4468-b861-4ab84f342385)
+THEN
+NOT DB_Dialogs_DatingDialog(CAMP_GoblinHuntTieflingCelebration_CRD_Gale3_1f3df6ba-3d41-c387-655a-7a39b4159f97);
+
+//The Tiefling Celebration specifically has approval-gated CRDs without, itself, being Approval-gated.
+IF
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)CAMP_Gale_CRD_SpellTeaching2_4d0a0d4e-0812-98c1-f2a6-94013578ce97, NULL_00000000-0000-0000-0000-000000000000, "CAMP", 0, -100)
+THEN
+NOT DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)CAMP_Gale_CRD_SpellTeaching2_4d0a0d4e-0812-98c1-f2a6-94013578ce97, NULL_00000000-0000-0000-0000-000000000000, "CAMP", 0, -100);
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)CAMP_Gale_CRD_SpellTeaching2_4d0a0d4e-0812-98c1-f2a6-94013578ce97, NULL_00000000-0000-0000-0000-000000000000, "CAMP", 0, 35);
+
+QRY
+QRY_CAMP_GoblinHuntCelebration_NonPersistentDialog((DIALOGRESOURCE)CAMP_Gale_CRD_SpellTeaching2_4d0a0d4e-0812-98c1-f2a6-94013578ce97)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Avatar Gale worsening sequence adjustment
+
+IF
+DB_Avatars((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_ORI_Gale_SetupCurseProgression(2)
+THEN
+NOT DB_ORI_Gale_TrackRegion((TRIGGER)S_FOR_ForestVillage_SUB_21e6bfbf-c5c9-4e99-97f8-2df7143967c4, "FOR_Village");
+DB_ORI_Gale_TrackRegion((TRIGGER)S_ORI_Gale_EnteredVillage_8c1c0520-ec22-4940-a8c8-9f3e1e9f6a14, "FOR_Village");
+NOT DB_ORI_Gale_TrackRegion((TRIGGER)S_UND_MyconidCircle_SUB_4b5cc8fc-88f4-465e-bf82-4c20b055c019, "UND_Myconids");
+DB_ORI_Gale_TrackRegion((TRIGGER)S_ORI_Gale_NearMyconidVillage_06b2d090-e2cc-47d2-8b8e-23a9b2c1e1d5, "UND_Myconids");
+NOT DB_ORI_Gale_TrackRegion((TRIGGER)S_UND_DuergarCamp_SUB_05c3bf1f-29a6-437c-9a98-c1ff0ec53a53, 	"UND_Duergar");
+DB_ORI_Gale_TrackRegion((TRIGGER)S_ORI_Gale_EnteredKethericCity_2e69b482-4207-493d-9988-06e36e8eb900, 	"UND_Duergar");
+PROC_TriggerRegisterForPlayers(S_ORI_Gale_EnteredKethericCity_2e69b482-4207-493d-9988-06e36e8eb900);
+PROC_TriggerRegisterForPlayers(S_ORI_Gale_NearMyconidVillage_06b2d090-e2cc-47d2-8b8e-23a9b2c1e1d5);
+PROC_TriggerRegisterForPlayers(S_ORI_Gale_EnteredVillage_8c1c0520-ec22-4940-a8c8-9f3e1e9f6a14);
+
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_GaleTressymJoin_SD_75b4946d-4a78-bea3-e0d2-2dc9b5c05209, _)
+THEN
+PROC_ORI_Gale_ResetVisitedRegions();
+
+IF
+DialogEnded((DIALOGRESOURCE)CAMP_GaleTressymJoin_SD_75b4946d-4a78-bea3-e0d2-2dc9b5c05209, _)
+THEN
+DB_ORI_Gale_RegionCounter(2, (FLAG)ORI_Gale_State_EnoughRegionsToAskMagicItem2_fd8f43cd-a2c1-4211-8978-de2db47fafe8);
+DB_ORI_Gale_RegionCounter(4, (FLAG)ORI_Gale_State_EnoughRegionsToAskMagicItem3_40cd9192-878b-480f-9a41-9f69c61f2bd9);
+
+
+//END_REGION
+
+//REGION Gale Avatar - Tara joins
+
+QRY
+QRY_Camp_StartSoloDream_CustomDialogStart((DIALOGRESOURCE)CAMP_GaleTressymJoin_SD_75b4946d-4a78-bea3-e0d2-2dc9b5c05209, _)
+AND
+QRY_CampNight_GaleTressym_ToGale()
+AND
+QRY_StartDialog_Fixed(CAMP_GaleTressymJoin_SD_75b4946d-4a78-bea3-e0d2-2dc9b5c05209, S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+SetFlag((FLAG)ORI_Gale_Knows_NeedsMagicItems_d3827f86-fc4f-411d-9623-9ae5d35d6735);
+MakePlayerActive(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+
+QRY
+QRY_CampNight_GaleTressym_ToGale()
+THEN
+SetFlag((FLAG)ORI_Gale_State_TressymJoined_c46cfbb6-2aad-47a9-81a1-bdd28a7919fb);
+PROC_CampNight_GaleTressym_ToCamp(0);
+TeleportTo(S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+PROC_Foop(S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236);
+
+
+//END_REGION
+
+//REGION Gale comments on the Tower
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_ORI_Gale_SetupArcaneTower(1)
+AND
+NOT DB_GlobalFlag((FLAG)UND_ArcaneTower_MainPowerOn_9423ae80-9b08-4fda-95c6-1832f753ca2b)
+THEN
+TriggerRegisterForCharacter(S_UND_ArcaneTower_AD_GaleEntrance_e8eb8b50-798d-4833-82dc-62746dc6dc16, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+ 
+IF
+EnteredTrigger((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, S_UND_ArcaneTower_AD_GaleEntrance_e8eb8b50-798d-4833-82dc-62746dc6dc16)
+THEN
+TriggerUnregisterForCharacter(S_UND_ArcaneTower_AD_GaleEntrance_e8eb8b50-798d-4833-82dc-62746dc6dc16, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+PROC_TryStartAD((DIALOGRESOURCE)UND_ArcaneTower_AD_GaleEntrance_13c4b5a8-cd57-9783-3c48-26e04c81a630, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+
+IF
+FlagSet(UND_ArcaneTower_MainPowerOn_9423ae80-9b08-4fda-95c6-1832f753ca2b, _, _)
+AND
+QRY_SpeakerIsAvailable(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+IsInTrigger(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, S_UND_ArcaneTower_AD_GalePowerRestored_c46992b4-d1ae-46a6-bbcf-19822221c003, 1)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)UND_ArcaneTower_AD_GalePowerRestored_2800a624-1d6f-0420-149c-cfb03c35fabd, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_ORI_Gale_SetupArcaneTower(1)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+THEN
+TriggerRegisterForCharacter(S_ORI_Gale_InArcaneTower_d26cc4ed-a428-4c3d-994d-57eb12ec0458, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+
+IF
+EnteredTrigger((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, S_ORI_Gale_InArcaneTower_d26cc4ed-a428-4c3d-994d-57eb12ec0458)
+THEN
+SetFlag(ORI_Gale_State_InArcaneTower_658fb691-bb2e-323e-e5af-90ae7f5a1c87, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+
+IF
+LeftTrigger((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, S_ORI_Gale_InArcaneTower_d26cc4ed-a428-4c3d-994d-57eb12ec0458)
+THEN
+ClearFlag(ORI_Gale_State_InArcaneTower_658fb691-bb2e-323e-e5af-90ae7f5a1c87, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 0);
+
+//END_REGION
+
+//REGION Gale TGs
+
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+QRY_OnlyOnce("TG_ORI_GaleRecruited")
+AND
+DB_Avatars(_Avatar)
+THEN
+SetFlag(TG_ORI_GaleRecruited_62c1a7b9-c95c-4433-a039-79c21cbadd8b, _Avatar, 0);
+
+IF
+FlagSet((FLAG)ORI_Gale_Knows_LearnedBackstory_0a9731cf-4769-249f-818d-b4c6e542083d, _, _)
+THEN
+PROC_TopicalGreeting_UnlockTopic(TG_ORI_Gale_LearnedBackstory_2857a62a-e31b-4913-b26d-92cf074ad969);
+
+//END_REGION
+
+//REGION Remove Tara's exclamation mark
+
+IF
+DB_DialogName((DIALOGRESOURCE)CAMP_Gale_Tressym_00706ce9-cbf7-95ee-912d-b42909b483a7, _ID)
+AND
+DB_DialogPlayers(_ID, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, 1)
+AND
+DB_ORI_Gale_TaraCRD(1)
+THEN
+NOT DB_ORI_Gale_TaraCRD(1);
+PROC_ExclamationMark_Hide(S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236);
+
+IF
+DB_GlobalFlag((FLAG)SCE_Epilogue_State_HasStarted_9b4bae0b-6464-4b0e-a0e3-41201c0c3c9e)
+AND
+DB_ORI_Gale_TaraCRD(1)
+THEN
+NOT DB_ORI_Gale_TaraCRD(1);
+PROC_ExclamationMark_Hide(S_GLO_Gale_Tressym_ada7ee81-829d-48c7-ba73-9c9ec191d236);
+
+//END_REGION
+
+//REGION Gale should not re-invite people to his romance scene.
+
+IF
+FlagSet((FLAG)CAMP_GoblinHunt_State_GaleAdditionalPartner_4e06a14a-b5db-9b92-4b21-7160ee3b0a50, _, _)
+THEN
+SetFlag((FLAG)ORI_Gale_State_TriedSpellteachingDuringParty_0530eacc-9c25-4f22-8a1a-b45bd94a7ed6, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+FlagSet((FLAG)CAMP_GoblinHunt_State_GalePartner_e36781b6-f9aa-b822-1e47-8944274190b4, _, _)
+THEN
+SetFlag((FLAG)ORI_Gale_State_TriedSpellteachingDuringParty_0530eacc-9c25-4f22-8a1a-b45bd94a7ed6, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+
+//REGION Gale romance fallback
+
+PROC
+PROC_CampNight_PreSelection_Hook()
+AND
+DB_PartOfTheTeam((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_InCamp((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT DB_ORI_Dating(_, (CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+NOT QRY_ORI_Gale_RomanceFallback()
+AND
+DB_GlobalFlag(ORI_Gale_State_ControlledByRomanceFallbackCandidate_d2a59d18-92fe-4a2c-b629-674b825ae56c)
+THEN
+ClearFlag((FLAG)ORI_Gale_State_ControlledByRomanceFallbackCandidate_d2a59d18-92fe-4a2c-b629-674b825ae56c, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+QRY
+QRY_ORI_Gale_RomanceFallback()
+AND
+DB_CurrentLevel("WLD_Main_A")
+AND
+DB_Players((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_SameUser((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar)
+AND
+QRY_ORI_Gale_AvatarEligibleForPartnerfallback_Avatar(_Avatar)
+THEN
+SetFlag((FLAG)ORI_Gale_State_ControlledByRomanceFallbackCandidate_d2a59d18-92fe-4a2c-b629-674b825ae56c, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+QRY
+QRY_ORI_Gale_RomanceFallback()
+AND
+DB_CurrentLevel("WLD_Main_A")
+AND
+NOT DB_Players((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604)
+AND
+DB_Avatars(_Avatar)
+AND
+QRY_ORI_Gale_AvatarEligibleForPartnerfallback_Avatar(_Avatar)
+THEN
+SetFlag((FLAG)ORI_Gale_State_ControlledByRomanceFallbackCandidate_d2a59d18-92fe-4a2c-b629-674b825ae56c, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+QRY
+QRY_ORI_Gale_AvatarEligibleForPartnerfallback_Avatar((CHARACTER)_Avatar)
+AND
+NOT DB_ORI_Dating(_Avatar, _)
+AND
+GetFlag((FLAG)CAMP_Gale_SpellTeaching_Attempted_e45aa80f-3b7a-533b-94ed-2fd068b7ea10, _Avatar, 1)
+AND
+GetFlag((FLAG)CAMP_Gale_SpellTeaching_Success_0c69d681-ca5c-0f03-fff9-a14c9374da95, _Avatar, 0)
+AND
+DB_ApprovalRating((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar, _Approval)
+AND
+_Approval >= 35
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_SelectCustomDialog(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar)
+AND
+DB_Avatars((CHARACTER)_Avatar)
+AND
+DB_HandlingRelationshipDialog((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, (DIALOGRESOURCE)CAMP_GoblinHuntTieflingCelebration_CRD_Gale3b_a65afd51-538b-3b92-e09a-ea0bb06c36cb, _, _, _, _)
+AND
+QRY_SameUser((CHARACTER)S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, _Avatar)
+AND
+NOT QRY_ORI_Gale_AvatarEligibleForPartnerfallback_Avatar(_Avatar)
+THEN
+DB_SelectedDialog(GLO_AD_NonBondedCompanionDialog_62ba7c46-8d22-c591-f04c-2e99441cd02a, S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604);
+
+//END_REGION
+
+
+//REGION Gale Double behaviour
+
+IF
+FlagSet((FLAG)ORI_Gale_State_ShowGaleDouble_ad1aabf8-690d-4f54-a674-717b515dc08d, _, _)
+AND
+DB_ActiveCamp(_Camp)
+AND
+DB_ORI_Gale_DoubleBHVRTrigger(_Camp, _Trigger)
+THEN
+SetVarObject(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_GaleDoubleBehaviourTrigger", _Trigger);
+
+IF
+FlagCleared((FLAG)ORI_Gale_State_ShowGaleDouble_ad1aabf8-690d-4f54-a674-717b515dc08d, _, _)
+THEN
+ClearVarObject(S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604, "ORI_GaleDoubleBehaviourTrigger");
+
+//END_REGION
+EXITSECTION
+NOT DB_ORI_Gale_SetupCurseProgression(1);
+NOT DB_ORI_Gale_SetupCurseProgression(2);
+NOT DB_ORI_Gale_SetupArcaneTower(1);
+ENDEXITSECTION
+ParentTargetEdge "Act1"

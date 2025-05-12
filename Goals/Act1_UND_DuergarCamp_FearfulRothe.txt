@@ -1,0 +1,489 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_UND_FearfulRothe_Rothe((CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962);
+DB_UND_FearfulRothe_Rothe((CHARACTER)S_UND_FearfulRothe_Rothe_002_697cc9bf-9f49-48f4-b270-6777882a2280);
+
+DB_UND_FearfulRothe_Guards((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+DB_UND_FearfulRothe_Guards((CHARACTER)S_UND_FearfulRothe_Guard_002_debc6e8e-10c2-4f6f-866a-220f7e64c4b7);
+DB_UND_FearfulRothe_Guards((CHARACTER)S_UND_FearfulRothe_Guard_003_3d27ceb8-30b2-4ce2-ad73-8ebeea0a48bb);
+
+DB_Dialogs((CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962, (DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466);
+DB_Dialogs((CHARACTER)S_UND_FearfulRothe_Rothe_002_697cc9bf-9f49-48f4-b270-6777882a2280, (DIALOGRESOURCE)UND_FearfulRothe_Rothe_002_736c6893-46a0-e8ef-9117-99b5f5b50ac4);
+DB_Dialogs((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, (DIALOGRESOURCE)UND_FearfulRothe_Guard_001_ddc698ac-1e05-9f02-a7ca-cc353c6c069c);
+DB_Dialogs((CHARACTER)S_UND_FearfulRothe_Guard_002_debc6e8e-10c2-4f6f-866a-220f7e64c4b7, (DIALOGRESOURCE)UND_FearfulRothe_Guard_002_e2ced3fb-3912-a8d3-6473-f5a46f4430cc);
+DB_Dialogs((CHARACTER)S_UND_FearfulRothe_Guard_003_3d27ceb8-30b2-4ce2-ad73-8ebeea0a48bb, (DIALOGRESOURCE)UND_FearfulRothe_Guard_003_16b3902d-a63c-71be-8455-31967f36a740);
+
+DB_DialogBlockTradeButton((DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)UND_FearfulRothe_Rothe_002_736c6893-46a0-e8ef-9117-99b5f5b50ac4);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)UND_FearfulRothe_RubbleAttack_c12170ba-e248-05fe-71dc-6578bbce8bc5);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4);
+
+//REGION Fearful Rothe State Manager
+// R = rothe, P = player, D = duergar
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_Default", 0); // stop spotting on leaving the state;
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_LearnedAboutProblem", 100);
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedTaskmasterToHurtRothe", 1000); // mass fight, R target D
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_FailedToPersuadeRothe", 800); // R vs P
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_DefeatedRotheAfterPersuasionFailure", 1000); // D vs P
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedRotheToAttackDuergar", 1000); // R&P vs D
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedRotheToAttackRubble", 500); // not final
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_RubbleDestroyedAndRotheCalm", 500); // start spotting, on spotted - dialog & attack, on failure - attack. R&P vs D
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_RubbleDestroyedAndRotheAreNotCalm", 500); // start spotting, on spotted - dialog & attack, on failure - attack. R vs D vs P
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_DuergarHostile", 1000); // start spotting, on spotted - dialog & attack, on failure - attack. R&P vs D
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_FallbackRotheAggressiveState", 1500);
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_AttackedDuergar", 1000);
+
+DB_State_Current(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_Default");
+
+//State changes after setting flags in dialogs (Flag, Dialog, State)
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_LearnedAboutProblem_d82a1877-b5d7-4b4f-9649-c11208df4743, (DIALOGRESOURCE)UND_FearfulRothe_Guard_001_ddc698ac-1e05-9f02-a7ca-cc353c6c069c, "UND_FearfulRothe_State_LearnedAboutProblem");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_ConvincedTaskmasterToHurtRothe_36587af1-1cb2-44bc-868b-837a6d459701, (DIALOGRESOURCE)UND_FearfulRothe_Guard_001_ddc698ac-1e05-9f02-a7ca-cc353c6c069c, "UND_FearfulRothe_State_ConvincedTaskmasterToHurtRothe");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_FailedToPersuadeRothe_b5d92fd4-4314-4f61-b83c-16ead7e6457b, (DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466, "UND_FearfulRothe_State_FailedToPersuadeRothe");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_ConvincedRotheToAttackDuergar_d8beb302-41e4-4154-9ecb-26dd411df2ab, (DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466, "UND_FearfulRothe_State_ConvincedRotheToAttackDuergar");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_ConvincedRotheToAttackRubble_ebc87a42-dffd-431a-adc8-5ad57f95f8cf, (DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466, "UND_FearfulRothe_State_ConvincedRotheToAttackRubble");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_MakeDuergarHostileInDialog_36886f92-40fc-499d-afc5-46363c7ce0bb, (DIALOGRESOURCE)UND_FearfulRothe_RubbleAttack_c12170ba-e248-05fe-71dc-6578bbce8bc5, "UND_FearfulRothe_State_DuergarHostile");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_MakeDuergarHostileInDialog_36886f92-40fc-499d-afc5-46363c7ce0bb, (DIALOGRESOURCE)UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4, "UND_FearfulRothe_State_DuergarHostile");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_MakeDuergarHostileInDialog_36886f92-40fc-499d-afc5-46363c7ce0bb, (DIALOGRESOURCE)UND_FearfulRothe_Guard_001_ddc698ac-1e05-9f02-a7ca-cc353c6c069c, "UND_FearfulRothe_State_DuergarHostile");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_MakeDuergarHostileInDialog_36886f92-40fc-499d-afc5-46363c7ce0bb, (DIALOGRESOURCE)UND_FearfulRothe_Guard_002_e2ced3fb-3912-a8d3-6473-f5a46f4430cc, "UND_FearfulRothe_State_DuergarHostile");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_MakeDuergarHostileInDialog_36886f92-40fc-499d-afc5-46363c7ce0bb, (DIALOGRESOURCE)UND_FearfulRothe_Guard_003_16b3902d-a63c-71be-8455-31967f36a740, "UND_FearfulRothe_State_DuergarHostile");
+DB_UND_FearfulRothe_StateChangesInDialogs((FLAG)UND_FearfulRothe_Event_AttackedDuergar_8ec1953c-eaf3-4522-85db-a8073e931f82, (DIALOGRESOURCE)UND_FearfulRothe_Guard_001_ddc698ac-1e05-9f02-a7ca-cc353c6c069c, "UND_FearfulRothe_State_AttackedDuergar");
+//END_REGION Fearful Rothe State Manager
+
+DB_SpotPlayers((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", (TRIGGER)S_UND_FearfulRothe_SpotTrigger_018434a0-f1a1-4440-977d-796c161280e1);
+
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, (DIALOGRESOURCE)UND_FearfulRothe_Guard_001_Dead_bf856617-60e0-35f7-c5d5-3c0c6676c6a2);
+
+// we don't react to the murder of the rothe & main duergar until the situation is resolved (these murders are handled manually)
+// after the resolution we remove these entries
+DB_DontCreateMurder((CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962);
+DB_DontCreateMurder((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+
+PROC_TriggerRegisterForPlayers(S_UND_FearfulRothe_SituationTrigger_819461b0-5519-471a-9ed7-cdc961eece99);
+
+DB_ItemOwnerShipTriggers("WLD_Main_A", (TRIGGER)S_UND_FearfulRothe_OwnershipTrigger_b3a4e004-73ce-48fa-a5be-96667ba33488, (CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+ClearOwnership(S_UND_FearfulRothe_Rubble_0267bd2f-2e17-47f8-94e4-1d89c32e6846);
+
+Equip((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, S_UND_FearfulRothe_WhippingCane_68e60e8c-3ffe-4706-ba9b-b3fe52a4e85c);
+
+//REGION Peaceful Resolution XP
+DB_GlobalFlagReactionAfterDialog((FLAG)UND_FearfulRothe_State_BefriendedRothe_7c295450-6de9-49b5-9d95-d81ca08c2e1c, (DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466);
+//END_REGION
+
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("UND_FearfulRothe_Rothe",(FLAG)UND_FearfulRothe_State_RotheArePermaDefeated_3edcda99-833f-4f49-9aed-a493d451eec3);
+DB_GLO_DefeatCounter_AllDeadGlobalFlag("UND_FearfulRothe_Rothe",(FLAG)UND_FearfulRothe_State_RotheAreDead_da84586c-ca0f-42b4-8082-c0b19803d682);
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("UND_FearfulRothe_Guards",(FLAG)UND_FearfulRothe_State_GuardsArePermaDefeated_60c74db1-dd75-96b6-5c9e-fa1d9a83bf58);
+KBSECTION
+//REGION Init
+IF
+DB_UND_FearfulRothe_Rothe(_Rothe)
+THEN
+DB_GLO_DefeatCounter((CHARACTER)_Rothe, "UND_FearfulRothe_Rothe");
+ApplyStatus(_Rothe, "UND_FEARFULROTHE_AGITATED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_UND_FearfulRothe_Guards(_Guard)
+THEN
+DB_GLO_DefeatCounter((CHARACTER)_Guard, "UND_FearfulRothe_Guards");
+DB_DoNotFace(_Guard);
+DB_SpotPlayers_SpotTrigger(_Guard, "UND_FearfulRothe_BehindRubbleSpotArea", (TRIGGER)S_UND_FearfulRothe_BehindRubbleSpotArea_3249d6ed-9c9e-4a2c-905e-da879211bf87);
+DB_SpotPlayers(_Guard, "UND_FearfulRothe_BehindRubbleSpotArea", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+Equipped((ITEM)S_UND_FearfulRothe_WhippingCane_68e60e8c-3ffe-4706-ba9b-b3fe52a4e85c, (CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe)
+THEN
+SetWeaponUnsheathed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, 1, 1);
+//END_REGION Init
+
+//REGION Defeat Counters
+PROC
+PROC_GLO_DefeatCounter_AllPermaDefeated("UND_FearfulRothe_Rothe")
+THEN
+DB_UND_FearfulRothe_HostilityDialog((DIALOGRESOURCE)UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4);
+PROC_UND_FearfulRothe_StartSpottingForHostility();
+//END_REGION Defeat Counters
+
+//REGION Changing the state of the situation in dialogs
+IF
+DB_UND_FearfulRothe_StateChangesInDialogs(_Flag, _Dialog, _)
+THEN
+DB_GlobalFlagReactionAfterDialog(_Flag, _Dialog);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(_Flag)
+AND
+DB_UND_FearfulRothe_StateChangesInDialogs(_Flag, _, _State)
+THEN
+PROC_State_Progress(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _State);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)UND_FearfulRothe_Event_ConvincedRotheToAttackRubble_ebc87a42-dffd-431a-adc8-5ad57f95f8cf)
+THEN
+SetFlag(UND_FearfulRothe_State_ConvincedRotheToAttackRubble_1f26371b-dbc7-0dcc-123b-3d3b6b06cc0f);
+//END_REGION Changing the state of the situation in dialogs
+
+//REGION State changes
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_Default", _)
+AND
+DB_SpotPlayers(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _, _)
+THEN
+PROC_SpotPlayers_StopSpotting(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe");
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedTaskmasterToHurtRothe")
+AND
+DB_UND_FearfulRothe_Rothe(_Rothe)
+THEN
+AddPreferredAiTargetTag(_Rothe, DUERGARDWARF_78adf3cd-4741-47a8-94f6-f3d322432591);
+PROC_UND_FearfulRothe_MakeRotheHostileToEveryone(); 
+
+// if the player fails to persuade the rothe then two fights happens one after another - first Player & Duergar vs Rothe, then - Duergar vs Player
+// we need to disable self-healing for the duergar between those two fights
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_FailedToPersuadeRothe")
+THEN
+PROC_UND_FearfulRothe_DisableSelfHealingForGuards();
+PROC_UND_FearfulRothe_RotheVersusDuergarAndPlayer();
+
+PROC
+PROC_UND_FearfulRothe_DisableSelfHealingForGuards()
+AND
+DB_UND_FearfulRothe_Guards(_Guard)
+THEN
+PROC_SelfHealing_Disable(_Guard);
+
+PROC
+PROC_UND_FearfulRothe_DisableSelfHealingForGuards()
+THEN
+DB_UND_FearfulRothe_SelfHealingForGuardsDisabled(1);
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedRotheToAttackDuergar")
+THEN
+PROC_UND_FearfulRothe_RotheAndPlayerVersusDuergar();
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedRotheToAttackRubble")
+AND
+DB_UND_FearfulRothe_Rothe(_Rothe)
+THEN
+RemoveStatus(_Rothe, "UND_FEARFULROTHE_AGITATED", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_RubbleDestroyedAndRotheCalm")
+AND
+NOT DB_UND_FearfulRothe_HostilityDialog((DIALOGRESOURCE)UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4) // the player killed one of the rothe while it was clearing the rubble, the main guard is already spotting the player
+THEN
+DB_UND_FearfulRothe_HostilityDialog((DIALOGRESOURCE)UND_FearfulRothe_RubbleAttack_c12170ba-e248-05fe-71dc-6578bbce8bc5);
+PROC_UND_FearfulRothe_StartSpottingForHostility();
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_RubbleDestroyedAndRotheAreNotCalm")
+AND
+NOT DB_UND_FearfulRothe_HostilityDialog((DIALOGRESOURCE)UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4) // the player killed one of the rothe while it was clearing the rubble, the main guard is already spotting the player
+THEN
+DB_UND_FearfulRothe_HostilityDialog((DIALOGRESOURCE)UND_FearfulRothe_RubbleAttack_c12170ba-e248-05fe-71dc-6578bbce8bc5);
+PROC_UND_FearfulRothe_StartSpottingForHostility();
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_FallbackRotheAggressiveState")
+THEN
+PROC_UND_FearfulRothe_MakeRotheHostileToEveryone();
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_AttackedDuergar")
+THEN
+PROC_UND_FearfulRothe_MakeRotheHostileToEveryone();
+
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_DuergarHostile")
+THEN
+PROC_UND_FearfulRothe_ResolveHostility();
+//END_REGION State changes
+
+//REGION Main guard starts spotting the player to start a hostility dialog after rubble is destroyed
+PROC
+PROC_UND_FearfulRothe_StartSpottingForHostility()
+AND
+DB_Defeated(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe)
+THEN
+PROC_UND_FearfulRothe_RotheAndPlayerVersusDuergar();
+
+PROC
+PROC_UND_FearfulRothe_StartSpottingForHostility()
+AND
+NOT DB_PermaDefeated(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe)
+THEN
+DB_SpotPlayers_IncludeWildshapedPlayers(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe_Hostility");
+DB_SpotPlayers((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe_Hostility", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_NoLowAttitudeDialog((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+
+PROC
+PROC_SpotPlayers_Spotted(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe_Hostility", _Player)
+AND
+DB_UND_FearfulRothe_HostilityDialog(_HostilityDialog)
+AND
+NOT QRY_StartDialog(_HostilityDialog, (CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, _Player)
+THEN
+PROC_UND_FearfulRothe_ResolveHostility();
+PROC_UND_FearfulRothe_EnableSelfHealing();
+NOT DB_NoLowAttitudeDialog((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+
+PROC
+PROC_UND_FearfulRothe_ResolveHostility()
+AND
+QRY_UND_FearfulRothe_RotheAreAllies()
+THEN
+PROC_UND_FearfulRothe_RotheAndPlayerVersusDuergar();
+
+PROC
+PROC_UND_FearfulRothe_ResolveHostility()
+AND
+NOT QRY_UND_FearfulRothe_RotheAreAllies()
+THEN
+PROC_UND_FearfulRothe_MakeRotheHostileToEveryone();
+
+QRY
+QRY_UND_FearfulRothe_RotheAreAllies()
+AND
+DB_GlobalFlag(UND_FearfulRothe_State_BefriendedRothe_7c295450-6de9-49b5-9d95-d81ca08c2e1c)
+AND
+NOT DB_UND_FearfulRothe_HostilityDialog(UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded(_Dialog, _ID)
+AND
+DB_UND_FearfulRothe_HostilityDialog(_Dialog)
+THEN
+PROC_UND_FearfulRothe_EnableSelfHealing();
+NOT DB_NoLowAttitudeDialog((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+
+// if the player runs away before being spotted
+IF
+LeftTrigger(_Player, S_UND_FearfulRothe_SituationTrigger_819461b0-5519-471a-9ed7-cdc961eece99)
+AND
+DB_Players(_Player)
+AND
+DB_UND_FearfulRothe_SelfHealingForGuardsDisabled(1)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTrigger(S_UND_FearfulRothe_SituationTrigger_819461b0-5519-471a-9ed7-cdc961eece99)
+THEN
+PROC_UND_FearfulRothe_EnableSelfHealing();
+
+PROC
+PROC_UND_FearfulRothe_EnableSelfHealing()
+AND
+DB_UND_FearfulRothe_Guards(_Guard)
+THEN
+PROC_SelfHealing_Enable(_Guard);
+
+PROC
+PROC_UND_FearfulRothe_EnableSelfHealing()
+AND
+DB_UND_FearfulRothe_SelfHealingForGuardsDisabled(1)
+THEN
+NOT DB_UND_FearfulRothe_SelfHealingForGuardsDisabled(1);
+//END_REGION Main guard starts spotting the player to start a hostility dialog after rubble is destroyed
+
+//REGION Main flow
+PROC
+PROC_SpotPlayers_Spotted(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)UND_FearfulRothe_Guard_001_ddc698ac-1e05-9f02-a7ca-cc353c6c069c, (CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, _Player)
+THEN
+DB_NOOP(1);
+
+// additional scripting for cases with the player attacking the wall / rothe / guards manually
+IF
+DestroyedBy(S_UND_FearfulRothe_Rubble_0267bd2f-2e17-47f8-94e4-1d89c32e6846, _, _, _)
+THEN
+SetFlag(UND_FearfulRothe_State_RubbleDestroyed_f20c21ab-db2f-495d-ad0c-986187ec0570);
+PROC_UND_FearfulRothe_DestroyedRubbleOrSpottedBehindIt();
+
+PROC
+PROC_SpotPlayers_Spotted(_Guard, "UND_FearfulRothe_BehindRubbleSpotArea", _Player)
+THEN
+PROC_UND_FearfulRothe_DestroyedRubbleOrSpottedBehindIt();
+PROC_UND_FearfulRothe_DisableBehindRubbleSpotting();
+
+PROC
+PROC_UND_FearfulRothe_DisableBehindRubbleSpotting()
+THEN
+PROC_SpotPlayers_StopSpotting("UND_FearfulRothe_BehindRubbleSpotArea");
+
+PROC
+PROC_UND_FearfulRothe_DestroyedRubbleOrSpottedBehindIt()
+AND
+NOT QRY_UND_FearfulRothe_InitialTensionResolved()
+AND
+QRY_OnlyOnce("UND_FearfulRothe_DestroyedRubbleOrSpottedBehindIt")
+THEN
+PROC_State_Progress(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_RubbleDestroyedAndRotheAreNotCalm");
+
+PROC
+PROC_UND_FearfulRothe_DestroyedRubbleOrSpottedBehindIt()
+AND
+QRY_UND_FearfulRothe_InitialTensionResolved()
+AND
+QRY_OnlyOnce("UND_FearfulRothe_DestroyedRubbleOrSpottedBehindIt")
+THEN
+PROC_State_IfCurrentProgress(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_ConvincedRotheToAttackRubble", "UND_FearfulRothe_State_RubbleDestroyedAndRotheCalm");
+
+IF
+AttackedBy(S_UND_FearfulRothe_Rubble_0267bd2f-2e17-47f8-94e4-1d89c32e6846, (CHARACTER)_AttackerOwner, _, _, _, _, _)
+AND
+DB_Players(_AttackerOwner)
+AND
+IsDestroyed(S_UND_FearfulRothe_Rubble_0267bd2f-2e17-47f8-94e4-1d89c32e6846, 0)
+AND
+NOT DB_GlobalFlag((FLAG)UND_FearfulRothe_Event_LearnedAboutProblem_d82a1877-b5d7-4b4f-9649-c11208df4743)
+THEN
+SetFlag(UND_FearfulRothe_State_PlayerAttackedRubbleBeforeTalkingToTaskmaster_f10e7d27-6ff7-44a0-a7ad-0e011cd5f885, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_SpotTrigger((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", (TRIGGER)S_UND_FearfulRothe_SpotTrigger_018434a0-f1a1-4440-977d-796c161280e1);
+// we remove the spot trigger, now the duergar tries to start the dialog automatically no matter the position
+
+//after talking to the guy, but before resolving the situation
+IF
+AttackedBy(S_UND_FearfulRothe_Rubble_0267bd2f-2e17-47f8-94e4-1d89c32e6846, (CHARACTER)_AttackerOwner, _, _, _, _, _)
+AND
+DB_Players(_AttackerOwner)
+AND
+IsDestroyed(S_UND_FearfulRothe_Rubble_0267bd2f-2e17-47f8-94e4-1d89c32e6846, 0)
+AND
+DB_GlobalFlag((FLAG)UND_FearfulRothe_Event_LearnedAboutProblem_d82a1877-b5d7-4b4f-9649-c11208df4743)
+AND
+NOT QRY_UND_FearfulRothe_InitialTensionResolved()
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe");
+// the rothe starts spotting to start its dialog with no "Leave" option, but faling to start the dialog does nothing
+SetFlag(UND_FearfulRothe_State_PlayerAttackedRubbleBeforeCalmingDownRothe_390ecc20-4b77-493c-bbab-d61d64c21986, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers((CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962, "UND_FearfulRothe", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SpotPlayers_Spotted(S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962, "UND_FearfulRothe", _Player)
+AND
+QRY_StartDialog((DIALOGRESOURCE)UND_FearfulRothe_Rothe_001_43502fd3-bdd9-e624-ba76-7cfda8d16466, (CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+EnteredCombat(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, _CombatID)
+AND
+GetFaction(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, _GuardFaction)
+AND
+GetFaction(S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962, _RotheFaction)
+AND
+GetRelation(_GuardFaction, _RotheFaction, _Relation)
+AND
+_Relation == 0
+AND
+NOT DB_GlobalFlag(UND_FearfulRothe_State_RotheArePermaDefeated_3edcda99-833f-4f49-9aed-a493d451eec3)
+AND
+QRY_OnlyOnce("UND_FearfulRothe_CommentOnFrenzyRothe")
+THEN
+PROC_ForceStopDialog((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+PROC_TryStartAD(UND_FearfulRothe_AD_RotheFrenzy_9fcdba13-b260-b5d3-6eee-5914ca1f456e, S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+
+QRY
+QRY_UND_FearfulRothe_InitialTensionResolved()
+AND
+NOT DB_State_Current(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_Default")
+AND
+NOT DB_State_Current(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", "UND_FearfulRothe_State_LearnedAboutProblem")
+THEN
+DB_NOOP(1);
+//END_REGION Main flow
+
+//REGION Methods to set up hostility
+PROC
+PROC_UND_FearfulRothe_RotheAndPlayerVersusDuergar()
+AND
+QRY_OnlyOnce("UND_FearfulRothe_MakeRotheHostileToDuergar")
+THEN
+PROC_SetRelationToPlayers(ACT1_UND_FearfulRothe_912ef703-98d2-4565-af20-4bcd1f584acc, 50);
+PROC_SetRelationMutual((FACTION)ACT1_UND_FearfulRothe_Rothe_912ef703-98d2-4565-af20-4bcd1f584acc, (FACTION)ACT1_UND_DuergarGuards_FearfulRothe_Guards_f9f3f71a-a934-4b2a-b378-7f932efa59ec, 0);
+PROC_SetRelationToPlayers(ACT1_UND_DuergarGuards_FearfulRothe_Guards_f9f3f71a-a934-4b2a-b378-7f932efa59ec, 0);
+
+PROC
+PROC_UND_FearfulRothe_MakeRotheHostileToEveryone()
+AND
+QRY_OnlyOnce("UND_FearfulRothe_MakeRotheHostileToEveryone")
+THEN
+PROC_SetRelationToPlayers(ACT1_UND_FearfulRothe_Rothe_912ef703-98d2-4565-af20-4bcd1f584acc, 0);
+PROC_SetRelationMutual((FACTION)ACT1_UND_FearfulRothe_Rothe_912ef703-98d2-4565-af20-4bcd1f584acc, (FACTION)ACT1_UND_DuergarGuards_FearfulRothe_Guards_f9f3f71a-a934-4b2a-b378-7f932efa59ec, 0);
+PROC_SetRelationToPlayers(ACT1_UND_DuergarGuards_FearfulRothe_Guards_f9f3f71a-a934-4b2a-b378-7f932efa59ec, 0);
+
+PROC
+PROC_UND_FearfulRothe_RotheVersusDuergarAndPlayer()
+AND
+QRY_OnlyOnce("UND_FearfulRothe_RotheVsDuergarAndPlayer")
+THEN
+PROC_SetRelationToPlayers(ACT1_UND_FearfulRothe_Rothe_912ef703-98d2-4565-af20-4bcd1f584acc, 0);
+PROC_SetRelationMutual((FACTION)ACT1_UND_FearfulRothe_Rothe_912ef703-98d2-4565-af20-4bcd1f584acc, (FACTION)ACT1_UND_DuergarGuards_FearfulRothe_Guards_f9f3f71a-a934-4b2a-b378-7f932efa59ec, 0);
+//END_REGION Methods to set up hostility
+
+//REGION Cancelling the situation (defeating the main duergar or the main rothe)
+//defeating the main duergar outside the regular situation flow
+PROC
+PROC_StateSet_Defeated((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe)
+AND
+NOT QRY_UND_FearfulRothe_SituationIsResolved()
+THEN
+PROC_SetRelationToPlayers(ACT1_UND_DuergarGuards_FearfulRothe_Guards_f9f3f71a-a934-4b2a-b378-7f932efa59ec, 0);
+
+//defeating the main rothe outside the regular situation flow
+PROC
+PROC_StateSet_Defeated((CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962)
+AND
+NOT QRY_UND_FearfulRothe_SituationIsResolved()
+THEN
+DB_UND_FearfulRothe_HostilityDialog((DIALOGRESOURCE)UND_FearfulRothe_RotheDeadAttack_99ac36c2-1f99-64d5-183d-a66139bdfaf4);
+PROC_UND_FearfulRothe_StartSpottingForHostility();
+
+QRY
+QRY_UND_FearfulRothe_SituationIsResolved()
+AND
+DB_State_Current(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _CurrentState)
+AND
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _CurrentState, _Priority)
+AND
+_Priority >= 1000
+THEN
+DB_NOOP(1);
+
+// after the situation is resolved we let the generics handle the crimes
+PROC
+PROC_State_Changed(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _, _NewState)
+AND
+DB_State_Priority(S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe, "UND_FearfulRothe", _NewState, _Priority)
+AND
+_Priority >= 1000
+THEN
+NOT DB_DontCreateMurder((CHARACTER)S_UND_FearfulRothe_Rothe_001_d7536f2a-ef68-42af-8834-c6fd53a91962);
+NOT DB_DontCreateMurder((CHARACTER)S_UND_FearfulRothe_Guard_001_90780cde-9241-478f-83a8-58a4a7d151fe);
+PROC_TriggerUnregisterForPlayers(S_UND_FearfulRothe_SituationTrigger_819461b0-5519-471a-9ed7-cdc961eece99);
+//END_REGION Cancelling the situation
+
+//REGION Peaceful Resolution XP
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)UND_FearfulRothe_State_BefriendedRothe_7c295450-6de9-49b5-9d95-d81ca08c2e1c)
+AND
+DB_UND_FearfulRothe_Rothe(_Rothe)
+THEN
+PROC_PeacefulResolve(_Rothe);
+//END_REGION
+
+//REGION Goal Completion
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A")
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

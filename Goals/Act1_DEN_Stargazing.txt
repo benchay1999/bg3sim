@@ -1,0 +1,65 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(S_DEN_Telescope_2d0c2dd9-22fa-4d7c-a177-3b88564eae83,DEN_Stargazing_Telescope_062a661f-9807-043d-6fe7-f88a61a40d32);
+DB_Dialogs(S_DEN_Stargazer_cd442e20-a6de-4497-ac51-8466433a758e,DEN_Stargazing_80173a64-2d66-49af-ce22-918f8452d3a8);
+DB_IgnoreMutingStatussesDialog(DEN_Stargazing_Telescope_062a661f-9807-043d-6fe7-f88a61a40d32);
+DB_DropMutingStatussesDialog(DEN_Stargazing_Telescope_062a661f-9807-043d-6fe7-f88a61a40d32);
+
+DB_HasItemEvent(S_DEN_StargazerCoin_9e196a46-527a-4fbb-b7e8-15ec1266fa76,DEN_Stargazing_State_HasCoin_4df4d453-78f5-48d2-931c-6ef71b357e3b);
+DB_GiveItemToEvent(S_DEN_StargazerCoin_9e196a46-527a-4fbb-b7e8-15ec1266fa76,DEN_Stargazing_Event_GiveCoin_bd203f3d-9914-a48f-bf06-53a386ae041f);
+ToInventory(S_DEN_StargazerCoin_9e196a46-527a-4fbb-b7e8-15ec1266fa76,S_DEN_Stargazer_cd442e20-a6de-4497-ac51-8466433a758e, 1, 0, 1);
+KBSECTION
+IF
+FlagSet(DEN_Stargazing_State_Left_35f42905-4756-d854-39fd-b92bb3c598bc,_,_)
+AND
+DB_OnlyOnce("DEN_Stargazing_UsedTelescope")
+THEN
+ItemRotateY(S_DEN_Telescope_2d0c2dd9-22fa-4d7c-a177-3b88564eae83,-30.0,20.0);
+
+IF
+FlagCleared(DEN_Stargazing_State_Left_35f42905-4756-d854-39fd-b92bb3c598bc,_,_)
+THEN
+ItemRotateY(S_DEN_Telescope_2d0c2dd9-22fa-4d7c-a177-3b88564eae83,30.0,20.0);
+DB_OnlyOnce("DEN_Stargazing_UsedTelescope");
+
+IF
+FlagSet(DEN_Stargazing_State_Right_c3f62989-6c80-e90f-f749-5475d86a73a4,_,_)
+AND
+DB_OnlyOnce("DEN_Stargazing_UsedTelescope")
+THEN
+ItemRotateY(S_DEN_Telescope_2d0c2dd9-22fa-4d7c-a177-3b88564eae83,30.0,20.0);
+
+IF
+FlagCleared(DEN_Stargazing_State_Right_c3f62989-6c80-e90f-f749-5475d86a73a4,_,_)
+THEN
+ItemRotateY(S_DEN_Telescope_2d0c2dd9-22fa-4d7c-a177-3b88564eae83,-30.0,20.0);
+DB_OnlyOnce("DEN_Stargazing_UsedTelescope");
+
+IF
+DB_GlobalFlag(DEN_BugbearNinja_Dead_cc673032-ad3b-484e-b2cb-57f67c901b3d)
+AND
+NOT DB_CantTalk(S_GLO_Stargazer_cd442e20-a6de-4497-ac51-8466433a758e)
+AND
+DB_InRegion(_Char,S_DEN_BugbearNinjaActivateArea_3112588e-833d-4f11-82e5-e2ac4547560d)
+AND
+NOT DB_OnlyOnce("DEN_Stargazing_AfterCombat")
+AND
+DB_Players(_Char)
+AND
+NOT DB_CantTalk(_Char)
+AND
+NOT DB_HiddenCharacters(_Char,_)
+AND
+QRY_StartDialog(DEN_Stargazing_80173a64-2d66-49af-ce22-918f8452d3a8,S_GLO_Stargazer_cd442e20-a6de-4497-ac51-8466433a758e,_Char)
+THEN
+DB_OnlyOnce("DEN_Stargazing_AfterCombat");
+
+IF
+DialogStarted(DEN_Stargazing_80173a64-2d66-49af-ce22-918f8452d3a8,_)
+THEN
+DB_OnlyOnce("DEN_Stargazing_AfterCombat");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

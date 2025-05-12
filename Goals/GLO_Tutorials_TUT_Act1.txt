@@ -1,0 +1,78 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//The following are conceptualized with some hysteresis to prevent the Tutorial hiding if you only scrape the trigger bondary
+DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs((TRIGGER)S_Tutorials_AdvancedMovement_04_5fb37b1f-42bd-4129-a8f8-69810ff20477, (TRIGGER)S_Tutorials_AdvancedMovement_04_Stop_e18749ca-88c9-4b15-b097-7318fb0bb6e8);
+DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs((TRIGGER)S_Tutorials_AdvancedMovement_05_2207c116-7859-44b1-a4c4-f762ac91278f, (TRIGGER)S_Tutorials_AdvancedMovement_05_Stop_d987351d-0d36-4813-adca-f313c9f129b0);
+KBSECTION
+//Advanced Movement Tutorial (gamepad)
+IF
+DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs(_ActivationTrigger, _DeactivationTrigger)
+THEN
+PROC_TriggerRegisterForParty(_ActivationTrigger);
+PROC_TriggerRegisterForParty(_DeactivationTrigger);
+
+IF
+DB_InRegion(_PartyMember, _Trigger)
+AND
+DB_GLO_Tutorials_AdvancedMovement_Triggers(_Trigger)
+AND
+NOT DB_Is_InCombat(_PartyMember, _)
+AND
+IsControlled(_PartyMember, 1)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_PartyMember, (UNIFIEDTUTORIAL)Advanced_Movement_dba0f73a-b17c-486d-a84c-1df5c8e12387);
+
+IF
+DB_InRegion(_PartyMember, _ActivationTrigger)
+AND
+DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs(_ActivationTrigger, _)
+AND
+NOT DB_Is_InCombat(_PartyMember, _)
+AND
+IsControlled(_PartyMember, 1)
+THEN
+PROC_ShowUnifiedTutorialForPlayer(_PartyMember, (UNIFIEDTUTORIAL)Advanced_Movement_dba0f73a-b17c-486d-a84c-1df5c8e12387);
+
+IF
+LeftTrigger(_PartyMember, _DeactivationTrigger)
+AND
+DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs(_, _DeactivationTrigger)
+AND
+IsControlled(_PartyMember, 1)
+THEN
+HideTutorial(_PartyMember, (UNIFIEDTUTORIAL)Advanced_Movement_dba0f73a-b17c-486d-a84c-1df5c8e12387);
+
+IF
+TutorialEvent(_Player, (TUTORIALEVENT)UserAction_CameraTargetMode_Activated_f4d715ca-7b0f-4598-acf2-81d7aa0744f0)
+THEN
+HideTutorial(_Player, (UNIFIEDTUTORIAL)Advanced_Movement_dba0f73a-b17c-486d-a84c-1df5c8e12387);
+
+
+//REGION Cleanup
+IF
+DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+AND
+DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs(_ActivationTrigger, _DeactivationTrigger)
+THEN
+PROC_TriggerUnregisterForParty(_ActivationTrigger);
+PROC_TriggerUnregisterForParty(_DeactivationTrigger);
+NOT DB_GLO_Tutorials_AdvancedMovement_StartStopTriggerPairs(_ActivationTrigger, _DeactivationTrigger);
+
+IF
+DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+AND
+DB_GLO_Tutorials_AdvancedMovement_Triggers(_Trigger)
+THEN
+PROC_TriggerUnregisterForParty(_Trigger);
+NOT DB_GLO_Tutorials_AdvancedMovement_Triggers(_Trigger);
+
+IF
+DB_GlobalFlag((FLAG)Act2_PointOfNoReturnReached_a3155f30-b8f3-4db5-ac21-d3036f4426e3)
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Tutorial"

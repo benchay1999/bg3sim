@@ -1,0 +1,591 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_PreventKnockedOutPermaDefeated((CHARACTER)FOR_GnomeGoblin1_6b85e9ac-82c4-9126-cce2-4d0259475ae9);
+
+DB_GLO_CharacterCorpseDialog(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, (DIALOGRESOURCE)FOR_GnomeGoblin1_Dead_4e00a2b1-a251-d4a2-7da7-3c6dbbac8fed);
+DB_GLO_CharacterCorpseDialog(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, FOR_UnfortunateGnome_Dead_bedf63dc-6459-b784-063f-26c24f2706f5);
+
+PROC_TriggerRegisterForPlayers(S_FOR_GnomeGoblinApproach_5f593aa2-5e02-4da4-821c-c19390730370);
+DB_QuestDef_State(FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529, "FOR_UnfortunateGnome", "Defeated");
+DB_QuestDef_State(FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714, "FOR_UnfortunateGnome", "Pacified");
+DB_QuestDef_State(WLD_FOR_GnomeGoblinsAngry_42a4e444-5e6e-c574-f360-ea3cf57e4426, "FOR_UnfortunateGnome", "GoblinsAttacked");
+DB_QuestDef_State(FOR_UnfortunateGnome_State_FoundDead_52305f06-b315-4eaa-b39b-4f3c4afd98bd, "FOR_UnfortunateGnome", "GnomeDied");
+
+DB_DeadOnceFlag(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, FOR_UnfortunateGnome_State_FoundDead_52305f06-b315-4eaa-b39b-4f3c4afd98bd);
+
+DB_SurrenderManually(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+DB_Surrender_BlockPermaDefeatedOnFlee(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+
+DB_FOR_GnomeGoblin1_SurrenderDialogues((DIALOGRESOURCE)FOR_GnomeGoblin1_Surrender_NotAtWindmill_10513b6f-5dd7-0578-87e3-b91a9db98659);
+
+PROC_TriggerRegisterForParty((TRIGGER)S_FOR_UnfortunateGnome_WindmillForceActivation_3b494ddd-a226-4fe3-905d-49e1546559fa);
+
+SetCanFight(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, 0);
+
+DB_AddCharactersInTriggerToDialog(FOR_UnfortunateGnome_SlowDown_NoGoblins_8859f0e0-0d0b-e54f-c141-7dff95ae05a4, S_FOR_UnfortunateGnome_SlowDown_NoGoblins_Trigger_5ee4c342-324b-4931-bd1b-24c95a1ea306, 1, 1, 1, 1);
+KBSECTION
+IF
+EntityEvent(_Goblin, "FOR_GnomeGoblinsReturnedHome")
+AND
+DB_FOR_GnomeGoblins((CHARACTER)_Goblin, _Trigger, _Dialog, _Time)
+AND
+_Trigger != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_MOO_GnomeGoblins(_Goblin, _Trigger);
+NOT DB_FOR_GnomeGoblins((CHARACTER)_Goblin, _Trigger, _Dialog, _Time);
+SetFlag((FLAG)FOR_GnomeGoblinsReturnedHome_be23fd5b-22ed-b163-0204-779faf6e131c, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+PROC_RemoveDBTrespassTrigger(TRIGGERGUID_S_WLD_WIL_NearCapturedGnome_a877c0ce-1016-4120-9c51-6557fea123b0, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(WLD_FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714, _, _) // flagType: Global
+THEN
+ClearOwnership(S_FOR_UnfortunateGnome_Lever_50b03092-6db1-4469-b21d-2104758ce130);
+ClearOwnership(S_FOR_UnfortunateGnome_Lever2_3c4f6a14-7b10-48ec-ace1-6324142cb994);
+
+IF
+FlagSet(WLD_FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714, _, _) // flagType: Global
+AND
+DB_FOR_GnomeGoblins((CHARACTER)_Goblin, NULL_00000000-0000-0000-0000-000000000000, _Dialog, _Time)
+AND
+NOT DB_PermaDefeated(_Goblin)
+THEN
+PROC_PeacefulResolve((CHARACTER)_Goblin);
+
+
+IF
+EntityEvent(_, "FOR_GnomeGoblinsReturnedHome")
+THEN
+ClearOwnership(S_FOR_UnfortunateGnome_Lever_50b03092-6db1-4469-b21d-2104758ce130);
+ClearOwnership(S_FOR_UnfortunateGnome_Lever2_3c4f6a14-7b10-48ec-ace1-6324142cb994);
+
+IF
+AddedTo(S_FOR_UnfortunateGnome_BlackpowderSatchel_67a1414e-354e-433a-9ca5-745bd688c939, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag(FOR_UnfortunateGnome_Knows_GnomeHasSmokepowder_d4938986-e88c-49f5-1d35-b7c359bc3a3f, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//REGION Finding the backpack
+IF
+FlagSet((FLAG)FOR_UnfortunateGnome_Event_OfferedPack_a32084eb-7edc-d5bb-3d61-393684ec8213, _Player, _)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_UnfortunateGnome_State_FoundBackpack_578a8d46-8f84-4ae9-811a-4e89c9f3de27)
+THEN
+PROC_UnlockPartyMarker("FOR_UnfortunateGnome_Backpack");
+PROC_UnlockPartyMarker("FOR_UnfortunateGnome_Backpack_Basement");
+
+IF
+FlagSet((FLAG)FOR_UnfortunateGnome_State_FoundBackpack_578a8d46-8f84-4ae9-811a-4e89c9f3de27, _, _)
+THEN
+PROC_HidePartyMarker("FOR_UnfortunateGnome_Backpack");
+PROC_HidePartyMarker("FOR_UnfortunateGnome_Backpack_Basement");
+
+IF
+Opened(S_FOR_UnfortunateGnome_Backpack_1075f497-108e-4697-90d1-4615963614f3)
+THEN
+SetFlag((FLAG)FOR_UnfortunateGnome_State_FoundBackpack_578a8d46-8f84-4ae9-811a-4e89c9f3de27);
+
+IF
+DestroyedBy(S_FOR_UnfortunateGnome_Backpack_1075f497-108e-4697-90d1-4615963614f3, _, _, _)
+THEN
+SetFlag((FLAG)FOR_UnfortunateGnome_State_FoundBackpack_578a8d46-8f84-4ae9-811a-4e89c9f3de27);
+
+IF
+Moved(S_FOR_UnfortunateGnome_Backpack_1075f497-108e-4697-90d1-4615963614f3)
+THEN
+SetFlag((FLAG)FOR_UnfortunateGnome_State_FoundBackpack_578a8d46-8f84-4ae9-811a-4e89c9f3de27);
+//END_REGION
+
+//REGION Surrender
+IF
+HitpointsChanged(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _Percent)
+AND
+DB_Is_InCombat(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _CombatID)
+AND
+_Percent < 25.0
+AND
+_Percent > 0.0
+AND
+NOT DB_MOO_GnomeGoblins((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _) //Don't do this if he's in MOO.
+AND
+NOT DB_Defeated(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+NOT DB_OnlyOnce("FOR_GnomeGoblin_Surrender")
+AND
+QRY_Surrender_GetSurrenderCause((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+DB_QRYRTN_Surrender_GetSurrenderCause(_Cause)
+THEN
+PROC_Surrender(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404,_Cause);
+ClearOwnership(S_FOR_UnfortunateGnome_Lever_50b03092-6db1-4469-b21d-2104758ce130);
+ClearOwnership(S_FOR_UnfortunateGnome_Lever2_3c4f6a14-7b10-48ec-ace1-6324142cb994);
+PROC_RemoveDBTrespassTrigger(TRIGGERGUID_S_WLD_WIL_NearCapturedGnome_a877c0ce-1016-4120-9c51-6557fea123b0, NULL_00000000-0000-0000-0000-000000000000);
+SetFlag(WLD_FOR_GnomeGoblinStopSpot_283b6c8d-77e3-4575-8262-3d729a3b36ec, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+QRY
+QRY_Surrender_StartCustomDialogAfterCombat((CHARACTER)_Player, (CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, (GUIDSTRING)_CombatID)
+AND
+NOT DB_FOR_UnfortunateGnomeGone(1)
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)FOR_GnomeGoblin1_Surrender_NotAtWindmill_10513b6f-5dd7-0578-87e3-b91a9db98659, S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_Surrender_StartCustomDialogAfterCombat((CHARACTER)_Player, (CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, (GUIDSTRING)_CombatID)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("FOR_GnomeGoblin_Surrender")
+THEN
+PROC_SetHitpoints_BlockSelfHealing(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 1);
+
+IF
+EntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"FOR_UnfortunateGnome_RanAway")
+THEN
+DB_FOR_UnfortunateGnomeGone(1);
+
+IF
+EntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"UND_UnfortunateGnome_RanAwayToCamp")
+THEN
+DB_FOR_UnfortunateGnomeGone(1);
+
+PROC
+PROC_Surrendered(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404,(CHARACTER)_Cause)
+THEN
+DB_OnlyOnce("FOR_GnomeGoblin_Surrender");
+SetFlag((FLAG)FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetHasDialog(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 1);
+DB_Dialogs((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, FOR_GnomeGoblin1_Surrender_NotAtWindmill_10513b6f-5dd7-0578-87e3-b91a9db98659);
+
+PROC
+PROC_Surrendered(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404,(CHARACTER)_Cause)
+AND
+DB_GLO_DefeatCounter(_Goblin, "FOR_GnomeGoblins")
+THEN
+NOT DB_GLO_DefeatCounter(_Goblin, "FOR_GnomeGoblins");
+
+QRY
+QRY_CustomSurrenderReaction(_Goblin)
+AND
+DB_FOR_GnomeGoblins((CHARACTER)_Goblin, _, _, _)
+AND
+_Goblin != S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404
+AND
+NOT DB_CantMove(_Goblin)
+THEN
+PROC_SetCanFight(_Goblin, 0);
+SetCanJoinCombat(_Goblin, 0);
+PROC_RemoveDialog(_Goblin);
+PROC_CharacterDisableAllCrimes(_Goblin, 1);
+DisappearOutOfSightTo(_Goblin, TRIGGERGUID_S_GOB_GnomeGoblinDestination_5418547b-f831-4598-99fe-741ba7985e0a, "Run", 0, "FOR_GnomeGoblinsReturnedHome");
+
+IF
+DialogEnded(_Dialog, _Id)
+AND
+DB_FOR_GnomeGoblin1_SurrenderDialogues(_Dialog)
+AND
+NOT DB_CharacterDieAfterDialog(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404,_Id)
+AND
+QRY_OnlyOnce("FOR_GnomeGoblin_ReadyToUnsurrender")
+THEN
+PROC_FOR_UnfortunateGnome_LeaderReadyToUnsurrender();
+
+PROC
+PROC_FOR_UnfortunateGnome_LeaderReadyToUnsurrender()
+AND
+NOT DB_GlobalFlag((FLAG)FOR_GnomeGoblin1_State_SurrenderWait_afe2158b-f792-73e7-ea12-3b4584a0adb6)
+THEN
+PROC_FOR_UnfortunateGnome_LeaderUnsurrender();
+
+PROC
+PROC_FOR_UnfortunateGnome_LeaderReadyToUnsurrender()
+AND
+DB_GlobalFlag((FLAG)FOR_GnomeGoblin1_State_SurrenderWait_afe2158b-f792-73e7-ea12-3b4584a0adb6)
+AND
+NOT DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1)
+THEN
+DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1);
+
+IF
+DB_GlobalFlag(FOR_GnomeGoblin1_Surrender_State_WasLooted_c18311c3-a783-4cbb-6eb0-4d4b6c5fbd51)
+AND
+DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1)
+THEN
+NOT DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1);
+PROC_FOR_UnfortunateGnome_LeaderUnsurrender();
+
+//Cautionary fallbacks, though WasLooted should be set long before
+IF
+LeftTrigger(_Player, S_FOR_ForestVillage_SUB_21e6bfbf-c5c9-4e99-97f8-2df7143967c4)
+AND
+DB_PartyMembers(_Player)
+AND
+QRY_AnyPartyMemberInTrigger(S_FOR_ForestVillage_SUB_21e6bfbf-c5c9-4e99-97f8-2df7143967c4)
+AND
+DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1)
+THEN
+NOT DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1);
+PROC_FOR_UnfortunateGnome_LeaderUnsurrender();
+
+IF
+DB_PermaDefeated(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1)
+THEN
+NOT DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1);
+
+PROC
+PROC_LongRest()
+AND
+DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1)
+THEN
+NOT DB_FOR_UnfortunateGnome_WaitForLeaderToBeLooted(1);
+PROC_FOR_UnfortunateGnome_LeaderUnsurrender();
+
+PROC
+PROC_FOR_UnfortunateGnome_LeaderUnsurrender()
+AND
+QRY_OnlyOnce("FOR_GnomeGoblin_Unsurrendered")
+AND
+DB_Surrender_FightStats(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _HadBlockRegen,_CouldFight,_CouldJoinCombat)
+THEN
+NOT DB_Surrender_FightStats(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _HadBlockRegen,_CouldFight,_CouldJoinCombat);
+DB_Surrender_FightStats(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _HadBlockRegen, 0, 0);
+PROC_Unsurrender(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, NULL_00000000-0000-0000-0000-000000000000);
+// Prevent him from reacting to the players trespassing the abandoned village
+BlockNewCrimeReactions(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 1);
+PROC_SetCanFight(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 0);
+SetCanJoinCombat(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 0);
+PROC_RemoveDialog((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+DisappearOutOfSightTo(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, TRIGGERGUID_S_GOB_GnomeGoblinDestination_5418547b-f831-4598-99fe-741ba7985e0a, "Run", 0, "FOR_GnomeGoblinsReturnedHome");
+
+PROC
+PROC_Surrender_Fled(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+QRY_OnlyOnce("FOR_GnomeGoblin_Unsurrendered")
+THEN
+PROC_Unsurrender(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, NULL_00000000-0000-0000-0000-000000000000);
+BlockNewCrimeReactions(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, 0);
+SetEntityEvent(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, "FOR_GnomeGoblinsReturnedHome");
+
+IF
+DB_KnockedOut((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+NOT DB_MOO_GnomeGoblins((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _)
+THEN
+DB_Surrendered((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404);
+
+IF
+DB_Surrendered((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+NOT DB_MOO_GnomeGoblins((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, _)
+THEN
+DB_Dialogs((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, (DIALOGRESOURCE)FOR_GnomeGoblin1_Surrender_NotAtWindmill_10513b6f-5dd7-0578-87e3-b91a9db98659);
+
+//END_REGION
+
+//REGION Once surrendered, the goblin may need to give a refund.
+PROC
+PROC_TransferMoneyInDialog(_ID,_Amount,_Character,_)
+AND
+DB_DialogName(WLD_GnomeGoblin1_6b85e9ac-82c4-9126-cce2-4d0259475ae9 ,_ID)
+AND
+DB_TransferMoneyInDialog_Succeeded(1)
+THEN
+SetFlag(FOR_GnomeGoblin1_State_PaidUser_b6860204-39d8-4b0f-8986-fac162dd23c9, _Character, 0);
+DB_DialogMoneyTransfer(1, (DIALOGRESOURCE)FOR_GnomeGoblin1_Surrender_NotAtWindmill_10513b6f-5dd7-0578-87e3-b91a9db98659, _Amount, 1);
+
+IF
+CharacterLootedCharacter(_, S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+THEN
+SetFlag(FOR_GnomeGoblin1_Surrender_State_WasLooted_c18311c3-a783-4cbb-6eb0-4d4b6c5fbd51, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+
+//REGION Journal updates
+IF
+EnteredTrigger(_Player, S_FOR_GnomeGoblinApproach_5f593aa2-5e02-4da4-821c-c19390730370)
+AND
+DB_FOR_UnfortunateGnome_OnWindMill((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976)
+AND
+NOT DB_GlobalFlag(FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529)
+AND
+NOT DB_GlobalFlag(FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714)
+THEN
+QuestUpdate(_Player, "FOR_UnfortunateGnome", "Approach");
+
+IF
+DB_GlobalFlag(FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529)
+AND
+NOT DB_GlobalFlag(FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6)
+AND
+DB_GlobalFlag(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "FOR_UnfortunateGnome", "WindmillStopped");
+
+IF
+DB_GlobalFlag(FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6)
+AND
+DB_GlobalFlag(FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529)
+AND
+DB_Players(_Player)
+THEN
+DB_QuestDef_State(FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529, "FOR_UnfortunateGnome", "GnomeFreed");
+
+IF
+DB_GlobalFlag(FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6)
+AND
+DB_GlobalFlag(FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714)
+AND
+DB_Players(_Player)
+THEN
+DB_QuestDef_State(FOR_GnomeGoblinsDead_8910f084-c9ad-2336-c6a7-098d71914529, "FOR_UnfortunateGnome", "GnomeFreed");
+
+PROC
+PROC_LevelLoadedOnce("SCL_Main_A")
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "FOR_UnfortunateGnome", "GnomeLeft");
+
+//END_REGION
+
+//REGION Speak With Dead removed when gnome runs away from Windmill. The SWD only applies to the case that the gnome died there.
+IF
+DB_FOR_UnfortunateGnomeGone(1)
+THEN
+NOT DB_GLO_CharacterCorpseDialog(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, FOR_UnfortunateGnome_Dead_bedf63dc-6459-b784-063f-26c24f2706f5);
+ 
+//END_REGION
+
+//REGION Apply Statuses
+IF
+UseStarted(_Character, S_FOR_UnfortunateGnomeChains_74cf2839-80b6-4f42-ab7c-679f0b6b74ac)
+THEN
+DB_FOR_UnfortunateGnome_OnWindMill(_Character);
+
+IF
+DB_FOR_UnfortunateGnome_OnWindMill(_Character)
+THEN
+ApplyStatus(_Character, "FOR_TIEDTOWINDMILL", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+PROC_LoopEffect(VFX_Script_PUZ_GEN_Tied_Ropes_A_Gnome_A_01_25f36571-f664-fcd6-5ca5-1fce4ad85444, _Character, "FOR_WindmillRopes", "WLD_Main_A", "Dummy_BodyFX");
+
+
+IF
+DB_FOR_UnfortunateGnome_OnWindMill(_Character)
+AND
+NOT DB_GlobalFlag(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746)
+THEN
+SetDetached(_Character, 1);
+
+IF
+DB_FOR_UnfortunateGnome_OnWindMill(_Character)
+AND
+DB_GlobalFlag(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746)
+THEN
+SetDetached(_Character, 0);
+
+IF
+ReposeRemoved(_Character,_)
+AND
+DB_FOR_UnfortunateGnome_OnWindMill((CHARACTER)_Character)
+AND
+IsOnStage(S_FOR_UnfortunateGnomeChains_Free_6c85929a-dfa7-4a2e-8cf3-60a31493e5fa, 1)
+THEN
+SetOnStage(S_FOR_UnfortunateGnomeChains_Free_6c85929a-dfa7-4a2e-8cf3-60a31493e5fa, 0);
+
+IF
+ReposeRemoved(_Character,_)
+AND
+DB_FOR_UnfortunateGnome_OnWindMill((CHARACTER)_Character)
+THEN
+SetCanFight(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, 1);
+SetDetached(_Character, 0);
+RemoveStatus(_Character, "FOR_TIEDTOWINDMILL");
+PROC_StopLoopEffect(_Character, "FOR_WindmillRopes");
+NOT DB_FOR_UnfortunateGnome_OnWindMill(_Character);
+
+//END_REGION
+
+//REGION Sound
+
+IF
+FlagSet(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746, _, _)
+THEN
+TriggerSetSoundRTPC((TRIGGER)Amb_SV_Forest_QD_727b95fa-f30c-3d41-cbe2-dc0d67f8f105, "SE_Windmill_A_Speed", 0.0, 1);
+PlaySound(S_FOR_UnfortunateGnomeChains_74cf2839-80b6-4f42-ab7c-679f0b6b74ac,"SE_Windmill_A_Stop");
+
+IF
+FlagCleared(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746, _, _)
+THEN
+TriggerSetSoundRTPC((TRIGGER)Amb_SV_Forest_QD_727b95fa-f30c-3d41-cbe2-dc0d67f8f105, "SE_Windmill_A_Speed", 50.0, 1);
+
+IF
+FlagCleared(WLD_FOR_UnfortunateGnome_State_Fast_ad363172-0964-4f0c-9f1d-4fea67834e60, _, _)
+THEN
+TriggerSetSoundRTPC((TRIGGER)Amb_SV_Forest_QD_727b95fa-f30c-3d41-cbe2-dc0d67f8f105, "SE_Windmill_A_Speed", 50.0, 1);
+
+IF
+FlagSet(WLD_FOR_UnfortunateGnome_State_Fast_ad363172-0964-4f0c-9f1d-4fea67834e60, _, _)
+THEN
+TriggerSetSoundRTPC((TRIGGER)Amb_SV_Forest_QD_727b95fa-f30c-3d41-cbe2-dc0d67f8f105, "SE_Windmill_A_Speed", 100.0, 1);
+
+//END_REGION
+
+//REGION If the windmill is restarted, end interactive dialogues
+
+IF
+FlagCleared(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746, _, _)
+AND
+DB_FOR_UnfortunateGnome_OnWindMill(_Character)
+AND
+DB_DialogNPCs(_ID, _Character, _)
+AND
+NOT DB_AutomatedDialog(_ID)
+THEN
+PROC_ForceStopDialog(_Character);
+
+//END_REGION
+
+//REGION Windmill cinematics
+IF
+UseStarted(_Character, S_FOR_UnfortunateGnome_Lever2_3c4f6a14-7b10-48ec-ace1-6324142cb994)
+AND
+IsPartyMember(_Character, 1, 1)
+AND
+QRY_OnlyOnce("FOR_UnfortunateGnome_SlowDown")
+AND
+DB_Players(_Character)
+AND
+NOT DB_GlobalFlag(GLO_UnfortunateGnome_State_Still_d58850bc-2eac-8105-99b1-fec5d247b746)
+AND
+NOT QRY_UnfortunateGnome_Slowdown_WithGoblins(_Character, 0)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)FOR_UnfortunateGnome_SlowDown_NoGoblins_8859f0e0-0d0b-e54f-c141-7dff95ae05a4, _Character)
+THEN
+DB_NOOP(1);
+
+IF
+UseStarted(_Character, S_FOR_UnfortunateGnome_Lever_50b03092-6db1-4469-b21d-2104758ce130)
+AND
+IsPartyMember(_Character, 1, 1)
+AND
+QRY_OnlyOnce("FOR_UnfortunateGnome_SpeedUp")
+AND
+DB_Players(_Character)
+AND
+NOT QRY_UnfortunateGnome_Slowdown_WithGoblins(_Character, 1)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)FOR_UnfortunateGnome_SpeedUp_b7098519-067a-43ee-1446-1ef3a604de87, _Character, 0, 0, 0, 0)
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet(WLD_FOR_UnfortunateGnome_State_Fast_ad363172-0964-4f0c-9f1d-4fea67834e60, _, _)
+AND
+NOT DB_FOR_UnfortunateGnome_ThrowOffDialog(_)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_UnfortunateGnome_State_Freed_c829895d-aba7-46e5-bc10-eb2516c8ddd6)
+AND
+NOT DB_DialogName(FOR_UnfortunateGnome_SpeedUp_b7098519-067a-43ee-1446-1ef3a604de87, _)
+AND
+NOT DB_DialogName((DIALOGRESOURCE)FOR_UnfortunateGnome_SlowDown_e5a2eee5-2eef-e746-ff88-a461d03e336c, _)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714)
+AND
+NOT QRY_StartDialog(DIALOGRESOURCEGUID_FOR_GnomeGoblin1_AD_InvestigateMill_cf27ec59-299d-7a19-7d1b-7a20b4c4a7e3, S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, S_FOR_GnomeGoblin3_bff8ab5f-739d-422a-9ad3-92f4b897f1bc)
+AND
+DB_FOR_UnfortunateGnome_GnomeInvestiGoblins(_, _Goblin, 1)
+THEN
+SetEntityEvent(_Goblin, "FOR_GnomeGoblins_Investigate");
+
+//END_REGION
+
+//REGION If you fling off the unfortunate gnome, the goblins have nothing to have fun with, so they trundle off.
+
+
+IF
+FlagSet(FOR_UnfortunateGnome_Event_ThrowOff_87ddb5ee-952a-4513-8759-03d1a98e1afc, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714)
+THEN
+ObjectTimerLaunch(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, "FOR_UnfortunateGnome_LeaveAfterFlungOff", 90000);
+
+IF
+ObjectTimerFinished(S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404, "FOR_UnfortunateGnome_LeaveAfterFlungOff")
+THEN
+SetFlag(FOR_UnfortunateGnome_State_GoblinsGiveUp_0f66989b-1a89-4666-bd62-00b2dfe4e325, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+
+IF
+DB_GlobalFlag(FOR_UnfortunateGnome_State_GoblinsGiveUp_0f66989b-1a89-4666-bd62-00b2dfe4e325)
+AND
+NOT DB_GlobalFlag((FLAG)WLD_FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714) // flagType: Global
+AND
+NOT DB_CantTalk((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+NOT DB_GlobalFlag(FOR_GnomeGoblinsReturnedHome_be23fd5b-22ed-b163-0204-779faf6e131c) //For if they surrendered, otherwise this triggers in Moonrise
+AND
+QRY_OnlyOnce("FOR_GnomeGoblin1_AD_UnfortunateGnomeGone")
+AND
+NOT QRY_StartDialog(FOR_GnomeGoblin1_AD_UnfortunateGnomeGone_32ed5899-0c97-9d2d-e946-21515146bb1a, (CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+THEN
+PROC_FOR_GnomeGoblins_LeavePacified();
+
+IF
+DB_GlobalFlag(FOR_UnfortunateGnome_State_GoblinsGiveUp_0f66989b-1a89-4666-bd62-00b2dfe4e325)
+AND
+NOT DB_GlobalFlag((FLAG)WLD_FOR_GnomeGoblinsPacified_385336a9-30d7-f4f8-fa62-32dff47ff714) // flagType: Global
+AND
+DB_Defeated((CHARACTER)S_FOR_GnomeGoblin1_b2c582af-bc69-48b3-a004-648562dab404)
+AND
+QRY_OnlyOnce("FOR_GnomeGoblin1_AD_UnfortunateGnomeGone")
+THEN
+PROC_FOR_GnomeGoblins_LeavePacified();
+
+IF
+AutomatedDialogEnded(FOR_GnomeGoblin1_AD_UnfortunateGnomeGone_32ed5899-0c97-9d2d-e946-21515146bb1a, _)
+THEN
+PROC_FOR_GnomeGoblins_LeavePacified();
+
+PROC
+PROC_FOR_GnomeGoblins_LeavePacified()
+AND
+DB_FOR_GnomeGoblins(_Goblin, _, _, _Time)
+THEN
+ObjectTimerLaunch(_Goblin, "FOR_GnomeGoblinLeave", _Time);
+
+IF
+ObjectTimerFinished((CHARACTER)_Goblin, "FOR_GnomeGoblinLeave")
+THEN
+PROC_DisappearOutOfSightTo(_Goblin, TRIGGERGUID_S_GOB_GnomeGoblinDestination_5418547b-f831-4598-99fe-741ba7985e0a, "Run", 0, "FOR_GnomeGoblinsReturnedHome");
+
+//END_REGION
+
+//REGION
+IF
+DB_InRegion(_Character, (TRIGGER)S_FOR_UnfortunateGnome_WindmillForceActivation_3b494ddd-a226-4fe3-905d-49e1546559fa)
+AND
+NOT DB_FOR_ForceUpdating(1)
+THEN
+DB_FOR_ForceUpdating(1);
+SetForceUpdate(S_FOR_UnfortunateGnomeChains_74cf2839-80b6-4f42-ab7c-679f0b6b74ac, 1);
+
+IF
+DB_FOR_ForceUpdating(1)
+AND
+NOT DB_InRegion(_, (TRIGGER)S_FOR_UnfortunateGnome_WindmillForceActivation_3b494ddd-a226-4fe3-905d-49e1546559fa)
+THEN
+NOT DB_FOR_ForceUpdating(1);
+SetForceUpdate(S_FOR_UnfortunateGnomeChains_74cf2839-80b6-4f42-ab7c-679f0b6b74ac, 0);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

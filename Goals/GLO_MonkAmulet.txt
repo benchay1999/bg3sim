@@ -1,0 +1,456 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_GLO_MadMonk_AsylumPos("WLD_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act1_1973406c-188b-4a34-b591-86bdb1ffffe7);
+DB_GLO_MadMonk_AsylumPos("CRE_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act1b_c3c9ee19-4014-4147-b2e1-cc799539b797);
+DB_GLO_MadMonk_AsylumPos("SCL_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act2_b47a15ea-a5c6-40e4-8de1-f1e53a8affc4);
+DB_GLO_MadMonk_AsylumPos("INT_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act2b_53971922-a8ad-410f-9e02-24eee1a5611b);
+DB_GLO_MadMonk_AsylumPos("BGO_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3a_54c3b2c0-ce1d-4870-b939-5fa3923accd0);
+DB_GLO_MadMonk_AsylumPos("CTY_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3b_72cad6e5-e6de-4637-8169-c894e0a04d91);
+DB_GLO_MadMonk_AsylumPos("END_Main"  , (TRIGGER)S_GLO_PixieAsylumPos_Act3c_9f22d897-b3df-49cb-82e9-3db74617dd26);
+DB_GLO_MadMonk_AsylumPos("IRN_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3i_e4710777-1183-43c6-aa1c-081ac8236869);
+DB_GLO_MadMonk_AsylumPos("EPI_Main_A", (TRIGGER)S_GLO_PixieAsylumPos_Act3c_EPI_42d0fecf-b7eb-4b3e-ad70-a3291bfb2085);
+
+PROC_GLO_MonkAmuletBanters_Init();
+
+DB_QuestDef_State(WYR_SentientAmulet_Knows_ShirraIsInCrypt_7d8201db-b5d8-9792-a1e3-3c75622b7f58,"UND_MonkAmulet","LearnedShirraDead");
+KBSECTION
+IF
+LevelLoaded(_Level)
+AND
+DB_GlobalFlag((FLAG)UND_MonkAmulet_State_FoundAmulet_843c2dc4-0066-47f7-a23b-8eef3965ffd3)
+AND
+DB_GLO_MadMonk_AsylumPos(_Level, _Pos)
+THEN
+TeleportTo(S_GLO_LathanderMonk_bd1fac9a-f107-4064-85d0-ec392a6f2b30, _Pos);
+
+IF
+AddedTo(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag(UND_MonkAmulet_State_FoundAmulet_843c2dc4-0066-47f7-a23b-8eef3965ffd3);
+
+//REGION Debug hooks
+
+IF
+TextEvent("UND_MonkAmulet_ForceMadnessEscalation")
+AND
+DB_Players(_Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)UND_MonkAmulet_ResistMadness_b276e5f0-20f4-b8c3-a2d9-ee2cd0bec374, (CHARACTER)S_GLO_LathanderMonk_bd1fac9a-f107-4064-85d0-ec392a6f2b30, _Player)
+THEN
+DB_Noop(1);
+
+IF
+TextEvent("MonkAmulet_Get")
+AND
+DB_CurrentLevel(_Level)
+AND
+DB_GLO_MadMonk_AsylumPos(_Level, _Pos)
+THEN
+TeleportTo(S_GLO_LathanderMonk_bd1fac9a-f107-4064-85d0-ec392a6f2b30, _Pos);
+
+IF
+TextEvent("MonkAmulet_Get")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178,_Player,1,1,1);
+
+//END_REGION
+
+//REGION Dialog Spell
+IF
+CastedSpell(_Player, "Shout_UND_MonkAmulet_TalkToAmulet", _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)UND_MonkAmulet_EquipAmulet_ee8a5144-2022-c562-75f2-c3d7a938fb74, (CHARACTER)S_GLO_LathanderMonk_bd1fac9a-f107-4064-85d0-ec392a6f2b30, _Player)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+//END_REGION
+
+//REGION Dialog Events
+IF
+FlagSet(UND_MonkAmulet_Event_EquipAmulet_c4ce9b0d-fa9b-155f-5b2b-0d3e607d1b21, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+IsEquipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, 0)
+THEN
+Equip(_Player, S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+IF
+FlagSet(UND_MonkAmulet_Event_StowedAmulet_592c6d53-625a-3547-5a4c-f27899d8e536, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+IsEquipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, 1)
+THEN
+ClearFlag(UND_MonkAmulet_Event_StowedAmulet_592c6d53-625a-3547-5a4c-f27899d8e536, _Player, 0);
+Unequip(_Player, S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+IF
+FlagSet(UND_MonkAmulet_Event_DiscardedAmulet_258db908-ef68-2cfe-754b-b39c55720bc9, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+ClearFlag(UND_MonkAmulet_Event_DiscardedAmulet_258db908-ef68-2cfe-754b-b39c55720bc9, _Player, 0);
+Drop(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+//END_REGION
+
+//REGION Amulet banter
+
+IF
+Equipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178,_Player)
+AND
+DB_Players(_Player)
+THEN
+DB_GLO_MonkAmulet_EquippingPlayer(_Player);
+
+IF
+Unequipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178,_Player)
+AND
+DB_GLO_MonkAmulet_EquippingPlayer(_Player)
+THEN
+DB_GLO_MonkAmulet_EquippingPlayer(_Player);
+
+//Check amulet slot (in case story was reloaded and amulet was already equipped)
+IF
+DB_InRegion(_Player, _Trigger)
+AND
+DB_GLO_MonkAmuletBanters(_Trigger, _Banter)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GLO_MonkAmulet_EquippingPlayer(_)
+AND
+GetEquippedItem(_Player,"Amulet",S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178)
+THEN
+DB_GLO_MonkAmulet_EquippingPlayer(_Player);
+
+//To iterate DB_GLO_MonkAmuletBanters facts that were defined before this goal becomes active
+PROC
+PROC_GLO_MonkAmuletBanters_Init()
+AND
+DB_GLO_MonkAmuletBanters((TRIGGER)_Trigger,(DIALOGRESOURCE)_)
+AND
+NOT DB_GLO_MonkAmuletBanters_CustomTriggerRegister(_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_GLO_MonkAmuletBanters((TRIGGER)_Trigger,(DIALOGRESOURCE)_)
+AND
+NOT DB_GLO_MonkAmuletBanters_CustomTriggerRegister(_Trigger)
+THEN
+PROC_TriggerRegisterForPlayers(_Trigger);
+
+IF
+DB_InRegion(_Player, _Trigger)
+AND
+DB_GLO_MonkAmuletBanters(_Trigger, _Banter)
+AND
+DB_GLO_MonkAmulet_EquippingPlayer(_Player)
+AND
+NOT DB_DialogSpeakers(_,_Player,_)
+AND
+NOT DB_Is_InCombat(_Player,_)
+THEN
+PROC_TryStartAD(_Banter, (ITEM)S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+IF
+AutomatedDialogStarted(_Banter, _)
+AND
+DB_GLO_MonkAmuletBanters(_Trigger, _Banter)
+AND
+NOT DB_GLO_MonkAmuletBanters_CustomTriggerRegister(_Trigger)
+THEN
+PROC_TriggerUnregisterForPlayers(_Trigger);
+
+IF
+AutomatedDialogStarted(_Banter, _)
+AND
+DB_GLO_MonkAmuletBanters(_Trigger, _Banter)
+THEN
+NOT DB_GLO_MonkAmuletBanters(_Trigger, _Banter);
+
+//END_REGION
+
+//REGION Amulet Haunting
+
+IF
+Equipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player)
+AND
+DB_Players(_Player)
+AND
+QRY_UND_MonkAmulet_HasNoMadness(_Player)
+THEN
+SetFlag(UND_MonkAmulet_State_MinorMadness_f0ace28f-8b25-468b-b4ca-3e676ad22687, _Player, 0);
+
+IF
+Equipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player)
+AND
+DB_Players(_Player)
+THEN
+ApplyStatus(_Player, "UND_MONKAMULET_HAUNTED", -1.0, 1, S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+IF
+Unequipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player)
+AND
+DB_Players(_Player)
+THEN
+RemoveStatus(_Player, "UND_MONKAMULET_HAUNTED", S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+IF
+CastedSpell(_Player, "Target_UND_MonkAmulet_Ability", _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_UND_MonkAmulet_MadnessLevels(_MadnessLevel, (DIFFICULTYCLASS)_MadnessDC)
+AND
+GetFlag(_MadnessLevel, _Player, 1)
+THEN
+RequestPassiveRoll(_Player, _Player, "SavingThrow", "Wisdom", _MadnessDC, 0, "UND_MonkAmulet_AvoidMadnessOnSpellCast");
+
+IF
+RollResult("UND_MonkAmulet_AvoidMadnessOnSpellCast", _Player, _, 0, _, _)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)UND_MonkAmulet_AD_FailedWisdomSave_9e071baf-a631-2cc7-cbae-f4014c22f856, (ITEM)S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player);
+ApplyStatus(_Player, "UND_MONKAMULET_MADNESS", 6.0, 1, S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+QRY
+QRY_UND_MonkAmulet_HasNoMadness((CHARACTER)_Char)
+AND
+GetFlag(UND_MonkAmulet_State_MinorMadness_f0ace28f-8b25-468b-b4ca-3e676ad22687, _Char, 0)
+AND
+GetFlag(UND_MonkAmulet_State_ModerateMadness_ed3fa304-f32f-44f5-9654-da46d5fe3c8a, _Char, 0)
+AND
+GetFlag(UND_MonkAmulet_State_MajorMadness_cb463ada-23b1-49fb-9fbc-0bfb54520922, _Char, 0)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Madness Escalation
+
+IF
+RollResult("UND_MonkAmulet_AvoidMadnessOnSpellCast", _Player, _, 1, _, _)
+THEN
+PROC_IncreaseCounter("UND_MonkAmulet_ResistMadnessCounter");
+
+IF
+Equipped(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player)
+AND
+DB_Players(_Player)
+AND
+DB_UND_MonkAmulet_IncreaseMadnessThreshold(_Threshold)
+AND
+DB_GlobalCounter("UND_MonkAmulet_ResistMadnessCounter", _Count)
+AND
+_Count >= _Threshold
+AND
+GetFlag(UND_MonkAmulet_State_MajorMadness_cb463ada-23b1-49fb-9fbc-0bfb54520922, _Player, 0)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)UND_MonkAmulet_ResistMadness_b276e5f0-20f4-b8c3-a2d9-ee2cd0bec374, (CHARACTER)S_GLO_LathanderMonk_bd1fac9a-f107-4064-85d0-ec392a6f2b30, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished(_Player, "UND_MonkAmulet_ResistMadnessDialog")
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)UND_MonkAmulet_ResistMadness_b276e5f0-20f4-b8c3-a2d9-ee2cd0bec374, (CHARACTER)S_GLO_LathanderMonk_bd1fac9a-f107-4064-85d0-ec392a6f2b30, _Player)
+THEN
+DB_Noop(1);
+
+IF
+DialogStarted(UND_MonkAmulet_ResistMadness_b276e5f0-20f4-b8c3-a2d9-ee2cd0bec374, _)
+THEN
+PROC_RemoveCounter("UND_MonkAmulet_ResistMadnessCounter");
+PROC_DeclareCounter("UND_MonkAmulet_ResistMadnessCounter");
+
+IF
+FlagSet(UND_MonkAmulet_State_ModerateMadness_ed3fa304-f32f-44f5-9654-da46d5fe3c8a, _Player, _)
+THEN
+ClearFlag(UND_MonkAmulet_State_MinorMadness_f0ace28f-8b25-468b-b4ca-3e676ad22687, _Player, 0);
+
+IF
+FlagSet(UND_MonkAmulet_State_MajorMadness_cb463ada-23b1-49fb-9fbc-0bfb54520922, _Player, _)
+THEN
+ClearFlag(UND_MonkAmulet_State_ModerateMadness_ed3fa304-f32f-44f5-9654-da46d5fe3c8a, _Player, 0);
+
+PROC
+PROC_CAMP_LeftCamp(_Player)
+AND
+GetEquippedItem(_Player, "Amulet", S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178)
+AND
+DB_UND_MonkAmulet_IncreaseMadnessThreshold(_Threshold)
+AND
+DB_GlobalCounter("UND_MonkAmulet_ResistMadnessCounter", _Count)
+AND
+_Count >= _Threshold
+AND
+GetFlag(UND_MonkAmulet_State_MajorMadness_cb463ada-23b1-49fb-9fbc-0bfb54520922, _Player, 0)
+THEN
+ObjectTimerLaunch(_Player, "UND_MonkAmulet_ResistMadnessDialog", 5000);
+//END_REGION
+
+//REGION Journal
+
+PROC
+PROC_BookFlags_FlagSet(_,UND_MonkAmulet_State_ReadJusticiarDiary_45870142-6295-4b60-9fe5-795b56624d33,_)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player,"UND_MonkAmulet",0)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "ReadJusticiarDiary");
+
+IF
+DialogEnded((DIALOGRESOURCE)UND_MonkAmulet_EquipAmulet_ee8a5144-2022-c562-75f2-c3d7a938fb74, _ID)
+AND
+NOT DB_GlobalFlag(UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "FoundAmulet");
+
+IF
+FlagSet((FLAG)UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f,_,_)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "ToldAboutShirra");
+
+IF
+FlagSet((FLAG)UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f,_,_)
+AND
+NOT DB_UND_MonkAmulet_SetCategoryToBG(1)
+THEN
+QuestSetCategory("UND_MonkAmulet","BaldursGate");
+DB_UND_MonkAmulet_SetCategoryToBG(1);
+
+PROC
+PROC_LevelBecameUnreachable("WLD_Main_A")
+AND
+NOT DB_UND_MonkAmulet_SetCategoryToBG(1)
+THEN
+QuestSetCategory("UND_MonkAmulet","BaldursGate");
+DB_UND_MonkAmulet_SetCategoryToBG(1);
+
+//For getting the amulet through debug
+IF
+DB_LevelLoadedOnce("BGO_Main_A")
+AND
+DB_GlobalFlag(UND_MonkAmulet_State_FoundAmulet_843c2dc4-0066-47f7-a23b-8eef3965ffd3)
+AND
+NOT DB_GlobalFlag(UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player,"UND_MonkAmulet",0)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "FoundAmulet");
+
+IF
+DB_LevelLoadedOnce("BGO_Main_A")
+AND
+DB_GlobalFlag(UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player,"UND_MonkAmulet",0)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "ToldAboutShirra");
+
+IF
+DialogEnded(UND_MonkAmulet_ResistMadness_b276e5f0-20f4-b8c3-a2d9-ee2cd0bec374, _ID)
+AND
+DB_GlobalFlag(UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+QRY_OnlyOnce("UND_MonkAmulet_MadnessIncreased_QuestUpdate")
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "MadnessIncreased_AfterQuest");
+
+IF
+DialogEnded(UND_MonkAmulet_ResistMadness_b276e5f0-20f4-b8c3-a2d9-ee2cd0bec374, _ID)
+AND
+NOT DB_GlobalFlag(UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+QRY_OnlyOnce("UND_MonkAmulet_MadnessIncreased_QuestUpdate")
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "MadnessIncreased");
+
+// Hidden XP Booster
+IF
+AddedTo(S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_UND_KethericCity_LavaElemental_1c47b089-3e59-41ca-a300-47dfd941b5a0)
+AND
+QuestUpdateIsUnlocked(_Player, "HIDDEN_WLD_Boosters", "UND_MonkAmulet_SparedLavaElemental", 0)
+THEN
+QuestUpdate(_Player, "HIDDEN_WLD_Boosters", "UND_MonkAmulet_SparedLavaElemental");
+
+IF
+QuestAccepted(_,"UND_MonkAmulet")
+THEN
+DB_LevelUnreachable_TrackEntity((GUIDSTRING)S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178);
+
+//WYR
+IF
+DB_InRegion(_,(TRIGGER)S_WYR_SentientAmulet_OpenHandTemple_Trigger_e913a308-a398-4b64-ab10-8423c0518dff)
+AND
+DB_GlobalFlag((FLAG)UND_MonkAmulet_Event_OfferedQuest_1226f854-c4f6-af9f-6863-e7c3d013647f)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "ReachedOpenHandTemple");
+
+IF
+DialogEnded((DIALOGRESOURCE)WYR_SentientAmulet_Zombie_b30457da-d36e-8822-cb6f-d8b24fe013ed, _ID)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+AND
+GetFlag(WYR_SentientAmulet_Event_GetMonkReward_93f52b5c-5f1f-4163-b76f-ab6cec9a6767,_Player,1)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "AcceptedMadness");
+
+IF
+FlagSet((FLAG)WYR_SentientAmulet_State_DefeatedZombies_bfbbb273-5195-428d-931a-5a93a7431055,_,_)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "FoughtMadMonk");
+
+PROC
+PROC_LevelBecameUnreachable("BGO_Main_A")
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "WyrmsCrossingUnreachable");
+
+PROC
+PROC_EntityBecameUnreachable((GUIDSTRING)S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178,(STRING)_)
+THEN
+SetFlag(WYR_SentientAmulet_State_LostAmulet_dd55b33c-ba87-4687-a674-6dd36b633de0);
+
+PROC
+PROC_EntityBecameUnreachable((GUIDSTRING)S_UND_MonkAmulet_Amulet_de2ea5a9-943a-4794-9ef7-208be7747178,(STRING)_)
+AND
+NOT DB_LevelUnreachable("BGO_Main_A")
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "UND_MonkAmulet", "LostAmulet");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

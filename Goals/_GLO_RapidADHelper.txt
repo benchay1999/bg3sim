@@ -1,0 +1,351 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//RapidMindmeldsADs
+//DistancePoints.
+//DB_GLO_RapidAD_MindMeldDistancePoints((STRING)_ID, (TRIGGER)_ClosestPointToOrigin, (TRIGGER)_FurthestPointToOrigin)
+//Setting the right region
+//Please, never NEVER reuse one of the other Directional Brainquakes for this region.
+//DB_GLO_RapidAD_MindMeldRegion((STRING)_ID, (TRIGGER)_MindmeldArea);
+//Helpers for the rapid ADs. Should be equal quantity of Helper items as dialogue ADs files.
+//DB_GLO_RapidAD_ADHelper("LOW_BaldursGate_Brainquakes", S_LOW_BaldursGate_RapidAD_Helper_001_27b7dec0-51da-4f2c-976c-5719dc5f8f51, LOW_BaldursGate_AD_RapidMelt_001_3d2de33c-8154-b13d-3379-a4d15992469f);
+//DB_GLO_RapidAD_OverloadOffsetRules((STRING)_IDRegion, (REAL)_OffsetXZ, (REAL)_OffsetY, (REAL)_RangeXZ, (REAL)_RangeY);
+
+
+DB_GLO_RapidADHelper_BaseAdjustedTime(900); //This is a more or less safa value to use. Probably will need further testing in order to avoid FPS drops
+DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(-1);
+NOT DB_GLO_RapidAD_AvailableRapidMindMeldADHelper("ID",(ITEM)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, 0);
+KBSECTION
+//REGION Rapid Mindmeld ADs
+
+PROC
+PROC_GLO_RapidAD_SetMaxDistance((STRING)_ID)
+AND
+DB_GLO_RapidAD_MindMeldDistancePoints(_ID, _ReferencePoint001, _ReferencePoint002)
+AND
+GetDistanceTo(_ReferencePoint001, _ReferencePoint002, _Distance)
+THEN
+DB_GLO_RapidAD_MindMeldMaxDistance(_ID, _Distance);
+
+IF
+DB_InRegion(_Player, _MindMeldRegion)
+AND
+IsTagged(_Player, ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed, 1)
+AND
+DB_GLO_RapidAD_MindMeldRegion(_ID, _MindMeldRegion)
+THEN
+PROC_GLO_RapidAD_TryRapidMindMeldAD((CHARACTER)_Player, (STRING)_ID);
+
+//Try to use the same AD and teleporting it
+PROC
+PROC_GLO_RapidAD_TryRapidMindMeldAD((CHARACTER)_Player, (STRING)_ID)
+AND
+DB_GLO_RapidAD_MindMeldRegion(_ID, _Region)//Convertir esto en otra BBDD que tenga su intern tambien. Una para valores genericos y otra para valores no genericos
+AND
+DB_InRegion(_Player, _Region)
+AND
+DB_GLO_RapidAD_ADHelper(_ID, _Helper, _Dialog)
+AND
+NOT DB_GLO_RapidAD_ActiveRapidAD(_ID, _Dialog)
+AND
+NOT DB_OnlyOnce(_ID)
+THEN
+DB_OnlyOnce(_ID);
+DB_GLO_RapidAD_ActiveRapidAD(_ID, _Dialog);
+PROC_GLO_RapidAD_TeleportADHelper(_Helper, _Player, _ID);
+PROC_TryStartAD(_Dialog, _Helper);
+PROC_GLO_RapidAD_TimerStart(_ID, _Player);
+
+//For more direct control in how many ads or when you want the ads to play
+PROC
+PROC_GLO_RapidAD_TryOneRandomMindMeldAD((CHARACTER)_, (STRING)_)
+AND
+DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(_Count)
+THEN
+NOT DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(_Count);
+
+PROC
+PROC_GLO_RapidAD_TryOneRandomMindMeldAD((CHARACTER)_, (STRING)_)
+THEN
+DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(-1);
+
+PROC
+PROC_GLO_RapidAD_TryOneRandomMindMeldAD((CHARACTER)_, (STRING)_)
+AND
+DB_GLO_RapidAD_AvailableRapidMindMeldADHelper(_ID, _Helper, _Dialog, _NewCount)
+THEN
+NOT DB_GLO_RapidAD_AvailableRapidMindMeldADHelper(_ID, _Helper, _Dialog, _NewCount);
+
+PROC
+PROC_GLO_RapidAD_TryOneRandomMindMeldAD((CHARACTER)_Player, (STRING)_ID)
+AND
+DB_GLO_RapidAD_ADHelper(_ID, _Helper, _Dialog)
+AND
+NOT DB_GLO_RapidAD_ActiveRapidAD(_ID, _Dialog)
+AND
+DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(_Count)
+AND
+IntegerSum(_Count, 1, _NewCount)
+THEN
+DB_GLO_RapidAD_AvailableRapidMindMeldADHelper(_ID, _Helper, _Dialog, _NewCount);
+NOT DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(_Count);
+DB_GLO_RapidADHelper_AvailableRapidMindMeldADHelperCount(_NewCount);
+
+PROC
+PROC_GLO_RapidAD_TryOneRandomMindMeldAD((CHARACTER)_Player, (STRING)_ID)
+AND
+DB_GLO_RapidAD_NonAutoMindMeldRegion(_ID, _Region)
+AND
+DB_InRegion(_Player, (TRIGGER)_Region)
+AND
+SysCount("DB_GLO_RapidAD_AvailableRapidMindMeldADHelper", 4, _Count)
+AND
+Random(_Count, _Index)
+AND
+DB_GLO_RapidAD_AvailableRapidMindMeldADHelper(_ID, _Helper, _Dialog, _Index)
+THEN
+DB_GLO_RapidAD_ActiveRapidAD(_ID, _Dialog);
+PROC_GLO_RapidAD_TeleportADHelper(_Helper, _Player, _ID);
+PROC_TryStartAD(_Dialog, _Helper);
+
+
+//REGION TeleportADHelper calculations
+
+PROC
+PROC_GLO_RapidAD_TeleportADHelper((GUIDSTRING)_Helper, (GUIDSTRING)_Player, (STRING)_IDRegion)
+AND
+DB_GLO_RapidAD_OverloadOffsetRules(_IDRegion, _OffsetXZ, _OffsetY, _RangeXZ, _RangeY)
+THEN
+PROC_GLO_RapidAD_TeleportADHelper(_Helper, _Player, _OffsetXZ, _OffsetY, _RangeXZ, _Rangey);
+
+PROC
+PROC_GLO_RapidAD_TeleportADHelper((GUIDSTRING)_Helper, (GUIDSTRING)_Player, (STRING)_IDRegion)
+AND
+NOT DB_GLO_RapidAD_OverloadOffsetRules(_IDRegion, _, _, _, _)
+THEN
+PROC_GLO_RapidAD_TeleportADHelper(_Helper, _Player, 2.0, -0.5, 1.0, 1.0);//Default values
+
+PROC
+PROC_GLO_RapidAD_TeleportADHelper((GUIDSTRING)_Speaker, (GUIDSTRING)_Player, (REAL)_OffsetXZ, (REAL) _OffsetY, (REAL)_RangeXZ, (REAL) _RangeY)
+AND
+Random(100, _RandomX)
+AND
+Random(100, _RandomZ)
+AND
+Random(100, _RandomY)
+AND
+IntegerToReal(_RandomX, _RealX)
+AND
+IntegerToReal(_RandomZ, _RealZ)
+AND
+IntegerToReal(_RandomY, _RealY)
+AND
+RealDivide(_RealX, 100.0, _NormX)
+AND
+RealDivide(_RealZ, 100.0, _NormZ)
+AND
+RealDivide(_RealY, 100.0, _NormY)
+AND
+Random(4,_Direction)
+AND
+QRY_GLO_RapidAD_DetermineRandomOffset(_Direction,_NormX,_NormZ,_OffsetXZ,_RangeXZ)
+AND
+DB_QRYRTN_GLO_RapidAD_RandomOffset(_DistDirX,_DistDirZ)
+AND
+RealProduct(_NormY, _RangeY, _ScaledY) //Distance range Y
+AND
+RealSum(_ScaledY,_OffsetY,_DistY) //Offset Y
+AND
+GetPosition(_Player, _X, _Y, _Z)
+AND
+RealSum(_X, _DistDirX, _NewX)
+AND
+RealSum(_Z, _DistDirZ, _NewZ)
+AND
+RealSum(_Y, _DistY, _NewY)
+THEN
+TeleportToPosition(_Speaker, _NewX, _NewY, _NewZ, "", 0,0,0,0,0);
+NOT DB_QRYRTN_GLO_RapidAD_RandomOffset(_DistDirX,_DistDirZ);
+
+//Clean up
+PROC
+PROC_GLO_RapidAD_TeleportADHelper((GUIDSTRING)_, (GUIDSTRING)_, (REAL)_, (REAL)_, (REAL)_, (REAL)_)
+THEN
+PROC_GLO_RapidAD_RapidMindMeldADCleanup();
+
+PROC
+PROC_GLO_RapidAD_RapidMindMeldADCleanup()
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_Value)
+THEN
+NOT DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_Value);
+
+PROC
+PROC_GLO_RapidAD_RapidMindMeldADCleanup()
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_Value)
+THEN
+NOT DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_Value);
+
+PROC
+PROC_GLO_RapidAD_RapidMindMeldADCleanup()
+AND
+DB_QRYRTN_GLO_RapidAD_RandomOffset(_X,_Z)
+THEN
+NOT DB_QRYRTN_GLO_RapidAD_RandomOffset(_X,_Z);
+
+//Determine random offset according to four directions
+QRY
+QRY_GLO_RapidAD_DetermineRandomOffset(0,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_GLO_RapidAD_CalcWithOffset(_NormX,_OffsetXZ,_RangeXZ,1.0) //positive offset X
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_X)
+AND
+QRY_GLO_RapidAD_CalcWithoutOffset(_NormZ,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 Z
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_Z)
+THEN
+DB_QRYRTN_GLO_RapidAD_RandomOffset(_X,_Z);
+
+QRY
+QRY_GLO_RapidAD_DetermineRandomOffset(1,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_GLO_RapidAD_CalcWithOffset(_NormX,_OffsetXZ,_RangeXZ,-1.0) //negative offset X
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_X)
+AND
+QRY_GLO_RapidAD_CalcWithoutOffset(_NormZ,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 Z
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_Z)
+THEN
+DB_QRYRTN_GLO_RapidAD_RandomOffset(_X,_Z);
+
+QRY
+QRY_GLO_RapidAD_DetermineRandomOffset(2,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_GLO_RapidAD_CalcWithoutOffset(_NormX,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 X
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_X)
+AND
+QRY_GLO_RapidAD_CalcWithOffset(_NormZ,_OffsetXZ,_RangeXZ,1.0) //positive offset Z
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_Z)
+THEN
+DB_QRYRTN_GLO_RapidAD_RandomOffset(_X,_Z);
+
+QRY
+QRY_GLO_RapidAD_DetermineRandomOffset(3,(REAL)_NormX,(REAL)_NormZ,(REAL)_OffsetXZ,(REAL)_RangeXZ)
+AND
+QRY_GLO_RapidAD_CalcWithoutOffset(_NormX,_OffsetXZ,_RangeXZ) //-1.0 to 1.0 X
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_X)
+AND
+QRY_GLO_RapidAD_CalcWithOffset(_NormZ,_OffsetXZ,_RangeXZ,-1.0) //negative offset Z
+AND
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_Z)
+THEN
+DB_QRYRTN_GLO_RapidAD_RandomOffset(_X,_Z);
+
+//Calculations with offset (-/+offset to -/+maxrange)
+QRY
+QRY_GLO_RapidAD_CalcWithOffset((REAL)_Random,(REAL)_Offset,(REAL)_Range,(REAL)_Direction)
+AND
+RealProduct(_Random,_Range,_Scaled) //Random varies from 0.0 to 1.0, Scaled varies from 0 to Range
+AND
+RealSum(_Scaled,_Offset,_ScaledOffset) //ScaledOffset varies from Offset to MaxRange(=Offset+Direction)
+AND
+RealProduct(_ScaledOffset,_Direction,_Value) //Value varies from -MaxRange to -Offset and +Offset to +MaxRange
+THEN
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithOffset(_Value);
+
+//Calculations without offset (-maxrange to +maxrange)
+QRY
+QRY_GLO_RapidAD_CalcWithoutOffset((REAL)_Random,(REAL)_Offset,(REAL)_Range)
+AND
+RealSum(_Offset,_Range,_MaxRange)
+AND
+RealSubtract(_Random,0.5,_RandomSub) //Random varies from 0.0 to 1.0, RandomSub varies from -0.5 to 0.5
+AND
+RealProduct(_RandomSub,2.0,_RandomNorm) //RandomNorm varies from -1.0 to 1.0
+AND
+RealProduct(_RandomNorm,_MaxRange,_Value) //Value varies from -MaxRange to +MaxRange
+THEN
+DB_QRY_RTN_GLO_RapidAD_CalculatedWithoutOffset(_Value);
+
+//END_REGION
+
+PROC
+PROC_GLO_RapidAD_TimerStart((STRING)_TimerID, (CHARACTER)_Player)
+AND
+QRY_GLO_Brainquakes_GetTimeDifference(_TimerID, _Player)
+AND
+DB_QRYRTN_GLO_RapidAD_ActiveRapidMindMeldTimeAdjusted(_TimerID, _AdjustedTime)
+//AND
+//ConcatenateInteger("Next AD: ", _AdjustedTime, _DebugTime)
+THEN
+ObjectTimerLaunch(_Player, _TimerID, _AdjustedTime, 1);
+DB_GLO_RapidAD_ActiveRapidMindMeldTimer(_TimerID);
+//DebugText(_Player, _DebugTime);
+NOT DB_QRYRTN_GLO_RapidAD_ActiveRapidMindMeldTimeAdjusted(_TimerID, _AdjustedTime);
+
+IF
+ObjectTimerFinished(_Player, _TimerID)
+AND
+DB_GLO_RapidAD_ActiveRapidMindMeldTimer(_TimerID)
+THEN
+NOT DB_OnlyOnce(_TimerID);
+NOT DB_GLO_RapidAD_ActiveRapidMindMeldTimer(_TimerID);
+PROC_GLO_RapidAD_TryRapidMindMeldAD((CHARACTER)_Player, _TimerID);
+
+QRY
+QRY_GLO_Brainquakes_GetTimeDifference((STRING)_TimerID, (CHARACTER)_Player)
+AND
+DB_GLO_RapidAD_MindMeldDistancePoints(_TimerID, _ClosestPointToOrigin, _)
+AND
+GetDistanceTo(_Player, _ClosestPointToOrigin, _PlayerDistance)
+AND
+DB_GLO_RapidAD_MindMeldMaxDistance(_TimerID, _MaxDistance)
+AND
+RealDivide(_PlayerDistance, _MaxDistance, _NormalizedDistance)
+AND
+DB_GLO_RapidAD_ActiveRapidMindMeldStartTime(_MaxTime)
+AND
+IntegerToReal(_MaxTime, _RealMaxTime)
+AND
+RealProduct(_NormalizedDistance, _RealMaxTime, _RealAdjustedTime)
+AND
+RealToInteger(_RealAdjustedTime, _AdjustedTime)
+THEN
+PROC_GLO_RapidAD_SetAdjustedTime(_TimerID, _AdjustedTime);
+
+PROC
+PROC_GLO_RapidAD_SetAdjustedTime((STRING)_TimerID, (INTEGER)_AdjustedTime)
+AND
+DB_GLO_RapidADHelper_BaseAdjustedTime(_BaseAdjustedTime)
+AND
+_AdjustedTime > _BaseAdjustedTime
+THEN
+DB_QRYRTN_GLO_RapidAD_ActiveRapidMindMeldTimeAdjusted(_TimerID, _AdjustedTime);
+
+PROC
+PROC_GLO_RapidAD_SetAdjustedTime((STRING)_TimerID, (INTEGER)_AdjustedTime)
+AND
+DB_GLO_RapidADHelper_BaseAdjustedTime(_BaseAdjustedTime)
+AND
+_AdjustedTime <= _BaseAdjustedTime
+THEN
+DB_QRYRTN_GLO_RapidAD_ActiveRapidMindMeldTimeAdjusted(_TimerID, _BaseAdjustedTime);
+
+IF
+AutomatedDialogEnded(_Dialog, _DialogID)
+AND
+DB_GLO_RapidAD_ActiveRapidAD(_ID, _Dialog)
+THEN
+NOT DB_GLO_RapidAD_ActiveRapidAD(_ID, _Dialog);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

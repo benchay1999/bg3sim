@@ -1,0 +1,364 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,GOB_GoblinHeretic_07115ebd-0531-94bc-5827-f85d85eac33f);
+
+DB_GOB_PreparingRaiders((CHARACTER)S_GOB_RaiderBold_1c9fd1dd-12bc-4b81-acb8-9eef54174c55);
+DB_GOB_PreparingRaiders(S_GOB_RaiderHefty_fcbb04a8-f4e6-4065-901c-1a4a708ccd54);
+DB_GOB_PreparingRaiders(S_GOB_RaiderHardy_6687f78f-5d6a-40d4-8cfd-2b972dacde3c);
+
+DB_ItemOwnerShipTriggers("WLD_Main_A",(TRIGGER)S_GOB_PreparingRaiders_OwnershipTrigger_359d40c2-82ef-420f-ba24-bcc5b3193d96,(CHARACTER)S_GOB_RaiderBold_1c9fd1dd-12bc-4b81-acb8-9eef54174c55);
+
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1);
+
+TriggerRegisterForCharacter(S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+
+PROC_TriggerRegisterForPlayers(S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df);
+KBSECTION
+//REGION Setup
+IF
+DB_GOB_PreparingRaiders(_Raider)
+THEN
+DB_GLO_DefeatCounter(_Raider,"GOB_PreparingRaiders");
+TriggerRegisterForCharacter(S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df,_Raider);
+
+IF
+Died(_Raider)
+AND
+DB_GOB_PreparingRaiders(_Raider)
+THEN
+NOT DB_GOB_PreparingRaiders(_Raider);
+
+IF
+DB_InRegion(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de)
+THEN
+SetFlag((FLAG)GOB_GoblinHeretic_InPrison_200696a2-d520-bc2c-a7e4-42c354672a07,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de); // flagType: Object
+PROC_SetCanFight(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,0);
+BlockNewCrimeReactions(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,1);
+//END_REGION
+
+//REGION Leaving the Cage
+IF
+Opened(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57)
+AND
+NOT DB_GOB_GoblinHeretic_DoorDontBlock(1)
+THEN
+DB_GOB_GoblinHeretic_DoorDontBlock(1);
+
+IF
+DestroyedBy(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57,_,_,_)
+AND
+NOT DB_GOB_GoblinHeretic_DoorDontBlock(1)
+THEN
+DB_GOB_GoblinHeretic_DoorDontBlock(1);
+
+IF
+Closed(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57)
+AND
+DB_GOB_GoblinHeretic_DoorDontBlock(1)
+THEN
+NOT DB_GOB_GoblinHeretic_DoorDontBlock(1);
+
+IF
+DB_GOB_GoblinHeretic_DoorDontBlock(1)
+AND
+NOT DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+AND
+DB_InRegion(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de)
+AND
+NOT DB_CantMove(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de)
+AND
+NOT DB_GOB_GoblinHeretic_Saved(1)
+THEN
+SetEntityEvent(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, "GOB_GoblinHeretic_Saved", 1);
+
+IF
+LeftTrigger((CHARACTER)S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, (TRIGGER)S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de)
+AND
+NOT DB_GOB_GoblinHeretic_LeftCage(1)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+ClearFlag((FLAG)GOB_GoblinHeretic_InPrison_200696a2-d520-bc2c-a7e4-42c354672a07,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de); // flagType: Object
+BlockNewCrimeReactions(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,0);
+PROC_SetCanFight(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,1);
+PROC_CharacterDisableCrime(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, "Vandalise");
+PROC_CharacterDisableCrime(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, "DisarmingTrap");
+PROC_CharacterDisableCrime(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, "ItemDestroy");
+PROC_CharacterDisableCrime(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, "UseForbiddenItem");
+DB_GOB_GoblinHeretic_LeftCage(1);
+PROC_GOB_GoblinHeretic_Freed();
+
+IF
+LeftTrigger(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de)
+AND
+DB_LinkedCrimes("Vandalise", _VandaliseCrime)
+THEN
+PROC_CharacterDisableCrime(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,_VandaliseCrime);
+//END_REGION
+
+//REGION Hostile Goblins
+PROC
+PROC_GOB_GoblinHeretic_Freed()
+AND
+NOT DB_PermaDefeated(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de)
+AND
+QRY_GOB_GoblinHeretic_MakeRaidersHostile()
+THEN
+PROC_GOB_GoblinHeretic_CheckPlayersInArea();
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)GOB_GoblinHeretic_AD_ExplosionReaction_8913978e-ad5d-861a-d37e-acfbce622489,_ID)
+THEN
+PROC_GOB_GoblinHeretic_CheckPlayersInArea();
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)GOB_GoblinHeretic_AD_ExplosionReaction_8913978e-ad5d-861a-d37e-acfbce622489,_ID)
+THEN
+PROC_GOB_GoblinHeretic_CheckPlayersInArea();
+
+PROC
+PROC_GOB_GoblinHeretic_CheckPlayersInArea()
+AND
+DB_InRegion(_Player,S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df)
+AND
+DB_Players(_Player)
+AND
+NOT DB_HiddenCharacters(_Player,_)
+AND
+DB_GOB_PreparingRaiders(_Raider)
+THEN
+PROC_MakeNPCHostile(_Raider,_Player);
+
+QRY
+QRY_GOB_GoblinHeretic_MakeRaidersHostile()
+AND
+DB_GOB_PreparingRaiders(_Raider)
+AND
+DB_InRegion(_Raider,S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df)
+THEN
+PROC_SetRelationMutual((FACTION)ACT1_GOB_Heretic_f5d96348-623f-41e5-9e4c-2454a536a618,(FACTION)ACT1_GOB_RaidersNearHeretic_1f30d2dc-3034-4237-9aed-0edf1e1f1c36,0);
+
+QRY
+QRY_GOB_GoblinHeretic_MakeRaidersHostile()
+AND
+NOT DB_CantTalk(S_GOB_RaiderHefty_fcbb04a8-f4e6-4065-901c-1a4a708ccd54)
+AND
+DB_InRegion(S_GOB_RaiderHefty_fcbb04a8-f4e6-4065-901c-1a4a708ccd54,S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GOB_GoblinHeretic_AD_ReleasedReaction_4b1ec64b-a0fe-3f86-aa6b-ccbfdca90eb2,S_GOB_RaiderHefty_fcbb04a8-f4e6-4065-901c-1a4a708ccd54);
+
+IF
+DB_GLO_DefeatCounter_CountMet("GOB_PreparingRaiders")
+THEN
+SetFlag((FLAG)GOB_GoblinHeretic_RaidersDead_4e7261b8-9510-45ae-bb94-3d2e3b191e40,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(GOB_GoblinHeretic_RaidersDead_4e7261b8-9510-45ae-bb94-3d2e3b191e40,_,_)
+THEN
+DB_GOB_GoblinHeretic_RaidersGone(1);
+
+IF
+LeftTrigger(_Raider, S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df)
+AND
+DB_GOB_PreparingRaiders(_Raider)
+AND
+NOT DB_GOB_GoblinHeretic_RaidersGone(1)
+AND
+NOT QRY_GOB_GoblinHeretic_AnyRaiderInArea()
+THEN
+DB_GOB_GoblinHeretic_RaidersGone(1);
+
+IF
+EnteredTrigger(_Raider, S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df)
+AND
+DB_GOB_PreparingRaiders(_Raider)
+AND
+NOT DB_GlobalFlag(GOB_GoblinHeretic_RaidersDead_4e7261b8-9510-45ae-bb94-3d2e3b191e40)
+THEN
+NOT DB_GOB_GoblinHeretic_RaidersGone(1);
+
+QRY
+QRY_GOB_GoblinHeretic_AnyRaiderInArea()
+AND
+DB_GOB_PreparingRaiders(_Raider)
+AND
+DB_InRegion(_Raider, S_GOB_GoblinHeretic_RaidersArea_cbedd1a5-d052-48f0-90de-0247e376b0df)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Saved dialog - starting and disappearing when it ends
+IF
+DB_GOB_GoblinHeretic_RaidersGone(1)
+AND
+DB_GOB_GoblinHeretic_LeftCage(1)
+AND
+NOT DB_CantTalk(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de)
+AND
+NOT DB_Is_InCombat(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,_)
+THEN
+PROC_GOB_GoblinHeretic_StartSavedDialog();
+
+PROC
+PROC_GOB_GoblinHeretic_StartSavedDialog()
+AND
+NOT DB_GOB_GoblinHeretic_Saved(1)
+THEN
+DB_GOB_GoblinHeretic_Saved(1);
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+DB_Dialogs(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, GOB_GoblinHeretic_Saved_442ebfc2-c948-dce6-2bcb-233b520dd70f);
+DB_SpotPlayers(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_AfterFight",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_AfterFight",S_GOB_GoblinHeretic_PostCombat_SpotArea_d0336140-6037-4eaa-b7ee-9657434264b0);
+DB_SpotPlayers_IncludeFollowers(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_AfterFight");
+DB_SpotPlayers_TargetIgnoreCantTalk(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_AfterFight");
+DB_SpotPlayers_IncludeWildshapedPlayers(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_AfterFight");
+
+PROC
+PROC_GOB_GoblinHeretic_StartSavedDialog()
+THEN
+ClearOwnership((ITEM)S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57);
+
+PROC
+PROC_SpotPlayers_Spotted(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_AfterFight",_Player)
+AND
+QRY_StartDialog(GOB_GoblinHeretic_Saved_442ebfc2-c948-dce6-2bcb-233b520dd70f,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,_Player)
+THEN
+DB_NOOP(1);
+
+//Heretic runs away
+IF
+DialogEnded(GOB_GoblinHeretic_Saved_442ebfc2-c948-dce6-2bcb-233b520dd70f,_ID)
+AND
+GetFlag((FLAG)GOB_GoblinHeretic_FreeToGo_8c660bd3-3443-47c5-8d2a-aa1f2b3c7237,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,1)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+QuestUpdate("HIDDEN_WLD_Boosters", "GOB_Heretic_Saved");
+
+IF
+DialogEnded(GOB_GoblinHeretic_Saved_442ebfc2-c948-dce6-2bcb-233b520dd70f,_ID)
+AND
+NOT DB_CantMove(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de)
+AND
+NOT DB_GOB_GoblinHeretic_Disappeared(1)
+AND
+GetFlag((FLAG)GOB_GoblinHeretic_FreeToGo_8c660bd3-3443-47c5-8d2a-aa1f2b3c7237,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,1)
+AND
+QRY_DoesntBlock(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57)
+THEN
+DB_GOB_GoblinHeretic_Disappeared(1);
+PROC_DisappearOutOfSight(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"Run",1,"");
+
+IF
+DB_GOB_GoblinHeretic_DoorDontBlock(1)
+AND
+NOT DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+AND
+NOT DB_CantMove(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de)
+AND
+NOT DB_GOB_GoblinHeretic_Disappeared(1)
+AND
+GetFlag((FLAG)GOB_GoblinHeretic_FreeToGo_8c660bd3-3443-47c5-8d2a-aa1f2b3c7237,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,1)
+THEN
+DB_GOB_GoblinHeretic_Disappeared(1);
+PROC_DisappearOutOfSight(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"Run",1,"");
+
+PROC
+PROC_StateSet_PermaDefeated(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de)
+THEN
+TriggerUnregisterForCharacter(S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+//END_REGION
+
+//REGION Rigged Cage
+IF
+PlatformDestroyed(PLT_GOB_HereticCage_Floor_3aa4f7eb-25b3-461d-97cb-e12bea2529c8)
+AND
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+THEN
+PROC_GOB_GoblinHeretic_ExplodeTrap();
+
+IF
+Opened(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57)
+AND
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+THEN
+PROC_GOB_GoblinHeretic_Explosions();
+
+IF
+DestroyedBy(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57,_,_,_)
+AND
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+THEN
+PROC_GOB_GoblinHeretic_ExplodeTrap();
+
+IF
+AttackedBy(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57,_,_,_,_,_,_)
+AND
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+THEN
+PROC_GOB_GoblinHeretic_Explosions();
+
+IF
+AttemptedDisarm(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57,_Player,_,1)
+THEN
+NOT DB_GOB_GoblinHeretic_CageDoor_Rigged(1);
+
+IF
+ArmedTrapUsed(_,S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57)
+AND
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+AND
+IsLocked(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57, 0)
+THEN
+Open(S_GOB_GoblinHeretic_CageDoor_ce1d2732-37b6-8591-2271-aeefab626e57);
+PROC_GOB_GoblinHeretic_Explosions();
+
+PROC
+PROC_GOB_GoblinHeretic_Explosions()
+THEN
+RealtimeObjectTimerLaunch(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_Explosion",1900);
+
+PROC
+PROC_GOB_GoblinHeretic_Explosions()
+AND
+DB_InRegion(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,S_GOB_GoblinHeretic_PrisonAreaTrigger_5aa5e640-a0fd-444b-8eda-00d746ec57de)
+THEN
+RealtimeObjectTimerLaunch(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_ExplosionReaction",2900);
+PROC_TryStartAD(GOB_GoblinHeretic_AD_CageOpen_53e2ebd6-479c-cc2e-3e28-5e37e301acff,S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de);
+
+IF
+ObjectTimerFinished(_,"GOB_GoblinHeretic_ExplosionReaction")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GOB_GoblinHeretic_AD_ExplosionReaction_8913978e-ad5d-861a-d37e-acfbce622489,S_GOB_RaiderHefty_fcbb04a8-f4e6-4065-901c-1a4a708ccd54);
+
+IF
+ObjectTimerFinished(_,"GOB_GoblinHeretic_Explosion")
+THEN
+PROC_GOB_GoblinHeretic_ExplodeTrap();
+
+PROC
+PROC_GOB_GoblinHeretic_ExplodeTrap()
+AND
+DB_GOB_GoblinHeretic_CageDoor_Rigged(1)
+AND
+NOT DB_GOB_GoblinHereic_ExplosivesAreTriggering(1)
+THEN
+DB_GOB_GoblinHereic_ExplosivesAreTriggering(1);
+CreateExplosion(S_GOB_GoblinHeretic_ExplosionTrigger_12d461a4-8ab9-4a88-9dc9-d0700203930a,"Projectile_GOB_CageTrap",-1);
+RealtimeObjectTimerLaunch(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de,"GOB_GoblinHeretic_UnrigExplosive",1000);
+
+IF
+ObjectTimerFinished(_,"GOB_GoblinHeretic_UnrigExplosive")
+THEN
+NOT DB_GOB_GoblinHeretic_CageDoor_Rigged(1);
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("GOB_GoblinHeretic_Jump")
+THEN
+SetEntityEvent(S_GOB_GoblinHeretic_3af8a55b-903a-43cd-84d3-9cb7ca8f69de, "GOB_GoblinHeretic_Saved", 1);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

@@ -1,0 +1,133 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+THEN
+PROC_CRA_InitAstarion();
+
+PROC
+PROC_CRA_InitAstarion()
+AND
+DB_Avatars(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+TeleportTo(S_CRA_ScaredBoar_e352fae8-f49a-4f1d-b131-ea10af7591c9, S_CRA_ScaredBoar_RockPoint_a398337d-08e7-41f1-9c36-d7bfbb1b9524, "CRA_EscapedBoar_StartSpotting");
+
+PROC
+PROC_CRA_InitAstarion()
+AND
+NOT DB_Avatars(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+PROC_GLO_Origins_SetRecruitmentDialog((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, (DIALOGRESOURCE)Astarion_Recruitment_56bc2c0c-f02d-ec4c-ea0b-e7ceac19779a);
+SetOnStage(S_CRA_ScaredBoar_e352fae8-f49a-4f1d-b131-ea10af7591c9, 0);
+
+PROC
+PROC_CRA_InitAstarion()
+AND
+NOT DB_Players(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+DB_WitnessKiller((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+DB_SpotPlayers((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, "CRA_AstarionRecruitment", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, "CRA_AstarionRecruitment", S_CRA_Astarion_RecruitmentTrigger_dec8ee8d-8d78-4bdb-b039-a08145e23ace);
+
+IF
+EntityEvent((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,"ORI_AstarionRecruitment_ToCamp")
+THEN
+PROC_ORI_SetupCamp((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, 1);
+
+PROC
+PROC_SpotPlayers_Spotted(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, "CRA_AstarionRecruitment", _Player)
+AND
+NOT DB_OnlyOnce("CRA_AstarionRecruitment")
+AND
+GetFlag(ORI_Astarion_HasMet_7c64a986-6bfd-ae42-ba29-b35b7f2cd6cf, NULL_00000000-0000-0000-0000-000000000000, 0)
+AND
+QRY_StartDialog(Astarion_Recruitment_56bc2c0c-f02d-ec4c-ea0b-e7ceac19779a, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player)
+THEN
+DB_OnlyOnce("CRA_AstarionRecruitment");
+
+IF
+DialogStarted(Astarion_Recruitment_56bc2c0c-f02d-ec4c-ea0b-e7ceac19779a, _)
+THEN
+DB_OnlyOnce("CRA_AstarionRecruitment");
+PROC_SpotPlayers_StopSpotting(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, "CRA_AstarionRecruitment");
+
+IF
+FlagSet(CRA_AstarionRecruitment_Event_SpawnBoar_5cd96f83-7dad-49c2-8ceb-a5e9c8dce2c2, _, _)
+THEN
+SetOnStage(S_CRA_ScaredBoar_e352fae8-f49a-4f1d-b131-ea10af7591c9, 1);
+
+
+//REGION Astarion reacts to people having killed him.
+IF
+Died(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+SetFlag(CRA_AstarionRecruitment_Event_AstarionDied_ddd5374c-16ee-4bbf-a682-3dbf9f42bec6, NULL_00000000-0000-0000-0000-000000000000, 0);
+ClearFlag(CRA_AstarionRecruitment_State_AstarionKnockedOut_b5283303-2e12-4584-a787-fb2812acfd19, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_WitnessedKiller(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, _, _, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255)
+THEN
+SetFlag(CRA_AstarionRecruitment_State_AstarionKiller_31df28b2-b1e4-494f-be1b-2c7e97b9111d, _Player, 0);
+
+IF
+StatusApplied(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, "KNOCKED_OUT", _Attacker, _) 
+AND
+CharacterGetOwner((CHARACTER)_Attacker, _AttackerOwner)
+AND
+DB_Players(_AttackerOwner)
+AND
+DB_Sees((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _AttackerOwner)
+THEN
+SetFlag(CRA_AstarionRecruitment_State_AstarionKnockout_55a8766b-e731-4d59-a45a-cc26a301dcb0, _AttackerOwner, 0);
+
+IF
+StatusApplied(S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, "KNOCKED_OUT", _, _) 
+AND
+DB_Is_InCombat((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _ID)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+DB_Sees((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player)
+AND
+QRY_ReportKiller_WasEnemy((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _Player, _ID)
+THEN
+SetFlag(CRA_AstarionRecruitment_State_AstarionKnockout_55a8766b-e731-4d59-a45a-cc26a301dcb0, _Player, 0);
+
+
+PROC
+PROC_KnockedOut((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255,(GUIDSTRING)_Cause)
+THEN
+SetFlag(CRA_AstarionRecruitment_State_AstarionKnockedOut_b5283303-2e12-4584-a787-fb2812acfd19, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_DialogFlagSetup(CRA_AstarionRecruitment_Recruitment_AD_d1ef05c4-c9cd-ac5e-55cb-325746affbaa, _, _Player)
+AND
+GetFlag(CRA_AstarionRecruitment_State_AstarionKnockout_55a8766b-e731-4d59-a45a-cc26a301dcb0, _Player, 1)
+AND
+DB_GlobalFlag((FLAG)CRA_AstarionRecruitment_Event_AstarionDied_ddd5374c-16ee-4bbf-a682-3dbf9f42bec6)
+THEN
+ClearFlag(CRA_AstarionRecruitment_State_AstarionKnockout_55a8766b-e731-4d59-a45a-cc26a301dcb0, _Player, 0);
+SetFlag(CRA_AstarionRecruitment_State_AstarionKiller_31df28b2-b1e4-494f-be1b-2c7e97b9111d, _Player, 0);
+
+IF
+DialogEnded((DIALOGRESOURCE)Astarion_Recruitment_56bc2c0c-f02d-ec4c-ea0b-e7ceac19779a, _ID)
+THEN
+PROC_PurgeLevelPartyFlag(CRA_AstarionRecruitment_State_AstarionKiller_31df28b2-b1e4-494f-be1b-2c7e97b9111d);
+ClearFlag(CRA_AstarionRecruitment_State_AstarionKnockedOut_b5283303-2e12-4584-a787-fb2812acfd19);
+
+//END_REGION
+
+IF
+FlagSet(OriginAddToParty_4870b2cd-210c-0fdc-9c58-4d0142bdae29, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, _)
+THEN
+NOT DB_ReportKiller((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_WitnessKiller((CHARACTER)S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255, S_Player_Astarion_c7c13742-bacd-460a-8f65-f864fe41f255);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

@@ -1,0 +1,40 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//TODO: Redo when wand is created through transform and therefore unique.
+IF
+TemplateAddedTo((ITEMROOT)UNI_HAG_Wand_SummonHusband_b1b872db-43f0-45f7-b34f-d814ef9cb64c, (ITEM)_SummonHusbandWand, _, _)
+AND
+NOT DB_HAG_SummonHusbandWand(_SummonHusbandWand)
+THEN
+DB_HAG_SummonHusbandWand(_SummonHusbandWand);
+
+IF
+RemovedFrom(_SummonHusbandWand, _Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_HAG_SummonHusbandWand((ITEM)_SummonHusbandWand)
+AND
+DB_PartyMembers(_Zombie)
+AND
+GetTemplate(_Zombie, QUEST_HAG_HusbandZombie_f1876ebc-8a68-410a-885f-21f991a5df09)
+AND
+CharacterGetOwner(_Zombie, _Player)
+THEN
+Die(_Zombie, DEATHTYPE.Lifetime, _Zombie, 0, 1);
+
+IF
+UsingSpell(_Player, "Target_HAG_Hagspawn_SummonHusband", _, _, _)
+AND
+DB_HAG_SummonHusbandWand(_SummonHusbandWand)
+AND
+NOT GetInventoryOwner(_SummonHusbandWand, _Player)
+THEN
+ToInventory(_SummonHusbandWand, _Player, -1, 1, 1);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

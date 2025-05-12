@@ -1,0 +1,584 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Library
+
+DB_DEN_DruidLair_SightBlockers("Entry", (ITEM)S_DEN_ShroudRock_000_c6d6a7af-cb9b-4693-b73d-167161d64e48);
+DB_DEN_DruidLair_SightBlockers("Entry", (ITEM)S_DEN_ShroudRock_001_275e84c8-2013-4203-86f4-717d7bb346b4);
+DB_DEN_DruidLair_SightBlockers("Entry", (ITEM)S_DEN_ShroudRock_002_037012b6-9869-462d-9862-9c296e40b22f);
+DB_DEN_DruidLair_SightBlockers("Entry", (ITEM)S_DEN_ShroudRock_003_455e217f-e563-4930-9f48-d5840913a44b);
+DB_DEN_DruidLair_SightBlockers("Entry", (ITEM)S_DEN_ShroudRock_006_b466f685-8dc0-4396-8368-6d0493499cce);
+
+DB_DEN_DruidLair_SightBlockers("Exit", (ITEM)S_DEN_ShroudRock_004_5c97d629-3438-43ad-80bf-78eea3b17e52);
+DB_DEN_DruidLair_SightBlockers("Exit", (ITEM)S_DEN_ShroudRock_005_3acbdefa-7f6f-44d6-bbdf-89079310f07c);
+
+DB_DEN_DruidLair_LibraryDoors("Entry", (ITEM)S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6);
+DB_DEN_DruidLair_LibraryDoors("Exit", (ITEM)S_DEN_LibraryExitDoor_36922df6-960d-484b-bbcb-6ff6def13c2c);
+
+DB_DEN_DruidLair_LibraryChecks("Entry", (DIFFICULTYCLASS)DC_Legacy_10_625be976-7a67-4394-97c8-14c69715ae4b, (TRIGGER)S_DEN_LibraryEntrySkillSphere_6775a038-ecda-4bb9-89b2-4391670c6f7c, (FLAG)DEN_DruidLair_Knows_HiddenLibraryEntrance_a883fb97-2402-4ab7-b66b-898c857b0199);
+DB_DEN_DruidLair_LibraryChecks("Exit", (DIFFICULTYCLASS)DC_Legacy_5_6e246ccd-6149-4ec4-a325-034309a18138, (TRIGGER)S_DEN_LibraryExitSkillSphere_f80cfb82-b8d5-458e-864c-ade710c07bda, (FLAG)DEN_DruidLair_Knows_HiddenLibraryExit_86339094-c942-4669-9113-38b32894fd40);
+
+PROC_TriggerRegisterForPlayers(S_DEN_LibraryEntrySkillSphere_6775a038-ecda-4bb9-89b2-4391670c6f7c);
+PROC_TriggerRegisterForPlayers(S_DEN_LibraryExitSkillSphere_f80cfb82-b8d5-458e-864c-ade710c07bda);
+SetCanInteract(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, 0);
+SetCanInteract(S_DEN_LibraryExitDoor_36922df6-960d-484b-bbcb-6ff6def13c2c, 0);
+
+PROC_TriggerRegisterForPlayers(S_DEN_LabToTunnelRoomBox_5de3e19e-26a3-4276-aa40-170c61e6842a);
+
+DB_BookFlags(S_DEN_DruidDiary_578b18a9-fb6c-4ac0-95bc-b9ff50a8e61b,DEN_DruidLair_Knows_SharDagger_72d2bbf3-afab-0f8a-2654-73f04a213e2c);
+//END_REGION
+//REGION Fresco
+
+DB_Dialogs(S_DEN_PlaqueFounding_72675309-4fc4-49ec-b049-d676bf0ac336,(DIALOGRESOURCE)DEN_DruidLair_FrescoFoundingGrove_3e01b73e-fc42-c734-40f3-3bfd62919620);
+DB_Dialogs(S_DEN_PlaqueWorking_ff44c6ca-7a0c-47f2-8f60-e5861431cb70, (DIALOGRESOURCE)DEN_DruidLair_FrescoWorking_1c465891-6671-fedc-4a71-56492cca2519);
+DB_Dialogs(S_DEN_PlaqueAlliance_5620d87b-f41f-45ec-847a-6c382950070d,(DIALOGRESOURCE)DEN_DruidLair_FrescoAlliance_dad29fbd-4434-93dd-2375-103da9199fe4);
+DB_Dialogs(S_DEN_PlaqueVictory_42342b3c-e8ab-41d7-ac96-dacaff8fd6c1,(DIALOGRESOURCE)DEN_DruidLair_FrescoVictory_ced9223e-8bde-3c44-1474-ded0b40e05f1);
+
+DB_DEN_DruidLair_FrescoKnowledge((FLAG)DEN_DruidLair_Knows_DruidsAlliance_365eb5fe-5133-4df4-f33d-d330bce62ad9);
+DB_DEN_DruidLair_FrescoKnowledge((FLAG)DEN_DruidLair_Knows_DruidsClearedForest_749d7bf0-3165-7863-e9b9-06d37e4e89ce);
+DB_DEN_DruidLair_FrescoKnowledge((FLAG)DEN_DruidLair_Knows_DruidsVictory_62fbb428-36e5-0af0-64c6-774fdc2b454f);
+DB_DEN_DruidLair_FrescoKnowledge((FLAG)DEN_DruidLair_Knows_FoundingGrove_4135732e-cf01-dab3-cfbb-99de5067909e);
+PROC_DeclareCounter("DEN_DruidLair_FrescoUnderstood");
+//END_REGION
+//REGION Puzzle
+
+SetCanInteract(S_DEN_VaultSpiralStairs_18c13cad-ce6a-4626-bc42-e90a6773ba45, 0);
+SetCanInteract(S_DEN_VaultSpiralStairsTeleporter_989b6ab5-29b3-4cec-9d8d-02bfaf3083b1, 0);
+
+DB_DEN_DruidLair_Rune((ITEM)S_DEN_DruidRune_000_685bff66-444c-42d8-a15e-c399501021e0);
+DB_DEN_DruidLair_Rune((ITEM)S_DEN_DruidRune_001_d18b5b07-60fb-4777-8749-d3f757df478f);
+DB_DEN_DruidLair_Rune((ITEM)S_DEN_DruidRune_002_44a66167-0875-4da3-bd36-86fa7c79d156);
+DB_DEN_DruidLair_Rune((ITEM)S_DEN_WolfRuneSocket_4c0aec0d-b033-4b66-a11b-6e7e2b6d673d);
+
+DB_HasItemEvent(S_DEN_WolfRune_5880cad0-6df1-4c04-957b-f5f48c120bf4,DEN_ShadowDruid_State_HasRune_7bea0095-268a-436e-aa0f-7b02d200305a);
+DB_GiveItemToEvent(S_DEN_WolfRune_5880cad0-6df1-4c04-957b-f5f48c120bf4,DEN_ShadowDruid_Event_GiveRune_a0760f24-bc2a-4f7d-8462-7d82f1e9f55c);
+
+DB_DEN_DruidLair_PuzzleComments(0, (VOICEBARKRESOURCE)DEN_DruidLair_VB_BrokenRunes_cef00c54-34f1-2c7e-6e0e-6d0dee9edf20);
+DB_DEN_DruidLair_PuzzleComments(1, (VOICEBARKRESOURCE)DEN_DruidLair_VB_UnlockedStudy_054c9a4f-b0a8-cbc4-c6fd-04eee5f77401);
+//END_REGION
+
+//REGION Loot Distribution
+DB_LootDistribution_Distributor("WLD_Main_A", "DEN_Druids", (CHARACTER)S_DEN_ServantPlight_005_13db744d-8a48-4131-8801-fd5fc289fdf6, (ITEM)S_DEN_DruidsLootDistributionStash_87f3cb9c-88d5-4d19-bfba-41955b585b6f, (TRIGGER)S_DEN_Cave_SUB_adecafa4-27c6-4b2f-bf9e-6ffd7c81a766, (TRIGGER)S_DEN_DruidLairLootStashTrigger_cbcc67c1-c5aa-47ed-80f2-c4113a75f575);
+// Mainly as backup in case Arron would die, so existing items could still be distributed
+DB_LootDistribution_Distributor("WLD_Main_A", "DEN_Druids", (CHARACTER)S_DEN_DruidLeader_95eb2b0b-a522-4ea5-8167-c5f4d1418156, (ITEM)S_DEN_DruidsLootDistributionStash_87f3cb9c-88d5-4d19-bfba-41955b585b6f, (TRIGGER)S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29, (TRIGGER)S_DEN_DruidLairLootStashTrigger_cbcc67c1-c5aa-47ed-80f2-c4113a75f575);
+PROC_DEN_Druid_InitLootDistribution();
+//END_REGION
+KBSECTION
+//REGION Debug
+
+IF
+TextEvent("denlibraryclear")
+AND
+DB_DEN_DruidLair_SightBlockers(_Zone, _Rock)
+THEN
+NOT DB_DEN_DruidLair_SightBlockers(_Zone, _Rock);
+SetOnStage(_Rock, 0);
+
+IF
+TextEvent("solverunepuzzle")
+THEN
+PROC_DEN_DruidLair_SolvePuzzle();
+
+IF
+TextEvent("solverunepuzzle")
+AND
+DB_DEN_DruidLair_Rune(_Rune)
+THEN
+SetCanInteract(_Rune, 1);
+ApplyStatus(_Rune,"ITEM_PUZ_DRUID_RUNE_ACTIVATED",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Subregion
+
+IF
+EnteredTrigger(_Player,S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(DEN_DruidLair_State_Entered_eaca2af1-14ff-41b8-841a-dc3751b2105d)
+THEN
+SetFlag(DEN_DruidLair_State_Entered_eaca2af1-14ff-41b8-841a-dc3751b2105d,NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Reading frescos
+
+IF
+FlagSet(_FrescoFlag, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_DEN_DruidLair_FrescoKnowledge(_FrescoFlag)
+THEN
+PROC_IncreaseCounter("DEN_DruidLair_FrescoUnderstood");
+
+PROC
+PROC_CounterIncreased("DEN_DruidLair_FrescoUnderstood",(INTEGER)_NewCount)
+AND
+_NewCount >= 2
+THEN
+PROC_RemoveCounter("DEN_DruidLair_FrescoUnderstood");
+SetFlag(DEN_DruidLair_State_UnderstoodTwoFrescos_1e07b372-1996-46ed-8e03-dc207a72804f, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CounterIncreased("DEN_DruidLair_FrescoUnderstood",(INTEGER)_NewCount)
+AND
+_NewCount >= 2
+AND
+DB_DEN_DruidLair_FrescoKnowledge(_Flag)
+THEN
+NOT DB_DEN_DruidLair_FrescoKnowledge(_Flag);
+
+//END_REGION
+
+//REGION Blade
+
+IF
+AddedTo(S_DEN_HalsinBlade_482f56bf-66ed-4d9d-8e1f-9f02b32ed2f6,(CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEN_DruidLair_CommentOnBlade")
+AND
+DB_InRegion(_Player, S_DEN_DruidVault_SUB_f4c22466-5963-4192-b939-f1056f4f806a)
+THEN
+StartVoiceBark(DEN_DruidLair_VB_ObtainedReward_30f1c286-c927-5097-89af-68d36145a25d, _Player);
+
+//END_REGION
+
+//REGION Stone slabs - Circlet
+
+PROC
+PROC_BlockLockpickItem(_Player,_Door)
+AND
+DB_DEN_DruidLair_LibraryDoors(_, _Door)
+THEN
+DB_CustomLockpickItemResponse(_Player,_Door,0);
+StartVoiceBark(DEN_DruidLair_VB_LockedLibrary_49d0f372-4b78-1a17-3cc1-fb09a203f9cc, _Player);
+
+PROC
+PROC_BlockUseOfItem(_Player,_Door)
+AND
+DB_DEN_DruidLair_LibraryDoors(_, _Door)
+AND
+DB_Players(_Player)
+AND
+IsLocked(_Door, 1)
+AND
+NOT QRY_DEN_DruidLair_UnlockWithCirclet((CHARACTER)_Player,(ITEM)_Door)
+AND
+NOT QRY_DEN_DruidLair_BlockIfGoingOut((CHARACTER)_Player,(ITEM)_Door)
+AND
+QRY_OnlyOnce("DEN_DruidLair_VB_LockedLibrary")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)DEN_DruidLair_VB_LockedLibrary_49d0f372-4b78-1a17-3cc1-fb09a203f9cc, _Player);
+
+QRY
+QRY_DEN_DruidLair_UnlockWithCirclet((CHARACTER)_Player,(ITEM)_Door)
+AND
+GetEquippedItem(_Player, "Helmet", _Circlet)
+AND
+GetTemplate(_Circlet,UNI_Druid_Helmet_Circlet_f4bef44e-57f1-47b5-ab2d-2457ff21c707)
+THEN
+DB_CustomUseItemResponse(_Player,_Door,0); //prevents seeing the "Locked" feedback when it's actually getting unlocked
+Unlock(_Door);
+PROC_DEN_DruidLair_OpenDoorWithCiclet((CHARACTER)_Player,(ITEM)_Door);
+
+QRY
+QRY_DEN_DruidLair_UnlockWithCirclet((CHARACTER)_Player,(ITEM)_Door)
+AND
+IsInTrigger(_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61, 1)
+AND
+DB_Camp_UserCampChest(_, _Chest)
+AND
+IsInInventoryOf(S_DEN_AppCirclet_59b54a3c-1825-49a3-b216-830edfd388ab, _Chest, 1)
+AND
+QRY_OnlyOnce("DEN_ForceEquipUnlockDoor")
+THEN
+Equip(_Player, S_DEN_AppCirclet_59b54a3c-1825-49a3-b216-830edfd388ab, 1, 1, 1);
+DB_CustomUseItemResponse(_Player,_Door,0); //prevents seeing the "Locked" feedback when it's actually getting unlocked
+Unlock(_Door);
+PROC_DEN_DruidLair_OpenDoorWithCiclet((CHARACTER)_Player,(ITEM)_Door);
+
+QRY
+QRY_DEN_DruidLair_UnlockWithCirclet((CHARACTER)_Player,(ITEM)_Door)
+AND
+IsInTrigger(_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61, 1)
+AND
+DB_Camp_UserCampChest(_, _Chest)
+AND
+IsInInventoryOf(S_DEN_ExtraCirclet_07914693-d6f6-40d2-8fe6-991c129d65da, _Chest, 1)
+AND
+QRY_OnlyOnce("DEN_ForceEquipUnlockDoor")
+THEN
+Equip(_Player, S_DEN_ExtraCirclet_07914693-d6f6-40d2-8fe6-991c129d65da, 1, 1, 1);
+DB_CustomUseItemResponse(_Player,_Door,0); //prevents seeing the "Locked" feedback when it's actually getting unlocked
+Unlock(_Door);
+PROC_DEN_DruidLair_OpenDoorWithCiclet((CHARACTER)_Player,(ITEM)_Door);
+
+QRY
+QRY_DEN_DruidLair_BlockIfGoingOut((CHARACTER)_Player,(ITEM)_Door)
+AND
+DB_InRegion(_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+_Door == S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DEN_DruidLair_BlockIfGoingOut((CHARACTER)_Player,(ITEM)_Door)
+AND
+DB_InRegion(_Player, S_DEN_LabToTunnelRoomBox_5de3e19e-26a3-4276-aa40-170c61e6842a)
+AND
+_Door == S_DEN_LibraryExitDoor_36922df6-960d-484b-bbcb-6ff6def13c2c
+AND
+IsOpened(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, 0)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DEN_DruidLair_UsingCircletVFX((CHARACTER)_Character,(ITEM)_Door,(EFFECTRESOURCE)_VFX)
+THEN
+	//Closing door: VFX_Script_DEN_SecretDoor_DoorClose_Root_01_77be6293-36ee-ea2e-d9ce-7caf0a76d420
+	//Opening door: VFX_Script_DEN_SecretDoor_Door_Root_01_440ce545-6137-6ae1-0988-a9272e30c2a5
+PlayEffect(_Character,VFX_Script_DEN_SecretDoor_HeadwearCirclet_Overhead_01_5804bae1-2a8a-d7f1-1cc1-6e134e2ff7c9, "Dummy_OverheadFX", 1.0);
+PlayEffect(_Door,_VFX); 
+
+PROC
+PROC_DEN_DruidLair_OpenDoorWithCiclet((CHARACTER)_Character,(ITEM)_Door) //delayed VFX when opening door
+THEN
+PlayEffect(_Character,VFX_Script_DEN_SecretDoor_HeadwearCirclet_Overhead_01_5804bae1-2a8a-d7f1-1cc1-6e134e2ff7c9, "Dummy_OverheadFX", 1.0);
+DB_DruidLair_Opening(_Door);
+SetCanInteract(_Door, 0);
+RealtimeObjectTimerLaunch(_Door,"DEN_DruidLair_DelayDoorVFX", 1400);
+
+IF
+ObjectTimerFinished((ITEM)_Door,"DEN_DruidLair_DelayDoorVFX")
+AND
+DB_DruidLair_Opening(_Door)
+THEN
+NOT DB_DruidLair_Opening(_Door);
+PlayEffect(_Door,VFX_Script_DEN_SecretDoor_Door_Root_01_440ce545-6137-6ae1-0988-a9272e30c2a5);
+PROC_ItemUnlockAndOpen(_Door);
+
+PROC
+PROC_DruidLair_CancelDoorOpening((ITEM)_Door)
+AND
+DB_DruidLair_Opening(_Door)
+THEN
+NOT DB_DruidLair_Opening(_Door);
+RealtimeObjectTimerCancel(_Door,"DEN_DruidLair_DelayDoorVFX");
+
+PROC
+PROC_DEN_DruidLair_OpenDoorWithCiclet((CHARACTER)_Player,(ITEM)_Door)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEN_DruidLair_ReactToCirclet")
+AND
+NOT QRY_DEN_DruidLair_BlockIfGoingOut((CHARACTER)_Player,(ITEM)_Door)
+AND
+GetDistanceTo(_Player,_Door,_Dist)
+AND
+_Dist < 10.0
+THEN
+PROC_TryStartAD(DEN_DruidLair_PAD_UnlockWithCirclet_90f13f8a-4921-632e-362f-e148c0666bef,_Player);
+
+IF
+Opened(_Door)
+AND
+DB_DEN_DruidLair_LibraryDoors(_, _Door)
+THEN
+SetCanInteract(_Door, 0);
+
+IF
+Closed(_Door)
+AND
+DB_DEN_DruidLair_LibraryDoors(_, _Door)
+THEN
+SetCanInteract(_Door, 1);
+
+//END_REGION
+//REGION Stone slabs - Opening Library
+
+//--- Perception checks to make the doors interactible
+IF
+EnteredTrigger(_Player,_Trigger)
+AND
+DB_DEN_DruidLair_LibraryChecks(_Zone, _DC, _Trigger, _Flag)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(_Flag)
+THEN
+PROC_KnowledgeCheck((CHARACTER)_Player, "DEN_DruidLair_Slabs", (GUIDSTRING)_Trigger,"Perception",_DC,DIALOGRESOURCEGUID_GLO_PerceptionSuccess_48825dbe-a320-7c4c-fe3e-372b717d5bc9,_Flag);
+ 
+IF
+FlagSet(_Flag, NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_DEN_DruidLair_LibraryChecks(_Zone, _, _Trigger, _Flag)
+AND
+DB_DEN_DruidLair_LibraryDoors(_Zone, _Door)
+THEN
+SetCanInteract(_Door, 1);
+
+//--- Unlocking doors
+IF
+Unlocked(_Door, _, _)
+AND
+DB_DEN_DruidLair_LibraryDoors(_Zone, _Door)
+THEN
+Open(_Door);
+PROC_DEN_DruidLair_RemoveRocks(_Zone);
+
+
+//--- Entering library / coming from tunnels
+IF
+UseStarted(_, (ITEM)S_DEN_TunnelSideIn_0c63cc6f-e5d6-4561-a952-cf44e8ffac57)
+AND
+NOT DB_DEN_LibraryExitIsUnlocked(1)
+THEN
+PROC_DEN_DruidLair_RemoveRocks("Exit");
+
+IF
+EnteredTrigger(_Player, (TRIGGER)S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+DB_Players(_Player)
+AND
+DB_DEN_DruidLair_SightBlockers("Entry", _) //reveal the library and door if it's not already done
+THEN
+SetFlag(DEN_DruidLair_Knows_HiddenLibraryEntrance_a883fb97-2402-4ab7-b66b-898c857b0199, NULL_00000000-0000-0000-0000-000000000000);
+PROC_DEN_DruidLair_RemoveRocks("Entry");
+
+
+//--- Setting rocks off stage
+PROC
+PROC_DEN_DruidLair_RemoveRocks((STRING)_Zone)
+AND
+DB_DEN_DruidLair_SightBlockers(_Zone, _Rock)
+THEN
+NOT DB_DEN_DruidLair_SightBlockers(_Zone, _Rock);
+SetOnStage(_Rock, 0);
+
+PROC
+PROC_DEN_DruidLair_RemoveRocks("Exit")
+THEN
+DB_DEN_LibraryExitIsUnlocked(1);
+Unlock((ITEM)S_DEN_TunnelSideOut_2f7d97b3-b061-49bf-a90c-a8365151ce35);
+Unlock((ITEM)S_DEN_TunnelSideIn_0c63cc6f-e5d6-4561-a952-cf44e8ffac57);
+
+
+//--- Locking doors to block pathfinding
+IF
+EnteredTrigger(_Player,S_DEN_Tunnel_SUB_6d2ed20e-f315-463a-9783-d02b173cb35a)
+AND
+DB_Players(_Player)
+AND
+NOT DB_DEN_LibraryExitIsUnlocked(1)
+THEN
+Unlock(S_DEN_TunnelSideIn_0c63cc6f-e5d6-4561-a952-cf44e8ffac57);
+
+IF
+LeftTrigger(_Player, (TRIGGER)S_DEN_Tunnel_SUB_6d2ed20e-f315-463a-9783-d02b173cb35a)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(NULL_00000000-0000-0000-0000-000000000000, (TRIGGER)S_DEN_Tunnel_SUB_6d2ed20e-f315-463a-9783-d02b173cb35a)
+AND
+NOT DB_DEN_LibraryExitIsUnlocked(1)
+AND
+IsInTrigger(_Player, S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29, 0)
+THEN
+Lock((ITEM)S_DEN_TunnelSideIn_0c63cc6f-e5d6-4561-a952-cf44e8ffac57, "NO_KEY");
+
+//Opening on Halsin's return
+IF
+FlagSet(GLO_Halsin_State_Returned_5af86099-47f9-ba69-199a-fe91292a41bd,_,_)
+AND
+DB_DEN_DruidLair_LibraryDoors(_Zone, _Door)
+AND
+DB_DEN_DruidLair_LibraryChecks(_Zone, _DC, _Trigger, _Flag)
+THEN
+NOT DB_DEN_DruidLair_LibraryDoors(_Zone, _Door);
+NOT DB_DEN_DruidLair_LibraryChecks(_Zone, _DC, _Trigger, _Flag);
+SetFlag(_Flag, NULL_00000000-0000-0000-0000-000000000000);
+PROC_TriggerUnregisterForPlayers(_Trigger);
+PROC_ItemUnlockAndOpen(_Door);
+SetCanInteract(_Door, 0);
+PROC_DEN_DruidLair_RemoveRocks(_Zone);
+
+IF
+FlagSet(GLO_Halsin_State_Returned_5af86099-47f9-ba69-199a-fe91292a41bd,_,_)
+THEN
+TriggerClearItemsOwner(S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61);
+TriggerClearItemsOwner(S_DEN_DruidVault_SUB_f4c22466-5963-4192-b939-f1056f4f806a);
+//END_REGION
+
+//REGION Rune puzzle
+
+//--- Using a rune
+IF
+UseStarted(_Player,_Rune)
+AND
+DB_DEN_DruidLair_Rune(_Rune)
+AND
+NOT DB_GlobalFlag(DEN_DruidLair_Knows_RuneAppearance_2c1f5b2c-a0c0-466c-a950-bfbfb95d9c53)
+THEN
+SetFlag(DEN_DruidLair_Knows_RuneAppearance_2c1f5b2c-a0c0-466c-a950-bfbfb95d9c53, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusApplied((ITEM)_Rune,"ITEM_PUZ_DRUID_RUNE_ACTIVATED",_Player,_)
+AND
+DB_DEN_DruidLair_Rune(_Rune)
+AND
+NOT DB_GlobalFlag(DEN_DruidLair_State_RunePuzzleSolved_ee9159ea-31ab-46cd-adc0-5602d2a63d2f)
+THEN
+PROC_DEN_DruidLair_CheckRuneState((CHARACTER)_Player);
+
+
+//--- Empty socket / Placing the wolf rune back
+IF
+UseFinished(_Player, S_DEN_WolfRuneSocket_4c0aec0d-b033-4b66-a11b-6e7e2b6d673d,1)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEN_DruidLair_AD_EmptyHolder")
+AND
+IsInInventoryOf(S_DEN_WolfRune_5880cad0-6df1-4c04-957b-f5f48c120bf4, _Player, 0)
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)DEN_DruidLair_VB_EmptyHolder_88d1162b-bf54-9218-9f39-fae23a1b80a7, _Player);
+
+IF
+Combined(S_DEN_WolfRuneSocket_4c0aec0d-b033-4b66-a11b-6e7e2b6d673d,_AnyWolfTablet,_Null,_Null,_Null,_Player,_NewSocket)
+THEN
+NOT DB_DEN_DruidLair_Rune((ITEM)S_DEN_WolfRuneSocket_4c0aec0d-b033-4b66-a11b-6e7e2b6d673d);
+DB_DEN_DruidLair_Rune(_NewSocket);
+DB_DEN_DruidLair_RuneIsRepaired(1);
+
+
+//--- Solution
+QRY
+QRY_DEN_DruidLair_ActivationMissing((ITEM)_ExcludedRune)
+AND
+DB_DEN_DruidLair_Rune(_Rune)
+AND
+_Rune != _ExcludedRune
+AND
+HasActiveStatus(_Rune,"ITEM_PUZ_DRUID_RUNE_ACTIVATED",0)
+THEN
+DB_NOOP(1);
+
+
+//Puzzle solved
+PROC
+PROC_DEN_DruidLair_CheckRuneState((CHARACTER)_Player)
+AND
+DB_DEN_DruidLair_RuneIsRepaired(1)
+AND
+NOT DB_GlobalFlag(DEN_DruidLair_State_RunePuzzleSolved_ee9159ea-31ab-46cd-adc0-5602d2a63d2f)
+AND
+NOT QRY_DEN_DruidLair_ActivationMissing(NULL_00000000-0000-0000-0000-000000000000)
+THEN
+QuestUpdate(_Player, "HIDDEN_WLD_Boosters", "DEN_DruidLair_OpenedVault");
+PROC_DEN_DruidLair_DoPuzzleComment(1,_Player);
+PROC_DEN_DruidLair_SolvePuzzle();
+
+PROC
+PROC_DEN_DruidLair_SolvePuzzle()
+THEN
+PlayAnimation(S_DEN_VaultSpiralStairs_18c13cad-ce6a-4626-bc42-e90a6773ba45, OBJ_Open_Unused_01_1c8ad609-f780-418e-9fdf-c52f6d749c9f, "");
+RealtimeObjectTimerLaunch(S_DEN_VaultSpiralStairs_18c13cad-ce6a-4626-bc42-e90a6773ba45, "DEN_DruidLair_StairsRevealed", 8000);
+PROC_GlobalSetFlagAndCache(DEN_DruidLair_State_RunePuzzleSolved_ee9159ea-31ab-46cd-adc0-5602d2a63d2f);
+
+IF
+AnimationEvent(S_DEN_VaultSpiralStairs_18c13cad-ce6a-4626-bc42-e90a6773ba45, "DEN_DruidLair_WolfStatueOpened", _)
+THEN
+ClearOwnership(S_DEN_VaultSpiralStairsTeleporter_989b6ab5-29b3-4cec-9d8d-02bfaf3083b1);
+SetCanInteract(S_DEN_VaultSpiralStairsTeleporter_989b6ab5-29b3-4cec-9d8d-02bfaf3083b1, 1);
+SetFlag(DEN_DruidLair_State_VaultIsOpen_8775e23e-104a-41ac-854e-1f238e0a2d57, NULL_00000000-0000-0000-0000-000000000000);
+Transform(S_DEN_VaultSpiralStairs_18c13cad-ce6a-4626-bc42-e90a6773ba45,BLD_Druids_Stairs_Spiral_A_Static_ac76d884-20bb-41a5-b85d-552471a51167,POLYMORPH_a0ddddc8-255f-4014-9f63-d7608eb1c2a0);
+
+PROC
+PROC_DEN_DruidLair_SolvePuzzle()
+AND
+DB_DEN_DruidLair_Rune(_Rune)
+THEN
+SetEntityEvent(_Rune,"PUZ_DruidRune_KeepActivated");
+SetCanInteract(_Rune,0);
+
+
+//Puzzle incomplete
+PROC
+PROC_DEN_DruidLair_CheckRuneState((CHARACTER)_Player)
+AND
+NOT DB_DEN_DruidLair_RuneIsRepaired(1)
+AND
+NOT DB_GlobalFlag(DEN_DruidLair_State_RunePuzzleSolved_ee9159ea-31ab-46cd-adc0-5602d2a63d2f)
+AND
+NOT QRY_DEN_DruidLair_ActivationMissing(S_DEN_WolfRuneSocket_4c0aec0d-b033-4b66-a11b-6e7e2b6d673d)
+THEN
+PROC_DEN_DruidLair_DoPuzzleComment(0,_Player);
+PROC_DEN_DruidLair_DeactivateRunes();
+
+PROC
+PROC_DEN_DruidLair_DeactivateRunes()
+AND
+DB_DEN_DruidLair_Rune(_Rune)
+THEN
+SetEntityEvent(_Rune,"PUZ_DruidRune_Deactivate");
+
+
+//--- Voicebarks
+PROC
+PROC_DEN_DruidLair_DoPuzzleComment((INTEGER)_Success,(CHARACTER)_Player)
+AND
+_Player != NULL_00000000-0000-0000-0000-000000000000
+AND
+DB_DEN_DruidLair_PuzzleComments(_Success, _VB)
+THEN
+StartVoiceBark(_VB,_Player);
+
+PROC
+PROC_DEN_DruidLair_DoPuzzleComment((INTEGER)_Success,(CHARACTER)_)
+AND
+DB_DEN_DruidLair_PuzzleComments(_Success, _VB)
+THEN
+NOT DB_DEN_DruidLair_PuzzleComments(_Success, _VB);
+
+//END_REGION
+
+//REGION Marker to the Vault
+IF
+QuestUpdateUnlocked(_Character, "DEN_Conflict", "RathRewarded")
+AND
+NOT DB_DEN_DruidLair_VaultMarkerShown(_Character)
+THEN
+DB_DEN_DruidLair_VaultMarkerShown(_Character);
+PROC_ShowMarker(_Character, "DEN_DruidGrove_VaultEntrance");
+
+IF
+DB_InRegion(_Character, S_DEN_DruidVault_SUB_f4c22466-5963-4192-b939-f1056f4f806a)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_DEN_DruidLair_VaultMarkerShown(_Character)
+AND
+DB_DEN_DruidLair_VaultMarkerShown(_AllCharacters)
+THEN
+NOT DB_DEN_DruidLair_VaultMarkerShown(_AllCharacters);
+PROC_HideMarker(_AllCharacters, "DEN_DruidGrove_VaultEntrance");
+//END_REGION
+
+//REGION Loot distribution
+PROC
+PROC_DEN_Druid_InitLootDistribution()
+AND
+DB_DEN_DruidAttack_Druids(_Druid, _, _)
+AND
+IsTagged(_Druid, (TAG)BEAST_890b5a2a-e773-48df-b191-c887d87bec16, 0)
+THEN
+DB_LootDistribution_Receiver("DEN_Druids", _Druid);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

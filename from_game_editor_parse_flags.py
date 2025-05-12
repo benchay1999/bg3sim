@@ -53,7 +53,54 @@ def parse_bg3_flag_file(xml_content: str) -> tuple[str | None, str | None, str |
 
     return uuid, name, description, usage
 
+def get_flags_from_node(node, flags_set):
+    """Recursively extracts flags from a single node and its children."""
+    if isinstance(node, dict):
+        if "setflags" in node and isinstance(node["setflags"], list):
+            for flag in node["setflags"]:
+                flags_set.add(flag)
+        if "checkflags" in node and isinstance(node["checkflags"], list):
+            for flag in node["checkflags"]:
+                flags_set.add(flag)
+
+        if "children" in node and isinstance(node["children"], dict):
+            for child_node in node["children"].values():
+                get_flags_from_node(child_node, flags_set)
+
+def parse_dialogue_flags(file_path):
+    """Parses the dialogue data from a JSON file and extracts all unique flags."""
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: File not found at {file_path}")
+        return set()
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from {file_path}")
+        return set()
+
+    unique_flags = set()
+
+    if "dialogue" in data and isinstance(data["dialogue"], dict):
+        for node_id, node_content in data["dialogue"].items():
+            get_flags_from_node(node_content, unique_flags)
+
+    return unique_flags
+
 if __name__ == "__main__":
+    # The user provided the file content directly, so we'll save it to a temporary file first
+    # or, if it's already in the workspace, use its path directly.
+    # For this example, I'll assume the file is in the same directory as the script.
+    file_path = "output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json"
+    all_flags = parse_dialogue_flags(file_path)
+
+    if all_flags:
+        print("Found unique flags:")
+        for flag in sorted(list(all_flags)):
+            print(f"- {flag}")
+    else:
+        print("No flags found or error in processing.")
+
     flags_dir = "GustavDev/Flags"  # Assuming flags are in this directory
     all_flags_data = []
     output_json_file = "parsed_flags.json"

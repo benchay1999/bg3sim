@@ -1,0 +1,306 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION NPCs and corpses
+// Duergars
+DB_UND_DeadInTheWater_CorpseDisposers((CHARACTER)S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf,(DIALOGRESOURCE)UND_CorpseDisposer_Leader_4b9bb411-10c3-64fc-9dfb-48219d9beaa9);
+DB_UND_DeadInTheWater_CorpseDisposers((CHARACTER)S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c,(DIALOGRESOURCE)UND_CorpseDisposer_Companion_d6c496f2-2e2b-2ce7-d095-f5a5cf30d48a);
+
+// Deep gnome corpses
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_000_ba34f54d-c3b0-4a72-b936-c44984ef2b40);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_003_bd8002d9-dc85-4fe3-b07a-08c9892f5171);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_001_4d7453d5-46d8-4ebd-806b-c346b52e223d);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_002_2405be53-e275-42a8-ad7c-b61e692c882f);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_ToTheRiver_000_ad8fa893-c3b2-4259-993c-d069815b3702);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_ToTheRiver_001_9a4f3e82-c6fb-4a16-a1a1-d62d4ba9c8ef);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnomeCinematic_000_375692e9-48ba-47a7-9a94-0abdfb8bbd3b);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnomeCinematic_001_48d7c293-1cee-4823-8ec6-fcf0828a7237);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnomeCinematic_002_da429f13-abee-413e-b357-27dfbbe22bed);
+DB_UND_DeadInTheWater_Corpses((CHARACTER)S_UND_DuergarCamp_DeadDeepGnomeCinematic_003_e4687c8e-047a-46a6-9b37-59371d45071f);
+//END_REGION
+
+//REGION Dalogues
+
+// Duergars' dialog setup
+DB_Dialogs(S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf, S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c, (DIALOGRESOURCE)UND_DeadInTheWater_CorpseDisposers_1479f0ef-b62a-15da-f338-ea396f143cad);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)UND_DeadInTheWater_Event_CorpseToTheWater_65a804d5-7dd1-d847-060b-3f1821119a89, (DIALOGRESOURCE)UND_DeadInTheWater_CorpseDisposers_1479f0ef-b62a-15da-f338-ea396f143cad);
+
+DB_GlobalFlagReactionAfterDialog((FLAG)UND_DeadInTheWater_Event_DuergarsLeave_7ac09f4c-77c5-43dd-87c1-56d6bc3b834f, (DIALOGRESOURCE)UND_DeadInTheWater_CorpseDisposers_1479f0ef-b62a-15da-f338-ea396f143cad);
+DB_GlobalFlagReactionAfterDialog((FLAG)UND_DeadInTheWater_Event_ClearOwnership_0e0d3e36-b368-43ba-9248-71758acdea16, (DIALOGRESOURCE)UND_DeadInTheWater_CorpseDisposers_1479f0ef-b62a-15da-f338-ea396f143cad);
+
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("UND_CorpseDisposers_Defeated",(FLAG)UND_DeadInTheWater_State_DuergarsPermaDefeated_d3b422e2-134d-44db-8dbd-77cdfa67191b);
+
+DB_GiveItemToEvent((ITEM)S_UND_CallarduranTrinket_82261770-46e3-403c-8ab0-b6cdb185d29a, (FLAG)UND_DeadInTheWater_Event_GiveTrinket_23c401e5-db8d-4701-9ac3-87c5c42eb8f8);
+DB_HasItemEvent((ITEM)S_UND_CallarduranTrinket_82261770-46e3-403c-8ab0-b6cdb185d29a, (FLAG)UND_DeadInTheWater_State_HasTrinket_86bc5709-152d-430e-aa17-097092850eef);
+ToInventory(S_UND_CallarduranTrinket_82261770-46e3-403c-8ab0-b6cdb185d29a, S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c, 1, 0, 0); // need to do it after DB_HasItemEvent is set
+//END_REGION
+
+PROC_TriggerRegisterForParty((TRIGGER)S_UND_CorpseDisposers_PartyNearThem_d6c08252-28e1-4c30-ad58-12666476a147);
+KBSECTION
+//REGION Init
+IF
+DB_UND_DeadInTheWater_CorpseDisposers(_Char, _)
+THEN
+DB_GLO_DefeatCounter(_Char, "UND_CorpseDisposers_Defeated");
+//END_REGION Init
+
+//REGION Corpse ownership
+IF
+DB_UND_DeadInTheWater_Corpses(_Corpse)
+THEN
+TriggerRegisterForCharacter((TRIGGER)S_UND_DuergarCamp_CorpseArea_5b960ecb-01cd-4597-bb5a-b421a91d4a45, _Corpse);
+TriggerRegisterForCharacter((TRIGGER)S_UND_DuergarCamp_CorpseArea_Disposed_9d8bf5ff-0ca3-4617-9333-9389e5a60ce6, _Corpse);
+PROC_SetCorpseOwner(_Corpse, S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf);
+
+// Leader is perma-defeated: change owner to his companion.
+PROC
+PROC_StateSet_PermaDefeated(S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf)
+AND
+NOT DB_PermaDefeated(S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c)
+AND
+DB_UND_DeadInTheWater_Corpses(_Corpse)
+THEN
+PROC_SetCorpseOwner(_Corpse, S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c);
+
+IF
+EnteredTrigger(_Corpse, S_UND_DuergarCamp_CorpseArea_Disposed_9d8bf5ff-0ca3-4617-9333-9389e5a60ce6)
+THEN
+SetOnStage(_Corpse, 0);
+//END_REGION Corpse ownership
+
+//REGION Keeping track of the trinket (whether it is in the corpse)
+// for dialog skill rolls (finding the trinket or trying to steal it).
+IF
+FlagSet(UND_DeadInTheWater_State_HasTrinket_86bc5709-152d-430e-aa17-097092850eef, S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c, _)
+THEN
+SetFlag((FLAG)UND_DeadInTheWater_State_TrinketIsInCorpse_ed74e117-7045-46fc-aa95-408795fd0186, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagCleared(UND_DeadInTheWater_State_HasTrinket_86bc5709-152d-430e-aa17-097092850eef, S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c, _)
+THEN
+ClearFlag(UND_DeadInTheWater_State_TrinketIsInCorpse_ed74e117-7045-46fc-aa95-408795fd0186, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION Keeping track of the trinket (whether it is in the corpse)
+
+//REGION XP rewards for getting the trinket
+IF
+FlagSet((FLAG)UND_DeadInTheWater_State_HasTrinket_86bc5709-152d-430e-aa17-097092850eef,(CHARACTER)_Player,_)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("UND_DeadInTheWater_XPReward")
+THEN
+QuestUpdate(_Player,"HIDDEN_WLD_Boosters","UND_DeadInTheWater_AcquiredTrinket");
+
+
+//END_REGION XP rewards for getting the trinket
+
+//REGION Cancelling the situation
+// pushing the body in the water with trinket in it destroys the trinket which in order clears TrinketIsInCorpse flag
+IF
+EnteredTrigger(S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c, S_UND_DuergarCamp_CorpseArea_Disposed_9d8bf5ff-0ca3-4617-9333-9389e5a60ce6)
+AND
+GetFlag(UND_DeadInTheWater_State_HasTrinket_86bc5709-152d-430e-aa17-097092850eef, S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c, 1)
+THEN
+Die(S_UND_CallarduranTrinket_82261770-46e3-403c-8ab0-b6cdb185d29a, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1);
+
+// destroying the trinket when the body with it is pushed in the water 
+// OR stealing the trinket 
+// ends the scene, but only if we aren't in the main dialog
+// if we are in the main dialog - the dialog has checks to handle the disappearance of the trinket
+IF
+FlagCleared(UND_DeadInTheWater_State_TrinketIsInCorpse_ed74e117-7045-46fc-aa95-408795fd0186, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+NOT DB_DialogName(UND_DeadInTheWater_CorpseDisposers_1479f0ef-b62a-15da-f338-ea396f143cad, _)
+AND
+NOT DB_GlobalFlag(UND_DeadInTheWater_State_StartSlackingOff_5191a962-d516-479e-97f5-27eb743658dd)
+THEN
+PROC_UND_DeadInTheWater_EndShovingScene();
+//END_REGION Cancelling the situation
+
+//REGION Throwing corpses dialog
+QRY
+QRY_SelectCustomDialog(_CorpseDisposer, _Player)
+AND
+DB_UND_DeadInTheWater_CorpseDisposers((CHARACTER)_CorpseDisposer, _Dialog)
+AND
+DB_UND_DeadInTheWater_CorpseDisposers(_OtherCorpseDisposer, _)
+AND
+_OtherCorpseDisposer != _CorpseDisposer
+AND
+NOT DB_GlobalFlag(UND_DeadInTheWater_State_StartSlackingOff_5191a962-d516-479e-97f5-27eb743658dd)
+AND
+DB_CantTalk(_OtherCorpseDisposer)
+THEN
+DB_SelectedDialog(_Dialog, _CorpseDisposer, _Player);
+
+// End scene after dialog ends.
+IF
+DialogEnded(UND_DeadInTheWater_CorpseDisposers_1479f0ef-b62a-15da-f338-ea396f143cad, _)
+THEN
+PROC_UND_DeadInTheWater_EndShovingScene();
+
+PROC
+PROC_UND_DeadInTheWater_EndShovingScene()
+THEN
+PROC_RemoveDialog(S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf);
+PROC_RemoveDialog(S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c);
+DB_Dialogs(S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf, (DIALOGRESOURCE)UND_CorpseDisposer_Leader_4b9bb411-10c3-64fc-9dfb-48219d9beaa9);
+DB_Dialogs(S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c, (DIALOGRESOURCE)UND_CorpseDisposer_Companion_d6c496f2-2e2b-2ce7-d095-f5a5cf30d48a);
+PROC_GlobalSetFlagAndCache(UND_DeadInTheWater_State_StartSlackingOff_5191a962-d516-479e-97f5-27eb743658dd);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog(UND_DeadInTheWater_Event_DuergarsLeave_7ac09f4c-77c5-43dd-87c1-56d6bc3b834f)
+THEN
+SetFlag((FLAG)UND_DeadInTheWater_Event_DuergarsLeftArea_2c021643-f85a-4467-8251-6c478fe7a102, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(UND_DeadInTheWater_Event_DuergarsLeftArea_2c021643-f85a-4467-8251-6c478fe7a102, _, _)
+AND
+DB_UND_DeadInTheWater_CorpseDisposers(_CorpseDisposer, _)
+THEN
+PROC_CharacterMoveTo(_CorpseDisposer, S_UND_CorpseDisposersDisappearTo_f09fbc0e-e17f-41ef-bdbc-8cee1245db9d, "Run", "UND_CorpseDisposerLeaves");
+
+IF
+EntityEvent((CHARACTER)_CorpseDisposer, "UND_CorpseDisposerLeaves")
+THEN
+PROC_DisappearOutOfSightTo(_CorpseDisposer, S_UND_CorpseDisposersDisappearTo_f09fbc0e-e17f-41ef-bdbc-8cee1245db9d, "Run", 0, "");
+
+// If the duergar leave players are free to loot the bodies.
+PROC
+PROC_GlobalFlagReactionAfterDialog(UND_DeadInTheWater_Event_DuergarsLeave_7ac09f4c-77c5-43dd-87c1-56d6bc3b834f)
+AND
+DB_UND_DeadInTheWater_Corpses(_Corpse)
+THEN
+PROC_ClearCorpseOwner(_Corpse);
+
+// Players lend a hand: clear ownership
+PROC
+PROC_GlobalFlagReactionAfterDialog(UND_DeadInTheWater_Event_ClearOwnership_0e0d3e36-b368-43ba-9248-71758acdea16)
+AND
+DB_UND_DeadInTheWater_Corpses(_Corpse)
+THEN
+PROC_ClearCorpseOwner(_Corpse);
+//END_REGION Throwing corpses dialog
+
+//REGION Looting corpse dialog
+// If the duergars are not in the area (or have been defeated) and any player attempts to loot the body start a short dialog the first time. 
+PROC
+PROC_BlockLootCorpse(_Player, _Corpse)
+AND
+DB_UND_DeadInTheWater_Corpses(_Corpse)
+AND
+DB_Players(_Player)
+AND
+NOT DB_OnlyOnce("UND_DeadInTheWater_LootedCorpse")
+AND
+QRY_UND_DeadInTheWater_DuergarsNotInTheArea()
+AND
+QRY_SpeakerIsAvailable(_Player)
+AND
+QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)UND_DeadInTheWater_LootingCorpse_77d50c4e-be5e-82a0-d59d-801bcd53a4fe, _Corpse, _Player, 0, 0, 1, 0)
+AND
+QRY_OnlyOnce("UND_DeadInTheWater_LootedCorpse")
+THEN
+DB_CustomLootCorpseResponse(_Player, _Corpse, 0);
+
+// Duergars left (or in the process of leaving after the dialog)
+QRY
+QRY_UND_DeadInTheWater_DuergarsNotInTheArea()
+AND
+DB_GlobalFlag((FLAG)UND_DeadInTheWater_Event_DuergarsLeftArea_2c021643-f85a-4467-8251-6c478fe7a102)
+THEN
+DB_NOOP(1);
+
+// Duergars not near the body (generics, went off stage, etc)
+// plus, cases where one duergar defeated and another one left the area
+QRY
+QRY_UND_DeadInTheWater_DuergarsNotInTheArea()
+AND
+QRY_UND_DeadInTheWater_DuergarNotInTheArea(S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf)
+AND
+QRY_UND_DeadInTheWater_DuergarNotInTheArea(S_UND_CorpseDisposer_000_e63c75ba-8e0a-4292-a04a-a5d4c8a2816c)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_UND_DeadInTheWater_DuergarNotInTheArea((CHARACTER)_Duergar)
+AND
+DB_Defeated(_Duergar)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_UND_DeadInTheWater_DuergarNotInTheArea((CHARACTER)_Duergar)
+AND
+IsInTrigger(_Duergar, S_UND_CorpseDisposers_PartyNearThem_d6c08252-28e1-4c30-ad58-12666476a147, 0)
+THEN
+DB_NOOP(1);
+
+//IsInTrigger returns true for OffStage characters who are still in the trigger
+QRY
+QRY_UND_DeadInTheWater_DuergarNotInTheArea((CHARACTER)_Duergar)
+AND
+DB_OffStage(_Duergar)
+THEN
+DB_NOOP(1);
+
+//END_REGION Looting corpse dialog
+
+//REGION Throwing corpses behaviour
+// Any party member is near the corpse disposers, let them play the throwing corpses action.
+IF
+EnteredTrigger(_, S_UND_CorpseDisposers_PartyNearThem_d6c08252-28e1-4c30-ad58-12666476a147)
+THEN
+SetFlag((FLAG)UND_DeadInTheWater_State_PartyNearDisposers_e7bd2df6-2cb4-4bab-bf10-ed603a3d1dee, NULL_00000000-0000-0000-0000-000000000000);
+
+// All left the trigger, stop.
+IF
+LeftTrigger(_PartyMember, S_UND_CorpseDisposers_PartyNearThem_d6c08252-28e1-4c30-ad58-12666476a147)
+AND
+NOT QRY_TriggerEvents_AnyPartyMemberInTrigger(S_UND_CorpseDisposers_PartyNearThem_d6c08252-28e1-4c30-ad58-12666476a147)
+THEN
+ClearFlag((FLAG)UND_DeadInTheWater_State_PartyNearDisposers_e7bd2df6-2cb4-4bab-bf10-ed603a3d1dee, NULL_00000000-0000-0000-0000-000000000000);
+//END_REGION Throwing corpses behaviour
+
+//REGION Hooks
+IF
+TextEvent("DW_GiveTrinket")
+AND
+QRY_OnlyOnce_Reset("DW_GiveTrinket")
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DW_GiveTrinket")
+THEN
+SetFlag(UND_DeadInTheWater_Event_GiveTrinket_23c401e5-db8d-4701-9ac3-87c5c42eb8f8, _Player);
+
+IF
+TextEvent("DW_GoNearDuergars")
+AND
+DB_Players(_Player)
+THEN
+TeleportTo(_Player, S_UND_Debug_GoToDeadInTheWater_1e11ca73-38de-41ca-9f38-39b7b8f5c579, "", 1, 1, 1);
+
+IF
+TextEvent("DW_ShoveCorpse")
+THEN
+UseSpell(S_UND_CorpseDisposer_Leader_5df19256-efcc-44c5-8fba-0add58492ccf, "Target_Shove", S_UND_DuergarCamp_DeadDeepGnome_TrinketOwner_142dadb4-96c1-474f-aa57-9acfecb5947c, S_UND_CorpseShovePos_e4d1ac62-9159-40e5-b318-2931fe268ff3);
+
+IF
+TextEvent("DW_SetTrinketOffStage")
+THEN
+SetOnStage(S_UND_CallarduranTrinket_82261770-46e3-403c-8ab0-b6cdb185d29a, 0);
+//END_REGION Hooks
+
+//REGION Goal Completion
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A")
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

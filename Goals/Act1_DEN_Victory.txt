@@ -1,0 +1,351 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Victory = Goblin Hunt has been completed.
+
+DB_DEN_DefenderLeaders((CHARACTER)S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, (DIALOGRESOURCE)CAMP_GoblinHuntCelebration_TieflingLeader_2ac7bfcd-6130-6eab-8496-ba4a7b1fdc3f); //Zevlor
+DB_DEN_DefenderLeaders(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, CAMP_GoblinHuntCelebration_Trainer_bc5948ea-0ce4-d90c-746a-ba5ee0ca07e7); //Asharak
+DB_DEN_DefenderLeaders(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, CAMP_GoblinHuntCelebration_BackupLeader_e51fef81-ae3f-24d6-b0a4-4ccbc6bcc00d); //Cerys
+DB_DEN_CurrentDefenderLeader((CHARACTER)S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a);
+
+DB_IgnoreMutingStatussesDialog(DEN_Victory_Transition_50787765-f63b-996d-f7d5-b54cbe716a09);
+DB_Dialog_AddAllNearbyPlayersAtStart((DIALOGRESOURCE)DEN_Victory_Transition_50787765-f63b-996d-f7d5-b54cbe716a09);
+
+DB_DEN_Victory_NoDialogSwap((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+KBSECTION
+//REGION Debug
+
+IF
+TextEvent("readygoblinhuntvictory")
+THEN
+PROC_DEN_RaidingParty_DebugResolveConfrontation();
+
+IF
+TextEvent("readygoblinhuntvictory")
+AND
+DB_GLO_DefeatCounter(_Leader,"GOB_GoblinHunt_Leaders")
+AND
+NOT DB_PermaDefeated((CHARACTER)_Leader)
+THEN
+PROC_ForceStopDialog(_Leader);
+Die(_Leader, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 1, 1);
+
+//END_REGION
+
+//REGION Register the defender (tiefling) leader
+
+PROC
+PROC_StateSet_PermaDefeated(_Leader)
+AND
+DB_DEN_DefenderLeaders((CHARACTER)_Leader,(DIALOGRESOURCE)_CampDialog)
+THEN
+NOT DB_DEN_DefenderLeaders(_Leader,_CampDialog);
+
+PROC
+PROC_StateSet_PermaDefeated(_Leader)
+AND
+DB_DEN_CurrentDefenderLeader((CHARACTER)_Leader)
+THEN
+NOT DB_DEN_CurrentDefenderLeader(_Leader);
+PROC_DEN_DefenderLeader_DefineNew();
+
+PROC
+PROC_DEN_DefenderLeader_DefineNew()
+AND
+DB_DEN_DefenderLeaders(_Leader,_)
+AND
+NOT DB_DEN_CurrentDefenderLeader(_)
+THEN
+DB_DEN_CurrentDefenderLeader(_Leader);
+
+PROC
+PROC_StateSet_PermaDefeated(_Leader)
+AND
+DB_DEN_CurrentDefenderLeader((CHARACTER)_Leader)
+AND
+DB_GlobalFlag((FLAG)DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d)
+THEN
+PROC_DEN_AttackOnDen_BetrayTieflings();
+
+//END_REGION
+
+//REGION Block dialog swap
+
+//They get their AttackOnDen dialog unless it's blocked here
+
+PROC
+PROC_DEN_Victory_NoDialogSwap_Init()
+THEN
+//Zevlor is handled differently, since he has a lot of dialog files, I allow the swap, but I previously change DB_DEN_NPC to contain his default dialog
+DB_DEN_Victory_NoDialogSwap(S_DEN_Squirrel_35ed8eab-1e0b-4ec8-92f2-1b8510cb3ad8);
+DB_DEN_Victory_NoDialogSwap(S_DEN_Rat_b61c2b37-da0d-47ad-ba9f-a4f8230f3b53);
+DB_DEN_Victory_NoDialogSwap(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb);
+
+PROC
+PROC_DEN_Victory_NoDialogSwap_Init()
+AND
+DB_DEN_DruidPets(_Pet)
+THEN
+DB_DEN_Victory_NoDialogSwap(_Pet);
+
+PROC
+PROC_DEN_Victory_NoDialogSwap_Init()
+AND
+DB_DEN_Druids(_Druid, 1) //1 = blocked (defined in Atc1_DEN_SacredPond)
+THEN
+DB_DEN_Victory_NoDialogSwap(_Druid);
+
+//END_REGION
+
+//REGION Setup: init
+
+//--- Launched in goal 'Act1_DEN_TieflingRefugees' (Goblin Hunt)
+PROC
+PROC_DEN_TieflingRefugees_StartVictory()
+THEN
+PROC_DEN_Victory_NoDialogSwap_Init();
+PROC_DEN_Victory_Setup();
+
+PROC
+PROC_DEN_Victory_Setup()
+THEN
+SetFlag(DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetFlag(DEN_General_State_KanonTryBurial_7edf4538-ae5d-4fdd-968d-9ce4f6c63d7f, NULL_00000000-0000-0000-0000-000000000000, 0);
+PROC_DEN_Victory_CheckStartTransition();
+
+PROC
+PROC_DEN_Victory_Setup()
+AND
+DB_DEN_AttackOnDen_LeaveObjects(_Object)
+THEN
+SetOnStage(_Object, 1);
+
+PROC
+PROC_DEN_Victory_Setup()
+AND
+DB_DEN_NPC(_NPC, _, _)
+THEN
+RemoveHarmfulStatuses(_NPC);
+LeaveCombat(_NPC);
+PROC_ForceStopDialog(_NPC);
+PurgeOsirisQueue(_NPC);
+
+PROC
+PROC_DEN_Victory_Setup()
+AND
+DB_DEN_CurrentDefenderLeader(_Leader)
+THEN
+SetDualEntityEvent(_Leader, S_DEN_VictoryLeaderWaitPos_5e1be949-9a96-471c-b218-87f9fd67c064, "DEN_AttackOnDen_UpdateVictoryPosition");
+
+PROC
+PROC_DEN_Victory_Setup()
+AND
+DB_DEN_CurrentDefenderLeader(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892)
+THEN
+SetOnStage(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, 1);
+SetEntityEvent(S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "DEN_Victory_TeleportToPosition");
+
+PROC
+PROC_DEN_Victory_Setup()
+AND
+DB_DEN_NPC(_NPC, _, _AttackOnDenDialog)
+THEN
+PROC_DEN_Victory_SetupNPC(_NPC, _AttackOnDenDialog);
+
+PROC
+PROC_DEN_Victory_Setup()
+THEN
+PROC_DEN_Victory_SetupOver();
+
+PROC
+PROC_DEN_Victory_SetupOver()
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Setup: Transition cutscene
+
+//--- If player(s) are in the Grove, put them in that scene while tieflings teleport
+
+PROC
+PROC_DEN_Victory_CheckStartTransition()
+AND
+DB_Players(_Player)
+AND
+QRY_DEN_IsInDen(_Player, 1, S_DEN_DruidVault_SUB_f4c22466-5963-4192-b939-f1056f4f806a, S_DEN_Tunnel_SUB_6d2ed20e-f315-463a-9783-d02b173cb35a)
+THEN
+PROC_ForceStopDialog(_Player);
+PROC_DEN_Victory_StartTransition((CHARACTER)_Player);
+
+PROC
+PROC_DEN_Victory_StartTransition((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("DEN_Victory_MoveScene")
+AND
+QRY_StartDialogCustom(DEN_Victory_Transition_50787765-f63b-996d-f7d5-b54cbe716a09, S_DEN_VictoryTiefling_4b11cdb4-a375-4b2b-9004-5f3de57da40f, _Player, 0,0,0,0)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Setup: Switch dialog and teleport
+
+//--- Check if staying
+PROC
+PROC_DEN_Victory_SetupNPC((CHARACTER)_NPC, (DIALOGRESOURCE)_AttackOnDenDialog)
+AND
+QRY_DEN_Victory_Staying(_NPC, _AttackOnDenDialog)
+THEN
+PROC_DEN_Victory_TryTeleport((CHARACTER)_NPC);
+PROC_DEN_Victory_TrySwitchDialog(_NPC);
+
+
+//--- Teleport
+PROC
+PROC_DEN_Victory_TryTeleport((CHARACTER)_NPC)
+AND
+QRY_DEN_Victory_CanTeleport(_NPC)
+THEN
+SetEntityEvent(_NPC, "DEN_Victory_TeleportToPosition");
+
+
+/* They can stay if:
+- they have an AttackOnDen dialog
+- they don't have an AttackOnDen dialog but were setup to ignore a dialog switch (they are keeping their default)
+*/
+QRY
+QRY_DEN_Victory_Staying((CHARACTER)_, (DIALOGRESOURCE)_AttackOnDenDialog)
+AND
+_AttackOnDenDialog != NULL_00000000-0000-0000-0000-000000000000
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DEN_Victory_Staying((CHARACTER)_NPC, (DIALOGRESOURCE)_)
+AND
+DB_DEN_Victory_NoDialogSwap(_NPC)
+THEN
+DB_NOOP(1);
+
+
+// Servants, druid pets, generic animals stay in their spot
+QRY
+QRY_DEN_Victory_CanTeleport((CHARACTER)_NPC)
+AND
+NOT DB_DEN_DruidPets(_NPC)
+AND
+NOT DB_DEN_Druids(_NPC,_)
+AND
+IsOnStage(_NPC, 1)
+THEN
+DB_NOOP(1);
+
+//Move Kagha for talk with Halsin.
+QRY
+QRY_DEN_Victory_CanTeleport((CHARACTER)S_DEN_DruidLeader_95eb2b0b-a522-4ea5-8167-c5f4d1418156)
+THEN
+DB_NOOP(1);
+
+//--- Not staying: set off stage
+//Set NPCs who don't participate off stage. Play an event so individual character logic can pick them up once they have left.
+PROC
+PROC_DEN_Victory_SetupNPC((CHARACTER)_UninvolvedNPC, NULL_00000000-0000-0000-0000-000000000000)
+AND
+NOT DB_DEN_Victory_NoDialogSwap(_UninvolvedNPC)
+THEN
+SetOnStage(_UninvolvedNPC, 0);
+PROC_DEN_RemoveFromDenNPCs(_UninvolvedNPC);
+
+PROC
+PROC_DEN_Victory_SetupNPC(_UninvolvedNPC, NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_DEN_LeaveEvents(_UninvolvedNPC,_Event)
+THEN
+SetEntityEvent(_UninvolvedNPC, _Event);
+
+//--- Custom handling for specific NPCS
+PROC
+PROC_DEN_Victory_SetupNPC(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb,_)
+AND
+NOT DB_GlobalFlag((FLAG)DEN_CapturedGoblin_State_LeftDen_2a64c50f-45b6-8bd2-e980-77fb4b11fce3)
+THEN
+Die(S_DEN_CapturedGoblin_783d7572-a846-455f-b686-247a95263ebb, DEATHTYPE.Physical, 1);
+
+
+//--- Dialog switch
+PROC
+PROC_DEN_Victory_TrySwitchDialog((CHARACTER)_NPC)
+AND
+NOT DB_DEN_Victory_NoDialogSwap(_NPC)
+AND
+DB_DEN_NPC(_NPC, _Role, _AttackOnDenDialog)
+AND
+_AttackOnDenDialog != NULL_00000000-0000-0000-0000-000000000000
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(_NPC);
+DB_Dialogs(_NPC, _AttackOnDenDialog);
+
+
+//--- Specific dialog switches. Make sure the characters have been added to DB_DEN_Victory_NoDialogSwap first.
+PROC
+PROC_DEN_Victory_TrySwitchDialog(S_DEN_DruidLeader_95eb2b0b-a522-4ea5-8167-c5f4d1418156)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_DruidLeader_95eb2b0b-a522-4ea5-8167-c5f4d1418156);
+DB_Dialogs(S_DEN_DruidLeader_95eb2b0b-a522-4ea5-8167-c5f4d1418156, DEN_ShadowDruid_LeaderPostGoblins_7ea3a9b8-b726-8309-2b8e-d328c36d82bf);
+
+IF
+FlagSet(DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d, _, _)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+PROC_GLO_Origins_SetRecruitmentDialog((CHARACTER)S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d,(DIALOGRESOURCE)Wyll_Recruitment_PostDruidAttack_PostEA_3c61d907-0397-abae-bf10-6ca114d84d0c);
+
+//END_REGION
+
+//REGION Leaders Dead leader reaches to player
+
+IF
+DialogStarted(DEN_AttackOnDen_BackupLeader_92b83e7a-534b-ebbc-8e8a-7a89d0d1bdab, _)
+THEN
+SetFlag(DEN_AttackOnDen_Event_TieflingPartyInvitation_545593fd-42e6-15c1-1e96-18e0e0be0443, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+EntityEvent((CHARACTER)_Leader, "DEN_Victory_TeleportToPosition")
+AND
+DB_DEN_CurrentDefenderLeader(_Leader)
+THEN
+DB_SpotPlayers_SpotTrigger(_Leader, "DEN_Victory_LeaderDialog", S_DEN_VictoryLeaderWaitArea_13345b61-58ef-4cf4-bb76-5fa3c3ee2d5d);
+DB_SpotPlayers(_Leader, "DEN_Victory_LeaderDialog", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_SpotPlayers_Spotted(_Leader, "DEN_Victory_LeaderDialog", _Player)
+AND
+DB_Dialogs(_Leader, _Dialog)
+AND
+QRY_StartDialog(_Dialog, _Leader, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogActorJoined(_Dialog, _, (CHARACTER)_Leader, 0)
+AND
+DB_SpotPlayers(_Leader, "DEN_Victory_LeaderDialog", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000)
+AND
+DB_Dialogs(_Leader, _Dialog)
+THEN
+PROC_SpotPlayers_StopSpotting("DEN_Victory_LeaderDialog");
+
+IF
+DialogStarted(_Dialog, _)
+AND
+DB_Dialogs(_Leader, _Dialog)
+AND
+DB_GlobalFlag(DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d)
+AND
+NOT DB_GlobalFlag(DEN_GoblinHunt_Event_LeaderMetPlayer_097d69b7-7e59-49ba-830a-b2b7f950aec7)
+THEN
+SetFlag(DEN_GoblinHunt_Event_LeaderMetPlayer_097d69b7-7e59-49ba-830a-b2b7f950aec7, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

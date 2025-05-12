@@ -1,0 +1,36 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_ItemOwnerShipTriggers("WLD_Main_A",S_GOB_WarMap_OwnershipTrigger_d14b0e1e-6a75-4cc1-ae68-ff348438f852,S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b);
+
+DB_ShovelArea(S_FOR_WarMap_StashMound_9fbb4960-8530-4600-89a9-dbcf4e812034,S_FOR_WarMap_Stash_876e5a0b-80ed-4f29-a177-e60dbb54e3c5);
+
+KBSECTION
+IF
+UseStarted(_Player,S_GOB_WarMap_78c48e45-30f6-47ea-8a53-a3dd960521ac)
+AND
+DB_Players(_Player)
+AND
+DB_ShovelArea(S_FOR_WarMap_StashMound_9fbb4960-8530-4600-89a9-dbcf4e812034,_)
+THEN
+PROC_ShowMarker(_Player,"FOR_WarMap_StashMarker");
+DB_GOB_WarMap_RevealMound(1);
+
+IF
+DB_GOB_WarMap_RevealMound(1)
+AND
+DB_ActiveLevel("WLD_Main_A")
+THEN
+NOT DB_GOB_WarMap_RevealMound(1);
+SetEntityEvent(S_FOR_WarMap_Helper_EntityEventIn_726fb49c-037d-4db7-90cb-4de7f75d7ec5,"FOR_WarMap_RevealFromStory",1);
+
+IF
+DB_ActivePlayerMarker(_Player,"FOR_WarMap_StashMarker")
+AND
+NOT DB_ShovelArea(S_FOR_WarMap_StashMound_9fbb4960-8530-4600-89a9-dbcf4e812034,_)
+THEN
+PROC_HideMarker((CHARACTER)_Player,"FOR_WarMap_StashMarker");
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

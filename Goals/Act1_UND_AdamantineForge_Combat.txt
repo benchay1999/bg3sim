@@ -1,0 +1,137 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+AddPreferredAiTargetTag(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,UND_ADMANTINEGOLEM_TAUNT_c70bfd7e-1287-42cd-bb5a-fa0f17bfcf38);
+DB_UND_AdamantinteGolem_Mephits((CHARACTER)S_UND_AdamantinteGolem_Mephit_001_c33491f2-17f1-48bd-ad4c-7df70049025e);
+DB_UND_AdamantinteGolem_Mephits((CHARACTER)S_UND_AdamantinteGolem_Mephit_002_e96e33ae-870c-4cc2-9742-201e61dbe162);
+DB_UND_AdamantinteGolem_Mephits((CHARACTER)S_UND_AdamantinteGolem_Mephit_003_2c07b751-f1d1-41f9-a3a6-1f9597171b32);
+DB_UND_AdamantinteGolem_Mephits((CHARACTER)S_UND_AdamantinteGolem_Mephit_004_8df15cf3-5880-4618-8c5d-b1522dff1bac);
+
+DB_UND_AdamantineGolem_Phase2_Spells("Shout_UND_Phase2_AdamantineGolem");
+DB_UND_AdamantineGolem_Phase2_Spells("Shout_UND_Phase2_AdamantineGolem_Hardcore");
+
+KBSECTION
+//REGION Adamantine Golem
+IF
+DB_UND_AdamantinteGolem_Mephits((CHARACTER)_Mephit)
+THEN
+PROC_SetOnStage(_Mephit,0);
+
+IF
+WentOnStage(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,1)
+THEN
+ApplyStatus(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,"UND_ADAMANTINEGOLEM_SUPERHEATED",12.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//REGION Taunt Mechanic
+
+IF
+StatusApplied(_Attacker,"UND_ADMANTINEGOLEM_TAUNT",_,_)
+AND
+NOT DB_UND_AdamantineGolem_Tauntee(_Attacker)
+THEN
+DB_UND_AdamantineGolem_Tauntee(_Attacker);
+
+IF
+StatusApplied(_,"UND_ADMANTINEGOLEM_TAUNT_HELPER",_Attacker,_)
+AND
+DB_UND_AdamantineGolem_Tauntee(_OtherChar)
+AND
+_Attacker != _OtherChar
+THEN
+RemoveStatus(_OtherChar,"UND_ADMANTINEGOLEM_TAUNT",NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusRemoved(_Char,"UND_ADMANTINEGOLEM_TAUNT",_,_)
+THEN
+NOT DB_UND_AdamantineGolem_Tauntee(_Char);
+
+//Remove Taunt from downed characters
+IF
+DownedChanged(_Char,1)
+AND
+HasActiveStatus(_Char,"UND_ADMANTINEGOLEM_TAUNT",1)
+THEN
+RemoveStatus(_Char,"UND_ADMANTINEGOLEM_TAUNT",NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Status Overrides
+
+IF
+StatusAttempt(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,"BURNING_LAVA",_,_)
+THEN
+ApplyStatus(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,"UND_ADAMANTINEGOLEM_SUPERHEATED",12.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//If Damaged by the Hammer attack, Move to phase 2
+IF
+StatusApplied(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,"AI_HELPER_SCRIPTEVENT",_,_)
+AND
+GetHitpointsPercentage(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,_HP)
+AND
+_HP <= 70
+AND
+QRY_OnlyOnce("UND_AdamantinteGolem_StartPhase2")
+AND
+NOT DB_PermaDefeated(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255)
+THEN
+PROC_UND_AdamantinteGolem_SpawnMephits();
+
+//Fallback for spawning the Mephits, react to Adamantine Golem's "phase" spell
+IF
+CastedSpell(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255,_Spell,_,_,_)
+AND
+DB_UND_AdamantineGolem_Phase2_Spells(_Spell)
+AND
+QRY_OnlyOnce("UND_AdamantinteGolem_StartPhase2")
+THEN
+PROC_UND_AdamantinteGolem_SpawnMephits();
+
+IF
+TextEvent("UND_AdamantineForge_SpawnMephits")
+THEN
+PROC_UND_AdamantinteGolem_SpawnMephits();
+
+PROC
+PROC_UND_AdamantinteGolem_SpawnMephits()
+AND
+DB_UND_AdamantinteGolem_Mephits((CHARACTER)_Mephit)
+THEN
+AppearAt(_Mephit,_Mephit,1,UTIL_Spawn_01_510ff37e-0618-40e4-8ce0-236e3dc9c291,"UND_AdamantinteGolem_Mephits_JoinCombat");
+
+IF
+EntityEvent(_Mephit,"UND_AdamantinteGolem_Mephits_JoinCombat")
+THEN
+SetCombatGroupID(_Mephit,"a78e643e-ecdb-3d86-7e62-8a2eaf7c8a6f");
+EnterCombat(_Mephit,S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255);
+
+IF
+CastSpell(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255, "Shout_UND_Phase2_AdamantineGolem", _, _, _)
+THEN
+MusicPlayGeneral("Adamantine_Golem_Fight_Phase_II");
+
+PROC
+PROC_StateSet_Defeated((CHARACTER)_Mephit)
+AND
+DB_UND_AdamantinteGolem_Mephits(_Mephit)
+THEN
+NOT DB_UND_AdamantinteGolem_Mephits(_Mephit);
+
+//END_REGION
+
+IF
+DB_PermaDefeated(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255)
+THEN
+MusicPlayGeneral("Music_Fight_AdamantineGolem_Win");
+
+//Cleanup
+IF
+Died(S_UND_KethericCity_AdamantineGolem_2a5997fc-5f2a-4a13-b309-bed16da3b255)
+THEN
+GoalCompleted;
+EXITSECTION
+SysClear("DB_UND_AdamantinteGolem_Mephits", 1);
+SysClear("DB_UND_AdamantineGolem_Tauntee", 1);
+ENDEXITSECTION
+ParentTargetEdge "Act1"

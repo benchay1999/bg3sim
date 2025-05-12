@@ -1,0 +1,225 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Children Training behaviour - Asharak & Wyll
+
+//REGION Training
+DB_Dialogs(CHARACTERGUID_S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, DIALOGRESOURCEGUID_DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4);
+DB_Dialogs(CHARACTERGUID_S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f, DIALOGRESOURCEGUID_DEN_Thieflings_Trainee1_c52ad66b-6f77-9828-a166-24802133d2ed);
+DB_Dialogs(CHARACTERGUID_S_DEN_Trainee_002_bd7f31a6-98e8-46cd-97be-4347fa45d387, DIALOGRESOURCEGUID_DEN_Thieflings_Trainee2_13b67fde-65bf-8f07-cfa4-c450e9e11b50);
+DB_Dialogs(CHARACTERGUID_S_DEN_Trainee_003_71bdc11d-b488-427d-8453-632e91178c7e, DIALOGRESOURCEGUID_DEN_Thieflings_Trainee3_e0feadaa-e7fe-5760-4934-c77cf50d37c2);
+
+//Default trainer versions:
+DB_DEN_Trainees(CHARACTERGUID_S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f);
+DB_DEN_Trainees(CHARACTERGUID_S_DEN_Trainee_002_bd7f31a6-98e8-46cd-97be-4347fa45d387);
+DB_DEN_Trainees(CHARACTERGUID_S_DEN_Trainee_003_71bdc11d-b488-427d-8453-632e91178c7e);
+
+//Inclusion nodes
+DB_Inclusion_Object(S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f,(FLAG)DEN_Trainer_Event_IncludeTrainee1_9eebce8b-68a9-d8ac-5b1d-9242ea3cf131,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_Inclusion_Object(S_DEN_Trainee_002_bd7f31a6-98e8-46cd-97be-4347fa45d387,(FLAG)DEN_Trainer_Event_IncludeTrainee2_a1c08e2e-50ae-cd30-15c2-6a69fb101521,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_Inclusion_Object(S_DEN_Trainee_003_71bdc11d-b488-427d-8453-632e91178c7e,(FLAG)DEN_Trainer_Event_IncludeTrainee3_c2a9f683-0c58-613e-7e40-f25a00d68236,(FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4,(CHARACTER)S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4,(CHARACTER)S_DEN_Trainee_002_bd7f31a6-98e8-46cd-97be-4347fa45d387);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4,(CHARACTER)S_DEN_Trainee_003_71bdc11d-b488-427d-8453-632e91178c7e);
+
+TriggerRegisterForCharacter(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+//END_REGION
+
+SetEntityEvent(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "DEN_Trainer_Event_IsTrainer");
+KBSECTION
+//REGION Debug
+
+IF
+TextEvent("dentrainees")
+AND
+GetTextEventParamInteger(1, _OnOrOff)
+THEN
+SetOnStage(S_DEN_Trainee_001_1f839ad2-2bcb-47d2-8de9-db7a1fb5d67f, _OnOrOff);
+SetOnStage(S_DEN_Trainee_003_71bdc11d-b488-427d-8453-632e91178c7e, _OnOrOff);
+SetOnStage(S_DEN_Trainee_002_bd7f31a6-98e8-46cd-97be-4347fa45d387, _OnOrOff);
+
+//END_REGION
+
+//REGION Wyll: not trainer anymore
+IF
+LeftTrigger(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211)
+AND
+DB_GlobalFlag(DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7)
+THEN
+PROC_DEN_Training_ClearWyll();
+
+PROC
+PROC_StateSet_PermaDefeated(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+DB_GlobalFlag(DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7)
+THEN
+PROC_DEN_Training_ClearWyll();
+
+IF
+DB_Players(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+AND
+DB_GlobalFlag(DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7)
+THEN
+PROC_DEN_Training_ClearWyll();
+
+PROC
+PROC_DEN_Training_ClearWyll()
+AND
+DB_GlobalFlag(DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7)
+THEN
+ClearFlag((FLAG)DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7, NULL_00000000-0000-0000-0000-000000000000, 0);
+ClearFlag(DEN_Trainer_State_IsTrainer_bf719cf2-08db-40ef-8e92-f0b112f5c883, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+SetEntityEvent(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "DEN_Trainer_Event_IsTrainer");
+
+//END_REGION
+
+//REGION New/change of trainer
+
+//--- Typical flow of trainers:
+// Event is called from the start on Asharak, who's immediately training the children
+// Wyll (unless he's avatar) finished Raiding Party and comes back, Wyll replaces Asharak
+// Wyll is then recruited/sent to camp, Asharak takes over.
+IF
+EntityEvent((CHARACTER)_Trainer, "DEN_Trainer_Event_IsTrainer")
+THEN
+PROC_DEN_Training_ChangeTrainer(_Trainer);
+
+PROC
+PROC_DEN_Training_ChangeTrainer((CHARACTER)_)
+AND
+DB_DEN_CurrentTrainer(_PreviousTrainer)
+THEN
+NOT DB_DEN_CurrentTrainer(_PreviousTrainer);
+ClearFlag((FLAG)DEN_Trainer_State_IsTrainer_bf719cf2-08db-40ef-8e92-f0b112f5c883, _PreviousTrainer);
+
+PROC
+PROC_DEN_Training_ChangeTrainer((CHARACTER)_Trainer)
+AND
+NOT DB_PermaDefeated(_Trainer)
+THEN
+DB_DEN_CurrentTrainer(_Trainer);
+SetFlag(DEN_Trainer_State_InTraining_d31cc229-45d9-4987-8e73-506456a62690, NULL_00000000-0000-0000-0000-000000000000);
+SetFlag((FLAG)DEN_Trainer_State_IsTrainer_bf719cf2-08db-40ef-8e92-f0b112f5c883, _Trainer);
+
+PROC
+PROC_StateSet_PermaDefeated(_Trainer)
+AND
+DB_DEN_CurrentTrainer((CHARACTER)_Trainer)
+THEN
+NOT DB_DEN_CurrentTrainer(_Trainer);
+ClearFlag((FLAG)DEN_Trainer_State_IsTrainer_bf719cf2-08db-40ef-8e92-f0b112f5c883, _Trainer);
+
+PROC
+PROC_DEN_Training_ChangeTrainer((CHARACTER)_)
+AND
+NOT DB_DEN_CurrentTrainer(_)
+THEN
+ClearFlag(DEN_Trainer_State_InTraining_d31cc229-45d9-4987-8e73-506456a62690, NULL_00000000-0000-0000-0000-000000000000); 
+
+//END_REGION
+
+//REGION Inclusion
+
+// Including trainees in the trainer's dialog for cinematic nodes
+IF
+FlagSet(DEN_Trainer_Event_CheckChildrenInclusions_7bd6857b-74e9-bfa4-cf13-3f625f039f20, _, _) // flagType: Global
+AND
+DB_DialogName(DIALOGRESOURCEGUID_DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4, _ID)
+AND
+DB_DEN_Trainees(_Trainee)
+AND
+NOT DB_ObjectInclusion(_ID,_Trainee)
+THEN
+SetFlag((FLAG)DEN_Trainer_State_HasMissingKid_fe6ee226-6d33-f17c-7f05-9d4b99b742b8, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+FlagSet(DEN_Trainer_Event_CheckChildrenInclusions_7bd6857b-74e9-bfa4-cf13-3f625f039f20, _, _) // flagType: Global
+THEN
+ClearFlag((FLAG)DEN_Trainer_Event_CheckChildrenInclusions_7bd6857b-74e9-bfa4-cf13-3f625f039f20, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+DialogEnded(DIALOGRESOURCEGUID_DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4, _)
+THEN
+ClearFlag((FLAG)DEN_Trainer_State_HasMissingKid_fe6ee226-6d33-f17c-7f05-9d4b99b742b8, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+//END_REGION
+
+//REGION Wyll: dialog
+
+// Force stopping kids dialog to make them available to Wyll
+QRY
+QRY_DEN_TieflingRefugees_MakeKidAvailable(NULL_00000000-0000-0000-0000-000000000000) //all of them
+AND
+DB_DEN_Trainees(_Kid)
+AND
+QRY_IsInRange(_Kid, S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, 10.0)
+THEN
+PROC_ForceStopDialog(_Kid);
+
+QRY
+QRY_DEN_TieflingRefugees_MakeKidAvailable((CHARACTER)_Kid) // one kid specifically
+AND
+DB_DEN_Trainees(_Kid)
+AND
+QRY_IsInRange(_Kid, S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, 10.0)
+THEN
+PROC_ForceStopDialog(_Kid);
+
+
+// Kid flee
+/*
+PROC
+PROC_DisappearOutOfSight(_Kid,_,_,"GEB_NPCFledOutOfSight")
+AND
+DB_DEN_Trainees(_Kid)
+AND
+GetFlag(DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7, NULL_00000000-0000-0000-0000-000000000000, 1)
+THEN
+ClearFlag(DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7, NULL_00000000-0000-0000-0000-000000000000);
+*/
+
+//--- Starting Wyll's dialog
+QRY
+QRY_SelectCustomDialog(S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435,_Player)
+AND
+_Player != S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d
+AND
+DB_Dialogs(CHARACTERGUID_S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, DIALOGRESOURCEGUID_DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4)
+AND
+DB_GlobalFlag((FLAG)DEN_Wyll_State_TrainingChildren_b949d261-4c0f-5eae-bee9-fa0fa0a8cea7) // flagType: Global
+AND
+QRY_DEN_CheckPeaceState()
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d, S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435)
+THEN
+SetFlag((FLAG)DEN_Trainer_State_WyllPresent_7d11d20e-9cf4-57c2-9ab2-c8c052199128, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+DB_SelectedDialog(DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4, S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435,_Player,
+		NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d);
+
+IF
+DialogEnded(DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4,_)
+THEN
+ClearFlag((FLAG)DEN_Trainer_State_WyllPresent_7d11d20e-9cf4-57c2-9ab2-c8c052199128, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+DialogRequestFailed(DEN_Thieflings_Trainer_f2596c8f-2b4f-0c9c-f371-e7940f4405d4,_)
+THEN
+ClearFlag((FLAG)DEN_Trainer_State_WyllPresent_7d11d20e-9cf4-57c2-9ab2-c8c052199128, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+//END_REGION
+
+//REGION Scared state
+
+// Player scared the trainees
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag((FLAG)DEN_Trainer_State_TraineesAreScared_b50848b6-8bbe-907c-b65a-c7f03bd797ad) // flagType: Global
+THEN
+ClearFlag((FLAG)DEN_Trainer_State_TraineesAreScared_b50848b6-8bbe-907c-b65a-c7f03bd797ad, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

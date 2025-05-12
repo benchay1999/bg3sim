@@ -1,0 +1,746 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Having chest/iron flask flags
+DB_HasItemEvent(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (FLAG)PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f);
+DB_GiveItemToEventWithClear(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, PLA_ZhentShipment_Event_GiveChest_e1023d4c-bfab-420d-a660-9c0e5eff06f0);
+
+DB_PLA_ZhentShipment_HadShipmentFlags((FLAG)PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f);
+DB_PLA_ZhentShipment_HadShipmentFlags(GLO_CursedIronFlask_State_HasFlask_9c9d36f1-eadb-4e45-a4ad-61edf52364a7);
+
+ToInventory(S_GLO_CursedIronFlask_83b010d4-7f1a-448c-9475-176347962cb2, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 1, 1, 1);
+SetFlag(PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e, NULL_00000000-0000-0000-0000-000000000000, 0);
+//END_REGION Having chest/iron flask flags
+
+//REGION Crimes
+DB_PLA_ZhentShipment_CustomCrimeDialogs((CHARACTER)S_PLA_ZhentShipment_Agent_001_fd9b4edd-7828-4e22-85a9-ead2ba9d29e4, (DIALOGRESOURCE)PLA_ZhentShipment_Agent_001_Crime_7e4d846f-1d5d-1e23-9006-1e919f8375f8, 0);
+DB_PLA_ZhentShipment_CustomCrimeDialogs((CHARACTER)S_PLA_ZhentShipment_Agent_001_fd9b4edd-7828-4e22-85a9-ead2ba9d29e4, (DIALOGRESOURCE)PLA_ZhentShipment_Agent_001_CrimeSevere_d5477286-edef-35ca-015d-aaa405418180, 1);
+DB_PLA_ZhentShipment_CustomCrimeDialogs((CHARACTER)S_PLA_ZhentShipment_Agent_002_7eda738e-8a85-4975-a1e1-1b3b2c4d641c, (DIALOGRESOURCE)PLA_ZhentShipment_Agent_002_Crime_864d51ec-2e53-fb41-b391-718c36cdfa4a, 0);
+DB_PLA_ZhentShipment_CustomCrimeDialogs((CHARACTER)S_PLA_ZhentShipment_Agent_002_7eda738e-8a85-4975-a1e1-1b3b2c4d641c, (DIALOGRESOURCE)PLA_ZhentShipment_Agent_002_CrimeSevere_44460ea8-0041-b6b5-a94d-a43bccf073df, 1);
+
+DB_PLA_ZhentShipment_ChestCrimes("Vandalise", 0);
+DB_PLA_ZhentShipment_ChestCrimes("UseForbiddenItem", 0);
+DB_PLA_ZhentShipment_ChestCrimes("SneakUseForbiddenItem", 0);
+DB_PLA_ZhentShipment_ChestCrimes("MoveForbiddenItem", 0);
+DB_PLA_ZhentShipment_ChestCrimes("Steal", 1);
+DB_PLA_ZhentShipment_ChestCrimes("PLA_ZhentShipment_ChestSevere", 1);
+DB_PLA_ZhentShipment_ChestCrimes("PickPocket", 0);
+DB_PLA_ZhentShipment_ChestCrimes("PickPocketFailed", 0);
+
+PROC_CharacterDisableCrime(S_PLA_ZhentShipment_Agent_001_fd9b4edd-7828-4e22-85a9-ead2ba9d29e4, "VandaliseNoOwner");
+PROC_CharacterDisableCrime(S_PLA_ZhentShipment_Agent_002_7eda738e-8a85-4975-a1e1-1b3b2c4d641c, "VandaliseNoOwner");
+//END_REGION Crimes
+KBSECTION
+//REGION RD converted to a VB
+QRY
+QRY_PLA_ZhentShipment_SurvivorsBlockChestRD()
+AND
+NOT DB_Defeated((CHARACTER)S_PLA_ZhentShipment_Agent_001_fd9b4edd-7828-4e22-85a9-ead2ba9d29e4)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_Intimidated_641d7a2e-724a-1533-41a9-9d074a5de560)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_Persuaded_0cc48ea5-9dad-42f1-bf61-d609bd83b914)
+THEN
+DB_NOOP(1);
+
+IF
+UseFinished(_Player, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+NOT QRY_PLA_ZhentShipment_SurvivorsBlockChestRD()
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ZhentShipment_State_SurvivorsAreDead_bb54af09-b0c2-46c2-84e8-642280ccec6a, _, _)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+GetFlag(PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f, _Player, 1)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ZhentShipment_State_ReadyToLeaveCave_e458690a-ebd9-a0a1-e44e-acca93224b3e, _, _)
+AND
+DB_PermaDefeated((CHARACTER)S_PLA_ZhentShipment_Agent_001_fd9b4edd-7828-4e22-85a9-ead2ba9d29e4)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+GetFlag(PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f, _Player, 1)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ConflictedFlind_State_Gone_4152beef-e7d1-e10f-7b06-62584d3571f2, _, _)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+GetFlag(PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f, _Player, 1)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f, _Player, _)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+NOT QRY_PLA_ZhentShipment_SurvivorsBlockChestRD()
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+StoppedLockpicking(_Player, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT QRY_PLA_ZhentShipment_SurvivorsBlockChestRD()
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ZhentShipment_Event_ClearChestOwner_f7e140a4-eb38-79de-309f-1c731cb00e3b, (CHARACTER)_Player, _) 
+AND
+DB_Players(_Player)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55, _, _)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+AND
+IsInInventory(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+AND
+GetClosestAlivePlayer(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Player, _)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+FlagSet(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55, _, _)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+AND
+IsInInventory(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 1)
+AND
+GetInventoryOwner(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _Player)
+AND
+DB_PartyMembers((CHARACTER)_Player)
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+// From Journal
+IF
+EntityEvent(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, "StoryReveal")
+AND
+NOT DB_PLA_ZhentShipment_SeenChest(1)
+THEN
+DB_PLA_ZhentShipment_SeenChest(1);
+
+IF
+DB_PLA_ZhentShipment_SeenChest(1)
+AND
+QRY_PLA_ZhentShipmnt_Journal_HasChestStepUnlocked()
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+AND
+DB_Players(_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+GetClosestAlivePlayer(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Player, _)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_CargoRDOnSeeingChest")
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+QuestUpdateUnlocked(_Player, "PLA_ZhentShipment", _Step)
+AND
+DB_PLA_ZhentShipmnt_Journal_WithChestSteps(_Step)
+AND
+DB_PLA_ZhentShipment_SeenChest(1)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+AND
+IsOpened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+AND
+GetClosestAlivePlayer(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Player, _)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_CargoRDOnSeeingChest")
+THEN
+PROC_PLA_ZhentShipment_PlayCargoVB(_Player);
+
+IF
+DestroyingBy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _, _, _)
+THEN
+DB_PLA_ZhentShipment_CargoVBBlocked(1);
+
+IF
+Opened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8)
+THEN
+DB_PLA_ZhentShipment_CargoVBBlocked(1);
+
+PROC
+PROC_PLA_ZhentShipment_PlayCargoVB((CHARACTER)_Player)
+AND
+NOT DB_PLA_ZhentShipment_CargoVBBlocked(1)
+THEN
+DB_PLA_ZhentShipment_CargoVBBlocked(1);
+StartVoiceBark(PLA_PreciousCargo_VB_d9402571-00fa-7187-280d-7efbbe531352, _Player);
+
+// Debug
+IF
+TextEvent("PLA_ZhentShipment_Cargo_TestVB")
+AND
+GetHostCharacter(_Player)
+THEN
+StartVoiceBark(PLA_PreciousCargo_VB_d9402571-00fa-7187-280d-7efbbe531352, _Player);
+//END_REGION RD
+
+//REGION Keep track of whether the player owned the chest or the flask at any point
+IF
+FlagSet(_Flag, _Character, _)
+AND
+DB_PLA_ZhentShipment_HadShipmentFlags(_Flag)
+AND
+IsCharacter(_Character, 1)
+THEN
+SetFlag(PLA_ZhentShipment_State_HadShipment_3bb17316-cbb3-4e73-95d8-04b826a5cecd, _Character, 0);
+
+IF
+FlagSet(PLA_ZhentShipment_State_HadShipment_3bb17316-cbb3-4e73-95d8-04b826a5cecd, (CHARACTER)_Character, _)
+AND
+DB_PartyMembers(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef);
+//END_REGION Keep track of whether the player owned the chest or the flask at any point
+
+//REGION Chest ownership
+IF
+FlagSet(PLA_ZhentShipment_Event_ClearChestOwner_f7e140a4-eb38-79de-309f-1c731cb00e3b, _Player, _) // flagType: Object
+THEN
+ClearOwnership(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8);
+
+IF
+DestroyingBy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521);
+
+PROC
+PROC_PLA_ZhentShipment_RemoveAgentsFromTheCave()
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521)
+AND
+NOT QRY_PLA_ZhentShipment_Journal_RuganForced()
+AND
+IsInTrigger(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, S_PLA_ZhentShipment_ZhentsSearchForItemsArea_bd972de9-6b5f-43f6-80d0-9ab9c7ba3eaa, 0)
+AND
+NOT QRY_PLA_ZhentShipment_AnyAgentHasChest()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521);
+
+PROC
+PROC_PLA_ZhentShipment_RemoveAgentsFromTheCave()
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521)
+AND
+QRY_PLA_ZhentShipment_Journal_RuganForced()
+AND
+NOT QRY_PLA_ZhentShipment_AnyAgentHasChest()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521);
+
+PROC
+PROC_PLA_ZhentShipment_RemoveAgentsFromTheCave()
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521);
+
+QRY
+QRY_PLA_ZhentShipment_AnyAgentHasChest()
+AND
+DB_PLA_ZhentShipment_AliveAgents(_Agent)
+AND
+GetFlag(PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f, _Agent, 1)
+THEN
+DB_NOOP(1);
+//END_REGION Chest ownership
+
+//REGION Chest moved away from base position
+IF
+CharacterStoleItem(_Thief, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _, _X,_Y,_Z, _Victim, _, _, _)
+AND
+NOT DB_PartyMembers(_Victim)
+AND
+DB_PartyMembers(_Thief)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_Quest_Intimidated_641d7a2e-724a-1533-41a9-9d074a5de560)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55)
+THEN
+DB_PLA_ZhenShipment_ChestStolen(1);
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55);
+
+// When stealing, first a Moved event is thrown and then a CharacterStoleItem
+// So wait for a few frames to handle Moved so we don't do anything specific to Moved if it was stolen
+IF
+Moved(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8)
+THEN
+TimerLaunch("PLA_ZhentShipment_DelayStoleCheck_1",0);
+
+IF
+TimerFinished("PLA_ZhentShipment_DelayStoleCheck_1")
+THEN
+TimerLaunch("PLA_ZhentShipment_DelayStoleCheck_2",0);
+
+IF
+TimerFinished("PLA_ZhentShipment_DelayStoleCheck_2")
+THEN
+TimerLaunch("PLA_ZhentShipment_DelayStoleCheck_3",0);
+
+IF
+TimerFinished("PLA_ZhentShipment_DelayStoleCheck_3")
+AND
+NOT DB_PLA_ZhenShipment_ChestStolen(1)
+AND
+IsInInventory(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, 0)
+THEN
+PROC_PLA_ZhentShipment_OnChestMoved();
+
+IF
+TimerFinished("PLA_ZhentShipment_DelayStoleCheck_3")
+AND
+DB_PLA_ZhenShipment_ChestStolen(1)
+THEN
+NOT DB_PLA_ZhenShipment_ChestStolen(1);
+
+PROC
+PROC_PLA_ZhentShipment_OnChestMoved()
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55)
+AND
+IsInTrigger(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, TRIGGERGUID_S_PLA_ZhentShipment_ZhentsSearchForItemsArea_bd972de9-6b5f-43f6-80d0-9ab9c7ba3eaa, 0)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55);
+
+PROC
+PROC_PLA_ZhentShipment_OnChestMoved()
+AND
+DB_GlobalFlag(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55)
+AND
+IsInTrigger(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, TRIGGERGUID_S_PLA_ZhentShipment_ZhentsSearchForItemsArea_bd972de9-6b5f-43f6-80d0-9ab9c7ba3eaa, 1)
+THEN
+ClearFlag(PLA_ZhentShipment_State_ChestNotInPlace_fe735132-788b-4a27-b606-5d7266290b55, NULL_00000000-0000-0000-0000-000000000000, 0);
+//END_REGION Chest moved away from base position
+
+//REGION Tempering the chest
+IF
+FlagSet(PLA_ZhentShipment_State_ChestUnlocked_118e5e96-5ee0-4760-86f3-5e3044bc9f76, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef);
+
+IF
+DestroyingBy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Character, _, _)
+AND
+DB_PartyMembers(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef);
+
+//Set flag when the chest is unlocked
+IF
+Unlocked(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _, _)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_State_ChestUnlocked_118e5e96-5ee0-4760-86f3-5e3044bc9f76)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_ChestUnlocked_118e5e96-5ee0-4760-86f3-5e3044bc9f76);
+
+IF
+Opened(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_State_ChestUnlocked_118e5e96-5ee0-4760-86f3-5e3044bc9f76)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_ChestUnlocked_118e5e96-5ee0-4760-86f3-5e3044bc9f76);
+
+IF
+MovedBy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _Character)
+AND
+DB_PartyMembers(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_TouchedChest_1db4a628-dc86-4142-83cb-fe27d69532ef);
+
+QRY
+QRY_PLA_ZhentShipment_SomePlayerHasChest()
+AND
+DB_PartyMembers((CHARACTER)_Player)
+AND
+GetFlag(PLA_ZhentShipment_State_HasShipment_73c09128-cbf6-441a-a882-96a891eee90f, _Player, 1)
+THEN
+DB_NOOP(1);
+//END_REGION Tempering the chest
+
+//REGION Chest crimes
+QRY
+QRY_CRIME_BlockGenericInvestigation(_Character)
+AND
+DB_PLA_ZhentShipment_AliveAgents(_Character)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ConflictedFlind_State_Gone_4152beef-e7d1-e10f-7b06-62584d3571f2)
+THEN
+SetEntityEvent(_Character, "CRIME_StartLookingForInterrogationSuspects");
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Character, "Steal", (ITEM)S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Victim, (INTEGER)_CrimeID)
+AND
+DB_PartyMembers(_Character)
+THEN
+DB_NOOP(1);
+
+IF
+CharacterStoleItem(_Character, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _, _, _, _, _Owner, NULL_00000000-0000-0000-0000-000000000000, 1, _)
+AND
+DB_PartyMembers(_Character)
+AND
+DB_PLA_ZhentShipment_Agents(_Owner)
+THEN
+PROC_CharacterRegisterCrime(_Character, "PLA_ZhentShipment_ChestSevere", S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _Owner, 0);
+
+PROC
+PROC_CrimeRegisterItemDestroy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Owner, (CHARACTER)_Vandal, _, _StoryActionID)
+AND
+NOT DB_PartyMembers(_Owner)
+AND
+DB_PartyMembers(_Vandal)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_Quest_Intimidated_641d7a2e-724a-1533-41a9-9d074a5de560)
+THEN
+PROC_CharacterRegisterCrime(_Vandal, "PLA_ZhentShipment_ChestSevere", _StoryActionID, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _Owner, 0);
+
+QRY
+QRY_CrimeGetCustomInterrogationDialog(_, _CrimeID, _Interrogator, _Criminal1, _, _, _, _)
+AND
+CrimeGetType(_CrimeID, (STRING)_CrimeType)
+AND
+DB_PLA_ZhentShipment_ChestCrimes(_CrimeType, 1)
+AND
+DB_PLA_ZhentShipment_CustomCrimeDialogs(_Interrogator, (DIALOGRESOURCE)_CustomDialog, 1)
+THEN
+DB_CrimeInterrogationDialog(_CustomDialog);
+
+QRY
+QRY_CrimeGetCustomWarning((CHARACTER)_Warner, _CrimeName, _, _CrimeID)
+AND
+DB_PLA_ZhentShipment_Agents(_Warner)
+AND
+DB_PLA_ZhentShipment_ChestCrimes(_CrimeName, (INTEGER)_Severity)
+AND
+CrimeGetEvidence(_CrimeID, 1, _Item)
+AND
+QRY_OnlyOnce_Reset("PLA_ZhentShipment_CustomWarningSet")
+THEN
+PROC_PLA_ZhentShipment_SetCustomWarning(_Warner, _CrimeName, (ITEM)_Item, _CrimeID, _Severity);
+
+PROC
+PROC_PLA_ZhentShipment_SetCustomWarning((CHARACTER)_Warner, (STRING)_CrimeName, (ITEM)_Evidence, (INTEGER)_CrimeID, (INTEGER)_Severity)
+THEN
+DB_NOOP(1);
+
+// Never met, normal crime, STANDARD dialog for the CHEST
+PROC
+PROC_PLA_ZhentShipment_SetCustomWarning((CHARACTER)_Warner, (STRING)_CrimeName, (ITEM)S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _CrimeID, 0)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_Quest_HasMet_5359e72b-f8ca-d2d6-4c3a-8fc00efe5c2c)
+AND
+DB_Dialogs(_Warner, _StandardDialogue)
+AND
+CrimeGetCriminals(_CrimeID, (CHARACTER)_Criminal1, _, _, _)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_CustomWarningSet")
+THEN
+SetFlag(PLA_ZhentShipment_Event_WarnInStandardDialog_702c2c06-fe80-4a26-8ebb-395201f5b99b, _Criminal1, 0);
+DB_PLA_ZhentShipment_RemoveWarningFlag(_Criminal1, _CrimeID);
+DB_CrimeWarning_CustomDialog(_Warner, _CrimeID, _StandardDialogue);
+
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_PLA_ZhentShipment_RemoveWarningFlag((CHARACTER)_Character, _CrimeID)
+THEN
+ClearFlag(PLA_ZhentShipment_Event_WarnInStandardDialog_702c2c06-fe80-4a26-8ebb-395201f5b99b, _Character, 0);
+NOT DB_PLA_ZhentShipment_RemoveWarningFlag(_Character, _CrimeID);
+
+// Has met or severe crime, CUSTOM CRIME dialog for the CHEST
+PROC
+PROC_PLA_ZhentShipment_SetCustomWarning((CHARACTER)_Warner, (STRING)_CrimeName, (ITEM)S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _CrimeID, (INTEGER)_Severity)
+AND
+DB_PLA_ZhentShipment_CustomCrimeDialogs(_Warner, (DIALOGRESOURCE)_CustomDialogue, _Severity)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_CustomWarningSet")
+THEN
+DB_CrimeWarning_CustomDialog(_Warner, _CrimeID, _CustomDialogue);
+
+// Never met, STANDARD dialog for non-chest crimes from the list
+PROC
+PROC_PLA_ZhentShipment_SetCustomWarning((CHARACTER)_Warner, (STRING)_CrimeName, (ITEM)_Item, (INTEGER)_CrimeID, _)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_Quest_HasMet_5359e72b-f8ca-d2d6-4c3a-8fc00efe5c2c)
+AND
+DB_Dialogs(_Warner, _StandardDialogue)
+AND
+NOT DB_CrimeBribes_SevereCrimes(_CrimeName)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_CustomWarningSet")
+THEN
+DB_CrimeWarning_CustomDialog(_Warner, _CrimeID, _StandardDialogue);
+DB_PLA_ZhentShipment_StopCrimeWithID(_StandardDialogue, _CrimeID);
+
+IF
+DialogEnded((DIALOGRESOURCE)_Dialog, _)
+AND
+DB_PLA_ZhentShipment_StopCrimeWithID(_Dialog, (INTEGER)_CrimeID)
+AND
+CrimeGetCriminals(_CrimeID, (CHARACTER)_Criminal1, _, _, _)
+THEN
+NOT DB_PLA_ZhentShipment_StopCrimeWithID(_Dialog, _CrimeID);
+CharacterStopCrimeWithID(_Criminal1, _CrimeID);
+
+IF
+FlagSet(PLA_ZhentShipment_State_Warned_fa343985-4d3a-4e4a-ba0d-31d4d7e93a10, _Character, _)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_Rugan_Knows_Thief_26f50a78-b9bf-43f2-bedd-d7d7347a9128)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_Rugan_Knows_Thief_26f50a78-b9bf-43f2-bedd-d7d7347a9128);
+
+IF
+FlagSet(PLA_ZhentShipment_Quest_Intimidated_641d7a2e-724a-1533-41a9-9d074a5de560, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_Rugan_Knows_Thief_26f50a78-b9bf-43f2-bedd-d7d7347a9128)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_Rugan_Knows_Thief_26f50a78-b9bf-43f2-bedd-d7d7347a9128);
+
+IF
+FlagSet(PLA_ZhentShipment_State_Persuaded_0cc48ea5-9dad-42f1-bf61-d609bd83b914, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_Rugan_Knows_Thief_26f50a78-b9bf-43f2-bedd-d7d7347a9128)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_Rugan_Knows_Thief_26f50a78-b9bf-43f2-bedd-d7d7347a9128);
+//END_REGION Chest crimes
+
+//REGION Olly commentig on player touching the chest
+IF
+UseStarted(_Player, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_OnlyOnce("PLA_ZhentShipment_OllyCommentsChestTouching")
+THEN
+PROC_PLA_ZhentShipment_OllyCommentsChestTouching(_Player);
+
+IF
+MovedBy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _Player)
+THEN
+PROC_PLA_ZhentShipment_OllyCommentsChestTouching(_Player);
+
+IF
+AttackedBy(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _AttackerOwner, _Attacker, _, _DamageAmount, _, _)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_PartyMember)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+_DamageAmount > 0
+AND
+NOT DB_OnlyOnce("PLA_ZhentShipment_OllyCommentsChestTouching")
+THEN
+PROC_PLA_ZhentShipment_OllyCommentsChestTouching(_PartyMember);
+
+IF
+AddedTo(S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, (CHARACTER)_Player, _)
+AND
+DB_PartyMembers(_Player)
+AND
+NOT DB_OnlyOnce("PLA_ZhentShipment_OllyCommentsChestTouching")
+THEN
+PROC_PLA_ZhentShipment_OllyCommentsChestTouching(_Player);
+
+PROC
+PROC_PLA_ZhentShipment_OllyCommentsChestTouching((CHARACTER)_Player)
+AND
+DB_PartyMembers(_Player)
+AND
+DB_Defeated((CHARACTER)S_PLA_ZhentShipment_Agent_001_fd9b4edd-7828-4e22-85a9-ead2ba9d29e4)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_Quest_Intimidated_641d7a2e-724a-1533-41a9-9d074a5de560)
+AND
+NOT DB_Defeated((CHARACTER)S_PLA_ZhentShipment_Agent_002_7eda738e-8a85-4975-a1e1-1b3b2c4d641c)
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentDungeon_State_GnollZhentsPresent_2fe0f447-2276-a930-90c0-ab99b4dc8a2a)
+AND
+CanSee(S_PLA_ZhentShipment_Agent_002_7eda738e-8a85-4975-a1e1-1b3b2c4d641c, _Player, 1)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_OllyCommentsChestTouching")
+THEN
+PROC_TryStartAD(PLA_ZhentShipment_Olly_AD_NoRuganTouchedChest_f0bb7a34-7766-d604-88ab-d14d0e765e48, (CHARACTER)S_PLA_ZhentShipment_Agent_002_7eda738e-8a85-4975-a1e1-1b3b2c4d641c);
+//END_REGION Olly commentig on player touching the chest
+
+//REGION Prevent crime investigations while Zhent are busy with gnolls
+IF
+CrimeProcessingStarted((INTEGER)_CrimeID, 0)
+AND
+NOT DB_GlobalFlag(PLA_ConflictedFlind_State_Gone_4152beef-e7d1-e10f-7b06-62584d3571f2)
+AND
+CrimeGetVictim(_CrimeID, _Zhent)
+AND
+DB_PLA_ZhentShipment_Agents(_Zhent)
+THEN
+PROC_CRIME_StopForAllCriminals(_CrimeID);
+//END_REGION Prevent crime investigations while Zhent are busy with gnolls
+
+//REGION Delay investigations of severe crimes against the shipment during combat to after combat
+PROC
+PROC_CharacterRegisterCrime_Success(_Perp, _Crime, _, _Evidence, _Zhent, _CrimeID)
+AND
+DB_PLA_ZhentShipment_Agents(_Zhent)
+AND
+DB_PLA_ZhentShipment_ChestCrimes(_Crime, 1)
+AND
+CombatGetGuidFor(_Zhent, _CombatID)
+AND
+CanSee(_Zhent, _Perp, _CanSee)
+AND
+DB_Negate(_CanSee, _CouldNotSee)
+THEN
+DB_PLA_ZhentShipment_ContinueCrimeInvestigationAfterCombat(_Zhent, _CombatID, _CrimeID, _CouldNotSee);
+CrimeSuspend((INTEGER)_CrimeID);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_PLA_ZhentShipment_ContinueCrimeInvestigationAfterCombat(_Zhent, _CombatID, _CrimeID, _CouldNotSee)
+AND
+NOT DB_Defeated(_Zhent)
+AND
+GetPosition(_Zhent, _X, _Y, _Z)
+THEN
+CrimeResumeWithPosition((INTEGER)_CrimeID, (REAL)_X, (REAL)_Y, (REAL)_Z, _CouldNotSee);
+
+IF
+CombatEnded(_CombatID)
+AND
+DB_PLA_ZhentShipment_ContinueCrimeInvestigationAfterCombat(_Zhent, _CombatID, _CrimeID, _CouldNotSee)
+THEN
+NOT DB_PLA_ZhentShipment_ContinueCrimeInvestigationAfterCombat(_Zhent, _CombatID, _CrimeID, _CouldNotSee);
+//END_REGION
+
+//REGION Cursed Iron Flask
+IF
+RemovedFrom((ITEM)_Flask, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8)
+AND
+DB_PLA_ZhentShipment_Flasks(_Flask)
+AND
+NOT DB_GlobalFlag(PLA_ZhentDungeon_State_GnollZhentsPresent_2fe0f447-2276-a930-90c0-ab99b4dc8a2a)
+AND
+DB_GlobalFlag(PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e)
+THEN
+ClearFlag(PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+AddedTo((ITEM)_Flask, S_PLA_ZhentShipment_Chest_fc3f4359-ec62-4cbf-8756-ecb9780c34e8, _)
+AND
+DB_PLA_ZhentShipment_Flasks(_Flask)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e)
+AND
+NOT DB_GlobalFlag(PLA_ZhentDungeon_State_GnollZhentsPresent_2fe0f447-2276-a930-90c0-ab99b4dc8a2a)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e);
+
+PROC
+PROC_PLA_ZhentShipment_RemoveAgentsFromTheCave()
+AND 
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_FlaskLost_4567436f-9598-4fba-a101-2f474a56de04)
+AND
+QRY_PLA_ZhentShipment_FlaskLost()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)PLA_ZhentShipment_State_FlaskLost_4567436f-9598-4fba-a101-2f474a56de04);
+
+QRY
+QRY_PLA_ZhentShipment_FlaskLost()
+AND
+DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e)
+AND
+DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_ChestLost_a672d90e-72fa-4ce3-8152-6969e39ab521)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PLA_ZhentShipment_FlaskLost()
+AND
+NOT DB_GlobalFlag((FLAG)PLA_ZhentShipment_State_FlaskInChest_d5b92de7-760f-462e-903c-2ea24d81f18e)
+AND
+DB_PLA_ZhentShipment_Flasks((ITEM)_Flask)
+AND
+IsInTrigger(_Flask, TRIGGERGUID_S_PLA_ZhentShipment_ZhentsSearchForItemsArea_bd972de9-6b5f-43f6-80d0-9ab9c7ba3eaa, 0)
+THEN
+DB_NOOP(1);
+//END_REGION Cursed Iron Flask
+
+//REGION Ninefingers orders
+IF
+GameBookInterfaceClosed(S_PLA_ZhentShipment_NinefingersOrders_14ed5f04-c524-41a1-976e-4a857b326e6a, _Player)
+AND
+QRY_OnlyOnce("PLA_ZhentShipment_ReadNinefingersOrders")
+THEN
+PROC_PLA_ZhentShipment_OnReadNinefingersOrders(_Player);
+
+PROC
+PROC_PLA_ZhentShipment_OnReadNinefingersOrders((CHARACTER)_Character)
+AND
+NOT DB_GlobalFlag(PLA_ZhentShipment_State_ReadNinefingersLetter_fb865fe5-a79d-c807-e8ac-7a8b29777fce)
+THEN
+PROC_GlobalSetFlagAndCache(PLA_ZhentShipment_State_ReadNinefingersLetter_fb865fe5-a79d-c807-e8ac-7a8b29777fce);
+//END_REGION Ninefingers orders
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

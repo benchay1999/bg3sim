@@ -1,0 +1,270 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//--- This quest is now a sub quest in DEN_Conflict
+
+//Know about the 3 leaders
+DB_QuestDef_BookReadState("DEN_Conflict", "DEN_LearntGoblinLeaderCorpses",S_DEN_GoblinLeadersEvidence_eebf1976-11d3-41a7-832f-bda88966ed0c);
+
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("DEN_LearntGoblinLeaderCorpses");
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_LearntNoName");
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_LearntTwoNames");
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_LearntThirdName");
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_LearntAllNames"); //For handling hunt success when player knows/not knows leaders
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_ThreeLeader_KilledPriest");
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_ThreeLeader_KilledKing");
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo("GOB_ThreeLeader_KilledDrow");
+DB_DEN_Conflict_Goblin_KnowsThreeLeaders(0); //0 == false / 1 == true
+
+DB_GOB_GoblinLeaders(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9,"GOB_Solo_KilledPriest","GOB_Trio_KilledPriest", (FLAG)DEN_GroveConflict_Knows_LeaderNamePriest_8341f319-e21b-4622-b4b9-ded718150929);
+DB_GOB_GoblinLeaders(S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54,"GOB_Solo_KilledKing","GOB_Trio_KilledKing", (FLAG)DEN_GroveConflict_Knows_LeaderNameKing_bcfbc49e-3461-44f0-964d-38a08ebf5d1f);
+DB_GOB_GoblinLeaders(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,"GOB_Solo_KilledDrow","GOB_Trio_KilledDrow", (FLAG)DEN_GroveConflict_Knows_LeaderNameDrow_20f20de4-4f03-b2b9-6a6b-e96f5e190160);
+
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, (CHARACTER)S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, "GOB_Last_KilledPriest");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54, (CHARACTER)S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, "GOB_Last_KilledKing");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (CHARACTER)S_DEN_TieflingLeader_475200ee-cc3c-4dbe-84b1-1820c02ea26a, "GOB_Last_KilledDrow");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, (CHARACTER)S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "GOB_Last_KilledPriest_Asharak");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54, (CHARACTER)S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "GOB_Last_KilledKing_Asharak");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (CHARACTER)S_DEN_Trainer_02025646-347a-4235-aef7-e46b7c94b435, "GOB_Last_KilledDrow_Asharak");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, (CHARACTER)S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "GOB_Last_KilledPriest_Cerys");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54, (CHARACTER)S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "GOB_Last_KilledKing_Cerys");
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b, (CHARACTER)S_DEN_BackupLeader_b304e07d-019c-4ec6-b5ea-c4ccb29ed892, "GOB_Last_KilledDrow_Cerys");
+//DB_GOB_KnownGoblinLeaders(0);
+
+DB_GLO_DefeatCounter(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9,"GOB_GoblinHunt_Leaders");
+DB_GLO_DefeatCounter(S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54,"GOB_GoblinHunt_Leaders");
+DB_GLO_DefeatCounter(S_GOB_DrowCommander_25721313-0c15-4935-8176-9f134385451b,"GOB_GoblinHunt_Leaders");
+
+//Found goblin evidence:
+DB_BookFlags(S_DEN_GoblinLeadersEvidence_eebf1976-11d3-41a7-832f-bda88966ed0c,DEN_GroveConflict_Quest_Learnt3LeadersNoName_843b95fd-450b-0d6a-2903-0312d9d0d58f);
+KBSECTION
+//REGION Arrived at Goblin Camp
+
+//Zevlor insinuates that there is a leader from the start
+IF
+EnteredTrigger(_Player, S_GOB_Festivities_SUB_217424e5-f9b7-4441-ab09-715076696a12)
+AND
+DB_Players(_Player)
+AND
+NOT DB_DEN_Conflict_Goblin_KnowsThreeLeaders(1)
+THEN
+QuestUpdate(_Player,"DEN_Conflict","GOB_ArrivedGoblinCamp");
+
+
+//Know about the 3 leaders
+IF
+EnteredTrigger(_Player, S_GOB_Festivities_SUB_217424e5-f9b7-4441-ab09-715076696a12)
+AND
+DB_Players(_Player)
+AND
+DB_DEN_Conflict_Goblin_KnowsThreeLeaders(1)
+THEN
+QuestUpdate(_Player,"DEN_Conflict","GOB_ArrivedGoblinCampLeaders");
+
+//END_REGION
+
+//REGION Learning about 3 leaders + their names
+
+//--- Learning about 3, but with none of the names
+//Set in GOB_DrunkGoblin (will not trigger if already set from the drawing)
+IF
+FlagSet(DEN_GroveConflict_Quest_Learnt3LeadersNoName_843b95fd-450b-0d6a-2903-0312d9d0d58f, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+AND
+DB_DialogPlayers(_Inst, _Player, _)
+THEN
+QuestUpdate((CHARACTER)_Player,"DEN_Conflict", "GOB_LearntNoName");
+
+
+//--- Learning about 3, with only Ragzlin and Gut being named (Minthara mentioned as "drow")
+IF
+FlagSet(DEN_GroveConflict_Quest_Learnt3LeadersTwoNames_0d126640-17f4-4008-baa4-81e5b8e0e012, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+AND
+DB_DialogPlayers(_Inst, _Player, _)
+AND
+NOT DB_GlobalFlag(DEN_GroveConflict_Quest_Learnt3LeadersAllNames_efa4acae-0fe2-4f36-bdc6-aea74235dad8)
+AND
+GetFlag(DEN_GroveConflict_Knows_LeaderNameDrow_20f20de4-4f03-b2b9-6a6b-e96f5e190160, NULL_00000000-0000-0000-0000-000000000000, _KnowsDrow)
+THEN
+PROC_DEN_Conflict_Goblin_CheckLearnedAllNames((CHARACTER)_Player, _KnowsDrow);
+
+IF
+FlagSet(DEN_GroveConflict_Quest_Learnt3LeadersTwoNames_0d126640-17f4-4008-baa4-81e5b8e0e012, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+AND
+DB_DialogPlayers(_Inst, _, _)
+THEN
+SetFlag(DEN_GroveConflict_Knows_LeaderNamePriest_8341f319-e21b-4622-b4b9-ded718150929,NULL_00000000-0000-0000-0000-000000000000);
+SetFlag(DEN_GroveConflict_Knows_LeaderNameKing_bcfbc49e-3461-44f0-964d-38a08ebf5d1f,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_DEN_Conflict_Goblin_CheckLearnedAllNames((CHARACTER)_Player, 0)
+THEN
+QuestUpdate(_Player,"DEN_Conflict", "GOB_LearntTwoNames");
+
+PROC
+PROC_DEN_Conflict_Goblin_CheckLearnedAllNames((CHARACTER)_Player, 1)
+THEN
+QuestUpdate(_Player,"DEN_Conflict", "GOB_LearntAllNames");
+
+
+// Learning Minthara's name to complete the 3
+IF
+FlagSet(DEN_GroveConflict_Knows_LeaderNameDrow_20f20de4-4f03-b2b9-6a6b-e96f5e190160, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+AND
+DB_DialogPlayers(_Inst, _Player, _)
+AND
+NOT DB_GlobalFlag(DEN_GroveConflict_Quest_Learnt3LeadersAllNames_efa4acae-0fe2-4f36-bdc6-aea74235dad8)
+AND
+DB_GlobalFlag(DEN_GroveConflict_Quest_Learnt3LeadersTwoNames_0d126640-17f4-4008-baa4-81e5b8e0e012)
+THEN
+QuestUpdate((CHARACTER)_Player,"DEN_Conflict", "GOB_LearntThirdName");
+
+
+//--- Setting the flags checked in these leader dialog
+IF
+FlagSet(DEN_GroveConflict_Knows_LeaderNameDrow_20f20de4-4f03-b2b9-6a6b-e96f5e190160, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+THEN
+SetFlag(GOB_DrowCommander_Knows_DrowLeader_74279f61-c499-340a-ef38-d26816725bd9,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(DEN_GroveConflict_Knows_LeaderNamePriest_8341f319-e21b-4622-b4b9-ded718150929, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+THEN
+SetFlag(GOB_GoblinPriest_Knows_PriestLeader_0914c022-b6c5-d460-b525-fd1af2778987,NULL_00000000-0000-0000-0000-000000000000);
+
+
+//--- Learning all names
+//separately
+IF
+DB_GlobalFlag(DEN_GroveConflict_Knows_LeaderNameDrow_20f20de4-4f03-b2b9-6a6b-e96f5e190160)
+AND
+DB_GlobalFlag(DEN_GroveConflict_Knows_LeaderNameKing_bcfbc49e-3461-44f0-964d-38a08ebf5d1f)
+AND
+DB_GlobalFlag(DEN_GroveConflict_Knows_LeaderNamePriest_8341f319-e21b-4622-b4b9-ded718150929)
+THEN
+DB_DEN_Conflict_Goblin_GotAllNamesSeparately(1);
+
+//all at once
+IF
+FlagSet(DEN_GroveConflict_Quest_Learnt3LeadersAllNames_efa4acae-0fe2-4f36-bdc6-aea74235dad8, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+SetFlag(DEN_GroveConflict_Quest_Learnt3LeadersTwoNames_0d126640-17f4-4008-baa4-81e5b8e0e012,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_DEN_Conflict_Goblin_GotAllNamesSeparately(1)
+AND
+NOT DB_GlobalFlag(DEN_GroveConflict_Quest_Learnt3LeadersTwoNames_0d126640-17f4-4008-baa4-81e5b8e0e012)
+AND
+DB_Players(_Player)
+THEN
+PROC_GlobalSetFlagAndCache(DEN_GroveConflict_Quest_Learnt3LeadersTwoNames_0d126640-17f4-4008-baa4-81e5b8e0e012);
+QuestUpdate(_Player,"DEN_Conflict", "GOB_LearntAllNames");
+
+//END_REGION
+
+//REGION Check if knows about 1 or 3 leaders
+
+IF
+QuestUpdateUnlocked(_Player,"DEN_Conflict", _Entry)
+AND
+DB_DEN_Conflict_Goblin_ThreeLeadersInfo(_Entry)
+THEN
+NOT DB_DEN_Conflict_Goblin_KnowsThreeLeaders(0);
+DB_DEN_Conflict_Goblin_KnowsThreeLeaders(1);
+
+//END_REGION
+
+//REGION Killing leaders / learning about them
+
+//--- Killing = learning
+PROC
+PROC_StateSet_Defeated(_Leader)
+AND
+DB_GOB_GoblinLeaders(_Leader,_,_,_KnowledgeFlag)
+THEN
+SetFlag(_KnowledgeFlag,NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_StateSet_Defeated(S_GOB_GoblinKing_11337af0-6a57-426b-a820-c4b00923dd54)
+THEN
+SetFlag(GOB_GoblinKing_Event_DefeatedOnce_9b13c642-18f8-6907-9370-7baae9d98fa4, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//--- Killed all three
+PROC
+PROC_StateSet_Defeated(_Leader)
+AND
+DB_GOB_GoblinLeaders_GroveLeaderEntries((CHARACTER)_Leader, _TieflingLeader, _LastKillEntry)
+AND
+DB_DEN_CurrentDefenderLeader(_TieflingLeader)
+AND
+DB_DEN_Conflict_Goblin_KilledOne(1)
+AND
+DB_DEN_Conflict_Goblin_KilledTwo(1)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"DEN_Conflict",_LastKillEntry);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("GOB_GoblinHunt_Leaders")
+THEN
+SetFlag(GOB_State_LeadersAreDead_a1c5b01f-4b7f-47ab-82b0-d24d9c6d8bc6, NULL_00000000-0000-0000-0000-000000000000);
+
+
+//--- Killing another
+PROC
+PROC_StateSet_Defeated(_Leader)
+AND
+DB_GOB_GoblinLeaders(_Leader,_,_TrioKillEntry,_)
+AND
+DB_DEN_Conflict_Goblin_KilledOne(1)
+AND
+NOT DB_DEN_Conflict_Goblin_KilledTwo(1)
+AND
+DB_Players(_Player)
+THEN
+DB_DEN_Conflict_Goblin_KilledTwo(1);
+QuestUpdate(_Player,"DEN_Conflict",_TrioKillEntry);
+
+
+//--- Killing the first one
+PROC
+PROC_StateSet_Defeated(_Leader)
+AND
+DB_GOB_GoblinLeaders(_Leader,_,_,_)
+AND
+NOT DB_DEN_Conflict_Goblin_KilledOne(1)
+AND
+DB_DEN_Conflict_Goblin_KnowsThreeLeaders(_KnowsThree)
+THEN
+DB_DEN_Conflict_Goblin_KilledOne(1);
+PROC_DEN_Conflict_Goblin_CheckGiveFirstKill((CHARACTER)_Leader, _KnowsThree);
+
+// Without knowing there are others
+PROC
+PROC_DEN_Conflict_Goblin_CheckGiveFirstKill((CHARACTER)_Leader, 0)
+AND
+DB_GOB_GoblinLeaders(_Leader,_SoloKill,_,_)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"DEN_Conflict",_SoloKill);
+
+// Knowing there are more than one
+PROC
+PROC_DEN_Conflict_Goblin_CheckGiveFirstKill((CHARACTER)_Leader, 1)
+AND
+DB_GOB_GoblinLeaders(_Leader,_,_TrioKill,_)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"DEN_Conflict",_TrioKill);
+
+//END_REGION
+
+/*TODO: set Updates:
+ - Close_TieflingsDead
+ - Close_Reported
+*/
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

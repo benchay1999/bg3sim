@@ -1,0 +1,2906 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION General
+DB_CHA_LaezelRecruit_Cager((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,2,(FLAG)CHA_LaezelRecruitment_State_Tiefling1Missing_d40bbf05-3884-42aa-b639-c20697703d6d);
+DB_CHA_LaezelRecruit_Cager((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,3,(FLAG)CHA_LaezelRecruitment_State_Tiefling2Missing_d6342f1d-f875-460a-b6eb-769c8790c86b);
+
+DB_CHA_LaezelRecruit_CagerDeathPoint((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(TRIGGER)S_CHA_CagerDeathPoint1_eddeb431-6a81-4f64-a333-0de764b5f7cb);
+DB_CHA_LaezelRecruit_CagerDeathPoint((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,(TRIGGER)S_CHA_CagerDeathPoint2_418d83b8-eaa0-45e5-a371-aaa13ce79484);
+
+DB_DropMutingStatussesDialog(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+
+//END_REGION
+
+//REGION Companion version
+PROC_TriggerRegisterForPlayers(S_CHA_LaezelControlBox_cc892a8d-edd0-481d-bc03-2ebcb34c6ce2);
+PROC_TriggerRegisterForPlayers(S_CHA_LaezelSceneBox_91215202-bfee-459e-a887-ad096e462046);
+
+//Journal updates
+DB_CHA_LaezelRecruit_Updates("Attacked","AttackedAlt");
+DB_CHA_LaezelRecruit_Updates("ReleasedEarly","ReleasedEarlyAlt");
+
+DB_CHA_LaezelRecruit_TieflingsDefeated(0, "TieflingsDefeated");
+DB_CHA_LaezelRecruit_TieflingsDefeated(1, "Freed");
+
+DB_CHA_LaezelRecruit_DeathAD((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_OtherDied1_e24afd2d-1b3d-378c-6c5a-d3b48463c681);
+DB_CHA_LaezelRecruit_DeathAD((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_OtherDied2_edac3a63-4c29-24e5-4bdc-536e124cf700);
+
+//position flags
+DB_GLO_Cinematic_PositionedDialog((DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4,"CHA_LaezelRecruit");
+DB_GLO_Cinematic_PositionFlags("CHA_LaezelRecruit",(TRIGGER)S_CHA_LaezelRecruit_FromWagonBox_69923808-8065-4517-b6b2-7e29b43d9365,(FLAG)CHA_LaezelRecruitment_Event_WagonPosition_694a4d7b-e54b-4436-8be0-1cd80007b47b); //highest prio
+DB_GLO_Cinematic_PositionFlags("CHA_LaezelRecruit",(TRIGGER)S_CHA_LaezelRecruit_FromArchBox_a4298583-97b6-44f9-83bc-c720ca4944e4,(FLAG)CHA_LaezelRecruitment_Event_ArchPosition_2d2c98e3-856a-4681-85cf-a3c46cd175f9); //bigger trigger, lower prio
+//END_REGION
+KBSECTION
+//REGION Debug
+//--- Fake died in TUT
+IF
+TextEvent("LZdiedTUT")
+THEN
+PROC_CRA_LaezelRecruit_DebugInit();
+
+PROC
+PROC_CRA_LaezelRecruit_DebugInit()
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player)
+THEN
+NOT DB_CHA_LaezelRecruit_PrioTalkTo(_Player);
+
+PROC
+PROC_CRA_LaezelRecruit_DebugInit()
+THEN
+	// reset if already started
+NOT DB_CRA_LaezelRecruit_LeaveOutOfSight(1);
+NOT DB_CHA_LaezelRecruitment_RecruitDialogStarted(1);
+PROC_TriggerUnregisterForPlayers(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b);
+TeleportTo(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b, S_PLA_GithBridgeEndPosTrigger_3dfeb29c-1e3c-4d13-89d5-a2a766c4b13e, "", 0 ,0 ,0);
+PROC_GlobalClearFlagAndCache(ORI_LaezelRecruitment_Event_CrashVersionDone_df73c46d-ed94-47de-be8b-36df1dbd973f);
+PROC_GlobalClearFlagAndCache(ORI_Laezel_Resurrection_HasMet_84fc0271-6af4-d318-d600-ca4d9a0091d8);
+	// cancel cage recruit
+PROC_CHA_LaezelRecruit_ResolveScene();
+	// fake death
+Die(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1);
+TeleportTo(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_TUT_GuideDeath_11989862-14e9-44e1-877f-f99c05d574f8, "", 0, 0, 0);
+SetOnStage(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+	// init
+PROC_CHA_LaezelRecruit_InitNPC_CrashVersion();
+
+
+//--- Dying in TUT, then dragged to Gith Chokepoint
+IF
+TextEvent("LZdiedTUTtoGC")
+THEN
+ClearFlag(ORI_LaezelRecruitment_State_PlainsVersionInitiated_59bda4f5-708b-4f23-aaba-d5f387ae95c2, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CRA_LaezelRecruit_DebugInit();
+TeleportTo(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_PLA_LaezelRecruitPoint_9f9daa3c-b446-4d03-a2a1-0a9383adccbe);
+
+//--- Recruit
+IF
+TextEvent("recruitlaezel")
+AND
+GetHostCharacter(_Character)
+AND
+QRY_StartDialog_Fixed(DIALOGRESOURCEGUID_DebugBook_3af7dec4-4c08-9e44-9064-ec038ebad0ea, _Character)
+THEN
+DB_NOOP(1);
+
+IF
+TextEvent("recruitlaezel")
+AND
+GetHostCharacter(_Character)
+THEN
+SetOnStage(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,1);
+TeleportTo(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Character);
+PROC_GLO_PartyMembers_Add(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Character);
+SetFlag((FLAG)SetPreset_Default_7eabc516-c15c-46ff-a99d-60d4a9f7037e, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+PROC_CHA_LaezelRecruit_InitPlayer(1);
+
+
+//--- Combat
+IF
+TextEvent("tplaezelcombatout")
+AND
+GetHostCharacter(_Char)
+AND
+DB_Is_InCombat(_Char, _ID)
+AND
+IsInTrigger(_Char, S_CHA_LaezelSceneBox_91215202-bfee-459e-a887-ad096e462046, 1)
+AND
+DB_Is_InCombat(_AllCombatCharacters, _ID)
+AND
+IsCharacter(_AllCombatCharacters,1)
+THEN
+TeleportTo(_AllCombatCharacters, S_Debug_Chapel_0dfa6e6c-599c-47d4-84e1-3bffc7c8839b);
+
+IF
+TextEvent("tplaezelcombatfar")
+AND
+GetHostCharacter(_Char)
+AND
+DB_Is_InCombat(_Char, _ID)
+AND
+IsInTrigger(_Char, S_CHA_LaezelSceneBox_91215202-bfee-459e-a887-ad096e462046, 1)
+AND
+DB_Is_InCombat(_AllCombatCharacters, _ID)
+AND
+IsCharacter(_AllCombatCharacters,1)
+THEN
+TeleportTo(_AllCombatCharacters, S_CHA_Debug_LaezelRecruitPoint_22095e5a-57af-438e-a303-6c5a38b2cef8);
+
+IF
+TextEvent("tplaezelothernear")
+AND
+GetHostCharacter(_Char)
+AND
+DB_Is_InCombat(_Char, _ID)
+AND
+IsInTrigger(_Char, S_CHA_LaezelControlBox_cc892a8d-edd0-481d-bc03-2ebcb34c6ce2, 1)
+AND
+DB_Is_InCombat(_NPCCharacters, _ID)
+AND
+IsCharacter(_NPCCharacters,1)
+AND
+NOT DB_Players((CHARACTER)_NPCCharacters)
+THEN
+TeleportTo(_NPCCharacters, S_CHA_LaezelOutPoint_ec8e8914-775c-42c7-a372-46d118ddcec7);
+
+
+//--- TP a bandit to LZ to interrupt the scene
+IF
+TextEvent("tpbandittolz")
+THEN
+Die(S_CHA_Exterior_Bandit_Caster_01_0f4300f6-0e1e-4d6c-a582-5da588d64ea7, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1);
+Die(S_CHA_Exterior_Bandit_Melee_02_b5c913f9-f081-45bd-8e95-e34d0735b645, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1);
+Die(S_CHA_Exterior_Bandit_Ranger_01_fa1a1fbd-2152-40e4-b53d-29e95d54279e, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1);
+TeleportTo(S_CHA_Exterior_Bandit_Melee_01_538e38b9-e3a4-452a-8369-60eb1fe8c40d, S_CHA_LaezelRecruit_FromArchBox_a4298583-97b6-44f9-83bc-c720ca4944e4);
+
+
+//--- Attack
+IF
+TextEvent("leavewithlaezel")
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_Init");
+
+//END_REGION
+
+//REGION Init switch
+
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+THEN
+TimerLaunch("ORI_Laezel_InitialSetup_AfterTutorial", 500);
+
+IF
+TimerFinished("ORI_Laezel_InitialSetup_AfterTutorial")
+THEN
+PROC_CHA_LaezelRecruit_Init();
+
+//--- NPC
+PROC
+PROC_CHA_LaezelRecruit_Init()
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+IsDead(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0)
+THEN
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion();
+
+PROC
+PROC_CHA_LaezelRecruit_Init()
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+IsDead(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1) //when dead, she's teleported at the end of TUT_Helm to S_TUT_GuideDeath_11989862-14e9-44e1-877f-f99c05d574f8
+THEN
+PROC_CHA_LaezelRecruit_InitNPC_CrashVersion();
+PROC_CHA_LaezelRecruit_InitPlayer(1); // = cancelling the Chapel situation
+
+//--- Avatar
+PROC
+PROC_CHA_LaezelRecruit_Init()
+AND
+DB_Avatars(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+PROC_CHA_LaezelRecruit_InitPlayer(1);
+
+//--- Companion (story reload)
+PROC
+PROC_CHA_LaezelRecruit_Init()
+AND
+NOT DB_Avatars(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+PROC_CHA_LaezelRecruit_InitPlayer(0);
+
+
+//END_REGION
+//REGION Init - Laezel NPC - CHA Version
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion()
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+THEN
+SetHasDialog(_Tiefling, 1);
+DB_SceneManager(_Tiefling, "CHA_LaezelTieflings"); 
+
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion()
+THEN
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+TriggerRegisterForCharacter(S_PLA_NPCInterruptionBox_198849d7-7f06-4520-a9e6-1ddedfe38660, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+SetFlag(ORI_LaezelRecruitment_State_ChapelVersionInitiated_e6015bdf-276e-47b2-9a43-9bc0c981e1ad, NULL_00000000-0000-0000-0000-000000000000);
+PROC_GLO_Origins_SetRecruitmentDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(DIALOGRESOURCE)Laezel_Recruitment_InCage_131cf573-180d-5307-6d6e-6a369319e161);
+PROC_TriggerRegisterForPlayers(S_PLA_UpdateLaezelRecruitBox_1a1deda3-7203-4e57-a017-7ccb1c6ed181);
+DB_CHA_LaezelRecruit_CagerJump((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, S_CHA_CagerJumpStart1_c7627758-d59a-47b8-9b21-5ddb85159a6a, (TRIGGER)S_CHA_CagerJumpTarget1_b6905a58-cb78-4d48-9545-007d87f6fbda);
+DB_CHA_LaezelRecruit_CagerJump((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, S_CHA_CagerJumpStart2_3b2c2e88-26e4-4f65-bf3f-8f018a558323, S_CHA_CagerJumpTarget2_a87f6957-45a7-4bbd-8bcf-d7ecbcf462a2);
+SetOwner(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea);
+DB_SceneTriggerManager("CHA_LaezelTieflings",(TRIGGER)S_CHA_LaezelSceneBox_91215202-bfee-459e-a887-ad096e462046,0);
+DB_SceneManager((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelTieflings");
+TeleportTo(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_CHA_LaezelStartPoint_26e040b6-4bab-45b3-b34a-cfc49417a95d);
+FlushOsirisQueue(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+TriggerRegisterForCharacter(S_CHA_CageBox_2de737cb-3353-444d-81dc-ce9a170a6837, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+PROC_TriggerRegisterForPlayers(S_CHA_SceneStartSphere_0ed6e6c4-890b-4523-ba9b-815e314de8cd);
+PROC_TriggerRegisterForPlayers(S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8);
+DB_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404, (DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+DB_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f, (DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+DB_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsGetLaezel_5e8867b9-67e5-dc2d-934f-4471a25a5ddf, (DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+DB_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404, (DIALOGRESOURCE)CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4);
+DB_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_LaezelHostile_510657f4-4dd5-4b51-16bd-707942066182, (DIALOGRESOURCE)CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4);
+DB_CHA_LaezelRecruit_AllowAD((FLAG)CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f);
+DB_CHA_LaezelRecruit_AllowAD((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404);
+PROC_SetCanFight(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+SetCanJoinCombat(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+DB_CustomDialogRange(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 14); //scene is fairly spread out, one of the tiefling is standing 10.7625 away from Lae'zel
+RemoveHarmfulStatuses(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+RestoreParty(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+ApplyStatus(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LAEZELRECRUIT_IGNOREFALLDAMAGE", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_CHA_LaezelRecruit_IgnoringFallDamage(1);
+ApplyStatus(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "GROUNDED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+DB_CHA_LaezelRecruitment_StartRecruitmentDialogFlag((FLAG)CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f);
+DB_CHA_LaezelRecruitment_StartRecruitmentDialogFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0);
+DB_CHA_LaezelRecruitment_StartRecruitmentDialogFlag(CHA_LaezelRecruitment_State_CagersAreDead_80d4178f-e95f-41dd-a17c-5f757481331f);
+SetFlag(CHA_LaezelRecruitment_State_PlayerDidntHelpLaezel_6ed97f29-00b3-4341-a866-dc8cac2a0c82, NULL_00000000-0000-0000-0000-000000000000);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+DB_Dialogs_DialogBlockStatusesDialogOverride(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, CHA_LaezelRecruitment_TieflingsSceneFallback_56ac7209-f467-1aef-b522-8695ac5b682d);
+DB_IgnoreMutingStatussesDialog(CHA_LaezelRecruitment_TieflingsSceneFallback_56ac7209-f467-1aef-b522-8695ac5b682d);
+PROC_ORI_Laezel_GiveNewEquipment();
+
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion()
+AND
+GetHitpointsPercentage(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _HP)
+AND
+_HP < 80.0
+THEN
+SetHitpointsPercentage(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 80.0);
+
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion()
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+THEN
+SetHasDialog(_Cager, 0); //deactivated because if they are dragged away by a combat, clicking on them causes too many useless issues
+
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion()
+THEN
+DB_DefeatedStateFlag(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(FLAG)CHA_LaezelRecruitment_State_NymessaIsDefeated_fa1ecbcf-2927-8f5a-e269-f18446b212ef);
+DB_CHA_LaezelRecruit_ReturningADs((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_ReturnAnyCombat2_fc919d64-0a3d-1daf-29d5-7d38fb357790); //Damays is first in this DB because he has priority
+DB_CHA_LaezelRecruit_ReturningADs((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_ReturnAnyCombat1_7336f7d2-b120-88eb-ba80-62d659f50833);
+DB_CHA_LaezelRecruit_LeavingADs((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_LeavingAnyCombat2_bc21359b-6a27-8e5e-9ad0-798d1d75c111); //Damays is first in this DB because he has priority
+DB_CHA_LaezelRecruit_LeavingADs((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_LeavingAnyCombat1_527a8a6f-df2a-52b6-46c7-09469c30fd3c);
+DB_SpotPlayers((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "CHA_LaezelRecruit_TieflingSpot", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, "CHA_LaezelRecruit_TieflingSpot", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_Continuous((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "CHA_LaezelRecruit_TieflingSpot");
+DB_SpotPlayers_Continuous((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, "CHA_LaezelRecruit_TieflingSpot");
+DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "CHA_LaezelRecruit_TieflingSpot");
+DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, "CHA_LaezelRecruit_TieflingSpot");
+
+PROC
+PROC_CHA_LaezelRecruit_ClearEdgeCaseDB()
+THEN
+NOT DB_CHA_LaezelRecruit_ReturningADs((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_ReturnAnyCombat2_fc919d64-0a3d-1daf-29d5-7d38fb357790);
+NOT DB_CHA_LaezelRecruit_ReturningADs((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_ReturnAnyCombat1_7336f7d2-b120-88eb-ba80-62d659f50833);
+NOT DB_CHA_LaezelRecruit_LeavingADs((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_LeavingAnyCombat2_bc21359b-6a27-8e5e-9ad0-798d1d75c111); //Damays is first in this DB because he has priority
+NOT DB_CHA_LaezelRecruit_LeavingADs((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,(DIALOGRESOURCE)CHA_LaezelRecruitment_AD_LeavingAnyCombat1_527a8a6f-df2a-52b6-46c7-09469c30fd3c);
+NOT DB_SpotPlayers((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "CHA_LaezelRecruit_TieflingSpot", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, "CHA_LaezelRecruit_TieflingSpot", (FLAG)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_Continuous((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "CHA_LaezelRecruit_TieflingSpot");
+NOT DB_SpotPlayers_Continuous((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, "CHA_LaezelRecruit_TieflingSpot");
+NOT DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "CHA_LaezelRecruit_TieflingSpot");
+NOT DB_SpotPlayers_IncludeWildshapedPlayers((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, "CHA_LaezelRecruit_TieflingSpot");
+
+
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_ChapelVersion()
+THEN
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "SceneStart");
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "SceneStart", 0);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "OpeningCage", 50);
+//State Branch: tieflings leaving with Laezel
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_Init", 100);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_OpenCage", 110);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelFell", 120);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_TieflingsInPosition", 130);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelAttacks", 140);
+//State branch: Laezel's cage opened: pick a side
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "PickASide", 150);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel", 175);
+//State branch:
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "TieflingsLeavingAlone", 200);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Hostile", 300);
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Finished", 400);
+//Player tried to not get involved; tieflings try to get LZ to the Grove
+DB_CHA_LaezelRecruit_LeavingStates("LeavingWithLaezel_Init");
+DB_CHA_LaezelRecruit_LeavingStates("LeavingWithLaezel_OpenCage");
+DB_CHA_LaezelRecruit_LeavingStates("LeavingWithLaezel_LaezelFell");
+DB_CHA_LaezelRecruit_LeavingStates("LeavingWithLaezel_TieflingsInPosition");
+DB_CHA_LaezelRecruit_LeavingStates("LeavingWithLaezel_LaezelAttacks");
+
+//END_REGION
+//REGION Init - Laezel player
+PROC
+PROC_CHA_LaezelRecruit_InitPlayer((INTEGER)_IsLegit)
+THEN
+PROC_CHA_LaezelRecruit_CheckAutoResolveScene();
+
+PROC
+PROC_CHA_LaezelRecruit_InitPlayer(0) // In case it's called from the debug book
+THEN
+// Cage is open
+DB_OnlyOnce("CHA_LaezelRecruit_LeavesCage");
+SetFlag((FLAG)CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+PROC_SetCanFight(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+SetCanJoinCombat(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+// In case of recruitment via debug book
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Finished");
+
+
+//END_REGION
+//REGION Init - Laezel NPC - CRA Version
+//--- Dead in TUT edge-case; handles resurrecting Lae'zel
+//called from the main situation, Act1_CHA_LaezelRecruit
+PROC
+PROC_CHA_LaezelRecruit_InitNPC_CrashVersion()
+THEN
+PROC_GlobalSetFlagAndCache(ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637);
+PROC_GLO_Origins_SetRecruitmentDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(DIALOGRESOURCE)Laezel_Recruitment_Crash_623fcc21-96e1-79c2-5d06-9e48f3a378b3);
+PROC_TriggerRegisterForPlayers(S_PLA_UpdateLaezelRecruitBox_1a1deda3-7203-4e57-a017-7ccb1c6ed181);
+TriggerRegisterForCharacter(S_PLA_NPCInterruptionBox_198849d7-7f06-4520-a9e6-1ddedfe38660, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+PROC_SelfHealing_Disable(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+IF
+DB_GlobalFlag(ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637)
+AND
+DB_GlobalFlag(ORI_Laezel_State_CaringAboutZorru_05c85d1f-11e6-4219-a047-901b958c3578)
+THEN
+PROC_ORI_Laezel_StopCaringAboutZorru();
+
+//END_REGION
+
+//REGION Crash version - Resurrecting LZ
+
+//"Teleportation_Revivify"
+//"Teleportation_Revivify_Scroll"
+//"Teleportation_TrueResurrection_Scroll"
+
+IF
+UsingSpellOnTarget(_, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "Teleportation_Revivify_Scroll", _, _, _)
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player)
+THEN
+NOT DB_CHA_LaezelRecruit_PrioTalkTo(_Player);
+
+IF
+UsingSpellOnTarget(_Player, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "Teleportation_Revivify_Scroll", _, _, _) //most likely those scrolls will be used. Could add support for other means
+AND
+DB_Players((CHARACTER)_Player)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637)
+AND
+NOT DB_GlobalFlag(ORI_Laezel_Resurrection_HasMet_84fc0271-6af4-d318-d600-ca4d9a0091d8)
+AND
+NOT DB_GlobalFlag(ORI_LaezelRecruitment_Event_CrashVersionDone_df73c46d-ed94-47de-be8b-36df1dbd973f)
+THEN
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player);
+SetFlag(CRA_LaezelRecruitment_State_ResurrectedLaezel_a45fa5c8-7e74-4ea3-846c-018f0e01733f, _Player);
+
+IF
+Resurrected(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637)
+AND
+NOT DB_GlobalFlag(ORI_LaezelRecruitment_Event_CrashVersionDone_df73c46d-ed94-47de-be8b-36df1dbd973f)
+AND
+NOT QRY_CRA_LaezelRecruit_BlockCRAVersion()
+THEN
+TeleportTo(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b, S_PLA_GithBridgeEndPosTrigger_3dfeb29c-1e3c-4d13-89d5-a2a766c4b13e, "", 0 ,0 ,0);
+PROC_TriggerRegisterForPlayers(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b);
+TeleportTo(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "", 0 ,0 ,0);
+TimerLaunch("CRA_LaezelRecruit_StartResurrectDialog", 4100);
+
+IF
+TimerFinished("CRA_LaezelRecruit_StartResurrectDialog")
+AND
+NOT DB_GlobalFlag(ORI_Laezel_Resurrection_HasMet_84fc0271-6af4-d318-d600-ca4d9a0091d8)
+AND
+NOT DB_GlobalFlag(ORI_LaezelRecruitment_Event_CrashVersionDone_df73c46d-ed94-47de-be8b-36df1dbd973f)
+AND
+QRY_SpeakerIsAvailable(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_CHA_LaezelRecruit_StartRecruitDialog(Laezel_Recruitment_Crash_623fcc21-96e1-79c2-5d06-9e48f3a378b3);
+
+IF
+DialogStarted((DIALOGRESOURCE)Laezel_Recruitment_Crash_623fcc21-96e1-79c2-5d06-9e48f3a378b3, _)
+THEN
+DB_CHA_LaezelRecruitment_RecruitDialogStarted(1);
+
+IF
+Died(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_TriggerUnregisterForPlayers(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b);
+
+//END_REGION
+//REGION Crash version - End
+
+// Ending conditions
+PROC
+PROC_GLO_PartyMembers_Add((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(CHARACTER)_)
+THEN
+PROC_TriggerUnregisterForPlayers(S_PLA_UpdateLaezelRecruitBox_1a1deda3-7203-4e57-a017-7ccb1c6ed181);
+TriggerUnregisterForCharacter(S_PLA_NPCInterruptionBox_198849d7-7f06-4520-a9e6-1ddedfe38660, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+
+IF
+FlagSet(ORI_LaezelRecruitment_Event_InvitedToCamp_5ac352a5-58c2-a8ed-1957-199d8bc284da, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+PROC_TriggerUnregisterForPlayers(S_PLA_UpdateLaezelRecruitBox_1a1deda3-7203-4e57-a017-7ccb1c6ed181);
+TriggerUnregisterForCharacter(S_PLA_NPCInterruptionBox_198849d7-7f06-4520-a9e6-1ddedfe38660, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+
+IF
+DB_CRA_LaezelRecruit_LeaveOutOfSight(1)
+AND
+DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+
+IF
+LeftTrigger(_Player, S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637)
+AND
+NOT DB_GlobalFlag(ORI_LaezelRecruitment_Event_CrashVersionDone_df73c46d-ed94-47de-be8b-36df1dbd973f)
+AND
+NOT DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+DB_CRA_LaezelRecruit_LeaveOutOfSight(1);
+
+IF
+DB_CRA_LaezelRecruit_LeaveOutOfSight(1)
+AND
+NOT DB_CantAct(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag(ORI_LaezelRecruitment_Event_InvitedToCamp_5ac352a5-58c2-a8ed-1957-199d8bc284da)
+THEN
+PROC_CRA_LaezelRecruit_EndCrashVersion();
+SetCanJoinCombat(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,0);
+PROC_DisappearOutOfSight(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "Sprint", 0, "CRA_LaezelRecruitment_LeftArea");
+
+IF
+EntityEvent(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CRA_LaezelRecruitment_LeftArea")
+THEN
+SetCanJoinCombat(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+
+
+// Clean up
+PROC
+PROC_CRA_LaezelRecruit_EndCrashVersion()
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_CrashVersionInitiated_a80f2bd8-ffa1-4065-a92a-d01d59907637)
+THEN
+PROC_GlobalSetFlagAndCache(ORI_LaezelRecruitment_Event_CrashVersionDone_df73c46d-ed94-47de-be8b-36df1dbd973f);
+NOT DB_CRA_LaezelRecruit_LeaveOutOfSight(1);
+PROC_TriggerUnregisterForPlayers(S_CRA_LaezelResurrectSphere_15341d9b-c8d8-4516-87ac-d414d61bab0b);
+PROC_SelfHealing_Enable(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+//END_REGION
+
+//REGION Player proximity logic
+
+IF
+EnteredTrigger(_Player, S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8)
+AND
+DB_Players(_Player)
+THEN
+SetEntityEvent(_Player, "CHA_LaezelRecruitment_PlayerEnteredRegion"); //sending events to the tieflings
+
+IF
+LeftTrigger(_Player, S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(NULL_00000000-0000-0000-0000-000000000000, S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8)
+THEN
+SetEntityEvent(_Player, "CHA_LaezelRecruitment_PlayersLeftRegion");
+
+//END_REGION
+//REGION Scene start / cancel start
+
+//setup spotting
+
+IF
+EnteredTrigger(_Player, S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8)
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_SetSpotting")
+THEN
+PROC_CHA_LaezelRecruitment_SetSpotting();
+
+PROC
+PROC_CHA_LaezelRecruitment_SetSpotting()
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+THEN
+DB_SpotPlayers(_Cager, "CHA_LaezelRecruitment_SpottingEvent", NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(_Cager, "CHA_LaezelRecruitment_SpottingEvent", S_CHA_SceneStartSphere_0ed6e6c4-890b-4523-ba9b-815e314de8cd);
+DB_SpotPlayers_IncludeWildshapedPlayers(_Cager, "CHA_LaezelRecruitment_SpottingEvent");
+
+//--- Cancel
+//call this if the tieflings go hostile against the player before it starts
+PROC
+PROC_CHA_LaezelRecruit_CancelStart()
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_SceneStart")
+THEN
+DB_NOOP(1);
+
+//--- Start
+PROC
+PROC_SpotPlayers_Spotted(_Cager, "CHA_LaezelRecruitment_SpottingEvent", _Player)
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0)
+AND
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_SceneStart")
+THEN
+PROC_CHA_LaezelRecruit_ClearEdgeCaseDB();
+PROC_CHA_LaezelRecruit_StartScene(_Player);
+
+PROC
+PROC_CHA_LaezelRecruit_StartScene((CHARACTER)_Player)
+AND
+QRY_CHA_LaezelRecruit_StartDialog(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, _Player, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_StartSceneFallback((CHARACTER)_Player)
+AND
+DB_CHA_LaezelRecruit_CagerSpeaker(2, _Cager1)
+AND
+DB_CHA_LaezelRecruit_CagerSpeaker(3, _Cager2)
+AND
+QRY_StartDialogCustom(CHA_LaezelRecruitment_TieflingsSceneFallback_56ac7209-f467-1aef-b522-8695ac5b682d, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Cager1, _Cager2, _Player, 0, 0, 1, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DialogShouldIgnoreMutingStatusses(CHA_LaezelRecruitment_TieflingsSceneFallback_56ac7209-f467-1aef-b522-8695ac5b682d, (GUIDSTRING)_, (GUIDSTRING)_) //problem is the query below (it has 4 params)
+AND
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0)
+THEN
+NOT DB_QRYRTN_DialogShouldIgnoreMutingStatusses(0);
+DB_QRYRTN_DialogShouldIgnoreMutingStatusses(1);
+
+QRY
+QRY_SpeakerIsAvailableForDialogSlot(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, CHA_LaezelRecruitment_TieflingsSceneFallback_56ac7209-f467-1aef-b522-8695ac5b682d, 1, 0,_) //LZ has telepathic nodes only in that one //THE SITUATION WORKS! FIX THIS AFTER PATCH4!!
+THEN
+DB_NOOP(1);
+
+IF
+DialogStarted((DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, _)
+THEN
+DB_CHA_LaezelRecruit_SceneStarted(1);
+DB_CHA_LaezelRecruit_ReadyAutoResolve(1);
+SetFlag(CHA_LaezelRecruitment_Knows_LaezelWasTrapped_5fc67366-b75f-4889-9b60-2af37ad37786);
+
+QRY
+QRY_SelectCustomDialog_AfterGenerics(_Tiefling, _Player) 
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Tiefling, _, _)
+AND
+NOT DB_GlobalFlag((FLAG)CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1) // flagType: Global
+AND
+QRY_CHA_LaezelRecruit_StartDialog((DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, (CHARACTER)_Player, 1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+//REGION Prioritising player
+
+PROC
+PROC_CHA_LaezelRecruit_CageBeingOpened((CHARACTER)_Player)
+THEN
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player);
+
+PROC
+PROC_CHA_LaezelRecruit_OpenCage((CHARACTER)_Char)
+AND
+DB_Players((CHARACTER)_Char)
+THEN
+DB_CHA_LaezelRecruit_PrioTalkTo(_Char);
+
+PROC
+PROC_CHA_LaezelRecruit_RecordPrioPlayer((CHARACTER)_Player)
+AND
+DB_Avatars(_Player)
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_OtherPC)
+AND
+_OtherPC != _Player
+AND
+NOT DB_Avatars(_OtherPC)
+THEN
+NOT DB_CHA_LaezelRecruit_PrioTalkTo(_OtherPC);
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player);
+
+PROC
+PROC_CHA_LaezelRecruit_RecordPrioPlayer((CHARACTER)_Player)
+AND
+NOT DB_CHA_LaezelRecruit_PrioTalkTo(_)
+THEN
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player);
+
+//END_REGION
+//REGION Dialog logic
+//--- Logic to start the dialog with the cagers or with nulls
+QRY
+QRY_CHA_LaezelRecruit_StartDialog((DIALOGRESOURCE)_Dialog, (CHARACTER)_Player, (INTEGER)_OnlySelect)
+AND
+QRY_CHA_LaezelRecruit_PreDialogCleanup()
+AND
+QRY_CHA_LaezelRecruit_ProcessCagers()
+AND
+DB_CHA_LaezelRecruit_CagerSpeaker(2, _Cager1)
+AND
+DB_CHA_LaezelRecruit_CagerSpeaker(3, _Cager2)
+AND
+QRY_CHA_LaezelRecruit_StartDialog_Internal(_Dialog, _Player, _Cager1, _Cager2, _OnlySelect)
+THEN
+DB_NOOP(1);
+
+
+// Sanity cleanup if the dialog previously failed
+QRY
+QRY_CHA_LaezelRecruit_PreDialogCleanup()
+AND
+DB_CHA_LaezelRecruit_CagerSpeaker(_Speaker, _Cager)
+THEN
+NOT DB_CHA_LaezelRecruit_CagerSpeaker(_Speaker, _Cager);
+
+QRY
+QRY_CHA_LaezelRecruit_PreDialogCleanup()
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_Speaker,_GlobalFlag)
+THEN
+ClearFlag(_GlobalFlag, NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_CHA_LaezelRecruit_PreDialogCleanup()
+THEN
+DB_NOOP(1); //always pass
+
+
+// Check the availability of each dudes
+QRY
+QRY_CHA_LaezelRecruit_ProcessCagers()
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_SpeakerSlot,_GlobalFlag)
+AND
+QRY_CHA_LaezelRecruit_ProcessCager(_Cager,_SpeakerSlot,_GlobalFlag)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_ProcessCager((CHARACTER)_Cager,(INTEGER)_SpeakerSlot,(FLAG)_GlobalFlag)
+AND
+NOT DB_DisappearedOutOfSight(_Cager,_,_,_,_,_,_)
+AND
+QRY_SpeakerIsAvailable(_Cager, 0, 1) //ignore shapeshift now to let it fail later in the process
+AND
+QRY_SpeakerIsInDialogRange(_Cager, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+DB_CHA_LaezelRecruit_CagerSpeaker(_SpeakerSlot, _Cager);
+
+QRY
+QRY_CHA_LaezelRecruit_ProcessCager((CHARACTER)_Cager,(INTEGER)_SpeakerSlot,(FLAG)_GlobalFlag)
+AND
+NOT DB_CHA_LaezelRecruit_CagerSpeaker(_SpeakerSlot, _Cager)
+THEN
+SetFlag(_GlobalFlag,NULL_00000000-0000-0000-0000-000000000000);
+DB_CHA_LaezelRecruit_CagerSpeaker(_SpeakerSlot, NULL_00000000-0000-0000-0000-000000000000);
+
+
+// Start the dialog or select it
+QRY
+QRY_CHA_LaezelRecruit_StartDialog_Internal(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, (CHARACTER)_Player, (CHARACTER)_Cager1, (CHARACTER)_Cager2, 0)
+AND
+NOT QRY_StartDialog(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Cager1, _Cager2, _Player)
+THEN
+PROC_CHA_LaezelRecruit_IntroDialogFailed(_Player);
+
+QRY
+QRY_CHA_LaezelRecruit_StartDialog_Internal((DIALOGRESOURCE)_Dialog, (CHARACTER)_Player, (CHARACTER)_Cager1, (CHARACTER)_Cager2, /*_OnlySelect=*/ 0)
+AND
+QRY_StartDialog((DIALOGRESOURCE)_Dialog, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Cager1, _Cager2, _Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_StartDialog_Internal((DIALOGRESOURCE)_Dialog, (CHARACTER)_Player, (CHARACTER)_Cager1, (CHARACTER)_Cager2, /*_OnlySelect=*/ 1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)_Dialog, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Cager1, _Cager2, _Player);
+
+//END_REGION
+
+//REGION Outsider Combat - tieflings join
+
+PROC
+PROC_CHA_LaezelRecruit_BlockRandomCombatReactions()
+THEN
+DB_OnlyOnce("CHA_LaezelRecruit_TieflingJoinCombat");
+DB_OnlyOnce("CHA_LaezelRecruit_LaezelCommentInCombat");
+DB_OnlyOnce("CHA_LaezelRecruit_TieflingCommentCombatEnded");
+NOT DB_CHA_LaezelRecruit_DoAD(1);
+
+
+//--- Tieflings see a player in combat near them
+IF
+DB_Sees(_Cager,_Player)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+AND
+DB_Players(_Player)
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_SceneStart")
+AND
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+AND
+NOT DB_CHA_LaezelRecruit_ForceJoinCombat(_Cager,_,_)
+AND
+DB_Is_InCombat(_Player,_ID)
+AND
+DB_Is_InCombat(_NPC,_ID)
+AND
+NOT DB_Players((CHARACTER)_NPC)
+AND
+QRY_IsEnemy(_Cager, _NPC)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_TieflingJoinCombat") //cleared on combat ended for them so many combats can be joined
+THEN
+PROC_CHA_LaezelRecruit_CagersForceJoinCombat(_NPC, _ID);
+
+PROC
+PROC_CHA_LaezelRecruit_CagersForceJoinCombat((CHARACTER)_NPC, (GUIDSTRING)_ID)
+AND
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_CantAct(_Tiefling)
+THEN
+DB_CHA_LaezelRecruit_ForceJoinCombat(_Tiefling,_NPC,_ID);
+PROC_EnterCombat(_Tiefling,_NPC); 
+
+IF
+EnteredCombat((CHARACTER)_Tiefling,_ID)
+AND
+DB_CHA_LaezelRecruit_ForceJoinCombat(_Tiefling,_NPC,_ID)
+THEN
+DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1);
+NOT DB_CHA_LaezelRecruit_ForceJoinCombat(_Tiefling,_NPC,_ID);
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea);
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e);
+
+IF
+EnterCombatFailed((CHARACTER)_Tiefling,(CHARACTER)_NPC)
+AND
+DB_CHA_LaezelRecruit_ForceJoinCombat(_Tiefling,_NPC,_ID)
+AND
+NOT DB_CHA_LaezelRecruit_RetryJoinCombat(_)
+AND
+NOT DB_CHA_LaezelRecruit_RetryJoinCombat(_NPC)
+THEN
+DB_CHA_LaezelRecruit_RetryJoinCombat(_NPC);
+ObjectTimerLaunch(_NPC, "CHA_LaezelRecruit_RetryJoinCombat", 1000, 0);
+
+IF
+ObjectTimerFinished((CHARACTER)_NPC, "CHA_LaezelRecruit_RetryJoinCombat")
+THEN
+NOT DB_CHA_LaezelRecruit_RetryJoinCombat(_NPC);
+
+IF
+ObjectTimerFinished((CHARACTER)_NPC, "CHA_LaezelRecruit_RetryJoinCombat")
+AND
+DB_CHA_LaezelRecruit_ForceJoinCombat(_Tiefling,_NPC,_ID)
+THEN
+NOT DB_CHA_LaezelRecruit_ForceJoinCombat(_Tiefling,_NPC,_ID);
+
+IF
+ObjectTimerFinished((CHARACTER)_, "CHA_LaezelRecruit_RetryJoinCombat")
+AND
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+THEN
+NOT DB_OnlyOnce("CHA_LaezelRecruit_TieflingJoinCombat");
+
+//--- tieflings leaves combat
+PROC
+PROC_LeftCombat(_Cager, _ID)
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Cager,_,_)
+AND
+DB_OnlyOnce("CHA_LaezelRecruit_TieflingJoinCombat")
+AND
+NOT DB_Is_InCombat(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea,_)
+AND
+NOT DB_Is_InCombat(S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e,_)
+THEN
+PROC_CHA_LaezelRecruit_CheckLeaveAfterRandomCombat();  //check if not returning to the scene because they are too far
+
+//END_REGION
+//REGION Outsider Combat - tieflings leave out of sight
+
+PROC
+PROC_CHA_LaezelRecruit_CheckLeaveAfterRandomCombat()
+AND
+QRY_CHA_LaezelRecruit_CanLeave()
+THEN
+	//Combat dragged the tiefling too far from Lae'zel -> they leave
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1);
+PROC_CHA_LaezelRecruit_ADOnLeavingAfterRandomCombat();
+SetFlag(CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_TieflingsLeaveAlone();
+
+PROC
+PROC_CHA_LaezelRecruit_ADOnLeavingAfterRandomCombat()
+AND
+DB_CHA_LaezelRecruit_LeavingADs(_Cager, _AD)
+AND
+NOT DB_CantTalk(_Cager)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_TieflingCommentCombatEnded")
+THEN
+PROC_TryStartAD(_AD, _Cager);
+
+
+QRY
+QRY_CHA_LaezelRecruit_CanLeave() //At least one of them is alive but too far
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager, _,_)
+AND
+IsInTrigger(_Cager, S_CHA_LaezelSceneBox_91215202-bfee-459e-a887-ad096e462046, 0)
+AND
+NOT DB_Defeated(_Cager)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_CanLeave() //LZ is not in the cage anymore, so go away (the scene doesn't handle that case) + at least one alive
+AND
+DB_GlobalFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager, _,_)
+AND
+NOT DB_Defeated(_Cager)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_CanLeave() //LZ can't talk + at least one alive
+AND
+DB_CantTalk_IgnoreCombat((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager, _,_)
+AND
+NOT DB_Defeated(_Cager)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+//REGION Outsider Combat - tieflings get back to scene
+
+// Not leaving -> going back is handled by the generic return to default position
+PROC
+PROC_CHA_LaezelRecruit_CheckLeaveAfterRandomCombat()
+AND
+DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1) 
+THEN
+NOT DB_OnlyOnce("CHA_LaezelRecruit_TieflingJoinCombat");
+
+
+//--- AD while going back to default pos (scene still valid)
+IF
+DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_TieflingJoinCombat")
+THEN
+PROC_CHA_LaezelRecruit_ADOnCombatEnded();
+
+PROC
+PROC_CHA_LaezelRecruit_ADOnCombatEnded()
+AND
+DB_OnlyOnce("CHA_LaezelRecruit_TieflingCommentCombatEnded")
+THEN
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1);
+
+PROC
+PROC_CHA_LaezelRecruit_ADOnCombatEnded()
+AND
+DB_CHA_LaezelRecruit_ReturningADs(_Cager, _AD)
+AND
+NOT DB_CantTalk(_Cager)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_TieflingCommentCombatEnded")
+AND
+QRY_CHA_LaezelRecruit_SetProximityFlag(_Cager)
+THEN
+DB_CHA_LaezelRecruit_ADOnCombatEnded(_AD);
+PROC_TryStartAD(_AD, _Cager);
+
+QRY
+QRY_CHA_LaezelRecruit_SetProximityFlag((CHARACTER)_Cager)
+AND
+IsInTrigger(_Cager, S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8, 0)
+THEN
+SetFlag((FLAG)CHA_LaezelRecruitment_Event_CombatEndedFar_2d92791a-188a-44b3-8777-22e20cfbda3e, NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_CHA_LaezelRecruit_SetProximityFlag((CHARACTER)_Cager)
+THEN
+DB_NOOP(1);
+
+IF
+AutomatedDialogEnded(_AD,_)
+AND
+DB_CHA_LaezelRecruit_ADOnCombatEnded(_AD)
+THEN
+NOT DB_CHA_LaezelRecruit_ADOnCombatEnded(_AD);
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1);
+ClearFlag((FLAG)CHA_LaezelRecruitment_Event_CombatEndedFar_2d92791a-188a-44b3-8777-22e20cfbda3e, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+//REGION Outsider Combat - Laezel comment at the player
+
+//--- Lae'zel comment on a player's turn, 
+//after seeing them fight for at least a turn
+IF
+TurnEnded((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1)
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_LaezelCommentInCombat")
+AND
+NOT DB_CHA_LaezelRecruit_DoAD(1)
+AND
+QRY_CHA_LaezelRecruit_CanADInRandomCombat(_Player)
+THEN
+DB_CHA_LaezelRecruit_DoAD(1);
+
+
+IF
+TurnStarted((CHARACTER)_Player)
+AND
+DB_Players(_Player)
+AND
+DB_CHA_LaezelRecruit_DoAD(1)
+AND
+NOT DB_GlobalFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1)
+AND
+QRY_CHA_LaezelRecruit_CanADInRandomCombat(_Player)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_LaezelCommentInCombat")
+AND
+	//adding player to check the GITHYANKI tag
+NOT QRY_StartDialogCustom_Fixed((DIALOGRESOURCE)CHA_LaezelRecruitment_AD_LaezelCombatComment_c46fe60f-d36d-c3cf-1b5d-ff7b2c611fb5, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Player, 0, 0, 0, 0)
+THEN
+NOT DB_OnlyOnce("CHA_LaezelRecruit_LaezelCommentInCombat");
+
+
+IF
+AutomatedDialogStarted(CHA_LaezelRecruitment_AD_LaezelCombatComment_c46fe60f-d36d-c3cf-1b5d-ff7b2c611fb5, _)
+THEN
+NOT DB_CHA_LaezelRecruit_DoAD(1);
+
+
+QRY
+QRY_CHA_LaezelRecruit_CanADInRandomCombat((CHARACTER)_Player)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0)
+AND
+NOT DB_CantTalk(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Player)
+AND
+DB_Is_InCombat(_Player,_)
+AND
+CanSee(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Player, 1)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+
+//REGION Cage - lock inheritance logic
+
+PROC
+PROC_StateSet_PermaDefeated(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea)
+AND
+NOT DB_PermaDefeated(S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e)
+AND
+NOT DB_GlobalFlag((FLAG)CHA_LaezelTieflings_State_Over_4afe6371-4768-464b-8f60-32c514ae6a8f) // flagType: Global
+AND
+NOT DB_CHA_LaezelRecruitment_LeverPlayer(_)
+AND
+NOT DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "PickASide")
+AND
+Exists((ITEM)S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 1)
+THEN
+SetOwner((ITEM)S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e);
+
+//END_REGION
+//REGION Cage - opening it
+
+//--- A tiefling is going to open the cage
+IF
+DialogEnded(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, _)
+AND
+DB_GlobalFlag(CHA_LaezelRecruitment_Event_TieflingPullsLevel_3a3d294c-3713-3f17-beba-9fdfc83f825a)
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "OpeningCage");
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "OpeningCage")
+AND
+DB_DialogName(CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, _Inst)
+AND
+DB_DialogPlayers(_Inst, _Player, 1)
+AND
+IsDead((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, _CageOpenerIsDead)
+THEN
+PROC_CHA_LaezelRecruit_CageBeingOpened((CHARACTER)_Player);
+PROC_CHA_LaezelRecruit_TieflingOpenCage(_CageOpenerIsDead, _Player);
+
+PROC
+PROC_CHA_LaezelRecruit_TieflingOpenCage(0, (CHARACTER)_Player)
+THEN
+SetEntityEvent(_Player, "CHA_LaezelRecruitment_OpeningCage");
+UseSpell(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, "Projectile_MainHandAttack", S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CHA_LaezelRecruit_TieflingOpenCage(1, (CHARACTER)_Player) //should be a super rare edge-case... Cager1 died during dialog after the global flag was set
+THEN
+SetEntityEvent(_Player, "CHA_LaezelRecruitment_WasToldToLowerCage"); //received in the tieflings script
+
+
+//--- Open tieflings are attacked from afar
+PROC
+PROC_CHA_LaezelRecruit_OpenCageFallback((CHARACTER)_Attacker)
+AND
+NOT DB_Is_InCombat(_Attacker,_)
+AND
+Exists(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 1)
+AND
+IsDestroyed(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 0)
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Tiefling,_,_)
+AND
+NOT DB_Defeated(_Tiefling)
+AND
+NOT DB_CantAct(_Tiefling)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_OpenCageFallback") //first tiefling available attacks the cage
+THEN
+Attack(_Tiefling, S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008,1);
+
+
+//--- The player is going to open the cage
+IF
+FlagSet(CHA_LaezelRecruitment_Event_TieflingSaidLowerTrap_18a9ca4f-c33e-fdf9-7db0-949b803b2851, NULL_00000000-0000-0000-0000-000000000000, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+SetEntityEvent(_Player, "CHA_LaezelRecruitment_WasToldToLowerCage"); //received in the tieflings script
+PROC_CHA_LaezelRecruit_CageBeingOpened((CHARACTER)_Player);
+
+
+//
+PROC
+PROC_CHA_LaezelRecruit_CageBeingOpened((CHARACTER)_Player)
+THEN
+PROC_CHA_LaezelRecruit_ClearCageOwnership();
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "PickASide");
+DB_CHA_LaezelRecruitment_LeverPlayer(_Player);
+
+//END_REGION
+//REGION Cage - is opened / bottom of cage
+
+//The cage bottom is in a level template:  S_LT_PLT_CHA_CageBottom_dbaea589-c010-4d50-884f-1df790b077f6
+//S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008
+PROC
+PROC_CHA_LaezelRecruit_ClearCageOwnership()
+AND
+Exists((ITEM)S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 1)
+AND
+IsDestroyed(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 0)
+THEN
+ClearOwnership(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008);
+
+
+//--- Destroying it
+IF
+AttackedBy(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, (CHARACTER)_Char, _, _, _DamageAmount, _, _)
+THEN
+PROC_CHA_LaezelRecruit_CheckDestroyBottom(_Char);
+
+
+//--- Destroy immediately if NPC / wait for players
+PROC
+PROC_CHA_LaezelRecruit_CheckDestroyBottom((CHARACTER)_Char)
+AND
+NOT DB_Players(_Char)
+THEN
+PROC_CHA_LaezelRecruit_DestroyBottom();
+PROC_CHA_LaezelRecruit_OpenCage(_Char);
+
+PROC
+PROC_CHA_LaezelRecruit_DestroyBottom()
+AND
+Exists((ITEM)S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 1)
+AND
+IsDestroyed(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 0)
+THEN
+Die((ITEM)S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008);
+
+PROC
+PROC_CHA_LaezelRecruit_CheckDestroyBottom((CHARACTER)_Char)
+AND
+DB_Players(_Char)
+AND
+GetHitpoints(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008,_INT)
+AND
+_INT < 1
+THEN
+ClearFlag(CHA_LaezelRecruitment_State_PlayerDidntHelpLaezel_6ed97f29-00b3-4341-a866-dc8cac2a0c82, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_BottomDestroyed(_Char);
+
+//--- Cage opened
+PROC
+PROC_CHA_LaezelRecruit_BottomDestroyed((CHARACTER)_Char)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_CageOpened")
+THEN
+PROC_CHA_LaezelRecruit_OpenCage((CHARACTER)_Char);
+
+PROC
+PROC_CHA_LaezelRecruit_OpenCage((CHARACTER)_Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag(CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f, NULL_00000000-0000-0000-0000-000000000000, _TieflingsLeaving)
+THEN
+PROC_CHA_LaezelRecruit_CheckFreedUpdate(_Player,_TieflingsLeaving);
+
+PROC
+PROC_CHA_LaezelRecruit_CheckFreedUpdate((CHARACTER)_Player, 0) //if they are leaving, Freed is given
+AND
+GetOwner(S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, _Owner)
+AND
+	//could be opening the cage:
+		//- at the remaining tiefling's request
+		//- in combat, after making the tiefling go hostile
+_Owner != NULL_00000000-0000-0000-0000-000000000000 
+THEN
+SetFlag((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+PROC_CHA_LaezelRecruit_TieflingsHostile();
+PROC_CHA_LaezelRecruit_GiveUpdateWithAlt(_Player, "ReleasedEarly");
+
+PROC
+PROC_CHA_LaezelRecruit_OpenCage((CHARACTER)_Char)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_LeavesCage")
+THEN
+PROC_CHA_LaezelRecruitment_LeftCage(); // Here in addition to in LeftTrigger rule, because the LeftTrigger doesn't work
+
+// Break off ongoing dialogs when falling
+IF
+LeftTrigger(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_CHA_CageBox_2de737cb-3353-444d-81dc-ce9a170a6837)
+THEN
+//TODO: either stop with PROC_ForceStopSpecificDialog, or make sure this stop happening before trying to start the PickASide dialog
+PROC_ForceStopDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+//END_REGION
+
+//REGION Laezel AD in cage
+
+//--- Allow her to AD only after a dialog (allows anubis to start doing it after a small delay)
+IF
+DB_GlobalFlag(_Flag)
+AND
+DB_CHA_LaezelRecruit_AllowAD(_Flag)
+AND
+NOT DB_CantTalk(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+NOT DB_CHA_LaezelRecruit_AllowAD((FLAG)CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f);
+NOT DB_CHA_LaezelRecruit_AllowAD((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404);
+SetEntityEvent(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_AllowAD");
+
+//END_REGION
+//REGION Laezel leaving the cage
+
+
+//--- Removing fall damage boost
+IF
+Fell(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _)
+AND
+DB_CHA_LaezelRecruit_IgnoringFallDamage(1)
+THEN
+PROC_CHA_LaezelRecruit_RemoveFallBoost();
+
+// This shouldn't be needed normally, but the game is currently broken. 
+// Lae'zel fails to stay on her platform, so she's never in the trigger and therefore never leaves it through the expected events
+QRY
+QRY_CHA_LaezelRecruit_LaezelIsAlreadyOut() 
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0)
+AND
+IsInTrigger(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_CHA_CageBox_2de737cb-3353-444d-81dc-ce9a170a6837, 0)
+THEN
+PROC_CHA_LaezelRecruitment_LeftCage();
+
+IF
+LeftTrigger(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_CHA_CageBox_2de737cb-3353-444d-81dc-ce9a170a6837)
+THEN
+PROC_CHA_LaezelRecruitment_LeftCage();
+DB_ORI_Laezel_LeftCageBox(1);
+
+IF
+DB_ORI_Laezel_LeftCageBox(1)
+AND
+DB_CurrentLevel("WLD_Main_A")
+THEN
+NOT DB_ORI_Laezel_LeftCageBox(1);
+PROC_CHA_LaezelRecruit_ClearCageOwnership();
+
+PROC
+PROC_CHA_LaezelRecruitment_LeftCage()
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_LeavesCage")
+THEN
+DB_OnlyOnce("CHA_LaezelRecruit_LeavesCage");
+PROC_SetCanFight(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+SetCanJoinCombat(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+RemoveStatus(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "GROUNDED", NULL_00000000-0000-0000-0000-000000000000);
+SetFlag((FLAG)CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+TriggerUnregisterForCharacter(S_CHA_CageBox_2de737cb-3353-444d-81dc-ce9a170a6837, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+PROC_CHA_LaezelRecruit_SetCHADialog();
+PROC_SceneManager_RemoveFromScene(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelTieflings");
+PROC_SceneInterrupted(NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, "CHA_LaezelTieflings", "LaezelLeftCage");
+PROC_CHA_LaezelRecruit_CheckDisableDialogAgain();
+
+PROC
+PROC_CHA_LaezelRecruit_SetCHADialog()
+AND
+NOT DB_GlobalFlag((FLAG)ORI_LaezelRecruitment_State_PlainsVersionInitiated_59bda4f5-708b-4f23-aaba-d5f387ae95c2)
+AND
+NOT DB_GlobalFlag((FLAG)ORI_Laezel_State_RecruitmentInCrecheActive_674e1fbb-7174-4c62-9581-08c67aeeaaa4)
+THEN
+PROC_GLO_Origins_SetRecruitmentDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(DIALOGRESOURCE)Laezel_Recruitment_a914c64a-30d8-0428-683a-99dd7879fc83,1);
+//END_REGION
+
+//REGION Picking a side
+/*
+We can make the following decisions:
+- We let the tieflings take her, though they will never make it. See below.
+- We leave. The tieflings take her, though they never make it. See below.
+- We convince them to leave. They walk off stage, and we can free Lae'zel.
+- If both tieflings are present: We convince them to free Lae'zel so we can all kill it.
+        If we win this option, Nymessa uses the lever. Once Lae'zel is lowered, we are given one more dialogue to choose a side - Lae'zel or the Tieflings - before combat begins.
+- If one tiefling is present: We convince it to free Lae'zel so we can all kill it.
+        If we win this option, the tiefling tells us to use the switch. Once Lae'zel is lowered, we are given one more dialogue to choose a side - Lae'zel or the Tieflings - before combat begins.
+- We attack the tieflings.
+-
+The main thing here is that we have options to kill the tieflings, kill lae'zel, or get them to leave. If we convince them that Lae'zel should be killed right now, we should get a chance to pick a side once Lae'zel is out of the cage.
+*/
+
+IF
+Fell(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _)
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "PickASide")
+THEN
+TimerLaunch("CHA_LaezelRecruit_PickASideDelay",1200);
+
+IF
+TimerFinished("CHA_LaezelRecruit_PickASideDelay")
+THEN
+PROC_CHA_LaezelRecruitment_PickSide();
+
+PROC
+PROC_CHA_LaezelRecruitment_PickSide()
+AND
+QRY_State_IsBeforeState(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+QRY_CHA_LaezelRecruitment_PickSidePlayer()
+THEN
+PROC_CHA_LaezelRecruitment_CheckPickSide();
+
+PROC
+PROC_CHA_LaezelRecruitment_CheckPickSide()
+AND
+NOT DB_CHA_LaezelRecruitment_SidingPlayer(_) //no player is available to make the decision
+AND
+GetFlag(CHA_LaezelRecruitment_Event_PersuadedKillLaezel_a3a395fa-8744-8e7b-0bd4-eaf0fee1736a, NULL_00000000-0000-0000-0000-000000000000, _OpeningToKill)
+THEN
+PROC_CHA_LaezelRecruit_PickASideDialogFailed(_OpeningToKill);
+
+PROC
+PROC_CHA_LaezelRecruitment_CheckPickSide()
+AND
+DB_CHA_LaezelRecruitment_SidingPlayer((CHARACTER)_Player)
+AND
+NOT QRY_CHA_LaezelRecruit_StartDialog(CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4, _Player, 0)
+AND
+GetFlag(CHA_LaezelRecruitment_Event_PersuadedKillLaezel_a3a395fa-8744-8e7b-0bd4-eaf0fee1736a, NULL_00000000-0000-0000-0000-000000000000, _OpeningToKill)
+THEN
+PROC_CHA_LaezelRecruit_PickASideDialogFailed(_OpeningToKill);
+
+PROC
+PROC_CHA_LaezelRecruitment_CheckPickSide()
+AND
+DB_CHA_LaezelRecruitment_SidingPlayer(_Player)
+THEN
+NOT DB_CHA_LaezelRecruitment_SidingPlayer(_Player);
+PROC_CHA_LaezelRecruit_RecordPrioPlayer((CHARACTER)_Player);
+
+PROC
+PROC_CHA_LaezelRecruitment_CheckPickSide()
+AND
+DB_CHA_LaezelRecruitment_LeverPlayer(_Player)
+THEN
+NOT DB_CHA_LaezelRecruitment_LeverPlayer(_Player);
+
+
+//--- Find player to start dialog with
+QRY
+QRY_CHA_LaezelRecruitment_PickSidePlayer()
+AND
+DB_CHA_LaezelRecruitment_LeverPlayer(_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+DB_CHA_LaezelRecruitment_SidingPlayer((CHARACTER)_Player);
+
+QRY
+QRY_CHA_LaezelRecruitment_PickSidePlayer()
+AND
+NOT DB_CHA_LaezelRecruitment_SidingPlayer(_)
+AND
+DB_Players(_Player)
+AND
+NOT DB_CHA_LaezelRecruitment_SidingPlayer(_)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+DB_CHA_LaezelRecruitment_SidingPlayer((CHARACTER)_Player);
+
+QRY
+QRY_CHA_LaezelRecruitment_PickSidePlayer()
+THEN
+DB_NOOP(1);
+
+
+//--- PickASide failed or no player available
+// 0 == didn't persuade tieflings -> make them hostile
+// 1 == persuaded tieflings to kill the creature -> 'side' with them against LZ
+PROC
+PROC_CHA_LaezelRecruit_PickASideDialogFailed(0) 
+THEN
+PROC_CHA_LaezelRecruit_TieflingsHostile();
+
+PROC
+PROC_CHA_LaezelRecruit_PickASideDialogFailed(1)
+THEN
+DB_CHA_LaezelRecruit_SidedAgainstLaezel(1);
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel");
+
+//END_REGION
+//REGION Picking a side - hostile to Laezel (side with tieflings)
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_LaezelHostile_510657f4-4dd5-4b51-16bd-707942066182, (DIALOGRESOURCE)CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4, _)
+THEN
+DB_CHA_LaezelRecruit_SidedAgainstLaezel(1);
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel");
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+DB_CHA_LaezelRecruit_SidedAgainstLaezel(1) // won't be set if LZ is assaulted; crime system is making her temporarily hostile
+AND
+GetFaction((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _LaezelFaction)
+THEN
+SetTag(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6); //only if explicitly choosing "Attack Lae'zel" OR trying to remain neutral in the PickASide dialog
+SetFaction(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, Origin_Laezel_Hostile_5d2675e2-6d65-4292-bd4b-269fa83d9e07);
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+NOT DB_CHA_LaezelRecruit_SidedAgainstLaezel(1)
+THEN
+PROC_CHA_LaezelRecruit_GiveSidedTieflingsUpdate();
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+THEN
+PROC_CHA_LaezelRecruit_SetTieflingsHostileToLaezel();
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_Defeated(_Tiefling)
+THEN
+SetHasDialog(_Tiefling, 1);
+
+
+// Dialog
+QRY
+QRY_SelectCustomDialog(_Tiefling, _Player) 
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Tiefling, _, _)
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT QRY_CHA_LaezelRecruit_DoSolo(_Tiefling, _Player) 
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)CHA_LaeZelRecruitment_LaezelDead_bb9c78e1-182b-69e3-c972-9feb27bd3d2b, S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, _Player);
+
+QRY
+QRY_CHA_LaezelRecruit_DoSolo((CHARACTER)_Tiefling, (GUIDSTRING)_Player)
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_OtherTiefling, _, _IsMissingFlag)
+AND
+_OtherTiefling != _Tiefling
+AND
+NOT QRY_SpeakerIsAvailableAndInDialogRange(_OtherTiefling, _Tiefling)
+AND
+QRY_CHA_LaezelRecruit_PreDialogCleanup()
+THEN
+SetFlag(_IsMissingFlag, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_LaezelDeadSolo(_Tiefling, _Player);
+
+PROC
+PROC_CHA_LaezelRecruit_LaezelDeadSolo(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, (GUIDSTRING)_Player)
+AND
+QRY_StartDialogCustom_Fixed(CHA_LaeZelRecruitment_LaezelDead_bb9c78e1-182b-69e3-c972-9feb27bd3d2b, S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea, NULL_00000000-0000-0000-0000-000000000000, _Player, 0, 0, 1, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CHA_LaezelRecruit_LaezelDeadSolo(S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, (GUIDSTRING)_Player)
+AND
+QRY_StartDialogCustom_Fixed(CHA_LaeZelRecruitment_LaezelDead_bb9c78e1-182b-69e3-c972-9feb27bd3d2b, NULL_00000000-0000-0000-0000-000000000000, S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e, _Player, 0, 0, 1, 1)
+THEN
+DB_NOOP(1);
+
+
+//END_REGION
+//REGION Laezel died / is defeated
+
+//died/defeated somehow during the scene
+//ex.: Player attacked the tieflings from afar, they turned hostile and managed to kill Lae'zel
+PROC
+PROC_StateSet_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_ChapelVersionInitiated_e6015bdf-276e-47b2-9a43-9bc0c981e1ad)
+AND
+NOT DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+NOT DB_GlobalFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1)
+THEN
+PROC_CHA_LaezelRecruitment_SetDefeatedFlags();
+PROC_CHA_LaezelRecruit_PrepLeavingAlone();
+TimerLaunch("CHA_LaezelRecruit_ReadyToLeave", 2000);
+
+//update only if she really died / repeating the checks because she might die after being first defeated
+IF
+DB_Dead(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_GlobalFlag(ORI_LaezelRecruitment_State_ChapelVersionInitiated_e6015bdf-276e-47b2-9a43-9bc0c981e1ad)
+AND
+NOT DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+NOT DB_GlobalFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1)
+THEN
+SetFlag(CHA_LaezelRecruitment_State_LaezelIsDead_c0d0a93e-43b2-4209-9af1-747370774499);
+DB_CHA_LaezelRecruit_GiveDeathUpdate("LaezelDied"); //if she is only defeated, the quest will wait to close with LeftArea instead
+
+
+//--- Killed/defeated
+PROC
+PROC_StateSet_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+THEN
+PROC_CHA_LaezelRecruitment_SetDefeatedFlags();
+PROC_CHA_LaezelRecruit_PrepLeavingAlone();
+DB_CHA_LaezelRecruit_GiveDeathUpdate("KilledLaezel");
+TimerLaunch("CHA_LaezelRecruit_ReadyToLeave", 20000);
+
+
+//--- Set flags (used in the tieflings' behaviour)
+PROC
+PROC_CHA_LaezelRecruitment_SetDefeatedFlags()
+THEN
+SetFlag(CHA_LaezelRecruitment_State_LaezelIsDefeated_d22e4798-d9bd-4e74-8fc8-80242f3e3595);
+
+PROC
+PROC_CHA_LaezelRecruitment_SetDefeatedFlags()
+AND
+IsDead(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1)
+THEN
+SetFlag(CHA_LaezelRecruitment_State_LaezelIsDead_c0d0a93e-43b2-4209-9af1-747370774499);
+
+//END_REGION
+//REGION Picking a side - hostile to tieflings (side with Laezel)
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404, (DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4, _ID)
+THEN
+ClearFlag(CHA_LaezelRecruitment_State_PlayerDidntHelpLaezel_6ed97f29-00b3-4341-a866-dc8cac2a0c82, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_TieflingsHostile();
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404, (DIALOGRESOURCE)CHA_LaezelRecruitment_PickASide_8780ce61-d16e-79c1-82cc-5d65b9894dd4, _)
+THEN
+ClearFlag(CHA_LaezelRecruitment_State_PlayerDidntHelpLaezel_6ed97f29-00b3-4341-a866-dc8cac2a0c82, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_TieflingsHostile();
+PROC_CHA_LaezelRecruit_CheckAutoResolveScene();
+
+// Hostility
+PROC
+PROC_CHA_LaezelRecruit_TieflingsHostile()
+THEN
+PROC_CHA_LaezelRecruit_ClearCageOwnership(); //clearing ownership here because there's a journal update when you destroy the cage and it turns the tieflings hostile. But now they are already hostile
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Hostile");
+SetFlag(CHA_LaezelRecruitment_Knows_LaezelWasTrapped_5fc67366-b75f-4889-9b60-2af37ad37786);
+
+
+// In case the state changes to hostile due to another cause, also set the hostile flag
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "Hostile")
+THEN
+SetFlag((FLAG)CHA_LaezelRecruitment_Event_TieflingsHostile_856bc630-9ad2-d2ed-db8c-7baafee77404, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+
+// Player vs tiefling
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "Hostile")
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Tiefling,_,_)
+AND
+NOT DB_Defeated(_Tiefling)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_TieflingsHostileToPlayers")
+AND
+GetFaction(_Tiefling, _TieflingFaction)
+THEN
+PROC_SetRelationToPlayers(_TieflingFaction, 0);
+
+
+// If attacked from afar
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "Hostile")
+AND
+DB_CHA_LaezelRecruit_OpenCageFallback(_Attacker)
+THEN
+NOT DB_CHA_LaezelRecruit_OpenCageFallback(_Attacker);
+PROC_CHA_LaezelRecruit_OpenCageFallback(_Attacker);
+
+
+// Laezel vs tiefling (except if you recruited her in the mean time, in which case she's handled above)
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "Hostile")
+THEN
+PROC_CHA_LaezelRecruit_SetTieflingsHostileToLaezel();
+
+PROC
+PROC_CHA_LaezelRecruit_SetTieflingsHostileToLaezel()
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+GetFaction(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _LaezelFaction)
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_Defeated(_Tiefling)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_TieflingsHostileToLaezel")
+AND
+GetFaction(_Tiefling, _TieflingFaction)
+THEN
+PROC_SetRelationMutual(_TieflingFaction, _LaezelFaction, 0);
+PROC_EnterCombat(_Tiefling, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+
+//END_REGION
+
+//REGION Scene interruptions
+
+//--- Crime reaction 'interruption'
+IF
+FlagSet(TemporaryHostilityAfterDialog_ca0cbe39-d121-069e-b408-c02954b32cf7, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Inst)
+AND
+NOT DB_Players(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+QRY_State_IsBeforeState(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+DialogIsCrimeDialog(_Inst, 1) //crime is making her hostile because the player attacked her. Here we make it go through the KillingLaezel flow as well
+AND
+IsInTrigger(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, S_CHA_LaezelControlBox_cc892a8d-edd0-481d-bc03-2ebcb34c6ce2, 1)
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel");
+
+
+//--- Process interruptions
+PROC
+PROC_SceneInterrupted(_Npc, _Player, "CHA_LaezelTieflings", _Interruption)
+AND
+_Interruption != "StartedDialog"
+AND
+_Interruption != "DestroyedItem"
+THEN
+PROC_CHA_LaezelRecruit_ProcessInterruption((CHARACTER)_Npc, (CHARACTER)_Player, _Interruption);
+
+// Tiefling dragged too far away
+PROC
+PROC_CHA_LaezelRecruit_ProcessInterruption((CHARACTER)_Cager, (CHARACTER)_, "LeftTrigger")
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager, _, _)
+AND
+NOT DB_Is_InCombat(_Cager,_)
+AND
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1)
+THEN
+PROC_CHA_LaezelRecruit_CancelScene();
+
+// Lae'zel freed too early
+PROC
+PROC_CHA_LaezelRecruit_ProcessInterruption((CHARACTER)_, (CHARACTER)_, "LaezelLeftCage")
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "SceneStart")
+THEN
+PROC_CHA_LaezelRecruit_InterruptScene();
+
+// Something that never happens
+PROC
+PROC_CHA_LaezelRecruit_ProcessInterruption((CHARACTER)_Npc, (CHARACTER)_Attacker, "PlayerTeleportInDialog")
+AND
+DB_CHA_LaezelRecruit_Cager(_Npc,_,_)
+THEN
+PROC_CHA_LaezelRecruit_InterruptScene();
+
+// Intro dialog failed to start
+PROC
+PROC_CHA_LaezelRecruit_IntroDialogFailed((CHARACTER)_Player)
+AND
+NOT DB_QRYRTN_StartDialog_FailReason("ShapeshiftOverride")
+AND
+NOT QRY_CHA_LaezelRecruit_StartSceneFallback(_Player)
+THEN
+PROC_CHA_LaezelRecruit_InterruptScene();
+
+IF
+DialogEnded(CHA_LaezelRecruitment_TieflingsSceneFallback_56ac7209-f467-1aef-b522-8695ac5b682d, _)
+THEN
+PROC_CHA_LaezelRecruit_InterruptScene();
+
+
+//--- Attacking stuff
+// Attacking LZ while she's in the cage
+PROC
+PROC_CHA_LaezelRecruit_ProcessInterruption(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (CHARACTER)_Attacker, "Attacked") //Lae'zel is removed from the scene when she's free, so this will happen only when she's in the cage
+AND
+DB_Players(_Attacker)
+THEN
+PROC_ForceStopSpecificDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+SetFlag(CHA_LaezelRecruitment_State_PlayerAttackedLaezelInCage_c0b75a2d-f818-44f8-80f8-0cca7ccc8ca6, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_ProcessAttackingLaezel(_Attacker);
+
+PROC
+PROC_CHA_LaezelRecruit_ProcessAttackingLaezel((CHARACTER)_Attacker)
+AND
+QRY_State_IsBeforeState(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "TieflingsLeavingAlone") //otherwise, AD from Anubis.
+THEN
+PROC_CHA_LaezelRecruit_CageBeingOpened((CHARACTER)_Attacker);
+PROC_CHA_LaezelRecruit_OpenCageFallback((CHARACTER)_Attacker);
+
+
+// Attacking a tiefling
+PROC
+PROC_CHA_LaezelRecruit_ProcessInterruption((CHARACTER)_Npc, (CHARACTER)_Attacker, "Attacked")
+AND
+DB_CHA_LaezelRecruit_Cager(_Npc,_,_)
+AND
+_Attacker != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+AND
+DB_PartyMembers(_Attacker) //this means the scene can still happen if the tieflings are killed by a goblin/bandits
+THEN
+PROC_CHA_LaezelRecruit_AttackedTieflings(_Attacker);
+
+PROC
+PROC_CHA_LaezelRecruit_AttackedTieflings((CHARACTER)_Attacker) //Tieflings attacked after player picked their side 
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+THEN
+PROC_CHA_LaezelRecruit_InterruptScene();
+
+PROC
+PROC_CHA_LaezelRecruit_AttackedTieflings((CHARACTER)_Attacker) //Tieflings attacked by player before player picked their side
+AND
+NOT DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "KillingLaezel")
+AND
+DB_PartyMembers(_Attacker)
+THEN
+DB_CHA_LaezelRecruit_OpenCageFallback(_Attacker); //tiefling will open the cage and start killing Lae'zel
+PROC_CHA_LaezelRecruit_CheckGiveAttackedUpdate(_Attacker);
+PROC_CHA_LaezelRecruit_InterruptScene();
+
+
+//--- Interrupting/Cancelling the scene
+PROC
+PROC_CHA_LaezelRecruit_InterruptScene() //--- make the tiefling hostile
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_InterruptScene")
+THEN
+PROC_CHA_LaezelRecruit_BlockRandomCombatReactions();
+PROC_CHA_LaezelRecruit_ClearEdgeCaseDB();
+NOT DB_CHA_LaezelRecruit_ScenePausedByRandomCombat(1);
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((CHARACTER)S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea);
+DB_GLO_PaladinOathbreaker_ProtectedNPCs((CHARACTER)S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e);
+PROC_CHA_LaezelRecruit_TieflingsHostile();
+PROC_CHA_LaezelRecruit_CancelStart();
+PROC_CHA_LaezelRecruit_CheckAutoResolveScene();
+// whatever other option a player chose during a dialog before, the resolution is now "tieflings are hostile"
+ClearFlag((FLAG)CHA_LaezelRecruitment_Event_TieflingsGetLaezel_5e8867b9-67e5-dc2d-934f-4471a25a5ddf, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+PROC_ForceStopSpecificDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4);
+
+PROC
+PROC_CHA_LaezelRecruit_CancelScene() //--- make the tieflings leave
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_InterruptScene")
+THEN
+PROC_CHA_LaezelRecruit_BlockRandomCombatReactions();
+PROC_CHA_LaezelRecruit_ClearEdgeCaseDB();
+PROC_CHA_LaezelRecruit_CancelStart();
+PROC_CHA_LaezelRecruit_TieflingsLeaveAlone();
+SetFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf, NULL_00000000-0000-0000-0000-000000000000);
+
+
+// And if both tieflings are dead, it's over
+QRY
+QRY_CHA_LaezelRecruit_AnyTieflingAlive()
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_Defeated(_Tiefling)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_StateSet_Defeated(_Tiefling)
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Tiefling,_,_)
+AND
+NOT QRY_CHA_LaezelRecruit_AnyTieflingAlive()
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Finished");
+
+//END_REGION
+
+//REGION Tieflings death + reaction
+
+//--- Reaction
+PROC
+PROC_StateSet_Defeated(_Cager)
+AND
+DB_CHA_LaezelRecruit_Cager((CHARACTER)_Cager, _, _)
+AND
+DB_CHA_LaezelRecruit_Cager(_OtherCager, _, _)
+AND
+_OtherCager != _Cager
+AND
+IsDead(_OtherCager, _IsDead)
+AND
+GetDistanceTo(_Cager, _OtherCager, _Dist)
+THEN
+PROC_CHA_LaezelRecruit_CagerDeathReaction(_OtherCager, _IsDead, _Dist);
+
+PROC
+PROC_CHA_LaezelRecruit_CagerDeathReaction((CHARACTER)_OtherCager, 1, (REAL)_)
+THEN
+SetFlag(CHA_LaezelRecruitment_State_CagersAreDead_80d4178f-e95f-41dd-a17c-5f757481331f, NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_CHA_LaezelRecruit_CagerDeathReaction((CHARACTER)_AliveCager, 0, (REAL)_Dist)
+AND
+_Dist <= 16.0
+AND
+DB_CHA_LaezelRecruit_DeathAD(_AliveCager, _AD)
+THEN
+PROC_TryStartAD(_AD, _AliveCager);
+
+PROC
+PROC_CHA_LaezelRecruit_CagerDeathReaction((CHARACTER)_, (INTEGER)_, (REAL)_)
+AND
+DB_CHA_LaezelRecruit_DeathAD(_Cager, _AD)
+THEN
+NOT DB_CHA_LaezelRecruit_DeathAD(_Cager, _AD);
+
+//END_REGION
+//REGION Outcome: Tieflings leave
+
+//--- Leaving after killing Lae'zel
+IF
+TimerFinished("CHA_LaezelRecruit_ReadyToLeave")
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf)
+THEN
+SetFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf, NULL_00000000-0000-0000-0000-000000000000);
+
+
+//--- Leaving after being convinced to leave in the dialog
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f, (DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4)
+THEN
+PROC_CHA_LaezelRecruit_ClearCageOwnership();
+PROC_CHA_LaezelRecruit_PrepLeavingAlone();
+PROC_CHA_LaezelRecruit_DisableDialogs(); //disabling dialog immediately in this case
+SetFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf, NULL_00000000-0000-0000-0000-000000000000);
+ClearFlag(CHA_LaezelRecruitment_State_PlayerDidntHelpLaezel_6ed97f29-00b3-4341-a866-dc8cac2a0c82, NULL_00000000-0000-0000-0000-000000000000);
+
+
+//--- Setting up leaving
+PROC
+PROC_CHA_LaezelRecruit_PrepLeavingAlone()
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling, _, _)
+AND
+NOT DB_Defeated(_Tiefling)
+THEN
+DB_CHA_LaezelRecruit_NotReady(_Tiefling);
+PROC_SceneManager_RemoveFromScene(_Tiefling,"CHA_LaezelTieflings");
+PROC_CharacterDisableCrime(_Tiefling ,"Vandalise");
+PROC_CharacterDisableCrime(_Tiefling, "VandaliseNoOwner");
+PROC_CharacterDisableCrime(_Tiefling, "MoveForbiddenItem");
+PROC_CharacterDisableCrime(_Tiefling, "ItemDestroy");
+
+PROC
+PROC_CHA_LaezelRecruit_DisableDialogs()
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling, _, _)
+AND
+NOT DB_Defeated(_Tiefling)
+THEN
+SetHasDialog(_Tiefling, 0);
+
+//Fallback timer to make them leave in case disturbances kick in
+IF
+FlagSet((FLAG)CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf, _, _)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_TieflingsLeave_FallbackTimerStarted")
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling, _, _)
+AND
+NOT DB_Defeated(_Tiefling)
+THEN
+ObjectTimerLaunch(_Tiefling, "CHA_LaezelRecruitment_TieflingsLeave_FallbackTimer", 15000, 1);
+
+IF
+ObjectTimerFinished(_Tiefling, "CHA_LaezelRecruitment_TieflingsLeave_FallbackTimer")
+THEN
+PROC_NotifyWhenReadyToMoveOn((CHARACTER)_Tiefling, "CHA_LaezelRecruitment_TieflingsLeave_FallbackTimer");
+
+PROC
+PROC_ReadyToMoveOn(_Tiefling, "CHA_LaezelRecruitment_TieflingsLeave_FallbackTimer")
+AND
+DB_CHA_LaezelRecruit_NotReady(_Tiefling)
+THEN
+NOT DB_CHA_LaezelRecruit_NotReady(_Tiefling);
+
+//--- Ready to leave - received from Anubis after regrouping on the small hill
+IF
+EntityEvent((CHARACTER)_Cager, "DEN_LaezelRecruit_ReadyToLeave")
+THEN
+NOT DB_CHA_LaezelRecruit_NotReady(_Cager);
+
+IF
+DB_Defeated(_Cager)
+AND
+DB_CHA_LaezelRecruit_NotReady((CHARACTER)_Cager)
+THEN
+NOT DB_CHA_LaezelRecruit_NotReady(_Cager);
+
+IF
+DB_GlobalFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf)
+AND
+NOT DB_CHA_LaezelRecruit_NotReady(_)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+AND
+NOT DB_CantTalk(_Cager)
+AND
+NOT QRY_CHA_LaezelRecruit_OtherBlocking(_Cager)
+THEN
+PROC_CHA_LaezelRecruit_TieflingsLeaveAlone();
+
+QRY
+QRY_CHA_LaezelRecruit_OtherBlocking((CHARACTER)_Cager)
+AND
+DB_CHA_LaezelRecruit_Cager(_OtherCager,_,_)
+AND
+_OtherCager != _Cager
+AND
+NOT QRY_CHA_LaezelRecruit_AllowLeaving((CHARACTER)_OtherCager)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_AllowLeaving((CHARACTER)_OtherCager)
+AND
+DB_Defeated(_Cager)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_AllowLeaving((CHARACTER)_OtherCager)
+AND
+NOT DB_CantTalk(_OtherCager)
+THEN
+DB_NOOP(1);
+
+
+//--- Actual disappear out of sight
+PROC
+PROC_CHA_LaezelRecruit_TieflingsLeaveAlone()
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_InterruptScene")
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_TieflingsLeave") //todo: refactor the leaving at some point
+THEN
+PROC_CHA_LaezelRecruit_CheckAutoResolveScene();
+PROC_CHA_LaezelRecruit_TieflingsDisappear();
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "TieflingsLeavingAlone");
+
+PROC
+PROC_CHA_LaezelRecruit_TieflingsDisappear()
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_PermaDefeated(_Tiefling)
+THEN
+SetHasDialog(_Tiefling, 0);
+PROC_DisappearOutOfSightTo(_Tiefling,(TRIGGER)S_CHA_CagersLeavePoint_d39df1c5-1bfb-4f15-a44e-0199e1603bf9,"Walk",0,"CHA_LaezelRecruitment_Event_TieflingDisappeared");
+
+IF
+EntityEvent((CHARACTER)_Tiefling, "CHA_LaezelRecruitment_Event_TieflingDisappeared")
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_TieflingCommentCombatEnded") //they left prematurely, the scene can happen with Lae'zel alone
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Finished");
+
+//END_REGION
+//REGION Dialog outcome: Tieflings leave with Laezel (at least they try)
+
+IF
+FlagSet(CHA_LaezelRecruitment_Event_TieflingsGetLaezel_5e8867b9-67e5-dc2d-934f-4471a25a5ddf,_,_Inst)
+AND
+DB_GlobalFlag(CHA_LaezelRecruitment_Quest_FailedPersuasion_7549fc4a-2910-d780-6a3a-1265d0df3f12)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+THEN
+PROC_CHA_LaezelRecruit_GiveFailedPersuationUpdate((CHARACTER)_Player);
+
+
+//--- INIT
+// disables dialog
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)CHA_LaezelRecruitment_Event_TieflingsGetLaezel_5e8867b9-67e5-dc2d-934f-4471a25a5ddf, (DIALOGRESOURCE)CHA_LaeZelRecruitment_TieflingsScene_e08f550a-8f06-89f7-40ed-98b02eb515e4)
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_Init");
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "LeavingWithLaezel_Init")
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_CantAct(_Tiefling)
+THEN
+DB_CHA_LaezelRecruit_LeavingWithLaezel(_Tiefling);
+SetHasDialog(_Tiefling, 0);
+PROC_RemoveAllDialogEntriesForSpeaker(_Tiefling);
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "LeavingWithLaezel_Init")
+AND
+DB_CHA_LaezelRecruit_LeavingWithLaezel(_)
+THEN
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+
+//--- Deactivate dialog while Lae'zel AD with the tiefling: after the AD she starts the siding dialog
+PROC
+PROC_CHA_LaezelRecruit_CheckDisableDialogAgain()
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _LeavingState)
+AND
+DB_CHA_LaezelRecruit_LeavingStates(_LeavingState)
+THEN
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+PROC
+PROC_CHA_LaezelRecruit_CheckDisableDialogAgain()
+AND
+DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1)
+THEN
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+//--- Step 1: get Lae'zel out of the cage
+// Laezel still in cage -> open it
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "LeavingWithLaezel_Init")
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruit_LeavesCage")
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+AND
+NOT DB_Defeated(_Tiefling)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_TieflingsOpenCage")
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_OpenCage");
+Attack(_Tiefling, S_CHA_CageBottom_S_LT_PLT_CHA_CageBottom_106fde0f-c09d-8920-3204-dc169a0ef008, 1);
+
+// Handle Lae'zel getting out of the cage before or after tieflings want to leave with her
+IF
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_OpenCage")
+AND
+DB_OnlyOnce("CHA_LaezelRecruit_LeavesCage")
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelFell");
+
+// Lae'zel already out of cage -> progress
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "LeavingWithLaezel_Init")
+AND
+DB_OnlyOnce("CHA_LaezelRecruit_LeavesCage")
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelFell");
+
+
+//--- Step 2: Tieflings approach Laezel. AD plays after they're done moving
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _, "LeavingWithLaezel_LaezelFell")
+AND
+NOT QRY_CHA_LaezelRecruit_StartApproachingLaezel()
+THEN
+PROC_CHA_LaezelRecruit_TieflingsHostile(); //if they can't act now but could act moments ago... player must be messing up...
+
+QRY
+QRY_CHA_LaezelRecruit_StartApproachingLaezel()
+AND
+DB_CHA_LaezelRecruit_LeavingWithLaezel(_Tiefling)
+AND
+NOT DB_CantAct(_Tiefling)
+AND
+DB_CHA_LaezelRecruit_CagerJump(_Tiefling, _StartPos, _)
+THEN
+PROC_CharacterMoveTo(_Tiefling, _StartPos, "Walk", "CHA_LaezelRecruitment_TieflingInitiatedApproach");
+
+
+// Approaching by jumping or running
+IF
+EntityEvent((CHARACTER)_Tiefling, "CHA_LaezelRecruitment_TieflingInitiatedApproach")
+AND
+DB_CHA_LaezelRecruit_CagerJump(_Tiefling, _, _EndPos)
+AND
+NOT QRY_CHA_LaezelRecruit_TryToApproach(_Tiefling, _EndPos)
+THEN
+SetEntityEvent(_Tiefling, "CHA_LaezelRecruitment_TieflingIsInPosition");
+
+QRY
+QRY_CHA_LaezelRecruit_TryToApproach((CHARACTER)_Tiefling, (TRIGGER)_EndPos) //jump
+AND
+GetPosition(_EndPos, _X, _Y, _Z)
+AND
+FindValidPosition(_X, _Y, _Z, 5.0, _Tiefling, 0, _PosX, _PosY, _PosZ)
+AND
+NOT DB_CantAct(_Tiefling)
+THEN
+DB_CHA_LaezelRecruit_MovingInPosition(_Tiefling);
+UseSpellAtPosition(_Tiefling, "Projectile_Jump", _PosX, _PosY, _PosZ);
+RealtimeObjectTimerLaunch(_Tiefling, "CHA_LaezelRecruitment_Jump", 500);
+
+QRY
+QRY_CHA_LaezelRecruit_TryToApproach((CHARACTER)_Tiefling, (TRIGGER)_EndPos) //jump
+AND
+NOT DB_CHA_LaezelRecruit_MovingInPosition(_Tiefling)
+AND
+NOT DB_CantAct(_Tiefling)
+THEN
+PROC_CharacterMoveTo((CHARACTER)_Tiefling, _EndPos, "Run", "CHA_LaezelRecruitment_TieflingIsInPosition");
+
+IF
+ObjectTimerFinished((CHARACTER)_Tiefling, "CHA_LaezelRecruitment_Jump")
+AND
+DB_CHA_LaezelRecruit_MovingInPosition(_Tiefling)
+THEN
+NOT DB_CHA_LaezelRecruit_MovingInPosition(_Tiefling);
+LookAtEntity(_Tiefling,S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+SetEntityEvent(_Tiefling, "CHA_LaezelRecruitment_TieflingIsInPosition");
+
+
+// End of movement, try AD
+IF
+EntityEvent(_, "CHA_LaezelRecruitment_TieflingIsInPosition")
+THEN
+PROC_PLA_LaezelRecruit_CheckStartEscortAD();
+
+
+//--- Step 3: after jumping/moving, start AD
+PROC
+PROC_PLA_LaezelRecruit_CheckStartEscortAD()
+AND
+NOT DB_CHA_LaezelRecruit_MovingInPosition(_)
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_TieflingsInPosition");
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_TieflingsInPosition")
+AND
+NOT QRY_PLA_LaezelRecruit_StartEscortAD()
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelAttacks");
+
+QRY
+QRY_PLA_LaezelRecruit_StartEscortAD()
+AND
+DB_CHA_LaezelRecruit_LeavingWithLaezel(_) // Gets cleared if both tieflings are dead
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_AD_EscortStart")
+AND
+NOT DB_CantTalk(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+QRY_CHA_LaezelRecruit_StartDialog(CHA_LaeZelRecruitment_AD_EscortStart_c7e6f696-dec1-c64d-04b6-cc8c48572e87, NULL_00000000-0000-0000-0000-000000000000, 0)
+THEN
+DB_NOOP(1);
+
+// Blockng Lae'zel dialogue, if she's getting freed by tieflings
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "OpeningCage")
+THEN
+DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1);
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "PickASide", _NewState)
+AND
+DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1)
+THEN
+NOT DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1);
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _AnyState, "Finished")
+AND
+DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1)
+THEN
+NOT DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1);
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1);
+
+// Reactivate Lae'zel's dialog
+IF
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene",_CurrentState)
+AND
+NOT DB_CHA_LaeZelRecruitment_TieflingsOpeningCage(1)
+AND
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene",_CurrentState,_CurrentPrio)
+AND
+DB_State_Priority(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelAttacks", _TargetPrio)
+AND
+_CurrentPrio > _TargetPrio
+THEN
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1); //Lae'zel's dialog was deactivated while she's ADing with the tieflings
+
+// AD ended, progress to PickASide
+IF
+AutomatedDialogEnded(CHA_LaeZelRecruitment_AD_EscortStart_c7e6f696-dec1-c64d-04b6-cc8c48572e87, _)
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelAttacks");
+
+IF
+AutomatedDialogRequestFailed(CHA_LaeZelRecruitment_AD_EscortStart_c7e6f696-dec1-c64d-04b6-cc8c48572e87, _)
+THEN
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelAttacks");
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "LeavingWithLaezel_LaezelAttacks")
+THEN
+PROC_CHA_LaezelRecruitment_PickSide();
+
+
+//--- CANCELLING 'Leaving' sequence
+IF
+DB_Defeated(_Char)
+AND
+DB_CHA_LaezelRecruit_LeavingWithLaezel((CHARACTER)_Char)
+THEN
+NOT DB_CHA_LaezelRecruit_LeavingWithLaezel(_Char);
+
+
+// Hostility during leaving -> abort
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _PreviousState, "KillingLaezel")
+AND
+DB_CHA_LaezelRecruit_LeavingStates(_PreviousState)
+THEN
+PROC_CHA_LaezelRecruit_CancelLeavingWithLaezel();
+
+PROC
+PROC_State_Changed(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _PreviousState, "Hostile")
+AND
+DB_CHA_LaezelRecruit_LeavingStates(_PreviousState)
+THEN
+PROC_CHA_LaezelRecruit_CancelLeavingWithLaezel();
+
+PROC
+PROC_CHA_LaezelRecruit_CancelLeavingWithLaezel()
+AND
+DB_CHA_LaezelRecruit_Cager(_Tiefling,_,_)
+THEN
+PROC_ClearStoryMove(_Tiefling);
+NOT DB_CHA_LaezelRecruit_LeavingWithLaezel(_Tiefling);
+
+PROC
+PROC_CHA_LaezelRecruit_CancelLeavingWithLaezel()
+AND
+DB_CHA_LaezelRecruit_CagerJump(_Tiefling, _StartPos, _EndPos)
+THEN
+NOT DB_CHA_LaezelRecruit_CagerJump(_Tiefling, _StartPos, _EndPos);
+
+PROC
+PROC_CHA_LaezelRecruit_CancelLeavingWithLaezel()
+AND
+DB_CHA_LaezelRecruit_MovingInPosition(_Tiefling)
+THEN
+NOT DB_CHA_LaezelRecruit_MovingInPosition(_Tiefling);
+
+
+//--- Lae'zel dies during leaving -> abort and leave to crash instead
+IF
+DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _CurrentState)
+AND
+DB_CHA_LaezelRecruit_LeavingStates(_CurrentState)
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf)
+THEN
+SetFlag(CHA_LaezelRecruitment_Event_ReadyToLeave_e84c6f3a-00c3-4315-b49e-705a2e4c3caf, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CHA_LaezelRecruit_CancelLeavingWithLaezel();
+
+//END_REGION
+
+//REGION Laezel starts a dialog after getting out of trouble
+
+IF
+FlagSet(_Flag, _, _)
+AND
+DB_CHA_LaezelRecruitment_StartRecruitmentDialogFlag(_Flag)
+AND
+NOT DB_GlobalFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1)
+AND
+DB_State_Current(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", _State)
+AND
+NOT DB_CHA_LaezelRecruit_LeavingStates(_State)
+AND
+NOT DB_CHA_LaezelRecruitment_RecruitDialogStarted((INTEGER)_)
+AND
+QRY_CHA_Laezel_TieflingsAreGone()
+AND
+GetFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0, NULL_00000000-0000-0000-0000-000000000000, 1)
+THEN
+ObjectTimerCancel(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_CheckStartRecruitmentDialog");
+ObjectTimerLaunch(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_CheckStartRecruitmentDialog", 2000);
+
+QRY
+QRY_CHA_Laezel_TieflingsAreGone()
+AND
+DB_GlobalFlag(CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_Laezel_TieflingsAreGone()
+AND
+DB_GlobalFlag(CHA_LaezelRecruitment_State_CagersAreDead_80d4178f-e95f-41dd-a17c-5f757481331f)
+THEN
+DB_NOOP(1);
+
+IF
+ObjectTimerFinished(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_CheckStartRecruitmentDialog")
+AND
+NOT DB_CantTalk(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_CHA_LaezelRecruitment_RecruitDialogStarted(_)
+THEN
+PROC_CHA_LaezelRecruit_StartRecruitDialog(Laezel_Recruitment_a914c64a-30d8-0428-683a-99dd7879fc83);
+
+IF
+DialogStarted((DIALOGRESOURCE)Laezel_Recruitment_a914c64a-30d8-0428-683a-99dd7879fc83, _)
+AND
+DB_GlobalFlag((FLAG)CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0)
+THEN
+DB_CHA_LaezelRecruitment_RecruitDialogStarted(1);
+
+
+//--- Shared pipeline (Chapel and Crash versions)
+PROC
+PROC_CHA_LaezelRecruit_StartRecruitDialog((DIALOGRESOURCE)_RecruitmentDialog)
+AND
+NOT DB_CHA_LaezelRecruitment_RecruitDialogStarted(_)
+AND
+NOT QRY_CHA_LaezelRecruit_StartPrioDialog_Avatar(_RecruitmentDialog)
+AND
+NOT QRY_CHA_LaezelRecruit_StartPrioDialog_Savior(_RecruitmentDialog)
+AND
+NOT QRY_CHA_LaezelRecruit_StartPrioDialog_SameUser(_RecruitmentDialog)
+THEN
+// If it doesn't work, a player can just click on her to talk
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_StartPrioDialog_Avatar((DIALOGRESOURCE)_RecruitmentDialog)
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player)
+AND
+NOT DB_Avatars(_Player)
+AND
+QRY_GetBestAvatarForCompanion(_Player,1,1)
+AND
+DB_QRYRTN_GetBestAvatarForCompanion(_Player,_Avatar)
+AND
+QRY_StartDialogCustom_Fixed(_RecruitmentDialog, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Avatar, 0, 0, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_StartPrioDialog_Savior((DIALOGRESOURCE)_RecruitmentDialog)
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+QRY_StartDialogCustom_Fixed(_RecruitmentDialog, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Player, 0, 0, 1, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_StartPrioDialog_SameUser((DIALOGRESOURCE)_RecruitmentDialog)
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_Prio)
+AND
+GetReservedUserID(_Prio, _PrioReservedUserID)
+AND
+DB_Players(_OtherChar)
+AND
+_OtherChar != _Prio
+AND
+GetReservedUserID(_OtherChar, _PrioReservedUserID)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_OtherChar, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+QRY_StartDialogCustom(_RecruitmentDialog, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _OtherChar, 0, 0, 1, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CHA_LaezelRecruit_StartRecruitDialog()
+AND
+DB_CHA_LaezelRecruit_PrioTalkTo(_Prio)
+THEN
+NOT DB_CHA_LaezelRecruit_PrioTalkTo(_Prio);
+
+//END_REGION
+
+//REGION Laezel inspects corpses
+
+IF
+EnteredCombat(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _)
+AND
+NOT DB_GlobalFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager, _, _)
+AND
+NOT DB_Defeated(_Cager)
+AND
+IsEnemy(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _Cager, 1)
+THEN
+SetEntityEvent(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "ClearPeaceReturn", 1);
+
+//--- Stopping
+//Any corpse is too far
+IF
+FlagSet(CHA_LaezelRecruitment_State_CagersAreDead_80d4178f-e95f-41dd-a17c-5f757481331f, NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+AND
+IsInTrigger(_Cager, S_CHA_SceneStartSphere_0ed6e6c4-890b-4523-ba9b-815e314de8cd, 0)
+THEN
+SetEntityEvent(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_StopInspectingCorpse");
+
+//Looting corpses
+IF
+CharacterLootedCharacter(_, _Cager)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+THEN
+SetEntityEvent(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_StopInspectingCorpse");
+
+//Moving
+IF
+OnThrown((CHARACTER)_Cager,_,_,_,_,_,_)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+THEN
+SetEntityEvent(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit_StopInspectingCorpse");
+
+//END_REGION
+
+//REGION Journal updates
+
+PROC
+PROC_CHA_LaezelRecruit_CheckGiveAttackedUpdate((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "CHA_LaezelRecruit", "SidedLaezel", 0)
+THEN
+PROC_CHA_LaezelRecruit_GiveUpdateWithAlt((CHARACTER)_Player, "Attacked");
+
+
+//--- Updates with alt version
+PROC
+PROC_CHA_LaezelRecruit_GiveUpdateWithAlt((CHARACTER)_Player, (STRING)_Update)
+AND
+DB_CHA_LaezelRecruit_Updates(_Update,_AltUpdate)
+AND
+NOT QRY_CHA_LeazelRecruit_GiveAltUpdate(_Player, _AltUpdate)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", _Update);
+
+QRY
+QRY_CHA_LeazelRecruit_GiveAltUpdate((CHARACTER)_Attacker, (STRING)_Update)
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+AND
+DB_Defeated(_Cager)
+THEN
+QuestUpdate(_Attacker, "CHA_LaezelRecruit", _Update);
+
+PROC
+PROC_CHA_LaezelRecruit_GiveUpdateWithAlt((CHARACTER)_Player, (STRING)_Update)
+AND
+DB_CHA_LaezelRecruit_Updates(_Update,_AltUpdate)
+THEN
+NOT DB_CHA_LaezelRecruit_Updates(_Update,_AltUpdate);
+
+
+//--- Tieflings death
+IF
+DB_Defeated(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea)
+AND
+DB_Defeated(S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e)
+AND
+NOT DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag((FLAG)CHA_LaezelRecruitment_Event_LaezelHostile_510657f4-4dd5-4b51-16bd-707942066182)
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player, S_CHA_SceneStartSphere_0ed6e6c4-890b-4523-ba9b-815e314de8cd)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_TieflingsDefeatedUpdate")
+AND
+GetFlag(CHA_LaezelRecruitment_State_Freed_0fe8e284-83a6-c1ad-9f18-20ed58985cf0, NULL_00000000-0000-0000-0000-000000000000, _IsFree)
+AND
+DB_CHA_LaezelRecruit_TieflingsDefeated(_IsFree, _Update)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", _Update);
+
+
+//--- FailedPersuasion
+PROC
+PROC_CHA_LaezelRecruit_GiveFailedPersuationUpdate((CHARACTER)_Player)
+AND
+NOT QRY_CHA_LeazelRecruit_GiveFailedPersuasionAltUpdate(_Player)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "FailedPersuasion");
+
+QRY
+QRY_CHA_LeazelRecruit_GiveFailedPersuasionAltUpdate((CHARACTER)_Player)
+AND
+DB_CHA_LaezelRecruit_Cager(_,_,_IsMissingFlag) // given while still in dialog so check this, not just death
+AND
+DB_GlobalFlag(_IsMissingFlag)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "FailedPersuasionAlt");
+
+
+//--- Laezel: Killed & Died
+PROC
+PROC_CHA_LaezelRecruit_GiveSidedTieflingsUpdate()
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "SidedTieflings");
+
+IF
+DB_CHA_LaezelRecruit_GiveDeathUpdate(_Update)
+AND
+DB_Players(_Player)
+AND
+DB_Sees(_Player, S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+NOT DB_CHA_LaezelRecruit_GiveDeathUpdate(_Update);
+QuestUpdate(_Player, "CHA_LaezelRecruit", _Update);
+
+
+//--- Cage opened after tieflings left
+PROC
+PROC_CHA_LaezelRecruit_CheckFreedUpdate((CHARACTER)_Player, 1) //1 == tieflings are leaving
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "Freed");
+
+//--- Cage opened after tieflings are defeated
+PROC
+PROC_CHA_LaezelRecruit_OpenCage((CHARACTER)_Player)
+AND
+DB_Defeated(S_CHA_CagerLaezel1_2c8537fb-bf73-43a2-a8ff-48e41453adea)
+AND
+DB_Defeated(S_CHA_CagerLaezel2_863d6788-5887-45c8-bafa-87128631904e)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "Freed");
+
+
+//--- COMPLETION
+
+//Leaving area (quest will be closed already if she's recruited in her dialog so no need to check)
+IF
+FlagSet(CHA_LaezelRecruitment_HasMet_DidNotRecruit_757b73c0-5ea1-3b8c-5639-e4276d928cbf,_,_)
+THEN
+DB_CHA_LaezelRecruit_InitiatedRecruit(1);
+
+IF
+EnteredTrigger(_Player, (TRIGGER)S_CHA_LaezelSceneBox_91215202-bfee-459e-a887-ad096e462046)
+AND
+DB_Players(_Player)
+AND
+DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1)
+THEN
+NOT DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1);
+QuestUpdate(_Player, "CHA_LaezelRecruit", "LeftAreaAfterRecruitment");
+
+//If the player speaks to Lae'zel in another recruitment dialogue, close the journal.
+IF
+DB_DialogSpeakers(_ID, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, _)
+AND
+DB_DialogPlayers(_ID, _Player, _)
+AND
+DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1)
+THEN
+NOT DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1);
+QuestUpdate((CHARACTER)_Player, "CHA_LaezelRecruit", "LeftAreaAfterRecruitment");
+
+IF
+DB_Players((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1)
+THEN
+NOT DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1);
+QuestUpdate(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LaezelRecruit", "LeftAreaAfterRecruitment");
+
+IF
+DB_Sees(_Player, (CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_Players(_Player)
+AND
+DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1)
+THEN
+NOT DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1);
+QuestUpdate(_Player, "CHA_LaezelRecruit", "LeftAreaAfterRecruitment");
+
+PROC
+PROC_CHA_LaezelRecruit_GiveLeavingUpdate((CHARACTER)_Player)
+AND
+DB_CHA_LaezelRecruit_SceneStarted(1)
+AND
+NOT DB_CHA_LaezelRecruit_InitiatedRecruit(1)
+AND
+DB_GlobalFlag((FLAG)CHA_Laezel_State_RecruitAttempted_c6b0e555-5f9e-33cc-943b-09c08350edc4)
+THEN
+DB_CHA_LaezelRecruit_LaezelLeftAfterRecruitment(1);
+
+PROC
+PROC_CHA_LaezelRecruit_GiveLeavingUpdate((CHARACTER)_Player)
+AND
+DB_CHA_LaezelRecruit_SceneStarted(1)
+AND
+NOT DB_CHA_LaezelRecruit_InitiatedRecruit(1)
+AND
+NOT DB_GlobalFlag((FLAG)CHA_Laezel_State_RecruitAttempted_c6b0e555-5f9e-33cc-943b-09c08350edc4)
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "LeftArea");
+
+PROC
+PROC_CHA_LaezelRecruit_GiveLeavingUpdate((CHARACTER)_Player)
+AND
+DB_CHA_LaezelRecruit_SceneStarted(1)
+AND
+DB_CHA_LaezelRecruit_InitiatedRecruit(1)
+THEN
+NOT DB_CHA_LaezelRecruit_InitiatedRecruit(1);
+QuestUpdate(_Player, "CHA_LaezelRecruit", "RefusedRecruit");
+
+PROC
+PROC_CHA_LaezelRecruit_GiveRecruitedUpdate((CHARACTER)_Player)//Also starts ORI_COM_Laezel in GLO_Origin_Laezel
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "Recruited"); 
+
+//END_REGION
+
+//REGION Scene cleanup
+
+//--- Recruiting
+PROC
+PROC_GLO_PartyMembers_Add((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(CHARACTER)_Player)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_ResolveOnRecruit")
+THEN
+PROC_CHA_LaezelRecruit_GiveRecruitedUpdate(_Player);
+PROC_CHA_LaezelRecruit_ResolveScene();
+
+
+//--- Sent to camp first time
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_ORI_DisappearingToCamp((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("CHA_LaezelRecruit_ResolveOnRecruit")
+THEN
+QuestUpdate(_Player, "CHA_LaezelRecruit", "InvitedCamp"); 
+PROC_CHA_LaezelRecruit_ResolveScene();
+
+
+//--- Entering the plains
+//check in Act1_PLA_GithChokepoint
+
+
+//--- Unavailable Zorru
+PROC
+PROC_ORI_Laezel_StopCaringAboutZorru()
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruitment_EndScene")
+AND
+NOT DB_CHA_LaezelRecruit_ReadyAutoResolve(1)
+THEN
+DB_CHA_LaezelRecruit_ReadyAutoResolve(1);
+
+
+//--- Entering GOB
+IF
+EnteredTrigger(_Player, S_GOB_ThroneRoom_SUB_bb81678b-641c-43fc-bd41-53295d59be03)
+AND
+DB_Players(_Player)
+AND
+NOT DB_OnlyOnce("CHA_LaezelRecruitment_EndScene")
+AND
+NOT DB_CHA_LaezelRecruit_ReadyAutoResolve(1)
+THEN
+DB_CHA_LaezelRecruit_ReadyAutoResolve(1);
+
+
+//--- Leaving area
+IF
+LeftTrigger(_Player, S_CHA_LaezelControlBox_cc892a8d-edd0-481d-bc03-2ebcb34c6ce2)
+AND
+DB_Players(_Player)
+AND
+_Player != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+AND
+DB_CHA_LaezelRecruit_ReadyAutoResolve(1)
+AND
+NOT QRY_CHA_LaezelRecruit_PlayersRemaining()
+THEN
+PROC_CHA_LaezelRecruit_GiveLeavingUpdate(_Player); //will pass only if DB_CHA_LaezelRecruit_DialogueStarted(1) is set
+PROC_CHA_LaezelRecruit_ResolveScene();
+
+IF
+TeleportedFromCamp(_Player)
+AND
+DB_Players(_Player)
+AND
+_Player != S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12
+AND
+DB_CHA_LaezelRecruit_ReadyAutoResolve(1)
+AND
+NOT QRY_CHA_LaezelRecruit_PlayersRemaining()
+THEN
+PROC_CHA_LaezelRecruit_GiveLeavingUpdate(_Player); //will pass only if DB_CHA_LaezelRecruit_DialogueStarted(1) is set
+PROC_CHA_LaezelRecruit_ResolveScene();
+
+PROC
+PROC_CHA_LaezelRecruit_CheckAutoResolveScene() //received from a couple of places in this script according to the interruption that was triggered
+AND
+NOT QRY_CHA_LaezelRecruit_PlayersRemaining()
+THEN
+PROC_CHA_LaezelRecruit_ResolveScene();
+
+PROC
+PROC_CHA_LaezelRecruit_ResolveScene()
+AND
+QRY_OnlyOnce("CHA_LaezelRecruitment_EndScene")
+THEN
+DB_OnlyOnce("CHA_LaezelRecruit_ResolveOnRecruit");
+NOT DB_CHA_LaezelRecruit_ReadyAutoResolve(1);
+PROC_SceneOver("CHA_LaezelTieflings");
+PROC_State_Progress(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "LaezelStartScene", "Finished");
+PROC_CHA_LaezelRecruit_RemoveTieflings();
+PROC_CHA_LaezelRecruit_RemoveFallBoost();
+PROC_CHA_LaezelRecruit_DestroyBottom();
+PROC_CHA_LaezelRecruit_SetOffStage();
+
+PROC
+PROC_CHA_LaezelRecruit_SetOffStage()
+AND
+NOT DB_IronFlasked(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_PartOfTheTeam(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+IsPlayer(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0)
+AND
+IsDead(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0)
+AND
+GetFlag(ORI_LaezelRecruitment_Event_InvitedToCamp_5ac352a5-58c2-a8ed-1957-199d8bc284da, NULL_00000000-0000-0000-0000-000000000000, 0)
+THEN
+	//Edge-case: during the PickASide dialog, Lae'zel turns hostile if the player don't side with her
+	//When she turns hostile, it blocks her resurrection on the spot, so if she's killed there, it's over.
+	//If she's left alive though (KO, player flee...), then Lae'zel can leave the area and move on with her quest like she normally does
+	//When/if the player meets her again at the Gith Chokepoint, she will react to being 'left for dead' and she can be recruited there.
+SetOnStage(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 0);
+SetFaction(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, Origin_Laezel_bee8449b-d682-93c8-e7da-9e4bad369476);
+RemoveHarmfulStatuses(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+ClearTag(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+/** Kill the tieflings if Lae'zel is alive, no players can see, etc.; 
+	otherwise make them leave
+*/
+PROC
+PROC_CHA_LaezelRecruit_RemoveTieflings()
+AND
+NOT QRY_CHA_LaezelRecruit_KillTieflings()
+THEN
+PROC_CHA_LaezelRecruit_TieflingsLeaveAlone();
+
+QRY
+QRY_CHA_LaezelRecruit_KillTieflings()
+AND
+NOT DB_Defeated(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+AND
+NOT DB_GlobalFlag(CHA_LaezelRecruitment_Event_TieflingsLeaveAlone_9cfe5720-e50c-8cae-cd23-f61aaf75499f)
+AND
+NOT QRY_CHA_LaezelRecruit_PlayersRemaining()
+AND
+DB_CHA_LaezelRecruit_Cager(_Cager,_,_)
+AND
+NOT DB_Defeated(_Cager)
+AND
+DB_CHA_LaezelRecruit_CagerDeathPoint(_Cager, _DeathPoint)
+THEN
+SetFlag(CHA_LaezelRecruitment_State_LaezelKilledTieflings_3dee3989-f099-f2dc-ee31-60d99d3a5856, NULL_00000000-0000-0000-0000-000000000000, 0);
+TeleportTo(_Cager, _DeathPoint);
+Die(_Cager, DEATHTYPE.DoT, NULL_00000000-0000-0000-0000-000000000000, 0, 1);
+
+QRY
+QRY_CHA_LaezelRecruit_PlayersRemaining()
+AND
+DB_Players(_Player)
+AND
+IsInTrigger(_Player, S_CHA_LaezelControlBox_cc892a8d-edd0-481d-bc03-2ebcb34c6ce2, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_CHA_LaezelRecruit_PlayersRemaining()
+AND
+DB_Players(_Player)
+AND
+DB_Camp(_, _, _Trigger, _)
+AND
+IsInTrigger(_Player, _Trigger, 1)
+THEN
+DB_NOOP(1);
+
+
+// Scene is over
+PROC
+PROC_SceneOver("CHA_LaezelTieflings")
+THEN
+PROC_TriggerUnregisterForPlayers(S_CHA_LaezelProximityBox_5ddb309f-8ceb-4517-8465-16e5c850faf8);
+PROC_TriggerUnregisterForPlayers(S_CHA_SceneStartSphere_0ed6e6c4-890b-4523-ba9b-815e314de8cd);
+SetFlag(CHA_LaezelTieflings_State_SceneOver_b6fcc020-c718-45d3-964d-2099f95a70c1, NULL_00000000-0000-0000-0000-000000000000, 0);
+NOT DB_CustomDialogRange(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 14);
+SetHasDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, 1); //fallback
+PROC_CHA_LaezelRecruit_CancelStart();
+
+PROC
+PROC_CHA_LaezelRecruit_RemoveFallBoost()
+AND
+HasActiveStatus(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LAEZELRECRUIT_IGNOREFALLDAMAGE", 1)
+THEN
+RemoveStatus(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, "CHA_LAEZELRECRUIT_IGNOREFALLDAMAGE");
+NOT DB_CHA_LaezelRecruit_IgnoringFallDamage(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

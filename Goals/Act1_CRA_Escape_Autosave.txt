@@ -1,0 +1,54 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//Autosaves are blocked if a player is still in dialog.
+PROC
+PROC_CRA_PerformAutosave()
+AND
+NOT QRY_CRA_PlayerInDialog()
+AND
+QRY_OnlyOnce("CRA_PerformAutosave")
+THEN
+TimerLaunch("CRA_PerformAutosave", 1000); // AutoSave() immediately after DialogEnded does not work
+
+IF
+TimerFinished("CRA_PerformAutosave")
+THEN
+AutoSave();
+PROC_GLO_ActivitiesPS5_Act1Start();
+GoalCompleted;
+
+QRY
+QRY_CRA_PlayerInDialog()
+AND
+DB_Players(_Player)
+AND
+DB_CantTalk(_Player)
+THEN
+DB_NOOP(1);
+
+IF
+VoiceBarkEnded(CRA_Escape_VB_WakeUp_9c1481c2-6fdf-2a2f-8067-b25377f09efb,_)
+THEN
+PROC_CRA_PerformAutosave();
+
+IF
+VoiceBarkFailed(CRA_Escape_VB_WakeUp_9c1481c2-6fdf-2a2f-8067-b25377f09efb)
+THEN
+PROC_CRA_PerformAutosave();
+
+IF
+DialogEnded((DIALOGRESOURCE)CRA_LaezelWakingUp_1994eda9-c2bb-cc14-554a-72883d7331eb,_)
+THEN
+PROC_CRA_PerformAutosave();
+
+IF
+DialogEnded((DIALOGRESOURCE)CRA_AvatarWakesUp_c67aba56-f03c-06a3-2f3c-a6a0a8625680,_)
+THEN
+PROC_CRA_PerformAutosave();
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

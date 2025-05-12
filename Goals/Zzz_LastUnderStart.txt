@@ -1,0 +1,30 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// hack for editor
+PROC_GLO_SetupForAct_CheckCurrentLevel();
+KBSECTION
+PROC
+PROC_GLO_SetupForAct_CheckCurrentLevel()
+AND
+DB_CurrentLevel(_Act)
+THEN
+DB_GLO_SetupForAct_CurrentLevel(_Act);
+
+IF
+DB_GLO_SetupForAct_CurrentLevel(_Act)
+AND
+NOT DB_CurrentLevel(_Act)
+THEN
+NOT DB_GLO_SetupForAct_CurrentLevel(_Act);
+
+PROC
+PROC_LevelLoadedOnce(_Act)
+AND
+NOT DB_GLO_SetupForAct_CurrentLevel(_Act)
+THEN
+DB_GLO_SetupForAct_CurrentLevel(_Act);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

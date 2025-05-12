@@ -1,0 +1,87 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+IF
+KilledBy((CHARACTER)S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f, (CHARACTER)_Player, _, _)
+AND
+DB_Players(_Player)
+AND
+DB_UND_KuoToaGod_BOOOALFollowers(_Follower)
+AND
+NOT DB_UND_KuoToaGod_MakeFrightened(_Follower, _Player)
+THEN
+DB_UND_KuoToaGod_MakeFrightened((CHARACTER)_Follower, (CHARACTER)_Player);
+RemoveStatus(_Follower,"UND_BOOOALSERVANT");
+
+IF
+StatusRemoved((CHARACTER)_Follower, "UND_BOOOALSERVANT", _, _)
+AND
+DB_UND_KuoToaGod_MakeFrightened(_Follower, _Player)
+THEN
+NOT DB_UND_KuoToaGod_MakeFrightened(_Follower, _Player);
+ApplyStatus(_Follower, "FRIGHTENED", 12.0, 1, _Player);
+
+IF
+TurnStarted((CHARACTER)_Follower)
+AND
+DB_UND_KuoToaGod_BOOOALFollowers(_Follower)
+AND
+DB_UND_KuoToaGod_DeathReactionInCombat(1)
+THEN
+NOT DB_UND_KuoToaGod_DeathReactionInCombat(1);
+PROC_TryStartAD((DIALOGRESOURCE)UND_KuoToaGod_AD_GodDead_bc7f5bbf-114d-1941-06df-f3bc7a4c5f33, _Follower);
+
+
+//REGION Statuses Logic
+IF
+StatusRemoved(_Follower,"UND_BOOOALSERVANT", _,_)
+THEN
+PROC_UND_KuoToaGod_CheckUpdateStatusDuration((CHARACTER)_Follower);
+
+PROC
+PROC_UND_KuoToaGod_CheckUpdateStatusDuration((CHARACTER)_Follower)
+AND
+_Follower != S_UND_Kuotoa_Sacrifice_f52a2d24-e75e-44e3-8209-268c66dad728
+THEN
+PROC_UND_KuoToaGod_UpdateStatus(6.0);
+
+PROC
+PROC_UND_KuoToaGod_UpdateStatus((REAL)_AddedDuration)
+AND
+IsInCombat(S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f,1)
+AND
+NOT DB_PermaDefeated((CHARACTER)S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f)
+AND
+QRY_UND_KuoToaGod_UpdateStatusDuration(_AddedDuration)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_UND_KuoToaGod_UpdateStatusDuration((REAL)_Duration)
+AND
+HasActiveStatus(S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f,"BLOODLUST_REDCAP",1)
+AND
+GetStatusTurns(S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f,"BLOODLUST_REDCAP",_Turns)
+AND
+IntegerProduct(_Turns,6,_TurnInSeconds)
+AND
+IntegerToReal(_TurnInSeconds,_TurnReal)
+AND
+RealSum(_TurnReal,_Duration,_NewTotalDuaration)
+THEN
+ApplyStatus(S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f,"BLOODLUST_REDCAP",_NewTotalDuaration,1);
+
+QRY
+QRY_UND_KuoToaGod_UpdateStatusDuration((REAL)_Duration)
+AND
+HasActiveStatus(S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f,"BLOODLUST_REDCAP",0)
+THEN
+ApplyStatus(S_UND_KuoToaGod_BOOOAL_abede50d-0d73-412b-8912-c9a4b900493f,"BLOODLUST_REDCAP",_Duration,1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

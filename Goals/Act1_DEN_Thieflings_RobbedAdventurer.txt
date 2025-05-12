@@ -1,0 +1,471 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Kid + Adventurer Setup
+
+//Dialogs
+DB_Dialogs((CHARACTER)S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9,(DIALOGRESOURCE)DEN_Thieflings_AdventurerRobber_Solo_9bb07c89-2ae3-668d-0186-6f27bf319113);
+DB_Dialogs((CHARACTER)S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,(DIALOGRESOURCE)DEN_General_TieflingGuard8_cf70e412-6b17-79dc-bc64-936c5f2da8ef);
+DB_CustomDialogRange((CHARACTER)S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17, 30);
+
+//Triggers
+TriggerRegisterForCharacter((TRIGGER)S_DEN_RobberKid_ConfrontArea_0326b5fd-6710-4802-ba50-07f5236c4685, (CHARACTER)S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9);
+TriggerRegisterForCharacter((TRIGGER)S_DEN_AdventurerArea_003_5fdf3e6c-bb21-48e2-8768-00767edc89da,(CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d);
+TriggerRegisterForCharacter((TRIGGER)S_DEN_RobbedAdventurer_ConfrontArea_f00c2333-3a28-4cd1-b6d4-c8b69c3a15fb,(CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d);
+
+//After Argument Dialogs
+DB_DEN_Thieflings_AdventurerConfrontationMembers((CHARACTER)S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9,(DIALOGRESOURCE)DEN_Thieflings_AdventurerRobber_Solo_9bb07c89-2ae3-668d-0186-6f27bf319113);
+DB_DEN_Thieflings_AdventurerConfrontationMembers((CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d,(DIALOGRESOURCE)DEN_Thieflings_Adventurer_Solo_5f998ed5-a834-2115-569b-c354450a5bc8); 
+DB_DEN_Thieflings_AdventurerConfrontationMembers((CHARACTER)S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,(DIALOGRESOURCE)DEN_General_TieflingGuard8_cf70e412-6b17-79dc-bc64-936c5f2da8ef); 
+
+//Adventurer Locket Flag Events
+DB_HasItemEvent((ITEM)S_DEN_AdventurerLocket_dbfd4598-a941-4169-927c-9e823aad81c5,(FLAG)DEN_Thieflings_State_HasStolenLocket_e6fba99f-42cd-5a66-4a7b-23b3f77e993b);
+DB_GiveItemToEvent((ITEM)S_DEN_AdventurerLocket_dbfd4598-a941-4169-927c-9e823aad81c5,(FLAG)DEN_Hideout_Event_TransferLocket_ad58e856-abc3-3369-5f3c-b623934e264e);
+
+//Locket Returned Reward Events
+DB_DialogMoneyTransfer(1,(DIALOGRESOURCE)DEN_Thieflings_Adventurer_Solo_5f998ed5-a834-2115-569b-c354450a5bc8,25);
+DB_DialogMoneyTransfer(2,(DIALOGRESOURCE)DEN_Thieflings_Adventurer_Solo_5f998ed5-a834-2115-569b-c354450a5bc8,50);
+
+//RobbedAdventurer Killed Flag
+DB_PermaDefeatedFlag((CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d,(FLAG)DEN_Thieflings_State_RobbedAdventurerPermaDefeated_ec701cb1-e09d-777b-994b-085e9d5394d6);
+
+//Ikaron Dialog Inclusion
+DB_Inclusion_Object(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,(FLAG)DEN_Thieflings_Event_StartRobberGuardInclusion_1f7f2396-28a2-45b1-89cd-658e1d8fb3df,(FLAG)DEN_Thieflings_Event_EndRobberGuardInclusion_29f3be58-729f-446a-acf6-29d96c042c61);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007,S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17);
+
+//END_REGION
+KBSECTION
+//REGION Robber Kid + Angry Adventurer (SETUP)
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Scene Manager
+PROC
+PROC_SceneInterrupted(_Character, _Player, "DEN_RobbedAdventurer_Argument", _Interrupt)
+AND
+_Interrupt != "StartedDialog"
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+//Remove Robbed Adventurer's Raiding Party Dialog >> Change to Solo Dialog
+IF
+EntityEvent((CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "DEN_DenArrivalDialogSwitch")
+AND
+NOT DB_GlobalFlag((FLAG)DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7)
+THEN
+PROC_RemoveDialog(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d); 
+DB_Dialogs(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, DEN_Thieflings_Adventurer_Solo_5f998ed5-a834-2115-569b-c354450a5bc8);
+DB_SceneManager(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "DEN_RobbedAdventurer_Argument");
+DB_SceneManager(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, "DEN_RobbedAdventurer_Argument");
+
+//Remove Robbed Adventurer's Solo Dialog >> Change to Robber Kid Confrontation
+IF
+EntityEvent((CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "DEN_SetKidConfrontationDialog")
+THEN
+PROC_RemoveDialog(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d); 
+PROC_RemoveDialog(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9);
+DB_Dialogs(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, NULL_00000000-0000-0000-0000-000000000000, DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007);
+//SetHasDialog(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, 1);
+//SetHasDialog(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, 1);
+
+//END_REGION
+
+//REGION Robber Kid + Angry Adventurer (CONFRONTATION)
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+IF
+DialogStarted(DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007, _)
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_Event_RobbedConfrontationStarted_f6dd9a88-74e4-4d6c-8ad1-431641bfd1df)
+THEN
+SetFlag(DEN_Thieflings_Event_RobbedConfrontationStarted_f6dd9a88-74e4-4d6c-8ad1-431641bfd1df,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DialogEnded(DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007, _)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationBreak();
+
+//Guard called, but not nearby
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationBreak()
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_CallGuard_1f5719d3-27aa-3291-ccb0-466e4a73f330)
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_Event_GuardNearby_3b7cd1d0-d98e-bacc-269b-1af2b678ac47)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+//Guard not called
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationBreak()
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_Event_CallGuard_1f5719d3-27aa-3291-ccb0-466e4a73f330)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+//Guard portion of argument complete
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationBreak()
+AND
+DB_GlobalFlag(DEN_Thieflings_State_SecondStageDone_ce22e368-52bc-8de2-6894-77f33c7ccc05)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+//Guard called, is available
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationBreak()
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_CallGuard_1f5719d3-27aa-3291-ccb0-466e4a73f330)
+AND
+IsDead(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17, 0)
+AND
+QRY_OnlyOnce("DEN_Thieflings_AddGuardRobbedDialog")
+THEN
+SetEntityEvent(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17, "DEN_Thieflings_AddGuardRobbedDialog");
+
+IF
+FlagSet(DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+ClearFlag(DEN_Thieflings_State_InKidConfrontation_1b4d990d-fa82-4bb5-b2ae-b910aeccbdf7, NULL_00000000-0000-0000-0000-000000000000);
+
+//Add the Guard to the dialog if they're available
+IF
+DialogActorJoined((DIALOGRESOURCE)DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007,_Inst,(CHARACTER)S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,_)
+THEN
+SetFlag((FLAG)DEN_Thieflings_Event_GuardNearby_3b7cd1d0-d98e-bacc-269b-1af2b678ac47, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DialogActorLeft((DIALOGRESOURCE)DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007,_Inst,(CHARACTER)S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,_)
+THEN
+ClearFlag((FLAG)DEN_Thieflings_Event_GuardNearby_3b7cd1d0-d98e-bacc-269b-1af2b678ac47, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+FlagSet(DEN_Thieflings_Event_StartRobberGuardInclusion_1f7f2396-28a2-45b1-89cd-658e1d8fb3df,_Player,_)
+THEN
+DB_DEN_Thieflings_FirstPhasePlayer(_Player);
+
+IF
+EntityEvent((CHARACTER)_Guard, "DEN_Thieflings_AddGuardRobbedDialog")
+AND
+NOT DB_Defeated(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17)
+AND
+NOT DB_Is_InCombat(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,_)
+AND
+DB_DEN_Thieflings_FirstPhasePlayer(_Player)
+THEN
+PROC_RemoveDialog(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d); 
+PROC_RemoveDialog(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9); 
+PROC_RemoveDialog(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17); 
+ObjectTimerLaunch(_Player,"DEN_Thieflings_RobbedAdventurerGuardBreak",1000);
+
+IF
+ObjectTimerFinished(_Player,"DEN_Thieflings_RobbedAdventurerGuardBreak")
+AND
+NOT QRY_StartDialog_Fixed(DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007, S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17,_Player)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+IF
+DialogRequestFailed(DEN_Thieflings_RobbedAdventurer_3c636813-99a5-8e3a-3cc7-937e98c86007,_)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+//END_REGION
+
+//REGION Knockout Sequence
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IF
+FlagSet(DEN_Thieflings_Event_Knockout_19490373-35ad-a9ee-a29f-efb5079d52ef, S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17, _)
+THEN
+ApplyStatus(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "PRONE", 12.0, 1, S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17);
+SetHasDialog(S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17, 0);
+SetHasDialog(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, 0);
+ApplyStatus(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "KNOCKED_DOWN", 12.0, 1, S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17);
+ApplyStatus(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "UNCONSCIOUS", 12.0, 1, S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17);
+SetFlag(DEN_Thieflings_Event_AdventurerKnockedOut_69529e3b-394f-9e41-8d23-9a36f09c9a46, NULL_00000000-0000-0000-0000-000000000000, 0);
+//END_REGION
+
+//REGION Robber Kid + Angry Adventurer (ENDING)
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//DEN Stage Changed - Force End Confrontation
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State)
+AND
+NOT DB_DEN_DefaultStates(_State)
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+//Robbed Adventurer Died - Force End Confrontation
+IF
+FlagSet(DEN_Thieflings_State_RobbedAdventurerPermaDefeated_ec701cb1-e09d-777b-994b-085e9d5394d6,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7)
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd();
+
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEnd()
+AND
+QRY_OnlyOnce("RobberKidConfrontationDialogEnd")
+THEN
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEndProcess();
+
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEndProcess()
+THEN
+PROC_SceneOver("DEN_RobbedAdventurer_Argument");
+SetFlag((FLAG)DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEndProcess()
+AND
+DB_DEN_Thieflings_FirstPhasePlayer(_Player)
+AND
+GetFlag((FLAG)DEN_Thieflings_Event_TurnTieflingsHostile_eacc3975-ba7c-1ad7-4476-da871a98a000, _Player, 1)
+THEN
+PROC_SetRelationTemporaryHostile((CHARACTER)_Player, S_DEN_Tiefling_008_03b6fae4-d250-4ce9-9a01-19cb427deb17);
+
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEndProcess()
+AND
+QRY_DEN_CheckPeaceState()
+AND
+DB_DEN_Thieflings_AdventurerConfrontationMembers(_Member, _Dialog)
+THEN
+PROC_RemoveDialog(_Member);
+DB_Dialogs(_Member,_Dialog);
+
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEndProcess()
+AND
+NOT DB_GlobalFlag((FLAG)DEN_Thieflings_Event_HideoutAbandoned_f3808740-25b9-4393-a947-7a1f7a88ebda)
+AND
+GetFlag((FLAG)DEN_Thieflings_State_HasStolenLocket_e6fba99f-42cd-5a66-4a7b-23b3f77e993b, S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, 1)
+THEN
+PROC_TryStartAD(DEN_Thieflings_AD_RobberKidTheft_7fad9270-19e0-65e9-5a21-4929c8612c7a,S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9);
+PROC_CharacterMoveTo(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9,S_DEN_Hideout_StashArea_11d74325-2323-4f77-8be8-24a9054a3573, "Run", "DEN_Thieflings_PutItemInStash");
+
+IF
+StatusRemoved(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d,"KNOCKED_DOWN",_,_)
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_AdventurerKnockedOut_69529e3b-394f-9e41-8d23-9a36f09c9a46)
+THEN
+ClearFlag(DEN_Thieflings_Event_AdventurerKnockedOut_69529e3b-394f-9e41-8d23-9a36f09c9a46,NULL_00000000-0000-0000-0000-000000000000);
+PROC_TryStartAD(DEN_Thieflings_AD_KnockedOutAdventurer_4c420090-8557-4eb0-f57c-6af72d340f7a,S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d);
+
+IF
+AutomatedDialogEnded((DIALOGRESOURCE)DEN_Thieflings_AD_KnockedOutAdventurer_4c420090-8557-4eb0-f57c-6af72d340f7a, _)
+AND
+DB_DEN_Thieflings_FirstPhasePlayer(_Player)
+THEN
+PROC_CharacterMoveToAndTalk(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, _Player, 5f998ed5-a834-2115-569b-c354450a5bc8, "", "Run", 5.0); //DEN_Thieflings_Adventurer_Solo
+SetEntityEvent(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d,"DEN_Thieflings_AfterKnockOutAD");
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)DEN_Thieflings_AD_KnockedOutAdventurer_4c420090-8557-4eb0-f57c-6af72d340f7a, _)
+AND
+DB_DEN_Thieflings_FirstPhasePlayer(_Player)
+THEN
+SetEntityEvent(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d,"DEN_Thieflings_AfterKnockOutAD");
+
+//END_REGION
+
+//REGION Journal
+
+//Barth died
+IF
+FlagSet(DEN_Thieflings_State_RobbedAdventurerPermaDefeated_ec701cb1-e09d-777b-994b-085e9d5394d6,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player,"DEN_RobbedAdventurer",1)
+THEN
+QuestUpdate(_Player,"DEN_RobbedAdventurer","AdventurerDead");
+
+//general catch-all for if kid successfully 'steals' barth's locket
+PROC
+PROC_DEN_Thieflings_RobberKidConfrontationDialogEndProcess()
+AND
+GetFlag((FLAG)DEN_Thieflings_State_HasStolenLocket_e6fba99f-42cd-5a66-4a7b-23b3f77e993b, S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, 1)
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_Knows_MeliTalkedAboutHisMother_12fca62d-399a-7517-89ed-6bc51dc2c5b2)
+THEN
+SetFlag(DEN_Thieflings_Event_RobberKidSucceeded_32a8833a-dc7b-4a32-b4f5-5cefea340b5f,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+FlagSet(DEN_Thieflings_Event_RobberKidSucceeded_32a8833a-dc7b-4a32-b4f5-5cefea340b5f,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_Event_AngeredAdventurer_81b36ccc-9496-94aa-f934-3805312109b3)
+THEN
+PROC_DEN_Thieflings_RobberKidJournalAccuse();
+
+PROC
+PROC_DEN_Thieflings_RobberKidJournalAccuse()
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_AdventurerKnockedOut_69529e3b-394f-9e41-8d23-9a36f09c9a46)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "DEN_RobbedAdventurer","FindLocket_KnockOut");
+
+PROC
+PROC_DEN_Thieflings_RobberKidJournalAccuse()
+AND
+NOT DB_GlobalFlag(DEN_Thieflings_Event_AdventurerKnockedOut_69529e3b-394f-9e41-8d23-9a36f09c9a46)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "DEN_RobbedAdventurer","FindLocket_NoKnockOut");
+
+//didn't accuse kid in argument, found locket later
+IF
+AddedTo(S_DEN_AdventurerLocket_dbfd4598-a941-4169-927c-9e823aad81c5,(CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_RobberKidSucceeded_32a8833a-dc7b-4a32-b4f5-5cefea340b5f)
+AND
+QuestIsAccepted(_Player,"DEN_RobbedAdventurer",0)
+THEN
+QuestUpdate(_Player, "DEN_RobbedAdventurer","FoundLocket_NoAccuse");
+
+IF
+MovedFromTo(S_DEN_AdventurerLocket_dbfd4598-a941-4169-927c-9e823aad81c5,S_DEN_HideoutKidStash_6a957f96-e910-4a3b-ad12-03359775c4b8,(CHARACTER)_Player,0)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_RobberKidSucceeded_32a8833a-dc7b-4a32-b4f5-5cefea340b5f)
+AND
+QuestIsAccepted(_Player,"DEN_RobbedAdventurer",1)
+AND
+QuestUpdateIsUnlocked(_Player,"DEN_RobbedAdventurer","FoundLocketKid_Accuse",0)
+THEN
+QuestUpdate(_Player, "DEN_RobbedAdventurer","FoundLocketChest_Accuse");
+
+IF
+MovedFromTo(S_DEN_AdventurerLocket_dbfd4598-a941-4169-927c-9e823aad81c5,S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9,(CHARACTER)_Player,0)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(DEN_Thieflings_Event_RobberKidSucceeded_32a8833a-dc7b-4a32-b4f5-5cefea340b5f)
+AND
+QuestIsAccepted(_Player,"DEN_RobbedAdventurer",1)
+AND
+QuestUpdateIsUnlocked(_Player,"DEN_RobbedAdventurer","FoundLocketChest_Accuse",0)
+THEN
+QuestUpdate(_Player, "DEN_RobbedAdventurer","FoundLocketKid_Accuse");
+
+PROC
+PROC_LevelUnloading("WLD_Main_A")
+AND
+DB_Players(_Player)
+AND
+QuestIsClosed("DEN_RobbedAdventurer",0)
+THEN
+QuestUpdate(_Player, "DEN_RobbedAdventurer", "NoConflictResolve");
+
+//END_REGION
+
+//REGION Debug
+
+//Robbed Adventurer Skips
+IF
+FlagSet(DEBUG_DEN_Thieflings_RobbedAdventurerConfrontationSkip_f435223f-859c-85d3-0007-a9b61d3b38e5, _Player, _)
+THEN
+ClearFlag((FLAG)DEBUG_DEN_Thieflings_RobbedAdventurerConfrontationSkip_f435223f-859c-85d3-0007-a9b61d3b38e5, _Player);
+SetFlag((FLAG)DEN_Thieflings_State_InKidConfrontation_1b4d990d-fa82-4bb5-b2ae-b910aeccbdf7, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetEntityEvent((CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "DEN_DenArrivalDialogSwitch");
+ToInventory((ITEM)S_DEN_AdventurerLocket_dbfd4598-a941-4169-927c-9e823aad81c5, S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, 1, 0, 0);
+TeleportTo(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, S_DEN_RobberKid_ConfrontArea_0326b5fd-6710-4802-ba50-07f5236c4685);
+TeleportTo(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, S_DEN_RobbedAdventurer_ConfrontArea_f00c2333-3a28-4cd1-b6d4-c8b69c3a15fb);
+SetHasDialog(S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d,1);
+SetHasDialog(S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9,1);
+TeleportTo(_Player, S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "", 1, 1, 1);
+SetEntityEvent((CHARACTER)S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, "DEN_SetKidConfrontationDialog");
+
+//Start
+IF
+TextEvent("rk_start")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(DEBUG_DEN_Thieflings_RobbedAdventurerConfrontationSkip_f435223f-859c-85d3-0007-a9b61d3b38e5, _Player, 0);
+
+//Main Ending Branches
+IF
+TextEvent("rk_end_kidwin")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(DEN_Hideout_Event_TransferLocket_ad58e856-abc3-3369-5f3c-b623934e264e, S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, 0);
+SetFlag(DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetFlag(DEN_Thieflings_State_WitnessedArgument_5dac9857-be45-8be2-1319-0706dfcc481b, _Player, 0);
+PROC_DEN_Thieflings_DEBUG_RobberKidEnd();
+
+IF
+TextEvent("rk_end_barthwin_nolocket")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(DEN_Hideout_Event_TransferLocket_ad58e856-abc3-3369-5f3c-b623934e264e, S_DEN_RobberKid_94e865e9-790d-4633-a378-8fb50832b5e9, 0);
+SetFlag(DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetFlag(DEN_Thieflings_State_WitnessedArgument_5dac9857-be45-8be2-1319-0706dfcc481b, _Player, 0);
+PROC_DEN_Thieflings_DEBUG_RobberKidEnd();
+
+IF
+TextEvent("rk_end_barthwin_gotlocket")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(DEN_Hideout_Event_TransferLocket_ad58e856-abc3-3369-5f3c-b623934e264e, S_DEN_RobbedAdventurer_534bceaf-678c-40a0-8ca9-e1134f95ba0d, 0);
+SetFlag(DEN_Thieflings_Event_ItemReturned_6c915bf1-176e-8c98-4804-b1b841bfe6ae, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetFlag(DEN_Thieflings_State_AfterRobberKidConfront_081b5119-aa6c-8b1e-b321-d622cbe162d7, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetFlag(DEN_Thieflings_State_WitnessedArgument_5dac9857-be45-8be2-1319-0706dfcc481b, _Player, 0);
+PROC_DEN_Thieflings_DEBUG_RobberKidEnd();
+
+//Modifiers
+IF
+TextEvent("rk_getlocket")
+AND
+GetHostCharacter(_Player)
+THEN
+SetFlag(DEN_Hideout_Event_TransferLocket_ad58e856-abc3-3369-5f3c-b623934e264e, _Player, 0);
+
+IF
+TextEvent("rk_barthko")
+THEN
+SetFlag(DEN_Thieflings_Event_AdventurerKnockedOut_69529e3b-394f-9e41-8d23-9a36f09c9a46, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+TextEvent("rk_barthangry")
+THEN
+SetFlag(DEN_Thieflings_Event_AngeredAdventurer_81b36ccc-9496-94aa-f934-3805312109b3, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+TextEvent("rk_barthgivelocket")
+THEN
+SetFlag(DEN_Thieflings_Knows_MeliTalkedAboutHisMother_12fca62d-399a-7517-89ed-6bc51dc2c5b2, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+TextEvent("rk_nowitness")
+AND
+GetHostCharacter(_Player)
+THEN
+ClearFlag(DEN_Thieflings_State_WitnessedArgument_5dac9857-be45-8be2-1319-0706dfcc481b, _Player, 0);
+
+PROC
+PROC_DEN_Thieflings_DEBUG_RobberKidEnd()
+AND
+DB_DEN_Thieflings_AdventurerConfrontationMembers(_Member, _Dialog)
+THEN
+PROC_RemoveDialog(_Member); 
+DB_Dialogs(_Member,_Dialog);
+SetEntityEvent(_Member, "DEN_Thieflings_AdventurerConfrontationEnd");
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

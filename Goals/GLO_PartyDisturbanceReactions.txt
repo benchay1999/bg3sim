@@ -1,0 +1,68 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Player assaults companion
+QRY
+QRY_PartyMember_IsZeroDamageAssault((STRING)_DamageSource,0)
+AND
+_DamageSource != "StatusEnter"
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_CrimeCheckAssailant((CHARACTER)_PartyMember,(CHARACTER)_Player,(CHARACTER)_Summon,(STRING)_DamageSource,(INTEGER)_DamageAmount,(INTEGER)_StoryActionID)
+AND
+NOT QRY_PartyMember_IsZeroDamageAssault(_DamageSource,_DamageAmount)
+AND
+NOT DB_Avatars(_PartyMember)
+AND
+NOT DB_PartyDisturbanceReactionsBlocked(_PartyMember)
+AND
+QRY_IsPartyMember(_PartyMember,0)
+AND
+QRY_SpeakerIsAvailable(_PartyMember,1)
+AND
+Random(5,0)
+AND
+// The player won't say anything, they're just included so the PAD can do tag checks on them
+QRY_PartyMemberAttackedDialog(_PartyMember,_Player)
+THEN
+PROC_BlockPartyDisturbanceReactions(_PartyMember);
+
+QRY
+QRY_PartyMemberAttackedDialog((CHARACTER)_PartyMember,(CHARACTER)_Player)
+AND
+DB_Origins(_PartyMember)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GLO_Companion_PAD_Warning_Assault_f8940687-8665-d8ec-8b08-29574d858013,_PartyMember,_Player)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_PartyMemberAttackedDialog((CHARACTER)_PartyMember,(CHARACTER)_Player)
+AND
+NOT DB_Origins(_PartyMember)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GEB_PartyMember_AD_Warning_Assault_97e47f39-bb60-d884-c36c-f6d32c0520b3,_PartyMember,_Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Blocking
+PROC
+PROC_BlockPartyDisturbanceReactions((CHARACTER)_PartyMember)
+THEN
+DB_PartyDisturbanceReactionsBlocked(_PartyMember);
+ObjectTimerLaunch(_PartyMember, "GLO_PartyMember_Warning_Assault", 10000);
+
+IF
+ObjectTimerFinished((CHARACTER)_PartyMember, "GLO_PartyMember_Warning_Assault")
+THEN
+NOT DB_PartyDisturbanceReactionsBlocked(_PartyMember);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

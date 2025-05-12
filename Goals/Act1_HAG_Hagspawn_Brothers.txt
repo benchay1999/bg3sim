@@ -1,0 +1,52 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_HAG_HagSpawn_BrothersDeadReaction((CHARACTER)S_HAG_HagAmbush_Brother_001_767e2e80-b340-4e0f-9a6c-fd7df92d6e9e, (DIALOGRESOURCE)HAG_HagAmbush_Brother_001_AD_BrotherDied_e63317ea-ef11-3867-3152-e78f42d3f9eb);
+DB_HAG_HagSpawn_BrothersDeadReaction(S_HAG_HagAmbush_Brother_002_24c7e849-2ad6-414e-bc38-6ea3f358a80b, HAG_HagAmbush_Brother_002_AD_BrotherDied_efed3923-b620-36c3-fde9-63851dbf63ac);
+KBSECTION
+//REGION Track whether Mayrina saw you kill her brother(s)
+IF
+DB_Sees(_Brother1, _Brother2)
+AND
+DB_PermaDefeated(_Brother2)
+AND
+DB_HAG_HagAmbush_Brothers(_Brother2)
+AND
+DB_HAG_HagSpawn_BrothersDeadReaction(_Brother1, _AD)
+THEN
+PROC_TryStartAD(_AD, _Brother1);
+NOT DB_HAG_HagSpawn_BrothersDeadReaction((CHARACTER)S_HAG_HagAmbush_Brother_001_767e2e80-b340-4e0f-9a6c-fd7df92d6e9e, (DIALOGRESOURCE)HAG_HagAmbush_Brother_001_AD_BrotherDied_e63317ea-ef11-3867-3152-e78f42d3f9eb);
+NOT DB_HAG_HagSpawn_BrothersDeadReaction(S_HAG_HagAmbush_Brother_002_24c7e849-2ad6-414e-bc38-6ea3f358a80b, HAG_HagAmbush_Brother_002_AD_BrotherDied_efed3923-b620-36c3-fde9-63851dbf63ac);
+
+IF
+DB_Is_InCombat(_Brother2, _ID)
+AND
+DB_PermaDefeated(_Brother2)
+AND
+DB_HAG_HagAmbush_Brothers((CHARACTER)_Brother2)
+AND
+DB_Is_InCombat(_Brother1, _ID)
+AND
+DB_HAG_HagSpawn_BrothersDeadReaction((CHARACTER)_Brother1, _AD)
+THEN
+PROC_TryStartAD(_AD, _Brother1);
+NOT DB_HAG_HagSpawn_BrothersDeadReaction((CHARACTER)S_HAG_HagAmbush_Brother_001_767e2e80-b340-4e0f-9a6c-fd7df92d6e9e, (DIALOGRESOURCE)HAG_HagAmbush_Brother_001_AD_BrotherDied_e63317ea-ef11-3867-3152-e78f42d3f9eb);
+NOT DB_HAG_HagSpawn_BrothersDeadReaction(S_HAG_HagAmbush_Brother_002_24c7e849-2ad6-414e-bc38-6ea3f358a80b, HAG_HagAmbush_Brother_002_AD_BrotherDied_efed3923-b620-36c3-fde9-63851dbf63ac);
+
+PROC
+PROC_StateSet_PermaDefeated(_Brother)
+AND
+DB_HAG_HagAmbush_Brothers((CHARACTER)_Brother)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_HAG_Brothers_21a1003e-c806-e4ae-7f0e-b1e6422d39dc, 0);
+
+//END_REGION
+
+IF
+DB_CurrentLevel("CTY_Main_A")
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

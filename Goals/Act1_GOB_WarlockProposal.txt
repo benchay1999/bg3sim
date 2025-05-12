@@ -1,0 +1,127 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers(S_GOB_WarlockProposal_ChainRoom_2224bd82-041a-4332-8fc3-b09473feeafa);
+
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0);
+KBSECTION
+ //REGION Warlock
+IF
+NestedDialogPlayed((DIALOGRESOURCE)GOB_GoblinPriest_Chains_fbe594c5-21e7-c9b1-3350-dd7f8242aea3, _)
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)GOB_WarlockProposal_State_CheckParty_380e9846-34a3-4c2b-bd8c-378dc14aaac7, _Player, 1)
+THEN
+DB_GOB_WarlockProposal_WarlockEvent(1);
+
+IF
+DB_GOB_WarlockProposal_WarlockEvent(_)
+AND
+DB_GOB_GoblinPriest_Chains_ChainedCharacter((CHARACTER)_Player)
+THEN
+PROC_ForceStopDialog(_Player);
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9,"GOB_GoblinPriest_SpotPlayerInDungeon");
+NOT DB_SpotPlayers(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9,"GOB_GoblinPriest_SpotPlayerInDungeon",NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+ScreenFadeTo(_Player, 2.0, 0, "GOB_WarlockProposal_ChainSleep");
+
+IF
+ScreenFadeDone(_, "GOB_WarlockProposal_ChainSleep")
+THEN
+Open((ITEM)S_GOB_GoblinPriestess_PrisonDoor_01_21ce3387-11dd-44f9-92c2-1949228ed813);
+TeleportTo(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, S_GOB_PriestReturnPoint_5d2ca547-4bf6-41a5-a6b2-0ab5fdf8d40b, "GOB_WarlockProposal_PriestTeleported", 0, 0, 0);
+
+IF
+EntityEvent(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, "GOB_WarlockProposal_PriestTeleported")
+AND
+DB_GOB_GoblinPriest_Chains_ChainedCharacter((CHARACTER)_Player)
+THEN
+ClearScreenFade(_Player, 2.0, "GOB_WarlockProposal_ChainSleep");
+
+IF
+EntityEvent(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, "GOB_WarlockProposal_PriestTeleported")
+THEN
+DB_AddCharactersInTriggerToDialog((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, S_GOB_WarlockProposal_ChainRoom_2224bd82-041a-4332-8fc3-b09473feeafa, 0, 0);
+
+IF
+EntityEvent(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, "GOB_WarlockProposal_PriestTeleported")
+THEN
+PROC_CharacterMoveTo(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, S_GOB_GoblinPriest_ChainRoom_Point_71c4764c-fed3-467f-87d0-9493a07847fc, "Walk", "GOB_WarlockProposal_PriestReturned");
+
+IF
+EntityEvent(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, "GOB_WarlockProposal_PriestReturned")
+THEN
+PROC_State_Progress(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297,"GLO_Warlock", "GLO_Warlock_Proposal");
+SetVisible(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 0);
+SetOnStage(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 1);
+PROC_GLO_Warlock_ApplyAllStatuses();
+
+IF
+WentOnStage(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 1)
+AND
+DB_GOB_GoblinPriest_Chains_ChainedCharacter((CHARACTER)_Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogRequestFailed(GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0,_DialogID)
+AND
+DB_GOB_GoblinPriest_Chains_ChainedCharacter((CHARACTER)_Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, _Player)
+THEN
+DB_NOOP(1);
+
+IF
+DialogStarted(GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, _ID)
+THEN
+SetVisible(S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 1);
+
+IF
+DB_Sees(_Player, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297)
+AND
+DB_Players(_Player)
+AND
+DB_DialogNPCs(_, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, _)
+THEN
+SetFlag((FLAG)GOB_WarlockProposal_State_SeenWarlockPrisonBreak_75994703-663e-4f1b-b8e1-e77c467d4be1, _Player);
+
+IF
+FlagSet((FLAG)GOB_WarlockProposal_Event_PriestDeath_b9e8c596-55dc-4edc-8fbd-e52d601839d2, _, _ID) 
+AND
+DialogRemoveActorFromDialog(_ID, S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, _)
+THEN
+Die(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, DEATHTYPE.Physical, S_GOB_Warlock_d432aafd-f728-4d9d-9707-732e1cdd8297, 0, 0);
+TeleportTo(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9, S_GOB_GoblinPriest_ChainRoom_Point_71c4764c-fed3-467f-87d0-9493a07847fc, "", 0, 0, 0, 0, 1);
+
+IF
+FlagSet(GLO_WarlockProposal_ReleasePlayer_987d0493-1427-8677-ffcb-b181ce9c4274, _, _) 
+AND
+DB_GOB_GoblinPriest_Chains_ChainedCharacter((CHARACTER)_Player)
+THEN
+PROC_GOB_GoblinPriest_FreeCharacter((CHARACTER)_Player);
+SetFlag(GOB_GoblinPriest_Event_FreedFromChains_38ee56fc-1ee7-7ce7-a247-39913c3335ed,_Player,0);
+
+IF
+DialogEnded((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, _)
+THEN
+PROC_GLO_Warlock_TeleportOut();
+
+// Edge case handling for interrupting the dialog before the priestess is dead
+IF
+DialogEnded((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, _)
+AND
+NOT DB_PermaDefeated(S_GOB_GoblinPriest_b983c336-9a14-4e9b-adb9-4689e7e0afa9)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_GOB_GoblinPriest_2d0b3c0e-279c-29c5-5e14-57de02a5dce9,0);
+GoalCompleted;
+
+//END_REGION
+EXITSECTION
+PROC_AddCharactersInTriggerToDialog_Clear((DIALOGRESOURCE)GOB_WarlockProposal_Warlock_0fdb76e3-2737-2ba3-4971-681bda07a9a0, S_GOB_WarlockProposal_ChainRoom_2224bd82-041a-4332-8fc3-b09473feeafa);
+
+PROC_TriggerUnregisterForPlayers(S_GOB_WarlockProposal_ChainRoom_2224bd82-041a-4332-8fc3-b09473feeafa);
+ENDEXITSECTION
+ParentTargetEdge "Act1"

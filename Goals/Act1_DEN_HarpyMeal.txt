@@ -1,0 +1,1366 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION TRIGGERS
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_DEN_HarpyCombat_2fa6543f-a632-4324-b304-36ec357b9222);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_DEN_HarpyWarningADArea_59e5d0bb-9ef0-40f6-ac5f-21fcbf9a5bd3);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_DEN_HarpyMeal_ExclusionZone_19b3c3d6-c3e6-4229-b6c4-8d88d7f6cbd4);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_DEN_HarpyMeal_ForceStartArea_496fe340-d1d0-4841-801f-5ff4e7ffdd17);
+PROC_TriggerRegisterForPlayers(S_DEN_HarpyExploration_f6ee76bc-af63-42bc-9af3-9b4e81b22d66);
+PROC_TriggerRegisterForPlayers(S_DEN_Cove_SUB_8b7e39c1-dbd9-4ce8-acb0-659f5295d459);
+TriggerRegisterForCharacter((TRIGGER)S_DEN_HarpyCombat_2fa6543f-a632-4324-b304-36ec357b9222, (CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+TriggerRegisterForCharacter((TRIGGER)S_DEN_HarpyCombat_2fa6543f-a632-4324-b304-36ec357b9222, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+TriggerRegisterForCharacter(S_DEN_HarpyMeal_CombatArea_79bc70b7-ebac-472a-860b-4bd1675b4169, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+TriggerRegisterForCharacter(S_DEN_BeachCowerArea_0fe4096d-608a-47b4-8b2b-bab73640f09c, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+//END_REGION
+
+//REGION HARPIES
+
+DB_DEN_HarpyMeal_Harpies((CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, (TRIGGER)S_DEN_HarpyLandingPerch_7f3d88aa-26cd-4ec2-aa14-a6ae368cb9fa);
+DB_DEN_HarpyMeal_Harpies((CHARACTER)S_DEN_Harpy_001_9ef79b8f-b516-4a4b-8f57-e93e2a17e6f7, (TRIGGER)S_DEN_HarpyMeal_Harpy1Landing_8ff766bd-8d33-42c8-8c02-a34107aa9832);
+DB_DEN_HarpyMeal_Harpies((CHARACTER)S_DEN_Harpy_002_12a20a1e-c588-401c-930e-e755cebf2ff5, (TRIGGER)S_DEN_HarpyMeal_Harpy2Landing_788eb080-f688-41f3-8590-8abff66fafb6);
+DB_DEN_HarpyMeal_Harpies((CHARACTER)S_DEN_Harpy_003_8ea6f80a-65e6-44b0-a8ff-9ab5ddd4d8f3, (TRIGGER)S_DEN_HarpyMeal_Harpy3Landing_34d314c2-03ac-4e4f-aab9-a9140fb1173d);
+
+DB_CombatReact_AD_OnNextTurn(S_DEN_Harpy_002_12a20a1e-c588-401c-930e-e755cebf2ff5,(DIALOGRESOURCE)DEN_HarpyMeal_AD_HarpyAttacks_92ccae30-c257-0f94-575d-4e04ec7e8ca2);
+DB_DEN_HarpyMeal_Harpy002CombatADCount(1);
+//END_REGION
+
+//REGION Charmed Kid
+SetFlag(DEN_HarpyMeal_State_GoCower_dbe0ef4a-49c4-4fac-912e-552447766b76, NULL_00000000-0000-0000-0000-000000000000, 0);
+SetEntityEvent(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_States_Disable", 1);	//Block DEN_States events on Charmed kid until situation resolved.
+DB_Dialogs((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, (DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c);
+DB_IgnoreMutingStatussesDialog(DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c);
+//ApplyStatus((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "LURING_SONG", -1.0, 1, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+SetFlag((FLAG)DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4,(CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+SetFlag((FLAG)GLO_HarpySong_State_Stationary_b1b560d0-05e4-40a6-a0ae-3c4d354e212e,(CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+SetCanTrade((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0);
+DB_DeadOnceFlag((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,(FLAG)DEN_HarpyMeal_State_VictimDead_50cfd9b3-bf92-e441-e166-1466dcf1e185);
+DB_SeenDeadNPCPartyFlag((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,(FLAG)DEN_HarpyMeal_Event_SawVictimDie_b83ca7bf-ad4a-e407-46e8-af775365eafd);
+DB_SeenAliveNPCPartyFlag(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, (FLAG)DEN_HarpyMeal_Event_SawVictim_35323740-c45d-476f-9a38-8308cb6a470f);
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("DEN_HarpyMeal_Harpies",(FLAG)DEN_HarpyMeal_State_HarpiesAllDead_89fd908d-98b0-47d2-8f29-0d2ec34fea0a);
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("DEN_HarpyMeal_Harpies",(FLAG)DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739);
+
+DB_Children((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+PROC_SetCanFight((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1);
+SetCanJoinCombat((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1);
+PROC_CharacterDisableAllCrimes(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1);
+BlockNewCrimeReactions(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1);
+DB_IgnoreAssault(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+DB_DialogMoneyTransfer(1,DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c,15,1);
+DB_IgnoreMutingStatussesDialog(DEN_HarpyMeal_CharmedVictim_Wildshape_fde88a45-4b5f-367d-7713-d5d23b743f88);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_Wildshape_fde88a45-4b5f-367d-7713-d5d23b743f88);
+
+DB_HasItemEvent((ITEM)S_DEN_HarpyKidStory_aeb815a0-a504-422e-ac60-8c2f6a588c1b,(FLAG)DEN_HarpyMeal_State_HasStory_e042050b-188f-0c1a-31fc-bbb49f4774a4);
+DB_GiveItemToEvent((ITEM)S_DEN_HarpyKidStory_aeb815a0-a504-422e-ac60-8c2f6a588c1b,(FLAG)DEN_HarpyMeal_Event_TransferStory_3c5b5b45-b3b0-de9c-bc5a-d69705fde9a5);
+SetOnStage((ITEM)S_DEN_HarpyKidStory_aeb815a0-a504-422e-ac60-8c2f6a588c1b,0);
+
+DB_SceneManager(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_BeforeCombat");
+TriggerRegisterForCharacter(S_DEN_HarpyMeal_CombatArea_79bc70b7-ebac-472a-860b-4bd1675b4169, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_Wildshape_fde88a45-4b5f-367d-7713-d5d23b743f88, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+DB_Inclusion_Object(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, (FLAG)DEN_HarpyMeal_Event_LeaderDialogEnter_4f278b70-889b-c810-7388-b45b0308165b, (FLAG)NULL_00000000-0000-0000-0000-000000000000);
+
+DB_DropMutingStatussesDialog(DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5);
+
+//END_REGION
+KBSECTION
+IF
+FlagSet(DEN_TieflingRefugees_State_LeftDen_003b304b-f058-4f8a-b9fa-a097e1b6b395, _, _)
+THEN
+GoalCompleted;
+
+//REGION Harpy Area Setup
+
+//Harpy Init
+IF
+DB_DEN_HarpyMeal_Harpies(_Harpy,_)
+THEN
+DB_GLO_DefeatCounter(_Harpy,"DEN_HarpyMeal_Harpies");
+SetOnStage(_Harpy, 0);
+BlockNewCrimeReactions(_Harpy,1);
+
+//Entering Beach Area
+IF
+EnteredTrigger((CHARACTER)_Player, (TRIGGER)S_DEN_HarpyMeal_WarningADArea_59e5d0bb-9ef0-40f6-ac5f-21fcbf9a5bd3)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_EntryWarningAD")
+THEN
+StartVoiceBark(DEN_HarpyMeal_VB_PlayerWarnings_f8074f5b-d847-135f-5f46-ae78298a6cc1, _Player);
+QuestUpdate(_Player, "DEN_HarpyMeal", "HeardBeachSong");
+TriggerSetSoundState(Amb_SV_Harpy_QD_61adb947-a706-45eb-b87e-72319ccf354f,"Music_ScriptedCombat","DEN_Harpy",0);
+
+//Spotting kid updates journal/begins encounter
+IF
+FlagSet(DEN_HarpyMeal_Event_SawVictim_35323740-c45d-476f-9a38-8308cb6a470f, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_StartedHarpyScene")
+THEN
+SetFlag(DEN_HarpyMeal_Event_PlayerEnteredLair_f2ab81cd-c89e-47d0-8013-2dc5425de331,NULL_00000000-0000-0000-0000-000000000000);
+QuestUpdate(_Player, "DEN_HarpyMeal", "FoundKid");
+PROC_DEN_HarpyMeal_InitiateEncounter();
+
+PROC
+PROC_DEN_HarpyMeal_InitiateEncounter()
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+THEN
+DB_SpotPlayers(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog", NULL_00000000-0000-0000-0000-000000000000, DEN_HarpyMeal_Event_StopSpotting_de1392c7-f81e-493f-8d21-58f3a92684ff);
+DB_SpotPlayers_IncludeWildshapedPlayers(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog");
+DB_SpotPlayers_IncludeSummons(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog");
+DB_SpotPlayers_IncludeFollowers(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog");
+DB_SpotPlayers_SpotterIgnoreCantTalk(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog");
+DB_SpotPlayers_SpotTrigger(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog",S_DEN_KidDialogZone_57a12063-ae3c-45f0-9dbd-dcfc427f2def);
+
+//END_REGION
+
+//REGION Interrupting Before Scene Starts
+
+PROC
+PROC_SceneInterrupted(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _, "DEN_HarpyMeal_BeforeCombat", _Interrupt)
+AND
+_Interrupt != "StartedDialog"
+THEN
+PROC_DEN_HarpyMeal_HarpySceneInterrupted();
+
+PROC
+PROC_DEN_HarpyMeal_HarpySceneInterrupted()
+THEN
+SetFlag(DEN_HarpyMeal_Event_StopSpotting_de1392c7-f81e-493f-8d21-58f3a92684ff, NULL_00000000-0000-0000-0000-000000000000); 
+PROC_SceneOver("DEN_HarpyMeal_BeforeCombat");
+DB_SceneManager(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_Combat"); //setting a new scene to catch if the kid leaves the area, which will end the situation
+DB_SceneTriggerManager("DEN_HarpyMeal_Combat",S_DEN_Cove_SUB_8b7e39c1-dbd9-4ce8-acb0-659f5295d459);
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter();
+
+PROC
+PROC_DEN_HarpyMeal_HarpySceneInterrupted()
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal","FoundKid");
+QuestUpdate(_Player,"DEN_HarpyMeal","FoughtHarpies");
+
+//END_REGION
+
+//REGION Kid Approach Scene + Dialog Spotting Open/Close
+
+//Trigger combat if charmed kid can't talk
+PROC
+PROC_SpotPlayers_Spotted(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog", _Player)
+AND
+DB_CantTalk(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+THEN
+PROC_DEN_HarpyMeal_HarpySceneInterrupted();
+
+//Non-player characters trigger combat.
+PROC
+PROC_SpotPlayers_Spotted(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog", _Character)
+AND
+NOT DB_Players(_Character)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96)
+THEN
+PROC_DEN_HarpyMeal_HarpySceneInterrupted();
+
+PROC
+PROC_SpotPlayers_Spotted(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_StartCharmDialog", _Player)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96)
+AND
+NOT DB_CantTalk(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,   _Player)
+THEN
+PROC_DEN_HarpyMeal_HarpySceneInterrupted();
+
+IF
+DialogStarted(DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, _ID) //disable spotting if dialog starts without a spotting event
+THEN
+PROC_SceneOver("DEN_HarpyMeal_BeforeCombat");
+DB_SceneManager(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_Combat");
+DB_SceneTriggerManager("DEN_HarpyMeal_Combat",S_DEN_Cove_SUB_8b7e39c1-dbd9-4ce8-acb0-659f5295d459);
+SetFlag(DEN_HarpyMeal_Event_StopSpotting_de1392c7-f81e-493f-8d21-58f3a92684ff, NULL_00000000-0000-0000-0000-000000000000); 
+
+//Kid is charmed + at Harpies
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player)
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player);
+
+//Kid is uncharmed + at Harpies (after encounter)
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player)
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0) 
+AND
+GetFlag(DEN_Thieflings_State_AtHideoutPoint_5f768dc1-8294-49ee-b2d2-964fcb22f5ff,S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player);
+
+//Kid has returned to hideout + grove is at default peace state
+QRY
+QRY_SelectCustomDialog_AfterGenerics(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player)
+AND
+QRY_DEN_CheckPeaceState()
+AND
+GetFlag(DEN_Thieflings_State_AtHideoutPoint_5f768dc1-8294-49ee-b2d2-964fcb22f5ff,S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1)
+THEN
+DB_SelectedDialog((DIALOGRESOURCE)DEN_HarpyMeal_InHideout_57caac6b-60f6-2776-0e57-09da3104e7ee, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player);
+
+IF
+DialogEnded((DIALOGRESOURCE)DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, _)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_TalkedToCharmedNPC")
+THEN
+PROC_DEN_HarpyMeal_TalkedToCharmedNPC();
+
+PROC
+PROC_DEN_HarpyMeal_TalkedToCharmedNPC() //harpies have entered the scene in the dialog, make them hostile
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyDialogEnter_26677f47-392a-6bf8-9da7-e91d36ec8307) 
+THEN
+PROC_DEN_HarpyMeal_SetHarpiesHostile();
+
+PROC 
+PROC_DEN_HarpyMeal_TalkedToCharmedNPC() //victims of harpy song in the dialog begin moving to the harpy perch
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyDialogEnter_26677f47-392a-6bf8-9da7-e91d36ec8307)
+THEN
+PROC_DEN_HarpyMeal_VictimWalkToHarpy();
+
+//END_REGION
+
+//REGION Charmed Kid Dialog Actions
+
+IF
+FlagSet(DEN_HarpyMeal_Event_OverpowerSong_61321f56-13f9-a29a-7175-332d3e5c70c9, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Id) // if the player succeeded at the dialog action (skill check in dialog)
+THEN
+SetFlag(DEN_HarpyMeal_State_ImmuneHarpy_01_35adbfb7-7620-4773-b2be-2d0b238ea4a1, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0);
+
+IF
+FlagSet(DEN_HarpyMeal_Event_PlayerSuccumbedCharm_e797ef6c-c59c-176b-b2c3-b76ce3387410,_Player,_)
+THEN
+ApplyStatus((CHARACTER)_Player, "LURING_SONG_AURA_VICTIM", -1.0, 1, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+ApplyStatus((CHARACTER)_Player, "LURING_SONG", -1.0, 1, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+
+IF
+FlagSet(DEN_HarpyMeal_State_ImmuneHarpy_01_35adbfb7-7620-4773-b2be-2d0b238ea4a1, (CHARACTER)_Victim, _) //applies to both kid + player in the initial dialog scene -- FORCE REMOVE LURING SONG
+THEN
+RemoveStatus(_Victim, "LURING_SONG_AURA_VICTIM");
+RemoveStatus(_Victim, "LURING_SONG");
+ApplyStatus(_Victim, "LURING_SONG_IMMUNE", -1.0, 1, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+ClearFlag(DEN_HarpyMeal_State_ImmuneHarpy_01_35adbfb7-7620-4773-b2be-2d0b238ea4a1, _Victim, 0);
+ClearFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, _Victim);
+
+IF
+StatusApplied(_Victim, "LURING_SONG", _, _)
+THEN
+SetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, _Victim);
+
+IF
+StatusRemoved(_Victim, "LURING_SONG", _, _)
+THEN
+ClearFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, _Victim);
+
+PROC
+PROC_SceneOver("DEN_HarpyMeal_BeforeCombat")
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+THEN
+ApplyStatus((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "LURING_SONG", -1.0, 1, (CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+//END_REGION
+
+//REGION Breaking Victim Charm Outcomes
+
+//NPC charm first time removal
+IF
+FlagCleared(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, (CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _)
+AND
+DB_CurrentLevel("WLD_Main_A")
+AND
+NOT DB_PermaDefeated(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_KidCharmRemoved")
+THEN
+PROC_DEN_HarpyMeal_NPCCharmRemoved();
+
+//stop kid if moving towards Harpy perch
+PROC
+PROC_DEN_HarpyMeal_NPCCharmRemoved()
+AND
+DB_StoryMoving(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+THEN
+PROC_ClearStoryMove(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+PROC
+PROC_DEN_HarpyMeal_NPCCharmRemoved()
+THEN
+PROC_DEN_HarpyMeal_SwitchKidDialog();
+
+PROC
+PROC_DEN_HarpyMeal_NPCCharmRemoved() // if kid is uncharmed before all the harpies are present
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6)
+AND
+NOT QRY_DEN_HarpyMeal_CheckInDialog() //don't do this if the kid is in the timeline
+THEN
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter();
+
+PROC
+PROC_DEN_HarpyMeal_NPCCharmRemoved()
+AND
+NOT DB_DialogNPCs(_, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+THEN
+PROC_TryStartAD(DEN_HarpyMeal_AD_GnomeUncharmed_61b5214b-a1db-250b-ee94-672028b024ef, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+QRY
+QRY_DEN_HarpyMeal_CheckInDialog()
+AND
+DB_DialogNPCs(_Id, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _)
+AND
+DB_DialogName(DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c,_Id)
+THEN
+DB_NOOP(1);
+
+//Player characters have several potential lines for when they're charmed/uncharmed
+IF
+StatusRemoved((CHARACTER)_Victim, "LURING_SONG", _, _)
+AND 
+DB_Players(_Victim)
+THEN
+PROC_TryStartAD(DEN_HarpyMeal_AD_PlayerUncharmed_182d328f-0006-c51a-3989-9b75077bfa0f, _Victim);
+
+//stop if moving towards harpy perch
+IF
+StatusRemoved((CHARACTER)_Victim, "LURING_SONG", _, _)
+AND
+DB_Players(_Victim)
+AND
+DB_StoryMoving(_Victim, 1)
+THEN
+PROC_ClearStoryMove(_Victim);
+
+//END_REGION
+
+//REGION Kid Walk To Perch Interrupted
+
+PROC
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter()
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96)
+THEN
+PROC_DEN_HarpyMeal_HarpyLeaderEnter();
+
+PROC
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter()
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6)
+THEN
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+PROC_DEN_HarpyMeal_SetHarpiesHostile();
+
+PROC
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter()
+THEN
+PROC_TryStartAD(DEN_HarpyMeal_AD_HarpyInterrupted_b169bc9d-af93-9e00-27b5-428adb7ac6e2, S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+
+IF
+AttackedBy((CHARACTER)S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, _, _, _, _, _, _)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6) 
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_LeaderAttackedEarly")
+THEN
+PROC_TryStartAD(DEN_HarpyMeal_AD_HarpyAttackedEarly_aa1bb29a-0ef7-b1cd-6d16-d3aa132a5919, S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+PROC_DEN_HarpyMeal_SetHarpiesHostile();
+
+IF
+EnteredCombat(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,_Id)
+THEN
+PROC_DEN_HarpyMeal_SetHarpiesHostile();
+
+IF
+EnteredCombat(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,_Id)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6) 
+AND
+NOT QRY_DEN_HarpyMeal_PlayersInCombat(_Id)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_LeaderAttackedEarly")
+THEN
+PROC_TryStartAD(DEN_HarpyMeal_AD_HarpyAttackedEarly_aa1bb29a-0ef7-b1cd-6d16-d3aa132a5919, S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+
+QRY
+QRY_DEN_HarpyMeal_PlayersInCombat((GUIDSTRING)_Id)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player,_Id)
+THEN
+DB_NOOP(0);
+
+//END_REGION
+
+//REGION Harpies Arrive In Cove
+
+//Harpy Leader Enters via dialog timeline (joins dialog)
+IF
+FlagSet(DEN_HarpyMeal_Event_LeaderDialogEnter_4f278b70-889b-c810-7388-b45b0308165b, _, _Id)
+THEN
+PROC_DEN_HarpyMeal_HarpyLeaderEnter();
+
+//Harpy Leader Enters
+PROC
+PROC_DEN_HarpyMeal_HarpyLeaderEnter()
+AND
+IsOnStage(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, 0)
+THEN
+SetOnStage(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, 1);
+TeleportTo(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, S_DEN_HarpyLandingPerch_7f3d88aa-26cd-4ec2-aa14-a6ae368cb9fa);	//TODO: make this a 'fly in'
+PlayEffect(S_DEN_HarpyLandingPerch_7f3d88aa-26cd-4ec2-aa14-a6ae368cb9fa, VFX_Script_Stub_Poof_01_f0cf792a-0f74-d17e-ad0d-6052a6131416, "");
+SetFlag((FLAG)DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96, NULL_00000000-0000-0000-0000-000000000000, 0); 
+UseSpell(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, "Shout_LuringSong_Harpy", S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+
+QRY
+QRY_SpeakerIsAvailableAndInDialogRange(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, _Character)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, _, (CHARACTER)_Character,_)
+AND
+IsOnStage(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_SpeakerIsAvailableAndInDialogRange(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, _Character)
+AND
+DB_DialogRequestCache_SpeakerList_Speakers(DEN_HarpyMeal_CharmedVictim_Wildshape_fde88a45-4b5f-367d-7713-d5d23b743f88, _, (CHARACTER)_Character,_)
+AND
+IsOnStage(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, 0)
+THEN
+DB_NOOP(1);
+
+//Standard Harpies Enter Via The Cinematic (no different from outside cinematic)
+IF
+DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyDialogEnter_26677f47-392a-6bf8-9da7-e91d36ec8307)
+THEN
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+
+IF
+EnteredCombat(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,_)
+THEN
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+
+//Standard Harpies Enter
+PROC
+PROC_DEN_HarpyMeal_StandardHarpiesEnter()
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_StandardHarpiesEnter")
+AND
+DB_DEN_HarpyMeal_Harpies(_Harpy, _Trigger)
+AND
+IsOnStage(_Harpy, 0)
+AND
+GetPosition(_Trigger, _X, _Y, _Z)
+THEN
+AppearAt(_Harpy, _Trigger, 1, DFLT_UTIL_Spawn_01_510ff37e-0618-40e4-8ce0-236e3dc9c291, "");
+LookAtEntity((CHARACTER)_Harpy, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+PROC
+PROC_DEN_HarpyMeal_StandardHarpiesEnter()
+THEN
+SetFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_DEN_HarpyMeal_SetHarpiesHostile()
+THEN
+PROC_SetRelationMutual((FACTION)ACT1_DEN_Harpy_8ae4ef27-7ccb-01f0-1c52-10e06bb58d5b, (FACTION)ACT1_DEN_HarpyKid_8bf1d066-93af-eaa6-d48f-c1db3da5c4cd, 0);
+
+IF
+AutomatedDialogStarted(DEN_HarpyMeal_AD_HarpyAttacks_92ccae30-c257-0f94-575d-4e04ec7e8ca2, _)
+AND
+DB_DEN_HarpyMeal_Harpy002CombatADCount(_OldCount)
+AND
+_OldCount < 4
+AND
+IntegerSum(_OldCount, 1, _NewCount)
+THEN
+NOT DB_DEN_HarpyMeal_Harpy002CombatADCount(_OldCount);
+DB_DEN_HarpyMeal_Harpy002CombatADCount(_NewCount);
+DB_CombatReact_AD_OnNextTurn(S_DEN_Harpy_002_12a20a1e-c588-401c-930e-e755cebf2ff5,(DIALOGRESOURCE)DEN_HarpyMeal_AD_HarpyAttacks_92ccae30-c257-0f94-575d-4e04ec7e8ca2);
+
+//END_REGION
+
+//REGION Charmed Walk To Harpy Perch
+
+PROC
+PROC_DEN_HarpyMeal_VictimWalkToHarpy()
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+THEN
+SetFlag(DEN_HarpyMeal_Event_VictimWalkToWater_1b77362e-144d-63a0-bb46-60981e051102,NULL_00000000-0000-0000-0000-000000000000);
+SetHasDialog(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0); //if he has dialog the player can talk to him and keep him from walking to harpies indefinitely
+ClearFlag((FLAG)GLO_HarpySong_State_Stationary_b1b560d0-05e4-40a6-a0ae-3c4d354e212e,(CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca); //used on StatusOverride script
+
+PROC
+PROC_DEN_HarpyMeal_VictimWalkToHarpy()
+AND
+DB_Players(_Player)
+AND
+HasActiveStatus(_Player, "LURING_SONG", 1)
+AND
+GetFlag(DEN_HarpyMeal_Event_PlayerSuccumbedCharm_e797ef6c-c59c-176b-b2c3-b76ce3387410,_Player,1)
+THEN
+DetachFromPartyGroup(_Player); //player will be moved automatically with the StatusOverride behavior
+
+IF
+EntityEvent(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,"GLO_HarpySong_ReachedCharmer")
+AND
+GetRelation((FACTION)ACT1_DEN_Harpy_8ae4ef27-7ccb-01f0-1c52-10e06bb58d5b, (FACTION)ACT1_DEN_HarpyKid_8bf1d066-93af-eaa6-d48f-c1db3da5c4cd, 50)
+THEN
+TimerLaunch("DEN_HarpyMeal_HarpyAttackTimer",2000);
+
+IF
+TimerFinished("DEN_HarpyMeal_HarpyAttackTimer")
+AND
+GetRelation((FACTION)ACT1_DEN_Harpy_8ae4ef27-7ccb-01f0-1c52-10e06bb58d5b, (FACTION)ACT1_DEN_HarpyKid_8bf1d066-93af-eaa6-d48f-c1db3da5c4cd, 50)
+AND
+QRY_IsInRange(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, 10.0)
+THEN
+UseSpell(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,"Target_Multiattack",S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+//Kill kid on the harpy perch after timeline
+IF
+UsingSpellOnTarget(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,"Target_Multiattack",_,_,_)
+AND
+GetRelation((FACTION)ACT1_DEN_Harpy_8ae4ef27-7ccb-01f0-1c52-10e06bb58d5b, (FACTION)ACT1_DEN_HarpyKid_8bf1d066-93af-eaa6-d48f-c1db3da5c4cd, 50)
+AND
+GetHitpoints(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,_HP)
+THEN
+SetImmortal(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+ApplyDamage(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,_HP,"Physical",S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3);
+Die(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,DEATHTYPE.Physical,S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,1,0);
+SetFlag(DEN_HarpyMeal_Event_LeaderKilledVictim_41f13c54-8ced-cd7c-d77b-448810338340,NULL_00000000-0000-0000-0000-000000000000);
+PROC_SetRelationToPlayers((FACTION)ACT1_DEN_Harpy_8ae4ef27-7ccb-01f0-1c52-10e06bb58d5b, 0);
+
+//Kill kid (remove immortality) if killed by harpy in combat
+IF
+AttackedBy(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,(CHARACTER)_Harpy,_,_,_Amount,_,_)
+AND
+IsDead(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0)
+AND
+DB_DEN_HarpyMeal_Harpies(_Harpy,_)
+AND
+GetRelation((FACTION)ACT1_DEN_Harpy_8ae4ef27-7ccb-01f0-1c52-10e06bb58d5b, (FACTION)ACT1_DEN_HarpyKid_8bf1d066-93af-eaa6-d48f-c1db3da5c4cd, 0)
+AND
+GetHitpoints(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,_HP)
+AND
+_Amount>=_HP
+THEN
+SetImmortal(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+Die(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,DEATHTYPE.Physical,S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3,1,0);
+
+//player attacks kid - don't allow to drop below 1HP
+IF
+AttackedBy(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,(CHARACTER)_Player,_,_,_Amount,_,_)
+AND
+DB_Players(_Player)
+AND
+NOT DB_PermaDefeated(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca) //So he cannot be resurrected
+AND
+GetHitpoints(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,_HP)
+AND
+IntegerSubtract(_HP,_Amount,_Remaining)
+AND
+_Remaining<1
+THEN
+PROC_SetHitpoints_BlockSelfHealing(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1);
+
+//END_REGION
+
+//REGION Kid in combat with harpies
+
+IF
+LeftCombat(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, _)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_AddSongSpell")
+THEN
+AddSpell(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, "Shout_LuringSong_Harpy");
+
+//Keep track of combat ID to clear the kid's AI_IGNORED_TARGET tag when players leave.
+IF
+DB_Is_InCombat((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _CombatID)
+AND
+DB_DEN_HarpyMeal_Harpies(_Harpy, _)
+AND
+DB_Is_InCombat(_Harpy, _CombatID)
+AND
+NOT DB_DEN_HarpyMeal_CombatID(_CombatID)
+THEN
+DB_DEN_HarpyMeal_CombatID(_CombatID);
+
+IF
+LeftCombat(_Player, _CombatID)
+AND
+DB_DEN_HarpyMeal_CombatID(_CombatID)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+CombatGetInvolvedPlayersCount(_CombatID, 0)
+THEN
+ClearTag(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, AI_IGNORED_TARGET_ff6d7d1f-094f-432e-a117-fdc3a0ab7ac1);
+
+IF
+EnteredTrigger(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, S_DEN_BeachCowerArea_0fe4096d-608a-47b4-8b2b-bab73640f09c)
+THEN
+ClearFlag(DEN_HarpyMeal_State_GoCower_dbe0ef4a-49c4-4fac-912e-552447766b76, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+//END_REGION
+
+
+//REGION Perch Approach Force Start
+
+IF
+EnteredTrigger((CHARACTER)_Player, S_DEN_HarpyMeal_ForceStartArea_496fe340-d1d0-4841-801f-5ff4e7ffdd17)
+AND
+DB_Players(_Player)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6)
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1)
+AND
+NOT QRY_CharacterIsHidden(_Player)
+THEN
+QuestUpdate(_Player,"DEN_HarpyMeal","FoughtHarpies");
+PROC_SceneOver("DEN_HarpyMeal_BeforeCombat");
+DB_SceneManager(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_HarpyMeal_Combat");
+DB_SceneTriggerManager("DEN_HarpyMeal_Combat",S_DEN_Cove_SUB_8b7e39c1-dbd9-4ce8-acb0-659f5295d459);
+PROC_DEN_HarpyMeal_ForceStart((CHARACTER)_Player);
+
+PROC
+PROC_DEN_HarpyMeal_ForceStart((CHARACTER)_Player)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96)
+THEN
+PROC_DEN_HarpyMeal_HarpyLeaderEnter();
+LookAtEntity(S_DEN_Harpy_000_e5f24d94-a1a9-40e0-b3ee-fe0480c408d3, _Player);
+
+PROC
+PROC_DEN_HarpyMeal_ForceStart((CHARACTER)_Player)
+THEN
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+PROC_DEN_HarpyMeal_SetHarpiesHostile();
+PROC_DEN_HarpyMeal_VictimWalkToHarpy();
+
+//END_REGION
+
+//REGION Combat/Harpy Encounter Over
+
+//npc left the area prematurely somehow
+PROC
+PROC_SceneInterrupted(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _, "DEN_HarpyMeal_Combat", "LeftTrigger")
+THEN
+SetFlag((FLAG)DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739, NULL_00000000-0000-0000-0000-000000000000);
+
+// If scene is interrupted while in dialog, stop it and start combat
+PROC
+PROC_SceneInterrupted(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _, "DEN_HarpyMeal_Combat", _)
+AND
+DB_DialogName(DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+THEN
+PROC_ForceStopSpecificDialog(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c);
+QuestUpdate((CHARACTER)_Player,"DEN_HarpyMeal","FoughtHarpies");
+PROC_DEN_HarpyMeal_ForceStart((CHARACTER)_Player);
+
+PROC
+PROC_StateSet_Defeated(_Harpy)
+AND
+DB_DEN_HarpyMeal_Harpies((CHARACTER)_Harpy, _Trigger)
+THEN
+PROC_RemoveFromTrackedSoundEntity(_Harpy);
+
+PROC
+PROC_StateSet_PermaDefeated(_Harpy)
+AND
+DB_DEN_HarpyMeal_Harpies((CHARACTER)_Harpy, _Trigger)
+THEN
+NOT DB_DEN_HarpyMeal_Harpies(_Harpy, _Trigger);
+PROC_RemoveFromTrackedSoundEntity(_Harpy);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("DEN_HarpyMeal_Harpies")
+THEN
+PROC_DEN_HarpyMeal_StopAreaSong();
+
+IF
+FlagSet((FLAG)DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+PROC_SceneOver("DEN_HarpyMeal_Combat");
+PROC_DEN_HarpyMeal_ResolvedHarpies();
+
+PROC
+PROC_DEN_HarpyMeal_ResolvedHarpies()
+AND
+GetFlag(DEN_HarpyMeal_State_Charmed_91040326-c989-449b-aaa4-332a344462f4,S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1)
+THEN
+SetFlag(DEN_HarpyMeal_State_ImmuneHarpy_01_35adbfb7-7620-4773-b2be-2d0b238ea4a1, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0);
+
+PROC
+PROC_DEN_HarpyMeal_ResolvedHarpies()
+THEN
+PROC_DEN_HarpyMeal_SwitchKidDialog();
+TimerLaunch("DEN_HarpyMeal_StartAfterHarpyDialog",2000);
+
+IF
+TimerFinished("DEN_HarpyMeal_StartAfterHarpyDialog")
+THEN
+PROC_DEN_HarpyMeal_TryKidMoveToAndTalk();
+
+PROC
+PROC_DEN_HarpyMeal_TryKidMoveToAndTalk()
+AND
+QRY_GetClosestAvailableCharacterTo(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 0)
+AND
+DB_ClosestAvailableCharacterTo_PreferAvatar(_Player,_,_Dist,_)
+AND
+_Dist <= 30.0
+THEN
+PROC_DEN_HarpyMeal_KidMoveToAndTalk((CHARACTER)_Player);
+
+PROC
+PROC_DEN_HarpyMeal_TryKidMoveToAndTalk()
+AND
+GetClosestPlayer(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player, _Dist)
+AND
+_Dist <= 30.0
+THEN
+PROC_DEN_HarpyMeal_KidMoveToAndTalk((CHARACTER)_Player);
+
+PROC
+PROC_DEN_HarpyMeal_KidMoveToAndTalk((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_KidMoveToTalkOnce")
+THEN
+PROC_CharacterMoveToAndTalk(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _Player, DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5, "", "Run", 10.0); 
+
+PROC
+PROC_DEN_HarpyMeal_ResolvedHarpies()
+AND
+DB_Players(_Player)
+AND
+DB_InRegion(_Player, S_DEN_Cove_SUB_8b7e39c1-dbd9-4ce8-acb0-659f5295d459)
+THEN
+SetFlag(DEN_HarpyMeal_State_HelpedSaveVictim_13491e5a-6381-2d8d-e015-5aae3948b794,_Player);
+
+PROC
+PROC_DEN_HarpyMeal_ResolvedHarpies()
+AND
+DB_Players(_Player)
+AND
+NOT DB_PermaDefeated(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+AND
+NOT DB_DEN_HarpyMeal_CharmedKidDead(1) // The DB_PermaDefeated() update comes too late so PROC_DEN_HarpyMeal_ResolvedHarpies gets called before, hence updating the wrong journal entry (DefeatedHarpies)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DefeatedHarpies");
+
+PROC
+PROC_DEN_HarpyMeal_ResolvedHarpies()
+AND
+NOT DB_PermaDefeated(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+THEN
+PROC_SetCanFight((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+SetCanJoinCombat((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+PROC_CharacterEnableAllCrimes((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+BlockNewCrimeReactions(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+NOT DB_IgnoreAssault(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+DB_DEN_Thieflings_HideoutKids((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+PROC
+PROC_DEN_HarpyMeal_SwitchKidDialog()
+AND
+NOT DB_Dialogs(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5)
+THEN
+PROC_RemoveDialogEntryForSpeaker(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, DEN_HarpyMeal_CharmedVictim_c6beeee9-6c35-4b8b-8b86-2a15a28f556c);
+DB_Dialogs(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5);
+SetHasDialog(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, 1);
+
+//END_REGION
+
+//REGION Kid Death Outcomes
+
+IF
+FlagSet((FLAG)DEN_HarpyMeal_Event_SawVictimDie_b83ca7bf-ad4a-e407-46e8-af775365eafd, (CHARACTER)_Player, _)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "FoundKid", 1)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DoneKidDied");
+
+IF
+FlagSet((FLAG)DEN_HarpyMeal_Event_SawVictimDie_b83ca7bf-ad4a-e407-46e8-af775365eafd, (CHARACTER)_Player, _)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "FoundKid", 0)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "InvestigateFoundDeadKid");
+
+IF
+DB_PermaDefeated((CHARACTER)S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+AND
+NOT DB_GlobalFlag(GLO_AttackOnDen_State_RaidReady_eb361773-da88-dee4-f4c8-a22acae60948)
+AND
+QRY_DEN_IsInDen(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0)
+THEN
+PROC_DEN_HarpyMeal_NPCPermaDefeated();
+
+//permadefeated before all Harpies arrived
+PROC
+PROC_DEN_HarpyMeal_NPCPermaDefeated()
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_LeaderKilledVictim_41f13c54-8ced-cd7c-d77b-448810338340)
+THEN
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter();
+
+//permadefeated because of harpy leader + player charmed too
+PROC
+PROC_DEN_HarpyMeal_NPCPermaDefeated()
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Event_HarpyLeaderEntered_b776842e-e858-4289-92eb-1e36e55c2c96)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_HarpiesEntered_97e098b2-74b6-495c-912f-55f23f6842f6)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Event_LeaderKilledVictim_41f13c54-8ced-cd7c-d77b-448810338340)
+AND
+DB_Players(_Player)
+AND
+GetFlag(DEN_HarpyMeal_Event_PlayerSuccumbedCharm_e797ef6c-c59c-176b-b2c3-b76ce3387410,_Player,1)
+THEN
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter();
+
+//END_REGION
+
+//REGION NPC Leaves Harpy Area
+IF
+FlagSet(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739, _, _)
+AND
+NOT DB_DEN_NPC(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, _, _)
+THEN
+DB_DEN_NPC(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "Hideout", DEN_AttackOnDen_HarpyKid_4d59e78a-c32c-92ad-f6cc-e01bc20f1b72);
+SetEntityEvent(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, "DEN_States_Enable", 1);
+
+//NPC disappears once the Harpy encounter is resolved and he is spoken with
+IF
+DialogEnded((DIALOGRESOURCE)DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5, _)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Event_KidReturnHideout_8180a3b3-8db8-c60f-4df9-e8b95adb14f4) 
+THEN
+PROC_DisappearOutOfSightTo(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, S_DEN_HideoutKidDenTarget_4a6db080-e49c-48c6-a175-20914fff76d7, "Run", 0, "DEN_HarpyMeal_KidToHideout");
+
+//Move NPC with long rest after combat Harpy is resolved (not talked to)
+PROC
+PROC_LongRestOrLevelUnloading("WLD_Main_A")
+AND
+DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_AfterCombatHasMet_335ecd21-9838-5bae-95dc-12e8f26c22d3)
+AND
+QRY_DEN_IsInDen(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0)
+AND
+NOT DB_PermaDefeated(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+THEN
+SetFlag(DEN_HarpyMeal_Event_KidReturnHideout_8180a3b3-8db8-c60f-4df9-e8b95adb14f4, NULL_00000000-0000-0000-0000-000000000000);
+PROC_DisappearOutOfSightTo(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, S_DEN_HideoutKidDenTarget_4a6db080-e49c-48c6-a175-20914fff76d7, "Run", 0, "DEN_HarpyMeal_KidToHideout");
+
+IF
+EntityEvent(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,"DEN_HarpyMeal_KidToHideout")
+THEN
+PROC_DEN_HarpyMeal_KidReturnedHideout();
+
+PROC
+PROC_DEN_HarpyMeal_KidReturnedHideout()
+THEN
+PROC_AppearOutOfSightTo(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,S_DEN_Thieflings_HarpyKidHideoutArea_01_449f15ea-643c-41d9-91a5-c9fcdd92aaea,S_DEN_General_HideoutWallCrack_b49d551f-c9cd-4b3b-ae35-bf5197371404,"");
+SetFlag(DEN_Thieflings_State_AtHideoutPoint_5f768dc1-8294-49ee-b2d2-964fcb22f5ff, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+ToInventory(S_DEN_HarpyKidStory_aeb815a0-a504-422e-ac60-8c2f6a588c1b,S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,1,0,1);
+
+PROC
+PROC_DEN_HarpyMeal_KidReturnedHideout()
+AND
+QRY_DEN_CheckPeaceState()
+THEN
+PROC_RemoveDialogEntryForSpeaker(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5);
+DB_Dialogs(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,DEN_HarpyMeal_InHideout_57caac6b-60f6-2776-0e57-09da3104e7ee);
+
+//Make Mol friendly for saving CharmedKid
+IF
+FlagSet(DEN_HarpyMeal_Event_KidReturnHideout_8180a3b3-8db8-c60f-4df9-e8b95adb14f4,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+NOT DB_PermaDefeated(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca)
+AND
+NOT DB_GlobalFlag(DEN_Hideout_Event_TurnedKidsHostile_17cfabeb-f1d7-9432-0e29-5aecfcef1a18)
+THEN
+SetFlag(DEN_Hideout_Event_BefriendedThieflings_a1a932ee-f66a-08af-4bf0-bf77790052f7,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EnteredTrigger(_Player,S_DEN_Cove_SUB_8b7e39c1-dbd9-4ce8-acb0-659f5295d459)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_Event_AfterCombatHasMet_335ecd21-9838-5bae-95dc-12e8f26c22d3)
+AND
+NOT DB_DEN_HarpyMeal_CharmedKidDead(1) // The DB_PermaDefeated() update comes too late so PROC_DEN_HarpyMeal_ResolvedHarpies gets called before, hence updating the wrong journal entry (DefeatedHarpies)
+AND
+QuestUpdateIsUnlocked(_Player,"DEN_HarpyMeal", "DoneKidFled_NoThank",0)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DoneKidFled_NoThank");
+
+//NPC left charmed in Harpy Den while Harpy is still alive -> he is killed
+PROC
+PROC_LongRestOrLevelUnloading("WLD_Main_A")
+THEN
+PROC_DEN_HarpyMeal_CheckOngoing();
+
+PROC
+PROC_DEN_AllPlayersLeftDen()
+THEN
+PROC_DEN_HarpyMeal_CheckOngoing();
+
+PROC
+PROC_DEN_HarpyMeal_CheckOngoing()
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Event_PlayerEnteredLair_f2ab81cd-c89e-47d0-8013-2dc5425de331) 
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+QRY_DEN_IsInDen(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0)
+THEN
+PROC_DEN_HarpyMeal_StateTransitionResolve();
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State)
+AND
+DB_State_Priority(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State, _Priority)
+AND
+_Priority >= 5000
+AND
+NOT DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+QRY_DEN_IsInDen(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0)
+THEN
+PROC_SceneOver("DEN_HarpyMeal_BeforeCombat");
+PROC_DEN_HarpyMeal_StateTransitionResolve();
+
+PROC
+PROC_DEN_HarpyMeal_StateTransitionResolve()
+THEN
+SetImmortal(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,0);
+DB_DEN_HarpyMeal_CharmedKidDead(1); // The DB_PermaDefeated() update comes too late so PROC_DEN_HarpyMeal_ResolvedHarpies gets called before, hence updating the wrong journal entry (DefeatedHarpies)
+Die(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, DEATHTYPE.DoT, 1);
+TeleportTo(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca,S_DEN_HarpyMeal_VictimCharmMove_112552b5-6ea3-4d7e-8781-dcf61c6c54c1);
+SetFlag((FLAG)DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739, NULL_00000000-0000-0000-0000-000000000000); 
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_DEN_HarpyWarningADArea_59e5d0bb-9ef0-40f6-ac5f-21fcbf9a5bd3);
+PROC_DEN_HarpyMeal_HarpyLeaderEnter();
+PROC_DEN_HarpyMeal_StandardHarpiesEnter();
+PROC_DEN_HarpyMeal_SetHarpiesHostile();
+PROC_DEN_HarpyMeal_StopAreaSong();
+
+//END_REGION
+
+//REGION Set World Gossip Trigger //TODO:Maybe remove?
+
+IF
+DialogEnded((DIALOGRESOURCE)DEN_HarpyMeal_AfterHarpyEncounter_4632f7e4-5423-2308-858d-b62b3f525ca5,_AfterHarpyInstance)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+QRY_OnlyOnce("DEN_HarpiesClearedPartyBanterTrigger")
+THEN
+PROC_RegisterWorldGossipTrigger(S_PartyBanterTrigger_DEN_HarpyCleared_85084c95-aba5-44c5-8309-d5155493c284);
+
+PROC
+PROC_LongRest()
+AND
+DB_GlobalFlag(DEN_HarpyMeal_State_HarpyEncounterOver_48fd55cd-a79a-8b4a-8dd6-901910b5d739)
+AND
+QRY_OnlyOnce("DEN_HarpiesClearedPartyBanterTrigger")
+THEN
+PROC_RegisterWorldGossipTrigger(S_PartyBanterTrigger_DEN_HarpyCleared_85084c95-aba5-44c5-8309-d5155493c284);
+
+//END_REGION
+
+//REGION Harpy Nest Marker
+
+IF
+FlagSet((FLAG)DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5, NULL_00000000-0000-0000-0000-000000000000, _Id)
+AND
+DB_DialogPlayers(_Id, _Player, _)
+THEN
+DB_DEN_HarpyMeal_NestMarker((CHARACTER)_Player);
+PROC_ShowMarker((CHARACTER)_Player, "DEN_HarpyMeal_Nest");
+
+IF
+UseStarted((CHARACTER)_Player, (ITEM)S_DEN_HarpyNest_a5c87ab6-b38b-4c2b-bf4f-a1f5f391f79f)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5)
+AND
+DB_DEN_HarpyMeal_NestMarker(_MarkerPlayer)
+THEN
+PROC_HideMarker(_MarkerPlayer, "DEN_HarpyMeal_Nest");
+
+IF
+UseStarted((CHARACTER)_Player, (ITEM)S_DEN_HarpyNest_a5c87ab6-b38b-4c2b-bf4f-a1f5f391f79f)
+AND
+DB_Players(_Player)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5)
+THEN
+ClearFlag(DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+DestroyedBy((ITEM)S_DEN_HarpyNest_a5c87ab6-b38b-4c2b-bf4f-a1f5f391f79f,_,_,_)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5)
+AND
+DB_DEN_HarpyMeal_NestMarker(_MarkerPlayer)
+THEN
+PROC_HideMarker(_MarkerPlayer, "DEN_HarpyMeal_Nest");
+
+IF
+DestroyedBy((ITEM)S_DEN_HarpyNest_a5c87ab6-b38b-4c2b-bf4f-a1f5f391f79f,_,_,_)
+AND
+DB_GlobalFlag(DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5)
+THEN
+ClearFlag(DEN_HarpyMeal_Knows_HarpyNestClimb_e6b84cff-5e06-6dde-e756-fd7ac58377f5, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+IF
+EnteredTrigger((CHARACTER)_Player, S_DEN_HarpyExploration_f6ee76bc-af63-42bc-9af3-9b4e81b22d66)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_DiscoveredHarpyNest")
+THEN
+StartVoiceBark(DEN_HarpyMeal_VB_FoundHarpyNest_43137e76-79d2-945b-7eff-4e6197be061f, _Player);
+PROC_TriggerUnregisterForPlayers(S_DEN_HarpyExploration_f6ee76bc-af63-42bc-9af3-9b4e81b22d66);
+
+//END_REGION
+
+//REGION Journal
+IF
+FlagSet(DEN_HarpyMeal_State_RescuedChild_7a90f576-f762-4710-aa4d-9a81905bd971, _, _)
+THEN
+PROC_DEN_HarpyMeal_RescuedKidJournalFollowup();
+
+//Already met mol, skip to that entry directly.
+PROC
+PROC_DEN_HarpyMeal_RescuedKidJournalFollowup()
+AND
+QRY_QuestUpdateIsUnlockedForAny("DEN_Thieflings", "EnteredHideout")
+THEN
+DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1);
+QuestUpdate("DEN_HarpyMeal","ToldDragonLair_MetMol");
+DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+//Doni is not in hideout and Mol wasn't met.
+PROC
+PROC_DEN_HarpyMeal_RescuedKidJournalFollowup()
+AND
+NOT DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1)
+AND
+GetFlag(DEN_GruntingKid_State_InHideout_f90cdb76-bb4f-bf03-e1f1-4a228799ce85, S_GLO_GruntingKid_0f8ef61e-cb63-49e1-a242-677173bff5e0, 0)
+THEN
+DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1);
+QuestUpdate("DEN_HarpyMeal","ToldDragonLair");
+
+//Doni is in hideout when update is to be given. Skip straight to DoniFled. (Players made him)
+PROC
+PROC_DEN_HarpyMeal_RescuedKidJournalFollowup()
+AND
+NOT DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1)
+AND
+GetFlag(DEN_GruntingKid_State_InHideout_f90cdb76-bb4f-bf03-e1f1-4a228799ce85, S_GLO_GruntingKid_0f8ef61e-cb63-49e1-a242-677173bff5e0, 1)
+AND
+IsOnStage(S_GLO_GruntingKid_0f8ef61e-cb63-49e1-a242-677173bff5e0, 1)
+AND
+NOT DB_PermaDefeated(S_GLO_GruntingKid_0f8ef61e-cb63-49e1-a242-677173bff5e0)
+THEN
+DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1);
+QuestUpdate("DEN_HarpyMeal","DoniFled");
+
+//If none of the above were given, some weird occurance has caused Doni to be unavailable. Give the DoniGone update.
+PROC
+PROC_DEN_HarpyMeal_RescuedKidJournalFollowup()
+AND
+NOT DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1)
+THEN
+DB_DEN_HarpyMeal_RescueFollowUpDoniUpdate(1);
+QuestUpdate("DEN_HarpyMeal","DoniGone");
+DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+//If Doni ends up in the hideout after receiving the ToldRagonLair update and he hasn't fled or shown the way, he is gone.
+IF
+FlagSet(DEN_GruntingKid_State_InHideout_f90cdb76-bb4f-bf03-e1f1-4a228799ce85,_,_)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player,"DEN_HarpyMeal","ToldDragonLair",1)
+AND
+QuestUpdateIsUnlocked(_Player,"DEN_HarpyMeal","DoniShownWay",0)
+AND
+QuestUpdateIsUnlocked(_Player,"DEN_HarpyMeal","DoniFled",0)
+THEN
+QuestUpdate(_Player,"DEN_HarpyMeal","DoniGone");
+DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+IF
+FlagSet(DEN_GruntingKid_Event_DisappearIntoWall_3c2644fa-05e4-c922-3949-69f3596760a8,_,_ID)
+AND
+DB_DialogPlayers(_ID,_Player,_)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player,"DEN_HarpyMeal","ToldDragonLair",1)
+THEN
+QuestUpdate((CHARACTER)_Player,"DEN_HarpyMeal","DoniFled");
+DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+IF
+QuestUpdateUnlocked(_,"DEN_HarpyMeal","DoniShownWay")
+THEN
+DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+IF
+FlagSet(DEN_Hideout_Event_ThankedForHarpyKid_ba2e9be4-184d-8fea-09d7-7045d70bc9f1,_,_ID)
+AND
+DB_DialogPlayers(_ID,_Player,_)
+THEN
+QuestUpdate((CHARACTER)_Player,"DEN_HarpyMeal","MetMol");
+NOT DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+IF
+DB_OnlyOnce("DEN_HarpyMeal_ToMol")
+AND
+DB_GlobalFlag(DEN_Hideout_Event_TurnedKidsHostile_17cfabeb-f1d7-9432-0e29-5aecfcef1a18)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player,"DEN_HarpyMeal","MolGone");
+NOT DB_OnlyOnce("DEN_HarpyMeal_ToMol");
+
+PROC
+PROC_LevelUnloading("WLD_Main_A")
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "FoundKid", 1)
+AND
+QuestIsClosed("DEN_HarpyMeal",0)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DoneLeftKid");
+
+PROC
+PROC_LevelUnloading("WLD_Main_A")
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "FoundKid", 0)
+AND
+QuestIsClosed("DEN_HarpyMeal",0)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DoneNoInvestigation");
+
+// MolGone - Case ToldDragonLair
+IF
+QuestUpdateUnlocked(_Player, "DEN_HarpyMeal", "ToldDragonLair")
+AND
+DB_GlobalFlag(DEN_Hideout_Event_TurnedKidsHostile_17cfabeb-f1d7-9432-0e29-5aecfcef1a18)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "MolGone");
+
+IF
+FlagSet(DEN_Hideout_Event_TurnedKidsHostile_17cfabeb-f1d7-9432-0e29-5aecfcef1a18, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "ToldDragonLair", 1)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "MolGone");
+
+// MolGone - Case ToldDragonLair_MetMol
+IF
+QuestUpdateUnlocked(_Player, "DEN_HarpyMeal", "ToldDragonLair_MetMol")
+AND
+DB_GlobalFlag(DEN_Hideout_Event_TurnedKidsHostile_17cfabeb-f1d7-9432-0e29-5aecfcef1a18)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "MolGone");
+
+IF
+FlagSet(DEN_Hideout_Event_TurnedKidsHostile_17cfabeb-f1d7-9432-0e29-5aecfcef1a18, _, _)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "ToldDragonLair_MetMol", 1)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "MolGone");
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State)
+AND
+NOT DB_DEN_DefaultStates(_State)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "ToldDragonLair", 1)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DoneStateChanged");
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State)
+AND
+NOT DB_DEN_DefaultStates(_State)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "DEN_HarpyMeal", "ToldDragonLair_MetMol", 1)
+THEN
+QuestUpdate(_Player, "DEN_HarpyMeal", "DoneStateChanged");
+//END_REGION
+
+//REGION Debug
+
+IF
+TextEvent("harpymealdone")
+THEN
+PROC_DEN_HarpyMeal_DebugEnd();
+
+PROC
+PROC_DEN_HarpyMeal_DebugEnd()
+THEN
+SetFlag(DEN_HarpyMeal_Event_StopSpotting_de1392c7-f81e-493f-8d21-58f3a92684ff, NULL_00000000-0000-0000-0000-000000000000); 
+PROC_DEN_HarpyMeal_WalkInterruptHarpyEnter();
+PROC_SceneOver("DEN_HarpyMeal_BeforeCombat");
+
+PROC
+PROC_DEN_HarpyMeal_DebugEnd()
+AND
+DB_DEN_HarpyMeal_Harpies(_Harpy,_)
+THEN
+Die(_Harpy,DEATHTYPE.DoT,_Harpy,1,1);
+
+PROC
+PROC_DEN_HarpyMeal_DebugEnd()
+THEN
+SetFlag(DEN_HarpyMeal_Event_KidReturnHideout_8180a3b3-8db8-c60f-4df9-e8b95adb14f4, NULL_00000000-0000-0000-0000-000000000000);
+TeleportTo(S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca, S_DEN_Thieflings_HarpyKidHideoutArea_01_449f15ea-643c-41d9-91a5-c9fcdd92aaea);
+SetFlag(DEN_Thieflings_State_AtHideoutPoint_5f768dc1-8294-49ee-b2d2-964fcb22f5ff, S_DEN_CharmedKid_3b92c689-6024-4446-a6c9-584e9e8d77ca);
+
+IF
+TextEvent("harpymeal")
+THEN
+PROC_TeleportPartiesTo(S_DEN_HarpyMeal_UncharmedArea_7fdc16b9-3621-4ab5-9847-e9e61a24ca1e,"");
+
+//END_REGION
+
+//REGION Sound
+
+IF
+DB_DEN_HarpyMeal_Harpies(_Harpy,_Trigger)
+THEN
+DB_Sound_ScriptedCombatMusic(_Harpy,"DEN_Harpy");
+
+IF
+StatusApplied((CHARACTER)_Harpy,"LURING_SONG_AURA",_,_)
+AND
+DB_DEN_HarpyMeal_Harpies((CHARACTER)_Harpy, _)
+THEN
+DB_DEN_HarpyMeal_SingingHarpy((CHARACTER)_Harpy);
+TriggerSetSoundState((TRIGGER)Amb_SV_RangerCamp_FZ_000_3fd38540-d846-770c-ba66-21c4924dacd6,"CombatPhase_DEN_Harpy_CastLuringSong","HarpyOn",1);
+PROC_AddToTrackedSoundEntity(_Harpy,S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211);
+
+IF
+StatusRemoved((CHARACTER)_Harpy,"LURING_SONG_AURA",_Cause,_)
+AND
+DB_DEN_HarpyMeal_SingingHarpy((CHARACTER)_Harpy)
+THEN
+NOT DB_DEN_HarpyMeal_SingingHarpy((CHARACTER)_Harpy);
+TriggerSetSoundState((TRIGGER)Amb_SV_RangerCamp_FZ_000_3fd38540-d846-770c-ba66-21c4924dacd6,"CombatPhase_DEN_Harpy_CastLuringSong","None",1);
+PROC_RemoveFromTrackedSoundEntity(_Harpy);
+
+QRY
+QRY_DEN_HarpyMeal_AnyLuredPlayerInCombat((GUIDSTRING)_CombatID)
+AND
+DB_Players(_Player)
+AND
+DB_Is_InCombat(_Player,_CombatID)
+AND
+HasActiveStatus(_Player,"LURING_SONG_AURA_VICTIM",1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DEN_HarpyMeal_StopAreaSong()
+AND
+QRY_OnlyOnce("DEN_HarpyMeal_StopAreaSong")
+THEN
+TriggerSetSoundState((TRIGGER)Amb_SV_RangerCamp_FZ_000_3fd38540-d846-770c-ba66-21c4924dacd6,"S_DEN_HarpyMeal_Harpy","Harpy_Dead",1);
+
+//END_REGION
+
+
+//REGION Luring Song tracker
+//Add Luring Song players to DB
+IF
+StatusApplied(_Player,"LURING_SONG",_Harpy,_)
+AND
+NOT DB_DEN_HarpyMeal_HarpySongVictims(_Player,_Harpy)
+THEN
+DB_DEN_HarpyMeal_HarpySongVictims(_Player,_Harpy);
+
+//If Harpy loses her aura, then remove luring some from victim players
+//Always remove player from aura DB if status removed
+IF
+StatusRemoved(_Harpy,"LURING_SONG_AURA",_,_)
+AND
+DB_DEN_HarpyMeal_HarpySongVictims(_Player,_Harpy)
+THEN
+RemoveStatus(_Player,"LURING_SONG");
+RemoveStatus(_Player,"LURING_SONG_AURA_VICTIM");
+NOT DB_DEN_HarpyMeal_HarpySongVictims(_Player,_Harpy);
+
+IF
+TurnStarted(_Harpy)
+AND
+DB_DEN_HarpyMeal_Harpies((CHARACTER)_Harpy,_)
+AND
+HasActiveStatus(_Harpy,"LURING_SONG_AURA",1)
+THEN
+SetEntityEventReal(_Harpy,"GLO_CombatWait",2.0);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

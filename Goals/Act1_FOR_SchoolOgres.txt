@@ -1,0 +1,903 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_FOR_SchoolOgres((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f);
+DB_FOR_SchoolOgres((CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245);
+DB_FOR_SchoolOgres((CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce);
+
+DB_PermaDefeatedFlag(S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f, (FLAG)FOR_SchoolOgres_State_MainOgrePermaDefeated_5b3ea6f8-0d41-4388-9124-434e133362c2);
+
+DB_FOR_SchoolOgre_Entrance((TRIGGER)S_FOR_SchoolOgre_Entrance_South_3efb01d4-10cc-4a0e-a423-97ac8c55429d,(FLAG)FOR_SchoolOgres_State_EntranceUsed_South_876f1f8d-e6f5-423a-8bc9-08a1d853c6db);
+DB_FOR_SchoolOgre_Entrance((TRIGGER)S_FOR_SchoolOgre_Entrance_SouthEastDoor_7843f74e-e294-4e71-9380-aa9c3d6d569d,(FLAG)FOR_SchoolOgres_State_EntranceUsed_SouthEastDoor_f42d2a86-0ebe-431a-845e-f84f5085f2f0);
+DB_FOR_SchoolOgre_Entrance((TRIGGER)S_FOR_SchoolOgre_Entrance_East_41fc78e6-50a6-4b63-ab2a-1419a40b2b21,(FLAG)FOR_SchoolOgres_State_EntranceUsed_East_15d88c73-8a5b-4ef8-bc29-ee38eefdd917);
+DB_FOR_SchoolOgre_Entrance((TRIGGER)S_FOR_SchoolOgre_Entrance_North_4b8753c5-c053-4908-9c0d-25d77681d3da,(FLAG)FOR_SchoolOgres_State_EntranceUsed_North_64d97a76-5941-41a3-bec7-b6ac5be86542);
+DB_FOR_SchoolOgre_Entrance((TRIGGER)S_FOR_SchoolOgre_Entrance_West_aee2f4a1-450d-4573-9c9e-172a6825146d,(FLAG)FOR_SchoolOgres_State_EntranceUsed_West_4704a1bc-5da9-4953-86c5-c5e684afb23f);
+
+PROC_FOR_SchoolOgre_InitSpotting();
+
+DB_DialogMoneyTransfer(1,(DIALOGRESOURCE)FOR_SchoolOgre1_31f68c00-dc6f-bcec-a0be-14acf675d630,500);
+DB_DialogMoneyTransfer(2,(DIALOGRESOURCE)FOR_SchoolOgre1_31f68c00-dc6f-bcec-a0be-14acf675d630,1000);
+DB_DialogMoneyTransfer(1,(DIALOGRESOURCE)FOR_SchoolOgres_Spotted_39bf09f7-0f54-3ca9-cbbd-56ca1a099545,500,4);
+DB_DialogMoneyTransfer(2,(DIALOGRESOURCE)FOR_SchoolOgres_Spotted_39bf09f7-0f54-3ca9-cbbd-56ca1a099545,1000,4);
+DB_DialogMoneyTransfer(1,(DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,500);
+DB_DialogMoneyTransfer(2,(DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,1000);
+DB_DialogMoneyTransfer(3,(DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,2500);
+DB_DialogMoneyTransfer(4,(DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,5000);
+
+DB_Dialogs(S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,(DIALOGRESOURCE)FOR_SchoolOgre1_31f68c00-dc6f-bcec-a0be-14acf675d630);
+DB_Dialogs(S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,(DIALOGRESOURCE)FOR_SchoolOgre2_2a570108-5a68-c468-12bf-1396263dbf5d);
+DB_Dialogs(S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce,(DIALOGRESOURCE)FOR_SchoolOgre3_b71b094e-57d3-befd-2c16-2eaf0aca3dc1);
+
+DB_GLO_CharacterCorpseDialog((CHARACTER)S_FOR_SchoolOgre_Corpse_ef9ff510-c334-45d4-bade-a3a0f4c6e63b, (DIALOGRESOURCE)FOR_SchoolOgre_Corpse_Dead_40aeaadb-5bb2-a8d5-3a57-a178f0075842);
+
+ToInventory((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f);
+DB_HasItemEvent((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,(FLAG)FOR_SchoolOgres_State_HasHorn_1656d9e5-4687-4ef1-ba87-44ba0f3478ec);
+//REGION Combat
+
+PROC_TriggerRegisterForPlayers(S_FOR_ShoolOgre_DestructableFloor_AreaTrigger_8f399368-0d58-4de6-9c8d-9f41a0b28600);
+
+//END_REGION
+
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48);
+KBSECTION
+//REGION Ogres Spot You
+PROC
+PROC_FOR_SchoolOgre_InitSpotting()
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+DB_SpotPlayers(_Ogre, "FOR_SchoolOgre_SpotPlayers", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_IncludeFollowers(_Ogre, "FOR_SchoolOgre_SpotPlayers");
+DB_SpotPlayers_IncludeSummons(_Ogre, "FOR_SchoolOgre_SpotPlayers");
+DB_SpotPlayers_TargetIgnoreCantTalk(_Ogre, "FOR_SchoolOgre_SpotPlayers");
+DB_SpotPlayers_IncludeWildshapedPlayers(_Ogre, "FOR_SchoolOgre_SpotPlayers");
+PROC_FOR_SchoolOgre_InitSpotTriggers(_Ogre);
+
+PROC
+PROC_FOR_SchoolOgre_InitSpotTriggers((CHARACTER)_Ogre)
+AND
+DB_FOR_SchoolOgre_Entrance(_Trigger, _Flag)
+THEN
+DB_SpotPlayers_SpotTrigger(_Ogre, "FOR_SchoolOgre_SpotPlayers", _Trigger);
+
+// Spotted player is available for dialog
+QRY
+QRY_FOR_SchoolOgres_SpottedCharacterIsAvailablePlayer((CHARACTER)_SpottedCharacter)
+AND
+DB_Players(_SpottedCharacter)
+AND
+QRY_SpeakerIsAvailable(_SpottedCharacter)
+AND
+QRY_OnlyOnce("FOR_SchoolOgres_PlayerSpottedInSchool")
+AND
+DB_InRegion(_SpottedCharacter, _Trigger)
+AND
+DB_FOR_SchoolOgre_Entrance(_Trigger, _Flag)
+AND
+QRY_PROC_FOR_SchoolOgres_SetEntranceFlag(_Flag)
+THEN
+PROC_FOR_SchoolOgres_PlayerSpotted(_SpottedCharacter, _Flag);
+
+// Spotted player is not available for dialog, but another player in the triggers is
+PROC
+PROC_SpotPlayers_Spotted(_Ogre, "FOR_SchoolOgre_SpotPlayers", _SpottedCharacter)
+AND
+NOT QRY_FOR_SchoolOgres_SpottedCharacterIsAvailablePlayer(_SpottedCharacter)
+AND
+DB_Players(_OtherPlayer)
+AND
+DB_InRegion(_OtherPlayer, _Trigger)
+AND
+DB_FOR_SchoolOgre_Entrance(_Trigger, _Flag)
+AND
+QRY_OnlyOnce("FOR_SchoolOgres_PlayerSpottedInSchool")
+AND
+QRY_PROC_FOR_SchoolOgres_SetEntranceFlag(_Flag)
+THEN
+PROC_FOR_SchoolOgres_PlayerSpotted(_OtherPlayer, _Flag);
+
+QRY
+QRY_PROC_FOR_SchoolOgres_SetEntranceFlag((FLAG)_SchoolOgreEntranceFlag)
+THEN
+SetFlag(_SchoolOgreEntranceFlag);
+
+// Fallback: spotted player is not available for dialog, and no other players are, go to combat
+PROC
+PROC_SpotPlayers_Spotted(_Ogre, "FOR_SchoolOgre_SpotPlayers", _SpottedCharacter)
+AND
+QRY_OnlyOnce("FOR_SchoolOgres_PlayerSpottedInSchool")
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+
+// Try to start group dialog with all ogres
+PROC
+PROC_FOR_SchoolOgres_PlayerSpotted((CHARACTER)_Player,(FLAG)_SchoolOgreEntranceFlag)
+AND
+QRY_PROC_FOR_SchoolOgres_SetEntranceFlag(_SchoolOgreEntranceFlag)
+AND
+NOT DB_CantTalk(S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+AND
+NOT DB_CantTalk(S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245)
+AND
+NOT DB_CantTalk(S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce)
+AND
+QRY_StartDialogCustom((DIALOGRESOURCE)FOR_SchoolOgres_Spotted_39bf09f7-0f54-3ca9-cbbd-56ca1a099545,S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce,_Player,S_FOR_SchoolOgre_Corpse_ef9ff510-c334-45d4-bade-a3a0f4c6e63b,0,1,1,1)
+THEN
+DB_FOR_SchoolOgres_DialogStartSucces(1);
+
+// Try to start solo dialog with Ogre 1
+PROC
+PROC_FOR_SchoolOgres_PlayerSpotted((CHARACTER)_Player,(FLAG)_)
+AND
+NOT DB_FOR_SchoolOgres_DialogStartSucces(1)
+AND
+NOT DB_CantTalk(S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+AND
+QRY_StartDialogCustom((DIALOGRESOURCE)FOR_SchoolOgre1_31f68c00-dc6f-bcec-a0be-14acf675d630,S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,_Player,0,1,1,1)
+THEN
+DB_FOR_SchoolOgres_DialogStartSucces(1);
+
+// Fallback to combat
+PROC
+PROC_FOR_SchoolOgres_PlayerSpotted((CHARACTER)_Player,(FLAG)_)
+AND
+NOT DB_FOR_SchoolOgres_DialogStartSucces(1)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+
+IF
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+DB_SceneManager(_Ogre,"FOR_SchoolOgreScene");
+SetTag(_Ogre, NOT_MESSING_AROUND_542b58f0-42ad-4157-a28e-27434e0e7b18); //They care about crimes so long as they're not recruited.
+
+IF
+DB_PermaDefeated(S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+AND
+QRY_OnlyOnce("FOR_SchoolOgre_StopSpotting")
+AND
+DB_FOR_SchoolOgres(_AnyOgre)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+
+PROC
+PROC_SceneInterrupted(_,_,"FOR_SchoolOgreScene",_Reason)
+AND
+_Reason != "StartedDialog"
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+
+IF
+DB_PermaDefeated(_Ogre)
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+THEN
+NOT DB_FOR_SchoolOgres(_Ogre);
+
+IF
+DialogStarted((DIALOGRESOURCE)FOR_SchoolOgres_Spotted_39bf09f7-0f54-3ca9-cbbd-56ca1a099545,_)
+THEN
+PROC_SceneOver("FOR_SchoolOgreScene");
+
+IF
+DialogStarted((DIALOGRESOURCE)FOR_SchoolOgre1_31f68c00-dc6f-bcec-a0be-14acf675d630,_)
+THEN
+PROC_SceneOver("FOR_SchoolOgreScene");
+
+PROC
+PROC_SceneOver("FOR_SchoolOgreScene")
+AND
+DB_FOR_SchoolOgre_Entrance(_SchoolOgresEntranceTrigger,_Flag)
+THEN
+PROC_TriggerUnregisterForPlayers(_SchoolOgresEntranceTrigger);
+NOT DB_FOR_SchoolOgre_Entrance(_SchoolOgresEntranceTrigger,_Flag);
+
+PROC
+PROC_SceneOver("FOR_SchoolOgreScene")
+THEN
+PROC_SpotPlayers_CleanupSpotting("FOR_SchoolOgre_SpotPlayers");
+//END_REGION
+
+//REGION Ogres Hired
+IF
+TextEvent("ogres")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,_Player);
+SetFlag((FLAG)FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_OfferedLatePayment_0abc5fd9-599e-f536-5504-0ce0aad477c0,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_OfferedMeat_d5b09c6c-959d-514b-c265-292331928889,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+SetOnStage((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,0);
+SetOnStage((CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,0);
+SetOnStage((CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce,0);
+
+
+IF
+TextEvent("ogresdebt")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,_Player);
+SetFlag((FLAG)FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901,NULL_00000000-0000-0000-0000-000000000000,0);
+SetFlag((FLAG)FOR_SchoolOgres_State_OfferedLatePayment_0abc5fd9-599e-f536-5504-0ce0aad477c0,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_OfferedMeat_d5b09c6c-959d-514b-c265-292331928889,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+SetOnStage((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,0);
+SetOnStage((CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,0);
+SetOnStage((CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce,0);
+
+IF
+TextEvent("ogresmeat")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,_Player);
+SetFlag((FLAG)FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_OfferedLatePayment_0abc5fd9-599e-f536-5504-0ce0aad477c0,NULL_00000000-0000-0000-0000-000000000000,0);
+SetFlag((FLAG)FOR_SchoolOgres_State_OfferedMeat_d5b09c6c-959d-514b-c265-292331928889,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_SceneOver("FOR_SchoolOgreScene");
+SetOnStage((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,0);
+SetOnStage((CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,0);
+SetOnStage((CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce,0);
+
+IF
+FlagSet((FLAG)FOR_SchoolOgres_Event_GiveHorn_c971dad2-e668-fece-df8c-499f8f748900,_Player,_)
+THEN
+ToInventory((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,_Player);
+
+
+IF
+FlagSet(FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901, _, _)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+ClearTag(_Ogre, NOT_MESSING_AROUND_542b58f0-42ad-4157-a28e-27434e0e7b18); //They care about crimes so long as they're not recruited.
+SetTag(_Ogre, MONSTER_90101158-141e-4896-8e60-f8db03f6dde3); //They now only care about crimes against their allies, i.e. themselves.
+
+IF
+DialogEnded((DIALOGRESOURCE)FOR_SchoolOgres_Spotted_39bf09f7-0f54-3ca9-cbbd-56ca1a099545,_)
+AND
+DB_GlobalFlag((FLAG)FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901)
+THEN
+PROC_FOR_SchoolOgres_RunOffAfterHired();
+
+IF
+DialogEnded((DIALOGRESOURCE)FOR_SchoolOgre1_31f68c00-dc6f-bcec-a0be-14acf675d630,_)
+AND
+DB_GlobalFlag((FLAG)FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901)
+THEN
+PROC_FOR_SchoolOgres_RunOffAfterHired();
+
+PROC
+PROC_FOR_SchoolOgres_RunOffAfterHired()
+THEN
+TimerLaunch("FOR_SchoolOgres_RunOffAfterHired",1000);
+
+PROC
+PROC_FOR_SchoolOgres_RunOffAfterHired()
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+SetHasDialog(_Ogre,0);
+
+IF
+TimerFinished("FOR_SchoolOgres_RunOffAfterHired")
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+PROC_DisappearOutOfSightTo(_Ogre,(TRIGGER)S_FOR_SchoolOgres_RunAwayDirection_9807d351-9799-44d4-9348-730894981c5b,"Walk",1,"");
+
+IF
+FlagSet((FLAG)FOR_SchoolOgres_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901, _, _)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+AND
+NOT DB_PermaDefeated(_Ogre)
+THEN
+PROC_PeacefulResolve(_Ogre);
+//END_REGION
+
+//REGION Using the Horn
+IF
+TextEvent("ogrehorn")
+AND
+GetHostCharacter(_Player)
+THEN
+PlayAnimation(_Player,(ANIMATION)CUST_PlayingHorn_01_6a141d35-effe-4c7f-9585-bb153e4c1230,"FOR_OgresHornBlown"); //CUST_PlayingHorn_01
+
+IF
+UseStarted(_Player,(ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b)
+THEN
+NOT DB_FOR_SchoolOgress_Hornresponded(1);
+
+//Player cant be in another dialog
+IF
+UseStarted(_Player,(ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b)
+AND
+NOT QRY_SpeakerIsAvailable(_Player, 1)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+
+//Ogre already summoned
+IF
+UseStarted(_Player,(ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_,_)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+
+IF
+UseStarted(_Player,(ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b)
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+THEN
+CloseUI(_Player,"Inventory");
+PlayAnimation(_Player,(ANIMATION)CUST_PlayingHorn_01_6a141d35-effe-4c7f-9585-bb153e4c1230,"FOR_OgresHornBlown"); //CUST_PlayingHorn_01
+
+//Response 1: Ogres are dead
+IF
+EntityEvent(_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+AND
+NOT DB_FOR_SchoolOgres((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+SetFlag((FLAG)FOR_SchoolOgres_Event_HornFail_Dead_78e9bec2-81f4-6e8b-53e7-63496cb9f976,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_TryStartAD((DIALOGRESOURCE)FOR_SchoolOgres_PAD_NotReturning_574a821c-4435-73c1-f9d4-ac76eac0df82,_Player);
+
+//Response 2: Contract is done
+IF
+EntityEvent(_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+AND
+DB_GlobalFlag((FLAG)FOR_SchoolOgres_State_SummonedThrice_2ea0b8d7-a7ba-9bad-af9c-2a4e3702ef3f)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+SetFlag((FLAG)FOR_SchoolOgres_Event_HornFail_Done_7132dbdc-ea57-6248-3885-1226aeb5db9d,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_TryStartAD((DIALOGRESOURCE)FOR_SchoolOgres_PAD_NotReturning_574a821c-4435-73c1-f9d4-ac76eac0df82,_Player);
+
+//Response 3: Ogres too far (different region)
+IF
+EntityEvent(_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+AND
+NOT DB_CurrentLevel("WLD_Main_A")
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+SetFlag((FLAG)FOR_SchoolOgres_Event_HornFail_Range_feb0a181-ccf6-d635-79c3-68ce8bb4e2cc,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_TryStartAD((DIALOGRESOURCE)FOR_SchoolOgres_PAD_NotReturning_574a821c-4435-73c1-f9d4-ac76eac0df82,_Player);
+
+//Response 3b: Ogres too far (blocked zone)
+IF
+EntityEvent(_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+AND
+DB_InBlockedWaypointZone((CHARACTER)_Player,_)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+SetFlag((FLAG)FOR_SchoolOgres_Event_HornFail_Range_feb0a181-ccf6-d635-79c3-68ce8bb4e2cc,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_TryStartAD((DIALOGRESOURCE)FOR_SchoolOgres_PAD_NotReturning_574a821c-4435-73c1-f9d4-ac76eac0df82,_Player);
+
+//Response 4: Player in Camp
+IF
+EntityEvent((CHARACTER)_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+AND
+DB_InCamp(_Player)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+SetFlag((FLAG)FOR_SchoolOgres_Event_HornFail_Camp_4be1279a-a0e8-f9e7-21c9-0f1415a6f31b,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_TryStartAD((DIALOGRESOURCE)FOR_SchoolOgres_PAD_NotReturning_574a821c-4435-73c1-f9d4-ac76eac0df82,_Player);
+
+//Ogre already summoned
+IF
+EntityEvent(_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_OffStage((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+THEN
+DB_FOR_SchoolOgress_Hornresponded(1);
+
+//Never hired: Summon Ogres + Have them attack the players
+IF
+EntityEvent((CHARACTER)_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_SchoolOgres_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901)
+THEN
+SetFlag((FLAG)FOR_SchoolOgres_Event_AggroOnPlayer_e87b2a42-1470-d04a-621b-7c6e5f54b000,NULL_00000000-0000-0000-0000-000000000000,0);
+DB_FOR_SchoolOgress_Hornresponded(1);
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,0);
+PROC_SetRelationToPlayers((FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b,0);
+PROC_FOR_SchoolOgres_Summon(_Player);
+
+//Hired: Summon Ogres + Attack all but the players.
+IF
+EntityEvent((CHARACTER)_Player,"FOR_OgresHornBlown")
+AND
+NOT DB_FOR_SchoolOgress_Hornresponded(1)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,50);
+PROC_SetRelationToPlayers((FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b,50);
+PROC_FOR_SchoolOgres_Summon(_Player);
+
+IF
+EntityEvent(_Player,"FOR_OgresHornBlown")
+THEN
+NOT DB_FOR_SchoolOgress_Hornresponded(1);
+//END_REGION
+
+//REGION Summoning The Ogres
+PROC
+PROC_FOR_SchoolOgres_Summon((CHARACTER)_Player)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+PROC_ForceStopDialog(_Ogre);
+AppearOutOfSightTo(_Ogre,_Player, (TRIGGER)S_FOR_SchoolOgre_LookAt_cb2c39fb-c511-49e5-85f3-fb47b47181d7,0,NULL_00000000-0000-0000-0000-000000000000, "FOR_SchoolOgre_RunToPlayer",1);
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player);
+
+/* Staggered summon code, tested it but didn't seem to help.
+PROC
+PROC_FOR_SchoolOgres_Summon((CHARACTER)_Player)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+PROC_ForceStopDialog(_Ogre);
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player);
+DB_FOR_SchoolOgre_SummonOgresDelayed(_Ogre);
+
+PROC
+PROC_FOR_SchoolOgres_Summon((CHARACTER)_Player)
+THEN
+SetEntityEvent(_Player, "FOR_SchoolOgre_SpawnNextOgre");
+
+// Only spawn next ogre when previous ogre is spawned
+IF
+EntityEvent(_PreviousOgre, "FOR_SchoolOgre_SpawnNextOgre")
+AND
+QRY_OnlyOnce_Reset("FOR_SchoolOgre_SpawnNextOgre")
+AND
+DB_FOR_SchoolOgre_SummonOgresDelayed(_Ogre)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player)
+AND
+QRY_OnlyOnce("FOR_SchoolOgre_SpawnNextOgre")
+THEN
+NOT DB_FOR_SchoolOgre_SummonOgresDelayed(_Ogre);
+AppearOutOfSightTo(_Ogre,_Player, (TRIGGER)S_FOR_SchoolOgre_LookAt_cb2c39fb-c511-49e5-85f3-fb47b47181d7,0,NULL_00000000-0000-0000-0000-000000000000, "FOR_SchoolOgre_SpawnNextOgre",1);
+
+// Propagate event to have ogres run to the player once they have appeared
+IF
+EntityEvent(_Ogre, "FOR_SchoolOgre_SpawnNextOgre")
+AND
+DB_FOR_SchoolOgre_SummonPlayer((CHARACTER)_Ogre, _)
+THEN
+SetEntityEvent(_Ogre, "FOR_SchoolOgre_RunToPlayer");
+*/
+
+IF
+AppearTeleportFailed(_Ogre,_)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player)
+THEN
+SetOnStage(_Ogre,0);
+NOT DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player);
+
+PROC
+PROC_FOR_SchoolOgres_Summon((CHARACTER)_Player)
+THEN
+SetFlag((FLAG)FOR_SchoolOgres_State_KilledNoone_21ffcaa9-23fc-f03a-f167-b06c6d22ee03,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_RemoveAllDialogEntriesForSpeaker((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f);
+DB_Dialogs((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,(DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48);
+
+IF
+DB_Is_InCombat(_Ogre,_)
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+THEN
+ClearFlag((FLAG)FOR_SchoolOgres_State_KilledNoone_21ffcaa9-23fc-f03a-f167-b06c6d22ee03,NULL_00000000-0000-0000-0000-000000000000,0);
+
+PROC
+PROC_FOR_SchoolOgres_Summon((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("FOR_SchoolOgre_StopSpotting")
+AND
+DB_FOR_SchoolOgres(_AnyOgre)
+THEN
+SetFaction(_AnyOgre,(FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b);
+PROC_SpotPlayers_StopSpotting(_AnyOgre, "FOR_SchoolOgre");
+
+PROC
+PROC_FOR_SchoolOgres_Summon((CHARACTER)_Player)
+AND
+DB_FOR_SchoolOgre_SummonedHaveAttacked(1)
+THEN
+NOT DB_FOR_SchoolOgre_SummonedHaveAttacked(1);
+
+IF
+EntityEvent(_Ogre,"FOR_SchoolOgre_RunToPlayer")
+AND
+DB_FOR_SchoolOgre_SummonPlayer((CHARACTER)_Ogre,_Player)
+THEN
+PROC_CharacterMoveTo((CHARACTER)_Ogre,_Player,"Run","FOR_SchoolOgres_TestCombatEnd");
+
+IF
+EntityEvent((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,"FOR_SchoolOgre_RunToPlayer")
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)FOR_SchoolOgres_AD_Summoned_67a08f9f-a27f-f6c7-0d25-30b2ec8c4edc,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,(CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,(CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce)
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)FOR_SchoolOgres_AD_Summoned_67a08f9f-a27f-f6c7-0d25-30b2ec8c4edc,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,(CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,NULL_00000000-0000-0000-0000-000000000000)
+AND
+NOT QRY_StartDialog((DIALOGRESOURCE)FOR_SchoolOgres_AD_Summoned_67a08f9f-a27f-f6c7-0d25-30b2ec8c4edc,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)FOR_SchoolOgres_AD_Summoned_67a08f9f-a27f-f6c7-0d25-30b2ec8c4edc,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,NULL_00000000-0000-0000-0000-000000000000,NULL_00000000-0000-0000-0000-000000000000);
+
+//Way to make ogres aggro everything: If they see someone, become aggressive to their faction.
+IF
+Saw(_Ogre,_Enemy,_)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_)
+AND
+NOT DB_FOR_SchoolOgres(_Enemy)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_SchoolOgres_Event_AggroOnPlayer_e87b2a42-1470-d04a-621b-7c6e5f54b000)
+AND
+NOT DB_Dead(_Enemy)
+AND
+IsPartyMember(_Enemy,1,0)
+AND
+GetFaction(_Enemy,_Faction)
+AND
+CanJoinCombat(_Ogre, 1)
+THEN
+PROC_FOR_SchoolOgre_SummonedHostileTo(_Enemy, _Faction);
+
+// Before the Ogres have attacked, the enemies will not be hostile to the player
+PROC
+PROC_FOR_SchoolOgre_SummonedHostileTo((CHARACTER)_Enemy, (FACTION)_Faction)
+AND
+NOT DB_FOR_SchoolOgre_SummonedHaveAttacked(1)
+THEN
+DB_FOR_SchoolOgre_SummonedHostileTo(_Enemy, _Faction);
+PROC_SetRelation((FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b,_Faction,0);
+
+// After the Ogres have attacked, the enemies will be hostile to the player
+PROC
+PROC_FOR_SchoolOgre_SummonedHostileTo(_Enemy, _Faction)
+AND
+DB_FOR_SchoolOgre_SummonedHaveAttacked(1)
+AND
+DB_Players(_Player)
+THEN
+DB_FOR_SchoolOgre_SummonedHostileTo(_Enemy, _Faction);
+//PROC_SetRelationToPlayers(_Faction, 0);
+PROC_SetRelationTemporaryHostile(_Enemy, _Player);
+PROC_SetRelationMutual((FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b, _Faction, 0);
+
+// If the ogres attack something, they will become hostile to the ogres.
+// The defenders will also blame the players for any attacks on them
+IF
+AttackedBy((CHARACTER)_Defender,(CHARACTER)_Ogre,_,_,_,_,_)
+AND
+NOT DB_FOR_SchoolOgre_SummonedHaveAttacked(1)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre, _Player)
+AND
+NOT DB_FOR_SchoolOgres(_Defender)
+AND
+IsPartyMember(_Defender,1,0)
+AND
+GetFaction(_Defender,_DefenderFaction)
+THEN
+PROC_FOR_SchoolOgre_SummonedHaveAttacked();
+
+// Ogres attacked for the first time, everyone they are hostile to now becomes hostile to them and temporarily to the player that summoned them.
+PROC
+PROC_FOR_SchoolOgre_SummonedHaveAttacked()
+THEN
+DB_FOR_SchoolOgre_SummonedHaveAttacked(1);
+
+PROC
+PROC_FOR_SchoolOgre_SummonedHaveAttacked()
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_, _Player)
+AND
+DB_FOR_SchoolOgre_SummonedHostileTo(_Character, _Faction)
+THEN
+DB_FOR_SchoolOgre_SummonedHaveAttacked(1);
+//PROC_SetRelationToPlayers(_Faction, 0);
+PROC_SetRelationTemporaryHostile(_Character, _Player);
+PROC_SetRelation(_Faction, (FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b, 0);
+
+//Edge case: If an NPC changes faction AFTER the ogre saw it, reapply hostility.
+IF
+BaseFactionChanged(_Char,_,_Faction)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_)
+AND
+DB_Sees(_Ogre,_Char)
+AND
+NOT DB_FOR_SchoolOgres(_Char)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_SchoolOgres_Event_AggroOnPlayer_e87b2a42-1470-d04a-621b-7c6e5f54b000)
+AND
+IsPartyMember(_Char,1,0)
+THEN
+PROC_SetRelationMutual((FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b,_Faction,0);
+
+IF
+WentOnStage(_Ogre,_)
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+AND
+GetPosition(_Ogre,_X,_Y,_Z)
+THEN
+PlayEffectAtPosition((EFFECTRESOURCE)VFX_Script_Ogre_Spawn_01_134d1d6b-1bd7-8cea-8d6e-8f3db2a14b32,_X,_Y,_Z,1.0);
+//END_REGION
+
+//REGION Dialog Interrupt
+IF
+EnteredCombat(_Ogre,_)
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+AND
+DB_FOR_SchoolOgres(_AnyOgre)
+AND
+DB_DialogNPCs(_,_AnyOgre,_ID)
+AND
+NOT DB_AutomatedDialog(_ID)
+THEN
+PROC_ForceStopDialog(_AnyOgre);
+//END_REGION
+
+//REGION After Combat
+IF
+EntityEvent(_Ogre,"FOR_SchoolOgres_TestCombatEnd")
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+AND
+DB_Is_InCombat(_Ogre,_)
+THEN
+DB_FOR_SchoolOgres_WaitForCombatToEnd(_Ogre);
+
+IF
+EntityEvent(_Ogre,"FOR_SchoolOgres_TestCombatEnd")
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_,_Player)
+AND
+DB_Is_InCombat(_Player,_)
+THEN
+DB_FOR_SchoolOgres_WaitForCombatToEnd(_Player);
+
+IF
+LeftCombat(_Combatant,_)
+AND
+DB_FOR_SchoolOgres_WaitForCombatToEnd((CHARACTER)_Combatant)
+THEN
+NOT DB_FOR_SchoolOgres_WaitForCombatToEnd((CHARACTER)_Combatant);
+PROC_FOR_SchoolOgres_CheckCombatEnded();
+
+PROC
+PROC_FOR_SchoolOgres_CheckCombatEnded()
+AND
+NOT DB_FOR_SchoolOgres_WaitForCombatToEnd(_)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player)
+THEN
+PROC_CharacterMoveTo((CHARACTER)_Ogre,_Player,"Run","FOR_SchoolOgres_TestCombatEnd");
+
+//Disable ogres from joining another combat once they have left combat after being summoned.
+IF
+LeftCombat((CHARACTER)_Ogre, _)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre, _)
+THEN
+SetCanJoinCombat(_Ogre, 0);
+SetCanFight(_Ogre, 0);
+
+IF
+EntityEvent((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,"FOR_SchoolOgres_TestCombatEnd")
+AND
+NOT DB_FOR_SchoolOgres_WaitForCombatToEnd(_)
+AND
+DB_FOR_SchoolOgre_SummonPlayer((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,_Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,_Player)
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent(_Ogre,"FOR_SchoolOgres_TestCombatEnd")
+AND
+NOT DB_FOR_SchoolOgres_WaitForCombatToEnd(_)
+AND
+DB_PermaDefeated((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+THEN
+PROC_DisappearOutOfSight((CHARACTER)_Ogre,"Run",1,"GEN_GoOffStage");
+
+IF
+EntityEvent(_Ogre,"FOR_SchoolOgres_TestCombatEnd")
+AND
+NOT DB_FOR_SchoolOgres_WaitForCombatToEnd(_)
+AND
+NOT DB_Dead((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+AND
+NOT DB_FOR_SchoolOgres_TimerStarted(1)
+THEN
+DB_FOR_SchoolOgres_TimerStarted(1);
+TimerLaunch("FOR_SchoolOgres_Fallback",20000);
+
+IF
+EnteredCombat(_Ogre,_)
+AND
+DB_FOR_SchoolOgres((CHARACTER)_Ogre)
+AND
+DB_FOR_SchoolOgres_TimerStarted(1)
+THEN
+NOT DB_FOR_SchoolOgres_TimerStarted(1);
+TimerCancel("FOR_SchoolOgres_Fallback");
+DB_FOR_SchoolOgres_WaitForCombatToEnd(_Ogre);
+
+IF
+TimerFinished("FOR_SchoolOgres_Fallback")
+AND
+DB_FOR_SchoolOgres_TimerStarted(1)
+AND
+NOT DB_DialogNPCs(_,(CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,_)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+SetFlag((FLAG)FOR_SchoolOgres_State_SummonedThrice_2ea0b8d7-a7ba-9bad-af9c-2a4e3702ef3f,NULL_00000000-0000-0000-0000-000000000000,0);
+PROC_DisappearOutOfSight((CHARACTER)_Ogre,"Run",1,"GEN_GoOffStage");
+
+IF
+TimerFinished("FOR_SchoolOgres_Fallback")
+THEN
+NOT DB_FOR_SchoolOgres_TimerStarted(1);
+
+IF
+Died((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f)
+THEN
+SetFlag((FLAG)FOR_SchoolOgres_State_SummonedThrice_2ea0b8d7-a7ba-9bad-af9c-2a4e3702ef3f,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_AfterSummoning_2xDeal_b2514b10-63d3-8107-2348-904948d682c3,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_AfterSummoning_5XDeal_299f123d-8f5b-c0dc-0aad-5b9620712426,NULL_00000000-0000-0000-0000-000000000000,0);
+ClearFlag((FLAG)FOR_SchoolOgres_State_AfterSummoning_10XDeal_be0290c7-5a04-66f1-98d2-cca61dd3e709,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF                      
+DialogEnded((DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,_)
+THEN
+ObjectTimerLaunch((CHARACTER)S_FOR_SchoolOgre1_848b6f10-3ae5-41f6-b1a1-98c34a19ba3f,"FOR_SchoolOgres_RunOff",500);
+ObjectTimerLaunch((CHARACTER)S_FOR_SchoolOgre2_b847c9ba-1b52-4afa-be10-accd07134245,"FOR_SchoolOgres_RunOff",1000);
+ObjectTimerLaunch((CHARACTER)S_FOR_SchoolOgre3_62c5741f-061b-4dbc-afe6-5fd2368485ce,"FOR_SchoolOgres_RunOff",1500);
+
+IF
+ObjectTimerFinished(_Ogre,"FOR_SchoolOgres_RunOff")
+THEN
+PROC_DisappearOutOfSight((CHARACTER)_Ogre,"Run",1,"GEN_GoOffStage");
+
+IF
+DialogEnded((DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,_)
+THEN
+TimerCancel("FOR_SchoolOgres_Fallback");
+
+IF
+WentOnStage(_Ogre,0)
+AND
+DB_FOR_SchoolOgre_SummonPlayer((CHARACTER)_Ogre,_Player)
+THEN
+SetCanFight(_Ogre, 1);
+SetCanJoinCombat(_Ogre, 1);
+NOT DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player);
+
+IF
+Died(_Ogre)
+AND
+DB_FOR_SchoolOgre_SummonPlayer((CHARACTER)_Ogre,_Player)
+THEN
+NOT DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player);
+
+IF
+DialogEnded((DIALOGRESOURCE)FOR_SchoolOgres_AfterSummon_5b0c1ee3-697c-7eeb-9370-5a70479bcc48,_)
+AND
+DB_GlobalFlag((FLAG)FOR_SchoolOgres_Event_AggroOnPlayer_e87b2a42-1470-d04a-621b-7c6e5f54b000)
+THEN
+PROC_SetRelationToPlayers((FACTION)Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b,0);
+SetFlag((FLAG)FOR_SchoolOgres_State_SummonedThrice_2ea0b8d7-a7ba-9bad-af9c-2a4e3702ef3f,NULL_00000000-0000-0000-0000-000000000000,0);
+
+//Restore hostility if Ogre is combat disabled and their faction is hostile to players.
+IF
+RelationChanged(Act1_FOR_SchoolOgres_Summoned_61056357-8ea5-4ab2-895e-bda956f2b03b, Hero_a1542c81-6895-929e-4522-10ce218bb360, 0, _)
+AND
+DB_FOR_SchoolOgre_SummonPlayer(_Ogre,_Player)
+AND
+CanFight(_Ogre, 0)
+THEN
+SetCanFight(_Ogre, 1);
+SetCanJoinCombat(_Ogre, 1);
+
+IF
+FlagSet((FLAG)FOR_SchoolOgres_State_SummonedThrice_2ea0b8d7-a7ba-9bad-af9c-2a4e3702ef3f,NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+SetStoryItem((ITEM)S_FOR_SchoolOgres_Horn_9d83c0b2-a14d-4f46-af49-67938cff4c8b,0);
+//END_REGION
+
+//REGION Combat
+
+IF
+EnteredTrigger(_Player,S_FOR_ShoolOgre_DestructableFloor_AreaTrigger_8f399368-0d58-4de6-9c8d-9f41a0b28600)
+AND
+DB_Players(_Player)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+AiAddInterestingItem(_Ogre,BLD_GEN_Beam_Square_A_Wood_A_8H_A_000_LT_PLT_FOR_HouseFloor_003_LT_WLD_Forest_9b966418-1de4-cc4c-e09a-02eafc09f59b);
+
+IF
+LeftTrigger(_Player,S_FOR_ShoolOgre_DestructableFloor_AreaTrigger_8f399368-0d58-4de6-9c8d-9f41a0b28600)
+AND
+DB_Players(_Player)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+AiRemoveInterestingItem(_Ogre,BLD_GEN_Beam_Square_A_Wood_A_8H_A_000_LT_PLT_FOR_HouseFloor_003_LT_WLD_Forest_9b966418-1de4-cc4c-e09a-02eafc09f59b);
+
+IF
+DestroyedBy(BLD_GEN_Beam_Square_A_Wood_A_8H_A_000_LT_PLT_FOR_HouseFloor_003_LT_WLD_Forest_9b966418-1de4-cc4c-e09a-02eafc09f59b,_,_,_)
+THEN
+PROC_TriggerUnregisterForPlayers(S_FOR_ShoolOgre_DestructableFloor_AreaTrigger_8f399368-0d58-4de6-9c8d-9f41a0b28600);
+
+IF
+DestroyedBy(BLD_GEN_Beam_Square_A_Wood_A_8H_A_000_LT_PLT_FOR_HouseFloor_003_LT_WLD_Forest_9b966418-1de4-cc4c-e09a-02eafc09f59b,_,_,_)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_SchoolOgres_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901)
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_FOR_SchoolOgres_Original_aea113cd-5e2c-4048-9f6e-76d8f1af7c0c,0);
+
+IF
+DestroyedBy(BLD_GEN_Beam_Square_A_Wood_A_8H_A_000_LT_PLT_FOR_HouseFloor_003_LT_WLD_Forest_9b966418-1de4-cc4c-e09a-02eafc09f59b,_,_,_)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+THEN
+AiRemoveInterestingItem(_Ogre,BLD_GEN_Beam_Square_A_Wood_A_8H_A_000_LT_PLT_FOR_HouseFloor_003_LT_WLD_Forest_9b966418-1de4-cc4c-e09a-02eafc09f59b);
+
+//END_REGION
+
+//REGION Boulder
+PROC
+PROC_FOR_SchoolOgres_RunOffAfterHired()
+THEN
+ClearOwnership(S_FOR_SchoolOgres_Stash_Crate_7cac9b65-9541-48c7-9649-d92792808db7);
+//END_REGION
+
+//REGION Patrolling Goblin walks in on fight against ogres (not hired)
+IF
+EnteredCombat((CHARACTER)S_FOR_Ambush_PatrollingGoblin_6db1f304-683a-4409-ab7a-b22f64f2c2e3,_CombatID)
+AND
+DB_FOR_SchoolOgres(_Ogre)
+AND
+DB_Is_InCombat(_Ogre,_CombatID)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_SchoolOgre_State_Hired_77d67f5b-540e-92b9-90ab-fa4849ff3901)
+AND
+QRY_OnlyOnce("FOR_Amobush_PatrollingGoblinWalksInOnFight")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)FOR_Ambush_PatrollingGoblin_AD_JoinOgreFight_1df51ca1-fd6e-2150-d82c-2232207aa141,(CHARACTER)S_FOR_Ambush_PatrollingGoblin_6db1f304-683a-4409-ab7a-b22f64f2c2e3);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

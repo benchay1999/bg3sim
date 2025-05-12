@@ -1,0 +1,1456 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//REGION Dialog
+DB_Dialogs(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_842bec1d-a049-c09a-1bcc-c5d73cc4d30b);
+DB_DoNotFace(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf); // while tending to the bird
+DB_Dialogs(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, DEN_Apprentice_WoundedBird_c6801ff8-9cd4-958a-7dd4-062e859bc274);
+DB_GLO_CharacterCorpseDialog(S_DEN_DissectedDrow_0cb0cdde-16f8-440d-b73a-ceb385183ea9, DEN_DissectedDrow_Dead_8dffcf93-b16d-98d6-1ba6-1f6dc9b86342);
+DB_GLO_CharacterCorpseDialog(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_Dead_31647b3a-c130-6206-4e07-491b588de2e9);
+DB_GlobalFlagReactionAfterDialog(DEN_Apprentice_Event_WoundedBirdDies_9f6f8aac-27b6-1d57-38a6-a0f6a7520f56,DEN_Apprentice_WoundedBird_c6801ff8-9cd4-958a-7dd4-062e859bc274);
+DB_GlobalFlagReactionAfterDialog(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1,DEN_Apprentice_Cyanide_38403daa-33ef-8543-1bc2-ca6f941a29f4);
+DB_GlobalFlagReactionAfterDialog(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1,DEN_Apprentice_LockedUp_8eb4471a-5f13-055b-786c-6d593512c2a9);
+DB_OneShot_VoiceBarkTrigger(S_DEN_DrowReactVBSphere_df0a08a6-2a89-4771-87b4-df17d03b21dd, DEN_Apprentice_VB_SeeDrow_95c5594d-628f-f9a9-dbe2-112fb680e410, "GlobalIgnoreFailure");
+DB_DEN_Apprentice_TadpoledGender("Male", (FLAG)DEN_Apprentice_State_HasMaleTadpoled_06edf64b-e10f-49d6-9411-8878dcf5c46a); //Female is the default.
+DB_DEN_Apprentice_TadpoledGender("Neutral", (FLAG)DEN_Apprentice_State_HasGenderNeutralTadpoled_56369087-b161-415b-a9f4-2bda7fd62ab0); //TODO: use the valid string
+DB_DropMutingStatussesDialog(DEN_Apprentice_CombatStarts_03b77114-5e1d-dd80-cfcd-3d3a4e6ac47f);
+//END_REGION
+//REGION Events, triggers...
+DB_DeadOnceFlag(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_State_Dead_900e56ea-6e14-5d93-4425-c2afe466e6f2);
+Equip(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, S_DEN_AppCirclet_59b54a3c-1825-49a3-b216-830edfd388ab);
+//PROC_SetCorpseOwner(S_DEN_DissectedDrow_0cb0cdde-16f8-440d-b73a-ceb385183ea9, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+ClearOwnership(S_DEN_TunnelSideOut_2f7d97b3-b061-49bf-a90c-a8365151ce35);
+
+DB_HasItemEvent(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a,DEN_Apprentice_State_HasAntidote_9a325766-081f-308d-f98e-ed7c9ce707af);
+
+DB_HasItemEvent(S_DEN_WyvernPoison_24ba1342-8c62-4029-83d3-2b4aed11561c,DEN_Apprentice_State_HasWyvernPoison_90ac3304-d106-4a25-9d20-c97ede397acd);
+DB_GiveItemToEvent(S_DEN_WyvernPoison_24ba1342-8c62-4029-83d3-2b4aed11561c,DEN_Apprentice_Event_GiveWyvenPoison_23c131ba-6a0f-40bf-9bd6-f15a094d78fb);
+
+PROC_TriggerRegisterForPlayers((TRIGGER)S_DEN_ApprenticeMainArea_4c6ed570-1e77-4305-bf5f-879750f48f14); //unused?
+TriggerRegisterForCharacter((TRIGGER)S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+PROC_DeclareCounter("DEN_Apprentice_InspectingBook");
+
+DB_DEN_Apprentice_ItemsToClear((ITEM)S_DEN_AntidoteCauldron_6d0a1890-df27-4f17-96ef-2f0c3b5ba064);
+DB_DEN_Apprentice_ItemsToClear((ITEM)S_DEN_AntidoteRecipeBook_6557e2a7-ee82-4c5a-a26b-9056e4eb03df);
+DB_DEN_Apprentice_ItemsToClear((ITEM)S_DEN_AntidoteHerbs_fc2fadee-01b5-46ca-81a3-503f4c03ba13);
+
+//Reward for when Halsin came back
+SetOnStage(S_DEN_ApprenticeRewardPouch_e7ee5c9f-9201-4abb-9969-587c7102f9ab, 0);
+//END_REGION
+//REGION Wounded Bird
+DB_DeadOnceFlag(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, DEN_Apprentice_State_DeadBird_3be08dca-4ffa-9bed-dd28-f59ea9402ce5);
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, 30.0); //If the percentage is changed here, it needs to be changed also in the Wounded Bird section below
+DB_DoNotFace(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123);
+PROC_CharacterDisableAllCrimes(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, 1);
+DB_DEN_Apprentice_BirdNames("ExhaustedBird", "DEN_Apprentice_ExhaustedBirdName");
+DB_DEN_Apprentice_BirdNames("HealedBird", "DEN_Apprentice_HealedBirdName");
+DB_State_Current(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "WoundedBird");
+DB_State_Priority(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "WoundedBird", 0);
+DB_State_Priority(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "ExhaustedBird", 100);
+DB_State_Priority(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "HealedBird", 200);
+DB_State_Priority(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "DeadBird", 300);
+//END_REGION
+//REGION State manager
+DB_State_Current(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TendingToBird");
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TendingToBird", 0);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "Working", 100);
+
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_BuildUp", 300);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Cyanide", 400);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedIn", 500);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedInCured", 550);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_HostileInit", 600);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_HostileRedeemable", 625);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_HostilePermanent", 650);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Persuaded", 700); //not only persuaded, took the wyvern poison also
+
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "PostTadpoled_Studying", 800);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "GroveStateChanged", 900);
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "GobHuntVictory", 950); //used to restore her faction after Goblin Hunt (Attack On Den takes care of it with the faction changes)
+DB_State_Priority(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "PermaDefeated", 1000);
+
+DB_DEN_Apprentice_LastChanceStates("TadpoledScene_LockedIn");
+DB_DEN_Apprentice_LastChanceStates("TadpoledScene_HostileRedeemable");
+
+DB_DEN_Apprentice_HostileStatesSwitch(0,1,"TadpoledScene_HostileRedeemable");
+DB_DEN_Apprentice_HostileStatesSwitch(1,1,"TadpoledScene_HostilePermanent");
+DB_DEN_Apprentice_HostileStatesSwitch(1,0,"TadpoledScene_HostilePermanent");
+DB_DEN_Apprentice_HostileStatesSwitch(0,0,"TadpoledScene_HostilePermanent");
+//END_REGION
+//REGION RD/VB
+
+//DB_DEN_Apprentice_RD(_TookPoison,_RD); //took the WYVERN POISON, not the has been poisoned by Nettie.
+DB_DEN_Apprentice_VB(0, (VOICEBARKRESOURCE)DEN_Apprentice_VB_LockedUp_9a11b63c-9ec5-8d02-2a3d-b831c5d12b77);
+DB_DEN_Apprentice_VB(1, (VOICEBARKRESOURCE)DEN_Apprentice_VB_Cyanide_2363bc05-2fb8-f072-7265-c9110d4fecf5);
+
+//END_REGION
+KBSECTION
+IF
+FlagSet(DEN_Apprentice_Knows_HeardAboutNettie_07818e31-1a13-0dd8-f02c-c27984614d17, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+SetFlag(DEN_Apprentice_Knows_HeardAboutNettie_PartialInfo_9ea0ca41-93e7-454b-92ca-721061285751, NULL_00000000-0000-0000-0000-000000000000);
+
+//REGION Debug
+
+//--- Start scene
+IF
+FlagSet(DEN_Apprentice_Debug_StartScene_fdc8d2a8-28c3-9878-9457-84f2a0397705, (CHARACTER)_Player, _) // flagType: Object
+THEN
+ClearFlag((FLAG)DEN_Apprentice_Debug_StartScene_fdc8d2a8-28c3-9878-9457-84f2a0397705, _Player); // flagType: Object
+PROC_DEN_Apprentice_Debug_SetupScene(_Player);
+
+IF
+TextEvent("denapptad")
+AND
+GetHostCharacter(_Player)
+THEN
+PROC_DEN_Apprentice_Debug_SetupScene(_Player);
+
+PROC
+PROC_DEN_Apprentice_Debug_SetupScene((CHARACTER)_Player)
+THEN
+TeleportTo(_Player, TRIGGERGUID_S_DEN_ApprenticePoint_5c98f4ff-9be3-4233-a2b4-7d054cf8ee62);
+SetFlag((FLAG)DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, _Player);
+PROC_DEN_Apprentice_TadpoleSceneStarts(_Player);
+ObjectTimerLaunch(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_StartTadpoleAD", 1000);
+
+IF
+FlagSet((FLAG)DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, _Player, _)
+THEN
+SetDualEntityEvent(_Player,S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_Event_RevealedTadpole", 1);
+
+
+//--- Complete scene
+
+//nettie persuaded
+IF
+FlagSet(DEN_Apprentice_Debug_TadpoleDoneStayed_6eef77ec-e971-2076-553e-c0cbdabf33f1, (CHARACTER)_Player, _)
+THEN
+PROC_DEN_Apprentice_Debug_TadpoledSceneSolved(_Player);
+SetFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1,NULL_00000000-0000-0000-0000-000000000000);
+SetFlag(DEN_Apprentice_State_TookPoison_6a7f0114-2003-2735-f6b2-f918b3a1a884,_Player);
+SetFlag(DEN_Apprentice_Quest_FindHalsin_b86c4657-4b06-6b30-aa26-23fde56f23a2,NULL_00000000-0000-0000-0000-000000000000);
+PROC_DEN_Apprentice_CleanScene();
+PROC_DEN_Apprentice_SetPostScene();
+
+//nettie killed
+IF
+FlagSet(DEN_Apprentice_Debug_TadpoleDoneLeft_6a4b6ac4-5dcb-230d-fe30-47329a33440e, (CHARACTER)_Player, _)
+THEN
+PROC_DEN_Apprentice_Debug_TadpoledSceneSolved(_Player);
+TeleportTo(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, S_DEN_AppTadProxBox_6afdf30e-f1dc-4a4c-a29c-e73f8ddc5105);
+Die(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+PROC_DEN_Apprentice_CleanScene();
+PROC_DEN_Apprentice_SetPostScene();
+
+PROC
+PROC_DEN_Apprentice_Debug_TadpoledSceneSolved((CHARACTER)_Player)
+THEN
+PROC_ItemUnlockAndOpen(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6);
+SetFlag((FLAG)DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, _Player);
+PROC_DEN_Apprentice_TadpoleSceneSetUp((CHARACTER)_Player);
+
+//END_REGION
+
+//REGION Wounded bird
+
+//--- Nettie & Bird interaction
+IF
+EnteredTrigger(_Player, S_DEN_DruidChamber_SUB_3302eeff-b41c-41c9-8402-0229086ae7a9)
+AND
+DB_Players(_Player)
+AND
+QRY_OnlyOnce("DEN_Apprentice_StartADing")
+THEN
+SetEntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,"DEN_Apprentice_StartADing");
+
+PROC
+PROC_State_Changed(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", _)
+THEN
+NOT DB_DoNotFace(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "Working");
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", _)
+THEN
+SetEntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,"DEN_Apprentice_StopCaringForBird");
+
+//--- Healing it
+IF
+FlagSet(DEN_Apprentice_UserShortcut_7141e2c1-f9bd-6d7e-956a-e78d4ed45520, NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+DB_State_Current(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "WoundedBird") //UserShortcut is set both when Nettie heals the bird or when she's done reacting to the player healing it
+THEN
+UseSpell(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "Target_DEN_Nettie_HealingWord", S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, NULL_00000000-0000-0000-0000-000000000000);
+PROC_State_Progress(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "ExhaustedBird");
+
+IF
+StatusApplied(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, _Status, (CHARACTER)_Player, _)
+AND
+DB_Players(_Player)
+AND
+DB_State_Current(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "WoundedBird")
+AND
+QRY_IsHealingStatus(_Status)
+THEN
+SetFlag(DEN_Apprentice_State_PlayerHealedBird_863a9e6c-79c2-9843-3f09-56a48d6feb34,NULL_00000000-0000-0000-0000-000000000000);
+PROC_State_Progress(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "ExhaustedBird");
+
+PROC
+PROC_State_Changed(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "ExhaustedBird")
+THEN
+PROC_DEN_Apprentice_UpdateBirdName();
+ApplyStatus(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "EXHAUSTED", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+ObjectTimerLaunch(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WounderBird_HealingProcess", 60000, 1);
+
+//--- Killing it
+PROC
+PROC_GlobalFlagReactionAfterDialog(DEN_Apprentice_Event_WoundedBirdDies_9f6f8aac-27b6-1d57-38a6-a0f6a7520f56,(DIALOGRESOURCE)_Dialog)
+THEN
+ //must not pass the player as the source otherwise is triggers a crime and may lead to DruidAttack
+Die(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123,DEATHTYPE.CinematicDeath,NULL_00000000-0000-0000-0000-000000000000,1,1);
+
+IF
+Dying(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123)
+AND
+GetDeathType(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, _Deathtype)
+AND
+_Deathtype != "CinematicDeath"
+THEN
+CreateSurface(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "SurfaceBlood", 0.8, -1.0, S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123);
+
+IF
+Dying(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123)
+THEN
+PROC_State_Progress(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "DeadBird");
+
+IF
+FlagSet(DEN_Apprentice_Event_RemoveBirdExhaustion_352ab466-a13f-ed19-2088-adf348c4ad1b, _, _)
+THEN
+PROC_DEN_WoundedBird_RemoveExhaustion();
+
+IF
+DialogEnded(DEN_Apprentice_WoundedBird_c6801ff8-9cd4-958a-7dd4-062e859bc274, _)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Event_RemoveBirdExhaustion_352ab466-a13f-ed19-2088-adf348c4ad1b)
+THEN
+PROC_DEN_WoundedBird_RemoveExhaustion();
+
+
+IF
+ObjectTimerFinished(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WounderBird_HealingProcess")
+THEN
+ObjectTimerCancel(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WounderBird_HealingProcess");
+ObjectTimerLaunch(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WounderBird_HealingProcess", 3000, 1);
+
+//--- Remove exhaustion
+
+PROC
+PROC_DEN_WoundedBird_RemoveExhaustion()
+THEN
+ObjectTimerCancel(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WounderBird_HealingProcess");
+ 
+PROC
+PROC_DEN_WoundedBird_RemoveExhaustion()
+AND
+HasActiveStatus(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123,"EXHAUSTED",1)
+THEN
+RemoveStatus(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "EXHAUSTED");
+
+IF
+StatusRemoved(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "EXHAUSTED", _, _)
+THEN
+PROC_State_Progress(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "HealedBird");
+
+PROC
+PROC_State_Changed(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", "HealedBird")
+THEN
+SetFlag(DEN_Apprentice_UserShortcut_7141e2c1-f9bd-6d7e-956a-e78d4ed45520,NULL_00000000-0000-0000-0000-000000000000); //setting it here as an edge-case; the nodes where this isn't set talk about the bird, but the bird is flying around now
+NOT DB_DoNotFace(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123);
+PROC_DEN_Apprentice_UpdateBirdName();
+PROC_SelfHealing_Enable(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123);
+PROC_RemoveDialogEntryForSpeaker(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, DEN_Apprentice_WoundedBird_c6801ff8-9cd4-958a-7dd4-062e859bc274);
+DB_Dialogs(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, DEN_Apprentice_HealedBird_76eae63c-b4b4-e39c-01bd-9a60e739ee98);
+PROC_CharacterEnableAllCrimes(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123);
+
+//--- Come back after AoD / healed after Gob Hunt
+IF
+FlagSet(DEN_AttackOnDen_State_DenVictory_71c7f23e-3ff1-c9b8-3ef5-d75fa1b42c8d,NULL_00000000-0000-0000-0000-000000000000,_)
+AND
+NOT DB_PermaDefeated(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123)
+THEN
+SetHitpointsPercentage(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, 100.0); 
+PROC_DEN_WoundedBird_RemoveExhaustion();
+PROC_DEN_WoundedBird_ComeBack();
+
+PROC
+PROC_DEN_WoundedBird_ComeBack()
+AND
+DB_Players(_Char)
+AND
+DB_InRegion(_Char,S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29)
+AND
+IsOnStage(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123,0)
+THEN
+PROC_AppearOutOfSightTo(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123,_Char,S_DEN_AppOwnership_6b0e6f9c-bffe-4643-922e-2c97ea39dca7,"");
+
+PROC
+PROC_DEN_WoundedBird_ComeBack()
+AND
+IsOnStage(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123,0)
+THEN
+PROC_Appear(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123);
+
+
+//--- Changing the bird's name
+PROC
+PROC_DEN_Apprentice_UpdateBirdName()
+AND
+DB_State_Current(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "DEN_WoundedBird", _BirdState)
+AND
+DB_DEN_Apprentice_BirdNames(_BirdState, _NewName)
+THEN
+SetStoryDisplayName(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, _NewName);
+
+IF
+StatusRemoved(S_DEN_WoundedBird_200bc56e-f3e1-445b-8b75-a5ddb541e123, "EXHAUSTED", _, _)
+AND
+DB_DEN_Apprentice_BirdNames(_StillExhausted, _NewName)
+THEN
+NOT DB_DEN_Apprentice_BirdNames(_StillExhausted, _NewName);
+
+//END_REGION
+
+//REGION Tadpole scene - start
+
+//--- Event starts / cancel (set in the Apprentice dialog)
+
+// Scene init
+IF
+FlagSet(DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, (CHARACTER)_Player, _Inst) // flagType: Object
+AND
+DB_DialogName(DEN_Apprentice_842bec1d-a049-c09a-1bcc-c5d73cc4d30b,_Inst) //blocks debug options
+AND
+QRY_OnlyOnce("DEN_Apprentice_StartTadpoleScene")
+THEN
+SetFlag(DEN_Apprentice_State_IsTadpoledPlayer_7eee9d99-f469-464d-aad4-8f3ee9a275fa, _Player);
+PROC_DEN_Apprentice_TadpoleSceneStarts(_Player);
+
+PROC
+PROC_DEN_Apprentice_TadpoleSceneStarts((CHARACTER)_Player)
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_BuildUp");
+DB_GLO_DefeatCounter(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_DefeatCounter");
+PROC_DEN_Apprentice_TadpoleSceneSetUp(_Player);
+SetForceUpdate(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, 1);
+DB_CustomDialogRange(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, 14);
+CharacterDisableCrime(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "KeepAnEyeOnMe");
+PROC_CRIME_KeepingAnEyeOut_Stop(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+PROC_TriggerRegisterForPlayers(S_DEN_AppTadInBox_2411c846-27d1-446d-9faa-20a5dc12dea9);
+PROC_DEN_GreetingReaction_Stop(_Player);
+
+PROC
+PROC_DEN_Apprentice_TadpoleSceneSetUp((CHARACTER)_Player) //called by debug options to fake having started it
+THEN
+SetFlag(DEN_DruidLair_Knows_HiddenLibraryEntrance_a883fb97-2402-4ab7-b66b-898c857b0199, NULL_00000000-0000-0000-0000-000000000000);
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+DB_Dialogs(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_TadpoledScene_d58ac991-ee3b-6f7d-a444-3cce6a9bc6d0);
+DB_DEN_Apprentice_Tadpoled(_Player);
+DB_DEN_Apprentice_TadpoledSceneStarted(1);
+
+PROC
+PROC_DEN_Apprentice_TadpoleSceneSetUp((CHARACTER)_Player)
+AND
+GetGender(_Player,0,_Gender)
+AND
+DB_DEN_Apprentice_TadpoledGender(_Gender, _Flag)
+THEN
+SetFlag(_Flag, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf); // flagType: Global
+
+IF
+DialogEnded(DEN_Apprentice_842bec1d-a049-c09a-1bcc-c5d73cc4d30b,_)
+AND
+DB_DEN_Apprentice_Tadpoled(_)
+THEN
+ObjectTimerLaunch(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_StartTadpoleAD", 1000);
+
+IF
+ObjectTimerFinished(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_StartTadpoleAD")
+THEN
+PROC_TryStartAD(DEN_Apprentice_AD_TadpoledStart_421a572d-d89b-f536-0e17-b7e17f6d3d57,S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+//END_REGION
+//REGION Tadpole scene - dialog override
+
+//--- Players who are not the one she's killing get an AD
+QRY
+QRY_SelectCustomDialog(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player)
+AND
+NOT DB_DEN_Apprentice_Tadpoled((CHARACTER)_Player)
+AND
+QRY_State_IsBeforeState(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedIn") //aka before the Cyanide dialog started
+AND
+DB_OnlyOnce("DEN_Apprentice_StartTadpoleScene")
+THEN
+DB_SelectedDialog(DIALOGRESOURCEGUID_DEN_Apprentice_AD_Busy_119aea6e-0e8a-a92a-05f9-5bc51e054f9e, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+
+//END_REGION
+//REGION Tadpole scene - door / players check / poison, etc
+
+//--- Opening
+//leading there
+IF
+EntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_Event_OpenDoor")
+AND
+QRY_OnlyOnce("DEN_Apprentice_OpenSecretDoor")
+AND
+IsClosed(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, 1)
+THEN
+PROC_DEN_Apprentice_UnlocksDoor("");
+
+PROC
+PROC_DEN_Apprentice_UnlocksDoor((STRING)_AnimEvent)
+THEN
+PlayAnimation(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, CUST_CloseDoor_Magic_NETTIE_01_da815583-d392-43c5-8dd7-7489cf1663a4, _AnimEvent);
+PROC_DEN_DruidLair_OpenDoorWithCiclet(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6);
+
+//opening because player persuaded her
+IF
+FlagSet(DEN_Apprentice_Event_OpenDoor_c907d84e-5a75-babb-a033-51fef0b7b773,_,_)
+THEN
+PROC_DEN_DruidLair_OpenDoorWithCiclet(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6);
+NOT DB_BlockedWaypointZone(S_DEN_AppTadWaypointBlockBox_1867e14e-ebca-44ed-88f0-eefc467b6d9a);
+
+IF
+Opened(_Door)
+AND
+DB_DEN_DruidLair_LibraryDoors(_,_Door)
+AND
+DB_BlockedWaypointZone(S_DEN_AppTadWaypointBlockBox_1867e14e-ebca-44ed-88f0-eefc467b6d9a)
+THEN
+NOT DB_BlockedWaypointZone(S_DEN_AppTadWaypointBlockBox_1867e14e-ebca-44ed-88f0-eefc467b6d9a);
+
+//--- Closing
+IF
+FlagSet(DEN_Apprentice_Event_CloseDoor_34899fcd-efd7-8b8d-9ebf-8b1a4949cdfd,_,_) //happens in dialog
+THEN
+PROC_DEN_DruidLair_UsingCircletVFX(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, VFX_Script_DEN_SecretDoor_DoorClose_Root_01_77be6293-36ee-ea2e-d9ce-7caf0a76d420);
+PROC_DEN_Apprentice_LockUp();
+
+PROC
+PROC_DEN_Apprentice_FallbackCloseDoor()
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Event_OpenDoor_c907d84e-5a75-babb-a033-51fef0b7b773)
+THEN
+PROC_DEN_Apprentice_LockUp();
+
+PROC
+PROC_DEN_Apprentice_LockUp()
+THEN
+PROC_DruidLair_CancelDoorOpening(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6);
+PROC_ItemCloseAndLock(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, "DEN_Apprentice_CircletKey");
+SetOwner(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6,S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+DB_BlockedWaypointZone(S_DEN_AppTadWaypointBlockBox_1867e14e-ebca-44ed-88f0-eefc467b6d9a);
+
+
+//--- Checking up other players
+IF
+FlagSet(DEN_Apprentice_Event_CheckOtherPlayers_8a3433c9-9261-3be6-2a0a-4d13398b520a,_,_)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+DB_InRegion(_OtherPlayer, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+_OtherPlayer != _Player
+AND
+NOT DB_HiddenCharacters(_OtherPlayer,_)
+AND
+QRY_SpeakerIsInDialogRange((GUIDSTRING)_OtherPlayer, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+THEN
+SetFlag(DEN_Apprentice_State_SeesExtraPlayers_45011961-da83-7951-08e7-4a9864f12b4c, NULL_00000000-0000-0000-0000-000000000000);
+
+
+//--- Set poisoned
+IF
+FlagSet(DEN_Apprentice_Event_ApplyPoison_f4df286d-2866-4acd-818f-6008e8db4212, (CHARACTER)_Player, _)
+THEN
+PROC_DEN_Apprentice_InitiatePoison(_Player);
+PROC_DEN_Apprentice_InitCustomCrime();
+
+//END_REGION
+//REGION Tadpole scene - crime overload
+
+//--- Initiated when a player gets poisoned
+PROC
+PROC_DEN_Apprentice_InitCustomCrime()
+THEN
+DB_DEN_Apprentice_OverridingCrimes(1);
+DB_DEN_Apprentice_MessingAround("Steal");
+DB_DEN_Apprentice_MessingAround("PickPocketFailed");
+DB_DEN_Apprentice_MessingAround("Vandalise"); //family: ItemDestroy, etc
+DB_DEN_Apprentice_MessingAround("MoveForbiddenItem");
+DB_DEN_Apprentice_MessingAround("UseForbiddenItem");
+DB_DEN_Apprentice_MessingAround("Sneaking");
+DB_DEN_Apprentice_MessingAround("LootOwnedCorpse");
+
+
+//--- Enforce combat if crime is committed after poison is pickpocketed.
+IF
+CharacterPickpocketSuccess(_Player, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a, _, _, _)
+AND
+DB_DEN_Apprentice_OverridingCrimes(1)
+THEN
+SetFlag(DEN_Apprentice_Event_AntidoteStolenAfterPoisoned_d01d2503-0582-b78f-1678-d800c1e70e0a, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+
+//--- Overriding crimes in general
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal,(STRING)_CrimeType,(GUIDSTRING)_Evidence,(CHARACTER)_Victim,(INTEGER)_CrimeID)
+AND
+DB_InRegion(_Criminal, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61) //if the criminal is not in there, Nettie doesn't care about them or she's going to turn hostile anyway
+AND
+DB_DEN_Apprentice_OverridingCrimes(1)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1)
+AND
+NOT DB_Defeated(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+AND
+QRY_DEN_Apprentice_BlockedCrime(_CrimeType)
+THEN
+PROC_CharacterRegisterCrime((CHARACTER)_Criminal,"DEN_Apprentice_MessingAround",(GUIDSTRING)NULL_00000000-0000-0000-0000-000000000000,(CHARACTER)_Victim,0);
+
+QRY
+QRY_DEN_Apprentice_BlockedCrime((STRING)_CrimeType)
+AND
+DB_DEN_Apprentice_MessingAround(_CrimeType)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DEN_Apprentice_BlockedCrime((STRING)_CrimeType)
+AND
+NOT DB_DEN_Apprentice_MessingAround(_CrimeType)
+AND
+QRY_CRIME_GetCrimeFamily(_CrimeType)
+AND
+DB_QRYRTN_CRIME_GetCrimeFamily(_Family)
+AND
+DB_DEN_Apprentice_MessingAround(_Family)
+THEN
+DB_NOOP(1);
+
+
+//--- Prevent Nettie from getting up after reacting while still seated
+//there should be a generic solution for this
+IF
+DialogStarted(DEN_CGB_Apprentice_1c709c48-4c30-391e-bdd8-86d5c84f3ec6, _)
+AND
+IsReposed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,1)
+THEN
+SetEntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "ClearCrimeReturn", 1);
+
+IF
+AutomatedDialogStarted(GEB_AD_Noticed_Pickpocket_8813c644-9d95-cb63-401e-9df6cca6b8f7, _Inst)
+AND
+DB_DialogNPCs(_Inst,S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,_)
+AND
+DB_DEN_Apprentice_OverridingCrimes(1)
+AND
+IsReposed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,1)
+THEN
+SetEntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "ClearCrimeReturn", 1);
+
+
+//Overriding EmptyPocketNoticedInvestigation specifically
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal,"EmptyPocketNoticedInvestigation",(GUIDSTRING)_Evidence,S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,(INTEGER)_CrimeID)
+AND
+DB_InRegion(_Criminal, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+DB_DEN_Apprentice_OverridingCrimes(1)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1)
+THEN
+PROC_DEN_Apprentice_CheckIfAntidoteStolen(_Evidence);
+
+PROC
+PROC_DEN_Apprentice_CheckIfAntidoteStolen(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a)
+THEN
+PROC_DEN_Apprentice_CheckReactToLostAntidote();
+
+PROC
+PROC_DEN_Apprentice_CheckIfAntidoteStolen(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a)
+AND
+NOT QRY_DEN_Apprentice_CheckAutoStartLockedUpDialog() //try to start DEN_Apprentice_LockedUp, if it fails, register the crime instead
+THEN
+PROC_DEN_Apprentice_OverrideEmptyPocketNoticedInvestigation(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a);
+
+QRY
+QRY_DEN_Apprentice_CheckAutoStartLockedUpDialog()
+AND
+NOT DB_State_Current(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedInCured") //aka Player isn't already cured
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+DB_InRegion(_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+NOT QRY_CharacterIsHidden(_Player)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(_Player, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+AND
+QRY_DEN_Apprentice_AutoStartLockedUpDialog(_Player)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DEN_Apprentice_CheckIfAntidoteStolen((ITEM)_Item)
+AND
+_Item != S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a
+THEN
+PROC_DEN_Apprentice_OverrideEmptyPocketNoticedInvestigation(_Item);
+
+PROC
+PROC_DEN_Apprentice_OverrideEmptyPocketNoticedInvestigation((ITEM)_Item)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+AND
+CrimeGetNewID(_NewCrimeID)
+THEN
+PROC_CharacterRegisterCrimeWithPosition(_Player,"DEN_Apprentice_MessingAround_Investigate",_Item,_X,_Y,_Z,S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,_NewCrimeID);
+
+
+//--- Counting warnings
+IF
+DialogEnded(DEN_CGB_Apprentice_1c709c48-4c30-391e-bdd8-86d5c84f3ec6, _Inst)
+AND
+DB_DialogPlayers(_Inst,_Player,_)
+THEN
+PROC_ObjectCountHelper(_Player, "DEN_Apprentice_TadpoledCrimeCounter");
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)_Dialog,(GUIDSTRING)_, (GUIDSTRING)_Object, (GUIDSTRING)_, (GUIDSTRING)_, (GUIDSTRING)_)
+AND
+DB_ObjectCountHelper(_Object,"DEN_Apprentice_TadpoledCrimeCounter",_Counter)
+AND
+_Counter >= 3
+THEN
+SetFlag(DEN_Apprentice_Event_MessedAroundTooMuch_acd98847-3403-df30-ebed-605a85f70000, _Object);
+
+
+//--- Clean up / stop registering
+PROC
+PROC_DEN_Apprentice_ClearCustomCrime()
+AND
+DB_DEN_Apprentice_MessingAround(_Crime)
+THEN
+NOT DB_DEN_Apprentice_MessingAround(_Crime);
+
+PROC
+PROC_DEN_Apprentice_ClearCustomCrime()
+AND
+DB_ObjectCountHelper(_Object,"DEN_Apprentice_TadpoledCrimeCounter",_Counter)
+THEN
+NOT DB_ObjectCountHelper(_Object,"DEN_Apprentice_TadpoledCrimeCounter",_Counter);
+
+PROC
+PROC_DEN_Apprentice_ClearCustomCrime()
+THEN
+NOT DB_DEN_Apprentice_OverridingCrimes(1);
+ClearOwnership(S_DEN_BookRowWithAntidote_1d1842dc-300a-8e24-3959-b1b6afaf54db);
+
+//END_REGION
+//REGION Tadpole scene - Cyanide dialog
+
+//--- Moving in for final dialog
+IF
+EntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_Event_LockStorage")
+THEN
+DB_CustomDialogRange(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, 20);
+PROC_CharacterMoveTo(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, S_DEN_AppDrowPoint_5e5c4845-6282-49e7-a10a-946acf568809, "Walk", "DEN_Apprentice_Event_StartDialog");
+
+
+//--- Final dialog
+//register a spotting event, in case the tadpoled player started sneaking or went away or whatev
+IF
+EntityEvent(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_Event_StartDialog")
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Cyanide");
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Cyanide")
+THEN
+SetFlag(DEN_Apprentice_Event_ReachedCyanideDialog_bcc31a3c-72e6-4720-98f1-6b7c2a40c6ba,NULL_00000000-0000-0000-0000-000000000000);
+PROC_DEN_Apprentice_RegisterSpottingTadpoled("DEN_Apprentice_CyanideDialog");
+
+PROC
+PROC_SpotPlayers_Spotted(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CyanideDialog", _Player)
+AND
+QRY_StartDialogCustom(DEN_Apprentice_Cyanide_38403daa-33ef-8543-1bc2-ca6f941a29f4, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player, 0, 0, 1, 1)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DialogFlagSetup(DEN_Apprentice_Cyanide_38403daa-33ef-8543-1bc2-ca6f941a29f4, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _)
+THEN
+DB_DEN_Apprentice_CyanideDialogStarted(1);
+PROC_DEN_Apprentice_InitCustomCrime();
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+DB_Dialogs(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_LockedUp_8eb4471a-5f13-055b-786c-6d593512c2a9);
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedIn");
+
+QRY
+QRY_SelectCustomDialog(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player)
+AND
+DB_State_Current(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Cyanide")
+AND
+GetFlag(DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, _Player, 1)
+AND
+DB_InRegion((CHARACTER)_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+NOT DB_DEN_Apprentice_CyanideDialogStarted(1)
+AND
+IsInTrigger(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61, 1)
+THEN
+DB_SelectedDialog(DEN_Apprentice_Cyanide_38403daa-33ef-8543-1bc2-ca6f941a29f4, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player);
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice","TadpoledScene_Cyanide",(STRING)_)  //progressed beyond Cyanide
+THEN
+PROC_DEN_Apprentice_StopSpotting("DEN_Apprentice_CyanideDialog");
+
+
+//--- Cyanide dialog played
+IF
+DialogEnded(DEN_Apprentice_Cyanide_38403daa-33ef-8543-1bc2-ca6f941a29f4, _)
+THEN
+PROC_DEN_Apprentice_CleanScene();
+PROC_DEN_Apprentice_FallbackCloseDoor(); //todo: should apply poison too?
+
+//Edge-case: normally, when persuaded, Nettie reopens the door 2 nodes later in the same dialog... 
+//but if that fails, open it here... this might look buggy but it's an extreme edge-case to avoid a potential flow breaker
+IF
+DialogEnded(DEN_Apprentice_Cyanide_38403daa-33ef-8543-1bc2-ca6f941a29f4, _)
+AND
+NOT DB_Is_InCombat(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,_)
+AND
+NOT DB_Defeated(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+AND
+DB_GlobalFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Event_OpenDoor_c907d84e-5a75-babb-a033-51fef0b7b773)
+AND
+IsClosed(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, 1)
+THEN
+PROC_ItemUnlockAndOpen(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6);
+
+//END_REGION
+//REGION Tadpole scene - Spotting
+
+// Register
+PROC
+PROC_DEN_Apprentice_RegisterSpottingTadpoled("DEN_Apprentice_CuredEarly")
+THEN
+//spot these anyway, and if the dialog fails to start, then go hostile
+DB_SpotPlayers_IncludeWildshapedPlayers(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+DB_SpotPlayers_TargetIgnoreCantTalk(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+DB_SpotPlayers_SpotterIgnoreCantTalk(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+DB_SpotPlayers_HasObjectFlag(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly", DEN_Apprentice_State_IsTadpoledPlayer_7eee9d99-f469-464d-aad4-8f3ee9a275fa, 1); //OBJECT flag
+
+PROC
+PROC_DEN_Apprentice_RegisterSpottingTadpoled("DEN_Apprentice_CyanideDialog")
+THEN
+DB_SpotPlayers_HasObjectFlag(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CyanideDialog", DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, 1); //DIALOG flag
+
+PROC
+PROC_DEN_Apprentice_RegisterSpottingTadpoled((STRING)_ID)
+THEN
+DB_SpotPlayers_Continuous(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID);
+DB_SpotPlayers_SpotTrigger_ManualRegistering(S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61);
+DB_SpotPlayers_SpotTrigger(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID,S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61);
+DB_SpotPlayers(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+
+
+// Stop
+PROC
+PROC_DEN_Apprentice_StopSpotting("DEN_Apprentice_CuredEarly")
+THEN
+NOT DB_SpotPlayers_IncludeWildshapedPlayers(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+NOT DB_SpotPlayers_TargetIgnoreCantTalk(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+NOT DB_SpotPlayers_SpotterIgnoreCantTalk(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+NOT DB_SpotPlayers_HasObjectFlag(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly", DEN_Apprentice_State_IsTadpoledPlayer_7eee9d99-f469-464d-aad4-8f3ee9a275fa, 1);
+
+PROC
+PROC_DEN_Apprentice_StopSpotting("DEN_Apprentice_CyanideDialog")
+THEN
+NOT DB_SpotPlayers_HasObjectFlag(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CyanideDialog", DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e, 1);
+
+PROC
+PROC_DEN_Apprentice_StopSpotting((STRING)_ID)
+THEN
+NOT DB_SpotPlayers_Continuous(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID);
+NOT DB_SpotPlayers(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_SpotPlayers_SpotTrigger_ManualRegistering(S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61);
+NOT DB_SpotPlayers_SpotTrigger(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID,S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61);
+
+//END_REGION
+//REGION Tadpole scene - early cure
+
+//--- Player cures themselves before persuading Nettie (might have been cured by being killed by Nettie)
+PROC
+PROC_DEN_Apprentice_CheckReactToLostAntidote()
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1)
+	//when this flag is set, the state progresses at the end of the dialog and this rule wouldn't normally pass, 
+	//but if the player drinks the antidote during the dialog DEN_Apprentice_LockedUp, this rule passes without this flag check since it is executed before the end of the dialog
+AND
+DB_State_Current(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", _CurrentState)
+AND
+DB_DEN_Apprentice_LastChanceStates(_CurrentState)
+AND
+NOT DB_Defeated(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+THEN
+PROC_DEN_Apprentice_PrepReactToCure(_Player);
+
+
+//--- Spotting player, then forcing them to accept the poison, or go hostile
+PROC
+PROC_DEN_Apprentice_PrepReactToCure((CHARACTER)_Player)
+AND
+QRY_OnlyOnce("DEN_Apprentice_CuredEarlyOrStoleAntidote")
+THEN
+SetFlag(DEN_Apprentice_State_CuredEarly_62717062-614e-41b4-a26a-e03d1ab7af62,_Player);
+SetFlag(DEN_Apprentice_Event_CuredBeforePersuasion_f36d90d4-58de-2183-ce22-8ab698e1d67b,NULL_00000000-0000-0000-0000-000000000000);
+PROC_DEN_Apprentice_RegisterSpottingTadpoled("DEN_Apprentice_CuredEarly");
+
+PROC
+PROC_SpotPlayers_Spotted(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly", _Player)
+AND
+NOT QRY_DEN_Apprentice_AutoStartLockedUpDialog(_Player)
+AND
+QRY_DEN_Apprentice_GiveCombatFeedback(_Player)
+THEN
+PROC_DEN_Apprentice_TurnHostile();
+
+QRY
+QRY_DEN_Apprentice_AutoStartLockedUpDialog((CHARACTER)_Player)
+AND
+QRY_StartDialogCustom(DEN_Apprentice_LockedUp_8eb4471a-5f13-055b-786c-6d593512c2a9, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player, 0, 0, 1, 1)
+THEN
+PROC_CRIME_Pickpocket_CheckPockets_ObjectTimerCancel(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedInCured");
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice","TadpoledScene_LockedIn",(STRING)_) //progressed beyond LockedIn
+THEN
+PROC_DEN_Apprentice_StopSpotting("DEN_Apprentice_CuredEarly");
+//NOT DB_SpotPlayers_IgnoreSpotterCrimeHandling(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_CuredEarly");
+
+//END_REGION
+//REGION Tadpole scene - tadpole death
+
+//--- Tadpole dies before the scene ends
+// Case 1: Nettie is currently hostile, player attacked her explicitly via the dialog options -> Nettie remains hostile
+// Case 2: Nettie is currently hostile, player assaulted her -> Nettie will try to give them a chance, otherwise she remains hostile
+// Case 3: Nettie is not hostile, player probably killed themself somehow -> Nettie will try to spot them and offer them the Wyvern poison
+// In any case, Nettie opens the library door to allow the rest of the party in
+
+//	Handling: 
+//		case 1 is handled automatically just by the fact that she's hostile
+//		case 2-3 are handled as part of the 'early cure' edge-case
+
+// Druid Attack:
+//		- Attacking Nettie before the flag DEN_Apprentice_State_TadpoleSceneDone is set should never start Druid Attack
+//			however, if the door is opened (because the tadpoled died), and the combat is dragged over to other druids, then Druid Attack can trigger because other druids are involved
+//		- Triggering Druid Attack from another source always causes Nettie to abandon whatever scene she's doing and join the druid attack
+
+IF
+Died(_Player)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+DB_DEN_Apprentice_Poisoned(_Player,_)
+THEN
+SetFlag(DEN_Apprentice_State_TadpolePlayerDied_54d81e00-8430-4905-a4fe-84e22e3971cd, _Player);
+PROC_DEN_Apprentice_CheckReactToLostAntidote();
+
+IF
+Died(_Player)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+QRY_DEN_Apprentice_MustOpenDoor()
+THEN
+DB_DEN_Apprentice_CheckReopenDoor(1); //edge-case: she's in dialog with another player when the tadpoled dies
+
+IF
+DB_DEN_Apprentice_CheckReopenDoor(1)
+AND
+NOT DB_CantTalk(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+THEN
+PROC_DEN_Apprentice_TryReopenDoor();
+
+PROC
+PROC_DEN_Apprentice_TryReopenDoor()
+AND
+QRY_DEN_Apprentice_MustOpenDoor()
+THEN
+NOT DB_DEN_Apprentice_CheckReopenDoor(1);
+PROC_CharacterMoveTo(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6,"Walk","DEN_Apprentice_ReopenDoor");
+
+IF
+EntityEvent((CHARACTER)_Nettie,"DEN_Apprentice_ReopenDoor")
+THEN
+PROC_DEN_Apprentice_UnlocksDoor("");
+
+
+QRY
+QRY_DEN_Apprentice_MustOpenDoor()
+AND
+DB_DEN_Apprentice_TadpoledSceneStarted(1)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_State_TadpoleSceneDone_694528f9-7991-84b9-2fdd-816daa7dc013)
+AND
+IsInTrigger(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61,1)
+AND
+IsClosed(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6,1)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+//REGION Tadpole scene - scene cleaning & ending
+
+IF
+EnteredCombat(CHARACTERGUID_S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _)
+THEN
+PROC_State_IfCurrentProgress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_LockedIn", "TadpoledScene_HostileInit");
+
+IF
+EnteredCombat(CHARACTERGUID_S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _)
+AND
+DB_DEN_Apprentice_TadpoledSceneStarted(1)
+THEN
+PROC_DEN_Apprentice_CleanScene();
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("DEN_Apprentice_DefeatCounter")
+THEN
+PROC_DEN_Apprentice_SetPostScene();
+
+
+//--- Scene cleaning
+//After the Cyanide dialog, we can clean almost everything, Nettie doesn't need that stuff anymore
+//The scene is fully done after Nettie is killed or persuaded to free the player
+
+PROC
+PROC_DEN_Apprentice_CleanScene()
+THEN
+SetEntityEvent(CHARACTERGUID_S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_Event_EndTadpoleScene");
+PROC_TriggerUnregisterForPlayers(S_DEN_AppTadInBox_2411c846-27d1-446d-9faa-20a5dc12dea9);
+SetForceUpdate(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, 0);
+CharacterEnableCrime(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "KeepAnEyeOnMe");
+
+PROC
+PROC_DEN_Apprentice_CleanScene()
+AND
+DB_CustomDialogRange(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _CustomRange)
+THEN
+NOT DB_CustomDialogRange(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _CustomRange);
+
+
+//--- Scene done
+//Nettie persuaded & poison accepted
+PROC
+PROC_GlobalFlagReactionAfterDialog(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1,(DIALOGRESOURCE)_)
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Persuaded");
+PROC_DEN_ApprenticePersuaded_JournalHook();
+DB_DEN_Apprentice_AllowCombatAD(1);
+PROC_DEN_Apprentice_SetPostScene();
+
+PROC
+PROC_DEN_ApprenticePersuaded_JournalHook()
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_DEN_Apprentice_SetPostScene()
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_State_TadpoleSceneDone_694528f9-7991-84b9-2fdd-816daa7dc013)
+THEN
+NOT DB_GLO_DefeatCounter(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_DefeatCounter");
+PROC_DEN_Apprentice_ClearCustomCrime();
+PROC_RemoveAllDialogEntriesForSpeaker(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf);
+DB_Dialogs(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_Stayed_f86fb61b-c636-d6b2-e7ab-c4bf06d383f4);
+PROC_GlobalSetFlagAndCache(DEN_Apprentice_State_TadpoleSceneDone_694528f9-7991-84b9-2fdd-816daa7dc013);
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "PostTadpoled_Studying");
+PROC_DEN_Apprentice_CheckLaunchVB();
+PROC_DEN_Apprentice_CheckClearOwnerships();
+
+PROC
+PROC_DEN_Apprentice_CheckClearOwnerships()
+AND
+DB_GlobalFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+THEN
+PROC_DEN_Apprentice_ClearOwnerships();
+
+PROC
+PROC_DEN_Apprentice_ClearOwnerships()
+AND
+DB_DEN_Apprentice_ItemsToClear(_Item)
+AND
+Exists(_Item, 1)
+THEN
+ClearOwnership(_Item);
+
+PROC
+PROC_DEN_Apprentice_ClearOwnerships()
+AND
+DB_DEN_Apprentice_ItemsToClear(_Item)
+THEN
+NOT DB_DEN_Apprentice_ItemsToClear(_Item);
+
+//END_REGION
+//REGION Tadpole scene - VB reaction
+
+PROC
+PROC_DEN_Apprentice_CheckLaunchVB()
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+DB_InRegion((CHARACTER)_Player, S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29)
+THEN
+RealtimeObjectTimerLaunch(_Player, "DEN_Apprentice_Timer_LockedUpVB", 4500);
+
+// VB
+IF
+ObjectTimerFinished(_Player, "DEN_Apprentice_Timer_LockedUpVB")
+AND
+DB_InRegion((CHARACTER)_Player, S_DEN_DruidLair_SUB_a9794f19-187a-4d79-b739-443548411d29)
+AND
+GetFlag((FLAG)DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1, NULL_00000000-0000-0000-0000-000000000000, _TookPoison)
+AND
+DB_DEN_Apprentice_VB(_TookPoison, _VB)
+THEN
+StartVoiceBark(_VB, _Player);
+
+QRY
+QRY_DEN_Apprentice_NotBehindLockedDoor((CHARACTER)_Player, 0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DEN_Apprentice_NotBehindLockedDoor((CHARACTER)_Player, 1) //edge-case: the other player came from the secret tunnel and is stuck behind the closed door
+AND
+NOT DB_InRegion(_Player,S_DEN_LabToTunnelRoomBox_5de3e19e-26a3-4276-aa40-170c61e6842a)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+//REGION Tadpole scene - Hostile
+
+//--- Combat start feedback
+//situation is falling back on combat, because DEN_Apprentice_LockedUp didn't start;
+//this one-liner makes it clear that Nettie is going hostile. It can play for players unable to speak
+QRY
+QRY_DEN_Apprentice_GiveCombatFeedback((CHARACTER)_Player)
+THEN
+SetFlag(DEN_Apprentice_Event_MessedAroundTooMuch_acd98847-3403-df30-ebed-605a85f70000, _Player);
+
+QRY
+QRY_DEN_Apprentice_GiveCombatFeedback((CHARACTER)_Player)
+AND
+QRY_StartDialogCustom(DEN_Apprentice_CombatStarts_03b77114-5e1d-dd80-cfcd-3d3a4e6ac47f, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player, 0, 0, 1, 0)
+THEN
+DB_NOOP(1);
+
+
+//--- Player flees the area
+//normally it's impossible to leave the area without killing her or persuading her because
+//she's wearing the circlet that unlocks the door (item is equipped, so not stealable). 
+//If the player finds a way to do it, she turns hostile.
+IF
+LeftTrigger(_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+NOT DB_Dead(_Player) //if the player if dead when leaving, it means we're in the "tadpole death" edge-case (Nettie reopened the door, so it was normal to leave)
+AND
+QRY_State_IsBeforeState(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_Persuaded")
+AND
+DB_GlobalFlag(DEN_Apprentice_Event_CloseDoor_34899fcd-efd7-8b8d-9ebf-8b1a4949cdfd)
+AND
+NOT DB_GlobalFlag(DEN_Apprentice_Quest_TookPoison_441540c2-a410-dc95-6b20-ae96109f38c1)
+THEN
+SetFlag(DEN_Apprentice_Event_NettieTurnsHostile_55b84bac-1247-7b8d-a33f-65491749a02f,NULL_00000000-0000-0000-0000-000000000000);
+PROC_DEN_Apprentice_TurnHostile();
+
+
+//--- Attacking her in dialog
+//(not using DB_GlobalFlagReactionAfterDialog because the flag can be added to any of her dialog and filling the DB for each is more bug prone)
+IF
+FlagSet((FLAG)DEN_Apprentice_Event_NettieTurnsHostile_55b84bac-1247-7b8d-a33f-65491749a02f, _, _Inst)
+AND
+_Inst != 0
+THEN
+DB_DEN_Apprentice_TurnHostileAfterDialog(1);
+
+IF
+DialogEnded(_,_Inst)
+AND
+DB_DialogNPCs(_Inst, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,_)
+AND
+DB_DEN_Apprentice_TurnHostileAfterDialog(1)
+THEN
+NOT DB_DEN_Apprentice_TurnHostileAfterDialog(1);
+PROC_DEN_Apprentice_TurnHostile();
+
+PROC
+PROC_OnDialogAttack_GoingHostile(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,(CHARACTER)_)
+AND
+QRY_DEN_CheckPeaceState()
+AND
+DB_DEN_Apprentice_OverridingCrimes(1)
+THEN
+PROC_DEN_Apprentice_TurnHostile();
+
+PROC
+PROC_DEN_Apprentice_TurnHostile()
+AND
+NOT DB_PermaDefeated(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+THEN
+SetFaction((CHARACTER)S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,(FACTION)ACT1_DEN_Apprentice_Hostile_7d6edeba-cbc6-4e7e-ac06-e9eb28222532);
+
+
+//--- Set when she enters combat
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_HostileInit")
+THEN
+SetFlag(DEN_Apprentice_State_HostileToTadpoled_e336c7e3-27b7-4068-adb9-9cf31d310be2,NULL_00000000-0000-0000-0000-000000000000);
+DB_GLO_DefeatCounter(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice_TadpoleSceneCombat");
+DB_NPCAttackAD((CHARACTER)S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, (DIALOGRESOURCE)DEN_Apprentice_AD_TadpoledCombat_0693ec5c-79da-3444-a6dd-542d4d1a46a7);
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "TadpoledScene_HostileInit")
+AND
+GetFlag(DEN_Apprentice_Event_NettieTurnsHostile_55b84bac-1247-7b8d-a33f-65491749a02f, NULL_00000000-0000-0000-0000-000000000000, _AttackedFromDialog)
+AND
+GetFlag(DEN_Apprentice_State_SomeoneGotPoisoned_35ce5ccc-aa41-48f4-aae2-cf0d64572740, NULL_00000000-0000-0000-0000-000000000000, _WasPoisoned)
+AND
+DB_DEN_Apprentice_HostileStatesSwitch(_AttackedFromDialog,_WasPoisoned,_NewState)
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", _NewState);
+
+IF
+FlagSet(DEN_Apprentice_Event_CombatADFinished_7cd9687b-e205-aa18-94d5-4792184c1b80, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+NOT DB_NPCAttackAD(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_AD_TadpoledCombat_0693ec5c-79da-3444-a6dd-542d4d1a46a7);
+
+PROC
+PROC_GLO_DefeatCounter_AllDefeated("DEN_Apprentice_TadpoleSceneCombat")
+THEN
+SetFlag(DEN_Apprentice_State_DiedInTadpoleScene_624f3b7a-3772-469f-8368-8cde7540337f, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Generic hostility after solving Tapdoled scene
+
+// Nettie says an AD to show her disappointment
+IF
+DB_Is_InCombat(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _ID)
+AND
+DB_DEN_Apprentice_AllowCombatAD(1)
+AND
+DB_DEN_Apprentice_Tadpoled(_Player)
+AND
+DB_Is_InCombat(_Player, _ID)
+AND
+IsEnemy(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player, 1)
+THEN
+NOT DB_DEN_Apprentice_AllowCombatAD(1);
+DB_NPCAttackAD((CHARACTER)S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, (DIALOGRESOURCE)DEN_AttackOnDen_AD_ApprenticeLastStand_8824181c-149a-dcf2-935a-046d5431a2df);
+
+IF
+AutomatedDialogStarted(DEN_AttackOnDen_AD_ApprenticeLastStand_8824181c-149a-dcf2-935a-046d5431a2df,_)
+THEN
+NOT DB_NPCAttackAD(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, DEN_Apprentice_AD_TadpoledCombat_0693ec5c-79da-3444-a6dd-542d4d1a46a7);
+
+//END_REGION
+//REGION SwD dialog
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)DEN_Apprentice_Dead_31647b3a-c130-6206-4e07-491b588de2e9, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, (GUIDSTRING)_Player)
+AND
+DB_InRegion((CHARACTER)_Player, S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+IsClosed(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6, 1)
+THEN
+SetFlag(DEN_Apprentice_State_AllowLockedInSwDQuestion_f7adf6b4-c68d-4534-b49e-8630a84fe835, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DialogEnded(DEN_Apprentice_Dead_31647b3a-c130-6206-4e07-491b588de2e9,_)
+THEN
+ClearFlag(DEN_Apprentice_State_AllowLockedInSwDQuestion_f7adf6b4-c68d-4534-b49e-8630a84fe835, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+
+//REGION Items
+
+//Drinking antidote immediately
+IF
+FlagSet(DEN_Apprentice_Event_GiveAntidote_e60bf645-9b5f-45a2-adf5-5e1fc5dae9b7, (CHARACTER)_Player, _)
+THEN
+ToInventory(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a,_Player, 0, 1);
+ClearOwnership(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a);
+Use(_Player,S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a,"");
+
+
+//"Grab the branch from her"
+IF
+FlagSet(DEN_Apprentice_Event_TookThorn_fa16b889-88de-3067-6cbf-a71bf5df15ba, _Player, _)
+AND
+GetPosition(_Player, _X, _Y, _Z)
+AND
+CreateAt(UNI_DEN_PoisonousThorn_A_Unidentified_b47a53a6-9533-4896-9d74-69aa0cff7c81, _X, _Y, _Z, 0, 0, "", _Thorn)
+THEN
+DB_DEN_Apprentice_UnidentifiedThorn(_Thorn);
+ToInventory((ITEM)_Thorn, _Player, 1, 0, 0);
+
+
+//Identifying the branch
+IF
+FlagSet(DEN_Apprentice_Knows_IdentifiedBranch_782eab90-646c-ca40-b8fc-a814641ce064, NULL_00000000-0000-0000-0000-000000000000, _)
+AND
+DB_DEN_Apprentice_UnidentifiedThorn(_Thorn)
+THEN
+NOT DB_DEN_Apprentice_UnidentifiedThorn(_Thorn);
+Transform(_Thorn, UNI_DEN_PoisonousThorn_A_Cinematic_91c883ff-9c21-4da8-bc34-1eab397e92ab, POLYMORPH_a0ddddc8-255f-4014-9f63-d7608eb1c2a0);
+
+IF
+FlagSet(DEN_Apprentice_Knows_IdentifiedBranch_782eab90-646c-ca40-b8fc-a814641ce064, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+DB_OneShotPlayerTrigger(S_DEN_DalelandsBookRevealSphere_ded38295-b828-4957-8ba8-9f24da67a163);
+
+PROC
+PROC_OneShotTriggerEntered(_Player, S_DEN_DalelandsBookRevealSphere_ded38295-b828-4957-8ba8-9f24da67a163)
+AND
+NOT DB_CantTalk(_Player)
+AND
+Exists(S_DEN_AntidoteRecipeBook_6557e2a7-ee82-4c5a-a26b-9056e4eb03df, 1)
+AND
+IsInInventory(S_DEN_AntidoteRecipeBook_6557e2a7-ee82-4c5a-a26b-9056e4eb03df, 0)
+AND
+IsInTrigger(S_DEN_AntidoteRecipeBook_6557e2a7-ee82-4c5a-a26b-9056e4eb03df, S_DEN_DalelandsBookRevealSphere_ded38295-b828-4957-8ba8-9f24da67a163, 1)
+THEN
+PROC_TryStartAD(DIALOGRESOURCEGUID_GLO_PerceptionSuccess_48825dbe-a320-7c4c-fe3e-372b717d5bc9, _Player);
+PROC_PlayPerceptionRevealEffect(S_DEN_AntidoteRecipeBook_6557e2a7-ee82-4c5a-a26b-9056e4eb03df, "DEN_Apprentice_HighlightBook");
+
+IF
+Opened(S_DEN_LibraryEntryDoor_df1f2445-3737-4410-8f8c-b7af5967dea6)
+AND
+DB_GlobalFlag(DEN_Apprentice_Event_ReachedCyanideDialog_bcc31a3c-72e6-4720-98f1-6b7c2a40c6ba)
+THEN
+SetStoryItem(S_DEN_AppCirclet_59b54a3c-1825-49a3-b216-830edfd388ab, 0);
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", "DEN_State_Final")
+AND
+Exists(S_DEN_AppCirclet_59b54a3c-1825-49a3-b216-830edfd388ab, 1)
+THEN
+SetStoryItem(S_DEN_AppCirclet_59b54a3c-1825-49a3-b216-830edfd388ab, 0);
+
+
+// AoD / GobHunt reward
+IF
+FlagSet(DEN_Apprentice_Event_GiveReward_f7b09592-a221-3414-2ffa-32df23ca4b61, NULL_00000000-0000-0000-0000-000000000000, _Inst)
+AND
+DB_DialogPlayers(_Inst, _Player, _)
+AND
+QRY_DEN_Apprentice_TryAddingAntidoteToPouch()
+THEN
+PROC_ToInventoryAndOnStage(S_DEN_ApprenticeRewardPouch_e7ee5c9f-9201-4abb-9969-587c7102f9ab, _Player, 1, 1, 1);
+
+QRY
+QRY_DEN_Apprentice_TryAddingAntidoteToPouch()
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_DEN_Apprentice_TryAddingAntidoteToPouch()
+AND
+DB_DEN_Apprentice_Poisoned(_,_)
+AND
+Exists(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a, 1)
+AND
+IsInInventoryOf(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a, S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, 1)
+THEN
+ToInventory(S_DEN_Antidote_3d02e275-1530-455c-9d58-bfac847e105a, S_DEN_ApprenticeRewardPouch_e7ee5c9f-9201-4abb-9969-587c7102f9ab, 1, 0, 1);
+
+//END_REGION
+
+//REGION Drow reaction & research
+
+IF
+FlagSet(DEN_Apprentice_Event_RevealedTadpole_246e8df4-cd5d-da9f-7b19-cd8785478c6e,_,_)
+THEN
+PROC_RemoveOneShotVoiceBarkTrigger(S_DEN_DrowReactVBSphere_df0a08a6-2a89-4771-87b4-df17d03b21dd, DEN_Apprentice_VB_SeeDrow_95c5594d-628f-f9a9-dbe2-112fb680e410);
+
+IF
+FlagSet(GLO_Halsin_Knows_IsFound_a0d83476-e2d0-4972-a76b-b23c39078cd7,_,_)
+THEN
+PROC_RemoveOneShotVoiceBarkTrigger(S_DEN_DrowReactVBSphere_df0a08a6-2a89-4771-87b4-df17d03b21dd, DEN_Apprentice_VB_SeeDrow_95c5594d-628f-f9a9-dbe2-112fb680e410);
+
+IF
+GameBookInterfaceClosed(S_DEN_DruidTadpoleBook_acd84c20-a9f1-4c80-861a-e8636f77e02e,_Player)
+AND
+QRY_OnlyOnce("DEN_Apprentice_ReadResearch")
+AND
+NOT DB_GlobalFlag(GLO_Halsin_Knows_IsFound_a0d83476-e2d0-4972-a76b-b23c39078cd7)
+THEN
+StartVoiceBark(DEN_Apprentice_VB_TadpoleResearch_6463bde7-14a8-2f8e-e208-7e3243fd5e9c,_Player);
+
+IF
+LeftTrigger(_Player,S_DEN_SecretLibrary_SUB_14dd754c-4b74-4aa7-bbec-471c2f8a0c61)
+AND
+DB_DEN_Apprentice_CyanideDialogStarted(1)
+AND
+DB_GlobalFlag(DEN_Apprentice_State_Dead_900e56ea-6e14-5d93-4425-c2afe466e6f2)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player,"GLO_Tadpole","LearnedResearchHalsin",0)
+AND
+QRY_OnlyOnce("DEN_Apprentice_ReadResearch")
+AND
+NOT DB_GlobalFlag(GLO_Halsin_Knows_IsFound_a0d83476-e2d0-4972-a76b-b23c39078cd7)
+THEN
+QuestUpdate(_Player,"GLO_Tadpole","LearnedResearchHalsin");
+StartVoiceBark(DEN_Apprentice_VB_TadpoleResearch_6463bde7-14a8-2f8e-e208-7e3243fd5e9c,_Player);
+//END_REGION
+//REGION Camp night
+
+IF
+FlagSet(DEN_Apprentice_State_TadpoleSceneDone_694528f9-7991-84b9-2fdd-816daa7dc013, NULL_00000000-0000-0000-0000-000000000000, _)
+THEN
+DB_DEN_Apprentice_ReadyMonitorIntro(1);
+
+//GUS-147034 - Raphael should appear only after all players left the Grove 
+	//Going to camp to rest is fine though
+PROC
+PROC_DEN_PlayerLeftDen(_Player)
+AND
+DB_Players(_Player)
+AND
+DB_DEN_Apprentice_ReadyMonitorIntro(1)
+AND
+NOT DB_DEN_PlayerInDen(_)
+THEN
+NOT DB_DEN_Apprentice_ReadyMonitorIntro(1);
+RealtimeObjectTimerLaunch(_Player, "DEN_Apprentice_CheckIfInCampAtNight", 2000);
+
+IF
+ObjectTimerFinished((CHARACTER)_Player, "DEN_Apprentice_CheckIfInCampAtNight")
+AND
+DB_InCamp(_Player)
+AND
+DB_Camp_NightMode(1) //night time, player is resting, they'll be back in the Grove and will be able to leave it properly
+THEN
+DB_DEN_Apprentice_ReadyMonitorIntro(1);
+
+ //if it's not night time, then the player is going to camp through the waypoint... 
+	//to avoid blocking Raphael if the player don't go back in the Grove, we consider the requirements met
+IF
+ObjectTimerFinished(_, "DEN_Apprentice_CheckIfInCampAtNight")
+AND
+NOT DB_DEN_Apprentice_ReadyMonitorIntro(1)
+THEN
+SetFlag(DEN_Apprentice_State_MonitorIntroRequirementMet_fdf075ba-072b-4788-9edb-1ad85949d06d, NULL_00000000-0000-0000-0000-000000000000);
+
+//END_REGION
+//REGION Goblin Hunt Victory
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "GobHuntVictory")
+AND
+DB_GlobalFlag(DEN_Apprentice_Event_NettieTurnsHostile_55b84bac-1247-7b8d-a33f-65491749a02f)
+THEN
+SetFaction((CHARACTER)S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,(FACTION)ACT1_DEN_Apprentice_4565e710-476b-6f86-1f7b-0ca50a6045c7);
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "GobHuntVictory")
+AND
+DB_GlobalFlag(DEN_Apprentice_Event_NettieTurnsHostile_55b84bac-1247-7b8d-a33f-65491749a02f)
+AND
+DB_Players(_Player)
+AND
+GetAttitudeTowardsPlayer(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,_Player,_Att)
+AND
+_Att <= -45
+THEN
+AddAttitudeTowardsPlayer(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, _Player, 45);
+
+//END_REGION
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _NewState)
+AND
+NOT DB_DEN_DefaultStates(_NewState)
+AND
+NOT DB_DEN_NoTieflingsStates(_NewState)
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,"DEN_Apprentice","GroveStateChanged");
+
+PROC
+PROC_State_Changed(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", _)
+AND
+NOT QRY_State_IsBeforeState(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf, "DEN_Apprentice", "PostTadpoled_Studying")
+THEN
+PROC_DEN_Apprentice_CheckThornAvoided();
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", "DEN_State_GoblinHuntVictory")
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,"DEN_Apprentice","GobHuntVictory");
+
+PROC
+PROC_State_Changed(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _Victory)
+AND
+DB_DEN_VictoryStates(_Victory)
+THEN
+PROC_DEN_Apprentice_ClearOwnerships();
+
+PROC
+PROC_StateSet_PermaDefeated(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf)
+THEN
+PROC_State_Progress(S_DEN_Apprentice_7cabf226-e34b-4556-8903-a45d0fe26caf,"DEN_Apprentice","PermaDefeated");
+
+//REGION Scene trigger for dissected Drow
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)DEN_DissectedDrow_Dead_8dffcf93-b16d-98d6-1ba6-1f6dc9b86342, _, _)
+AND
+Exists(S_DEN_DissectedDrow_OnSlab_2174dd69-d425-407d-988d-6fc83ccf94f1, 1) //In case the corpse was moved to another level.
+AND
+IsInTrigger(S_DEN_DissectedDrow_0cb0cdde-16f8-440d-b73a-ceb385183ea9, S_DEN_DissectedDrow_OnSlab_2174dd69-d425-407d-988d-6fc83ccf94f1, 1)
+THEN
+SetFlag(DEN_DissectedDrow_State_OnSlab_484984e1-8bcd-4d23-b694-602bcf2079e6, S_DEN_DissectedDrow_0cb0cdde-16f8-440d-b73a-ceb385183ea9, 0);
+
+PROC
+PROC_DialogFlagSetup((DIALOGRESOURCE)DEN_DissectedDrow_Dead_8dffcf93-b16d-98d6-1ba6-1f6dc9b86342, _, _)
+AND
+Exists(S_DEN_DissectedDrow_OnSlab_2174dd69-d425-407d-988d-6fc83ccf94f1, 1) //In case the corpse was moved to another level.
+AND
+IsInTrigger(S_DEN_DissectedDrow_0cb0cdde-16f8-440d-b73a-ceb385183ea9, S_DEN_DissectedDrow_OnSlab_2174dd69-d425-407d-988d-6fc83ccf94f1, 0)
+THEN
+ClearFlag(DEN_DissectedDrow_State_OnSlab_484984e1-8bcd-4d23-b694-602bcf2079e6, S_DEN_DissectedDrow_0cb0cdde-16f8-440d-b73a-ceb385183ea9, 0);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

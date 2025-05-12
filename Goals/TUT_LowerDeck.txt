@@ -1,0 +1,496 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers(S_TUT_LowerDeck_CombatEvent_5eb34cda-5b4e-4667-895f-c7683f228cc9);
+PROC_TriggerRegisterForPlayers(S_TUT_LowerDeck_GuideDialogTrigger_5ec4613a-ca05-451b-a952-481922e179d1);
+PROC_TriggerRegisterForParty(S_TUT_LaezelCinematicSpectatorTrigger_255025f1-ddac-4141-af34-eb8e32fc6839);
+PROC_TriggerRegisterForParty((TRIGGER)S_TUT_LowerDeck_GuideInnerTrigger_4a295043-24aa-40dd-8be5-f9ac13765782);
+
+DB_OneShotPlayerTrigger((TRIGGER)S_TUT_ImpRoom_ShakeTrigger_711cd164-5c53-490d-aada-5614b278e957);
+DB_TUT_LowerDeck_UndesiredGuideTags((TAG)ILLITHID_1eec74e8-3673-4500-abec-57b7ed8469ed);
+PROC_SetOnStage(S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04, 0);
+
+//REGION Imp Combat
+
+DB_GLO_DefeatCounter((CHARACTER)S_FirstFight_Imp_Melee_01_07f1512b-efe9-4eb8-8ade-783435e9d7c9, "TUT_LowerDeck_ImpsDefeated");
+DB_GLO_DefeatCounter((CHARACTER)S_FirstFight_Imp_Ranged_01_38d1ce2f-4f19-4266-971d-61f08bc1a895, "TUT_LowerDeck_ImpsDefeated");
+DB_GLO_DefeatCounter((CHARACTER)S_FirstFight_Imp_Melee_02_5c5bd50b-147e-42e5-93cb-59a754df91ec, "TUT_LowerDeck_ImpsDefeated");
+
+SetOnStage(S_FirstFight_Imp_Ranged_02_df44fa65-5399-47d6-b5bb-70e4b8e63314,0);
+//END_REGION
+
+DB_DropMutingStatussesDialog((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344);
+DB_DialogBlockAttackButton((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344);
+DB_DialogBlockTradeButton((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344);
+
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)TUT_LowerDeck_AD_UsWaitingAtEntrance_e092c714-1a9b-1a62-b17a-3324c4e08f11);
+KBSECTION
+//REGION Lae'zel/Guide Introduction
+
+
+PROC
+PROC_Tutorial_Start()
+AND
+DB_Players(_Player)
+AND
+HasActiveStatus(_Player,"TUT_SUMMON_BLOCK",0)
+THEN
+ApplyStatus(_Player,"TUT_SUMMON_BLOCK",-1.0);
+
+IF
+EnteredTrigger(_Player,(TRIGGER)S_TUT_LowerDeck_GuideDialogTrigger_5ec4613a-ca05-451b-a952-481922e179d1)
+AND
+NOT DB_TUT_LowerDeck_GuideRecruitmentGoingOn(_)
+AND
+DB_TUT_Guide((CHARACTER)_Guide)
+AND
+QRY_OnlyOnce("TUT_PathOfHell_TeleportsToEntrance")
+THEN
+PROC_SetOnStage(_Guide,1);
+SetVisible(_Guide,0);
+TeleportTo(_Guide,S_TUT_LowerDeck_GuideDialogTrigger_5ec4613a-ca05-451b-a952-481922e179d1,"TUT_LowerDeck_TeleportedGuide",0,0,0,0,1);
+PROC_TUT_LowerDeck_FindDialogueSpeaker((CHARACTER)_Player);
+
+
+IF
+FlagSet((FLAG)TUT_LowerDeck_Event_SetGuideVisible_5b044d7c-ba8d-47f5-b056-dbe941c9cf72,_,_)
+AND
+QRY_OnlyOnce("TUT_LowerDeck_GuideAppears")
+AND
+DB_TUT_Guide((CHARACTER)_Guide)
+THEN
+SetVisible(_Guide,1);
+
+IF
+WentOnStage(S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04,1)
+THEN
+SetFlag((FLAG)TUT_LowerDeck_State_GuideAppeared_4d3c156f-b09c-4f18-b031-d5caa8acf184);
+
+
+//We add to dialog any posterior players that reach the area if it's going on 
+IF
+EnteredTrigger(_PartyMember,(TRIGGER)S_TUT_LowerDeck_GuideInnerTrigger_4a295043-24aa-40dd-8be5-f9ac13765782)
+AND
+NOT DB_LowerDeck_AddedCharToGuideDialog(_PartyMember)
+AND
+DB_TUT_LowerDeck_GuideRecruitmentGoingOn(_ID)
+THEN
+DB_LowerDeck_AddedCharToGuideDialog(_PartyMember);
+PROC_DialogAddListeningActor(_ID,_PartyMember);
+
+IF
+EnteredTrigger((CHARACTER)S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558,(TRIGGER)S_TUT_LowerDeck_GuideInnerTrigger_4a295043-24aa-40dd-8be5-f9ac13765782)
+AND
+NOT DB_OnlyOnce("TUT_LowerDeck_GuideAppears")
+AND 
+NOT QRY_AnyAvatarInTrigger((TRIGGER)S_TUT_LowerDeck_GuideDialogTrigger_5ec4613a-ca05-451b-a952-481922e179d1)
+AND
+QRY_OnlyOnce("TUT_LowerDeck_UsTempLeaves")
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)TUT_LowerDeck_AD_UsWaitingAtEntrance_e092c714-1a9b-1a62-b17a-3324c4e08f11,S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558);
+
+IF 
+AutomatedDialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AD_UsWaitingAtEntrance_e092c714-1a9b-1a62-b17a-3324c4e08f11,_)
+THEN
+PROC_TUT_Lab_TempRemoveBrain();
+
+IF
+AutomatedDialogRequestFailed((DIALOGRESOURCE)TUT_LowerDeck_AD_UsWaitingAtEntrance_e092c714-1a9b-1a62-b17a-3324c4e08f11,_)
+THEN
+PROC_TUT_Lab_TempRemoveBrain();
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _InstanceID)
+AND
+DB_Avatars(_Char)
+AND
+NOT DB_LowerDeck_AddedCharToGuideDialog(_Char)
+AND
+DB_InRegion(_Char, (TRIGGER)S_TUT_LaezelCinematicSpectatorTrigger_255025f1-ddac-4141-af34-eb8e32fc6839) 
+THEN
+DB_LowerDeck_AddedCharToGuideDialog(_Char);
+PROC_DialogAddListeningActor(_InstanceID,_Char);
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _InstanceID)
+AND
+DB_InRegion(S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558, (TRIGGER)S_TUT_LaezelCinematicSpectatorTrigger_255025f1-ddac-4141-af34-eb8e32fc6839) 
+THEN
+PROC_DialogAddSpeakingActor(_InstanceID,S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558);
+
+PROC
+PROC_TUT_LowerDeck_FindDialogueSpeaker((CHARACTER)_Char)
+AND
+DB_Players(_Char)
+AND
+QRY_TUT_LowerDeck_RemoveBlockers((CHARACTER)_Char)
+THEN
+PROC_TUT_LowerDeck_StartDialogue((CHARACTER)_Char);
+
+PROC
+PROC_TUT_LowerDeck_FindDialogueSpeaker((CHARACTER)_Char)
+AND
+DB_PlayerSummons(_Char)
+AND
+CharacterGetOwner(_Char, _Player)
+AND
+QRY_TUT_LowerDeck_RemoveBlockers((CHARACTER)_Player)
+THEN
+PROC_TUT_LowerDeck_StartDialogue((CHARACTER)_Player);
+
+PROC
+PROC_TUT_LowerDeck_FindDialogueSpeaker((CHARACTER)_Char)
+AND
+DB_PartyFollowers(_Char)
+AND
+CharacterGetOwner(_Char, _Player)
+THEN
+PROC_TUT_LowerDeck_StartDialogue((CHARACTER)_Player);
+
+QRY
+QRY_TUT_LowerDeck_RemoveBlockers((CHARACTER)_Player)
+AND
+HasActiveStatus(_Player, "SILENCED", 1)
+AND
+NOT DB_OnlyOnce("TUT_LowerDeck_CombatScene")
+THEN
+RemoveStatus(_Player, "SILENCED");
+
+QRY
+QRY_TUT_LowerDeck_RemoveBlockers((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("TUT_LowerDeck_CombatScene")
+THEN
+PROC_RemoveAllPolymorphs(_Player);
+
+QRY
+QRY_TUT_LowerDeck_RemoveBlockers((CHARACTER)_Player)
+AND
+NOT DB_OnlyOnce("TUT_LowerDeck_CombatScene")
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_TUT_LowerDeck_StartDialogue((CHARACTER)_Player)
+THEN
+DB_LowerDeck_AddedCharToGuideDialog(_Player);
+
+PROC
+PROC_TUT_LowerDeck_StartDialogue((CHARACTER)_Player)
+AND
+DB_TUT_Guide((CHARACTER)_Guide)
+AND
+QRY_OnlyOnce("TUT_LowerDeck_CombatScene")
+AND
+QRY_StartDialog((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _Guide, _Player)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Vista
+
+//REGION Laezel Navigation
+
+PROC
+PROC_StartDialog_AddExtraSpeakers(TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _DialogID) 
+THEN
+PROC_DialogAddSpeakingActor(_DialogID, S_TUT_DeadTrall_001_9cbdd9c3-6282-49e0-8cff-a61d0df6ae67);
+
+
+IF
+DialogStarted((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _ID)
+THEN
+DB_TUT_LowerDeck_GuideRecruitmentGoingOn(_ID);
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _ID)
+AND
+DB_TUT_Lab_OwnerUs(_PlayerOwner)
+THEN
+NOT DB_TUT_Lab_OwnerUs(_PlayerOwner);
+PROC_CharacterEnableAllCrimes((CHARACTER)S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558);
+SetFlag((FLAG)TUT_Lab_DevourerIsFollower_fdac4665-45bf-40ec-9f87-12674cbad1d6);
+PROC_TUT_Misc_TutorialCompanion_RecruitBrain((CHARACTER)_PlayerOwner);
+PROC_TUT_LowerDeck_TeleportCharToImpRoom((CHARACTER)S_TUT_Lab_TrappedDevourer_6ca92237-eb1e-4ed8-a1ee-18b3bef21558);
+ClearFlag((FLAG)TUT_LowerDeck_State_UsWaiting_ca04ed16-c1ef-44f5-ae5c-f19e48d88034);
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _ID)
+AND
+QRY_OnlyOnce("TUT_LowerDeck_GuideAppears")
+AND
+DB_TUT_Guide((CHARACTER)_Guide)
+THEN
+SetVisible(_Guide,1);
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _ID)
+AND
+DB_LowerDeck_AddedCharToGuideDialog(_Char)
+THEN
+NOT DB_LowerDeck_AddedCharToGuideDialog(_Char);
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _ID)
+AND
+DB_TUT_Guide(_Guide)
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)TUT_LowerDeck_Event_LaezelBecomesFollower_6625adc5-8c6d-448f-8963-26dcf458e6ae, _Player, 1)
+AND
+GetFaction(_Guide, _Faction)
+AND
+QRY_OnlyOnce("TUT_LowerDeck_GuidePartyFollower")
+THEN
+DB_TutorialCompanion(_Guide);//added for tutorial messages
+DB_TUT_Misc_TutorialCompanion_OldFaction(_Guide, _Faction);
+PROC_TUT_Misc_CheckCustomRecruitAltGith(_Player);
+PROC_TUT_LowerDeck_GuideDialogue((CHARACTER)_Guide);
+PROC_TUT_Misc_UpdateHelmMarkerPosition("UpperFloor");
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344, _ID)
+AND
+DB_DialogPlayers(_ID,_Player,1)
+AND
+DB_TUT_Guide(_Guide)
+AND
+GetFlag((FLAG)TUT_LowerDeck_Event_LaezelBecomesFollower_6625adc5-8c6d-448f-8963-26dcf458e6ae,_Player, 0)
+THEN
+SetFlag((FLAG)TUT_LowerDeck_Event_LaezelBecomesFollower_6625adc5-8c6d-448f-8963-26dcf458e6ae,_Player);
+PROC_CheckPartyFull();
+PROC_GLO_PartyMembers_Add(_Guide,(CHARACTER)_Player);
+
+
+PROC
+PROC_TUT_Misc_CheckCustomRecruitAltGith((CHARACTER)_Player)
+AND
+DB_TUT_Guide((CHARACTER)S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04)
+THEN
+PROC_TUT_Misc_TutorialCompanion_Recruitment((CHARACTER)S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04, (CHARACTER)_Player);
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344,_ID)
+AND
+DB_Players(_Player)
+AND
+HasActiveStatus(_Player,"TUT_SUMMON_BLOCK",1)
+THEN
+RemoveStatus(_Player,"TUT_SUMMON_BLOCK");
+
+PROC 
+PROC_GLO_DefeatCounter_AllDefeated("TUT_LowerDeck_ImpsDefeated")
+THEN
+TimerLaunch("TUT_LowerDeck_ADDelay", 3000);
+SetFlag((FLAG)TUT_LowerDeck_State_ImpsDead_c505f03a-c6d4-4ac5-a0a1-ea805fc1a589);
+
+IF
+FlagSet((FLAG)LOW_LowerDeck_Event_ImpRoomTeleportPlayers_66c9ae56-50b5-46ee-a9a0-fc4e2b21657a,_,_)
+THEN
+PROC_TUT_LowerDeck_CheckCharNeedTeleport();
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344,_ID)
+THEN
+PROC_TUT_LowerDeck_CheckCharNeedTeleport();
+
+PROC
+PROC_TUT_LowerDeck_CheckCharNeedTeleport()
+AND
+DB_Players(_Player)
+AND
+NOT DB_Defeated(_Player)
+AND
+NOT DB_TUT_LowerDeck_TeleportedToImpRoom(_Player)
+AND
+IsInTrigger(_Player,(TRIGGER)S_TUT_LaezelCinematicSpectatorTrigger_255025f1-ddac-4141-af34-eb8e32fc6839,1)
+THEN
+PROC_TUT_LowerDeck_TeleportCharToImpRoom(_Player);
+
+PROC
+PROC_TUT_LowerDeck_CheckCharNeedTeleport()
+AND
+DB_TUT_Guide(_Guide)
+AND
+NOT DB_Defeated(_Guide)
+AND
+NOT DB_TUT_LowerDeck_TeleportedToImpRoom(_Guide)
+AND
+IsInTrigger(_Guide,(TRIGGER)S_TUT_LaezelCinematicSpectatorTrigger_255025f1-ddac-4141-af34-eb8e32fc6839,1)
+THEN
+PROC_SetOnStage(_Guide,1);
+PROC_TUT_LowerDeck_TeleportCharToImpRoom(_Guide);
+
+PROC
+PROC_TUT_LowerDeck_TeleportCharToImpRoom((CHARACTER)_Char)
+AND
+GetPosition(TUT_ImpRoom_CombatPlayerPosition_001_df89b981-d542-4337-9b25-d637050d80b6,_X,_Y,_Z)
+AND
+FindValidPosition(_X,_Y,_Z,10.0,_Char,1,_Xf,_Yf,_Zf)
+THEN
+DB_TUT_LowerDeck_Teleported(1);
+TeleportToPosition(_Char,_Xf,_Yf,_Zf,"TUT_LowerDeck_TeleportedToImpRoom",0,1,0,0,1);
+
+PROC
+PROC_TUT_LowerDeck_TeleportCharToImpRoom((CHARACTER)_Char)
+AND
+NOT DB_TUT_LowerDeck_Teleported(1)
+AND
+GetPosition(TUT_ImpRoom_CombatPlayerPosition_001_df89b981-d542-4337-9b25-d637050d80b6,_X,_Y,_Z)
+THEN
+DB_TUT_LowerDeck_Teleported(1);
+TeleportToPosition(_Char,_X,_Y,_Z,"TUT_LowerDeck_TeleportedToImpRoom",0,1,0,0,1);
+
+IF
+DB_GLO_DefeatCounter(_Char,"TUT_LowerDeck_ImpsDefeated")
+AND
+HasActiveStatus(_Char,"TUT_LOWERDECK_INITIATIVEBOOST",0)
+THEN
+ApplyStatus(_Char,"TUT_LOWERDECK_INITIATIVEBOOST",-1.0);
+
+IF
+EntityEvent(_Char, "TUT_LowerDeck_TeleportedToImpRoom")
+THEN
+DB_TUT_LowerDeck_TeleportedToImpRoom((CHARACTER)_Char);
+NOT DB_TUT_LowerDeck_Teleported(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)TUT_LowerDeck_AfterImpFight_77547ae6-d1b6-886f-b3f4-22fcb582e344,_ID)
+AND
+DB_TUT_LowerDeck_GuideRecruitmentGoingOn(_ID)
+THEN
+NOT DB_TUT_LowerDeck_GuideRecruitmentGoingOn(_ID);
+
+PROC
+PROC_TUT_LowerDeck_GuideDialogue((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12)
+THEN
+DB_Tutorial_Start_PlayerPodAssigned(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (ITEM)S_TUT_Start_LaezelPod_0aa6b2a4-808a-4eb3-84d7-face5ac13e44); 
+PROC_RemoveDialog(S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12);
+DB_Dialogs((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12, (DIALOGRESOURCE)TUT_Start_Laezel_c62d7e26-beb5-0afe-becd-68a25c7f4314);
+NOT DB_OriginInPartyDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(DIALOGRESOURCE)Laezel_InParty2_93bf58f5-5111-9730-1ee2-62dfb0b00c96);
+DB_OriginInPartyDialog((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(DIALOGRESOURCE)TUT_Start_Laezel_c62d7e26-beb5-0afe-becd-68a25c7f4314);
+
+PROC
+PROC_TUT_LowerDeck_GuideDialogue((CHARACTER)S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04)
+THEN
+DB_Dialogs(S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04, (DIALOGRESOURCE)TUT_Start_AltGuide_d2957339-a41d-5346-c861-9acaf2a7663c);
+
+//Prevent guide from getting illithid tags when being set as a player, we don't want the truesoulcorpse dialog to pop up when his body appears in act 1
+IF
+TagSet((CHARACTER)S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04,_Tag)
+AND
+DB_TUT_LowerDeck_UndesiredGuideTags(_Tag)
+THEN
+ClearTag((CHARACTER)S_TUT_GithGuide_201a0ee6-6411-4564-aaea-1ca057bfea04, _Tag);
+
+IF
+RelationChanged((FACTION)Origin_Laezel_bee8449b-d682-93c8-e7da-9e4bad369476,_Faction,0,0)
+AND
+FactionGetParentFaction(_Faction,1,(FACTION)Hero_a1542c81-6895-929e-4522-10ce218bb360)
+THEN
+SetFaction((CHARACTER)S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12,(FACTION)Origin_Laezel_Hostile_5d2675e2-6d65-4292-bd4b-269fa83d9e07);
+
+PROC
+PROC_OneShotTriggerEntered(_Player,(TRIGGER)S_TUT_ImpRoom_ShakeTrigger_711cd164-5c53-490d-aada-5614b278e957)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)TUT_LowerDeck_PAD_ReactionToDragonAttack_140671e8-ceb3-546e-22e7-563f1a30dd78,_Player);
+
+IF
+AutomatedDialogStarted((DIALOGRESOURCE)TUT_LowerDeck_PAD_ReactionToDragonAttack_140671e8-ceb3-546e-22e7-563f1a30dd78,_ID)
+AND
+DB_DialogSpeakers(_ID, _Player, 1)
+THEN
+PROC_CameraShakeAroundObject(_Player, 3000, 20.0);
+
+
+//END_REGION
+
+//END_REGION
+
+
+//REGION After combat 
+
+IF
+TimerFinished("TUT_LowerDeck_ADDelay")
+THEN
+PROC_TriggerRegisterForPlayers(S_TUT_LowerDeck_RoomTrigger_ebbf3bb5-d79a-49f0-b085-eae705c8fc66);
+
+//END_REGION
+
+
+//REGION Set Imps Surprised for first round + Guide join combat helper
+
+PROC
+PROC_Tutorial_Start()
+AND
+SysCount("DB_Players",1,_Int)
+AND
+_Int > 1
+THEN
+SetOnStage(S_FirstFight_Imp_Ranged_02_df44fa65-5399-47d6-b5bb-70e4b8e63314,1);
+DB_GLO_DefeatCounter((CHARACTER)S_FirstFight_Imp_Ranged_02_df44fa65-5399-47d6-b5bb-70e4b8e63314, "TUT_LowerDeck_ImpsDefeated");
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("TUT_LowerDeck_TeleportTo_PathOfHell")
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(_Player, S_Debug_Teleport_TUT_PathOfHell_1ee248d0-c2d2-49d8-ae32-35be078f9394, "", 1,1,1,1,1);
+
+IF
+DB_GlobalFlag((FLAG)TUT_LowerDeck_Debug_TeleportPathOfHell_f20d8743-715e-4646-b583-48aa9f6a64f4)
+AND
+GetHostCharacter(_Player)
+THEN
+TeleportTo(_Player, S_Debug_Teleport_TUT_PathOfHell_1ee248d0-c2d2-49d8-ae32-35be078f9394, "", 1,1,1,1,1);
+
+IF
+TextEvent("TUT_LowerDeck_StartGuideDialog")
+THEN
+PROC_TUT_LowerDeck_Debug_StartGuideDialog();
+
+IF
+DB_GlobalFlag((FLAG)TUT_LowerDeck_Debug_StartGuideDialog_123a0266-9989-4c8c-9bf6-e01e9719561b)
+THEN
+TimerLaunch("TUT_LowerDeck_GuideDialogTimer",500);
+
+
+IF
+TimerFinished("TUT_LowerDeck_GuideDialogTimer")
+THEN
+PROC_TUT_LowerDeck_Debug_StartGuideDialog();
+
+PROC
+PROC_TUT_LowerDeck_Debug_StartGuideDialog()
+AND
+GetHostCharacter(_Player)
+AND
+QRY_OnlyOnce("TUT_PathOfHell_GuideRecruit")
+AND
+NOT DB_OnlyOnce("TUT_LowerDeck_CombatScene")
+AND
+DB_TUT_Guide((CHARACTER)_Guide)
+AND
+NOT DB_Is_InCombat(_Guide, _)
+THEN
+TeleportTo(_Player, S_Debug_Teleport_TUT_PathOfHell_1ee248d0-c2d2-49d8-ae32-35be078f9394, "", 1,1,1,1,1);
+TeleportTo(_Guide,S_TUT_LowerDeck_GuideInnerTrigger_4a295043-24aa-40dd-8be5-f9ac13765782,"",0,0,0,0,1);
+PROC_TUT_LowerDeck_FindDialogueSpeaker((CHARACTER)_Player);
+
+
+
+//END_REGION
+
+PROC
+PROC_TUT_Helm_EndTutorial()
+THEN
+GoalCompleted;
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Tutorial"

@@ -1,0 +1,469 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_UND_Teleporter((TRIGGER)S_GOB_TempleAccess_ClimbDownPoint_4b7a3777-51a1-428f-83e8-23d5a23b2f43, (ITEM)S_GOB_TempleAccess_Stairs_79bd8cb0-c407-49f3-b35b-9a5c9da9f20a, (TRIGGER)S_GOB_TempleAccess_InLadderArea_bee2d572-9725-42e0-aeaa-e155a80efd92, (DIALOGRESOURCE)GOB_TempleAccess_CINE_ClimbDown_38f73e7a-ccce-6ed7-149f-703f971663c0, (TRIGGER)S_SHA_TempleAccess_TriggerDownstairs_c00e302b-4c70-48a1-94c4-5b72619f0983);
+DB_UND_Teleporter((TRIGGER)S_GOB_TempleAccess_ClimbDownPoint_4b7a3777-51a1-428f-83e8-23d5a23b2f43, (ITEM)S_SHA_TempleAccess_StairsDownstairs_3780fa8f-9257-4998-81c4-1b28c293b26e, (TRIGGER)S_GOB_TempleAccess_InLadderArea_bee2d572-9725-42e0-aeaa-e155a80efd92, (DIALOGRESOURCE)GOB_TempleAccess_CINE_ClimbUp_864adbfd-6d3c-40c7-044f-a6e98b3a40c7, (TRIGGER)S_GOB_TempleAccess_TriggerUpstairs_67b88035-5a5c-4303-bf67-daa9b04497e5);
+
+DB_UND_Teleporter(S_PLA_ZhentDungeon_ElevatorCinematicPoint_8804dd3b-be30-4130-9d18-12d686e07ecd, 
+				(ITEM)S_PLA_ZhentDungeon_LiftDown_2e18ea36-cf07-49df-a3f6-f98ec020e4af, 
+				(TRIGGER)S_PLA_ZhentDungeon_ElevatorCinematicBox_7f8e8708-99b6-4578-ab1a-c2d85cab263d, 
+				(DIALOGRESOURCE)UND_Elevator_CINE_FromPLA_56e09594-a48e-939f-1cfe-6ea431e494aa, 
+				(TRIGGER)S_UND_Elevetor_FromCaravanSerai_905f9fe5-b31b-4595-97cd-ea51d4f08be8);
+
+DB_FOR_Bottomless_Cinematics(0, (DIALOGRESOURCE)FOR_Bottomless_CINE_Descent_NoFF_5cd5539f-fed3-f048-09ba-f37960adebda);
+DB_FOR_Bottomless_Cinematics(1, (DIALOGRESOURCE)FOR_Bottomless_CINE_Descent_FF_7e5441a1-94e5-b285-5871-9cbeafa3f064);
+PROC_TriggerRegisterForParty(S_FOR_Bottomless_DropCinematicBox_226a5864-b348-45e0-b381-3477ceeb7e49);
+ 
+KBSECTION
+//REGION Cinematic of descending or ascending
+
+IF 
+DB_UND_Teleporter(_, _, _Trigger, _Dialog, _)
+THEN
+PROC_TriggerRegisterForParty(_Trigger);
+DB_DialogBlockAttackButton(_Dialog);
+DB_DropMutingStatussesDialog(_Dialog);
+
+// Always provide a fallback exit so nobody can get stuck.
+IF
+DB_UND_Teleporter(_, _, _Trigger, _, _PastTrigger)
+AND
+NOT DB_UND_CinematicTriggerExit(_Trigger, _)
+THEN
+DB_UND_CinematicTriggerExit(_Trigger, _PastTrigger);
+
+PROC
+PROC_BlockUseOfItem(_Player, _Teleporter)
+AND
+DB_UND_Teleporter(_CinematicPoint, _Teleporter, _CinematicBox, _, _PastTrigger)
+AND
+DB_UND_Transitioncinematic_Started(_CinematicPoint, _Teleporter)
+AND
+NOT DB_UND_Transitioncinematic_Ended(_CinematicPoint)
+AND
+DB_Players(_Player)
+AND
+QRY_SpeakerIsAvailable(_Player, 1)
+THEN
+DB_CustomUseItemResponse(_Player, _Teleporter, 0);
+TeleportTo(_Player, _CinematicPoint, "", 1, 1, 1);
+PROC_UND_UpdateCinematicTriggerExit(_CinematicBox, _PastTrigger);
+
+QRY
+QRY_UND_TransitionCinematic((ITEM)_Teleporter)
+AND
+DB_UND_Teleporter(_CinematicPoint, _Teleporter, _, _, _)
+AND
+NOT DB_UND_Transitioncinematic_Started(_CinematicPoint, _)
+THEN
+DB_UND_Transitioncinematic_Started(_CinematicPoint, _Teleporter);
+
+PROC
+PROC_BlockUseOfItem(_Player, _Teleporter)
+AND
+DB_UND_Teleporter(_CinematicPoint, _Teleporter, _CinematicBox, _Dialog, _PastTrigger)
+AND
+NOT DB_CustomUseItemResponse(_Player, _Teleporter, 0)
+AND
+IsPartyMember(_Player, 1, 1)
+AND
+QRY_UND_TransitionCinematic(_Teleporter)
+AND
+DB_Players(_Player)
+AND
+NOT QRY_StartDialogCustom_Fixed(_Dialog, _Player, 0, 0, 0, 0)
+THEN
+DB_CustomUseItemResponse(_Player, _Teleporter, 0);
+TeleportTo(_Player, _CinematicPoint, "", 1, 1, 1);
+PROC_UND_UpdateCinematicTriggerExit(_CinematicBox, _PastTrigger);
+
+PROC
+PROC_DialogFlagSetup(_Dialog, _Player)
+AND
+DB_UND_Teleporter(_CinematicPoint, _Teleporter, _CinematicBox, _Dialog, _PastTrigger)
+THEN
+DB_CustomUseItemResponse((CHARACTER)_Player, _Teleporter, 0);
+TeleportTo(_Player, _CinematicPoint, "", 1, 1, 1);
+PROC_UND_UpdateCinematicTriggerExit(_CinematicBox, _PastTrigger);
+
+
+IF
+DB_InRegion(_Character, _BoxTrigger)
+AND
+DB_UND_CinematicTriggerExit(_BoxTrigger, _PastTrigger)
+AND
+NOT DB_Players(_Character)
+THEN
+TeleportTo(_Character, _PastTrigger, "", 0, 0, 1);
+
+IF
+DB_InRegion(_Character, _BoxTrigger)
+AND
+DB_Players(_Character)
+AND
+DB_UND_Teleporter(_, _, _BoxTrigger, _Dialog, _PastTrigger)
+AND
+DB_UND_CinematicTriggerExit(_BoxTrigger, _PastTrigger)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+DB_CantTalk(_Character)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Character)
+THEN
+PROC_UND_TransitionCinematic_PassingTo(_PastTrigger);
+TeleportTo(_Character, _PastTrigger, "", 0, 0, 1);
+
+
+IF
+DB_InRegion(_Character, _BoxTrigger)
+AND
+DB_Players(_Character)
+AND
+DB_UND_Teleporter(_, _, _BoxTrigger, _Dialog, _PastTrigger)
+AND
+DB_UND_CinematicTriggerExit(_BoxTrigger, _PastTrigger)
+AND
+NOT DB_DialogName(_Dialog, _)
+AND
+NOT DB_DialogRequestCache_DialogInstance(_Dialog, _)
+AND
+NOT DB_DialogStart_WaitingForDroppedMutingStatus(_Dialog, _, _, _, _, _, _, _)
+THEN
+PROC_UND_TransitionCinematic_PassingTo(_PastTrigger);
+TeleportTo(_Character, _PastTrigger, "", 0, 0, 1);
+
+
+IF
+DB_UND_Teleporter(_, _, _BoxTrigger, _Dialog, _)
+THEN
+DB_AddCharactersInTriggerToDialog(_Dialog,_BoxTrigger,1,1,1);
+
+IF
+DialogEnded(_Dialog, _)
+AND
+DB_UND_Teleporter(_, _, _BoxTrigger, _Dialog, _PastTrigger)
+THEN
+PROC_UND_Teleporter_Pass(_BoxTrigger, _PastTrigger);
+
+PROC
+PROC_UND_Teleporter_Pass((TRIGGER)_BoxTrigger, (TRIGGER)_PastTrigger)
+AND
+DB_UND_CinematicTriggerExit(_BoxTrigger, _PastTrigger)
+AND
+DB_InRegion(_Character, _BoxTrigger)
+AND
+IsInTrigger(_Character, _BoxTrigger, 1) //Character may have been teleported out following a previous entry in DB_InRegion
+THEN
+PROC_UND_TransitionCinematic_PassingTo(_PastTrigger);
+TeleportTo(_Character, _PastTrigger, "", 1, 1, 1);
+
+IF
+DialogEnded(_Dialog, _)
+AND
+DB_UND_Teleporter(_CinematicPoint, _Teleporter, _, _Dialog, _)
+THEN
+DB_UND_Transitioncinematic_Ended(_CinematicPoint);
+
+//Fallback events
+IF
+DB_StartDialog_StuckTimelineLoad_StuckDetected(_Dialog)
+AND
+DB_UND_Teleporter(_CinematicPoint, _, _BoxTrigger, _Dialog, _PastTrigger)
+AND
+DB_UND_Transitioncinematic_Started(_CinematicPoint, _Item)
+THEN
+PROC_UND_Teleporter_Pass(_BoxTrigger, _PastTrigger);
+DB_UND_Transitioncinematic_Ended(_CinematicPoint);
+
+IF
+DialogRequestFailed(_Dialog, _)
+AND
+DB_UND_Teleporter(_CinematicPoint, _, _BoxTrigger, _Dialog, _PastTrigger)
+AND
+DB_UND_Transitioncinematic_Started(_CinematicPoint, _Item)
+THEN
+PROC_UND_Teleporter_Pass(_BoxTrigger, _PastTrigger);
+DB_UND_Transitioncinematic_Ended(_CinematicPoint);
+
+PROC
+PROC_UND_UpdateCinematicTriggerExit((TRIGGER)_CinematicBox, (TRIGGER)_PastTrigger)
+THEN
+DB_UND_CinematicTriggerExit(_CinematicBox, _PastTrigger);
+
+PROC
+PROC_UND_UpdateCinematicTriggerExit((TRIGGER)_CinematicBox, (TRIGGER)_PastTrigger)
+AND
+DB_UND_CinematicTriggerExit(_CinematicBox, _OldTrigger)
+AND
+_OldTrigger != _PastTrigger
+THEN
+NOT DB_UND_CinematicTriggerExit(_CinematicBox, _OldTrigger);
+
+PROC
+PROC_UND_TransitionCinematic_PassingTo((TRIGGER)_PastTrigger)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Spider Pit
+QRY
+QRY_FOR_Bottomless_Cinematic((CHARACTER)_Character, (INTEGER)_IsControlled)
+AND
+DB_Players(_Character)
+AND
+DB_FOR_Bottomless_Cinematics(_FF, _Cinematic)
+AND
+DB_DialogName(_Cinematic, _ID)
+AND
+HasActiveStatus(_Character, "FEATHER_FALL", _FF)
+AND
+IsImmuneToFallDamage(_Character, _FF)
+AND
+NOT DB_CantTalk(_Character) //includes not in combat
+THEN
+TeleportTo(_Character, S_FOR_Bottomless_DropCinematicPoint_80e2cd31-9e6d-499f-b44c-588e6aff8064, "", _IsControlled, _IsControlled, 1);
+
+QRY
+QRY_FOR_Bottomless_Cinematic((CHARACTER)_Character, _IsControlled)
+AND
+DB_Players(_Character)
+AND
+DB_FOR_Bottomless_Cinematics(_FF, _Cinematic)
+AND
+DB_DialogName(_Cinematic, _ID)
+AND
+HasActiveStatus(_Character, "FEATHER_FALL", _FF)
+AND
+IsImmuneToFallDamage(_Character, _FF)
+AND
+NOT DB_CantTalk_IgnoreCombat(_Character)
+AND
+DB_Is_InCombat(_Character, _)
+THEN
+TeleportTo(_Character, S_FOR_Bottomless_DropCinematicPoint_80e2cd31-9e6d-499f-b44c-588e6aff8064, "", 0, 0, 1);
+
+QRY
+QRY_FOR_Bottomless_BlockCineForFly((CHARACTER)_Character, 0) // second parameter is whether character is affected by FeatherFall
+AND
+HasActiveStatus(_Character,"FLY",1)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_FOR_Bottomless_Cinematic((CHARACTER)_Character, _IsControlled)
+AND
+NOT DB_DialogName(FOR_Bottomless_CINE_Descent_NoFF_5cd5539f-fed3-f048-09ba-f37960adebda, _)
+AND
+NOT DB_DialogName(FOR_Bottomless_CINE_Descent_FF_7e5441a1-94e5-b285-5871-9cbeafa3f064, _)
+AND
+DB_Players(_Character)
+AND
+HasActiveStatus(_Character, "FEATHER_FALL", _FF)
+AND
+IsImmuneToFallDamage(_Character, _FF)
+AND
+DB_FOR_Bottomless_Cinematics(_FF, _Cinematic)
+AND
+NOT DB_FOR_Bottomless_Cinematic_Done(_Cinematic)
+AND
+NOT DB_Is_InCombat(_Character, _)
+AND
+NOT QRY_FOR_Bottomless_BlockCineForFly(_Character, _FF)
+AND
+QRY_StartDialogCustom_Fixed(_Cinematic, _Character, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 0, 0, 0, 0)
+THEN
+DB_FOR_Bottomless_Cinematic_Done(_Cinematic);
+DB_FOR_BottomLess_CinematicStarting(1);
+TeleportTo(_Character, S_FOR_Bottomless_DropCinematicPoint_80e2cd31-9e6d-499f-b44c-588e6aff8064, "", _IsControlled, _IsControlled, 1);
+
+QRY
+QRY_FOR_Bottomless_Cinematic((CHARACTER)_Character, _IsControlled)
+AND
+NOT DB_DialogName(FOR_Bottomless_CINE_Descent_NoFF_5cd5539f-fed3-f048-09ba-f37960adebda, _)
+AND
+NOT DB_DialogName(FOR_Bottomless_CINE_Descent_FF_7e5441a1-94e5-b285-5871-9cbeafa3f064, _)
+AND
+DB_Players(_Character)
+AND
+HasActiveStatus(_Character, "FEATHER_FALL", _FF)
+AND
+IsImmuneToFallDamage(_Character, _FF)
+AND
+DB_FOR_Bottomless_Cinematics(_FF, _Cinematic)
+AND
+NOT DB_FOR_Bottomless_Cinematic_Done(_Cinematic)
+AND
+DB_Is_InCombat(_Character, _)
+AND
+NOT QRY_FOR_Bottomless_BlockCineForFly(_Character, _FF)
+AND
+QRY_StartDialogCustom_Fixed(_Cinematic, _Character, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000, 0, 0, 0, 0)
+THEN
+DB_FOR_Bottomless_Cinematic_Done(_Cinematic);
+DB_FOR_BottomLess_CinematicStarting(1);
+TeleportTo(_Character, S_FOR_Bottomless_DropCinematicPoint_80e2cd31-9e6d-499f-b44c-588e6aff8064, "", 0, 0, 1);
+
+IF
+DialogStarted(_Cinematic, _)
+AND
+DB_FOR_Bottomless_Cinematics(_, _Cinematic)
+AND
+DB_FOR_BottomLess_CinematicStarting(1)
+THEN
+NOT DB_FOR_BottomLess_CinematicStarting(1);
+
+IF
+DB_InRegion(_Character, S_FOR_Bottomless_DropCinematicBox_226a5864-b348-45e0-b381-3477ceeb7e49)
+AND
+NOT DB_Players(_Character)
+THEN
+PROC_FOR_Bottomless_UnderdarkEntrance(_Character);
+
+IF
+DB_InRegion(_Character, S_FOR_Bottomless_DropCinematicBox_226a5864-b348-45e0-b381-3477ceeb7e49)
+AND
+DB_Players(_Character)
+AND
+DB_FOR_Bottomless_Cinematics(_, _Cinematic)
+AND
+DB_DialogName(_Cinematic, _ID)
+AND
+DB_CantTalk(_Character)
+AND
+NOT DB_InteractiveDialogSpeaker(_ID, _Character)
+THEN
+PROC_FOR_Bottomless_UnderdarkEntrance(_Character);
+
+IF
+DB_InRegion(_Character, S_FOR_Bottomless_DropCinematicBox_226a5864-b348-45e0-b381-3477ceeb7e49)
+AND
+DB_Players(_Character)
+AND
+NOT DB_DialogName(FOR_Bottomless_CINE_Descent_NoFF_5cd5539f-fed3-f048-09ba-f37960adebda, _)
+AND
+NOT DB_DialogName(FOR_Bottomless_CINE_Descent_FF_7e5441a1-94e5-b285-5871-9cbeafa3f064, _)
+AND
+NOT DB_FOR_BottomLess_CinematicStarting(1)
+THEN
+PROC_FOR_Bottomless_UnderdarkEntrance(_Character);
+
+IF
+DB_InRegion(_Character, S_FOR_Bottomless_DropCinematicBox_226a5864-b348-45e0-b381-3477ceeb7e49)
+AND
+DB_Players(_Character)
+AND
+DB_FOR_Bottomless_Cinematics(_FF, _Cinematic)
+AND
+DB_DialogName(_Cinematic, _ID)
+AND
+NOT DB_CantTalk(_Character)
+AND
+NOT HasActiveStatus(_Character, "FEATHER_FALL", _FF)
+THEN
+PROC_FOR_Bottomless_UnderdarkEntrance(_Character);
+
+IF
+DB_InRegion(_Character, S_FOR_Bottomless_DropCinematicBox_226a5864-b348-45e0-b381-3477ceeb7e49)
+AND
+DB_Players(_Character)
+AND
+DB_FOR_Bottomless_Cinematics(_FF, _Cinematic)
+AND
+DB_DialogName(_Cinematic, _ID)
+AND
+NOT DB_CantTalk(_Character)
+AND
+HasActiveStatus(_Character, "FEATHER_FALL", _FF)
+THEN
+PROC_DialogAddListeningActor(_ID, _Character);
+
+//Attributing murder
+IF
+ForceMoveEnded(_Killer, _Victim, _)
+AND
+IsCharacter(_Victim, 1)
+AND
+DB_InRegion((CHARACTER)_Victim, S_FOR_Bottomless_UnderdarkEntrance_de806dd8-ca47-4f20-b7d0-6d50b1328ae5)
+THEN
+DB_FOR_Bottomless_ForceMover(_Killer, _Victim);
+
+IF
+EnteredTrigger(_Victim, S_FOR_Bottomless_UnderdarkEntrance_de806dd8-ca47-4f20-b7d0-6d50b1328ae5)
+AND
+DB_FOR_Bottomless_ForceMover(_Killer, _Victim)
+THEN
+NOT DB_FOR_Bottomless_ForceMover(_Killer, _Victim);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("und_cine_reset")
+THEN
+SysClear("DB_UND_Transitioncinematic_Ended", 1);
+SysClear("DB_UND_Transitioncinematic_Started", 2);
+
+IF
+TextEvent("UND_TransitionCinematic_ActivateHideoutElevator")
+AND
+DB_UND_Teleporter(_CinematicPoint, (ITEM)S_PLA_ZhentDungeon_LiftDown_2e18ea36-cf07-49df-a3f6-f98ec020e4af, _CinematicBox, _Dialog, _PastTrigger)
+AND
+GetHostCharacter((CHARACTER)_Player)
+AND
+IsPartyMember(_Player, 1, 1)
+AND
+QRY_UND_TransitionCinematic((ITEM)S_PLA_ZhentDungeon_LiftDown_2e18ea36-cf07-49df-a3f6-f98ec020e4af)
+AND
+DB_Players(_Player)
+AND
+QRY_StartDialog(_Dialog, _Player)
+THEN
+TeleportTo(_Player, _CinematicPoint, "", 1, 1, 1);
+PROC_UND_UpdateCinematicTriggerExit(_CinematicBox, _PastTrigger);
+NOT DB_UND_Transitioncinematic_Started(_CinematicPoint, S_PLA_ZhentDungeon_LiftDown_2e18ea36-cf07-49df-a3f6-f98ec020e4af);
+
+IF
+TextEvent("UND_TransitionCinematic_ClimbDown")
+AND
+DB_UND_Teleporter(_CinematicPoint, (ITEM)S_GOB_TempleAccess_Stairs_79bd8cb0-c407-49f3-b35b-9a5c9da9f20a, _CinematicBox, _Dialog, _PastTrigger)
+AND
+GetHostCharacter((CHARACTER)_Player)
+AND
+IsPartyMember(_Player, 1, 1)
+AND
+QRY_UND_TransitionCinematic((ITEM)S_GOB_TempleAccess_Stairs_79bd8cb0-c407-49f3-b35b-9a5c9da9f20a)
+AND
+DB_Players(_Player)
+AND
+QRY_StartDialog(_Dialog, _Player)
+THEN
+TeleportTo(_Player, _CinematicPoint, "", 1, 1, 1);
+PROC_UND_UpdateCinematicTriggerExit(_CinematicBox, _PastTrigger);
+NOT DB_UND_Transitioncinematic_Started(_CinematicPoint, S_GOB_TempleAccess_Stairs_79bd8cb0-c407-49f3-b35b-9a5c9da9f20a);
+
+IF
+TextEvent("UND_TransitionCinematic_ClimbUp")
+AND
+DB_UND_Teleporter(_CinematicPoint, (ITEM)S_SHA_TempleAccess_StairsDownstairs_3780fa8f-9257-4998-81c4-1b28c293b26e, _CinematicBox, _Dialog, _PastTrigger)
+AND
+GetHostCharacter((CHARACTER)_Player)
+AND
+IsPartyMember(_Player, 1, 1)
+AND
+QRY_UND_TransitionCinematic((ITEM)S_SHA_TempleAccess_StairsDownstairs_3780fa8f-9257-4998-81c4-1b28c293b26e)
+AND
+DB_Players(_Player)
+AND
+QRY_StartDialog(_Dialog, _Player)
+THEN
+TeleportTo(_Player, _CinematicPoint, "", 1, 1, 1);
+PROC_UND_UpdateCinematicTriggerExit(_CinematicBox, _PastTrigger);
+NOT DB_UND_Transitioncinematic_Started(_CinematicPoint, S_SHA_TempleAccess_StairsDownstairs_3780fa8f-9257-4998-81c4-1b28c293b26e);
+//END_REGION Debug
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

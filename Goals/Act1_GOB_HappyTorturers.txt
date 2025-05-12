@@ -1,0 +1,1006 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+//GOB_Torturers_State_KnowDen - goblins know about location of the Den, whether because of torture or because Sazza told them
+//GOB_TorturedAdventurer_State_Free - adventurer was freed and ran away
+
+DB_Dialogs(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,
+	S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,
+	DIALOGRESOURCEGUID_GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c);
+PROC_CharacterMoveTo(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"Walk","");
+LookAtEntity(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+LookAtEntity(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+Unlock(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6);
+PROC_TriggerRegisterForPlayers(S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_GOB_HappyTorturers_QuestAddBox_b8dac444-277e-499f-8e0b-cb83fd77fd2f);
+
+DB_KilledEvent(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,(FLAG)GOB_Torturers_KilledSpike_64863f03-e538-451d-86ab-5ce8684cf175);
+DB_KilledEvent(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,(FLAG)GOB_Torturers_KilledGoblet_f3afc968-d6e8-46a4-aea3-fc06981554a1);
+DB_KilledEvent(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(FLAG)GOB_Torturers_KilledPrisoner_ecb838c2-26fe-4b78-ba28-b307b8e9aa19);
+
+DB_GLO_DefeatCounter_AllPermaDefeatedGlobalFlag("GOB_HappyTorturers_Torturers",(FLAG)GOB_Torturers_State_GoblinsDied_3fa02923-ca0b-4f87-9b2d-9f896b523343);
+DB_GLO_DefeatCounter_AllDeadGlobalFlag("GOB_HappyTorturers_Spike",(FLAG)GOB_Torturers_State_SpikeIsDead_a9f8e52f-fa21-1731-ec55-81b3b64c79e1);
+
+DB_ItemOwnerShipTriggers("WLD_Main_A",S_GOB_Torturers_OwnershipTrigger_90301e50-f33c-4795-a093-44d54add9727,S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f);
+
+Use(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,"GOB_HappyTorturers_AdventurerRestrained");
+
+ToInventory(S_GOB_HappyTorturers_Chains_Key_536107bd-277b-42bb-8eaf-2b787123615c,S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,1,0,1);
+
+DB_HasItemEvent(
+	S_GOB_HappyTorturers_Chains_Key_536107bd-277b-42bb-8eaf-2b787123615c,
+	GOB_Torturers_State_HasKey_b7a5d960-c173-4b79-852c-01cea0a45e2e);
+
+DB_Inclusion_Object(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,(FLAG)GOB_Torturers_Goblet_Inclusion_Start_3611ee87-86b8-4869-a758-db7df455c45c,NULL_00000000-0000-0000-0000-000000000000);
+DB_Inclusion_NPCDialog((DIALOGRESOURCE)GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,(CHARACTER)S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc);
+
+DB_GLO_CharacterCorpseDialog(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f, (DIALOGRESOURCE)GOB_Torturers_Spike_Dead_f5cfb502-ef15-30e6-5638-1090a97871a6);
+
+//REGION killcounter
+DB_GLO_DefeatCounter(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,"GOB_HappyTorturers_Torturers");
+DB_GLO_DefeatCounter(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,"GOB_HappyTorturers_Torturers");
+DB_GLO_DefeatCounter(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,"GOB_HappyTorturers_Spike");
+//END_REGION 
+
+PROC_TriggerRegisterForPlayers(S_GOB_HappyTorturers_TortureScreamsRegion_0d98abd3-4d8a-4948-9cd9-d2ef581b3b53);
+
+SetCanTrade(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+
+SetFlag((FLAG)GLO_State_NoCower_8180293e-4d0d-4e9b-9dfc-b195d4c67ddb,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+
+DB_GlobalFlagReactionAfterDialog(GOB_Torturers_State_TorturedEnough_5ee00add-a8c8-4d61-4560-80582db6fe58,DIALOGRESOURCEGUID_GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c);
+DB_GlobalFlagReactionAfterDialog(GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89,DIALOGRESOURCEGUID_GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c);
+
+DB_NoLowAttitudeDialog((CHARACTER)S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f);
+DB_NoLowAttitudeDialog(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc);
+DB_NoLowAttitudeDialog(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+
+DB_PreventKnockedOutPermaDefeated((CHARACTER)S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+
+DB_GLO_DefeatCounter(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,"GOB_HappyTorturers_Defeated");
+DB_GLO_DefeatCounter(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,"GOB_HappyTorturers_Defeated");
+DB_GLO_DefeatCounter_AllDefeatedGlobalFlag("GOB_HappyTorturers_Defeated",(FLAG)GOB_Torturers_State_TorturersDefeated_b225be7d-fb72-4ec2-a504-17c5cd4ee5f9);
+
+DB_DoNotFaceDialog(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,(DIALOGRESOURCE)GOB_Torturers_Torture_AD_f0c41a90-ce2d-3440-346a-87e94873f2ed);
+DB_DoNotFaceDialog(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,(DIALOGRESOURCE)GOB_Torturers_Torture_AD_f0c41a90-ce2d-3440-346a-87e94873f2ed);
+
+// When one of the flags is set, the animation played by the adventurer is changed to the one that doesn't have screams
+DB_GOB_TortureOverFlags((FLAG)GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89);
+DB_GOB_TortureOverFlags((FLAG)GOB_Torturers_State_TorturedEnough_5ee00add-a8c8-4d61-4560-80582db6fe58);
+DB_GOB_TortureOverFlags((FLAG)GOB_Torturers_State_AfterLongRest_78b07dee-8461-9d1b-028a-1e7cf8d39532);
+DB_GOB_TortureOverFlags((FLAG)GOB_Torturers_State_TorturersDefeated_b225be7d-fb72-4ec2-a504-17c5cd4ee5f9);
+
+DB_GOB_AdventurerFreedFlags((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977);
+DB_GOB_AdventurerFreedFlags((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9);
+KBSECTION
+//REGION Debug
+IF
+FlagSet(Debug_Quest_GOB_TorturedAdventurer_Escort_a562b750-d572-d1c3-9cb9-b6c0a9542a96, _Player, _) // flagType: Object
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+Die(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,DEATHTYPE.DoT,1);
+Die(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,DEATHTYPE.DoT,1);
+SetOnStage(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1);
+SetHasDialog(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1);
+ClearFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+ClearFlag((FLAG)Debug_Quest_GOB_TorturedAdventurer_Escort_a562b750-d572-d1c3-9cb9-b6c0a9542a96, _Player, 0); // flagType: Object
+PROC_TeleportPartiesTo(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"");
+
+IF
+FlagSet(Debug_Quest_GOB_TorturedAdventurer_Persuade_f481a534-aaad-2b3f-6e2f-8294e51e86f6, _Player, _) // flagType: Object
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetOnStage(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1);
+SetHasDialog(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1);
+ClearFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+ClearFlag((FLAG)Debug_Quest_GOB_TorturedAdventurer_Persuade_f481a534-aaad-2b3f-6e2f-8294e51e86f6, _Player, 0); // flagType: Object
+PROC_TeleportPartiesTo(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"");
+SetFlag((FLAG)GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+PROC_GOB_Torturers_MoveOut(1);
+
+IF
+FlagSet(Debug_Quest_GOB_TorturedAdventurer_KnowDen_1967e727-a12b-a07b-4d15-e0595c701863, _Player, _) // flagType: Object
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag((FLAG)GOB_Torturers_State_KnowDen_06207c03-9264-9790-99da-49b1df20be0c, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+ClearFlag((FLAG)Debug_Quest_GOB_TorturedAdventurer_KnowDen_1967e727-a12b-a07b-4d15-e0595c701863, _Player, 0); // flagType: Object
+
+IF
+FlagSet(Debug_Quest_GOB_TorturedAdventurer_Teleport_30a05aeb-589f-525b-eb02-b1ab3853aca2, _Player, _) // flagType: Object
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+PROC_TeleportPartiesTo(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"");
+ClearFlag((FLAG)Debug_Quest_GOB_TorturedAdventurer_Teleport_30a05aeb-589f-525b-eb02-b1ab3853aca2, _Player, 0); // flagType: Object
+
+IF
+TextEvent("GOB_Debug_Torturers_OrderGoblet")
+THEN
+DB_GOB_PainPriest_NotifyGoblins(1);
+SetEntityEvent(S_GOB_PainPriest_cad1854b-8f41-4038-b640-156ee0272f81,"GOB_PainPriest_Event_ResetPenance");
+SetFlag(GOB_PainPriest_State_ReadyForNextPenance_4afe4a86-2dcb-409f-b83c-63d1bb4f570e, NULL_00000000-0000-0000-0000-000000000000); 
+SetFlag(GOB_PainPriest_State_PostPlayerPenance_103d9832-d8e2-415d-bde0-6e2d1599c636,NULL_00000000-0000-0000-0000-000000000000,0);
+
+IF
+TextEvent("GOB_Debug_HappyTorturers_Equip")
+THEN
+Equip(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,GOB_TorturerSpear_e066f59a-4012-47f1-a6f3-646d0338ab5e);
+
+IF
+TextEvent("GOB_Debug_HappyTorturers_Unequip")
+THEN
+Unequip(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,GOB_TorturerSpear_e066f59a-4012-47f1-a6f3-646d0338ab5e);
+
+IF
+TextEvent("GOB_Debug_HappyTorturers_Adventurer_Rest")
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+DB_Dialogs(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(DIALOGRESOURCE)DEN_TorturedAdventurer_Resting_b2315435-5fda-8c48-38aa-231c448b758c);
+SetHasDialog(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1);
+SetFlag((FLAG)GOB_TorturedAdventurer_State_Resting_75e6b157-74c3-4bb1-bba7-c8046cd1486d,NULL_00000000-0000-0000-0000-000000000000,0);
+TeleportTo(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(TRIGGER)S_DEN_TorturedAdventurer_Idle_103f07fe-8c42-4e61-8f7f-3ecbd8a96cbb,"debug_tp",0,0,0);
+Use(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(ITEM)S_DEN_TorturedAdventurer_IdleBedroll_0e3bf7f6-9c73-4dca-8728-ded6ef833f1c,"debug_use");
+GoalCompleted;
+//END_REGION Debug
+
+//REGION Init
+IF
+UseFinished((CHARACTER)S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(ITEM)S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,1)
+THEN
+Lock(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,"GOB_HappyTorturers_ChainsKey");
+DB_GOB_TortureRackLocked(1);
+
+IF
+FlagSet((FLAG)GOB_DrowCommander_Event_CompromisedDen_1fe44eb2-5437-ed3b-5ab8-6244d7980593,_,_)
+THEN
+SetFlag((FLAG)GOB_Torturers_State_KnowDen_06207c03-9264-9790-99da-49b1df20be0c,NULL_00000000-0000-0000-0000-000000000000,0);
+//END_REGION
+
+//REGION random flags
+IF
+FlagSet(GOB_Torturers_HasMet_Spike_d3beebd0-2192-ffe6-1ac7-695917560679,_Player,_)
+THEN
+SetFlag(GOB_TorturedAdventurer_HasMet_5a0a2a5d-08e2-6d7c-054a-0c7e8ccf574b,_Player,0);
+//END_REGION
+
+//REGION State changes
+
+IF
+DialogActorJoined(DIALOGRESOURCEGUID_GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,_,_Player,_)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag((FLAG)GOB_Torturers_Seen_b74063f0-8eda-b39a-a126-ac774873b51c, _Player); // flagType: Object
+
+IF
+FlagSet(GOB_Torturers_Assisted_aee96e28-e049-0e55-b5d8-c001580de642, _Player, _Instance) // flagType: Object
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_GlobalFlag((FLAG)GOB_Torturers_State_KnowDen_06207c03-9264-9790-99da-49b1df20be0c) // flagType: Global
+THEN
+SetFlag((FLAG)GOB_Torturers_AssistedForFun_cb21983f-223e-5678-77e8-814f03e1ed00, _Player, _Instance); // flagType: Dialog
+
+IF
+DialogStarted(DIALOGRESOURCEGUID_GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,_)
+THEN
+SetFlag((FLAG)GOB_Torturers_State_Seen_5f7ba9b7-1414-48f9-b527-0e7d75ea05a6, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+FlagSet(GOB_Torturers_Persuaded_80ef00ea-6c66-6922-605b-8aafe43c1859, _Player, _) // flagType: Object
+THEN
+SetFlag((FLAG)GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+FlagSet((FLAG)GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89,_,_)
+THEN
+PROC_PeacefulResolve((CHARACTER)S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f);
+PROC_PeacefulResolve((CHARACTER)S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc);
+
+PROC
+PROC_LongRest()
+AND
+QRY_OnlyOnce("GOB_Torture_LongRestStateChange_OnlyOnce")
+AND
+GetFlag((FLAG)GOB_Torturers_State_Seen_5f7ba9b7-1414-48f9-b527-0e7d75ea05a6, NULL_00000000-0000-0000-0000-000000000000, 1) // flagType: Global
+THEN
+PROC_GOB_Torturers_AfterLongRest();
+
+// GOB_Torturers_State_TorturedEnough is set in dialog
+
+IF
+Died(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847)
+THEN
+SetFlag((FLAG)GOB_Torturers_State_PrisonerDied_6208091a-2462-4f0b-abd4-77890be39f11, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+IF
+FlagSet(GOB_CapturedGoblin_Event_Resolved_aae95a8b-bbec-e7c6-f47a-53834c294a2b, _, _) // flagType: Global
+THEN
+SetFlag((FLAG)GOB_Torturers_State_KnowDen_06207c03-9264-9790-99da-49b1df20be0c, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+
+//END_REGION State changes
+
+//REGION Tortured Adventurer restrained animation changes. Each applied status has higher stack id than the previous one
+IF
+EntityEvent(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_HappyTorturers_AdventurerRestrained")
+THEN
+ApplyStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_BASE",-1.0,1);
+ApplyStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_SCREAMING_ANIMATIONOVERRIDE",-1.0);
+SetCanJoinCombat(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+
+IF
+FlagSet(_Flag,_,_)
+AND
+DB_GOB_TortureOverFlags(_Flag)
+THEN
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_SCREAMING_ANIMATIONOVERRIDE");
+
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c,_,_)
+THEN
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_SCREAMING_ANIMATIONOVERRIDE");
+ApplyStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_FAINTED_ANIMATIONOVERRIDE",-1.0,1);
+
+IF
+FlagSet(_Flag,_,_)
+AND
+DB_GOB_AdventurerFreedFlags(_Flag)
+THEN
+// The animation override statuses are removed with it in OnRemove functors
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_BASE");
+PROC_GOB_AdventurerFreed_ProgressTorturers();
+
+PROC
+PROC_GOB_AdventurerFreed_ProgressTorturers()
+THEN
+PROC_GOB_Torturers_MoveOut(0);
+PROC_SetRelationMutual((FACTION)ACT1_GOB_Torturers_8a9e7e9a-1e72-eed1-8175-6c8d50ef7372,(FACTION)ACT1_GOB_TortureredAdventurer_64035579-5958-e356-bd99-8369fa439a40,0);
+
+IF
+FlagCleared((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c,_,_)
+THEN
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_FAINTED_ANIMATIONOVERRIDE");
+
+IF
+StatusRemoved(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TORTURED_BASE",_,_)
+THEN
+SetCanJoinCombat(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1);
+
+//TODO: Once the code bug preventing Incapacitated statuses with higher prio override animations of Incapaciatetd statuses with lower prio, knocking out
+// adventurer while it's racked may need extra handling, otherwise it will appear sitting on the rack
+//END_REGION
+
+//REGION Start scene and dialog replacement
+
+//If alarm is triggered - cancel scene
+IF
+FlagSet(GOB_BattleStations_Event_ToStation_03a8bd66-c23f-4989-9a7b-775cf475104b,_,_)
+THEN
+PROC_TriggerUnregisterForPlayers(S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071);
+
+
+IF
+EnteredTrigger(_Player,S_GOB_Torturers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071)
+AND
+QRY_StartDialogWithAvailableSpeakerInRange(GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,
+	S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,
+	S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,
+	_Player,15.0)
+THEN
+DB_NOOP(1);
+
+IF
+DialogStarted(GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,_)
+THEN
+PROC_TriggerUnregisterForPlayers(S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071);
+
+PROC
+PROC_GOB_Torturers_ReplaceDialogs()
+AND
+NOT DB_PermaDefeated(S_GOB_TortureredAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+DB_Dialogs(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,DIALOGRESOURCEGUID_GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3);
+
+PROC
+PROC_GOB_Torturers_ReplaceDialogs()
+AND
+NOT DB_PermaDefeated(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f)
+THEN
+PROC_RemoveAllDialogEntriesForSpeaker(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f);
+DB_Dialogs(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,GOB_Torturers_Spike_c61cd5b1-391a-ae0d-b677-12378d024abe);
+
+PROC
+PROC_GOB_Torturers_ReplaceDialogs()
+THEN
+PROC_TriggerUnregisterForPlayers(S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071);
+//END_REGION Start scene and dialog replacement
+
+//REGION sounds management
+
+//animation changes are done in anubis
+
+IF
+Unlocked(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_Player,_)
+AND
+DB_GOB_TortureRackLocked(1)
+AND
+QRY_GOB_HappyTortures_AdventurerShackledAndAwake()
+THEN
+PlaySound(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"SE_Tortured_Adventurer_Screams_Stop");
+
+IF
+HitpointsChanged(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_)
+AND
+GetHitpoints(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_HP)
+AND
+_HP<=0
+AND
+DB_GOB_TortureRackDestroyer(_Player)
+AND
+QRY_GOB_HappyTortures_AdventurerShackledAndAwake()
+THEN
+PlaySound(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"SE_Tortured_Adventurer_Screams_Stop");
+
+IF
+DestroyingBy(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_,_,_)
+THEN
+PlaySound(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"SE_Tortured_Adventurer_Screams_Stop");
+
+IF
+FlagSet((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9, NULL_00000000-0000-0000-0000-000000000000,_)
+THEN
+PlaySound(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"SE_Tortured_Adventurer_Screams_Stop");
+
+IF
+DialogEnded(DIALOGRESOURCEGUID_GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,_)
+AND
+GetFlag(
+	(FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9,
+	NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+PlaySound(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"SE_Tortured_Adventurer_Screams_Stop");
+
+//END_REGION
+
+//REGION Deaths
+
+PROC
+PROC_StateSet_PermaDefeated(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f)
+THEN
+PROC_GOB_Torturers_ReplaceDialogs();
+
+PROC
+PROC_StateSet_PermaDefeated(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847)
+THEN
+PROC_GOB_Torturers_ReplaceDialogs();
+//END_REGION
+
+//REGION Long Rest -> Torture ends
+PROC
+PROC_GOB_Torturers_AfterLongRest()
+THEN
+DB_GOB_Torturers_LongRestStateChange(1);
+
+IF
+DB_GOB_Torturers_LongRestStateChange(1)
+AND
+DB_CurrentLevel("WLD_Main_A")
+THEN
+NOT DB_GOB_Torturers_LongRestStateChange(1);
+SetFlag((FLAG)GOB_Torturers_State_AfterLongRest_78b07dee-8461-9d1b-028a-1e7cf8d39532, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+PROC_GOB_Torturers_AfterLongRest_Internal();
+
+PROC
+PROC_GOB_Torturers_AfterLongRest_Internal()
+THEN
+PROC_GOB_Torturers_MoveOut(0);
+
+PROC
+PROC_GOB_Torturers_AfterLongRest_Internal()
+AND
+NOT QRY_GOB_AdventurerFreedOrUnlocked()
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,25.0);
+SetFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+
+QRY
+QRY_GOB_AdventurerFreedOrUnlocked()
+AND
+DB_GlobalFlag((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GOB_AdventurerFreedOrUnlocked()
+AND
+DB_GlobalFlag((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9)
+THEN
+DB_NOOP(1);
+//END_REGION Long Rest -> Torture ends
+
+//REGION Damage in tortures
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_Event_SoftOption_351539cc-1601-f5ba-d55d-515b8bd79993,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_)
+AND
+GetHitpointsPercentage(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_Percent)
+AND
+RealSubtract(_Percent,15.0,_NewPercent)
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_NewPercent);
+PROC_GOB_Torturers_CheckKilled();
+
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_Event_HardOption_26cf8dbf-0110-0681-bfff-f874c5b2dc07,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_)
+AND
+GetHitpointsPercentage(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_Percent)
+AND
+RealSubtract(_Percent,25.0,_NewPercent)
+THEN
+PROC_SetHitpointsPercentage_BlockSelfHealing(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_NewPercent);
+PROC_GOB_Torturers_CheckKilled();
+
+PROC
+PROC_GOB_Torturers_CheckKilled()
+AND
+DB_PermaDefeated(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847)
+THEN
+PROC_GOB_TorturedAdventurer_RemoveFromDialog();
+
+PROC
+PROC_GOB_TorturedAdventurer_RemoveFromDialog()
+AND
+DB_DialogNPCs(_DlgID,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_)
+AND
+DialogRemoveActorFromDialog(_DlgID,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_)
+THEN
+DB_NOOP(1);
+
+IF
+FlagCleared(GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847, _) // flagType: Object
+THEN
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_OUT");
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_DOWN_INSTANT");
+
+IF
+StatusRemoved(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_OUT",_,_)
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847, 1) // flagType: Object
+THEN
+ClearFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+
+IF
+StatusRemoved(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_OUT",_,_)
+AND
+HasActiveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_DOWN_INSTANT",1)
+THEN
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_DOWN_INSTANT");
+//END_REGION Damage in tortures
+
+//REGION MoveOut
+
+IF
+FlagSet(GOB_BattleStations_Event_ToStation_03a8bd66-c23f-4989-9a7b-775cf475104b,_,_)
+THEN
+PROC_GOB_Torturers_MoveOut(0);
+
+IF
+FlagSet((FLAG)GOB_HappyTorturers_Event_ClearSpearOwnership_be662c90-b121-8981-9c94-597bdfa07c56,_,_)
+THEN
+ClearOwnership((ITEM)GOB_TorturerSpear_003_8e89b27e-2c35-4f08-a0b1-01433a72f0c8);
+ClearOwnership((ITEM)WPN_GOB_Spear_A_002_e7171b5c-37cd-49cc-b3d5-daa38b4b537e);
+ClearOwnership((ITEM)WPN_GOB_Spear_A_003_fb74badf-3882-49f5-bdfb-928ec66ef326);
+ClearOwnership((ITEM)WPN_Torture_Club_d4a216a4-6359-4290-a682-3626f7076af3);
+ClearOwnership((ITEM)TOOL_Tong_A_000_a60fbd34-0b4b-4fd4-9e8e-3f1995df33b0);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89)
+THEN
+PROC_GOB_Torturers_MoveOut(1);
+
+PROC
+PROC_GlobalFlagReactionAfterDialog((FLAG)GOB_Torturers_State_TorturedEnough_5ee00add-a8c8-4d61-4560-80582db6fe58)
+THEN
+PROC_GOB_Torturers_MoveOut(1);
+
+PROC
+PROC_GOB_Torturers_MoveOut((INTEGER)_WithAD)
+AND
+QRY_OnlyOnce("GOB_Torturers_MoveOut_OnlyOnce")
+THEN
+PROC_GOB_Torturers_ReplaceDialogs();
+SetFlag(GOB_Torturers_State_MovedOut_a20ec730-dfec-56a7-6cc3-71ff51e16502,CHARACTERGUID_S_GOB_Torturers_Rat_000_ccde6943-0165-4885-b888-b4e44c8054bc,0);
+SetFlag(GOB_Torturers_State_MovedOut_a20ec730-dfec-56a7-6cc3-71ff51e16502,CHARACTERGUID_S_GOB_Torturers_Rat_001_720df859-7592-4f34-9000-1a2c0a313b94,0);
+
+PROC
+PROC_GOB_Torturers_MoveOut(1)
+THEN
+TimerLaunch("GOB_Torturers_Timer_AD_Delay",300);
+
+
+IF
+TimerFinished("GOB_Torturers_Timer_AD_Delay")
+THEN
+PROC_TryStartAD(DIALOGGUID_GOB_Torturers_MoveOut_AD_2c3e8fc9-2dd1-7397-0880-4c3dd25af147,S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f);
+
+//END_REGION MoveOut
+
+//REGION Hostility
+IF
+FlagSet(GOB_Torturers_Hostile_a84f8147-fbc2-de26-5149-61147843f2eb, _Player, _) // flagType: Object
+THEN
+PROC_SetHostileToIndivPlayerFaction((FACTION)ACT1_GOB_Torturers_8a9e7e9a-1e72-eed1-8175-6c8d50ef7372,(CHARACTER)_Player);
+
+IF
+AttackedBy(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_Player,_,_,_,_,_)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Is_InCombat(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,_)
+THEN
+PROC_SetHostileToIndivPlayerFaction((FACTION)ACT1_GOB_Torturers_8a9e7e9a-1e72-eed1-8175-6c8d50ef7372,(CHARACTER)_Player);
+//END_REGION Hostility
+
+//REGION Freeing the adventurer
+QRY
+QRY_GOB_HappyTortures_AdventurerShackledAndAwake()
+AND
+NOT DB_GlobalFlag((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9) // flagType: Global
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847, 0) // flagType: Object
+THEN
+DB_NOOP(1);
+
+IF
+Unlocked(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_Player,_)
+AND
+DB_GOB_TortureRackLocked(1)
+AND
+QRY_GOB_HappyTortures_AdventurerShackledAndAwake()
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9);
+SetFlag((FLAG)GOB_Torturers_Liberator_f14fc1ce-62c5-4eaa-a4c1-26c53daa8ef1, _Player); // flagType: Object
+
+
+IF
+AttackedBy(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_AttackerOwner,_Attacker,_,_,_,_)
+AND
+QRY_GetCharacterOwnerIfItemSummon(_AttackerOwner,_Attacker)
+AND
+DB_QRYRTN_GetCharacterOwnerIfItemSummon(_Player)
+AND
+DB_Players(_Player)
+THEN
+DB_GOB_TortureRackDestroyer(_Player);
+
+IF
+DB_GOB_TortureRackDestroyer(_Player)
+AND
+DB_GOB_TortureRackDestroyer(_OldPlayer)
+AND
+_Player != _OldPlayer
+THEN
+NOT DB_GOB_TortureRackDestroyer(_OldPlayer);
+
+IF
+HitpointsChanged(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_)
+AND
+GetHitpoints(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_HP)
+AND
+_HP<=0
+AND
+DB_GOB_TortureRackDestroyer(_Player)
+AND
+QRY_GOB_HappyTortures_AdventurerShackledAndAwake()
+THEN
+SetFlag((FLAG)GOB_Torturers_Liberator_f14fc1ce-62c5-4eaa-a4c1-26c53daa8ef1, _Player); // flagType: Object
+PROC_GlobalSetFlagAndCache((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977);
+
+IF
+DestroyingBy(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_,_,_)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977);
+
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977,_,_)
+THEN
+Unlock((ITEM)S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6);
+
+IF
+Unlocked(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_Player,_)
+AND
+DB_GOB_TortureRackLocked(1)
+THEN
+SetDisableUse((ITEM)S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,1);
+PROC_GlobalSetFlagAndCache((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977);
+
+IF
+FlagCleared((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c,_,_)
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977,NULL_00000000-0000-0000-0000-000000000000,1)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9);
+
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977,_,_)
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847, 0)
+THEN
+PROC_GlobalSetFlagAndCache((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9);
+
+IF
+FlagSet(GOB_Torturers_Liberator_f14fc1ce-62c5-4eaa-a4c1-26c53daa8ef1, _Player, _) // flagType: Object
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QRY_SpeakerIsInDialogRange(_Player, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847)
+AND
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst(
+	DIALOGRESOURCEGUID_GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,
+	S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,
+	_Player,10.0)
+THEN
+DB_NOOP(1);
+
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977,_,_)
+THEN
+DebugText(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"Unlocked");
+
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977,_,_)
+AND
+QRY_GOB_AdventurerFaintedOrKnockedOut()
+THEN
+DebugText(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"Should lie");
+ApplyStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_DOWN_INSTANT",-1.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+QRY
+QRY_GOB_AdventurerFaintedOrKnockedOut()
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GOB_AdventurerFaintedOrKnockedOut()
+AND
+HasActiveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_OUT",1)
+THEN
+DB_NOOP(1);
+
+//Note to self - Don't replace with PROC_GlobalFlagReactionAfterDialog
+//It only seems to work if flag set DURING the dialog, which isn't the case here
+IF
+DialogEnded(DIALOGRESOURCEGUID_GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,_)
+AND
+DB_GlobalFlag((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9)
+THEN
+Unlock(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6);
+PROC_GOB_TorturedAdventurer_DashOff();
+
+IF
+DestroyedBy(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_,_Player,_)
+THEN
+SetFlag((FLAG)GOB_Torturers_Liberator_f14fc1ce-62c5-4eaa-a4c1-26c53daa8ef1, _Player); // flagType: Object
+
+PROC
+PROC_GOB_TorturedAdventurer_DashOff()
+THEN
+DebugText(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"running away");
+GoalCompleted;
+
+IF
+FlagSet(GOB_TorturedAdventurer_Event_RemoveLockpick_f573673e-6fbd-4133-b0eb-57b4a4fa2206,_,_id)
+AND
+DialogGetInvolvedPlayer(_id,1,(CHARACTER)_Player)
+THEN
+MagicPocketsDestroyLocalItemsByTag(_Player,"LOCKPICKS_1013e720-9b0f-4783-8686-9b5506840088",1);
+ClearFlag(GOB_TorturedAdventurer_Event_RemoveLockpick_f573673e-6fbd-4133-b0eb-57b4a4fa2206,_Player,0);
+PROC_GOB_TorturedAdventurer_CheckLockpicks((CHARACTER)_Player);
+
+
+IF
+FlagSet(GOB_TorturedAdventurer_Event_RemoveHealingPot_b75474b5-8741-4486-8a11-ee734b7d2290,_,_id)
+AND
+DialogGetInvolvedPlayer(_id,1,_Player)
+THEN
+MagicPocketsDestroyLocalItemsByTag((CHARACTER)_Player,"HEALING_POTION_1879a93d-2edf-4f54-85dd-81a3724d677f",1);
+
+
+IF
+StatusApplied(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_Status,_Causee,_)
+AND
+QRY_IsHealingStatus(_Status)
+AND
+QRY_GOB_TorturedAdventurer_CheckRemoveKO()
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_Causee)
+AND
+QRY_StartDialogWithAvailableSpeakerInRange_TryTargetFirst(GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_Causee,10.0)
+THEN
+DB_NOOP(1);
+
+
+QRY
+QRY_GOB_TorturedAdventurer_CheckRemoveKO()
+AND
+GetFlag(
+    GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c,
+    S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1)
+THEN
+ClearFlag(GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_OUT");
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"KNOCKED_DOWN");
+
+PROC
+PROC_DialogFlagSetup(GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(CHARACTER)_Player)
+THEN
+PROC_GOB_TorturedAdventurer_CheckLockpicks((CHARACTER)_Player);
+
+PROC
+PROC_DialogFlagSetup(GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(CHARACTER)_Player)
+AND
+QRY_TaggedItemInMagicPockets(_Player,"HEALING_POTION_1879a93d-2edf-4f54-85dd-81a3724d677f")
+THEN
+SetFlag((FLAG)Has_TaggedItem_HEALING_POTION_af0f38a4-183d-2c1f-aa3f-6652acb89fe0,_Player,0);
+
+PROC
+PROC_GOB_TorturedAdventurer_CheckLockpicks((CHARACTER)_Player)
+AND
+QRY_TaggedItemInMagicPockets(_Player,"LOCKPICKS_1013e720-9b0f-4783-8686-9b5506840088")
+THEN
+SetFlag((FLAG)GOB_TorturedAdventurer_HasLockpick_cd56e778-ebf6-4f86-b6b0-fdc38318cb2e,_Player,0);
+
+PROC
+PROC_GOB_TorturedAdventurer_CheckLockpicks((CHARACTER)_Player)
+AND
+NOT QRY_TaggedItemInMagicPockets(_Player,"LOCKPICKS_1013e720-9b0f-4783-8686-9b5506840088")
+THEN
+ClearFlag((FLAG)GOB_TorturedAdventurer_HasLockpick_cd56e778-ebf6-4f86-b6b0-fdc38318cb2e,_Player,0);
+
+IF
+DialogEnded(GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3,_id)
+AND
+DialogGetInvolvedPlayer(_id,1,_Player)
+THEN
+ClearFlag((FLAG)GOB_TorturedAdventurer_HasLockpick_cd56e778-ebf6-4f86-b6b0-fdc38318cb2e,_Player,0);
+ClearFlag((FLAG)Has_TaggedItem_HEALING_POTION_af0f38a4-183d-2c1f-aa3f-6652acb89fe0,_Player,0);
+
+IF
+FlagSet(GOB_TorturedAdventurer_State_Free_7feb23c9-0263-4ee0-913c-8c70a55306f7, _, _) // flagType: Global
+THEN
+NOT DB_PreventKnockedOutPermaDefeated((CHARACTER)S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+
+//END_REGION Freeing the adventurer
+
+//REGION Adventurers AD
+//Not using existing PROCs, because I need player as parameter to get needed flags
+
+QRY
+QRY_CheckOtherUsersInTrigger((CHARACTER)_Player,(TRIGGER)_CheckTrigger)
+AND
+DB_Players(_Other)
+AND
+_Other!=_Player 
+AND
+DB_InRegion(_Other, _CheckTrigger)
+AND
+NOT QRY_SameUser(_Player,_Other)
+THEN
+DB_NOOP(1);
+
+
+//If there are other users in trigger, adventurer waits until the last one leaves
+//If there are other characters (same user) in trigger, adventurer starts AD based on how the leaving character treated him
+IF
+LeftTrigger(_Player,S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071)
+AND
+DB_Players(_Player)
+AND
+QRY_GOB_HappyTortures_AdventurerShackledAndAwake()
+AND
+NOT QRY_CheckOtherUsersInTrigger(_Player,S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071)
+THEN
+PROC_GOB_TorturedAdventurer_AD_FlagSetup(_Player);
+
+PROC
+PROC_GOB_TorturedAdventurer_AD_FlagSetup((CHARACTER)_Player)
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_PromisedToFree_6c9ae7fc-7434-c475-b1e8-535cf738a7df, _Player, 1) // flagType: Dialog
+THEN
+SetFlag((FLAG)GOB_TorturedAdventurer_GoodAD_eb6d0f24-7d2c-56a4-36cd-e794987f4bda, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+
+
+PROC
+PROC_GOB_TorturedAdventurer_AD_FlagSetup((CHARACTER)_Player)
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_LeftInChains_94987d71-bd64-df88-25b8-12ddf2d50d82, _Player, 1) // flagType: Dialog
+THEN
+SetFlag((FLAG)GOB_TorturedAdventurer_BadAD_ae07b833-67a3-08d6-662a-618c8739c9cb, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+
+
+PROC
+PROC_GOB_TorturedAdventurer_AD_FlagSetup((CHARACTER)_Player)
+AND
+QRY_GOB_HappyTorturers_Adventurer_ShouldCallHelp()
+AND
+GetFlag((FLAG)GOB_TorturedAdventurer_State_FailedPersuasion_1891e9e4-4aff-47f3-a874-048f24022d04,NULL_00000000-0000-0000-0000-000000000000,0)
+THEN
+PROC_TryStartAD(DIALOGRESOURCEGUID_GOB_TorturedAdventurer_AD_CryForHelp_8a4790a3-2bc2-732e-2003-d4e01a5b679a,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+
+QRY
+QRY_GOB_HappyTorturers_Adventurer_ShouldCallHelp()
+AND
+DB_GlobalFlag((FLAG)GOB_Torturers_State_Persuaded_d68ef3fa-08ba-52b9-8f39-7594dfde5c89) // flagType: Global
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GOB_HappyTorturers_Adventurer_ShouldCallHelp()
+AND
+DB_GlobalFlag((FLAG)GOB_Torturers_State_TorturedEnough_5ee00add-a8c8-4d61-4560-80582db6fe58) // flagType: Global
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GOB_HappyTorturers_Adventurer_ShouldCallHelp()
+AND
+DB_Defeated(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f)
+AND
+DB_Defeated(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc)
+THEN
+DB_NOOP(1);
+
+IF
+AutomatedDialogRequestFailed(DIALOGRESOURCEGUID_GOB_TorturedAdventurer_AD_CryForHelp_8a4790a3-2bc2-732e-2003-d4e01a5b679a,_)
+THEN
+ClearFlag((FLAG)GOB_TorturedAdventurer_BadAD_ae07b833-67a3-08d6-662a-618c8739c9cb, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+ClearFlag((FLAG)GOB_TorturedAdventurer_GoodAD_eb6d0f24-7d2c-56a4-36cd-e794987f4bda, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+
+IF
+DialogActorLeft(DIALOGRESOURCEGUID_GOB_TorturedAdventurer_AD_CryForHelp_8a4790a3-2bc2-732e-2003-d4e01a5b679a,_,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,_)
+THEN
+ClearFlag((FLAG)GOB_TorturedAdventurer_BadAD_ae07b833-67a3-08d6-662a-618c8739c9cb, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+ClearFlag((FLAG)GOB_TorturedAdventurer_GoodAD_eb6d0f24-7d2c-56a4-36cd-e794987f4bda, S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847); // flagType: Object
+//END_REGION
+
+//REGION Custom assault/murder crimes for the tortured adventurer
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, (GUIDSTRING)_Evidence, (CHARACTER)_Victim, _)
+AND
+_Victim == S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Murder")
+THEN
+PROC_CharacterRegisterCrime(_Criminal,"GOB_HappyTorturers_CustomMurder",_Evidence,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0);
+DebugText(_Criminal,"GOB_HappyTorturers_CustomMurder");
+
+QRY
+QRY_CRIME_BlockRegisterCrime((CHARACTER)_Criminal, (STRING)_Crime, (GUIDSTRING)_Evidence, (CHARACTER)_Victim, _)
+AND
+_Victim == S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847
+AND
+QRY_CRIME_IsCrimeFamilyMember(_Crime, "Assault")
+AND
+QRY_GOB_HappyTorturers_ShouldTriggerScene(_Criminal)
+AND
+QRY_StartDialog_Fixed(GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,
+	S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,
+	S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,
+	_Criminal)
+THEN
+SetFlag((FLAG)GOB_HappyTorturers_Assaulted_97dfba06-5e5a-8f1f-25db-7cc270cbd0d8,NULL_00000000-0000-0000-0000-000000000000,0); //setting flag to have a separate greeting for this case
+
+QRY
+QRY_GOB_HappyTorturers_ShouldTriggerScene((CHARACTER)_Criminal)
+AND
+QRY_SpeakerIsAvailable(_Criminal)
+AND
+QRY_SpeakerIsAvailable((CHARACTER)S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f)
+AND
+QRY_GOB_TorturersSeeCriminal(_Criminal)
+AND
+NOT DB_GlobalFlag((FLAG)GOB_Torturers_State_TorturedEnough_5ee00add-a8c8-4d61-4560-80582db6fe58)
+AND
+GetFlag(GOB_TorturedAdventurer_State_Faint_1b34f04f-919a-8b6e-1cd4-39b2d003504c,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GOB_TorturersSeeCriminal((CHARACTER)_Criminal)
+AND
+DB_Sees((CHARACTER)S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,_Criminal)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GOB_TorturersSeeCriminal((CHARACTER)_Criminal)
+AND
+DB_Sees((CHARACTER)S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,_Criminal)
+THEN
+DB_NOOP(1);
+
+IF
+DialogEnded(GOB_Torturers_Torture_66404335-c54e-5e67-3fb6-e85535b96e9c,_)
+THEN
+ClearFlag((FLAG)GOB_HappyTorturers_Assaulted_97dfba06-5e5a-8f1f-25db-7cc270cbd0d8,NULL_00000000-0000-0000-0000-000000000000,0);
+
+// If a torturer sees any party member when the rack is destroyed, they aggro to the players as those are outsiders. 
+// It's in addition to normal ItemDestroy crime reaction that will make goblins around investigate, keeping it systemic.
+IF
+DestroyedBy((ITEM)S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,_,_PartyMember,_)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+QRY_GOB_TorturersSeeAnyPartyMember()
+THEN
+PROC_SetRelationToPlayers((FACTION)ACT1_GOB_Torturers_8a9e7e9a-1e72-eed1-8175-6c8d50ef7372,0);
+
+QRY
+QRY_GOB_TorturersSeeAnyPartyMember()
+AND
+DB_GLO_DefeatCounter(_Torturer,"GOB_HappyTorturers_Torturers")
+AND
+DB_PartyMembers(_PartyMember)
+AND
+DB_Sees((CHARACTER)_Torturer,_PartyMember)
+THEN
+DB_NOOP(1);
+
+// If torturers see freed adventurer, its dialog is force stopped to ensure that combat between them starts
+IF
+DB_Sees(_Character,S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847)
+AND
+DB_GLO_DefeatCounter(_Character,"GOB_HappyTorturers_Torturers")
+THEN
+PROC_GOB_TorturersSawAdventurer();
+
+PROC
+PROC_GOB_TorturersSawAdventurer()
+AND
+DB_GOB_AdventurerFreedFlags(_AdventurerFreedFlag)
+AND
+DB_GlobalFlag(_AdventurerFreedFlag)
+THEN
+PROC_ForceStopDialog(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+//END_REGION
+
+// Happens either in script on in dialog, ensures that Volo doesn't keep sitting on the rack once it's unlocked
+IF
+FlagSet((FLAG)GOB_TorturedAdventurer_State_Unlocked_34dbc4e3-6fdf-4154-aa2b-d51b553b3977,_,_)
+AND
+NOT GetHitpoints(S_GOB_HappyTorturers_TortureRack_dae2b64c-f4c3-4e44-bc57-1a17ad17d3a6,0)
+AND
+IsReposedSitting(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,1)
+THEN
+EndRepose(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847);
+
+//REGION completing goal
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A") // TODO: Check if he should be killed when leaving WLD_Main_A instead
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+NOT DB_OneTimeEventFlag((FLAG)GOB_TorturedAdventurer_Event_Faint_dbeb939c-2e1d-4242-8524-2f82a0572b16);
+
+RemoveStatus(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,"GOB_TIEDTOTORTURERACK");
+
+SysClear("DB_GOB_Torturers_States",1);
+
+NOT DB_KilledEvent(S_GOB_Torturers_Spike_3f1fa953-6a0d-4589-adfd-23c69603da2f,(FLAG)GOB_Torturers_KilledSpike_64863f03-e538-451d-86ab-5ce8684cf175);
+NOT DB_KilledEvent(S_GOB_Torturers_Goblet_0f18201e-2836-4642-8a26-d0a6e1a8a8cc,(FLAG)GOB_Torturers_KilledGoblet_f3afc968-d6e8-46a4-aea3-fc06981554a1);
+NOT DB_KilledEvent(S_GOB_TorturedAdventurer_0dd6e9f1-d32d-41f1-b230-d540558e0847,(FLAG)GOB_Torturers_KilledPrisoner_ecb838c2-26fe-4b78-ba28-b307b8e9aa19);
+
+NOT DB_GlobalFlagReactionAfterDialog((FLAG)GOB_Torturers_State_PrisonerFreed_c3ebd7d6-243c-f355-5cff-94ceb315d5c9,DIALOGRESOURCEGUID_GOB_TorturedAdventurer_70f76b90-009e-b95a-0e76-65cc8eff73d3);
+
+PROC_TriggerUnRegisterForPlayers(S_GOB_Tortsurers_DialogStartTrigger_aceaceca-245c-44b2-bbd3-48a2bd6ab071);
+
+PROC_TriggerUnregisterForPlayers(S_GOB_HappyTorturers_TortureScreamsRegion_0d98abd3-4d8a-4948-9cd9-d2ef581b3b53);
+ENDEXITSECTION
+ParentTargetEdge "Act1"

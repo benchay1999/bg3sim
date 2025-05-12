@@ -1,0 +1,656 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+PROC_TriggerRegisterForPlayers(S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915);
+PROC_TriggerRegisterForPlayers(S_CHA_ChapelBox_81eaa47c-0516-42a4-9eaa-e1a9b6983893);
+PROC_TriggerRegisterForPlayers(S_CHA_ShadowHeartReturnPoly_ec0e537c-7ac9-41b2-912b-ea7ee4279983);
+TriggerRegisterForCharacter(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211,S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+DB_DropMutingStatussesDialog(ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a);
+DB_DropMutingStatussesDialog(ShadowHeart_Recruitment_Den_6416a635-e032-25c5-110c-8ff3d885eda4);
+DB_DropMutingStatussesDialog(Shadowheart_Recruitment_Camp_1ef3642b-047a-e043-37f3-774b0c0b24cd);
+DB_DropMutingStatussesDialog(ShadowHeart_Recruitment_Gob_cd0dd81e-a7b4-1cae-6d4c-750a7a65ff59);
+DB_DropMutingStatussesDialog(ShadowHeart_Recruitment_Beach_0e3f617e-1e5a-838c-6e3f-5f36d0470699);
+DB_DropMutingStatussesDialog(ShadowHeart_Revived_7118b9f8-38c0-02f0-8824-d7c575a3a956);
+
+DB_GLO_Shadowheart_Equipment("Breast", (ITEMROOT)ARM_ChainShirt_Shar_0c0c1031-4a04-4e8f-ba8a-8aafa2a396e8, (ITEMROOT)ARM_Bandit_A_2f63906e-259e-49af-a8a8-7d3f7c7587a8);
+DB_GLO_Shadowheart_Equipment("Boots", (ITEMROOT)ARM_Boots_Leather_969bab00-b269-46a5-a7e9-dd4887814719, (ITEMROOT)ARM_Boots_Leather_969bab00-b269-46a5-a7e9-dd4887814719);
+DB_GLO_Shadowheart_Equipment("Melee Main Weapon", (ITEMROOT)WPN_HUM_Mace_A_0_3186796d-3ab3-4d49-bfc2-cba1aff0cf5a, (ITEMROOT)WPN_GOB_Mace_A_7ebf3d2b-39ff-4a18-9114-4d09d17f432f);
+DB_GLO_Shadowheart_Equipment("Melee Offhand Weapon", (ITEMROOT)WPN_HUM_Shield_A_0_d2af60ea-1b72-4d25-a188-6d8bc4fe255b, (ITEMROOT)WPN_HUM_Shield_B_0_24fa28d4-f679-44bf-865e-c7e70dcb9588);
+KBSECTION
+//REGION In Party
+IF
+EnteredTrigger(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_CHA_ShadowHeartReturnPoly_ec0e537c-7ac9-41b2-912b-ea7ee4279983)
+THEN
+PROC_TriggerUnregisterForPlayers(S_CHA_ShadowHeartReturnPoly_ec0e537c-7ac9-41b2-912b-ea7ee4279983);
+StartVoiceBark(CHA_ShadowHeartRecruitment_VB_Return_66d5bcad-4ca1-c9c7-b4dd-aa136761cc54,S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+LookFromTrigger(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_CHA_ShadowHeartReturnPoly_ec0e537c-7ac9-41b2-912b-ea7ee4279983,0);
+
+IF
+EnteredTrigger(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_CHA_ChapelBox_81eaa47c-0516-42a4-9eaa-e1a9b6983893)
+THEN
+PROC_TriggerUnregisterForPlayers(S_CHA_ShadowHeartReturnPoly_ec0e537c-7ac9-41b2-912b-ea7ee4279983);
+
+IF
+GameBookInterfaceClosed(S_DEN_DruidSCLBook2_cc574cf0-cb9f-468c-bfd1-fd3afe8898da,_Char)
+AND
+DB_Players(_Char)
+AND
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,_Char)
+AND
+QRY_OnlyOnce("DEN_General_VB_ShadowheartBook")
+THEN
+StartVoiceBark(DEN_General_VB_ShadowheartBook_e3b43370-a2e8-6b85-3d40-1f51e55e48e6,S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+//END_REGION
+
+//REGION Set up recruitment
+PROC
+PROC_GLO_Origins_SetupRecruitment("WLD_Main_A")
+THEN
+PROC_GLO_ShadowheartRecruitmentInit();
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_Surrender_BlockPermaDefeatedOnFlee((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+NOT DB_Surrender_BlockPermaDefeatedOnFlee((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+//END_REGION
+
+//REGION CHA
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","CHA")
+THEN
+ApplyStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "BLOOD_COVERED", -1.0, 1);
+TeleportTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (TRIGGER)S_CRA_ShadowheartStart_bf0f807a-c37b-4292-b3ed-bbd3099363be, "CHA_ShadowHeartRecruitment_FinishedTeleport", 0, 0, 0, 1, 1);
+
+IF
+EntityEvent(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CHA_ShadowHeartRecruitment_FinishedTeleport")
+THEN
+PROC_GLO_Origins_SetRecruitmentDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a);
+DB_SpotPlayers(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CHA_ShadowheartRecruitment", NULL_00000000-0000-0000-0000-000000000000, NULL_00000000-0000-0000-0000-000000000000);
+DB_SpotPlayers_SpotTrigger(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CHA_ShadowheartRecruitment", S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915);
+
+PROC
+PROC_State_Changed(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment", "CHA", _)
+THEN
+PROC_SpotPlayers_StopSpotting(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CHA_ShadowheartRecruitment");
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+NOT DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","CHA")
+THEN
+PROC_CHA_ShadowHeart_ClearScene();
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_CHA_ShadowHeart_ClearScene();
+
+PROC
+PROC_CHA_ShadowHeart_ClearScene()
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH")
+AND
+DB_Dead(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+Resurrect(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+PROC
+PROC_CHA_ShadowHeart_ClearScene()
+THEN
+SetOnStage(S_CHA_DeadIntellectDev_001_495014fe-a600-437c-9b18-735e82c49b4d,0);
+SetOnStage(S_CHA_DeadIntellectDev_002_df428bb0-9854-4f33-8c82-7b287cce4115,0);
+SetOnStage(S_CHA_DeadIntellectDev_003_146166f2-83c2-4795-80cd-3e87f452b44e,0);
+SetOnStage(S_CHA_DeadIntellectDev_004_c619fd7e-804a-49fc-9f41-a084d4398d64,0);
+DB_CHA_ShadowheartRecruitment_CleanUp(1);
+
+IF
+DialogEnded((DIALOGRESOURCE)CRA_Crash_c6870e25-3c45-386c-0264-965c48731036, _)
+AND
+DB_CHA_ShadowheartRecruitment_CleanUp(1)
+THEN
+NOT DB_CHA_ShadowheartRecruitment_CleanUp(1);
+RemoveSurfaceLayer(S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915,"Ground",10.0);
+
+IF
+DialogEnded(ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a, _)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GlobalFlag(ORI_ShadowHeart_State_IsInParty_9a029c5a-e3c3-45ef-9cd4-1cb45718deb1)
+AND
+NOT DB_GlobalFlag(ORI_ShadowHeart_Event_RecruitmentFight_8a222492-be3e-16f3-cb58-414077beb9ef)
+AND
+NOT DB_ORI_DisappearingToCamp((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("RecruitedFirstTime_ShadowHeart")
+THEN
+PROC_NotifyWhenReadyToMoveOn((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"CHA_Recruitment");
+
+PROC
+PROC_ReadyToMoveOn((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"CHA_RECRUITMENT")
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+IF
+EnteredTrigger(_Char,S_CHA_Crypt_SUB_002_fec6419e-a387-4799-bb28-ba008f2d0e96)
+AND
+DB_Players(_Char)
+AND
+NOT DB_GlobalFlag(ORI_ShadowHeart_State_IsInParty_9a029c5a-e3c3-45ef-9cd4-1cb45718deb1)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+IF
+UseStarted(_Char,S_CHA_FL0_Entrance_Door_TEMP_73e52fe0-74d3-4b3a-b331-acf60066b1d2)
+AND
+DB_Players(_Char)
+AND
+IsLocked(S_CHA_FL0_Entrance_Door_TEMP_73e52fe0-74d3-4b3a-b331-acf60066b1d2,0)
+THEN
+SetFlag(CHA_ShadowHeartRecruitment_UsedDoor_91d77fbb-ddb7-365a-e5af-fd67ca1b99f3,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+UseFinished(_Char,S_CHA_OUTSIDE_Crypt_Door_d06d5638-c69a-4fcc-b996-c305acbb7ebf,0)
+AND
+_Char != S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679
+AND
+NOT DB_OnlyOnce("CHA_ShadowHeartRecruitment_DoorAD")
+AND
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_Avatars((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_GlobalFlag(CHA_ShadowHeartRecruitment_UsedDoor_91d77fbb-ddb7-365a-e5af-fd67ca1b99f3)
+AND
+QRY_SpeakerIsAvailableAndInDialogRange(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,_Char)
+THEN
+PROC_TryStartAD(CHA_ShadowHeartRecruitment_PAD_Door_cd6ec310-6b6e-1772-9829-4c747cec59cc,S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+DB_OnlyOnce("CHA_ShadowHeartRecruitment_DoorAD");
+
+IF
+Unlocked(S_CHA_OUTSIDE_Crypt_Door_d06d5638-c69a-4fcc-b996-c305acbb7ebf, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+THEN
+StartVoiceBark(CHA_Outside_VB_LockpickingShadowheart_fe2d6ad4-58b5-14a5-950f-0545716d2d30, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+DB_OnlyOnce("CHA_ShadowHeartRecruitment_DoorAD");
+
+IF
+Unlocked(S_CHA_OUTSIDE_Crypt_Door_d06d5638-c69a-4fcc-b996-c305acbb7ebf, _Player, _)
+AND
+NOT DB_OnlyOnce("CHA_ShadowHeartRecruitment_DoorAD")
+THEN
+StartVoiceBark(CHA_Outside_VB_LockpickingCrypt_bf92a987-a4df-919c-c470-3765c04d02b5, (CHARACTER)_Player);
+DB_OnlyOnce("CHA_ShadowHeartRecruitment_DoorAD");
+
+IF
+DB_InRegion(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915)
+THEN
+PROC_TriggerUnregisterForPlayers(S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915);
+StartVoiceBark(CHA_ShadowHeartRecruitment_VB_9616d628-cb2b-f36b-8248-1afb24af0149,S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+PROC
+PROC_SpotPlayers_Spotted(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CHA_ShadowheartRecruitment", _Player)
+AND
+NOT DB_OnlyOnce("CHA_ShadowHeartRecruitment")
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","CHA")
+AND
+NOT QRY_ORI_ShadowheartResurrection_DialogIntercept(_Player)
+AND
+QRY_StartDialog(ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a,S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,_Player)
+THEN
+PROC_TriggerUnregisterForPlayers(S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915);
+DB_OnlyOnce("CHA_ShadowHeartRecruitment");
+
+IF
+DialogStarted(ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a, _)
+AND
+NOT DB_OnlyOnce("CHA_ShadowHeartRecruitment")
+THEN
+DB_OnlyOnce("CHA_ShadowHeartRecruitment");
+
+PROC
+PROC_StartDialog_AddExtraSpeakers((DIALOGRESOURCE)ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a, (INTEGER)_ID)
+THEN
+PROC_DialogAddSpeakingActor(_ID, S_CHA_DeadIntellectDev_001_495014fe-a600-437c-9b18-735e82c49b4d);
+PROC_DialogAddSpeakingActor(_ID, S_CHA_DeadIntellectDev_002_df428bb0-9854-4f33-8c82-7b287cce4115);
+PROC_DialogAddSpeakingActor(_ID, S_CHA_DeadIntellectDev_003_146166f2-83c2-4795-80cd-3e87f452b44e);
+PROC_DialogAddSpeakingActor(_ID, S_CHA_DeadIntellectDev_004_c619fd7e-804a-49fc-9f41-a084d4398d64);
+
+IF
+DialogEnded(ShadowHeart_Recruitment_f553d51e-18ed-659b-e418-56fdca0d0a0a,_ID)
+AND
+DB_GlobalFlag(ORI_ShadowHeart_Event_RecruitmentFight_8a222492-be3e-16f3-cb58-414077beb9ef)
+AND
+DB_DialogPlayers(_ID,_Char,_)
+THEN
+PROC_SetRelationTemporaryHostile(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,(CHARACTER)_Char);
+
+IF
+DB_Is_InCombat((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,_ID)
+AND
+NOT DB_Players((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_Is_InCombat(_Char,_ID)
+AND
+DB_Players((CHARACTER)_Char)
+AND
+IsEnemy((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Char, 1)
+AND
+IsInTrigger(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915,1)
+THEN
+SetFlag(ORI_ShadowHeart_Event_RecruitmentFight_8a222492-be3e-16f3-cb58-414077beb9ef,NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_ORI_SendToCampAfterDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _, _, _)
+THEN
+PROC_SetRelationMutual((FACTION)Origin_ShadowHeart_901cd370-86ff-b538-e1e8-574c84135ca0, (FACTION)ACT1_CRA_Nautiloid_61c7f822-6895-3a45-f8f0-2ecf276d91b4, 50);
+
+PROC
+PROC_CheckFirstTimeRecruited((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_SetRelationMutual((FACTION)Origin_ShadowHeart_901cd370-86ff-b538-e1e8-574c84135ca0, (FACTION)ACT1_CRA_Nautiloid_61c7f822-6895-3a45-f8f0-2ecf276d91b4, 50);
+//END_REGION
+
+//REGION DEN
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN")
+THEN
+TeleportTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, S_DEN_ShadowHeartSphere_ebe5b328-4bcd-431a-8507-a073b06fbe3c, "DEN_ShadowHeartRecruitment_FinishedTeleport", 0, 0, 0, 1, 1);
+PROC_GLO_Origins_SetRecruitmentDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,ShadowHeart_Recruitment_Den_6416a635-e032-25c5-110c-8ff3d885eda4);
+DB_DEN_NPC((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "", (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_GlobalFlag(DEN_RaidingParty_Quest_GoblinRaidOver_98712d90-c46b-20c4-c4df-02c0117e85a5)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_InRegion(_, (TRIGGER)S_CRA_ShadowheartFallback_685577dd-e9be-4a64-a195-6d16f74e08f1)
+AND
+NOT DB_CantTalk(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_OnlyOnce("RecruitedFirstTime_ShadowHeart")
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+PROC
+PROC_State_Changed(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN")
+AND
+GetFaction(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Faction)
+THEN
+PurgeOsirisQueue(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+SetHasDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,0);
+PROC_SetRelationMutual(_Faction, (FACTION)ACT1_CRA_Nautiloid_DiningIntDev_44ae0af8-9a7e-4f90-977c-b8c5e99c9ca7, 50); // Make shadowheart neutral so she doesn't fight the IDs and potentailly get killed
+PROC_DisappearOutOfSightTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_CHA_ShadowheartFleePos_051554e8-266e-4293-ab76-a2f7f74cd4de,"Run",0,"CHA_ShadowHeartRecruitment_ToDen");
+SetFlag(DEN_Shadowheart_Event_ToDen_5e61b083-4c7f-4f1a-982f-0b4d28fbbd79,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EntityEvent(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"CHA_ShadowHeartRecruitment_ToDen")
+THEN
+SetHasDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,1);
+
+IF
+EntityEvent(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"CHA_ShadowHeartRecruitment_ToDen")
+AND
+QRY_DEN_CheckPeaceState()
+AND
+NOT DB_PermaDefeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+AppearOutOfSightTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_DEN_ShadowHeartSphere_ebe5b328-4bcd-431a-8507-a073b06fbe3c,S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915,0,NULL_00000000-0000-0000-0000-000000000000,"DEN_ShadowHeart_Arrived");
+PROC_GLO_Origins_SetRecruitmentDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,ShadowHeart_Recruitment_Den_6416a635-e032-25c5-110c-8ff3d885eda4);
+DB_DEN_NPC((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "", (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_State_Changed(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN")
+AND
+DB_GlobalFlag((FLAG)ORI_ShadowHeart_HasMet_d06842a4-248e-7f83-da87-4eec7606178e)
+THEN
+DB_SpotPlayers((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment_Den", NULL_00000000-0000-0000-0000-000000000000, DEN_ShadowHeart_HasMet_9e9b8ecd-d618-7501-5bea-31355bf41d06);
+DB_SpotPlayers_Continuous((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment_Den");
+DB_SpotPlayers_SpotTrigger((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment_Den", S_DEN_ShadowHeartSphere_ebe5b328-4bcd-431a-8507-a073b06fbe3c);
+
+PROC
+PROC_SpotPlayers_Spotted((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment_Den", _Player)
+AND
+QRY_StartDialog(ShadowHeart_Recruitment_Den_6416a635-e032-25c5-110c-8ff3d885eda4, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment_Den");
+
+IF
+DB_PartOfTheTeam((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_SpotPlayers_StopSpotting((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Recruitment_Den");
+
+IF
+DialogEnded(ShadowHeart_Recruitment_Den_6416a635-e032-25c5-110c-8ff3d885eda4,_ID)
+AND
+DB_GlobalFlag(ORI_ShadowHeart_Event_RecruitmentFight_8a222492-be3e-16f3-cb58-414077beb9ef)
+AND
+DB_DialogPlayers(_ID,_Char,_)
+THEN
+PROC_SetRelationTemporaryHostile(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,(CHARACTER)_Char);
+
+IF
+DB_GLO_PartyMembers_RecruitAfterDialog(_ID, _Origin, (CHARACTER)_Player)
+AND
+DB_DialogName((DIALOGRESOURCE)ShadowHeart_Recruitment_Den_6416a635-e032-25c5-110c-8ff3d885eda4, _ID)
+THEN
+NOT DB_GLO_PartyMembers_RecruitAfterDialog(_ID, _Origin, (CHARACTER)_Player);
+PROC_GLO_PartyMembers_CheckAdd((CHARACTER)_Origin,(CHARACTER)_Player);
+
+IF
+DB_GlobalFlag(ORI_ShadowHeart_State_IsInParty_9a029c5a-e3c3-45ef-9cd4-1cb45718deb1)
+AND
+DB_DEN_NPC(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "", NULL_00000000-0000-0000-0000-000000000000)
+THEN
+NOT DB_DEN_NPC(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_DEN_NPC(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "", NULL_00000000-0000-0000-0000-000000000000)
+AND
+NOT DB_InRegion(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211)
+THEN
+NOT DB_DEN_NPC(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+DB_InRegion(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211)
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_State_Current(S_DEN_RangerDen_SUB_50062397-bf9c-4765-9cbc-e40b5148f211, "DEN", _State)
+AND
+NOT DB_DEN_DefaultStates(_State)
+THEN
+PROC_DisappearOutOfSight(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Run",0,"CHA_ShadowHeartRecruitment_ToCamp");
+//END_REGION
+
+//REGION BEACH
+
+//REGION If SH is dead and armor got looted
+
+QRY
+QRY_GLO_Shadowheart_HasEquipped((STRING)_Slot, (ITEMROOT)_Template)
+AND
+GetEquippedItem(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Slot, _Equipped)
+AND
+GetTemplate(_Equipped, _Root)
+AND
+_Root == _Template
+THEN
+DB_NOOP(1);
+
+IF
+EntityEvent(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"CHA_ShadowHeartRecruitment_ToDen")
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GLO_Shadowheart_Equipment(_Slot, _Template, _Replacement)
+AND
+NOT QRY_GLO_Shadowheart_HasEquipped((STRING)_Slot, (ITEMROOT)_Template)
+AND
+TemplateIsInInventory(_Template, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Count)
+AND
+GetItemByTemplateInInventory(_Template, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Armor)
+THEN
+Equip(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Armor);
+
+IF
+EntityEvent(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"CHA_ShadowHeartRecruitment_ToDen")
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GLO_Shadowheart_Equipment(_Slot, _Template, _Replacement)
+AND
+NOT QRY_GLO_Shadowheart_HasEquipped((STRING)_Slot, (ITEMROOT)_Template)
+AND
+TemplateIsInInventory(_Template, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 0)
+THEN
+DB_GLO_Shadowheart_ArmorQueue(_Replacement);
+
+IF
+DB_GLO_Shadowheart_ArmorQueue(_Replacement)
+THEN
+TemplateAddTo(_Replacement, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1, 0);
+
+IF
+TemplateAddedTo(_Replacement, _Armor, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+AND
+DB_GLO_Shadowheart_ArmorQueue((ITEMROOT)_Replacement)
+THEN
+NOT DB_GLO_Shadowheart_ArmorQueue(_Replacement);
+Equip(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (ITEM)_Armor);
+
+//END_REGION
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_GlobalFlag(GLO_Shadowheart_State_BeachRecruitment_14468bb2-c6bf-4aa0-a00e-011ced4823fb)
+AND
+NOT DB_GlobalFlag(ORI_Shadowheart_State_FellFromNautiloid_bf503406-711c-4274-abb5-27c22ba09977)
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH");
+
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH")
+AND
+DB_Downed(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_Dead(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+RemoveStatusesWithType(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "DOWNED", NULL_00000000-0000-0000-0000-000000000000);
+SetHitpoints(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1);
+//PROC_SetHitpointsPercentage_BlockSelfHealing(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1.0);
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH")
+THEN
+TeleportTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, S_CRA_BeachDeadShadowheart_8699c474-f431-4bf7-9433-dabebc66a007);
+PROC_TriggerUnregisterForPlayers(S_CHA_ShadowHeartStartSphere_8a65b0ae-7d7b-4685-b657-4855f0468915);
+
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_State_Current(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH")
+AND
+NOT DB_Dead(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+RestoreParty(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+TeleportTo(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (TRIGGER)S_CRA_BeachShadowheartRecruit_566350d5-6331-4a87-afde-ef122c5f41a6, "CRA_ShadowheartRecruitment_BeachAppear", 0, 0, 0);
+
+IF
+EntityEvent(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_ShadowheartRecruitment_BeachAppear")
+THEN
+PROC_RemoveDialog(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+DB_Dialogs(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (DIALOGRESOURCE)ShadowHeart_Recruitment_Beach_0e3f617e-1e5a-838c-6e3f-5f36d0470699);
+SetHasDialog((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, 1);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_CRA_ShadowheartFallback_685577dd-e9be-4a64-a195-6d16f74e08f1);
+PROC_TriggerRegisterForPlayers((TRIGGER)S_CRA_PainTrigger_9bfd9b13-69db-4498-a1de-f4668bc53b6a);
+ApplyStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+SetFlag((FLAG)CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+EnteredTrigger(_Player, (TRIGGER)S_CRA_PainTrigger_9bfd9b13-69db-4498-a1de-f4668bc53b6a)
+AND
+DB_GlobalFlag((FLAG)CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af)
+AND
+NOT DB_DialogNPCs(_, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+AND
+NOT QRY_CheckOtherPlayersInTrigger(_Player, (TRIGGER)S_CRA_PainTrigger_9bfd9b13-69db-4498-a1de-f4668bc53b6a)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)CRA_ShadowheartRecruitment_AD_53262521-fdeb-8cc7-750e-e0dba289398b, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+StatusApplied((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", _, _)
+THEN
+PROC_CharacterDisableAllCrimes((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+PROC_CharacterEnableCrime((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Assault");
+
+IF
+StatusRemoved((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", _, _)
+THEN
+PROC_CharacterDisableCrime((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "Assault");
+PROC_CharacterEnableAllCrimes((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+//PROC_SelfHealing_Enable((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679);
+
+IF
+DB_GLO_PartyMembers_RecruitAfterDialog(_ID, _Origin, (CHARACTER)_Player)
+AND
+DB_DialogName((DIALOGRESOURCE)ShadowHeart_Recruitment_Beach_0e3f617e-1e5a-838c-6e3f-5f36d0470699, _ID)
+THEN
+NOT DB_GLO_PartyMembers_RecruitAfterDialog(_ID, _Origin, (CHARACTER)_Player);
+PROC_GLO_PartyMembers_CheckAdd((CHARACTER)_Origin,(CHARACTER)_Player);
+
+IF
+CharacterPickpocketSuccess(_Player, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, S_GLO_PuzzleBox_326324f9-0920-8f0f-3e85-3781fbf48282, _, _, _)
+AND
+DB_GlobalFlag((FLAG)CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af)
+THEN
+SetFlag((FLAG)CRA_ShadowheartRecruitment_State_BoxPickpocketed_0b9a3813-a1d3-4995-9729-8721fdc6b6b1, NULL_00000000-0000-0000-0000-000000000000);
+PROC_CRA_ShadowHeart_WakeUp((CHARACTER)_Player);
+
+PROC
+PROC_CRA_ShadowHeart_WakeUp((CHARACTER)_Player)
+AND
+NOT QRY_StartDialog_Fixed((DIALOGRESOURCE)ShadowHeart_Recruitment_Beach_0e3f617e-1e5a-838c-6e3f-5f36d0470699, S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _Player)
+THEN
+PROC_SetRelationTemporaryHostile(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,_Player);
+
+IF
+FlagCleared((FLAG)CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af, _, _)
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_CRA_PainTrigger_9bfd9b13-69db-4498-a1de-f4668bc53b6a);
+RemoveStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+AttackedBy(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _, _Char, _, _, _, _)
+AND
+DB_GlobalFlag((FLAG)CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af)
+THEN
+PROC_SetRelationTemporaryHostile(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, (CHARACTER)_Char);
+ClearFlag(CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af);
+DB_CRA_ShadowheartRecruitment_WokenUp(1);
+
+IF
+LeftCombat(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_CRA_ShadowheartRecruitment_WokenUp(1)
+THEN
+NOT DB_CRA_ShadowheartRecruitment_WokenUp(1);
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+IF
+DB_CRA_ShadowheartRecruitment_WokenUp(1)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_Is_InCombat(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, _)
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+
+//REGION Fallback
+PROC
+PROC_State_Changed(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","BEACH",_)
+AND
+HasActiveStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", 1)
+THEN
+NOT DB_CRA_ShadowheartRecruitment_WokenUp(1);
+RemoveStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", NULL_00000000-0000-0000-0000-000000000000);
+ClearFlag(CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af);
+
+IF
+DialogEnded((DIALOGRESOURCE)ShadowHeart_Recruitment_Beach_0e3f617e-1e5a-838c-6e3f-5f36d0470699, _)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GlobalFlag((FLAG)CRA_ShadowheartRecruitment_Event_LeaveForDen_23932bc4-baf8-4e7b-bed1-0ca650607f7a)
+AND
+QRY_OnlyOnce("CRA_ShadowheartRecruitment_Beach_NotRecruited")
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+IF
+LeftTrigger(_Char, (TRIGGER)S_CRA_ShadowheartFallback_685577dd-e9be-4a64-a195-6d16f74e08f1)
+AND
+NOT DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+NOT DB_InRegion(_, (TRIGGER)S_CRA_ShadowheartFallback_685577dd-e9be-4a64-a195-6d16f74e08f1)
+AND
+QRY_OnlyOnce("CRA_ShadowheartRecruitment_Beach_NotRecruited")
+THEN
+NOT DB_CRA_ShadowheartRecruitment_WokenUp(1);
+SetFlag((FLAG)CRA_ShadowheartRecruitment_State_WasLeftUnconscious_e5639da0-083a-44d2-b675-5c882ad3b847, NULL_00000000-0000-0000-0000-000000000000);
+RemoveStatus(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusRemoved(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679, "CRA_UNCONSCIOUS_SHADOWHEART", _, _)
+AND
+NOT DB_Defeated(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+AND
+DB_GlobalFlag((FLAG)CRA_ShadowheartRecruitment_State_WasLeftUnconscious_e5639da0-083a-44d2-b675-5c882ad3b847)
+AND
+DB_GlobalFlag((FLAG)CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af)
+THEN
+ClearFlag(CRA_ShadowheartRecruitment_State_Unconscious_a461603e-1423-4c54-a270-82f38ee470af);
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","DEN");
+
+//END_REGION
+//END_REGION
+
+//REGION CAMP
+PROC
+PROC_GLO_ShadowheartRecruitmentInit()
+AND
+DB_Players(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679)
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","CAMP");
+
+QRY
+QRY_OnlyOnce("ORI_ShadowHeart_COM_Init")
+THEN
+PROC_State_Progress(S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,"Recruitment","CAMP");
+//END_REGION
+
+//REGION Recruitment Child Crime Handling
+
+IF
+InstanceDialogChanged(_,(DIALOGRESOURCE)GOB_Orpheus_VoiceOfAbsolute_ShadowheartHasBox_8996ac21-4624-8bd4-02f2-24c92219d8cd,(DIALOGRESOURCE)ShadowHeart_Recruitment_Gob_cd0dd81e-a7b4-1cae-6d4c-750a7a65ff59,_)
+THEN
+SetRelation((FACTION)Origin_ShadowHeart_901cd370-86ff-b538-e1e8-574c84135ca0, (FACTION)ACT1_GOB_FestivitiesKids_021b58fe-a0de-4cef-af2c-ca03b475de50, 51);
+
+PROC
+PROC_GLO_PartyMembers_Add((CHARACTER)S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679,(CHARACTER)_Player)
+THEN
+SetRelation((FACTION)Origin_ShadowHeart_901cd370-86ff-b538-e1e8-574c84135ca0, (FACTION)ACT1_GOB_FestivitiesKids_021b58fe-a0de-4cef-af2c-ca03b475de50, 50);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

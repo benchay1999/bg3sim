@@ -1,0 +1,43 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+//REGION Lake Chasm
+
+IF
+EnteredChasm((CHARACTER)_Dueragar,_CauseObj,_,_,_,_) ///TODO define the chasm when we have it setup
+AND
+DB_UND_DuergarSquad(_Dueragar)
+AND
+TriggerGetRandomPosition(S_UND_Raft_CorpseTrigger_2f2ae987-aaf8-4244-b790-63d5bc7f9a14,_X,_Y,_Z)
+AND
+FindValidPosition(_X, _Y, _Z, 0.5, _Dueragar, 0, _ValidX, _ValidY, _ValidZ)
+THEN
+TeleportToPosition(_Dueragar, _ValidX, _ValidY, _ValidZ, "", 0, 0, 1);
+Die(_Dueragar,DEATHTYPE.Falling,_CauseObj,1,1);
+EnterChasmProcessed(_Dueragar, 1);
+
+IF
+EnteredChasm((CHARACTER)_Dueragar,_CauseObj,_,_,_,_) ///TODO define the chasm when we have it setup
+AND
+DB_UND_DuergarSquad(_Dueragar)
+AND
+TriggerGetRandomPosition(S_UND_Raft_CorpseTrigger_2f2ae987-aaf8-4244-b790-63d5bc7f9a14,_X,_Y,_Z)
+THEN
+TeleportToPosition(_Dueragar, _X,_Y,_Z, "", 0, 0, 1);
+Die(_Dueragar,DEATHTYPE.Falling,_CauseObj,1,1);
+EnterChasmProcessed(_Dueragar, 1);
+
+//END_REGION
+
+//REGION Goal Completion
+PROC
+PROC_LevelLoadedOnce("BGO_Main_A")
+THEN
+GoalCompleted;
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

@@ -1,0 +1,557 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_IgnoreMutingStatussesDialog((DIALOGRESOURCE)FOR_DangerousBook_Tome_696a8379-fa91-d800-7cb6-2f27e04dc100);
+
+DB_FOR_DangerousBook_ReadableMentionsTome((ITEM)S_FOR_ThayanCellar_ParanoidJournal_faab6ead-14bc-449f-b24f-f1459ffd0692);
+DB_FOR_DangerousBook_ReadableMentionsTome((ITEM)S_FOR_ThayanCellar_ResearchNotes_d28b1bc9-0d77-49da-aa08-d0d243f699f3);
+DB_FOR_DangerousBook_ReadableMentionsTome((ITEM)S_FOR_ThayanJournal_9339e000-6be5-45c3-868d-7e686c7d2b69);
+
+//REGION Dialog Script Flag Registration
+DB_PlayerHasTemplateItem(BOOK_Tome_Thayan_Necromancy_A_Gem_A_f3b79dc6-aa5e-46a9-828e-6f6ce0021c48, (FLAG)FOR_DangerousBook_State_HasTomeKey_49997188-93bc-a8cc-8808-d74efe9191d4);
+DB_HasItemEvent((ITEM)S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, (FLAG)FOR_DangerousBook_State_HasTome_4a6e2b36-8bcc-a067-6d1c-51c5cba542d3);
+
+//END_REGION
+
+DB_QuestDef_State_ConditionalFlag((FLAG)LOW_Tolna_Event_MentionsNecromancy_eaedd5fe-8ae0-411a-90fa-0dc7ca7fef4f,"FOR_DangerousBook", "TolnaMentionsTharchiate", 1, (FLAG)FOR_DangerousBook_State_BookFinished_489a23a0-758a-97bd-bd0c-d6b417c20af3);
+DB_QuestDef_State((FLAG)FOR_DangerousBook_State_BookFinished_489a23a0-758a-97bd-bd0c-d6b417c20af3,"FOR_DangerousBook","ReachedLastPage");
+
+//REGION Detected if gems / book became unreachable
+DB_LevelUnreachable_TrackEntity((ITEM)S_FOR_DangerousBook_Key_000_123c268d-ad0c-4df5-905b-a78dacbed80b);
+DB_LevelUnreachable_TrackEntity((ITEM)S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507);
+//END_REGION
+KBSECTION
+//REGION Dialog Event Handling
+IF
+DialogEnded(FOR_DangerousBook_Tome_696a8379-fa91-d800-7cb6-2f27e04dc100, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+GetFlag((FLAG)FOR_DangerousBook_Event_DroppedBook_00348450-116c-3b85-7cb6-99382951ab7c, _Player, 1) //flagType: Object
+THEN
+ToInventory(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player, 1, 0, 0);
+Drop(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507);
+ClearFlag(FOR_DangerousBook_Event_DroppedBook_00348450-116c-3b85-7cb6-99382951ab7c, _Player, 0);
+
+IF
+FlagSet(FOR_DangerousBook_State_BookUnlocked_fd215551-a14c-8cfa-ba34-7ac32d1ada28, _, _) //flagType: Global
+THEN
+Transform(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, UNI_FOR_ThayanTome_Socketed_215dc202-2b77-4825-b6d1-c72954f6394a, POLYMORPH_a0ddddc8-255f-4014-9f63-d7608eb1c2a0);
+
+IF
+FlagSet(FOR_DangerousBook_Event_RemoveTomeKey_712ac68a-fffe-43aa-a625-06e812082f71, _Player, _)
+AND
+GetFlag(FOR_DangerousBook_State_HasTomeKey_49997188-93bc-a8cc-8808-d74efe9191d4, _Player, 1)
+THEN
+DB_FOR_DangerousBook_RemovingKey(1);
+MagicPocketsDropByTemplate((CHARACTER)_Player, BOOK_Tome_Thayan_Necromancy_A_Gem_A_f3b79dc6-aa5e-46a9-828e-6f6ce0021c48, 1);
+
+IF
+TemplateRemovedFrom(BOOK_Tome_Thayan_Necromancy_A_Gem_A_f3b79dc6-aa5e-46a9-828e-6f6ce0021c48, _BookKey, _)
+AND
+DB_FOR_DangerousBook_RemovingKey(1)
+THEN
+PROC_SetOnStage(_BookKey, 0);
+NOT DB_FOR_DangerousBook_RemovingKey(1);
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_State_BookOwner_06022678-24ed-35af-de93-bd91abc02452, _Player, _)
+AND
+IsInInventoryOf((ITEM)S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player, 1)
+THEN
+ToInventory(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player, 1, 0, 1);
+ApplyStatus(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, "FOR_DANGEROUSBOOK_BOUNDTO", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+AddedTo(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player, _)
+AND
+GetFlag((FLAG)FOR_DangerousBook_State_BookOwner_06022678-24ed-35af-de93-bd91abc02452, _Player, 1)
+THEN
+ApplyStatus(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, "FOR_DANGEROUSBOOK_BOUNDTO", -1.0, 1, NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+AddedTo(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Container, _)
+AND
+DB_Players(_Player)
+AND
+_Container != _Player
+AND
+GetFlag((FLAG)FOR_DangerousBook_State_BookOwner_06022678-24ed-35af-de93-bd91abc02452, _Player, 1)
+AND
+IsCharacter(_Container, 0)
+AND
+IsContainer((ITEM)_Container, 1)
+THEN
+DB_FOR_DangerousBook_MoveTome(_Player);
+PROC_FOR_DangerousBook_MoveTome();
+
+PROC
+PROC_FOR_DangerousBook_MoveTome()
+AND
+DB_FOR_DangerousBook_MoveTome(_Player)
+AND
+NOT QRY_FOR_DangerousBook_NeedsUnboundingFirst()
+AND
+DB_CurrentLevel(_CurrentLevel)
+AND
+DB_Daisy_IdleTeleport(_CurrentLevel, _Trigger)
+THEN
+TeleportTo(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Trigger, "FOR_DangerousBook_Teleported", 0, 0, 0);
+
+QRY
+QRY_FOR_DangerousBook_NeedsUnboundingFirst()
+AND
+HasActiveStatus(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, "FOR_DANGEROUSBOOK_BOUNDTO", 1)
+THEN
+RemoveStatus(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, "FOR_DANGEROUSBOOK_BOUNDTO", NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+InventoryBoundChanged(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, 0)
+AND
+DB_FOR_DangerousBook_MoveTome(_Player)
+AND
+DB_CurrentLevel(_CurrentLevel)
+AND
+DB_Daisy_IdleTeleport(_CurrentLevel, _Trigger)
+THEN
+TeleportTo(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Trigger, "FOR_DangerousBook_Teleported", 0, 0, 0);
+
+IF
+EntityEvent(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, "FOR_DangerousBook_Teleported")
+AND
+DB_FOR_DangerousBook_MoveTome(_Player)
+THEN
+ToInventory(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player, 1, 0, 1);
+NOT DB_FOR_DangerousBook_MoveTome(_Player);
+// Status will be applied by previous rule responding to AddedTo
+
+PROC
+PROC_BlockUseOfItem(_Player, (ITEM)S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507)
+AND
+DB_Players(_Player)
+AND
+NOT DB_Is_WildShaped(_Player)
+AND
+QRY_StartDialog_Fixed((DIALOGRESOURCE)FOR_DangerousBook_Tome_696a8379-fa91-d800-7cb6-2f27e04dc100, (ITEM)S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player)
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION AD/VB Conditions
+IF
+DestroyedBy(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+DB_Players(_Companion)
+AND
+NOT DB_Avatars(_Companion)
+AND
+GetDistanceTo(_Companion, S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Dist)
+AND
+_Dist < 12.0
+AND
+QRY_OnlyOnce("FOR_DangerousBook_BookDestroyedVB")
+THEN
+StartVoiceBark((VOICEBARKRESOURCE)FOR_DangerousBook_VB_BookDestroyed_b3dd9bc6-1967-378c-d7dc-9c1b70eddebc, _Companion);
+
+IF
+DestroyedBy(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _, _, _)
+AND
+NOT DB_OnlyOnce("FOR_DangerousBook_BookDestroyedVB")
+AND
+NOT DB_FOR_DangerousBook_DestroyedNoVB(_)
+THEN
+DB_FOR_DangerousBook_DestroyedNoVB(1);
+//END_REGION
+
+//REGION Book Effects
+IF
+FlagSet(FOR_DangerousBook_Event_FailedWisdomSave_8a1daef2-7115-4319-9d3d-22b17ee57b4c, _Player, _)
+THEN
+PROC_FOR_DangerousBook_ApplyMadness((CHARACTER)_Player);
+ClearFlag(FOR_DangerousBook_Event_FailedWisdomSave_8a1daef2-7115-4319-9d3d-22b17ee57b4c, _Player, 0);
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_State_MinorMadnessReceived_375617ca-1e18-30e0-b1e5-6584a785b064, _Player, _)
+THEN
+ApplyStatus(_Player, "GLO_DANGEROUSBOOK_MADNESS", -1.0, 0, S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507);
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_State_ModerateMadnessReceived_f691465a-d6a0-4fb1-82b5-44ff63bc8fe2, _Player, _)
+AND
+HasActiveStatus(_Player, "GLO_DANGEROUSBOOK_MAJORMADNESS",0)
+THEN
+RemoveStatus(_Player, "GLO_DANGEROUSBOOK_MADNESS");
+ApplyStatus(_Player, "GLO_DANGEROUSBOOK_MAJORMADNESS", -1.0, 0, S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507);
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_State_MajorMadnessReceived_610d3094-ac05-4c70-aa5e-40d20fe8406d, _Player, _)
+AND
+HasActiveStatus(_Player, "GLO_DANGEROUSBOOK_MAJORMADNESS",0)
+THEN
+RemoveStatus(_Player, "GLO_DANGEROUSBOOK_MADNESS");
+ApplyStatus(_Player, "GLO_DANGEROUSBOOK_MAJORMADNESS", -1.0, 0, S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507);
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_Event_GrantForbiddenKnowledge_a2a4d0f3-8859-4ce1-b694-cf0eebbb9d22, _Player, _)
+THEN
+SetTag(_Player, (TAG)FORBIDDENKNOWLEDGE_673cb6af-f12b-4d6e-abfa-1bb83cf4ce44);
+AddPassive(_Player,"CTY_NecromancyOfThay_ForbiddenKnowledge_Passive");
+
+IF
+DestroyedBy(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _, _, _)
+AND
+DB_Players(_Player)
+AND
+GetFlag((FLAG)FOR_DangerousBook_State_BookOwner_06022678-24ed-35af-de93-bd91abc02452, _Player, 1)
+THEN
+ClearFlag((FLAG)FOR_DangerousBook_State_BookOwner_06022678-24ed-35af-de93-bd91abc02452, _Player);
+ClearFlag((FLAG)FOR_DangerousBook_State_Bound_5e16d6fc-ae5c-cb6f-3a0f-4237593ee05e, NULL_00000000-0000-0000-0000-000000000000);
+
+//TODO: Add spell during the camp night instead for companions only
+IF
+DialogEnded(FOR_DangerousBook_Tome_696a8379-fa91-d800-7cb6-2f27e04dc100, _)
+AND
+DB_Players(_Owner)
+AND
+GetFlag((FLAG)FOR_DangerousBook_State_BookOwner_06022678-24ed-35af-de93-bd91abc02452, _Owner, 1)
+AND
+QRY_OnlyOnce("FOR_DangerousBook_RewardGiven")
+THEN
+AddSpell(_Owner, "Target_GLO_DangerousBook_SpeakWithDead", 1);
+
+// Custom GiveItem solution since we need to guarantee the item is given after the dialog has concluded
+IF
+DialogEnded(FOR_DangerousBook_Tome_696a8379-fa91-d800-7cb6-2f27e04dc100, _)
+AND
+DB_PartOfTheTeam(_Player)
+AND
+GetFlag(FOR_DangerousBook_Event_TakeBook_adedc17d-5320-8984-0e8d-0a8174b0d890, _Player, 1)
+THEN
+ToInventory(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player, 1, 1, 0);
+ClearFlag(FOR_DangerousBook_Event_TakeBook_adedc17d-5320-8984-0e8d-0a8174b0d890, _Player, 0);
+
+// Apply increasingly dangerous madness statuses based on how many times the character failed to read the book
+PROC
+PROC_FOR_DangerousBook_ApplyMadness((CHARACTER)_Player)
+AND
+GetFlag(FOR_DangerousBook_State_ModerateMadnessReceived_f691465a-d6a0-4fb1-82b5-44ff63bc8fe2, _Player, 1)
+THEN
+SetFlag(FOR_DangerousBook_Event_MajorMadness_610d3094-ac05-4c70-aa5e-40d20fe8406d, _Player, 0);
+
+PROC
+PROC_FOR_DangerousBook_ApplyMadness((CHARACTER)_Player)
+AND
+GetFlag(FOR_DangerousBook_State_MinorMadnessReceived_375617ca-1e18-30e0-b1e5-6584a785b064, _Player, 1)
+THEN
+SetFlag(FOR_DangerousBook_State_ModerateMadnessReceived_f691465a-d6a0-4fb1-82b5-44ff63bc8fe2, _Player, 0);
+
+PROC
+PROC_FOR_DangerousBook_ApplyMadness((CHARACTER)_Player)
+AND
+GetFlag(FOR_DangerousBook_State_MinorMadnessReceived_375617ca-1e18-30e0-b1e5-6584a785b064, _Player, 0)
+THEN
+SetFlag(FOR_DangerousBook_State_MinorMadnessReceived_375617ca-1e18-30e0-b1e5-6584a785b064, _Player, 0);
+
+//TODO: When we can lock items into a character's inventory increase approval rating when item given to specific companions
+//		Currently done through dialog options now
+//END_REGION
+
+//REGION Gem traveling if not picked
+IF
+Moved((ITEM)S_FOR_DangerousBook_Key_000_123c268d-ad0c-4df5-905b-a78dacbed80b)
+AND
+NOT DB_LOW_PhilgravesMansion_MovedGem(1)
+THEN
+DB_LOW_PhilgravesMansion_MovedGem(1);
+
+
+//END_REGION
+
+//REGION Journal Updates
+IF
+GameBookInterfaceClosed(S_FOR_DangerousBook_ThiefJournal_10ce12d4-1d42-48aa-b086-b698c964d377, _Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "InvestigateTome", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "FindCellar", 0)
+AND
+NOT QRY_FOR_Thayan_AlreadyVisitedLab(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "FindLab");
+
+QRY
+QRY_FOR_Thayan_AlreadyVisitedLab((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "FindLab", 0)
+AND
+DB_GlobalFlag((FLAG)FOR_ThayanCellar_State_LabDiscovered_72e17f62-be19-4277-be42-01a6f62afbf3)
+THEN
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "FindLabAgain");
+
+IF
+FlagSet((FLAG)LOW_SorcerousSundries_Event_CypherRead_2dd1c3d5-53b1-4884-849d-b0b72d3602b0, _, _)
+AND
+QRY_OnlyOnce("FOR_DangerousBook_ReadyToUpdate_LastStep")
+THEN
+QuestUpdate("FOR_DangerousBook", "ReadNecromancyOfThay");
+
+IF
+DB_LevelLoadedOnce("CTY_Main_A")
+AND
+DB_QuestIsOpened("FOR_DangerousBook")
+THEN
+QuestSetCategory("FOR_DangerousBook","BaldursGate");
+PROC_FOR_DangerousBook_UpdateRegion();
+
+PROC
+PROC_FOR_DangerousBook_UpdateRegion()
+AND
+DB_GlobalFlag((FLAG)FOR_DangerousBook_State_BookFinished_489a23a0-758a-97bd-bd0c-d6b417c20af3)
+THEN
+QuestUpdate("FOR_DangerousBook", "ReachedCity");
+
+IF
+DB_GlobalFlag((FLAG)FOR_DangerousBook_State_BookFinished_489a23a0-758a-97bd-bd0c-d6b417c20af3)
+THEN
+DB_QuestDef_State_ConditionalFlag((FLAG)LOW_SorcerousSundries_State_TolnaWarnedBooksNotForSaleOnce_6c76ca24-9373-f3ec-0621-801a4b2d70a6,"FOR_DangerousBook", "FindBasement", 1, (FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0);
+DB_QuestDef_State_ConditionalFlag((FLAG)LOW_SorcerousSundries_State_GotVaultHint_e912c718-92e7-27bd-fd24-848e9d43f5dc,"FOR_DangerousBook", "FindBasement_Hint", 1, (FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0);
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_State_BookFinished_489a23a0-758a-97bd-bd0c-d6b417c20af3,_,_)
+AND
+DB_GlobalFlag((FLAG)LOW_SorcerousSundries_State_TolnaWarnedBooksNotForSaleOnce_6c76ca24-9373-f3ec-0621-801a4b2d70a6)
+AND
+DB_GlobalFlag((FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0)
+THEN
+QuestUpdate("FOR_DangerousBook", "FindBasement");
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_State_BookFinished_489a23a0-758a-97bd-bd0c-d6b417c20af3,_,_)
+AND
+DB_GlobalFlag((FLAG)LOW_SorcerousSundries_State_GotVaultHint_e912c718-92e7-27bd-fd24-848e9d43f5dc)
+AND
+DB_GlobalFlag((FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0)
+THEN
+QuestUpdate("FOR_DangerousBook", "FindBasement_Hint");
+
+IF
+FlagSet(FOR_DangerousBook_State_HasTome_4a6e2b36-8bcc-a067-6d1c-51c5cba542d3, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "InvestigateTome");
+
+IF
+FlagSet((FLAG)LOW_SorcerousSundries_State_TolnaWarnedBooksNotForSaleOnce_6c76ca24-9373-f3ec-0621-801a4b2d70a6,_,_)
+THEN
+PROC_TriggerRegisterForPlayers((TRIGGER)S_FOR_DangerousBook_SorcSundriesBasementTrigger_a4fc3ecc-3e6e-4a02-b0e8-2b629911122e);
+
+IF
+EnteredTrigger(_Player,(TRIGGER)S_FOR_DangerousBook_SorcSundriesBasementTrigger_a4fc3ecc-3e6e-4a02-b0e8-2b629911122e)
+AND
+DB_GlobalFlag((FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0)
+THEN
+PROC_TriggerUnregisterForPlayers((TRIGGER)S_FOR_DangerousBook_SorcSundriesBasementTrigger_a4fc3ecc-3e6e-4a02-b0e8-2b629911122e);
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "FindTharchiate");
+
+IF
+FlagSet((FLAG)LOW_SorcerousSundries_State_HasTharchiate_79067d89-0cb1-47cf-a746-cc265948b527,_Player,_)
+AND
+DB_GlobalFlag((FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_SorcerousSundries_Event_CypherRead_2dd1c3d5-53b1-4884-849d-b0b72d3602b0)
+AND
+QRY_OnlyOnce("FOR_DangerousBook_ReadyToUpdate_ReadTharchiate")
+THEN
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "ReadTharchiateCodex");
+
+IF
+FlagSet((FLAG)FOR_DangerousBook_Knows_TharchiateIsKey_7076b4da-9242-46d6-960d-793c820595b0,_,_)
+AND
+NOT DB_GlobalFlag((FLAG)LOW_SorcerousSundries_Event_CypherRead_2dd1c3d5-53b1-4884-849d-b0b72d3602b0)
+AND
+DB_Players(_Player)
+AND
+GetFlag(LOW_SorcerousSundries_State_HasTharchiate_79067d89-0cb1-47cf-a746-cc265948b527,_Player,1)
+AND
+QRY_OnlyOnce("FOR_DangerousBook_ReadyToUpdate_ReadTharchiate")
+THEN
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "ReadTharchiateCodex");
+
+IF
+GameBookInterfaceClosed(S_FOR_Thayan_ApothecaryLedger_551bb6db-470a-42ba-88e1-c5f628d08c9b, _Player)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "InvestigateTome", 0)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "FindLab", 0)
+AND
+NOT QRY_FOR_Thayan_AlreadyVisitedCellar(_Player)
+THEN
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "FindCellar");
+
+QRY
+QRY_FOR_Thayan_AlreadyVisitedCellar((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "FindCellar", 0)
+AND
+DB_GlobalFlag((FLAG)FOR_ThayanCellar_State_CellarDiscovered_308aa3f8-f4f2-4c48-88e9-59d36b1778e8)
+THEN
+QuestUpdate((CHARACTER)_Player, "FOR_DangerousBook", "FindCellarAgain");
+
+IF
+GameBookInterfaceClosed(_Book, _Player)
+AND
+DB_FOR_DangerousBook_ReadableMentionsTome(_Book)
+AND
+DB_Players((CHARACTER)_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "InvestigateTome", 0)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "FindTome");
+
+IF
+DB_InRegion(_Player, (TRIGGER)S_FOR_ThayanCellar_DangerZone_5978a2ae-581a-4063-a953-f0713aca5bbe)
+AND
+DB_Players(_Player)
+THEN
+SetFlag((FLAG)FOR_ThayanCellar_State_CellarDiscovered_308aa3f8-f4f2-4c48-88e9-59d36b1778e8);
+
+IF
+DB_InRegion(_Player, (TRIGGER)S_FOR_ThayanCellar_DangerZone_5978a2ae-581a-4063-a953-f0713aca5bbe)
+AND
+DB_Players(_Player)
+AND
+QuestIsAccepted(_Player, "FOR_DangerousBook", 1)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "SearchLabAfterJournal");
+
+IF
+GameBookInterfaceClosed(S_FOR_ThayanCellar_ParanoidJournal_faab6ead-14bc-449f-b24f-f1459ffd0692, _Player)
+AND
+DB_Players(_Player)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "KeyInCave", 0)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "KeyLost");
+
+IF
+GameBookInterfaceClosed(S_FOR_DangerousBook_ThiefJournal_10ce12d4-1d42-48aa-b086-b698c964d377, _Player)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "KeyInCave");
+
+IF
+FlagSet(FOR_DangerousBook_State_HasTomeKey_49997188-93bc-a8cc-8808-d74efe9191d4, _Player, _)
+AND
+QuestUpdateIsUnlocked((CHARACTER)_Player, "FOR_DangerousBook", "FindKey", 1)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "UnlockTome");
+
+IF
+QuestUpdateUnlocked(_Player, "FOR_DangerousBook", "FindKey")
+AND
+GetFlag(FOR_DangerousBook_State_HasTomeKey_49997188-93bc-a8cc-8808-d74efe9191d4, _Player, 1)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "UnlockTome");
+
+IF
+QuestUpdateUnlocked(_Player, "FOR_DangerousBook", "InvestigateTome")
+AND
+DB_Players(_Player)
+AND
+IsTagged(_Player, (TAG)WIZARD_6fe3ae27-dc6c-4fc9-9245-710c790c396c, 1)
+AND
+QuestUpdateIsUnlocked(_Player, "FOR_DangerousBook", "MadnessKnowledge", 0)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "MadnessKnowledge");
+
+// Need to do quest closures in Osiris to guarantee subquests are closed before parent quest
+
+IF
+FlagSet(ORI_Gale_Event_ConsumeDangerousBook_96146522-830b-4489-8f38-6e3902e3bca5, _, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+SetFlag(FOR_DangerousBook_State_GaveBookAway_07636fe8-4d72-2adb-1327-5202c45d9a20, NULL_00000000-0000-0000-0000-000000000000, 0);
+
+
+IF
+FlagSet((FLAG)LOW_SorcerousSundries_Event_CursedTomeEffect_Necromancy_f1ff24df-f882-40d0-b8c5-6d0c88178cd3, _Player, _)
+AND
+DB_Players((CHARACTER)_Player)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "LearnedSpell");
+QuestUpdate(_Player, "FOR_DangerousBook", "EvilTome_ReadBook");
+QuestUpdate(_Player, "FOR_DangerousBook", "FinishedTome");
+
+IF
+DestroyedBy(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _, _, _)
+AND
+DB_Players(_Player)
+THEN
+QuestUpdate(_Player, "FOR_DangerousBook", "EvilTome_COMPLETE");
+QuestUpdate(_Player, "FOR_DangerousBook", "UseTome_Destroyed");
+QuestUpdate(_Player, "FOR_DangerousBook", "DestroyedTome");
+
+// Book has become unreachable
+PROC
+PROC_EntityBecameUnreachable((ITEM)S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _)
+THEN
+PROC_DangerousBook_JournalUpdateLeft();
+
+// Book key has become unreachable and book is still locked
+PROC
+PROC_EntityBecameUnreachable((ITEM)S_FOR_DangerousBook_Key_000_123c268d-ad0c-4df5-905b-a78dacbed80b, _)
+AND
+NOT DB_GlobalFlag((FLAG)FOR_DangerousBook_State_BookUnlocked_fd215551-a14c-8cfa-ba34-7ac32d1ada28)
+THEN
+PROC_DangerousBook_JournalUpdateLeft();
+
+PROC
+PROC_DangerousBook_JournalUpdateLeft()
+THEN
+QuestUpdate("FOR_DangerousBook", "EvilTome_LostTome");
+QuestUpdate("FOR_DangerousBook", "UseTome_LostTome");
+QuestUpdate("FOR_DangerousBook", "LostTome");
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("FOR_DangerousBook_GiveSwD")
+AND
+DB_Players(_Owner)
+THEN
+AddSpell(_Owner, "Target_GLO_DangerousBook_SpeakWithDead", 1, 0);
+
+IF
+TextEvent("FOR_DangerousBook_GiveKey")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_FOR_DangerousBook_Key_000_123c268d-ad0c-4df5-905b-a78dacbed80b, _Player);
+
+IF
+TextEvent("FOR_DangerousBook_GiveTome")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_FOR_DangerousBook_Tome_73ea8888-ed82-4ca5-b9f9-0c9119873507, _Player);
+
+IF
+TextEvent("FOR_DangerousBook_GiveJournal")
+AND
+GetHostCharacter(_Player)
+THEN
+ToInventory(S_FOR_ThayanJournal_9339e000-6be5-45c3-868d-7e686c7d2b69, _Player);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

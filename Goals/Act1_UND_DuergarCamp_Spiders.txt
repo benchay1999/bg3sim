@@ -1,0 +1,107 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_Dialogs(S_UND_DuergarLoyalPatroller_01_Spider_01_82f367a2-14c0-46cf-82d1-f070c87cf95a,S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,
+			S_UND_DuergarLoyalPatroller_01_Spider_03_e082c0b9-3566-46cb-b89d-4a4224aa7778,S_UND_DuergarLoyalPatroller_01_Spider_04_edb3513b-71e7-4115-bb37-e14de750f202,(DIALOGRESOURCE)UND_SpiderFight_FourWay_1343cf7d-7aa7-2b25-8b0c-e7295d7eb22e);
+
+
+DB_UND_DuergarSpiders((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_01_82f367a2-14c0-46cf-82d1-f070c87cf95a);
+DB_UND_DuergarSpiders((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53);
+DB_UND_DuergarSpiders((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_03_e082c0b9-3566-46cb-b89d-4a4224aa7778);
+DB_UND_DuergarSpiders((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_04_edb3513b-71e7-4115-bb37-e14de750f202);
+
+//REGION Spiders dying
+DB_UND_DuergarSpiderKilled_CrimeNoticed(0);
+//END_REGION
+KBSECTION
+IF
+DialogEnded(UND_SpiderFight_FourWay_1343cf7d-7aa7-2b25-8b0c-e7295d7eb22e,_ID)
+AND
+DB_GlobalFlag((FLAG)GLO_UND_SpiderFight_Aggro_c929e223-1daa-78f8-cbe8-689e331cf12a)
+THEN
+DB_Dialogs((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,(DIALOGRESOURCE)UND_SpiderFight_Spider02_4a55a387-4fb8-b16d-cf75-cd32d3521815);
+DB_Dialogs((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_03_e082c0b9-3566-46cb-b89d-4a4224aa7778,(DIALOGRESOURCE)UND_SpiderFight_Spider03_7b6305b6-4df6-1d17-f85c-1cc08a1e215a);
+DB_Dialogs((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_04_edb3513b-71e7-4115-bb37-e14de750f202,(DIALOGRESOURCE)UND_SpiderFight_Spider04_a0d1017c-4ac2-6e4c-66b2-c0a3e1d561c3);
+PROC_CharacterMoveTo(S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,S_UND_DuergarLoyalPatroller_01_Spider_01_82f367a2-14c0-46cf-82d1-f070c87cf95a,"Run","UND_DuergarSpider_AtTarget");
+
+IF
+EntityEvent(S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,"UND_DuergarSpider_AtTarget")
+THEN
+Attack(S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,S_UND_DuergarLoyalPatroller_01_Spider_01_82f367a2-14c0-46cf-82d1-f070c87cf95a,1);
+
+IF
+AttackedBy((CHARACTER)S_UND_DuergarLoyalPatroller_01_Spider_01_82f367a2-14c0-46cf-82d1-f070c87cf95a,S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,_,_,_,"Attack",_)
+THEN
+Die(S_UND_DuergarLoyalPatroller_01_Spider_01_82f367a2-14c0-46cf-82d1-f070c87cf95a,DEATHTYPE.DoT,S_UND_DuergarLoyalPatroller_01_Spider_02_14d465cd-4e32-415a-b321-282b797d5c53,0,1);
+
+IF
+DialogEnded(UND_SpiderFight_FourWay_1343cf7d-7aa7-2b25-8b0c-e7295d7eb22e,_ID)
+AND
+DB_GlobalFlag((FLAG)GLO_UND_SpiderFight_SpidersLeave_c35dd327-908d-1ef0-be2f-bc9cbd65aea9)
+AND
+DB_UND_DuergarSpiders(_Spider)
+THEN
+PROC_PeacefulResolve(_Spider);
+PROC_DisappearOutOfSight(_Spider,"Run",1,"");
+
+//REGION Spiders dying
+//Note if a crime is registered attacking the spiders
+IF
+CrimeIsRegistered(_Spider, "Murder_Beast_HighPrio", _CrimeID, _,_,_,_,_)
+AND
+DB_UND_DuergarSpiders(_Spider)
+THEN
+DB_UND_SpiderDeath_CrimeID(_CrimeID);
+NOT DB_UND_DuergarSpiderKilled_CrimeNoticed(0);
+DB_UND_DuergarSpiderKilled_CrimeNoticed(1);
+
+//If the investigation is finished and the criminal isn't in combat (or about to be) then the spiders need to flee.
+PROC
+PROC_CRIME_Finished(_CrimeID)
+AND
+DB_UND_SpiderDeath_CrimeID(_CrimeID)
+AND
+CrimeGetCriminal(_CrimeID,1,_Criminal)
+AND
+NOT DB_Is_InCombat(_Criminal, _)
+AND
+NOT DB_EnterCombatRequested(_Criminal)
+AND
+DB_UND_DuergarSpiders(_Spider)
+THEN
+PROC_IfAliveDisappearOutOfSight(_Spider,"Run",1,"");
+
+//As a failsafe, if the spiders die for any reason, and in 1 second there is no crimereaction or combat, the living spiders should flee (unless the spider aggro flag is set, which means this is the expected death in the situation (or after, in which case it's not breaking anything)
+IF
+DB_PermaDefeated(_Spider)
+AND
+DB_UND_DuergarSpiders((CHARACTER)_Spider)
+AND
+NOT DB_GlobalFlag((FLAG)GLO_UND_SpiderFight_Aggro_c929e223-1daa-78f8-cbe8-689e331cf12a)
+THEN
+TimerLaunch("UND_SpidersFleeTimer", 1000);
+
+IF
+TimerFinished("UND_SpidersFleeTimer")
+AND
+DB_UND_DuergarSpiderKilled_CrimeNoticed(0)
+AND
+DB_UND_DuergarSpiders(_AllSpiders)
+AND
+NOT DB_Is_InCombat(_AllSpiders,_)
+THEN
+PROC_IfAliveDisappearOutOfSight(_AllSpiders,"Run",1,"");
+
+
+//New disappear out of sight Proc that ignores dead characters in the mix.
+PROC
+PROC_IfAliveDisappearOutOfSight((CHARACTER)_Character,(STRING)_Speed,(INTEGER)_Int,(STRING)_Event)
+AND
+NOT DB_PermaDefeated(_Character)
+THEN
+PROC_DisappearOutOfSight(_Character, _Speed, _Int, _Event);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Act1"

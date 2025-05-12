@@ -1,0 +1,351 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+// Generic DB helper to support head removal for NPCS:
+// 1) Handles when head can be removed or not (depending on the corpse state)
+// 2) Puts head in the inventory when interacted, oR
+// 3) (optional) starts a dialog where the head may be removed.
+//
+// Main DB to fill for the head removal support:
+// DB_GLO_HeadRemoval((CHARACTER)_CorpseCharacter, (CHARACTERROOT)_HeadlessRoot, (ITEM)_HeadItem);
+//
+// To start dialog where head can be removed:
+// DB_GLO_HeadRemoval_Dialog((CHARACTER)_CorpseCharacter, (DIALOGRESOURCE)_HeadRemovalDialog);
+// Note 1: Set GLO_HeadRemoval_Event_HeadToInventory_65952066-e8d5-4f06-a685-9997e3b7e918 
+//	on a node to transfer head item to the player
+// Note 2: Set GLO_HeadRemoval_Event_OpenLoot_8b69f29d-3757-496a-87e5-5ad391117229 
+//	on a node in the dialog where the player doesn-t pick the head or looting will be blocked
+// 
+// To block head removal dialog OR the head appearing in the inventory of the corpse (if the player is not on the quest, for example):
+// QRY_GLO_HeadRemoval_Block((CHARACTER)_CorpseCharacter)
+//
+// React to this being set when head can-t be accessed:
+// DB_GLO_HeadRemoval_HeadInaccessible((CHARACTER)_CorpseCharacter)
+//
+// Set this if character moving offstage should make their head inaccessible even if wasnt perma-defeated
+// DB_GLO_HeadRemoval_InaccessibleIfOffstage((CHARACTER)_CorpseCharacter)
+
+DB_OneTimeEventFlag((FLAG)GLO_HeadRemoval_Event_HeadToInventory_65952066-e8d5-4f06-a685-9997e3b7e918);
+
+NOT DB_GLO_HeadRemoval_InaccessibleIfOffstage((CHARACTER)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_HeadRemoval((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (CHARACTERROOT)NULL_00000000-0000-0000-0000-000000000000, (ITEM)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_HeadRemoval_Dialog((CHARACTER)NULL_00000000-0000-0000-0000-000000000000, (DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000);
+
+// These block head removal dialog and does not allow to pick up head from the inventory (since there's no head left in such a case):
+DB_GLO_HeadRemoval_RestrictedDeathType("Explode");
+DB_GLO_HeadRemoval_RestrictedDeathType("Chasm");
+DB_GLO_HeadRemoval_RestrictedDeathType("Disintegrate");
+
+// Being on an ai grid with these surfaces blocks head removal:
+DB_GLO_HeadRemoval_RestrictedSurfaces("SurfaceLava");
+DB_GLO_HeadRemoval_RestrictedSurfaces("SurfaceChasm");
+KBSECTION
+IF
+DB_GLO_HeadRemoval(_Character, _, _HeadItem)
+THEN
+PROC_SetOnStage(_HeadItem, 0);
+
+// Corpse queries
+QRY
+QRY_GLO_HeadRemoval_CanRemoveHeadCinematic((CHARACTER)_Character)
+AND
+DB_Dead(_Character)
+AND
+DB_GLO_HeadRemoval_Dialog(_Character, _)
+AND
+IsFreshCorpse(_Character, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_HeadRemoval_CanRemoveHeadInventory((CHARACTER)_Character)
+AND
+DB_Dead(_Character)
+AND
+IsFreshCorpse(_Character, 1)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_HeadRemoval_CanRemoveHeadInventory((CHARACTER)_Character)
+AND
+DB_Dead(_Character)
+AND
+GetDeathType(_Character, _DeathType)
+AND
+NOT DB_GLO_HeadRemoval_RestrictedDeathType(_DeathType)
+AND
+GetSurfaceGroundAt(_Character, _Surface)
+AND
+NOT DB_GLO_HeadRemoval_RestrictedSurfaces(_Surface)
+THEN
+DB_NOOP(1);
+
+// Reacting to death right away 
+// Fallback if inaccessible:
+// - partially: puts the head in the inventory
+// - fully: triggers a DB that can be reacted, to block related quest from progression
+IF
+DB_Dead(_Character)
+AND
+DB_GLO_HeadRemoval(_Character, _, _HeadItem)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+AND
+NOT QRY_GLO_HeadRemoval_CanRemoveHeadCinematic(_Character) // dont need to put the head in the inventory if we have cinematic for it
+THEN
+PROC_GLO_HeadRemoval_TryPutHeadInventory(_Character, _HeadItem);
+
+IF
+DB_OffStage(_Character)
+AND
+DB_PermaDefeated(_Character)
+AND
+DB_GLO_HeadRemoval((CHARACTER)_Character, _,_)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked((CHARACTER)_Character)
+THEN
+DB_GLO_HeadRemoval_HeadInaccessible((CHARACTER)_Character);
+
+// special case if character left and we cant access them anymore
+IF
+DB_GLO_HeadRemoval_InaccessibleIfOffstage((CHARACTER)_Character)
+AND
+DB_OffStage(_Character)
+AND
+NOT DB_PermaDefeated(_Character)
+AND
+DB_GLO_HeadRemoval((CHARACTER)_Character, _,_)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked((CHARACTER)_Character)
+THEN
+DB_GLO_HeadRemoval_HeadInaccessible((CHARACTER)_Character);
+
+IF
+EnteredChasm(_Character, _,_,_,_,_)
+AND
+DB_GLO_HeadRemoval((CHARACTER)_Character, _,_)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked((CHARACTER)_Character)
+THEN
+DB_GLO_HeadRemoval_HeadInaccessible((CHARACTER)_Character);
+
+// Inventory
+// if corpse is inacessible, block the head right away
+PROC
+PROC_GLO_HeadRemoval_TryPutHeadInventory((CHARACTER)_Character, _)
+AND
+NOT QRY_GLO_HeadRemoval_CanRemoveHeadInventory(_Character)
+THEN
+DB_GLO_HeadRemoval_HeadInaccessible((CHARACTER)_Character);
+
+// this may pass if QRY_GLO_HeadRemoval_CanRemoveHeadInventory passed (otherwise it would be in the DB_GLO_HeadRemoval_HeadInaccessible already)
+PROC
+PROC_GLO_HeadRemoval_TryPutHeadInventory((CHARACTER)_Character, (ITEM)_HeadItem)
+AND
+NOT DB_GLO_HeadRemoval_HeadInaccessible(_Character)
+AND
+NOT QRY_GLO_HeadRemoval_Block(_Character)
+AND
+NOT QRY_GLO_HeadRemoval_HeadToInventory(_Character, _HeadItem)
+THEN
+DB_GLO_HeadRemoval_HeadInaccessible((CHARACTER)_Character);
+
+QRY
+QRY_GLO_HeadRemoval_HeadToInventory((CHARACTER)_Character, (ITEM)_HeadItem)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+AND
+NOT DB_GLO_HeadRemoval_HeadPutIntoInventory(_Character, _HeadItem)
+THEN
+DB_GLO_HeadRemoval_HeadPutIntoInventory(_Character, _HeadItem);
+PROC_ToInventoryAndOnStage(_HeadItem, _Character, 1, 0, 1);
+
+IF
+RemovedFrom(_HeadItem, _Character)
+AND
+DB_GLO_HeadRemoval((CHARACTER)_Character, _HeadlessRoot, (ITEM)_HeadItem)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+AND
+DB_GLO_HeadRemoval_HeadPutIntoInventory(_Character, _HeadItem)
+THEN
+NOT DB_GLO_HeadRemoval_HeadPutIntoInventory(_Character, _HeadItem);
+PROC_GLO_HeadRemoval_OnHeadPicked(_Character, _HeadlessRoot);
+
+// Transforming the corpse
+PROC
+PROC_GLO_HeadRemoval_OnHeadPicked((CHARACTER)_Character, (CHARACTERROOT)_HeadlessRoot)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+THEN
+DB_GLO_HeadRemoval_HeadPicked((CHARACTER)_Character);
+Transform(_Character, _HeadlessRoot, (SHAPESHIFTRULE)DeathCorpse_ac4a5946-00cb-464f-9389-e3ac9e8b7e26);
+SetTag(_Character, BLOCK_SPEAK_WITH_DEAD_70f9d685-b791-4ea2-88e4-fc8fc48b4234);
+CreateSurface(_Character, "SurfaceBlood", 1.0, -1.0);
+
+// deleting item if inaccessible (otherwise it can still be bicked up, incl. from the chasms)
+IF
+DB_GLO_HeadRemoval_HeadInaccessible(_Character)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+AND
+DB_GLO_HeadRemoval_HeadPutIntoInventory((CHARACTER)_Character, (ITEM)_HeadItem)
+THEN
+NOT DB_GLO_HeadRemoval_HeadPutIntoInventory(_Character, _HeadItem);
+RequestDelete(_HeadItem);
+
+// Interacting with the corpse starts dialog (or puts a head in the inventory if hasn-t already)
+PROC
+PROC_BlockLootCorpse(_Player, _Character)
+AND
+DB_Dead(_Character)
+AND
+DB_GLO_HeadRemoval(_Character, _, _HeadItem)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+AND
+NOT DB_GLO_HeadRemoval_HeadPutIntoInventory(_Character,_)
+AND
+NOT DB_GLO_HeadRemoval_HeadPicked(_Character)
+AND
+NOT DB_GLO_HeadRemoval_HeadInaccessible(_Character)
+AND
+NOT DB_GLO_HeadRemoval_OpenLootAfterDialog(_, _Player, _Character)
+AND
+NOT QRY_GLO_HeadRemoval_TryStartDialog(_Character, _Player)
+THEN
+PROC_GLO_HeadRemoval_TryPutHeadInventory(_Character, _HeadItem);
+
+QRY
+QRY_GLO_HeadRemoval_TryStartDialog((CHARACTER)_Character, (CHARACTER)_Player)
+AND
+DB_GLO_HeadRemoval_Dialog(_Character, _Dialog)
+AND
+NOT QRY_GLO_HeadRemoval_Block(_Character)
+AND
+QRY_GLO_HeadRemoval_CanRemoveHeadCinematic(_Character)
+AND
+NOT QRY_GLO_HeadRemoval_OverrideDialogInCombat(_Player, _Character)
+AND
+NOT QRY_GLO_HeadRemoval_OverrideDialogCantAct(_Player, _Character)
+AND
+IsInInventory(_Character, 0) // Timeline stucks otherwise
+AND
+QRY_StartDialogCustom_Fixed(_Dialog, _Character, _Player, 0, 0, 1, 0)
+THEN
+DB_CustomLootCorpseResponse(_Player, _Character, 0);
+
+QRY
+QRY_GLO_HeadRemoval_OverrideDialogInCombat((CHARACTER)_Player, (CHARACTER)_Corpse)
+AND
+DB_Is_InCombat(_Player,_)
+AND
+NOT QRY_TemporarilyMuted(_Player)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_Combat_964ad41a-9386-d74d-bbbb-0768d248b188, _Player);
+DB_CustomLootCorpseResponse(_Player, _Corpse, 0);
+
+QRY
+QRY_GLO_HeadRemoval_OverrideDialogCantAct((CHARACTER)_Player, (CHARACTER)_Corpse)
+AND
+DB_CantAct(_Player)
+AND
+NOT QRY_TemporarilyMuted(_Player)
+THEN
+PROC_TryStartAD((DIALOGRESOURCE)GLO_AD_CannotUseNow_057cb7cf-5aa4-1ed7-9639-65530939b2f9, _Player);
+DB_CustomLootCorpseResponse(_Player, _Corpse, 0);
+
+// transferring item in the dialog
+IF
+DB_GLO_HeadRemoval_Dialog(_CorpseCharacter, _HeadRemovalDialog)
+AND
+DB_GLO_HeadRemoval(_CorpseCharacter, _,_)
+THEN
+DB_FlagReactionAfterDialog(GLO_HeadRemoval_Event_HeadToInventory_65952066-e8d5-4f06-a685-9997e3b7e918, _HeadRemovalDialog);
+
+// The moment the flag is set block any kind of resurrection, don't wait for the dialog to end.
+IF
+FlagSet((FLAG)GLO_HeadRemoval_Event_HeadToInventory_65952066-e8d5-4f06-a685-9997e3b7e918, _, _DialogID)
+AND
+DB_DialogName(_HeadRemovalDialog, _DialogID)
+AND
+DB_GLO_HeadRemoval_Dialog(_CorpseCharacter, _HeadRemovalDialog)
+THEN
+SetTag(_CorpseCharacter, BLOCK_RESURRECTION_22a75dbb-1588-407e-b559-5aa4e6d4e6a6);
+
+PROC
+PROC_FlagReactionAfterDialog(_Player, GLO_HeadRemoval_Event_HeadToInventory_65952066-e8d5-4f06-a685-9997e3b7e918, _HeadRemovalDialog)
+AND
+DB_GLO_HeadRemoval_Dialog(_CorpseCharacter, _HeadRemovalDialog)
+AND
+DB_GLO_HeadRemoval(_CorpseCharacter, _HeadlessRoot, _HeadItem)
+AND
+IsDead(_CorpseCharacter, 1)
+THEN
+PROC_ToInventoryAndOnStage(_HeadItem, _Player, 1, 1, 1);
+PROC_GLO_HeadRemoval_OnHeadPicked(_CorpseCharacter, _HeadlessRoot);
+
+// opening inventory for looting instead of removing head
+IF
+FlagSet(GLO_HeadRemoval_Event_OpenLoot_8b69f29d-3757-496a-87e5-5ad391117229, _Corpse, _ID)
+AND
+DB_DialogPlayers(_ID, _Player, 1)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+DB_GLO_HeadRemoval_Dialog((CHARACTER)_Corpse, _Dialog)
+THEN
+DB_GLO_HeadRemoval_OpenLootAfterDialog((DIALOGRESOURCE)_Dialog, (CHARACTER)_Player, (CHARACTER)_Corpse);
+
+IF
+FlagSet(GLO_HeadRemoval_Event_OpenLoot_8b69f29d-3757-496a-87e5-5ad391117229, _Corpse, _ID)
+THEN
+ClearFlag((FLAG)GLO_HeadRemoval_Event_OpenLoot_8b69f29d-3757-496a-87e5-5ad391117229, _Corpse, _ID);
+
+IF
+DialogEnded(_,_ID)
+AND
+DB_DialogName(_Dialog, _ID)
+AND
+DB_GLO_HeadRemoval_OpenLootAfterDialog(_Dialog, _Player, _Corpse)
+AND
+OpenCharacterLootUI((CHARACTER)_Player,(CHARACTER)_Corpse,_) // this triggers PROC_BlockLootCorpse
+THEN
+DB_NOOP(1);
+
+IF
+CharacterLootedCharacter((CHARACTER)_Player, (CHARACTER)_Corpse)
+AND
+DB_GLO_HeadRemoval_OpenLootAfterDialog(_Dialog, _Player, _Corpse)
+THEN
+NOT DB_GLO_HeadRemoval_OpenLootAfterDialog(_Dialog, _Player, _Corpse);
+
+// blocking trade/attack buttons
+IF
+DB_GLO_HeadRemoval_Dialog(_CorpseCharacter, _HeadRemovalDialog)
+THEN
+DB_DialogBlockTradeButton(_HeadRemovalDialog);
+DB_DialogBlockAttackButton(_HeadRemovalDialog);
+
+// Override this for your custom purposes
+QRY
+QRY_GLO_HeadRemoval_Block((CHARACTER)_Character)
+AND
+1 == 2
+THEN
+DB_NOOP(1);
+
+// If the character was resurrected while the dialog was in progress stop it.
+IF
+Resurrected(_Char)
+AND
+DB_GLO_HeadRemoval_Dialog(_Char, _HeadRemovalDialog)
+AND
+DB_DialogName(_HeadRemovalDialog, _)
+THEN
+PROC_ForceStopDialog(_Char);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

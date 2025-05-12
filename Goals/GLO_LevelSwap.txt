@@ -1,0 +1,351 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_GLO_LevelSwap_Dialog((DIALOGRESOURCE)NULL_00000000-0000-0000-0000-000000000000, (FLAG)NULL_00000000-0000-0000-0000-000000000000, "");
+NOT DB_GLO_LevelSwap_Teleporter((ITEM)NULL_00000000-0000-0000-0000-000000000000, "");
+
+// ReadyCheckID, Teleporter, Movie, TranslationID, RecommendedLevel, TranslationID_LowLevelVariant, DestinationLevel
+// By default we show TranslationID message, but if the level is too low we change it to TranslationID_LowLevel Variant
+// Set RecommendedLevel to 1 for transitions to previous regions to avoid bothering the players with "Low Level" messages for regions they have already visited
+NOT DB_GLO_LevelSwap_Location("", (TRIGGER)NULL_00000000-0000-0000-0000-000000000000, "", "", 0, "", "");
+KBSECTION
+//REGION Ready checks from dialogs and items (teleporters like cave entrances etc)
+IF
+DialogEnded(_Dialog, _Inst)
+AND
+DB_GLO_LevelSwap_Dialog(_Dialog, _LevelSwapFlag, _ReadyCheckID)
+AND
+DB_DialogPlayers(_Inst, _Player,_)
+AND
+_LevelSwapFlag != NULL_00000000-0000-0000-0000-000000000000
+AND
+GetFlag(_LevelSwapFlag, _Player, 1)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _, _, _ReadyCheckTranslationID, _, _, _)
+THEN
+ClearFlag(_LevelSwapFlag, _Player);
+PROC_GLO_LevelSwapCheckPartyAvailableAndProceed(_ReadyCheckID, (CHARACTER)_Player);
+
+PROC
+PROC_BlockUseOfItem(_Player, _Teleporter)
+AND
+DB_GLO_LevelSwap_Teleporter(_Teleporter, _ReadyCheckID)
+AND
+DB_Is_InCombat(_Player,_)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+DB_CustomUseItemResponse(_Player, _Teleporter, 0);
+
+IF
+UseFinished(_Player,_Teleporter,1)
+AND
+DB_GLO_LevelSwap_Teleporter(_Teleporter, _ReadyCheckID)
+AND
+NOT DB_Is_InCombat(_Player,_)
+AND
+NOT QRY_GLO_LevelSwap_BlockTeleport(_Player,_Teleporter)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _, _, _, _, _, _)
+THEN
+PROC_GLO_LevelSwapCheckPartyAvailableAndProceed(_ReadyCheckID, (CHARACTER)_Player);
+
+QRY
+QRY_GLO_LevelSwap_BlockTeleport((CHARACTER)_Player,(ITEM)_Teleporter)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Check party availability
+PROC
+PROC_GLO_LevelSwapCheckPartyAvailableAndProceed((STRING)_ReadyCheckID, (CHARACTER)_Player)
+AND
+NOT QRY_GLO_LevelSwap_IsPartyUnavailable(_Player)
+THEN
+PROC_GLO_LevelSwapCheckCustomReadyCheckAndProceed(_ReadyCheckID, _Player);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyUnavailable((CHARACTER)_CheckOriginator)
+AND
+QRY_GLO_LevelSwap_IsPartyUnavailable((CHARACTER)_CheckOriginator,0)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyUnavailable((CHARACTER)_CheckOriginator,(INTEGER)_IncludeDefeatedCheck)
+AND
+DB_PartyMembers(_Character)
+AND
+Exists(_Character, 1) //Nonexistent characters should not block level swapping.
+AND
+NOT DB_GLO_LevelSwap_PartyUnavailable(1) //to break out of party member loop/not check further party members
+AND
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable(_Character,_IncludeDefeatedCheck)
+THEN
+DB_GLO_LevelSwap_PartyUnavailable(1);
+PROC_GLO_LevelSwap_NotifyPartyUnavailable(_Character, _CheckOriginator);
+
+PROC
+PROC_GLO_LevelSwap_NotifyPartyUnavailable((CHARACTER)_Character, (CHARACTER)_CheckOriginator)
+AND
+_Character == _CheckOriginator
+THEN
+OpenMessageBox(_CheckOriginator, "ReadyCheck_YouAreNotReady");
+
+PROC
+PROC_GLO_LevelSwap_NotifyPartyUnavailable((CHARACTER)_Character, (CHARACTER)_CheckOriginator)
+AND
+_Character != _CheckOriginator
+AND
+QRY_SameUser(_Character, _CheckOriginator)
+THEN
+OpenMessageBox(_CheckOriginator, "ReadyCheck_PartyMemberNotReady");
+
+PROC
+PROC_GLO_LevelSwap_NotifyPartyUnavailable((CHARACTER)_Character, (CHARACTER)_CheckOriginator)
+AND
+_Character != _CheckOriginator
+AND
+NOT QRY_SameUser(_Character, _CheckOriginator)
+THEN
+OpenMessageBox(_Character, "ReadyCheck_YouAreNotReady");
+OpenMessageBox(_CheckOriginator, "ReadyCheck_PartyMemberNotReady");
+
+QRY
+QRY_GLO_LevelSwap_IsPartyUnavailable((CHARACTER)_Player,(INTEGER)_)
+AND
+DB_GLO_LevelSwap_PartyUnavailable(1)
+THEN
+NOT DB_GLO_LevelSwap_PartyUnavailable(1);
+
+
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character)
+AND
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,0)
+THEN
+DB_NOOP(1);
+
+//Unavailable because party member is in (non-levelswap) dialog
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_InteractiveDialogSpeaker(_DialogId,_Character)
+AND
+DB_DialogName(_Dialog,_DialogId)
+AND
+NOT DB_GLO_LevelSwap_Dialog(_Dialog,_,_)
+THEN
+DB_NOOP(1);
+
+//Unavailable because party member is in combat
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_Is_InCombat(_Character,_)
+THEN
+DB_NOOP(1);
+
+//Unavailable because party member is downed
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_Downed(_Character)
+THEN
+DB_NOOP(1);
+
+//Unavailable because party member can't fast travel
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_InDangerZone(_Character,_)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_CantMove_IgnoreDialog(_Character)
+AND
+NOT DB_Dead(_Character)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_FastTravelBlock_Arrested_StatusSet(_Character)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_FastTravelBlock_BlockedZone_StatusSet(_Character)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,(INTEGER)_)
+AND
+DB_FastTravelBlock_FugitiveInPrison_StatusSet(_Character, _FugitiveStatus)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_IsPartyMemberUnavailable((CHARACTER)_Character,1)
+AND
+DB_Defeated(_Character)
+THEN
+DB_NOOP(1);
+
+//END_REGION
+
+//REGION Custom Ready Check
+PROC
+PROC_GLO_LevelSwapCheckCustomReadyCheckAndProceed((STRING)_ReadyCheckID, (CHARACTER)_Player)
+AND
+NOT QRY_GLO_LevelSwapCheckCustomReadyCheckAndProceed(_ReadyCheckID, (CHARACTER)_Player)
+THEN
+PROC_RegionSwapReadyCheck(_Player, _ReadyCheckID, 0);
+
+QRY
+QRY_GLO_LevelSwapCheckCustomReadyCheckAndProceed((STRING)_ReadyCheckID, (CHARACTER)_Player)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+//END_REGION
+
+//REGION Region Swap
+// Waypoint Travel - this means the player has already visited the level and unlocked a waypoint there
+// no point in asking the player about their low level or anything else
+PROC
+PROC_RegionSwapReadyCheck((CHARACTER)_Player, "WaypointTravel_RegionSwap", _Force)
+THEN
+DB_GLO_LevelSwap_ReadyCheck(_Player, "WaypointTravel_RegionSwap");
+ReadyCheckGlobal("WaypointTravel_RegionSwap", "GLO_Waypoint_Regionswap", _Force, (CHARACTER)_Player);
+
+// otherwise we need to either display the default message about leaving the region or its LowLevel variant
+// in addition we allow custom handling (in case we want to do additional checks / provide custom messages etc)
+PROC
+PROC_RegionSwapReadyCheck((CHARACTER)_Player, (STRING)_ReadyCheckID, _Force)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _, _, _, _RecommendedPlayerLevel, _ReadyCheckTranslationID_LowLevelVariant,_DestinationLevel)
+AND
+DB_LevelLoadedOnce(_DestinationLevel)
+THEN
+DB_GLO_LevelSwap_ReadyCheck(_Player, _ReadyCheckID);
+ReadyCheckGlobal(_ReadyCheckID, "GLO_Waypoint_Regionswap", _Force, (CHARACTER)_Player);
+
+PROC
+PROC_RegionSwapReadyCheck((CHARACTER)_Player, (STRING)_ReadyCheckID, _Force)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _, _, _, _RecommendedPlayerLevel, _ReadyCheckTranslationID_LowLevelVariant,_DestinationLevel)
+AND
+NOT DB_LevelLoadedOnce(_DestinationLevel)
+AND
+QRY_LevelSwap_PlayerLevelIsTooLow(_Player, _RecommendedPlayerLevel)
+THEN
+DB_GLO_LevelSwap_ReadyCheck(_Player, _ReadyCheckID);
+ReadyCheckGlobal(_ReadyCheckID, _ReadyCheckTranslationID_LowLevelVariant, _Force, (CHARACTER)_Player);
+
+PROC
+PROC_RegionSwapReadyCheck((CHARACTER)_Player, (STRING)_ReadyCheckID, _Force)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _, _, _ReadyCheckTranslationID, _RecommendedPlayerLevel, _,_DestinationLevel)
+AND
+NOT DB_LevelLoadedOnce(_DestinationLevel)
+AND
+NOT QRY_LevelSwap_PlayerLevelIsTooLow(_Player, _RecommendedPlayerLevel)
+THEN
+DB_GLO_LevelSwap_ReadyCheck(_Player, _ReadyCheckID);
+ReadyCheckGlobal(_ReadyCheckID, _ReadyCheckTranslationID, _Force, (CHARACTER)_Player);
+
+QRY
+QRY_LevelSwap_PlayerLevelIsTooLow((CHARACTER)_Player, (INTEGER)_RecommendedLevel)
+AND
+GetLevel(_Player, _PlayerLevel)
+AND
+_PlayerLevel < _RecommendedLevel
+THEN
+DB_NOOP(1);
+
+IF
+ReadyCheckPassed(_ReadyCheckID)
+AND
+DB_GLO_LevelSwap_ReadyCheck(_Player,_ReadyCheckID)
+THEN
+NOT DB_GLO_LevelSwap_ReadyCheck(_Player,_ReadyCheckID);
+PROC_RegionSwapReadyCheckPassed(_Player,_ReadyCheckID);
+
+IF
+ReadyCheckFailed(_ReadyCheckID)
+AND
+DB_GLO_LevelSwap_ReadyCheck(_Player,_ReadyCheckID)
+THEN
+NOT DB_GLO_LevelSwap_ReadyCheck(_Player,_ReadyCheckID);
+PROC_RegionSwapReadyCheckFailed(_Player,_ReadyCheckID);
+
+PROC
+PROC_RegionSwapReadyCheckPassed((CHARACTER)_Player, (STRING)_ReadyCheckID)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_RegionSwapReadyCheckFailed((CHARACTER)_Player, (STRING)_ReadyCheckID)
+THEN
+DB_NOOP(1);
+
+PROC
+PROC_RegionSwapReadyCheckPassed((CHARACTER)_Player, (STRING)_ReadyCheckID)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _, _, _, _, _, _)
+AND
+DB_CurrentLevel(_CurrentLevel)
+THEN
+PROC_GLO_LevelSwap_BlockSwap(_Player, _ReadyCheckID, _CurrentLevel);
+PROC_GLO_LevelSwap_CheckSwap(_Player, _ReadyCheckID, _CurrentLevel);
+
+PROC
+PROC_GLO_LevelSwap_BlockSwap((CHARACTER)_Player, (STRING)_ReadyCheckID, (STRING)_CurrentLevel)
+THEN
+DB_NOOP(1); // Fill 'DB_GLO_LevelSwap_Blocked(_CurrentLevel)' to block the swap and do your thing instead.
+
+PROC
+PROC_GLO_LevelSwap_CheckSwap((CHARACTER)_Player, (STRING)_ReadyCheckID, (STRING)_CurrentLevel)
+AND
+NOT DB_GLO_LevelSwap_Blocked(_CurrentLevel)
+AND
+NOT QRY_GLO_LevelSwap_CustomTransition((CHARACTER)_Player, (STRING)_ReadyCheckID, (STRING)_CurrentLevel)
+AND
+DB_GLO_LevelSwap_Location(_ReadyCheckID, _StartTrigger, _Movie, _, _, _, _)
+THEN
+PROC_GLO_LevelSwap_LeavingFromTo(_CurrentLevel, _ReadyCheckID);
+TeleportPartiesWithMovie(_StartTrigger, "", _Movie);
+
+PROC
+PROC_GLO_LevelSwap_CheckSwap((CHARACTER)_Player, (STRING)_ReadyCheckID, (STRING)_CurrentLevel)
+AND
+DB_GLO_LevelSwap_Blocked(_CurrentLevel)
+THEN
+NOT DB_GLO_LevelSwap_Blocked(_CurrentLevel);
+
+PROC
+PROC_GLO_LevelSwap_LeavingFromTo((STRING)_CurrentLevel, (STRING)_ReadyCheckID)
+THEN
+DB_NOOP(1);
+
+QRY
+QRY_GLO_LevelSwap_CustomTransition((CHARACTER)_Player, (STRING)_ReadyCheckID, (STRING)_CurrentLevel)
+AND
+1 == 0
+THEN
+DB_NOOP(1);
+
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

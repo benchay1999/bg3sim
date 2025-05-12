@@ -1,0 +1,89 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+NOT DB_GLO_RestorationStation((ITEM)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_RestorationStation_OneTimeUse((ITEM)NULL_00000000-0000-0000-0000-000000000000);
+NOT DB_GLO_RestorationStation_CustomDistance((ITEM)NULL_00000000-0000-0000-0000-000000000000,0.0);
+KBSECTION
+IF
+UseStarted(_Player, _Station)
+AND
+DB_GLO_RestorationStation(_Station)
+AND
+NOT DB_Is_InCombat(_Player,_)
+THEN
+PROC_GLO_RestorationStation_Activate(_Station,_Player);
+
+PROC
+PROC_GLO_RestorationStation_Activate((ITEM)_Station,(CHARACTER)_Player)
+AND
+DB_GLO_RestorationStation_CustomDistance(_Station,_Distance)
+THEN
+PROC_RestoreNearbyAvailableParty(_Player,_Distance);
+
+PROC
+PROC_GLO_RestorationStation_Activate((ITEM)_Station,(CHARACTER)_Player)
+AND
+NOT DB_GLO_RestorationStation_CustomDistance(_Station,_)
+THEN
+PROC_RestoreNearbyAvailableParty(_Player);
+
+PROC
+PROC_GLO_RestorationStation_Activate((ITEM)_Station,(CHARACTER)_Player)
+THEN
+PlaySound(_Station, "Spell_Passive_Cast_Healing_DiscipleOfLife_L1to3");
+PlayEffect(_Player, (EFFECTRESOURCE)VFX_Spells_Cast_Intent_Healing_ShoutAoE_Impact_Root_Textkey_01_27357584-12f2-6267-08c2-cbec69d3ef10);
+Transform(_Station,FUR_MF_Resting_Device_B_823a1b67-0a13-4508-ae67-88312ee386ea,(SHAPESHIFTRULE)Disguise_ceccc4eb-d774-4cd5-9147-12322b81b763);
+SetCanInteract(_Station,0);
+
+PROC
+PROC_GLO_RestorationStation_Activate((ITEM)_Station,(CHARACTER)_)
+AND
+NOT DB_GLO_RestorationStation_OneTimeUse(_Station)
+THEN
+ObjectTimerLaunch(_Station,"GLO_RestorationStation_Cooldown",5000);
+
+IF
+ObjectTimerFinished(_Station,"GLO_RestorationStation_Cooldown")
+THEN
+RemoveTransforms(_Station);
+SetCanInteract((ITEM)_Station,1);
+
+IF
+UseStarted(_Player, _Station)
+AND
+DB_GLO_RestorationStation(_Station)
+AND
+DB_Is_InCombat(_Player,_)
+AND
+NOT DB_DialogSpeakers(_,_Player,_)
+THEN
+PROC_PlayCantUseItemAD(_Player);
+
+PROC
+PROC_RestoreNearbyAvailableParty((CHARACTER)_Character,(REAL)_Distance)
+AND
+DB_PartyMembers(_PartyMember)
+AND
+NOT DB_Is_InCombat(_PartyMember,_)
+AND
+GetDistanceTo(_Character,_PartyMember,_Dist)
+AND
+_Dist <= _Distance
+THEN
+ApplyStatus(_PartyMember,"TUT_RESTORATION",0.0,1,NULL_00000000-0000-0000-0000-000000000000);
+
+IF
+StatusApplied(_Char, "TUT_RESTORATION", _, _)
+THEN
+PROC_CharacterFullRestore((CHARACTER)_Char);
+RemoveStatus(_Char, "TUT_RESTORATION", NULL_00000000-0000-0000-0000-000000000000);
+
+PROC
+PROC_RestoreNearbyAvailableParty((CHARACTER)_Character)
+THEN
+PROC_RestoreNearbyAvailableParty((CHARACTER)_Character,30.0);
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"

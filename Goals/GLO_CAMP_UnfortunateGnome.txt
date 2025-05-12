@@ -1,0 +1,92 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+DB_DialogMoneyTransfer(1, (DIALOGRESOURCE)CAMP_UnfortunateGnome_2ed77bf2-7ce7-00af-831b-035ee968f546, 100, 1);
+KBSECTION
+//REGION Move to Camp
+IF
+EntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"UND_UnfortunateGnome_RanAwayToCamp")
+THEN
+PROC_CAMP_UnfortunateGnome_MoveToCamp();
+
+PROC
+PROC_CAMP_UnfortunateGnome_MoveToCamp()
+THEN
+PROC_SetCustomTradeTreasure(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "FOR_UnfortunateGnomeTrader");
+SetFlag((FLAG)CAMP_UnfortunateGnome_State_MovedToCamp_0292e2c3-0717-4ac2-a99c-c3febfb76435, NULL_00000000-0000-0000-0000-000000000000, 0); // flagType: Global
+SetTag(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, (TAG)TRADER_91d5ebc6-91ea-44db-8a51-216860d69b5b);
+PROC_ORI_SetupCamp((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, 1);
+
+IF
+DB_InCamp(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976)
+THEN
+PROC_RemoveDialog(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976);
+DB_Dialogs(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, (DIALOGRESOURCE)CAMP_UnfortunateGnome_2ed77bf2-7ce7-00af-831b-035ee968f546);
+//END_REGION
+
+//REGION Grymforge Camp
+// When the player recruits Barcus they will likely rest in Grymforge
+// Reasonable to expect to see Barcus at the Grymforge mini-camp
+// When Barcus is recruited he can be found at the Grymforge camp
+// If the players leave Grymforge he is no longer available at the Grymforge camp
+
+IF
+EntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"UND_UnfortunateGnome_RanAwayToCamp")
+AND
+QRY_TriggerEvents_AnyPlayerInTrigger((TRIGGER)S_UND_KethericCity_SUB_eeb2e8d6-6c21-41d9-aef8-30b6f267a0a5)
+THEN
+DB_ORI_OriginCampData((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "WLDDUNSHA", (TRIGGER)S_CAMP_WLDDUNSHA_UnfortunateGnome_ba48e0c6-7395-4163-9f9f-d86ce918d574);
+
+
+IF
+LeftTrigger(_Player, S_UND_KethericCity_SUB_eeb2e8d6-6c21-41d9-aef8-30b6f267a0a5)
+AND
+DB_Players(_Player)
+AND
+DB_ORI_OriginCampData((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "WLDDUNSHA", (TRIGGER)S_CAMP_WLDDUNSHA_UnfortunateGnome_ba48e0c6-7395-4163-9f9f-d86ce918d574)
+AND
+NOT QRY_TriggerEvents_AnyPlayerInTrigger((TRIGGER)S_UND_KethericCity_SUB_eeb2e8d6-6c21-41d9-aef8-30b6f267a0a5)
+THEN
+NOT DB_ORI_OriginCampData((CHARACTER)S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "WLDDUNSHA", (TRIGGER)S_CAMP_WLDDUNSHA_UnfortunateGnome_ba48e0c6-7395-4163-9f9f-d86ce918d574);
+
+//END_REGION
+
+//REGION Debug
+IF
+TextEvent("CAMP_MoveGnomeToCamp")
+THEN
+PROC_CAMP_DEBUG_PrepGnomeForCamp();
+SetEntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"UND_UnfortunateGnome_RanAwayToCamp");
+
+IF
+EntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "DebugTeleportedToCamp")
+THEN
+PROC_CAMP_DEBUG_PrepGnomeForCamp();
+SetEntityEvent(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976,"UND_UnfortunateGnome_RanAwayToCamp");
+
+// Remove remaining old situation dialog logic
+// Done after arriving in camp to work around timing issues with FOR_UnfortunateGnome_Held goal ending
+IF
+DB_InCamp(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976)
+AND
+DB_CAMP_DEBUG_MovedGnomeWithDebug(1)
+THEN
+NOT DB_CAMP_DEBUG_MovedGnomeWithDebug(1);
+PROC_SpotPlayers_StopSpotting(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "FOR_UnfortunateGnome");
+
+// Make sure faction is correct and prep for arrival in campsite
+// Remove initial situation-specific logic
+// FEATHER_FALL applied to work around gnome being killed from fall damage after floating on the windmill
+PROC
+PROC_CAMP_DEBUG_PrepGnomeForCamp()
+THEN
+DB_CAMP_DEBUG_MovedGnomeWithDebug(1);
+RemoveStatus(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "FOR_TIEDTOWINDMILL");
+PROC_StopLoopEffect(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, "FOR_WindmillRopes");
+SetFaction(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976, (FACTION)ACT1_FOR_UnfortunateGnome_b07fe550-1c04-7fed-03d4-f6ea6ff836f1);
+PROC_ClearStoryMove(S_FOR_UnfortunateGnome_6e45a00b-bad2-40bb-9403-147b9e92d976);
+//END_REGION
+EXITSECTION
+
+ENDEXITSECTION
+ParentTargetEdge "Start"
