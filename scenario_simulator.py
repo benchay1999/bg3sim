@@ -467,7 +467,9 @@ class ScenarioSimulator:
              flat_session_dialog = session_dialog # Use original as fallback
 
         # Create a temporary JSON file for this session using the flattened dialog
-        temp_file = f"temp_{session_id}.json"
+        temp_file = f"temp/temp_{session_id}.json"
+        # Create temp directory if it doesn't exist
+        os.makedirs(os.path.dirname(temp_file), exist_ok=True)
         temp_data = {
             "metadata": {
                 "synopsis": self.metadata.get("individual_metadata", {}).get(session_id, {}).get("synopsis", ""),
@@ -752,7 +754,6 @@ class ScenarioSimulator:
             # Process approvals and flags
             simulator._process_approvals(current_node)
             simulator._process_setflags(current_node)
-            
             # Add to traversed nodes
             traversed_nodes.append({
                 "id": current_node_id,
@@ -995,7 +996,7 @@ class ScenarioSimulator:
 
         return node_data, final_flags
 
-    def simulate_single_traversal(self, initial_flags, min_utterances=3, prioritize_approval=True, include_all_sessions=True):
+    def simulate_single_traversal(self, initial_flags, min_utterances=3, prioritize_approval=True, include_all_sessions=True, debug_mode=False):
         """
         Simulates a single traversal through the scenario, respecting constraints,
         starting with initial flags, and returning the traversal data and final flags.
@@ -1025,17 +1026,23 @@ class ScenarioSimulator:
             prioritize_approval=prioritize_approval,
             include_all_sessions=include_all_sessions
         )
-
+        if debug_mode:
+            import pdb; pdb.set_trace()
         # Fallback if no sequences found with prioritization enabled
         if not valid_sequences and prioritize_approval:
             print(f"{Fore.YELLOW}No valid sequences found prioritizing approval. Retrying without...{Style.RESET_ALL}")
             valid_sequences = self._generate_valid_sequences(prioritize_approval=False, include_all_sessions=include_all_sessions)
 
-        if not valid_sequences:
-            print(f"{Fore.RED}No valid session sequences found for scenario {self.scenario_name}! Check constraints.{Style.RESET_ALL}")
+        # Filter out empty sequences before choosing
+        non_empty_sequences = [seq for seq in valid_sequences if seq]
+
+        if not non_empty_sequences:
+            print(f"{Fore.RED}No non-empty valid session sequences found for scenario {self.scenario_name}! Check constraints.{Style.RESET_ALL}")
             return None, initial_flags # Return None for data, initial flags unchanged
-        # Choose one valid sequence (e.g., the first/best one or random)
-        sequence = random.choice(valid_sequences)
+
+        # Choose one valid, non-empty sequence (e.g., the first/best one or random)
+        sequence = random.choice(non_empty_sequences)
+
         print(f"{Fore.CYAN}Using session sequence: {sequence}{Style.RESET_ALL}")
 
         # Initialize traversal data structure for this single run
@@ -1046,7 +1053,8 @@ class ScenarioSimulator:
             "node_data": {}, # Store node data from execution
             "session_synopses": {} # Add dictionary to store synopses
         }
-
+        if debug_mode:
+            import pdb; pdb.set_trace()
         # Initialize flags for this specific scenario run, starting with the input
         current_scenario_flags = initial_flags.copy()
 
@@ -1076,7 +1084,8 @@ class ScenarioSimulator:
             current_scenario_flags = session_final_flags
             # print(f"Session {session_id} finished. Updated flags: {current_scenario_flags}")
 
-
+        if debug_mode:
+            import pdb; pdb.set_trace()
         print(f"{Fore.GREEN}Single scenario traversal complete for {self.scenario_name}. Final flag count: {len(current_scenario_flags)}{Style.RESET_ALL}")
         return traversal_data, current_scenario_flags
 

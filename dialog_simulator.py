@@ -79,7 +79,6 @@ class DialogSimulator:
         # Track flags that have been set during playthrough
         self.default_flags = ["ORI_INCLUSION_GALE", "ORI_INCLUSION_ASTARION", "ORI_INCLUSION_LAEZEL", "ORI_INCLUSION_SHADOWHEART", "ORI_INCLUSION_WYLL", "ORI_INCLUSION_KARLACH", "ORI_INCLUSION_HALSIN", "ORI_INCLUSION_MINTHARA", "ORI_INCLUSION_MINSC", "ORI_INCLUSION_RANDOM"]
         self.active_flags = set(self.default_flags)
-        import pdb; pdb.set_trace()
     def set_initial_flags(self, flags):
         """Set the initial active flags for the simulator."""
         # Ensure flags is a set
@@ -158,45 +157,57 @@ class DialogSimulator:
         """Process flags that are set by a node"""
         # if setflags has a flag with " = False", remove it from the active flags
         for flag in node_data.get('setflags', []):
-            if flag not in self.entire_flags and flag not in self.entire_tags:
-                continue
-            if flag in self.entire_flags or flag.split('= False')[0].strip() in self.entire_flags or flag.split('= True')[0].strip() in self.entire_flags:
-                flag_type = self.entire_flags[flag]['usage']
+            
+            flag_ = flag.replace("= False", "").replace("= True", "").strip()
+            # TODO: somehow the flagnames in the lsj files are not always the same as the flagnames in the json files
+            #if flag_ not in self.entire_flags and flag_ not in self.entire_tags:
+            #    continue
+            if flag_ in self.entire_flags:
+                flag_type = self.entire_flags[flag_]['usage']
                 if flag_type.lower() not in ['global', 'dialog', 'user']:
                     continue
-            if flag in self.entire_tags:
-                if self.entire_tags[flag]['categories'].lower() not in ['story', 'dialog', 'dialoghidden']:
+            if flag_ in self.entire_tags:
+                if self.entire_tags[flag_]['categories'].lower() not in ['story', 'dialog', 'dialoghidden']:
                     continue
             if "= False" in flag:
                 try:
-                    self.active_flags.remove(flag.split('= False')[0].strip())
+                    self.active_flags.remove(flag_.strip())
                 except KeyError:
                     pass
             else:
-                self.active_flags.add(flag.strip())
-    
+                self.active_flags.add(flag_.strip())
     def _check_flags(self, node_data):
         """Check if required flags are met for a node"""
         # A simple implementation - in a real game this would be more complex
         # if checkflags is empty, return True
+        
         if not node_data.get('checkflags', []):
             return True
         # if checkflags has a flag with " = False", check whether it is not set.
         for flag in node_data.get('checkflags', []):
-            if flag not in self.entire_flags and flag not in self.entire_tags:
-                continue
-            if flag in self.entire_flags or flag.split('= False')[0].strip() in self.entire_flags or flag.split('= True')[0].strip() in self.entire_flags:
-                flag_type = self.entire_flags[flag]['usage']
+            flag_ = flag.replace("= False", "").replace("= True", "").strip()
+            
+            # TODO: somehow the flagnames in the lsj files are not always the same as the flagnames in the json files
+            #if flag_ not in self.entire_flags and flag_ not in self.entire_tags:
+            #    continue
+            if flag_ in self.entire_flags:
+                flag_type = self.entire_flags[flag_]['usage']
                 if flag_type.lower() not in ['global', 'dialog', 'user']:
                     continue
-            if flag in self.entire_tags:
-                if self.entire_tags[flag]['categories'].lower() not in ['story', 'dialog', 'dialoghidden']:
+            if flag_ in self.entire_tags:
+                tag_categories = self.entire_tags[flag_]['categories']
+                tag_category_flag = False
+                for tag_category in tag_categories:
+                    if tag_category.lower() in ['story', 'dialog', 'dialoghidden']:
+                        tag_category_flag = True
+                        break
+                if not tag_category_flag:
                     continue
             if "= False" in flag:
-                if flag.split('= False')[0].strip() in self.active_flags:
+                if flag_.strip() in self.active_flags:
                     return False
             else:
-                if flag.strip() not in self.active_flags:
+                if flag_.strip() not in self.active_flags:
                     return False
         return True
     
@@ -507,7 +518,6 @@ class DialogSimulator:
             # Process approvals and flags
             self._process_approvals(current_node)
             self._process_setflags(current_node)
-            
             # Check if this is an end node explicitly marked as is_end
             if current_node.get('is_end', False):
                 print(f"\n{Fore.RED}[End of dialog path - Explicit end node]{Style.RESET_ALL}")
@@ -1443,12 +1453,12 @@ def main():
     print(f"{Fore.BLUE}Export options: Save dialog paths to text and JSON files{Style.RESET_ALL}")
     
     # Check if dialog_tree.json exists
-    if not os.path.isfile('output/Act1/Chapel/CHA_Crypt_AD_JergalWandering.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
+    if not os.path.isfile('output/Act1/Crash/CRA_ShadowheartRecruitment_AD.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
         print(f"{Fore.RED}Error: dialog_tree.json not found.{Style.RESET_ALL}")
         print("Please run the parser script first to generate the dialog tree.")
         return
     
-    simulator = DialogSimulator('output/Act1/Chapel/CHA_Crypt_AD_JergalWandering.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
+    simulator = DialogSimulator('output/Act1/Crash/CRA_ShadowheartRecruitment_AD.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
     
     while True:
         print("\nSelect mode:")
@@ -1459,7 +1469,6 @@ def main():
         print("5. View companion approval history")
         print("6. Export approval history to JSON")
         print("7. Export paths to Python dictionary")
-        print(f"8. {Fore.MAGENTA}Visualize Dialog Structure (Graphviz){Style.RESET_ALL}") # New option
         print("0. Exit")
         
         try:
@@ -1703,41 +1712,7 @@ def main():
                         
                 except ValueError:
                     print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
-            elif choice == 8: # New case for visualization
-                if not GRAPHVIZ_AVAILABLE:
-                     print(f"{Fore.RED}Graphviz visualization is not available. Please install 'graphviz' and ensure the Graphviz software is in your PATH.{Style.RESET_ALL}")
-                     continue
-
-                print(f"\n{Fore.MAGENTA}--- Visualize Dialog Structure ---{Style.RESET_ALL}")
-                try:
-                    default_filename = f"visualizations/{simulator.metadata.get('synopsis','dialog').replace(' ', '_')}_structure"
-                    output_filename = input(f"Enter output base filename (e.g., visualizations/my_dialog_viz) [default: {default_filename}]: ")
-                    if not output_filename.strip():
-                        output_filename = default_filename
-
-                    start_node_id_input = input("Enter start node ID (leave blank to start from all roots): ")
-                    start_node_id = start_node_id_input.strip() if start_node_id_input.strip() else None
-
-                    max_depth_input = input("Enter maximum visualization depth [default: 10]: ")
-                    max_depth = int(max_depth_input) if max_depth_input.strip() else 10
-
-                    render_format_input = input("Enter output format (pdf, png, svg, etc.) [default: pdf]: ")
-                    render_format = render_format_input.strip().lower() if render_format_input.strip() else 'pdf'
-
-                    # Call the visualization function
-                    simulator.visualize_structure(
-                        output_filename=output_filename,
-                        start_node_id=start_node_id,
-                        max_depth=max_depth,
-                        render_format=render_format
-                    )
-
-                except ValueError:
-                    print(f"{Fore.RED}Invalid input (e.g., depth must be a number). Please try again.{Style.RESET_ALL}")
-                except Exception as e:
-                     print(f"{Fore.RED}An unexpected error occurred during visualization setup: {e}{Style.RESET_ALL}")
-            else:
-                print(f"{Fore.RED}Invalid choice. Try again.{Style.RESET_ALL}")
+        
         except ValueError:
             print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
 

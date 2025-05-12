@@ -44,7 +44,7 @@ class ActSimulator:
 
         # Special handling for Act1 order
         if self.act_id == "Act1":
-            fixed_prefix = ['Crash', 'Chapel', 'DEN']
+            fixed_prefix = ['Crash', 'Chapel', 'DEN', 'Forest', 'Plains', 'Swamp', 'HAG', 'HagLair',  'Goblin',  'Underdark']
             # Get the original list of all found chapter IDs
             all_found_chapters = self.chapter_ids # Keep a reference before modifying
 

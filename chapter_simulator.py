@@ -42,16 +42,17 @@ class ChapterSimulator:
 
         # Store act name for potential use
         self.act_name = act_name
-
         # No constraints defined by chapter directory structure
         self.metadata = {}
         self.ordering = []
         self.exclusivity = []
+        # TODO: This is a hack to get the order right for Tutorial act. Clean this up later.
         # Define specific order for Tutorial act
         if self.act_name == "Tutorial":
             self.ordering = ['tut_start', 'tut_lab', 'tut_misc', 'tut_lowerdeck', 'tut_helm', 'tut_lab', 'tut_transformchamber', 'tut_upperdeck']
             print(f"{Fore.BLUE}Detected Tutorial act. Applying specific scenario order.{Style.RESET_ALL}")
-
+        #if self.act_name == "Act1":
+        #    self.ordering = ['Crash', 'Chapel', 'DEN', 'Forest', 'Plains', 'Swamp', 'HAG', 'HagLair',  'Goblin',  'Underdark']
         self.scenario_ids = sorted([self._get_scenario_id_from_path(sf) for sf in self.scenario_files])
         self.scenario_path_map = {self._get_scenario_id_from_path(sf): sf for sf in self.scenario_files}
 
@@ -142,7 +143,6 @@ class ChapterSimulator:
         valid_scenario_sequences = self._generate_valid_scenario_sequences(
             include_all_scenarios=include_all_scenarios
         )
-
         if not valid_scenario_sequences:
             print(f"{Fore.RED}No valid scenario sequences found for this chapter. Check constraints.{Style.RESET_ALL}")
             return []
@@ -183,6 +183,7 @@ class ChapterSimulator:
 
             # --- SIMULATION LOOP ---
             for scenario_id in chosen_scenario_sequence:
+                
                 scenario_file_path = self.scenario_path_map.get(scenario_id)
                 if not scenario_file_path:
                     print(f"{Fore.RED}Error: Could not find file path for scenario ID '{scenario_id}'. Skipping.{Style.RESET_ALL}")
@@ -202,13 +203,14 @@ class ChapterSimulator:
 
                     # --- THIS IS THE KEY PART REQUIRING MODIFICATION ---
                     # We need a new method in ScenarioSimulator:
+
                     scenario_traversal_data, scenario_final_flags = scenario_sim.simulate_single_traversal(
                         initial_flags=current_chapter_flags,
                         min_utterances=min_utterances_per_session,
                         prioritize_approval=prioritize_approval,
                         include_all_sessions=include_all_sessions
                     )
-
+                    
                     # Placeholder until ScenarioSimulator is modified:
                     # print(f"{Fore.MAGENTA}    [Placeholder] Running scenario simulation for {scenario_id}...{Style.RESET_ALL}")
                     # Simulate scenario (using existing method for now, flags won't persist correctly yet)
