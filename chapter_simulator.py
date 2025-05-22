@@ -117,7 +117,7 @@ class ChapterSimulator:
 
 
     def simulate_chapter(self, num_traversals=1, export_txt=False, export_json=False,
-                         min_utterances_per_session=3, prioritize_approval=True,
+                         prioritize_approval=True,
                          include_all_scenarios=True, include_all_sessions=True,
                          initial_flags_set=None):
         """
@@ -127,7 +127,6 @@ class ChapterSimulator:
             num_traversals (int): Number of chapter traversals to generate.
             export_txt (bool): Export each chapter traversal to a text file.
             export_json (bool): Export each chapter traversal to a JSON file.
-            min_utterances_per_session (int): Min utterances for sessions within scenarios.
             prioritize_approval (bool): Prioritize approval paths within scenarios/sessions.
             include_all_scenarios (bool): Try to include all non-exclusive scenarios.
             include_all_sessions (bool): Try to include all non-exclusive sessions within scenarios.
@@ -201,58 +200,34 @@ class ChapterSimulator:
                 try:
                     scenario_sim = ScenarioSimulator(scenario_file_path)
 
-                    # --- THIS IS THE KEY PART REQUIRING MODIFICATION ---
                     # We need a new method in ScenarioSimulator:
-
-                    scenario_traversal_data, scenario_final_flags = scenario_sim.simulate_single_traversal(
-                        initial_flags=current_chapter_flags,
-                        min_utterances=min_utterances_per_session,
+                    # The call should be to scenario_sim.simulate_scenario, which now returns a list of (traversal_dict, final_flags) tuples.
+                    # Each tuple represents one full path combination through one of the scenario's internal session sequences.
+                    
+                    # scenario_sim.simulate_scenario arguments are:
+                    # num_traversals, export_txt, export_json, prioritize_approval, include_all_sessions
+                    scenario_path_combinations = scenario_sim.simulate_scenario(
+                        num_traversals=1, 
+                        export_txt=False, 
+                        export_json=False,
                         prioritize_approval=prioritize_approval,
                         include_all_sessions=include_all_sessions
                     )
-                    
-                    # Placeholder until ScenarioSimulator is modified:
-                    # print(f"{Fore.MAGENTA}    [Placeholder] Running scenario simulation for {scenario_id}...{Style.RESET_ALL}")
-                    # Simulate scenario (using existing method for now, flags won't persist correctly yet)
-                    # temp_traversals = scenario_sim.simulate_scenario(
-                    #     num_traversals=1, # Simulate just one path through the scenario
-                    #     export_txt=False, # Disable internal export
-                    #     export_json=False,
-                    #     min_utterances=min_utterances_per_session,
-                    #     prioritize_approval=prioritize_approval,
-                    #     include_all_sessions=include_all_sessions
-                    # )
 
-                    # Check if the scenario simulation was successful
-                    if scenario_traversal_data is None:
-                        print(f"{Fore.YELLOW}    Scenario '{scenario_id}' produced no valid traversal. Flags not updated.{Style.RESET_ALL}")
-                        # Store an indicator that this scenario failed/was skipped in results
-                        chapter_run_data["scenario_results"][scenario_id] = {"status": "skipped_no_valid_path"}
-                        # Keep current flags for the next scenario
-                        scenario_final_flags = current_chapter_flags
-                        # We still need to update current_chapter_flags at the end of the loop iteration
-                        # continue # Optional: Decide if skipping means truly no flag update. Let's assume flags pass through.
+                    if not scenario_path_combinations:
+                        print(f"{Fore.YELLOW}    Scenario '{scenario_id}' produced no valid path combinations. Flags not updated.{Style.RESET_ALL}")
+                        chapter_run_data["scenario_results"][scenario_id] = {"status": "skipped_no_valid_path_combinations"}
+                        # current_chapter_flags remains unchanged for the next scenario
                     else:
-                        # Store results for this scenario
-                        chapter_run_data["scenario_results"][scenario_id] = scenario_traversal_data
+                        # Pick one combination from the scenario's results.
+                        # For now, let's pick a random one. 
+                        # Alternatively, could pick based on approval or other metrics.
+                        chosen_scenario_combo_data, chosen_scenario_combo_flags = random.choice(scenario_path_combinations)
+                        
+                        chapter_run_data["scenario_results"][scenario_id] = chosen_scenario_combo_data
+                        current_chapter_flags = chosen_scenario_combo_flags # Update chapter flags
 
-                    # Extract the single traversal result (assuming num_traversals=1)
-                    # scenario_traversal_data = temp_traversals[0]
-
-                    # --- Placeholder for flag update ---
-                    # scenario_final_flags = current_chapter_flags # NO CHANGE YET
-                    # TODO: Replace this with the actual flags returned by the modified simulate_single_traversal
-                    # scenario_final_flags = set() # Dummy value
-                    # print(f"{Fore.MAGENTA}    [Placeholder] Scenario finished. Flags need proper update mechanism.{Style.RESET_ALL}")
-                    # --- End Placeholder ---
-
-
-                    # Store results for this scenario
-                    # chapter_run_data["scenario_results"][scenario_id] = scenario_traversal_data
-
-                    # Update chapter flags for the next scenario in the sequence
-                    current_chapter_flags = scenario_final_flags # This now uses the returned flags
-                    print(f"{Fore.BLUE}    Updated chapter flags after {scenario_id}: {len(current_chapter_flags)}{Style.RESET_ALL}") # {current_chapter_flags}
+                    print(f"{Fore.BLUE}    Updated chapter flags after {scenario_id}: {len(current_chapter_flags)}{Style.RESET_ALL}")
 
                 except Exception as e:
                     print(f"{Fore.RED}Error simulating scenario '{scenario_id}': {e}{Style.RESET_ALL}")
@@ -410,14 +385,6 @@ def main():
     except ValueError:
         print(f"{Fore.YELLOW}Invalid input. Using default value of 1.{Style.RESET_ALL}")
 
-    min_utterances = 3
-    try:
-        min_utterances_input = input(f"Minimum utterances per session within scenarios [default: 3]: ")
-        if min_utterances_input:
-            min_utterances = int(min_utterances_input)
-    except ValueError:
-        print(f"{Fore.YELLOW}Invalid input. Using default value of 3.{Style.RESET_ALL}")
-
     prioritize_approval = input(f"Prioritize approval paths within scenarios? (y/n, default: y): ").lower() != 'n'
     include_all_scenarios = input(f"Try to include all possible scenarios in chapter? (y/n, default: y): ").lower() != 'n'
     include_all_sessions = input(f"Try to include all possible sessions within scenarios? (y/n, default: y): ").lower() != 'n'
@@ -458,7 +425,6 @@ def main():
         num_traversals=num_traversals,
         export_txt=export_txt,
         export_json=export_json,
-        min_utterances_per_session=min_utterances,
         prioritize_approval=prioritize_approval,
         include_all_scenarios=include_all_scenarios,
         include_all_sessions=include_all_sessions,

@@ -1,445 +1,36 @@
 {
   "metadata": {
     "individual_metadata": {
-      "AD_CultistsSceneInterrupted": {
-        "synopsis": "The Gith Guards want to immediately kill the intruders.",
-        "how_to_trigger": "Plays if the Cultists capture scene is interrupted. Branches depending on whether the player is spotted or not when the scene is interrupted."
-      },
-      "PAD_NearDeadBody": {
-        "synopsis": "When you get near the dead cultist, this will play. We've just seen the gith kill this one and take the other captive cultists inside. The player ponders whether this works in their favour or against and establishes that the gith don't like the cultists either.",
-        "how_to_trigger": "Go near the body of the cultist left outside of the monastery."
+      "AD_EscortingCultistsChatter": {
+        "synopsis": "A few ADs for the eponymous captured cultists to share with the gith captors as they traipse through the monastery on the way to the creche.",
+        "how_to_trigger": "Remain out of sight of the guards as they accompany the cultists to the creche."
       },
       "CultistsCapture": {
         "synopsis": "The player sees two Githyanki guards dragging three cultists in the monastery. One of the cultists - upon realising they're looking for some sort of weapon and failing to plead ignorance - makes a break for it. The gith guard kills him. The guards order the two remaining inside, pointing at the gate, before cutting to gameplay.",
         "how_to_trigger": "Approach the main courtyard entrance of the monastery."
       },
-      "AD_EscortingCultistsChatter": {
-        "synopsis": "A few ADs for the eponymous captured cultists to share with the gith captors as they traipse through the monastery on the way to the creche.",
-        "how_to_trigger": "Remain out of sight of the guards as they accompany the cultists to the creche."
-      },
       "Cultist03_Dead": {
         "synopsis": "He reveals some info about the Absolute's activity at Moonrise.",
         "how_to_trigger": "Use SpeakWithDead on the Halfling Cultist that is left dead outside of the monastery gates after being killed in CultistsCapture."
+      },
+      "PAD_NearDeadBody": {
+        "synopsis": "When you get near the dead cultist, this will play. We've just seen the gith kill this one and take the other captive cultists inside. The player ponders whether this works in their favour or against and establishes that the gith don't like the cultists either.",
+        "how_to_trigger": "Go near the body of the cultist left outside of the monastery."
+      },
+      "AD_CultistsSceneInterrupted": {
+        "synopsis": "The Gith Guards want to immediately kill the intruders.",
+        "how_to_trigger": "Plays if the Cultists capture scene is interrupted. Branches depending on whether the player is spotted or not when the scene is interrupted."
       }
     },
     "source_files": [
-      "CRE_ChainOfCommand_AD_CultistsSceneInterrupted.json",
-      "CRE_ChainOfCommand_PAD_NearDeadBody.json",
-      "CRE_ChainOfCommand_CultistsCapture.json",
       "CRE_ChainOfCommand_AD_EscortingCultistsChatter.json",
-      "CRE_ChainOfCommand_Cultist03_Dead.json"
-    ],
-    "automatic_ordering": {
-      "reasoning": "Analyzing the sessions reveals that the core event is the 'CultistsCapture' scene, which shows the guards taking cultists into the monastery and one cultist dying. After a normal (non\u2010interrupted) capture, the player can trigger additional content. Approaching the dead cultist after this event triggers 'PAD_NearDeadBody', which sets up the context for using the SpeakWithDead ability on that corpse to trigger 'Cultist03_Dead'. In parallel, while escorting the captured cultists, the 'AD_EscortingCultistsChatter' event occurs if the player remains unseen. However, if the player interrupts the CultistsCapture scene (for example, by being spotted at the wrong moment), then the dialogue 'AD_CultistsSceneInterrupted' is triggered instead. This version is an alternate branch that means the normal capture and its consequential dialogues (PAD_NearDeadBody, AD_EscortingCultistsChatter, and Cultist03_Dead) will not occur. Thus, 'AD_CultistsSceneInterrupted' is mutually exclusive with the normal capture branch and its subsequent sessions.",
-      "order": [
-        {
-          "predecessor": [
-            "CultistsCapture"
-          ],
-          "successor": "PAD_NearDeadBody"
-        },
-        {
-          "predecessor": [
-            "CultistsCapture"
-          ],
-          "successor": "AD_EscortingCultistsChatter"
-        },
-        {
-          "predecessor": [
-            "CultistsCapture",
-            "PAD_NearDeadBody"
-          ],
-          "successor": "Cultist03_Dead"
-        }
-      ],
-      "exclusive": [
-        [
-          "CultistsCapture",
-          "AD_CultistsSceneInterrupted"
-        ],
-        [
-          "PAD_NearDeadBody",
-          "AD_CultistsSceneInterrupted"
-        ],
-        [
-          "AD_EscortingCultistsChatter",
-          "AD_CultistsSceneInterrupted"
-        ],
-        [
-          "Cultist03_Dead",
-          "AD_CultistsSceneInterrupted"
-        ]
-      ]
-    }
+      "CRE_ChainOfCommand_CultistsCapture.json",
+      "CRE_ChainOfCommand_Cultist03_Dead.json",
+      "CRE_ChainOfCommand_PAD_NearDeadBody.json",
+      "CRE_ChainOfCommand_AD_CultistsSceneInterrupted.json"
+    ]
   },
   "dialogue": {
-    "AD_CultistsSceneInterrupted_0": {
-      "id": "AD_CultistsSceneInterrupted_0",
-      "speaker": "Raider Add'ath",
-      "text": "Sentries! Intruder spotted - htak'a!",
-      "context": "NodeContext: \"huh-tack-A!\" meaning \"attack",
-      "checkflags": [
-        "CRE_ChainOfCommand_State_MonasteryGuardsSpottedPlayer"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_CultistsSceneInterrupted_1": {
-      "id": "AD_CultistsSceneInterrupted_1",
-      "speaker": "Raider Add'ath",
-      "text": "Zech... Something's there. Show yourself, is'tark!",
-      "context": "NodeContext: ZECK meaning \"wait\" and \"iss-TARK\" meaning \"coward\"",
-      "checkflags": [
-        "CRE_ChainOfCommand_State_MonasteryGuardsSpottedPlayer = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_NearDeadBody_0": {
-      "id": "PAD_NearDeadBody_0",
-      "speaker": "Player",
-      "text": "So the githyanki aren't fond of the cultists. Could be a good thing.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "CultistsCapture_8": {
-      "id": "CultistsCapture_8",
-      "speaker": "Raider Add'ath",
-      "text": "That's enough. On your feet.",
-      "context": "CinematicNodeContext: ~The player is walking toward the steps to the exterior courtyard of the monastery, just across the entrance bridge\n~They stop, hearing voices the player crouches by corner of an archway\n~Peering around they see a gith guard hustling three cultists to their feet. The cultists are prisoners, terrified of the guards.\rInternalNodeContext: The guards have been kicking the cultists and roughing them up a bit before we stumble on this scene.",
-      "checkflags": [],
-      "setflags": [
-        "ORI_Laezel_Knows_CrecheLocation"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "4",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "CultistsCapture_15": {
-          "id": "CultistsCapture_15",
-          "speaker": "Corliss",
-          "text": "Where are you taking us?",
-          "context": "CinematicNodeContext: Getting to her feet. \rNodeContext: quaking with fear",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "4",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "CultistsCapture_7": {
-              "id": "CultistsCapture_7",
-              "speaker": "Mahrin",
-              "text": "If this is about that 'weapon' your friend was talking about, we don't have it, and we don't know shit about it!",
-              "context": "CinematicNodeContext: All cultists stood up. We see the mark of the Absolute clearly on this one (to establish that these are cultists.) \rInternalNodeContext: The 'friend' is referencing the other githyanki guard. \rNodeContext: gruff, defensive",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "4",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "CultistsCapture_11": {
-                  "id": "CultistsCapture_11",
-                  "speaker": "Raider Add'ath",
-                  "text": "Silence! Move.",
-                  "context": "CinematicNodeContext: Shoves Cultist02, who begrudgingly starts walking.",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "4",
-                  "is_end": false,
-                  "node_type": "normal",
-                  "children": {
-                    "CultistsCapture_17": {
-                      "id": "CultistsCapture_17",
-                      "speaker": "Corliss",
-                      "text": "No. No no no. I'm not going in there. I won't!",
-                      "context": "CinematicNodeContext: ~The guards and prisoners walk forward\n~The Brawler cultist breaks away and tries to make a run for it. \rInternalNodeContext: Knows that once they get taken in there, they're never coming back out.",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "4",
-                      "is_end": false,
-                      "node_type": "normal",
-                      "children": {
-                        "CultistsCapture_12": {
-                          "id": "CultistsCapture_12",
-                          "speaker": "Corliss",
-                          "text": "Ugh!",
-                          "context": "CinematicNodeContext: A bolt to the back - fired by Raider Add'ath - drops them to the ground, dead. \rInternalNodeContext: A grunt/shout as the bolt hits. \rNodeContext: ~Get us an alt take with a fatal bolt impact",
-                          "checkflags": [],
-                          "setflags": [],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "4",
-                          "is_end": false,
-                          "node_type": "normal",
-                          "children": {
-                            "CultistsCapture_13": {
-                              "id": "CultistsCapture_13",
-                              "speaker": "",
-                              "text": "",
-                              "context": "",
-                              "checkflags": [],
-                              "setflags": [],
-                              "ruletags": [],
-                              "approval": [],
-                              "rolls": "",
-                              "goto": "",
-                              "link": "4",
-                              "is_end": false,
-                              "node_type": "visualstate",
-                              "children": {
-                                "CultistsCapture_16": {
-                                  "id": "CultistsCapture_16",
-                                  "speaker": "Raider Add'ath",
-                                  "text": "Anyone want to join her?",
-                                  "context": "CinematicNodeContext: ~The githyanki guard that killed the cultist dares the others to try the same\n\rNodeContext: Matter of fact threat",
-                                  "checkflags": [],
-                                  "setflags": [
-                                    "CRE_ChainOfCommand_Event_CultistKilled"
-                                  ],
-                                  "ruletags": [],
-                                  "approval": [],
-                                  "rolls": "",
-                                  "goto": "",
-                                  "link": "4",
-                                  "is_end": false,
-                                  "node_type": "normal",
-                                  "children": {
-                                    "CultistsCapture_5": {
-                                      "id": "CultistsCapture_5",
-                                      "speaker": "Raider Add'ath",
-                                      "text": "As I thought. Through the doors. Now. The Captain is expecting you.",
-                                      "context": "CinematicNodeContext: ~The remaining cultists are suitably scared into submission and say nothing.",
-                                      "checkflags": [],
-                                      "setflags": [
-                                        "GLO_SecretOfArtefact_GuardMentionedCaptain"
-                                      ],
-                                      "ruletags": [],
-                                      "approval": [],
-                                      "rolls": "",
-                                      "goto": "",
-                                      "link": "4",
-                                      "is_end": false,
-                                      "node_type": "normal",
-                                      "children": {
-                                        "CultistsCapture_10": {
-                                          "id": "CultistsCapture_10",
-                                          "speaker": "",
-                                          "text": "",
-                                          "context": "",
-                                          "checkflags": [],
-                                          "setflags": [
-                                            "ORI_Inclusion_Laezel"
-                                          ],
-                                          "ruletags": [],
-                                          "approval": [],
-                                          "rolls": "",
-                                          "goto": "",
-                                          "link": "4",
-                                          "is_end": false,
-                                          "node_type": "taganswer",
-                                          "children": {
-                                            "CultistsCapture_4": {
-                                              "id": "CultistsCapture_4",
-                                              "speaker": "",
-                                              "text": "",
-                                              "context": "CinematicNodeContext: ~The githyanki guard point towards the opend double gate and the group takes the first step in the direction. Cut to gamepaly.",
-                                              "checkflags": [
-                                                "607bbdd2-9891-589d-d8b0-53cbd89f0367 = False",
-                                                "REALLY_LAEZEL = False"
-                                              ],
-                                              "setflags": [
-                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
-                                              ],
-                                              "ruletags": [],
-                                              "approval": [],
-                                              "rolls": "",
-                                              "goto": "",
-                                              "link": "",
-                                              "is_end": true,
-                                              "node_type": "tagcinematic",
-                                              "children": {}
-                                            },
-                                            "CultistsCapture_1": {
-                                              "id": "CultistsCapture_1",
-                                              "speaker": "",
-                                              "text": "",
-                                              "context": "",
-                                              "checkflags": [
-                                                "607bbdd2-9891-589d-d8b0-53cbd89f0367",
-                                                "REALLY_LAEZEL = False"
-                                              ],
-                                              "setflags": [
-                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
-                                              ],
-                                              "ruletags": [],
-                                              "approval": [],
-                                              "rolls": "",
-                                              "goto": "",
-                                              "link": "4",
-                                              "is_end": false,
-                                              "node_type": "alias",
-                                              "children": {
-                                                "CultistsCapture_14": {
-                                                  "id": "CultistsCapture_14",
-                                                  "speaker": "Lae'zel",
-                                                  "text": "Forward - carefully. These cultists have the cr\u00e8che on high alert.",
-                                                  "context": "",
-                                                  "checkflags": [],
-                                                  "setflags": [],
-                                                  "ruletags": [],
-                                                  "approval": [],
-                                                  "rolls": "",
-                                                  "goto": "",
-                                                  "link": "",
-                                                  "is_end": true,
-                                                  "node_type": "normal",
-                                                  "children": {}
-                                                }
-                                              }
-                                            },
-                                            "CultistsCapture_6": {
-                                              "id": "CultistsCapture_6",
-                                              "speaker": "",
-                                              "text": "",
-                                              "context": "",
-                                              "checkflags": [
-                                                "AVATAR = False",
-                                                "REALLY_LAEZEL"
-                                              ],
-                                              "setflags": [
-                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
-                                              ],
-                                              "ruletags": [],
-                                              "approval": [],
-                                              "rolls": "",
-                                              "goto": "",
-                                              "link": "4",
-                                              "is_end": false,
-                                              "node_type": "alias",
-                                              "children": {
-                                                "CultistsCapture_9": {
-                                                  "id": "CultistsCapture_9",
-                                                  "speaker": "Player",
-                                                  "text": "Forward - carefully. These cultists have the cr\u00e8che on high alert.",
-                                                  "context": "",
-                                                  "checkflags": [
-                                                    "REALLY_LAEZEL"
-                                                  ],
-                                                  "setflags": [],
-                                                  "ruletags": [],
-                                                  "approval": [],
-                                                  "rolls": "",
-                                                  "goto": "",
-                                                  "link": "",
-                                                  "is_end": true,
-                                                  "node_type": "normal",
-                                                  "children": {}
-                                                }
-                                              }
-                                            },
-                                            "CultistsCapture_0": {
-                                              "id": "CultistsCapture_0",
-                                              "speaker": "",
-                                              "text": "",
-                                              "context": "",
-                                              "checkflags": [
-                                                "AVATAR",
-                                                "REALLY_LAEZEL"
-                                              ],
-                                              "setflags": [
-                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
-                                              ],
-                                              "ruletags": [],
-                                              "approval": [],
-                                              "rolls": "",
-                                              "goto": "",
-                                              "link": "4",
-                                              "is_end": false,
-                                              "node_type": "alias",
-                                              "children": {
-                                                "CultistsCapture_3": {
-                                                  "id": "CultistsCapture_3",
-                                                  "speaker": "Narrator",
-                                                  "text": "*You have found your kin at last. You know to step carefully - the cultists have the cr\u00e8che on high alert.*",
-                                                  "context": "",
-                                                  "checkflags": [],
-                                                  "setflags": [],
-                                                  "ruletags": [],
-                                                  "approval": [],
-                                                  "rolls": "",
-                                                  "goto": "",
-                                                  "link": "",
-                                                  "is_end": true,
-                                                  "node_type": "normal",
-                                                  "children": {}
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "AD_EscortingCultistsChatter_0": {
       "id": "AD_EscortingCultistsChatter_0",
       "speaker": "Burrock",
@@ -619,6 +210,321 @@
           "is_end": true,
           "node_type": "normal",
           "children": {}
+        }
+      }
+    },
+    "CultistsCapture_8": {
+      "id": "CultistsCapture_8",
+      "speaker": "Raider Add'ath",
+      "text": "That's enough. On your feet.",
+      "context": "CinematicNodeContext: ~The player is walking toward the steps to the exterior courtyard of the monastery, just across the entrance bridge\n~They stop, hearing voices the player crouches by corner of an archway\n~Peering around they see a gith guard hustling three cultists to their feet. The cultists are prisoners, terrified of the guards.\rInternalNodeContext: The guards have been kicking the cultists and roughing them up a bit before we stumble on this scene.",
+      "checkflags": [],
+      "setflags": [
+        "ORI_Laezel_Knows_CrecheLocation"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "CultistsCapture_4",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "CultistsCapture_15": {
+          "id": "CultistsCapture_15",
+          "speaker": "Corliss",
+          "text": "Where are you taking us?",
+          "context": "CinematicNodeContext: Getting to her feet. \rNodeContext: quaking with fear",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "CultistsCapture_4",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "CultistsCapture_7": {
+              "id": "CultistsCapture_7",
+              "speaker": "Mahrin",
+              "text": "If this is about that 'weapon' your friend was talking about, we don't have it, and we don't know shit about it!",
+              "context": "CinematicNodeContext: All cultists stood up. We see the mark of the Absolute clearly on this one (to establish that these are cultists.) \rInternalNodeContext: The 'friend' is referencing the other githyanki guard. \rNodeContext: gruff, defensive",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "CultistsCapture_4",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "CultistsCapture_11": {
+                  "id": "CultistsCapture_11",
+                  "speaker": "Raider Add'ath",
+                  "text": "Silence! Move.",
+                  "context": "CinematicNodeContext: Shoves Cultist02, who begrudgingly starts walking.",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "CultistsCapture_4",
+                  "is_end": false,
+                  "node_type": "normal",
+                  "children": {
+                    "CultistsCapture_17": {
+                      "id": "CultistsCapture_17",
+                      "speaker": "Corliss",
+                      "text": "No. No no no. I'm not going in there. I won't!",
+                      "context": "CinematicNodeContext: ~The guards and prisoners walk forward\n~The Brawler cultist breaks away and tries to make a run for it. \rInternalNodeContext: Knows that once they get taken in there, they're never coming back out.",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "CultistsCapture_4",
+                      "is_end": false,
+                      "node_type": "normal",
+                      "children": {
+                        "CultistsCapture_12": {
+                          "id": "CultistsCapture_12",
+                          "speaker": "Corliss",
+                          "text": "Ugh!",
+                          "context": "CinematicNodeContext: A bolt to the back - fired by Raider Add'ath - drops them to the ground, dead. \rInternalNodeContext: A grunt/shout as the bolt hits. \rNodeContext: ~Get us an alt take with a fatal bolt impact",
+                          "checkflags": [],
+                          "setflags": [],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "CultistsCapture_4",
+                          "is_end": false,
+                          "node_type": "normal",
+                          "children": {
+                            "CultistsCapture_13": {
+                              "id": "CultistsCapture_13",
+                              "speaker": "",
+                              "text": "",
+                              "context": "",
+                              "checkflags": [],
+                              "setflags": [],
+                              "ruletags": [],
+                              "approval": [],
+                              "rolls": "",
+                              "goto": "",
+                              "link": "CultistsCapture_4",
+                              "is_end": false,
+                              "node_type": "visualstate",
+                              "children": {
+                                "CultistsCapture_16": {
+                                  "id": "CultistsCapture_16",
+                                  "speaker": "Raider Add'ath",
+                                  "text": "Anyone want to join her?",
+                                  "context": "CinematicNodeContext: ~The githyanki guard that killed the cultist dares the others to try the same\n\rNodeContext: Matter of fact threat",
+                                  "checkflags": [],
+                                  "setflags": [
+                                    "CRE_ChainOfCommand_Event_CultistKilled"
+                                  ],
+                                  "ruletags": [],
+                                  "approval": [],
+                                  "rolls": "",
+                                  "goto": "",
+                                  "link": "CultistsCapture_4",
+                                  "is_end": false,
+                                  "node_type": "normal",
+                                  "children": {
+                                    "CultistsCapture_5": {
+                                      "id": "CultistsCapture_5",
+                                      "speaker": "Raider Add'ath",
+                                      "text": "As I thought. Through the doors. Now. The Captain is expecting you.",
+                                      "context": "CinematicNodeContext: ~The remaining cultists are suitably scared into submission and say nothing.",
+                                      "checkflags": [],
+                                      "setflags": [
+                                        "GLO_SecretOfArtefact_GuardMentionedCaptain"
+                                      ],
+                                      "ruletags": [],
+                                      "approval": [],
+                                      "rolls": "",
+                                      "goto": "",
+                                      "link": "CultistsCapture_4",
+                                      "is_end": false,
+                                      "node_type": "normal",
+                                      "children": {
+                                        "CultistsCapture_10": {
+                                          "id": "CultistsCapture_10",
+                                          "speaker": "",
+                                          "text": "",
+                                          "context": "",
+                                          "checkflags": [],
+                                          "setflags": [
+                                            "ORI_Inclusion_Laezel"
+                                          ],
+                                          "ruletags": [],
+                                          "approval": [],
+                                          "rolls": "",
+                                          "goto": "",
+                                          "link": "CultistsCapture_4",
+                                          "is_end": false,
+                                          "node_type": "taganswer",
+                                          "children": {
+                                            "CultistsCapture_4": {
+                                              "id": "CultistsCapture_4",
+                                              "speaker": "",
+                                              "text": "",
+                                              "context": "CinematicNodeContext: ~The githyanki guard point towards the opend double gate and the group takes the first step in the direction. Cut to gamepaly.",
+                                              "checkflags": [
+                                                "607bbdd2-9891-589d-d8b0-53cbd89f0367 = False",
+                                                "REALLY_LAEZEL = False"
+                                              ],
+                                              "setflags": [
+                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
+                                              ],
+                                              "ruletags": [],
+                                              "approval": [],
+                                              "rolls": "",
+                                              "goto": "",
+                                              "link": "",
+                                              "is_end": true,
+                                              "node_type": "tagcinematic",
+                                              "children": {}
+                                            },
+                                            "CultistsCapture_1": {
+                                              "id": "CultistsCapture_1",
+                                              "speaker": "",
+                                              "text": "",
+                                              "context": "",
+                                              "checkflags": [
+                                                "607bbdd2-9891-589d-d8b0-53cbd89f0367",
+                                                "REALLY_LAEZEL = False"
+                                              ],
+                                              "setflags": [
+                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
+                                              ],
+                                              "ruletags": [],
+                                              "approval": [],
+                                              "rolls": "",
+                                              "goto": "",
+                                              "link": "CultistsCapture_4",
+                                              "is_end": false,
+                                              "node_type": "alias",
+                                              "children": {
+                                                "CultistsCapture_14": {
+                                                  "id": "CultistsCapture_14",
+                                                  "speaker": "Lae'zel",
+                                                  "text": "Forward - carefully. These cultists have the cr\u00e8che on high alert.",
+                                                  "context": "",
+                                                  "checkflags": [],
+                                                  "setflags": [],
+                                                  "ruletags": [],
+                                                  "approval": [],
+                                                  "rolls": "",
+                                                  "goto": "",
+                                                  "link": "",
+                                                  "is_end": true,
+                                                  "node_type": "normal",
+                                                  "children": {}
+                                                }
+                                              }
+                                            },
+                                            "CultistsCapture_6": {
+                                              "id": "CultistsCapture_6",
+                                              "speaker": "",
+                                              "text": "",
+                                              "context": "",
+                                              "checkflags": [
+                                                "AVATAR = False",
+                                                "REALLY_LAEZEL"
+                                              ],
+                                              "setflags": [
+                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
+                                              ],
+                                              "ruletags": [],
+                                              "approval": [],
+                                              "rolls": "",
+                                              "goto": "",
+                                              "link": "CultistsCapture_4",
+                                              "is_end": false,
+                                              "node_type": "alias",
+                                              "children": {
+                                                "CultistsCapture_9": {
+                                                  "id": "CultistsCapture_9",
+                                                  "speaker": "Player",
+                                                  "text": "Forward - carefully. These cultists have the cr\u00e8che on high alert.",
+                                                  "context": "",
+                                                  "checkflags": [
+                                                    "REALLY_LAEZEL"
+                                                  ],
+                                                  "setflags": [],
+                                                  "ruletags": [],
+                                                  "approval": [],
+                                                  "rolls": "",
+                                                  "goto": "",
+                                                  "link": "",
+                                                  "is_end": true,
+                                                  "node_type": "normal",
+                                                  "children": {}
+                                                }
+                                              }
+                                            },
+                                            "CultistsCapture_0": {
+                                              "id": "CultistsCapture_0",
+                                              "speaker": "",
+                                              "text": "",
+                                              "context": "",
+                                              "checkflags": [
+                                                "AVATAR",
+                                                "REALLY_LAEZEL"
+                                              ],
+                                              "setflags": [
+                                                "CRE_ChainOfCommand_Event_MonasteryGuardsStartWalkingDuringDialog"
+                                              ],
+                                              "ruletags": [],
+                                              "approval": [],
+                                              "rolls": "",
+                                              "goto": "",
+                                              "link": "CultistsCapture_4",
+                                              "is_end": false,
+                                              "node_type": "alias",
+                                              "children": {
+                                                "CultistsCapture_3": {
+                                                  "id": "CultistsCapture_3",
+                                                  "speaker": "Narrator",
+                                                  "text": "*You have found your kin at last. You know to step carefully - the cultists have the cr\u00e8che on high alert.*",
+                                                  "context": "",
+                                                  "checkflags": [],
+                                                  "setflags": [],
+                                                  "ruletags": [],
+                                                  "approval": [],
+                                                  "rolls": "",
+                                                  "goto": "",
+                                                  "link": "",
+                                                  "is_end": true,
+                                                  "node_type": "normal",
+                                                  "children": {}
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1233,6 +1139,58 @@
       "context": "",
       "checkflags": [
         "GLO_SpeakWithDead_State_Killer"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_NearDeadBody_0": {
+      "id": "PAD_NearDeadBody_0",
+      "speaker": "Player",
+      "text": "So the githyanki aren't fond of the cultists. Could be a good thing.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_CultistsSceneInterrupted_0": {
+      "id": "AD_CultistsSceneInterrupted_0",
+      "speaker": "Raider Add'ath",
+      "text": "Sentries! Intruder spotted - htak'a!",
+      "context": "NodeContext: \"huh-tack-A!\" meaning \"attack",
+      "checkflags": [
+        "CRE_ChainOfCommand_State_MonasteryGuardsSpottedPlayer"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_CultistsSceneInterrupted_1": {
+      "id": "AD_CultistsSceneInterrupted_1",
+      "speaker": "Raider Add'ath",
+      "text": "Zech... Something's there. Show yourself, is'tark!",
+      "context": "NodeContext: ZECK meaning \"wait\" and \"iss-TARK\" meaning \"coward\"",
+      "checkflags": [
+        "CRE_ChainOfCommand_State_MonasteryGuardsSpottedPlayer = False"
       ],
       "setflags": [],
       "ruletags": [],

@@ -1,53 +1,47 @@
 {
   "metadata": {
     "individual_metadata": {
-      "AD_OgreKilled": {
-        "synopsis": "The players have killed the ogress (the bugbear's lover) and he swears revenge.",
-        "how_to_trigger": ""
-      },
-      "Ogre_Dead": {
-        "synopsis": "Butthir the ogre has been killed - you are now speaking with her corpse.",
-        "how_to_trigger": ""
-      },
-      "Bugbear_Dead": {
-        "synopsis": "A dialogue with the bugbear's corpse after a player killed him. 'Butters' is Buthir, the ogre he loves.",
-        "how_to_trigger": ""
-      },
       "AD_BugbearKilled": {
         "synopsis": "The players have killed the bugbear (the Ogress' lover) and she swears revenge.",
+        "how_to_trigger": ""
+      },
+      "": {
+        "synopsis": "The player arrives at a house and hears a strange noise inside. It might sound like a fight is happening inside, but upon closer inspection they can learn that a bugbear and an ogre are making love.",
         "how_to_trigger": ""
       },
       "AD_Combat": {
         "synopsis": "The bugbear shouts at the players after they barge in on the couple having sex.",
         "how_to_trigger": ""
       },
+      "AD_OgreKilled": {
+        "synopsis": "The players have killed the ogress (the bugbear's lover) and he swears revenge.",
+        "how_to_trigger": ""
+      },
       "VB_Scholar": {
         "synopsis": "Comment made after seeing the ogre and bugbear having sex AND passing a successful Nature check.",
         "how_to_trigger": ""
       },
-      "": {
-        "synopsis": "The player arrives at a house and hears a strange noise inside. It might sound like a fight is happening inside, but upon closer inspection they can learn that a bugbear and an ogre are making love.",
+      "Bugbear_Dead": {
+        "synopsis": "A dialogue with the bugbear's corpse after a player killed him. 'Butters' is Buthir, the ogre he loves.",
+        "how_to_trigger": ""
+      },
+      "Ogre_Dead": {
+        "synopsis": "Butthir the ogre has been killed - you are now speaking with her corpse.",
         "how_to_trigger": ""
       }
     },
     "source_files": [
-      "FOR_Bugbear_AD_OgreKilled.json",
-      "FOR_Bugbear_Ogre_Dead.json",
-      "FOR_Bugbear_Bugbear_Dead.json",
       "FOR_Bugbear_AD_BugbearKilled.json",
+      "FOR_BugBear.json",
       "FOR_BugBear_AD_Combat.json",
+      "FOR_Bugbear_AD_OgreKilled.json",
       "FOR_BugBear_VB_Scholar.json",
-      "FOR_BugBear.json"
+      "FOR_Bugbear_Bugbear_Dead.json",
+      "FOR_Bugbear_Ogre_Dead.json"
     ],
     "automatic_ordering": {
-      "reasoning": "Analyzing the session synopses suggests that the sexual encounter between the bugbear and the ogress is first introduced when the player comes upon the house (the session with the empty string key). From that encounter the player can choose to either quietly observe the couple \u2013 which, if they pass a Nature check, leads to the scholar\u2019s comment (VB_Scholar) \u2013 or to barge in on them, which triggers a hostile reaction from the bugbear (AD_Combat). These two responses are alternative paths that occur immediately after the introduction, so they are mutually exclusive. In addition, if the players kill one member of the couple, there is a two\u2010step sequence: first the killing dialogue (AD_OgreKilled if the ogress is killed or AD_BugbearKilled if the bugbear is killed) and then later a subsequent dialogue with that character\u2019s corpse (Ogre_Dead is spoken with after the ogress is killed, and Bugbear_Dead is with the bugbear\u2019s corpse). These establish clear order relations \u2013 the \u201ckilled\u201d dialogue must come before the corpse dialogue. There is no explicit constraint ruling out killing both (or only one) from a mechanical point of view in the data, so we do not mark them as mutually exclusive. Only the \u201cobserving\u201d (VB_Scholar) and \u201cbarging in\u201d (AD_Combat) sessions are clearly marked as alternate triggers.",
+      "reasoning": "The data describe a scene that starts with the player arriving at a house and witnessing an odd occurrence \u2013 a bugbear and an ogre (who are lovers) in an intimate scene. This introductory event (represented by the session with an empty key) is what sets off further possibilities. One branch comes from the player interrupting the scene, which triggers AD_Combat. From the combat branch, if the players kill one of the lovers, further sessions occur: killing the bugbear leads to AD_BugbearKilled and then to Bugbear_Dead (a dialogue with the corpse), and similarly, killing the ogre leads to AD_OgreKilled then Ogre_Dead. On the other hand, if the players choose not to interrupt and instead take a Nature check to observe the scene as-is, they trigger VB_Scholar. Since VB_Scholar is clearly tied to the observation of the couple in the act (while they are still alive), it would be mutually exclusive with the combat branch outcomes (the kill events and corpse interactions). Thus, the ordering constraints are: the introductory (anonymous) session happens first; then it can lead either to AD_Combat (if the players barge in) or to VB_Scholar (if the players observe). For the combat branch, AD_Combat should come before the kill events, and then the related corpse dialogue sessions come after the kill events. Also, as the observation branch is an alternative outcome to the combat/killing branch, sessions like VB_Scholar and the kill/corpse dialogues should be mutually exclusive in the same narrative path.",
       "order": [
-        {
-          "predecessor": [
-            ""
-          ],
-          "successor": "VB_Scholar"
-        },
         {
           "predecessor": [
             ""
@@ -56,1004 +50,56 @@
         },
         {
           "predecessor": [
-            "AD_OgreKilled"
+            ""
           ],
-          "successor": "Ogre_Dead"
+          "successor": "VB_Scholar"
+        },
+        {
+          "predecessor": [
+            "AD_Combat"
+          ],
+          "successor": "AD_BugbearKilled"
+        },
+        {
+          "predecessor": [
+            "AD_Combat"
+          ],
+          "successor": "AD_OgreKilled"
         },
         {
           "predecessor": [
             "AD_BugbearKilled"
           ],
           "successor": "Bugbear_Dead"
+        },
+        {
+          "predecessor": [
+            "AD_OgreKilled"
+          ],
+          "successor": "Ogre_Dead"
         }
       ],
       "exclusive": [
         [
           "VB_Scholar",
-          "AD_Combat"
+          "AD_BugbearKilled"
+        ],
+        [
+          "VB_Scholar",
+          "AD_OgreKilled"
+        ],
+        [
+          "VB_Scholar",
+          "Bugbear_Dead"
+        ],
+        [
+          "VB_Scholar",
+          "Ogre_Dead"
         ]
       ]
     }
   },
   "dialogue": {
-    "AD_OgreKilled_0": {
-      "id": "AD_OgreKilled_0",
-      "speaker": "Grukkoh",
-      "text": "Butters!",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "AD_OgreKilled_1": {
-          "id": "AD_OgreKilled_1",
-          "speaker": "Grukkoh",
-          "text": "I'll rip you apart!",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Ogre_Dead_8": {
-      "id": "Ogre_Dead_8",
-      "speaker": "Narrator",
-      "text": "*The corpse seems willing to speak - but not to its killer.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_Killer"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Ogre_Dead_11": {
-      "id": "Ogre_Dead_11",
-      "speaker": "Narrator",
-      "text": "*The corpse does not stir. It will answer no more questions.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_QuestionsLimitReached"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Ogre_Dead_16": {
-      "id": "Ogre_Dead_16",
-      "speaker": "Narrator",
-      "text": "*The corpse regards you lifelessly.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Ogre_Dead_7": {
-          "id": "Ogre_Dead_7",
-          "speaker": "Player",
-          "text": "Who are you?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_14": {
-              "id": "Ogre_Dead_14",
-              "speaker": "Buthir",
-              "text": "Butthir... found Grukkoh... found Absolute...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_15": {
-                  "id": "Ogre_Dead_15",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_5": {
-          "id": "Ogre_Dead_5",
-          "speaker": "Player",
-          "text": "What were you doing in the village?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_weapon",
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_10": {
-              "id": "Ogre_Dead_10",
-              "speaker": "Buthir",
-              "text": "Looking for... weapon. Absolute's... weapon.",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_13": {
-                  "id": "Ogre_Dead_13",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_2": {
-          "id": "Ogre_Dead_2",
-          "speaker": "Player",
-          "text": "Did you have any valuables?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_weapon",
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_3": {
-              "id": "Ogre_Dead_3",
-              "speaker": "Buthir",
-              "text": "Have... nothing... looking for... weapon...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_1": {
-                  "id": "Ogre_Dead_1",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_25": {
-          "id": "Ogre_Dead_25",
-          "speaker": "Player",
-          "text": "What weapon were you looking for?",
-          "context": "",
-          "checkflags": [
-            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_weapon",
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_19": {
-              "id": "Ogre_Dead_19",
-              "speaker": "Buthir",
-              "text": "From... crash... took by... bad people...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_4": {
-                  "id": "Ogre_Dead_4",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_9": {
-          "id": "Ogre_Dead_9",
-          "speaker": "Player",
-          "text": "Who killed you?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_17": {
-              "id": "Ogre_Dead_17",
-              "speaker": "Buthir",
-              "text": "Someone... interrupt... someone... start fight...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_24": {
-                  "id": "Ogre_Dead_24",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_6": {
-          "id": "Ogre_Dead_6",
-          "speaker": "Player",
-          "text": "What were you doing in the barn?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_bugbear",
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_18": {
-              "id": "Ogre_Dead_18",
-              "speaker": "Buthir",
-              "text": "Grukkoh... baby boy... we take a break... together...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_23": {
-                  "id": "Ogre_Dead_23",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_12": {
-          "id": "Ogre_Dead_12",
-          "speaker": "Player",
-          "text": "Were you and Grukkoh in love?",
-          "context": "",
-          "checkflags": [
-            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_bugbear",
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Ogre_Dead_0": {
-              "id": "Ogre_Dead_0",
-              "speaker": "Buthir",
-              "text": "Love... yeah... good love...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Ogre_Dead_22": {
-                  "id": "Ogre_Dead_22",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Ogre_Dead_21": {
-          "id": "Ogre_Dead_21",
-          "speaker": "Player",
-          "text": "Leave.",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        },
-        "Ogre_Dead_20": {
-          "id": "Ogre_Dead_20",
-          "speaker": "Narrator",
-          "text": "*The spell's power wanes. You can ask no more questions.*",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Bugbear_Dead_5": {
-      "id": "Bugbear_Dead_5",
-      "speaker": "Narrator",
-      "text": "*The corpse does not stir. It will answer no more questions.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_QuestionsLimitReached"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Bugbear_Dead_23": {
-      "id": "Bugbear_Dead_23",
-      "speaker": "Narrator",
-      "text": "*The corpse seems willing to speak - but not to its killer.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_Killer"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Bugbear_Dead_25": {
-      "id": "Bugbear_Dead_25",
-      "speaker": "Narrator",
-      "text": "*The corpse regards you lifelessly.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Bugbear_Dead_8": {
-          "id": "Bugbear_Dead_8",
-          "speaker": "Player",
-          "text": "Who are you?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_15": {
-              "id": "Bugbear_Dead_15",
-              "speaker": "Grukkoh",
-              "text": "Name... Grukkoh...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_17": {
-                  "id": "Bugbear_Dead_17",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_16": {
-          "id": "Bugbear_Dead_16",
-          "speaker": "Player",
-          "text": "What happened to you?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_1": {
-              "id": "Bugbear_Dead_1",
-              "speaker": "Grukkoh",
-              "text": "Intruders... me and... Butters... ruined.",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_2": {
-                  "id": "Bugbear_Dead_2",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_10": {
-          "id": "Bugbear_Dead_10",
-          "speaker": "Player",
-          "text": "Were you alone when you died?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_19": {
-              "id": "Bugbear_Dead_19",
-              "speaker": "Grukkoh",
-              "text": "Butters... Buthir... love...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_9": {
-                  "id": "Bugbear_Dead_9",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_12": {
-          "id": "Bugbear_Dead_12",
-          "speaker": "Player",
-          "text": "Who killed you?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_18": {
-              "id": "Bugbear_Dead_18",
-              "speaker": "Grukkoh",
-              "text": "Dog... split us up... ran us through...",
-              "context": "NodeContext: with anger/ disdain",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_13": {
-                  "id": "Bugbear_Dead_13",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_3": {
-          "id": "Bugbear_Dead_3",
-          "speaker": "Player",
-          "text": "Where did you come from?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_6": {
-              "id": "Bugbear_Dead_6",
-              "speaker": "Grukkoh",
-              "text": "Hills... then... Moonrise...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_0": {
-                  "id": "Bugbear_Dead_0",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_21": {
-          "id": "Bugbear_Dead_21",
-          "speaker": "Player",
-          "text": "What were you doing in the village?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_22": {
-              "id": "Bugbear_Dead_22",
-              "speaker": "Grukkoh",
-              "text": "Weapon... search... take break... Butters...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_20": {
-                  "id": "Bugbear_Dead_20",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_11": {
-          "id": "Bugbear_Dead_11",
-          "speaker": "Player",
-          "text": "Who do you report to?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Bugbear_Dead_24": {
-              "id": "Bugbear_Dead_24",
-              "speaker": "Grukkoh",
-              "text": "Absolute... only goddess... Moonrise...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [
-                "GLO_Absolute_Knows_MoonriseTowers"
-              ],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Bugbear_Dead_14": {
-                  "id": "Bugbear_Dead_14",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Bugbear_Dead_4": {
-          "id": "Bugbear_Dead_4",
-          "speaker": "Player",
-          "text": "Leave.",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        },
-        "Bugbear_Dead_7": {
-          "id": "Bugbear_Dead_7",
-          "speaker": "Narrator",
-          "text": "*The spell's power wanes. You can ask no more questions.*",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
     "AD_BugbearKilled_1": {
       "id": "AD_BugbearKilled_1",
       "speaker": "Buthir",
@@ -1086,38 +132,6 @@
           "children": {}
         }
       }
-    },
-    "AD_Combat_0": {
-      "id": "AD_Combat_0",
-      "speaker": "Grukkoh",
-      "text": "Get out! OUT!",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "VB_Scholar_0": {
-      "id": "VB_Scholar_0",
-      "speaker": "Player",
-      "text": "Yikes, don't disturb a half-ogre in the making!",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
     },
     "11": {
       "id": "11",
@@ -2165,6 +1179,1016 @@
       "is_end": false,
       "node_type": "tagcinematic",
       "children": {}
+    },
+    "AD_Combat_0": {
+      "id": "AD_Combat_0",
+      "speaker": "Grukkoh",
+      "text": "Get out! OUT!",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_OgreKilled_0": {
+      "id": "AD_OgreKilled_0",
+      "speaker": "Grukkoh",
+      "text": "Butters!",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "AD_OgreKilled_1": {
+          "id": "AD_OgreKilled_1",
+          "speaker": "Grukkoh",
+          "text": "I'll rip you apart!",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "VB_Scholar_0": {
+      "id": "VB_Scholar_0",
+      "speaker": "Player",
+      "text": "Yikes, don't disturb a half-ogre in the making!",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Bugbear_Dead_5": {
+      "id": "Bugbear_Dead_5",
+      "speaker": "Narrator",
+      "text": "*The corpse does not stir. It will answer no more questions.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_QuestionsLimitReached"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Bugbear_Dead_23": {
+      "id": "Bugbear_Dead_23",
+      "speaker": "Narrator",
+      "text": "*The corpse seems willing to speak - but not to its killer.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_Killer"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Bugbear_Dead_25": {
+      "id": "Bugbear_Dead_25",
+      "speaker": "Narrator",
+      "text": "*The corpse regards you lifelessly.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Bugbear_Dead_8": {
+          "id": "Bugbear_Dead_8",
+          "speaker": "Player",
+          "text": "Who are you?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_15": {
+              "id": "Bugbear_Dead_15",
+              "speaker": "Grukkoh",
+              "text": "Name... Grukkoh...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_17": {
+                  "id": "Bugbear_Dead_17",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_16": {
+          "id": "Bugbear_Dead_16",
+          "speaker": "Player",
+          "text": "What happened to you?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_1": {
+              "id": "Bugbear_Dead_1",
+              "speaker": "Grukkoh",
+              "text": "Intruders... me and... Butters... ruined.",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_2": {
+                  "id": "Bugbear_Dead_2",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_10": {
+          "id": "Bugbear_Dead_10",
+          "speaker": "Player",
+          "text": "Were you alone when you died?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_19": {
+              "id": "Bugbear_Dead_19",
+              "speaker": "Grukkoh",
+              "text": "Butters... Buthir... love...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_9": {
+                  "id": "Bugbear_Dead_9",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_12": {
+          "id": "Bugbear_Dead_12",
+          "speaker": "Player",
+          "text": "Who killed you?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_18": {
+              "id": "Bugbear_Dead_18",
+              "speaker": "Grukkoh",
+              "text": "Dog... split us up... ran us through...",
+              "context": "NodeContext: with anger/ disdain",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_13": {
+                  "id": "Bugbear_Dead_13",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_3": {
+          "id": "Bugbear_Dead_3",
+          "speaker": "Player",
+          "text": "Where did you come from?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_6": {
+              "id": "Bugbear_Dead_6",
+              "speaker": "Grukkoh",
+              "text": "Hills... then... Moonrise...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_0": {
+                  "id": "Bugbear_Dead_0",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_21": {
+          "id": "Bugbear_Dead_21",
+          "speaker": "Player",
+          "text": "What were you doing in the village?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_22": {
+              "id": "Bugbear_Dead_22",
+              "speaker": "Grukkoh",
+              "text": "Weapon... search... take break... Butters...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_20": {
+                  "id": "Bugbear_Dead_20",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_11": {
+          "id": "Bugbear_Dead_11",
+          "speaker": "Player",
+          "text": "Who do you report to?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Bugbear_Dead_24": {
+              "id": "Bugbear_Dead_24",
+              "speaker": "Grukkoh",
+              "text": "Absolute... only goddess... Moonrise...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [
+                "GLO_Absolute_Knows_MoonriseTowers"
+              ],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Bugbear_Dead_14": {
+                  "id": "Bugbear_Dead_14",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Bugbear_Dead_4": {
+          "id": "Bugbear_Dead_4",
+          "speaker": "Player",
+          "text": "Leave.",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        },
+        "Bugbear_Dead_7": {
+          "id": "Bugbear_Dead_7",
+          "speaker": "Narrator",
+          "text": "*The spell's power wanes. You can ask no more questions.*",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "Ogre_Dead_8": {
+      "id": "Ogre_Dead_8",
+      "speaker": "Narrator",
+      "text": "*The corpse seems willing to speak - but not to its killer.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_Killer"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Ogre_Dead_11": {
+      "id": "Ogre_Dead_11",
+      "speaker": "Narrator",
+      "text": "*The corpse does not stir. It will answer no more questions.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_QuestionsLimitReached"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Ogre_Dead_16": {
+      "id": "Ogre_Dead_16",
+      "speaker": "Narrator",
+      "text": "*The corpse regards you lifelessly.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Ogre_Dead_7": {
+          "id": "Ogre_Dead_7",
+          "speaker": "Player",
+          "text": "Who are you?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_14": {
+              "id": "Ogre_Dead_14",
+              "speaker": "Buthir",
+              "text": "Butthir... found Grukkoh... found Absolute...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_15": {
+                  "id": "Ogre_Dead_15",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_5": {
+          "id": "Ogre_Dead_5",
+          "speaker": "Player",
+          "text": "What were you doing in the village?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_weapon",
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_10": {
+              "id": "Ogre_Dead_10",
+              "speaker": "Buthir",
+              "text": "Looking for... weapon. Absolute's... weapon.",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_13": {
+                  "id": "Ogre_Dead_13",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_2": {
+          "id": "Ogre_Dead_2",
+          "speaker": "Player",
+          "text": "Did you have any valuables?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_weapon",
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_3": {
+              "id": "Ogre_Dead_3",
+              "speaker": "Buthir",
+              "text": "Have... nothing... looking for... weapon...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_1": {
+                  "id": "Ogre_Dead_1",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_25": {
+          "id": "Ogre_Dead_25",
+          "speaker": "Player",
+          "text": "What weapon were you looking for?",
+          "context": "",
+          "checkflags": [
+            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_weapon",
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_19": {
+              "id": "Ogre_Dead_19",
+              "speaker": "Buthir",
+              "text": "From... crash... took by... bad people...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_4": {
+                  "id": "Ogre_Dead_4",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_9": {
+          "id": "Ogre_Dead_9",
+          "speaker": "Player",
+          "text": "Who killed you?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_17": {
+              "id": "Ogre_Dead_17",
+              "speaker": "Buthir",
+              "text": "Someone... interrupt... someone... start fight...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_24": {
+                  "id": "Ogre_Dead_24",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_6": {
+          "id": "Ogre_Dead_6",
+          "speaker": "Player",
+          "text": "What were you doing in the barn?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_bugbear",
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_18": {
+              "id": "Ogre_Dead_18",
+              "speaker": "Buthir",
+              "text": "Grukkoh... baby boy... we take a break... together...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_23": {
+                  "id": "Ogre_Dead_23",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_12": {
+          "id": "Ogre_Dead_12",
+          "speaker": "Player",
+          "text": "Were you and Grukkoh in love?",
+          "context": "",
+          "checkflags": [
+            "33b6b21f-f6a6-4596-eef1-d9791a188b1d_bugbear",
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Ogre_Dead_0": {
+              "id": "Ogre_Dead_0",
+              "speaker": "Buthir",
+              "text": "Love... yeah... good love...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Ogre_Dead_22": {
+                  "id": "Ogre_Dead_22",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Ogre_Dead_21": {
+          "id": "Ogre_Dead_21",
+          "speaker": "Player",
+          "text": "Leave.",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        },
+        "Ogre_Dead_20": {
+          "id": "Ogre_Dead_20",
+          "speaker": "Narrator",
+          "text": "*The spell's power wanes. You can ask no more questions.*",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
     }
   }
 }

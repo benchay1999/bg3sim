@@ -1,10 +1,6 @@
 {
   "metadata": {
     "individual_metadata": {
-      "PAD_CurseRemovedByLight": {
-        "synopsis": "Curse is removed from player because they are close to a light.",
-        "how_to_trigger": "After SCL_EntryPoint_VB_Curse plays, remove the curse's influence by approaching a light or lighting a torch,"
-      },
       "PAD_AfterCutscene_2Characters": {
         "synopsis": "PAD for party banter when players enter SCL, after the cutscene (either SCL_EntryPoint_Mountain.lsj or SCL_EntryPoint_Underdark.lsj, depending on which entrance is used). Lines are generic enough about the shadow curse/look of the land that they work for both entrances to SCL. One line each from two companions if 2+ companions present.",
         "how_to_trigger": "After the SCL entry cutscene plays for either entrance, should get a 1 line each party banter from 2 companions if 2+ companions present."
@@ -13,18 +9,6 @@
         "synopsis": "Players are affected by the shadow curse for the first time. They start to lose health, and can feel the darkness starting to suck their life away.",
         "how_to_trigger": ""
       },
-      "PAD_AfterCutscene": {
-        "synopsis": "PAD for party banter when players enter SCL, after the cutscene (either SCL_EntryPoint_Mountain.lsj or SCL_EntryPoint_Underdark.lsj, depending on which entrance is used). Lines are generic enough about the shadow curse/look of the land that they work for both entrances to SCL. Two lines from one companion if only one companion present.",
-        "how_to_trigger": "After the SCL entry cutscene plays for either entrance, should get a 2-line party banter from a single companion if only one companion present"
-      },
-      "PAD_Curse_4Characters": {
-        "synopsis": "Players are affected by the shadow curse. They start to lose health, and can feel the darkness starting to suck their life away - and all 4 party members are available to AD about this.",
-        "how_to_trigger": ""
-      },
-      "DaisyAD_ReachTowers": {
-        "synopsis": "DaisyAD that plays on entering SCL from either entry point.",
-        "how_to_trigger": "Load either of the SCL entry points from the debug book and walk towards the center of the map."
-      },
       "PAD_Curse_2Characters": {
         "synopsis": "Players are affected by the shadow curse. They start to lose health, and can feel the darkness starting to suck their life away - and 2 party members are available to AD about this.",
         "how_to_trigger": ""
@@ -32,6 +16,22 @@
       "AD_Sign": {
         "synopsis": "Sign on the Risen Road before the Shadow Curse",
         "how_to_trigger": ""
+      },
+      "PAD_Curse_4Characters": {
+        "synopsis": "Players are affected by the shadow curse. They start to lose health, and can feel the darkness starting to suck their life away - and all 4 party members are available to AD about this.",
+        "how_to_trigger": ""
+      },
+      "PAD_AfterCutscene": {
+        "synopsis": "PAD for party banter when players enter SCL, after the cutscene (either SCL_EntryPoint_Mountain.lsj or SCL_EntryPoint_Underdark.lsj, depending on which entrance is used). Lines are generic enough about the shadow curse/look of the land that they work for both entrances to SCL. Two lines from one companion if only one companion present.",
+        "how_to_trigger": "After the SCL entry cutscene plays for either entrance, should get a 2-line party banter from a single companion if only one companion present"
+      },
+      "DaisyAD_ReachTowers": {
+        "synopsis": "DaisyAD that plays on entering SCL from either entry point.",
+        "how_to_trigger": "Load either of the SCL entry points from the debug book and walk towards the center of the map."
+      },
+      "PAD_CurseRemovedByLight": {
+        "synopsis": "Curse is removed from player because they are close to a light.",
+        "how_to_trigger": "After SCL_EntryPoint_VB_Curse plays, remove the curse's influence by approaching a light or lighting a torch,"
       },
       "Underdark": {
         "synopsis": "Players enter SCL for the first time from the underdark. Surveying the landscape, they reflect on the atmosphere and the shadow curse. The player may or may not have been previously briefed about the shadow curse by the druid Halsin",
@@ -43,95 +43,19 @@
       }
     },
     "source_files": [
-      "SCL_EntryPoint_PAD_CurseRemovedByLight.json",
       "SCL_EntryPoint_PAD_AfterCutscene_2Characters.json",
       "SCL_EntryPoint_PAD_Curse.json",
-      "SCL_EntryPoint_PAD_AfterCutscene.json",
-      "SCL_EntryPoint_PAD_Curse_4Characters.json",
-      "SCL_EntryPoint_DaisyAD_ReachTowers.json",
       "SCL_EntryPoint_PAD_Curse_2Characters.json",
       "SCL_EntryPoint_AD_Sign.json",
+      "SCL_EntryPoint_PAD_Curse_4Characters.json",
+      "SCL_EntryPoint_PAD_AfterCutscene.json",
+      "SCL_EntryPoint_DaisyAD_ReachTowers.json",
+      "SCL_EntryPoint_PAD_CurseRemovedByLight.json",
       "SCL_EntryPoint_Underdark.json",
       "SCL_EntryPoint_Mountain.json"
-    ],
-    "automatic_ordering": {
-      "reasoning": "Analyzing the sessions shows several narrative dependencies. First, the AD_Sign session occurs \u201cbefore the Shadow Curse\u201d happens \u2013 that is, it must be seen before any of the PAD_Curse events. The PAD_Curse sessions (PAD_Curse, PAD_Curse_2Characters, PAD_Curse_4Characters) represent essentially the same moment\u2014the player\u2019s first experience of the shadow curse\u2014but are chosen based on party composition, so only one will occur. Later, when the curse\u2019s effects are countered, PAD_CurseRemovedByLight plays, so that session must occur after whichever PAD_Curse variant happened. Similarly, on entering SCL there are two different entry sessions: Underdark and Mountain. Only one of these will trigger depending on which entry route is chosen (they are mutually exclusive). After the entry cutscene (which plays after arriving via Underdark or Mountain), a party banter session occurs \u2013 either PAD_AfterCutscene (if only one companion is present) or PAD_AfterCutscene_2Characters (if 2 or more companions are present). These two are mutually exclusive based on the party composition. In summary, AD_Sign must precede any curse event; one of the curse events must occur before PAD_CurseRemovedByLight; and the entry sessions (Underdark or Mountain) must occur before the cutscene party banter sessions. In addition, the sessions grouped by party composition (PAD_Curse variants and PAD_AfterCutscene variants) are mutually exclusive, and the two entry sessions (Underdark and Mountain) are mutually exclusive as well.",
-      "order": [
-        {
-          "predecessor": [
-            "AD_Sign"
-          ],
-          "successor": "PAD_Curse"
-        },
-        {
-          "predecessor": [
-            "AD_Sign"
-          ],
-          "successor": "PAD_Curse_2Characters"
-        },
-        {
-          "predecessor": [
-            "AD_Sign"
-          ],
-          "successor": "PAD_Curse_4Characters"
-        },
-        {
-          "predecessor": [
-            "PAD_Curse",
-            "PAD_Curse_2Characters",
-            "PAD_Curse_4Characters"
-          ],
-          "successor": "PAD_CurseRemovedByLight"
-        },
-        {
-          "predecessor": [
-            "Underdark",
-            "Mountain"
-          ],
-          "successor": "PAD_AfterCutscene"
-        },
-        {
-          "predecessor": [
-            "Underdark",
-            "Mountain"
-          ],
-          "successor": "PAD_AfterCutscene_2Characters"
-        }
-      ],
-      "exclusive": [
-        [
-          "Underdark",
-          "Mountain"
-        ],
-        [
-          "PAD_AfterCutscene",
-          "PAD_AfterCutscene_2Characters"
-        ],
-        [
-          "PAD_Curse",
-          "PAD_Curse_2Characters",
-          "PAD_Curse_4Characters"
-        ]
-      ]
-    }
+    ]
   },
   "dialogue": {
-    "PAD_CurseRemovedByLight_0": {
-      "id": "PAD_CurseRemovedByLight_0",
-      "speaker": "Player",
-      "text": "That light - it's protecting me from the curse.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
     "PAD_AfterCutscene_2Characters_0": {
       "id": "PAD_AfterCutscene_2Characters_0",
       "speaker": "Player",
@@ -333,143 +257,6 @@
       "is_end": true,
       "node_type": "normal",
       "children": {}
-    },
-    "PAD_AfterCutscene_0": {
-      "id": "PAD_AfterCutscene_0",
-      "speaker": "Player",
-      "text": "I've never seen darkness like this before. It's unsettling.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "PAD_AfterCutscene_1": {
-          "id": "PAD_AfterCutscene_1",
-          "speaker": "Player",
-          "text": "But if this is the way to Moonrise Towers, then this is the only path I've got.",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "PAD_Curse_4Characters_1": {
-      "id": "PAD_Curse_4Characters_1",
-      "speaker": "Player",
-      "text": "|Something's wrong. I feel weak. Drained.|",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "PAD_Curse_4Characters_2": {
-          "id": "PAD_Curse_4Characters_2",
-          "speaker": "Player",
-          "text": "|Best not to stand in there.|",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "PAD_Curse_4Characters_0": {
-              "id": "PAD_Curse_4Characters_0",
-              "speaker": "Player",
-              "text": "|There's no time to waste, we should get away from the darkness.|",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "PAD_Curse_4Characters_3": {
-                  "id": "PAD_Curse_4Characters_3",
-                  "speaker": "Player",
-                  "text": "|Good idea. Maybe there's somewhere safe from it?|",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": true,
-                  "node_type": "normal",
-                  "children": {}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "DaisyAD_ReachTowers_0": {
-      "id": "DaisyAD_ReachTowers_0",
-      "speaker": "",
-      "text": "We are approaching the Absolute. A telepathic storm is surging all around us.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [
-        "DAISY_FEMALE_VOICE"
-      ],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "DaisyAD_ReachTowers_1": {
-          "id": "DaisyAD_ReachTowers_1",
-          "speaker": "",
-          "text": "And the eye of the storm lies above that tower.<br>",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [
-            "DAISY_FEMALE_VOICE"
-          ],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
     },
     "PAD_Curse_2Characters_2": {
       "id": "PAD_Curse_2Characters_2",
@@ -970,6 +757,159 @@
       "node_type": "normal",
       "children": {}
     },
+    "PAD_Curse_4Characters_1": {
+      "id": "PAD_Curse_4Characters_1",
+      "speaker": "Player",
+      "text": "|Something's wrong. I feel weak. Drained.|",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "PAD_Curse_4Characters_2": {
+          "id": "PAD_Curse_4Characters_2",
+          "speaker": "Player",
+          "text": "|Best not to stand in there.|",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "PAD_Curse_4Characters_0": {
+              "id": "PAD_Curse_4Characters_0",
+              "speaker": "Player",
+              "text": "|There's no time to waste, we should get away from the darkness.|",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "PAD_Curse_4Characters_3": {
+                  "id": "PAD_Curse_4Characters_3",
+                  "speaker": "Player",
+                  "text": "|Good idea. Maybe there's somewhere safe from it?|",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": true,
+                  "node_type": "normal",
+                  "children": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "PAD_AfterCutscene_0": {
+      "id": "PAD_AfterCutscene_0",
+      "speaker": "Player",
+      "text": "I've never seen darkness like this before. It's unsettling.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "PAD_AfterCutscene_1": {
+          "id": "PAD_AfterCutscene_1",
+          "speaker": "Player",
+          "text": "But if this is the way to Moonrise Towers, then this is the only path I've got.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "DaisyAD_ReachTowers_0": {
+      "id": "DaisyAD_ReachTowers_0",
+      "speaker": "GROUP_Daisy",
+      "text": "We are approaching the Absolute. A telepathic storm is surging all around us.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [
+        "DAISY_FEMALE_VOICE"
+      ],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "DaisyAD_ReachTowers_1": {
+          "id": "DaisyAD_ReachTowers_1",
+          "speaker": "GROUP_Daisy",
+          "text": "And the eye of the storm lies above that tower.<br>",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [
+            "DAISY_FEMALE_VOICE"
+          ],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "PAD_CurseRemovedByLight_0": {
+      "id": "PAD_CurseRemovedByLight_0",
+      "speaker": "Player",
+      "text": "That light - it's protecting me from the curse.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "Underdark_1": {
       "id": "Underdark_1",
       "speaker": "",
@@ -981,7 +921,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "0",
+      "link": "Underdark_0",
       "is_end": false,
       "node_type": "tagcinematic",
       "children": {
@@ -1000,7 +940,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "0",
+          "link": "Underdark_0",
           "is_end": false,
           "node_type": "normal",
           "children": {}
@@ -1018,7 +958,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "11",
+          "link": "Underdark_11",
           "is_end": false,
           "node_type": "normal",
           "children": {
@@ -1035,7 +975,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "11",
+              "link": "Underdark_11",
               "is_end": false,
               "node_type": "taganswer",
               "children": {
@@ -1053,7 +993,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "11",
+                  "link": "Underdark_11",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1072,7 +1012,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "11",
+                  "link": "Underdark_11",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1091,7 +1031,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "11",
+                  "link": "Underdark_11",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1148,7 +1088,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "11",
+                  "link": "Underdark_11",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1167,7 +1107,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "11",
+                  "link": "Underdark_11",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1186,7 +1126,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "11",
+                  "link": "Underdark_11",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1211,7 +1151,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "36",
+      "link": "Mountain_36",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -1225,7 +1165,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "30",
+          "goto": "Mountain_30",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -1247,7 +1187,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "36",
+      "link": "Mountain_36",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -1346,7 +1286,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "36",
+      "link": "Mountain_36",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -1363,7 +1303,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "36",
+          "link": "Mountain_36",
           "is_end": false,
           "node_type": "tagcinematic",
           "children": {
@@ -1380,7 +1320,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "36",
+              "link": "Mountain_36",
               "is_end": false,
               "node_type": "taganswer",
               "children": {
@@ -1398,7 +1338,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "36",
+                  "link": "Mountain_36",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1415,7 +1355,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "36",
+                      "link": "Mountain_36",
                       "is_end": false,
                       "node_type": "taganswer",
                       "children": {
@@ -1432,7 +1372,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "36",
+                          "link": "Mountain_36",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -1449,7 +1389,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "36",
+                              "link": "Mountain_36",
                               "is_end": false,
                               "node_type": "tagcinematic",
                               "children": {
@@ -1464,7 +1404,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "36",
+                                  "link": "Mountain_36",
                                   "is_end": false,
                                   "node_type": "visualstate",
                                   "children": {
@@ -1481,7 +1421,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "36",
+                                      "link": "Mountain_36",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {
@@ -1496,7 +1436,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "36",
+                                          "link": "Mountain_36",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1551,7 +1491,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "36",
+                                          "link": "Mountain_36",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1566,7 +1506,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "36",
+                                              "link": "Mountain_36",
                                               "is_end": false,
                                               "node_type": "normal",
                                               "children": {}
@@ -1586,7 +1526,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "10",
+                                          "link": "Mountain_10",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1615,7 +1555,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "9",
+                                                  "goto": "Mountain_9",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -1638,7 +1578,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "10",
+                                          "link": "Mountain_10",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {}
@@ -1656,7 +1596,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "10",
+                                          "link": "Mountain_10",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {}
@@ -1674,7 +1614,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "9",
+                                          "link": "Mountain_9",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {}
@@ -1692,7 +1632,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "10",
+                                          "link": "Mountain_10",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {}
@@ -1737,7 +1677,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "36",
+                                                  "goto": "Mountain_36",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -1807,7 +1747,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "33",
+                  "link": "Mountain_33",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1826,7 +1766,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "33",
+                  "link": "Mountain_33",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1845,7 +1785,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "33",
+                  "link": "Mountain_33",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1864,7 +1804,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "33",
+                  "link": "Mountain_33",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1883,7 +1823,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "33",
+                  "link": "Mountain_33",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}

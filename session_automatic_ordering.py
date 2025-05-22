@@ -3,7 +3,11 @@ import langchain_openai
 import langchain_core
 from langchain_core.output_parsers import JsonOutputParser
 from tqdm import tqdm
-root_dir = "output_merged/Act1b"
+root_dir = "output_merged/Act1"
+from dotenv import load_dotenv
+load_dotenv()
+
+api_key = os.getenv("OPENAI_API_KEY")
 
 for merged_session_folder_path in tqdm(os.listdir(root_dir)):
     merged_session_folder = f"{root_dir}/{merged_session_folder_path}"
@@ -19,16 +23,16 @@ for merged_session_folder_path in tqdm(os.listdir(root_dir)):
         metadata = merged_session["metadata"]
         dialogue = merged_session["dialogue"]
         individual_metadata = metadata["individual_metadata"]
+        chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key=api_key)
 
-        chat = langchain_openai.ChatOpenAI(model="o3-mini", api_key=os.getenv("OPENAI_API_KEY"))
-
-        chain = chat | JsonOutputParser()
+        chain = (chat | JsonOutputParser()).with_retry(stop_after_attempt=5)
         prompt_path = "automatic_ordering.txt"
         with open(prompt_path, 'r') as f:
             prompt = f.read()
 
         prompt = prompt.format(individual_metadata=individual_metadata)
-
+        if "automatic_ordering" in metadata:
+            continue
         response = chain.invoke(prompt)
         # update the merged_session with the response
         merged_session["metadata"]["automatic_ordering"] = response

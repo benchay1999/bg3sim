@@ -5,23 +5,29 @@
         "synopsis": "",
         "how_to_trigger": ""
       },
-      "Torturers_Goblet_AssaultCustom": {
-        "synopsis": "Grush gets mad at the player for attacking or killing the tortured adventurer.",
-        "how_to_trigger": ""
-      },
       "Torturers_Spike_MurderCustom": {
         "synopsis": "Small crime dialogue with Spike if he sees you kill Liam.",
+        "how_to_trigger": ""
+      },
+      "Torturers_Goblet_AssaultCustom": {
+        "synopsis": "Grush gets mad at the player for attacking or killing the tortured adventurer.",
         "how_to_trigger": ""
       }
     },
     "source_files": [
       "GOB_CGB_Torturers_Spike_AssaultCustom.json",
-      "GOB_CGB_Torturers_Goblet_AssaultCustom.json",
-      "GOB_CGB_Torturers_Spike_MurderCustom.json"
+      "GOB_CGB_Torturers_Spike_MurderCustom.json",
+      "GOB_CGB_Torturers_Goblet_AssaultCustom.json"
     ],
     "automatic_ordering": {
-      "reasoning": "Looking at the session names and their description, we see that two of the sessions involve an assault scenario while one involves a murder outcome. In particular, 'Torturers_Spike_AssaultCustom' appears to be a dialogue related to initiating an assault, and then 'Torturers_Goblet_AssaultCustom' is described as Grush getting mad at the player for attacking or killing the tortured adventurer. This suggests that the assault on the tortured individual (as shown by the Spike assault session) logically comes before Grush\u2019s reaction in the goblet assault session. Separately, 'Torturers_Spike_MurderCustom' is a dialogue that occurs if Spike witnesses the killing of Liam \u2013 a clearly different (and graver) choice. It therefore seems that if a player triggers the murder dialogue for Liam, they would not (or could not) simultaneously have triggered the assault-related dialogue with Spike. This means 'Torturers_Spike_MurderCustom' and 'Torturers_Spike_AssaultCustom' are mutually exclusive, representing alternative outcomes in the narrative path.",
+      "reasoning": "In the provided sessions, we can identify that 'Torturers_Spike_MurderCustom' is triggered by an action of killing, which implies that it is a direct consequence of a prior action. This suggests that there is a sequential relationship where the murder must happen before the dialogue with Spike can occur. Additionally, 'Torturers_Goblet_AssaultCustom' indicates a reaction to an attack or killing, which means it also has a dependency on a preceding action. Since both 'Torturers_Spike_MurderCustom' and 'Torturers_Goblet_AssaultCustom' relate to violent actions, they cannot occur simultaneously, as they both refer to the aftermath of different violent events involving the same character (Spike). Thus, they are mutually exclusive as they cannot both reflect different outcomes from the same scenario.",
       "order": [
+        {
+          "predecessor": [
+            "Torturers_Spike_AssaultCustom"
+          ],
+          "successor": "Torturers_Spike_MurderCustom"
+        },
         {
           "predecessor": [
             "Torturers_Spike_AssaultCustom"
@@ -32,7 +38,7 @@
       "exclusive": [
         [
           "Torturers_Spike_MurderCustom",
-          "Torturers_Spike_AssaultCustom"
+          "Torturers_Goblet_AssaultCustom"
         ]
       ]
     }
@@ -98,6 +104,82 @@
         "DROWELF"
       ],
       "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Torturers_Spike_MurderCustom_1": {
+      "id": "Torturers_Spike_MurderCustom_1",
+      "speaker": "Torturer Spike",
+      "text": "No! I wanted him to suffer! N-not that you killed him too easily, your drowness. I meant no offence.",
+      "context": "NodeContext: He says the 'no! I wanted him to suffer!' on instinct, then realises he's talking to a drow and scrambles to correct himself and show enough reverence.",
+      "checkflags": [
+        "GOB_Torturers_State_KnowDen",
+        "DROWELF"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Torturers_Spike_MurderCustom_2": {
+      "id": "Torturers_Spike_MurderCustom_2",
+      "speaker": "Torturer Spike",
+      "text": "He can't be dead! I never got any answers out of him!",
+      "context": "InternalNodeContext: Goblins don't know where the den is.\rNodeContext: Spike is extremely worried. The palyer killed the prisoner he had to extract information from, and he's certain his commander will kill him for his failure.",
+      "checkflags": [
+        "GOB_Torturers_State_KnowDen = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Torturers_Spike_MurderCustom_0": {
+          "id": "Torturers_Spike_MurderCustom_0",
+          "speaker": "Torturer Spike",
+          "text": "She'll kill me. This is it. This is the end... but oh, I'll make you pay before I die.",
+          "context": "NodeContext: Fiercely angry - about to attack the player.",
+          "checkflags": [],
+          "setflags": [
+            "TemporaryHostilityAfterDialog"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "Torturers_Spike_MurderCustom_3": {
+      "id": "Torturers_Spike_MurderCustom_3",
+      "speaker": "Torturer Spike",
+      "text": "No! I still had more to do with him! Guess I'll have to give his due to you, eh?",
+      "context": "NodeContext: sadistic - he couldn't exact revenge on the prisoner, so the player will have to pay instead. Starts combat.",
+      "checkflags": [
+        "GOB_Torturers_State_KnowDen"
+      ],
+      "setflags": [
+        "TemporaryHostilityAfterDialog"
+      ],
       "ruletags": [],
       "approval": [],
       "rolls": "",
@@ -175,82 +257,6 @@
       ],
       "setflags": [
         "GOB_GCB_Goblet_Assault_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Torturers_Spike_MurderCustom_1": {
-      "id": "Torturers_Spike_MurderCustom_1",
-      "speaker": "Torturer Spike",
-      "text": "No! I wanted him to suffer! N-not that you killed him too easily, your drowness. I meant no offence.",
-      "context": "NodeContext: He says the 'no! I wanted him to suffer!' on instinct, then realises he's talking to a drow and scrambles to correct himself and show enough reverence.",
-      "checkflags": [
-        "GOB_Torturers_State_KnowDen",
-        "DROWELF"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Torturers_Spike_MurderCustom_2": {
-      "id": "Torturers_Spike_MurderCustom_2",
-      "speaker": "Torturer Spike",
-      "text": "He can't be dead! I never got any answers out of him!",
-      "context": "InternalNodeContext: Goblins don't know where the den is.\rNodeContext: Spike is extremely worried. The palyer killed the prisoner he had to extract information from, and he's certain his commander will kill him for his failure.",
-      "checkflags": [
-        "GOB_Torturers_State_KnowDen = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Torturers_Spike_MurderCustom_0": {
-          "id": "Torturers_Spike_MurderCustom_0",
-          "speaker": "Torturer Spike",
-          "text": "She'll kill me. This is it. This is the end... but oh, I'll make you pay before I die.",
-          "context": "NodeContext: Fiercely angry - about to attack the player.",
-          "checkflags": [],
-          "setflags": [
-            "TemporaryHostilityAfterDialog"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Torturers_Spike_MurderCustom_3": {
-      "id": "Torturers_Spike_MurderCustom_3",
-      "speaker": "Torturer Spike",
-      "text": "No! I still had more to do with him! Guess I'll have to give his due to you, eh?",
-      "context": "NodeContext: sadistic - he couldn't exact revenge on the prisoner, so the player will have to pay instead. Starts combat.",
-      "checkflags": [
-        "GOB_Torturers_State_KnowDen"
-      ],
-      "setflags": [
-        "TemporaryHostilityAfterDialog"
       ],
       "ruletags": [],
       "approval": [],

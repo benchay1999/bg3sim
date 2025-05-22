@@ -299,7 +299,7 @@ class ScenarioSimulator:
         return all_sequences # Return the sorted list of distinct, valid sequences
 
     def simulate_scenario(self, num_traversals=1, export_txt=False, export_json=False, 
-                          min_utterances=3, prioritize_approval=True, include_all_sessions=True):
+                          prioritize_approval=True, include_all_sessions=True):
         """
         Simulate traversals through the scenario
         
@@ -307,7 +307,6 @@ class ScenarioSimulator:
             num_traversals (int): Number of traversals to generate
             export_txt (bool): Whether to export traversals to text files
             export_json (bool): Whether to export traversals to JSON files
-            min_utterances (int): Minimum number of utterances required for each session
             prioritize_approval (bool): Whether to prioritize sessions and paths with approval effects
             include_all_sessions (bool): Whether to try to include all possible sessions
             
@@ -316,7 +315,7 @@ class ScenarioSimulator:
                   Each dictionary contains session sequence, paths, node data, and total approval count.
         """
         print(f"\n{Fore.WHITE}===== SCENARIO SIMULATOR ====={Style.RESET_ALL}")
-        print(f"Generating {num_traversals} traversals for scenario (min {min_utterances} utterances per session)")
+        print(f"Generating {num_traversals} traversals for scenario")
         
         if prioritize_approval:
             print(f"{Fore.CYAN}Prioritizing sessions and paths with companion approval effects{Style.RESET_ALL}")
@@ -343,84 +342,62 @@ class ScenarioSimulator:
             # Re-check sessions_with_approval for the print statement below if needed, although prioritization is now off
             sessions_with_approval_fallback = self._identify_sessions_with_approval() if prioritize_approval else {}
 
+        # This will now store traversal_dict parts from all combinations from all num_traversals runs.
+        all_traversal_data_with_flags = [] 
+
         if not valid_sequences:
             print(f"{Fore.RED}No valid session sequences found even after fallback! Check constraints.{Style.RESET_ALL}")
             return []
-        
+
         print(f"{Fore.GREEN}Found {len(valid_sequences)} valid session sequences{Style.RESET_ALL}")
-        
-        # Count total sessions and approval sessions in best sequence (using original prioritize_approval flag for context)
-        if valid_sequences:
-            best_sequence = valid_sequences[0] # After sorting, the first one is the 'best'
-            total_sessions = len(best_sequence)
-            # Use the initially identified approval sessions for reporting, even if fallback occurred
-            sessions_with_approval_report = self._identify_sessions_with_approval() if prioritize_approval else {}
-            approval_sessions = sum(1 for s in best_sequence if s in sessions_with_approval_report)
-            print(f"{Fore.GREEN}Best sequence includes {total_sessions} sessions ({approval_sessions} with approval effects based on initial priority){Style.RESET_ALL}")
-        
-        generated_traversals = []
+        non_empty_sequences = [seq for seq in valid_sequences if seq]
+        if not non_empty_sequences:
+            print(f"{Fore.YELLOW}All valid sequences are empty. Cannot generate traversals.{Style.RESET_ALL}")
+            return []
+
         for i in range(num_traversals):
-            # Choose a random valid sequence
-            if not valid_sequences: # Should not happen based on check above, but safety first
-                 print(f"{Fore.RED}Ran out of valid sequences unexpectedly.{Style.RESET_ALL}")
-                 break
-            sequence = random.choice(valid_sequences)
+            sequence = random.choice(non_empty_sequences)
             
-            print(f"\n{Fore.CYAN}Generating Traversal {i+1} / {num_traversals}: Using sequence {sequence}{Style.RESET_ALL}")
+            print(f"\n{Fore.CYAN}For Traversal Run {i+1} / {num_traversals}: Getting all path combinations for sequence {sequence}{Style.RESET_ALL}")
             
-            # Generate paths for each session in the sequence
-            traversal = {
-                "session_sequence": sequence,
-                "paths": {},
-                "node_data": {},  # Store detailed node data from traversals
-                "total_approval_nodes": 0 # Initialize approval count
-            }
+            initial_flags_for_this_run = set() # Example: Use a base set of flags
             
-            # Choose a random path and traverse through it for each session
-            total_approval_nodes_in_traversal = 0
-            for session_id in sequence:
-                # Choose a random path for this session with minimum utterances
-                path = self._choose_random_path(session_id, min_utterances=min_utterances, prioritize_approval=prioritize_approval)
-                traversal["paths"][session_id] = path
-                
-                # Actually traverse the path to simulate the dialog
-                # We need the node data to count approvals
-                node_data = self._traverse_session_path(session_id, path)
-                traversal["node_data"][session_id] = node_data
-                
-                # Count meaningful dialog nodes (nodes with text)
-                meaningful_nodes = [n for n in node_data if isinstance(n, dict) and n.get('text')]
-                print(f"  Session {session_id}: Traversed path with {len(path)} nodes, {len(meaningful_nodes)} dialog interactions")
-
-                # Count approval nodes visited in this session's path
-                session_approval_count = 0
-                for node in node_data:
-                     if isinstance(node, dict) and node.get('approval'):
-                         session_approval_count += 1 # Count nodes with non-empty approval lists
-                total_approval_nodes_in_traversal += session_approval_count
-                print(f"    Approvals in this session: {session_approval_count}")
-
-            # Store the total count for this traversal
-            traversal["total_approval_nodes"] = total_approval_nodes_in_traversal
-            print(f"{Fore.MAGENTA}Traversal {i+1} total approval nodes: {total_approval_nodes_in_traversal}{Style.RESET_ALL}")
-            generated_traversals.append(traversal)
+            traversal_combinations_for_sequence = self.simulate_single_traversal(
+                initial_flags=initial_flags_for_this_run, 
+                chosen_sequence=sequence
+            )
             
-            # Export if requested (can be done before sorting)
-            if export_txt:
-                self._export_traversal_to_txt(traversal, f"scenario_traversal_{self.scenario_name}_{i+1}.txt")
+            # Extract the traversal_dict part from each combination and add to our main list
+            for trav_dict, final_flags in traversal_combinations_for_sequence:
+                all_traversal_data_with_flags.append((trav_dict, final_flags))
             
-            if export_json:
-                self._export_traversal_to_json(traversal, f"scenario_traversal_{self.scenario_name}_{i+1}.json")
+            print(f"{Fore.MAGENTA}Traversal Run {i+1}: Generated {len(traversal_combinations_for_sequence)} path combinations for sequence {sequence}.{Style.RESET_ALL}")
 
         # Sort the generated traversals by the total number of approval nodes visited (descending)
-        generated_traversals.sort(key=lambda t: t.get('total_approval_nodes', 0), reverse=True)
+        # Sorting a list of (traversal_dict, final_flags_for_combo) tuples.
+        # Key for sorting should access the traversal_dict part.
+        all_traversal_data_with_flags.sort(key=lambda t: t[0].get('total_approval_nodes', 0), reverse=True)
 
-        print(f"\n{Fore.GREEN}Finished generating {len(generated_traversals)} traversals. Sorted by approval count.{Style.RESET_ALL}")
-        # Print summary of sorted traversals
-        for idx, trav in enumerate(generated_traversals):
-             print(f"  Rank {idx+1}: Sequence {trav['session_sequence']} - Approvals: {trav['total_approval_nodes']}")
+        print(f"\n{Fore.GREEN}Finished generating. Total path combinations found across all runs: {len(all_traversal_data_with_flags)}.{Style.RESET_ALL}")
+        if all_traversal_data_with_flags:
+            print(f"{Fore.CYAN}Top {min(10, len(all_traversal_data_with_flags))} combinations (by approval nodes):{Style.RESET_ALL}")
+            for idx, (trav_dict, final_flags) in enumerate(all_traversal_data_with_flags[:10]): # Print top 10 for brevity
+                 print(f"  Rank {idx+1}: Sequence {trav_dict['session_sequence']} - Approvals: {trav_dict['total_approval_nodes']} - Final Flags: {len(final_flags)}")
         
-        return generated_traversals
+        # Export logic needs careful consideration due to potentially many combinations.
+        if (export_txt or export_json) and all_traversal_data_with_flags:
+            print(f"\n{Fore.YELLOW}Exporting top {min(5, len(all_traversal_data_with_flags))} combinations as an example...{Style.RESET_ALL}")
+            os.makedirs(f"output_scenario_traversals/{self.scenario_name}", exist_ok=True)
+            for i, (trav_dict, final_flags) in enumerate(all_traversal_data_with_flags[:min(5, len(all_traversal_data_with_flags))]): 
+                # We might want to include final_flags in the export if relevant, or just export trav_dict.
+                # For now, exports use trav_dict.
+                base_filename = f"output_scenario_traversals/{self.scenario_name}/scenario_combo_{self.scenario_name}_rank{i+1}"
+                if export_txt:
+                    self._export_traversal_to_txt(trav_dict, f"{base_filename}.txt") # _export_traversal_to_txt expects a trav_dict
+                if export_json:
+                    self._export_traversal_to_json(trav_dict, f"{base_filename}.json") # _export_traversal_to_json expects a trav_dict
+
+        return all_traversal_data_with_flags # Return the list of (traversal_dict, final_flags) tuples
     
     def _simulate_session(self, session_id):
         """
@@ -492,9 +469,8 @@ class ScenarioSimulator:
             test_mode=False,  # True: Ignore flag requirements for simulation
             verbose=True
         )
-        
         # Store the paths for this session
-        self.session_path_options[session_id] = paths
+        self.session_path_options[session_id] = paths[:5] # TODO: paths ? or paths[:5] ?
         
         # Clean up temp file
         os.remove(temp_file)
@@ -996,98 +972,120 @@ class ScenarioSimulator:
 
         return node_data, final_flags
 
-    def simulate_single_traversal(self, initial_flags, min_utterances=3, prioritize_approval=True, include_all_sessions=True, debug_mode=False):
+    def simulate_single_traversal(self, initial_flags, chosen_sequence=None):
         """
-        Simulates a single traversal through the scenario, respecting constraints,
-        starting with initial flags, and returning the traversal data and final flags.
+        Simulates all path combinations for a GIVEN session sequence, 
+        starting with initial flags, and returning all traversal data and final flags for each combination.
 
         Args:
-            initial_flags (set): The set of flags active before starting this scenario.
-            min_utterances (int): Minimum utterances per session.
-            prioritize_approval (bool): Prioritize sessions/paths with approval effects.
-            include_all_sessions (bool): Attempt to include all possible sessions.
+            initial_flags (set): The set of flags active before starting this scenario sequence.
+            chosen_sequence (list): The specific sequence of session IDs to process.
 
         Returns:
-            tuple: (traversal_data, final_flags_set)
-                   - traversal_data: Dictionary containing the session sequence and node data for the run.
-                                     Returns None if no valid traversal could be made.
-                   - final_flags_set: The set of active flags after the scenario traversal.
+            list: A list of (traversal_data, final_flags_set) tuples.
+                  Each tuple represents one complete path combination through the chosen_sequence.
+                  - traversal_data: Dictionary containing the session sequence and node data for the run.
+                  - final_flags_set: The set of active flags after that specific path combination.
         """
-        print(f"\n{Fore.WHITE}===== SIMULATING SINGLE SCENARIO TRAVERSAL ====={Style.RESET_ALL}")
-        print(f"Scenario: {self.scenario_name}")
-        # print(f"Initial flags received: {initial_flags}") # Optional debug
+        if not chosen_sequence:
+            print(f"{Fore.RED}No sequence provided to simulate_single_traversal. Cannot proceed.{Style.RESET_ALL}")
+            return []
 
-        # Ensure all sessions are simulated to get path options (does this only once)
-        for session_id in self.session_ids:
-            self._simulate_session(session_id)
+        print(f"\n{Fore.WHITE}===== SIMULATING ALL PATH COMBINATIONS FOR SEQUENCE: {chosen_sequence} ====={Style.RESET_ALL}")
+        # print(f"Initial flags for this sequence: {initial_flags}") # Optional debug
 
-        # Generate valid session sequences based on constraints and priorities
-        valid_sequences = self._generate_valid_sequences(
-            prioritize_approval=prioritize_approval,
-            include_all_sessions=include_all_sessions
+        # Ensure all sessions in the chosen sequence have their paths pre-simulated
+        for session_id in chosen_sequence:
+            if session_id not in self.session_path_options:
+                self._simulate_session(session_id) # This populates self.session_path_options
+        
+        all_completed_traversals_with_flags = []
+        current_path_details = [] # To build up one combination at a time
+        self._generate_path_combinations_for_sequence_recursive(
+            session_idx=0,
+            sequence=chosen_sequence,
+            current_flags=initial_flags.copy(),
+            current_path_details=current_path_details,
+            all_completed_traversals_with_flags=all_completed_traversals_with_flags
         )
-        if debug_mode:
-            import pdb; pdb.set_trace()
-        # Fallback if no sequences found with prioritization enabled
-        if not valid_sequences and prioritize_approval:
-            print(f"{Fore.YELLOW}No valid sequences found prioritizing approval. Retrying without...{Style.RESET_ALL}")
-            valid_sequences = self._generate_valid_sequences(prioritize_approval=False, include_all_sessions=include_all_sessions)
+        
+        print(f"{Fore.GREEN}For sequence {chosen_sequence}, found {len(all_completed_traversals_with_flags)} path combinations.{Style.RESET_ALL}")
+        return all_completed_traversals_with_flags
 
-        # Filter out empty sequences before choosing
-        non_empty_sequences = [seq for seq in valid_sequences if seq]
+    def _count_utterances_for_path(self, session_id, path):
+        """Counts the number of nodes with text in a given path for a session."""
+        simulator = self.session_simulators.get(session_id)
+        if not simulator or not path:
+            return 0
+        utterance_count = 0
+        for node_id in path:
+            if node_id in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]:
+                continue
+            node = simulator._get_node(node_id) # Assuming DialogSimulator has _get_node
+            if node and node.get('text'):
+                utterance_count += 1
+        return utterance_count
 
-        if not non_empty_sequences:
-            print(f"{Fore.RED}No non-empty valid session sequences found for scenario {self.scenario_name}! Check constraints.{Style.RESET_ALL}")
-            return None, initial_flags # Return None for data, initial flags unchanged
+    def _generate_path_combinations_for_sequence_recursive(
+        self,
+        session_idx,
+        sequence,
+        current_flags,
+        current_path_details, # List of tuples: (session_id, path_chosen, node_data_for_path)
+        all_completed_traversals_with_flags
+    ):
+        if session_idx == len(sequence):
+            # Base case: A complete combination of paths for the sequence is formed
+            final_traversal_dict = {
+                "scenario_name": self.scenario_name,
+                "session_sequence": list(sequence), # Ensure it's a list
+                "paths": {item[0]: item[1] for item in current_path_details},
+                "node_data": {item[0]: item[2] for item in current_path_details},
+                "session_synopses": {
+                    item[0]: self.metadata.get('individual_metadata', {}).get(item[0], {}).get('synopsis', 'Synopsis not found')
+                    for item in current_path_details
+                },
+                "total_approval_nodes": sum(
+                    sum(1 for node in item[2] if isinstance(node, dict) and node.get('approval'))
+                    for item in current_path_details if item[2]
+                )
+            }
+            all_completed_traversals_with_flags.append((final_traversal_dict, current_flags.copy()))
+            return
 
-        # Choose one valid, non-empty sequence (e.g., the first/best one or random)
-        sequence = random.choice(non_empty_sequences)
+        session_id = sequence[session_idx]
+        available_paths_for_session = self.session_path_options.get(session_id, [])
 
-        print(f"{Fore.CYAN}Using session sequence: {sequence}{Style.RESET_ALL}")
+        # Use all available_paths_for_session directly
+        paths_to_process = available_paths_for_session
 
-        # Initialize traversal data structure for this single run
-        traversal_data = {
-            "scenario_name": self.scenario_name,
-            "session_sequence": sequence,
-            "paths": {}, # Store chosen path for each session
-            "node_data": {}, # Store node data from execution
-            "session_synopses": {} # Add dictionary to store synopses
-        }
-        if debug_mode:
-            import pdb; pdb.set_trace()
-        # Initialize flags for this specific scenario run, starting with the input
-        current_scenario_flags = initial_flags.copy()
+        if not paths_to_process:
+            # If no paths for this session (even without utterance filtering)
+            print(f"{Fore.YELLOW}No paths found for session {session_id}. Skipping in this combination.{Style.RESET_ALL}")
+            current_path_details.append((session_id, [], [])) # Path is empty list, node_data is empty list
+            self._generate_path_combinations_for_sequence_recursive(
+                session_idx + 1,
+                sequence,
+                current_flags, # Flags remain unchanged
+                current_path_details,
+                all_completed_traversals_with_flags
+            )
+            current_path_details.pop() # Backtrack
+            return
 
-        # Execute the chosen sequence session by session
-        for session_id in sequence:
-            # Choose a path for this session
-            path = self._choose_random_path(session_id, min_utterances=min_utterances, prioritize_approval=prioritize_approval)
-            if not path:
-                 print(f"{Fore.YELLOW}Could not find a suitable path for session {session_id}. Skipping session, flags not updated.{Style.RESET_ALL}")
-                 traversal_data["paths"][session_id] = []
-                 traversal_data["node_data"][session_id] = [] # Indicate skipped session
-                 continue # Move to the next session
-
-            traversal_data["paths"][session_id] = path
-            # Retrieve and store synopsis
-            synopsis = self.metadata.get('individual_metadata', {}).get(session_id, {}).get('synopsis', 'Synopsis not found')
-            traversal_data["session_synopses"][session_id] = synopsis
-
-            # Execute the chosen path with the current flags
-            # print(f"Executing session {session_id} with flags: {current_scenario_flags}")
-            session_node_data, session_final_flags = self.execute_session_path(session_id, path, current_scenario_flags)
-
-            # Store the resulting node data
-            traversal_data["node_data"][session_id] = session_node_data
-
-            # Update the flags for the next session
-            current_scenario_flags = session_final_flags
-            # print(f"Session {session_id} finished. Updated flags: {current_scenario_flags}")
-
-        if debug_mode:
-            import pdb; pdb.set_trace()
-        print(f"{Fore.GREEN}Single scenario traversal complete for {self.scenario_name}. Final flag count: {len(current_scenario_flags)}{Style.RESET_ALL}")
-        return traversal_data, current_scenario_flags
+        for path in paths_to_process:
+            path_node_data, flags_after_path = self.execute_session_path(session_id, path, current_flags.copy())
+            
+            current_path_details.append((session_id, path, path_node_data))
+            
+            self._generate_path_combinations_for_sequence_recursive(
+                session_idx + 1,
+                sequence,
+                flags_after_path,
+                current_path_details,
+                all_completed_traversals_with_flags
+            )
+            current_path_details.pop() # Backtrack
 
 def main():
     print(f"{Fore.CYAN}Baldur's Gate 3 Scenario Simulator{Style.RESET_ALL}")
@@ -1128,15 +1126,6 @@ def main():
     except ValueError:
         print(f"{Fore.YELLOW}Invalid input. Using default value of 1.{Style.RESET_ALL}")
     
-    # Get minimum utterances option
-    min_utterances = 3
-    try:
-        min_utterances_input = input(f"Minimum utterances per session [default: 3]: ")
-        if min_utterances_input:
-            min_utterances = int(min_utterances_input)
-    except ValueError:
-        print(f"{Fore.YELLOW}Invalid input. Using default value of 3.{Style.RESET_ALL}")
-    
     # Get prioritize approval option
     prioritize_approval = input(f"Prioritize sessions with companion approval effects? (y/n, default: y):{Style.RESET_ALL} ").lower() != 'n'
     
@@ -1152,7 +1141,6 @@ def main():
         num_traversals=num_traversals,
         export_txt=export_txt,
         export_json=export_json,
-        min_utterances=min_utterances,
         prioritize_approval=prioritize_approval,
         include_all_sessions=include_all_sessions
     )

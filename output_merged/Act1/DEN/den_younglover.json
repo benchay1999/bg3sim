@@ -1,10 +1,6 @@
 {
   "metadata": {
     "individual_metadata": {
-      "2": {
-        "synopsis": "This is Bex's default dialogue if Danis is either occupied or dead, so it's a bit uneasy and tonally ambiguous without giving a strong indication of what's on his mind.",
-        "how_to_trigger": ""
-      },
       "AD_1": {
         "synopsis": "This will be Danis' AD if Bex is separated from him, possibly by being dead, possibly just by being occupied. He is a bit uneasy because of this, in any case.",
         "how_to_trigger": ""
@@ -17,88 +13,91 @@
         "synopsis": "This is Danis' default dialogue if Bex is either occupied or dead, so it's a bit uneasy and tonally ambiguous without giving a strong indication of what's on his mind.",
         "how_to_trigger": ""
       },
+      "2": {
+        "synopsis": "This is Bex's default dialogue if Danis is either occupied or dead, so it's a bit uneasy and tonally ambiguous without giving a strong indication of what's on his mind.",
+        "how_to_trigger": ""
+      },
       "AD_Shared": {
         "synopsis": "The two young lovers are enthusiastically making plans for when they arrive in Baldur's Gate.",
         "how_to_trigger": ""
       }
     },
     "source_files": [
-      "DEN_YoungLover_2.json",
       "DEN_YoungLover_AD_1.json",
       "DEN_YoungLover_AD_2.json",
       "DEN_YoungLover_1.json",
+      "DEN_YoungLover_2.json",
       "DEN_YoungLover_AD_Shared.json"
     ],
     "automatic_ordering": {
-      "reasoning": "In Baldur\u2019s Gate 3 the dialogue between Danis and Bex falls into two broad branches: one in which both lovers are together and share an upbeat conversation (AD_Shared), and another in which at least one character is either absent, occupied, or even dead. The AD_Shared session is triggered when both characters are present and enthusiastic about their future, so it cannot occur alongside any conversation where one of them is missing. For each character there are two dialogue sessions triggered by the same negative condition \u2013 one being the standard (default) dialogue (\u20181\u2019 for Danis and \u20182\u2019 for Bex) and one an \u201cAD\u201d (alternate/additional dialogue, AD_1 for Danis and AD_2 for Bex) that reflects a slightly different tone. These two for each character are alternatives; only one version (default or AD) can show up in a single playthrough when the partner is absent. Thus, we have a set of mutual exclusivity constraints between the positive branch (AD_Shared) and any dialogue indicating separation or absence, as well as between the two options for each character.",
-      "order": [],
+      "reasoning": "The sessions can be categorized by the states of the characters Danis and Bex. Sessions AD_1 and AD_2 occur when the respective other character (Bex or Danis) is either dead or occupied, indicating a direct relationship where one session depends on the state of the other character. Therefore, if Danis is dead or occupied, Bex's dialogue (AD_2) can occur, while if Bex is dead or occupied, Danis' dialogue (AD_1) can occur. Sessions 1 and 2 are default dialogues that occur under the same conditions as AD_1 and AD_2, respectively. Thus, they are also part of the same logical chain. The session AD_Shared represents a normal state where both characters are together and engaged in positive dialogue, which cannot occur if either character is dead or occupied, making it mutually exclusive with all other sessions.",
+      "order": [
+        {
+          "predecessor": [
+            "AD_1"
+          ],
+          "successor": "AD_2"
+        },
+        {
+          "predecessor": [
+            "AD_2"
+          ],
+          "successor": "AD_1"
+        },
+        {
+          "predecessor": [
+            "AD_1"
+          ],
+          "successor": "1"
+        },
+        {
+          "predecessor": [
+            "AD_2"
+          ],
+          "successor": "2"
+        }
+      ],
       "exclusive": [
         [
-          "AD_Shared",
+          "AD_1",
+          "AD_2"
+        ],
+        [
+          "AD_1",
           "1"
         ],
         [
-          "AD_Shared",
-          "AD_1"
-        ],
-        [
-          "AD_Shared",
+          "AD_1",
           "2"
         ],
         [
-          "AD_Shared",
-          "AD_2"
+          "AD_2",
+          "1"
+        ],
+        [
+          "AD_2",
+          "2"
+        ],
+        [
+          "AD_1",
+          "AD_Shared"
+        ],
+        [
+          "AD_2",
+          "AD_Shared"
         ],
         [
           "1",
-          "AD_1"
+          "AD_Shared"
         ],
         [
           "2",
-          "AD_2"
+          "AD_Shared"
         ]
       ]
     }
   },
   "dialogue": {
-    "2_0": {
-      "id": "2_0",
-      "speaker": "Bex",
-      "text": "I couldn't be more ready to leave.",
-      "context": "",
-      "checkflags": [
-        "DEN_General_YoungLover_2_HasMet"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "2_1": {
-      "id": "2_1",
-      "speaker": "Bex",
-      "text": "We have a chance at a new start. Finally.",
-      "context": "",
-      "checkflags": [
-        "DEN_General_YoungLover_2_HasMet = False"
-      ],
-      "setflags": [
-        "DEN_General_YoungLover_2_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
     "AD_1_0": {
       "id": "AD_1_0",
       "speaker": "Danis",
@@ -299,6 +298,44 @@
       ],
       "setflags": [
         "DEN_General_YoungLover_1_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "2_0": {
+      "id": "2_0",
+      "speaker": "Bex",
+      "text": "I couldn't be more ready to leave.",
+      "context": "",
+      "checkflags": [
+        "DEN_General_YoungLover_2_HasMet"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "2_1": {
+      "id": "2_1",
+      "speaker": "Bex",
+      "text": "We have a chance at a new start. Finally.",
+      "context": "",
+      "checkflags": [
+        "DEN_General_YoungLover_2_HasMet = False"
+      ],
+      "setflags": [
+        "DEN_General_YoungLover_2_HasMet"
       ],
       "ruletags": [],
       "approval": [],

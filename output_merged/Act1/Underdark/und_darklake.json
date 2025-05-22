@@ -1,21 +1,21 @@
 {
   "metadata": {
     "individual_metadata": {
+      "DuergarBoatAtCave": {
+        "synopsis": "Dialogue when clicking on boat in cave to reach Grymforge. Player can stay or cross. This dialogue only appears once player has already been to Grymforge.",
+        "how_to_trigger": "Repro steps (will only work with new game):1. Start the game.2. loadlevel WLD_Main_A3. Use debug book - go to region - act 1 - underdark - lone duergar4. Use the Recon command: \"setOnstage S_UND_DuergarCamp_BoatAtCave\"6. goto -16.45, 0.50, -235.737. Click on the boat."
+      },
       "CINE_RaftApproaching": {
         "synopsis": "We see a raft with duergar approaching our raft.",
         "how_to_trigger": ""
-      },
-      "Boat": {
-        "synopsis": "Raft dialogue. The player can decide either to sail somewhere or to walk away from the raft.",
-        "how_to_trigger": "Go to X: -10  Y: -210Click on boat"
       },
       "RaftEvent": {
         "synopsis": "The players use a boat to reach the duergar camp. In the middle of the lake, they are confronted by a group of duergar on a raft. Being Drow/Duergar changes the tone of the conversation and makes the persuasion event easier. Having the mark of the Absolute can also make the persuasion event easier.",
         "how_to_trigger": "Go to X:0 , Y:-205 (goto 0, -205)Click on boat at dockWill play after departing cinematic"
       },
-      "DuergarBoatAtCave": {
-        "synopsis": "Dialogue when clicking on boat in cave to reach Grymforge. Player can stay or cross. This dialogue only appears once player has already been to Grymforge.",
-        "how_to_trigger": "Repro steps (will only work with new game):1. Start the game.2. loadlevel WLD_Main_A3. Use debug book - go to region - act 1 - underdark - lone duergar4. Use the Recon command: \"setOnstage S_UND_DuergarCamp_BoatAtCave\"6. goto -16.45, 0.50, -235.737. Click on the boat."
+      "Boat": {
+        "synopsis": "Raft dialogue. The player can decide either to sail somewhere or to walk away from the raft.",
+        "how_to_trigger": "Go to X: -10  Y: -210Click on boat"
       },
       "DuergarBoatAtCamp": {
         "synopsis": "Dialogue when clciking boat in Grymforge to reach the other side of the lake. Player can cross or stay.",
@@ -23,38 +23,100 @@
       }
     },
     "source_files": [
-      "UND_DarkLake_CINE_RaftApproaching.json",
-      "UND_DarkLake_Boat.json",
-      "UND_DarkLake_RaftEvent.json",
       "UND_DarkLake_DuergarBoatAtCave.json",
+      "UND_DarkLake_CINE_RaftApproaching.json",
+      "UND_DarkLake_RaftEvent.json",
+      "UND_DarkLake_Boat.json",
       "UND_DarkLake_DuergarBoatAtCamp.json"
     ],
     "automatic_ordering": {
-      "reasoning": "Reviewing the provided sessions, we can deduce three ordering relationships. First, the 'CINE_RaftApproaching' session is a cinematic introduction showing the approaching duergar raft, and it naturally sets up the raft boat encounter, so it should come before the 'Boat' session which offers the raft dialogue and decision. Second, the 'Boat' session \u2013 where the player decides between sailing or walking away \u2013 is a precursor to the 'RaftEvent' session, where the boat is used to travel and the player is confronted by duergar. Thus, 'Boat' should precede 'RaftEvent'. Finally, looking at the two duergar boat dialogue sessions, 'DuergarBoatAtCave' is triggered when in the cave and is only available after the player has already been to Grymforge. After this, a subsequent dialogue occurs at the camp in 'DuergarBoatAtCamp'. Therefore, the cave dialogue must come before the camp dialogue. There is no explicit mutual exclusiveness between these sessions provided in the input \u2013 they appear to be sequential encounters rather than mutually exclusive branches.",
+      "reasoning": "Looking at the session descriptions we can deduce a couple of temporal or causal links. First, the Duergar boat sessions occur in two different locations. The 'DuergarBoatAtCave' dialogue \u2013 which is triggered when clicking on the boat in a cave to reach Grymforge \u2013 will only appear after the player has already been to Grymforge. In our available sessions the only dialogue clearly set in Grymforge is 'DuergarBoatAtCamp' (triggered by clicking on the boat in Grymforge). This suggests that the Grymforge boat event (DuergarBoatAtCamp) must occur before the cave dialogue (DuergarBoatAtCave). Second, regarding the raft-related sessions, the cinematic 'CINE_RaftApproaching' shows a raft with duergar approaching and is intended to set the stage for the ensuing confrontation described in 'RaftEvent' (which plays after a departing cinematic). This provides a clear ordering in which the cinematic must happen before the actual event dialogue. There is no clear evidence of mutually exclusive occurrences among these sessions \u2013 the sessions we see appear to belong to different segments or branches of the journey. (Note that in a full game path there might be branch choices, but given the descriptions provided, we list only ordering constraints.)",
       "order": [
+        {
+          "predecessor": [
+            "DuergarBoatAtCamp"
+          ],
+          "successor": "DuergarBoatAtCave"
+        },
         {
           "predecessor": [
             "CINE_RaftApproaching"
           ],
-          "successor": "Boat"
-        },
-        {
-          "predecessor": [
-            "Boat"
-          ],
           "successor": "RaftEvent"
-        },
-        {
-          "predecessor": [
-            "DuergarBoatAtCave"
-          ],
-          "successor": "DuergarBoatAtCamp"
         }
       ],
       "exclusive": []
     }
   },
   "dialogue": {
+    "DuergarBoatAtCave_0": {
+      "id": "DuergarBoatAtCave_0",
+      "speaker": "Narrator",
+      "text": "*The boat is ready to sail.*",
+      "context": "CinematicNodeContext: Boat sits in the water",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "DuergarBoatAtCave_1": {
+          "id": "DuergarBoatAtCave_1",
+          "speaker": "Player",
+          "text": "Travel to Grymforge.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [
+            "UND_DarkLake_Event_MoveToCampOnBoat"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "DuergarBoatAtCave_3": {
+              "id": "DuergarBoatAtCave_3",
+              "speaker": "",
+              "text": "",
+              "context": "CinematicNodeContext: Party boards the boat. Player sees the boat sail for a few seconds from the shore with the party on board.\rInternalNodeContext: Cinematic needs to be few seconds, a single node. Just to establish we're going through a long journey from A to B.",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": true,
+              "node_type": "tagcinematic",
+              "children": {}
+            }
+          }
+        },
+        "DuergarBoatAtCave_2": {
+          "id": "DuergarBoatAtCave_2",
+          "speaker": "Player",
+          "text": "Leave.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
     "CINE_RaftApproaching_0": {
       "id": "CINE_RaftApproaching_0",
       "speaker": "",
@@ -71,334 +133,6 @@
       "node_type": "tagcinematic",
       "children": {}
     },
-    "Boat_10": {
-      "id": "Boat_10",
-      "speaker": "Narrator",
-      "text": "*The craft is ready to sail.*",
-      "context": "InternalNodeContext: ~Should share sequence with *A vessel wobbles on the lake's murky waters.*",
-      "checkflags": [
-        "UND_DarkLake_Boat_HasMet",
-        "UND_EbonLake_State_RaftAtCave"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "2",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Boat_8": {
-          "id": "Boat_8",
-          "speaker": "Player",
-          "text": "Sail into the darkness.",
-          "context": "InternalNodeContext: First time using the boat, sailing to the camp",
-          "checkflags": [
-            "UND_DarkLake_State_LakeEncounterHappened = False"
-          ],
-          "setflags": [
-            "UND_EbonLake_Event_MoveToLake"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "2",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Boat_2": {
-              "id": "Boat_2",
-              "speaker": "",
-              "text": "",
-              "context": "CinematicNodeContext: ~The player departs from the Myconid beach and pilots the raft out into the underground lake\n~[EA: Treat this like it's propelled by sails, there is not rowing or special animations for this]",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": true,
-              "node_type": "tagcinematic",
-              "children": {}
-            }
-          }
-        },
-        "Boat_12": {
-          "id": "Boat_12",
-          "speaker": "Player",
-          "text": "Set out for the duergar camp.",
-          "context": "InternalNodeContext: Sailing to the camp",
-          "checkflags": [
-            "UND_DarkLake_State_LakeEncounterHappened"
-          ],
-          "setflags": [
-            "UND_EbonLake_Event_MoveToCamp"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "2",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {}
-        },
-        "Boat_7": {
-          "id": "Boat_7",
-          "speaker": "Player",
-          "text": "Leave.",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Boat_14": {
-      "id": "Boat_14",
-      "speaker": "Narrator",
-      "text": "*The boat beckons you aboard.*",
-      "context": "InternalNodeContext: ~Should share sequence with *A vessel wobbles on the lake's murky waters.*",
-      "checkflags": [
-        "UND_DarkLake_Boat_HasMet",
-        "UND_EbonLake_State_RaftAtCamp"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "9",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Boat_9": {
-          "id": "Boat_9",
-          "speaker": "Player",
-          "text": "Board and sail to the cave shore.",
-          "context": "",
-          "checkflags": [],
-          "setflags": [
-            "UND_EbonLake_Event_MoveToCave"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Boat_4": {
-              "id": "Boat_4",
-              "speaker": "",
-              "text": "",
-              "context": "CinematicNodeContext: ~The player departs from the Duergar Fortress and pilots the raft out into the underground lake",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": true,
-              "node_type": "tagcinematic",
-              "children": {}
-            }
-          }
-        },
-        "Boat_11": {
-          "id": "Boat_11",
-          "speaker": "Player",
-          "text": "Leave.",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Boat_15": {
-      "id": "Boat_15",
-      "speaker": "Narrator",
-      "text": "*A vessel wobbles on the lake's murky waters.*",
-      "context": "",
-      "checkflags": [
-        "UND_DarkLake_Boat_HasMet = False",
-        "UND_EbonLake_State_RaftAtCamp"
-      ],
-      "setflags": [
-        "UND_DarkLake_Boat_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "9",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Boat_18": {
-      "id": "Boat_18",
-      "speaker": "Narrator",
-      "text": "*The craft is ready to sail.*",
-      "context": "",
-      "checkflags": [
-        "UND_EbonLake_State_RaftAtLake"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "8",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Boat_1": {
-          "id": "Boat_1",
-          "speaker": "Player",
-          "text": "Continue your journey across the lake.",
-          "context": "InternalNodeContext: Sailing to the camp after the lake fight",
-          "checkflags": [],
-          "setflags": [
-            "UND_EbonLake_Event_MoveToCamp"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Boat_3": {
-              "id": "Boat_3",
-              "speaker": "",
-              "text": "",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "taganswer",
-              "children": {
-                "Boat_0": {
-                  "id": "Boat_0",
-                  "speaker": "",
-                  "text": "",
-                  "context": "CinematicNodeContext: ~The player stays the course, to the Fortress\n~[EA: Treat this like it's propelled by sails, there is not rowing or special animations for this]",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": true,
-                  "node_type": "tagcinematic",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Boat_17": {
-          "id": "Boat_17",
-          "speaker": "Player",
-          "text": "Return to the cave shore.",
-          "context": "InternalNodeContext: Sailing back to the cave after the lake fight",
-          "checkflags": [],
-          "setflags": [
-            "UND_EbonLake_Event_MoveToCave"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Boat_5": {
-              "id": "Boat_5",
-              "speaker": "",
-              "text": "",
-              "context": "CinematicNodeContext: ~The player pilots the raft about to head back the way it came\n~[EA: Treat this like it's propelled by sails, there is not rowing or special animations for this]",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": true,
-              "node_type": "tagcinematic",
-              "children": {}
-            }
-          }
-        },
-        "Boat_19": {
-          "id": "Boat_19",
-          "speaker": "Player",
-          "text": "Leave.",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Boat_20": {
-      "id": "Boat_20",
-      "speaker": "Narrator",
-      "text": "*A vessel wobbles on the lake's murky waters.*",
-      "context": "",
-      "checkflags": [
-        "UND_DarkLake_Boat_HasMet = False",
-        "UND_EbonLake_State_RaftAtCave"
-      ],
-      "setflags": [
-        "UND_DarkLake_Boat_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "8",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {}
-    },
     "RaftEvent_15": {
       "id": "RaftEvent_15",
       "speaker": "Corsair Greymon",
@@ -412,7 +146,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "41",
+      "link": "RaftEvent_41",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -427,7 +161,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "41",
+          "link": "RaftEvent_41",
           "is_end": false,
           "node_type": "alias",
           "children": {
@@ -456,7 +190,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "32",
+                  "goto": "RaftEvent_32",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -481,7 +215,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "41",
+      "link": "RaftEvent_41",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -496,7 +230,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "41",
+          "link": "RaftEvent_41",
           "is_end": false,
           "node_type": "alias",
           "children": {
@@ -511,7 +245,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "51",
+              "link": "RaftEvent_51",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -525,8 +259,8 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "115",
-                  "link": "51",
+                  "goto": "RaftEvent_115",
+                  "link": "RaftEvent_51",
                   "is_end": false,
                   "node_type": "jump",
                   "children": {}
@@ -541,8 +275,8 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "0",
-                  "link": "51",
+                  "goto": "RaftEvent_0",
+                  "link": "RaftEvent_51",
                   "is_end": false,
                   "node_type": "jump",
                   "children": {}
@@ -557,8 +291,8 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "97",
-                  "link": "51",
+                  "goto": "RaftEvent_97",
+                  "link": "RaftEvent_51",
                   "is_end": false,
                   "node_type": "jump",
                   "children": {}
@@ -578,7 +312,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "51",
+                  "link": "RaftEvent_51",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -593,7 +327,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "51",
+                      "link": "RaftEvent_51",
                       "is_end": false,
                       "node_type": "rollresult",
                       "children": {
@@ -610,7 +344,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "51",
+                          "link": "RaftEvent_51",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -625,7 +359,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "51",
+                              "link": "RaftEvent_51",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -642,7 +376,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "51",
+                                  "link": "RaftEvent_51",
                                   "is_end": false,
                                   "node_type": "alias",
                                   "children": {
@@ -657,7 +391,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "120",
+                                      "link": "RaftEvent_120",
                                       "is_end": false,
                                       "node_type": "visualstate",
                                       "children": {
@@ -672,7 +406,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "120",
+                                          "link": "RaftEvent_120",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -717,7 +451,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "86",
+                          "link": "RaftEvent_86",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {}
@@ -793,7 +527,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "67",
+                  "link": "RaftEvent_67",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -827,7 +561,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "137",
+                      "goto": "RaftEvent_137",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -843,7 +577,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "47",
+                      "goto": "RaftEvent_47",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -894,7 +628,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "71",
+                  "goto": "RaftEvent_71",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -910,7 +644,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "78",
+                  "goto": "RaftEvent_78",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -935,7 +669,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "41",
+      "link": "RaftEvent_41",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -950,7 +684,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "41",
+          "link": "RaftEvent_41",
           "is_end": false,
           "node_type": "alias",
           "children": {
@@ -979,7 +713,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "26",
+                  "goto": "RaftEvent_26",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -1005,7 +739,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "2",
+      "link": "RaftEvent_2",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -1020,7 +754,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "2",
+          "link": "RaftEvent_2",
           "is_end": false,
           "node_type": "tagcinematic",
           "children": {
@@ -1035,7 +769,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "2",
+              "link": "RaftEvent_2",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -1053,7 +787,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "2",
+                  "link": "RaftEvent_2",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1254,7 +988,7 @@
                                       "ruletags": [],
                                       "approval": [],
                                       "rolls": "",
-                                      "goto": "77",
+                                      "goto": "RaftEvent_77",
                                       "link": "",
                                       "is_end": false,
                                       "node_type": "jump",
@@ -1286,7 +1020,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "2",
+                  "link": "RaftEvent_2",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1301,7 +1035,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "2",
+                      "link": "RaftEvent_2",
                       "is_end": false,
                       "node_type": "normal",
                       "children": {
@@ -1316,7 +1050,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "2",
+                          "link": "RaftEvent_2",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -1331,7 +1065,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "2",
+                              "link": "RaftEvent_2",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1348,7 +1082,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "2",
+                                  "link": "RaftEvent_2",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -1364,7 +1098,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "51",
+                                  "link": "RaftEvent_51",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {
@@ -1379,7 +1113,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "51",
+                                      "link": "RaftEvent_51",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {
@@ -1396,7 +1130,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "51",
+                                          "link": "RaftEvent_51",
                                           "is_end": false,
                                           "node_type": "alias",
                                           "children": {
@@ -1473,7 +1207,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "2",
+                              "link": "RaftEvent_2",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {}
@@ -1489,7 +1223,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "2",
+                              "link": "RaftEvent_2",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1504,7 +1238,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "2",
+                                  "link": "RaftEvent_2",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -1524,7 +1258,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "2",
+                              "link": "RaftEvent_2",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1539,7 +1273,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "2",
+                                  "link": "RaftEvent_2",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -1565,7 +1299,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "43",
+                  "link": "RaftEvent_43",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1609,7 +1343,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "4",
+                              "goto": "RaftEvent_4",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -1644,7 +1378,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "77",
+                          "goto": "RaftEvent_77",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -1669,7 +1403,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "43",
+                  "link": "RaftEvent_43",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1725,7 +1459,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "54",
+                  "link": "RaftEvent_54",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -1745,7 +1479,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "51",
+                  "link": "RaftEvent_51",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1789,7 +1523,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "2",
+                              "goto": "RaftEvent_2",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -1839,7 +1573,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "77",
+                              "goto": "RaftEvent_77",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -1866,7 +1600,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "51",
+                  "link": "RaftEvent_51",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1881,7 +1615,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "51",
+                      "link": "RaftEvent_51",
                       "is_end": false,
                       "node_type": "rollresult",
                       "children": {
@@ -1896,7 +1630,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "51",
+                          "link": "RaftEvent_51",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -1911,7 +1645,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "51",
+                              "link": "RaftEvent_51",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1928,7 +1662,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "51",
+                                  "link": "RaftEvent_51",
                                   "is_end": false,
                                   "node_type": "alias",
                                   "children": {
@@ -1943,7 +1677,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "72",
+                                      "link": "RaftEvent_72",
                                       "is_end": false,
                                       "node_type": "alias",
                                       "children": {
@@ -1958,7 +1692,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "80",
+                                          "link": "RaftEvent_80",
                                           "is_end": false,
                                           "node_type": "alias",
                                           "children": {}
@@ -1984,7 +1718,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "104",
+                      "link": "RaftEvent_104",
                       "is_end": false,
                       "node_type": "rollresult",
                       "children": {
@@ -1999,7 +1733,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "104",
+                          "link": "RaftEvent_104",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {}
@@ -2018,7 +1752,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "11",
+                  "goto": "RaftEvent_11",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2034,7 +1768,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "71",
+                  "goto": "RaftEvent_71",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2065,7 +1799,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "77",
+                      "goto": "RaftEvent_77",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -2093,7 +1827,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "41",
+      "link": "RaftEvent_41",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -2108,7 +1842,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "41",
+          "link": "RaftEvent_41",
           "is_end": false,
           "node_type": "alias",
           "children": {
@@ -2123,7 +1857,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "120",
+              "link": "RaftEvent_120",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -2137,8 +1871,8 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "115",
-                  "link": "120",
+                  "goto": "RaftEvent_115",
+                  "link": "RaftEvent_120",
                   "is_end": false,
                   "node_type": "jump",
                   "children": {}
@@ -2153,8 +1887,8 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "0",
-                  "link": "120",
+                  "goto": "RaftEvent_0",
+                  "link": "RaftEvent_120",
                   "is_end": false,
                   "node_type": "jump",
                   "children": {}
@@ -2169,8 +1903,8 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "97",
-                  "link": "120",
+                  "goto": "RaftEvent_97",
+                  "link": "RaftEvent_120",
                   "is_end": false,
                   "node_type": "jump",
                   "children": {}
@@ -2190,7 +1924,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "120",
+                  "link": "RaftEvent_120",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -2205,7 +1939,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "120",
+                      "link": "RaftEvent_120",
                       "is_end": false,
                       "node_type": "rollresult",
                       "children": {
@@ -2220,7 +1954,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "120",
+                          "link": "RaftEvent_120",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -2235,7 +1969,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "120",
+                              "link": "RaftEvent_120",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -2252,7 +1986,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "120",
+                                  "link": "RaftEvent_120",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {
@@ -2267,7 +2001,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "120",
+                                      "link": "RaftEvent_120",
                                       "is_end": false,
                                       "node_type": "visualstate",
                                       "children": {
@@ -2282,7 +2016,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "120",
+                                          "link": "RaftEvent_120",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -2385,7 +2119,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "49",
+                  "link": "RaftEvent_49",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {}
@@ -2434,7 +2168,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "76",
+                          "goto": "RaftEvent_76",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -2482,7 +2216,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "92",
+                              "goto": "RaftEvent_92",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -2504,7 +2238,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "71",
+                  "goto": "RaftEvent_71",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2520,7 +2254,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "11",
+                  "goto": "RaftEvent_11",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2536,7 +2270,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "78",
+                  "goto": "RaftEvent_78",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2561,7 +2295,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "41",
+      "link": "RaftEvent_41",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -2576,7 +2310,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "41",
+          "link": "RaftEvent_41",
           "is_end": false,
           "node_type": "alias",
           "children": {
@@ -2646,7 +2380,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "42",
+                  "goto": "RaftEvent_42",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2664,7 +2398,7 @@
               "ruletags": [],
               "approval": [],
               "rolls": "",
-              "goto": "71",
+              "goto": "RaftEvent_71",
               "link": "",
               "is_end": false,
               "node_type": "jump",
@@ -2695,7 +2429,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "77",
+                  "goto": "RaftEvent_77",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -2707,43 +2441,48 @@
         }
       }
     },
-    "DuergarBoatAtCave_0": {
-      "id": "DuergarBoatAtCave_0",
+    "Boat_10": {
+      "id": "Boat_10",
       "speaker": "Narrator",
-      "text": "*The boat is ready to sail.*",
-      "context": "CinematicNodeContext: Boat sits in the water",
-      "checkflags": [],
+      "text": "*The craft is ready to sail.*",
+      "context": "InternalNodeContext: ~Should share sequence with *A vessel wobbles on the lake's murky waters.*",
+      "checkflags": [
+        "UND_DarkLake_Boat_HasMet",
+        "UND_EbonLake_State_RaftAtCave"
+      ],
       "setflags": [],
       "ruletags": [],
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "",
+      "link": "Boat_2",
       "is_end": false,
       "node_type": "normal",
       "children": {
-        "DuergarBoatAtCave_1": {
-          "id": "DuergarBoatAtCave_1",
+        "Boat_8": {
+          "id": "Boat_8",
           "speaker": "Player",
-          "text": "Travel to Grymforge.",
-          "context": "",
-          "checkflags": [],
+          "text": "Sail into the darkness.",
+          "context": "InternalNodeContext: First time using the boat, sailing to the camp",
+          "checkflags": [
+            "UND_DarkLake_State_LakeEncounterHappened = False"
+          ],
           "setflags": [
-            "UND_DarkLake_Event_MoveToCampOnBoat"
+            "UND_EbonLake_Event_MoveToLake"
           ],
           "ruletags": [],
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "",
+          "link": "Boat_2",
           "is_end": false,
           "node_type": "normal",
           "children": {
-            "DuergarBoatAtCave_3": {
-              "id": "DuergarBoatAtCave_3",
+            "Boat_2": {
+              "id": "Boat_2",
               "speaker": "",
               "text": "",
-              "context": "CinematicNodeContext: Party boards the boat. Player sees the boat sail for a few seconds from the shore with the party on board.\rInternalNodeContext: Cinematic needs to be few seconds, a single node. Just to establish we're going through a long journey from A to B.",
+              "context": "CinematicNodeContext: ~The player departs from the Myconid beach and pilots the raft out into the underground lake\n~[EA: Treat this like it's propelled by sails, there is not rowing or special animations for this]",
               "checkflags": [],
               "setflags": [],
               "ruletags": [],
@@ -2757,8 +2496,28 @@
             }
           }
         },
-        "DuergarBoatAtCave_2": {
-          "id": "DuergarBoatAtCave_2",
+        "Boat_12": {
+          "id": "Boat_12",
+          "speaker": "Player",
+          "text": "Set out for the duergar camp.",
+          "context": "InternalNodeContext: Sailing to the camp",
+          "checkflags": [
+            "UND_DarkLake_State_LakeEncounterHappened"
+          ],
+          "setflags": [
+            "UND_EbonLake_Event_MoveToCamp"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "Boat_2",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {}
+        },
+        "Boat_7": {
+          "id": "Boat_7",
           "speaker": "Player",
           "text": "Leave.",
           "context": "",
@@ -2774,6 +2533,241 @@
           "children": {}
         }
       }
+    },
+    "Boat_14": {
+      "id": "Boat_14",
+      "speaker": "Narrator",
+      "text": "*The boat beckons you aboard.*",
+      "context": "InternalNodeContext: ~Should share sequence with *A vessel wobbles on the lake's murky waters.*",
+      "checkflags": [
+        "UND_DarkLake_Boat_HasMet",
+        "UND_EbonLake_State_RaftAtCamp"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "Boat_9",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Boat_9": {
+          "id": "Boat_9",
+          "speaker": "Player",
+          "text": "Board and sail to the cave shore.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [
+            "UND_EbonLake_Event_MoveToCave"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Boat_4": {
+              "id": "Boat_4",
+              "speaker": "",
+              "text": "",
+              "context": "CinematicNodeContext: ~The player departs from the Duergar Fortress and pilots the raft out into the underground lake",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": true,
+              "node_type": "tagcinematic",
+              "children": {}
+            }
+          }
+        },
+        "Boat_11": {
+          "id": "Boat_11",
+          "speaker": "Player",
+          "text": "Leave.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "Boat_15": {
+      "id": "Boat_15",
+      "speaker": "Narrator",
+      "text": "*A vessel wobbles on the lake's murky waters.*",
+      "context": "",
+      "checkflags": [
+        "UND_DarkLake_Boat_HasMet = False",
+        "UND_EbonLake_State_RaftAtCamp"
+      ],
+      "setflags": [
+        "UND_DarkLake_Boat_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "Boat_9",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Boat_18": {
+      "id": "Boat_18",
+      "speaker": "Narrator",
+      "text": "*The craft is ready to sail.*",
+      "context": "",
+      "checkflags": [
+        "UND_EbonLake_State_RaftAtLake"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "Boat_8",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Boat_1": {
+          "id": "Boat_1",
+          "speaker": "Player",
+          "text": "Continue your journey across the lake.",
+          "context": "InternalNodeContext: Sailing to the camp after the lake fight",
+          "checkflags": [],
+          "setflags": [
+            "UND_EbonLake_Event_MoveToCamp"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Boat_3": {
+              "id": "Boat_3",
+              "speaker": "",
+              "text": "",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "taganswer",
+              "children": {
+                "Boat_0": {
+                  "id": "Boat_0",
+                  "speaker": "",
+                  "text": "",
+                  "context": "CinematicNodeContext: ~The player stays the course, to the Fortress\n~[EA: Treat this like it's propelled by sails, there is not rowing or special animations for this]",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": true,
+                  "node_type": "tagcinematic",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Boat_17": {
+          "id": "Boat_17",
+          "speaker": "Player",
+          "text": "Return to the cave shore.",
+          "context": "InternalNodeContext: Sailing back to the cave after the lake fight",
+          "checkflags": [],
+          "setflags": [
+            "UND_EbonLake_Event_MoveToCave"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Boat_5": {
+              "id": "Boat_5",
+              "speaker": "",
+              "text": "",
+              "context": "CinematicNodeContext: ~The player pilots the raft about to head back the way it came\n~[EA: Treat this like it's propelled by sails, there is not rowing or special animations for this]",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": true,
+              "node_type": "tagcinematic",
+              "children": {}
+            }
+          }
+        },
+        "Boat_19": {
+          "id": "Boat_19",
+          "speaker": "Player",
+          "text": "Leave.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "Boat_20": {
+      "id": "Boat_20",
+      "speaker": "Narrator",
+      "text": "*A vessel wobbles on the lake's murky waters.*",
+      "context": "",
+      "checkflags": [
+        "UND_DarkLake_Boat_HasMet = False",
+        "UND_EbonLake_State_RaftAtCave"
+      ],
+      "setflags": [
+        "UND_DarkLake_Boat_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "Boat_8",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {}
     },
     "DuergarBoatAtCamp_0": {
       "id": "DuergarBoatAtCamp_0",

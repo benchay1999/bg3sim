@@ -5,13 +5,13 @@
         "synopsis": "A body is found protruding out of a tunnel in the GOB prison. For patch 6: After pulling the body out, the player can use the tunnel to instantly escape. Patch 7: the player will need to find a shovel to dig their way out, but this will be outside the dialogue.",
         "how_to_trigger": "Go to GOB prison and click on either the tunnel or the body that is sticking out of it. Recon 'oe gotogobprison' to be teleported there"
       },
-      "PAD_TunnelBlocked": {
-        "synopsis": "The player has pulled the body from the tunnel in the goblin prison, but it's still blocked by debris. The player can attack it if they can do enough damage (vulnrable to Force damge), are small enough to get good levrage, or shapeshifted into a badger. This AD plays to inform the player the way is still blocked and to hint at the solution.",
-        "how_to_trigger": "Load WLD_Main_AGo to 416; 37; -32 (Goblin Prison)Click on the body and free it from the tunnelClick on the tunnel again"
-      },
       "Escapee_Dead": {
         "synopsis": "A dead body is found trapped in a half-dug prison hole. After freeing him, it's clear he died attempting to escape the prison before ended up like the rest as worg chow.",
         "how_to_trigger": "Triggered if SwD is cast on the body (once free of the tunnel, cast is blocked otherwise)To trigger GREETING1. Start the game.2. loadlevel WLD_Main_A3. goto 416.76; 37.801; -46.3944. addDebugSpell Target_SpeakWithDead5. infiniteAp6. Use the speak with dead spell to start dialog."
+      },
+      "PAD_TunnelBlocked": {
+        "synopsis": "The player has pulled the body from the tunnel in the goblin prison, but it's still blocked by debris. The player can attack it if they can do enough damage (vulnrable to Force damge), are small enough to get good levrage, or shapeshifted into a badger. This AD plays to inform the player the way is still blocked and to hint at the solution.",
+        "how_to_trigger": "Load WLD_Main_AGo to 416; 37; -32 (Goblin Prison)Click on the body and free it from the tunnelClick on the tunnel again"
       },
       "Guard": {
         "synopsis": "Warrior Plig is a goblin on patrol around the wolf pens in the goblin camp. She's bored and wishing for some action.",
@@ -20,32 +20,31 @@
     },
     "source_files": [
       "GOB_PrisonEscape_Tunnel.json",
-      "GOB_PrisonEscape_PAD_TunnelBlocked.json",
       "GOB_PrisonEscape_Escapee_Dead.json",
+      "GOB_PrisonEscape_PAD_TunnelBlocked.json",
       "GOB_PrisonEscape_Guard.json"
     ],
     "automatic_ordering": {
-      "reasoning": "The Tunnel session is the starting point where the player finds and interacts with the body in the tunnel at the goblin prison. Once the body is pulled, two potential continuations diverge. In one branch (triggering PAD_TunnelBlocked), the debris still blocks the tunnel, and the AD explains this blockage and hints at a solution. In the alternate branch, after clearing the debris, the player can free the body properly so that Speak With Dead can be cast, triggering the Escapee_Dead session. Because the player can only follow one of these branches, PAD_TunnelBlocked and Escapee_Dead are mutually exclusive. The Guard session is an independent dialog event without any ordering constraints relative to these events.",
+      "reasoning": [
+        "The session 'Tunnel' involves a body found in a tunnel that can be used for escape. The session 'Escapee_Dead' describes a dead body found in a similar context but focuses on a dead escapee. Therefore, 'Escapee_Dead' logically follows 'Tunnel' as it discusses the fate of a body that might relate to the escape theme.",
+        "The session 'PAD_TunnelBlocked' occurs after 'Tunnel' because it describes the situation where the player has pulled the body from the tunnel but is still unable to escape due to blockage. Thus, it must be triggered after the player interacts with the tunnel.",
+        "The 'Guard' session does not have any direct predecessor or successor constraints relative to the other sessions, but it provides context about the surroundings of the goblin camp and can be triggered independently."
+      ],
       "order": [
         {
           "predecessor": [
             "Tunnel"
           ],
-          "successor": "PAD_TunnelBlocked"
+          "successor": "Escapee_Dead"
         },
         {
           "predecessor": [
             "Tunnel"
           ],
-          "successor": "Escapee_Dead"
+          "successor": "PAD_TunnelBlocked"
         }
       ],
-      "exclusive": [
-        [
-          "PAD_TunnelBlocked",
-          "Escapee_Dead"
-        ]
-      ]
+      "exclusive": []
     }
   },
   "dialogue": {
@@ -201,22 +200,6 @@
           "children": {}
         }
       }
-    },
-    "PAD_TunnelBlocked_0": {
-      "id": "PAD_TunnelBlocked_0",
-      "speaker": "Player",
-      "text": "Still blocked - but should be easy enough to clear.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
     },
     "Escapee_Dead_12": {
       "id": "Escapee_Dead_12",
@@ -616,6 +599,22 @@
           "children": {}
         }
       }
+    },
+    "PAD_TunnelBlocked_0": {
+      "id": "PAD_TunnelBlocked_0",
+      "speaker": "Player",
+      "text": "Still blocked - but should be easy enough to clear.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
     },
     "Guard_0": {
       "id": "Guard_0",

@@ -1,31 +1,31 @@
 {
   "metadata": {
     "individual_metadata": {
-      "PAD_FindBook": {
-        "synopsis": "PAD when you pick up 'The Necromancy of Thay' (DangerousBook_Tome.lsj). Character might have a sense that the book is evil or just be curious about what it might contain.",
-        "how_to_trigger": ""
-      },
       "Tome": {
         "synopsis": "The player finds a book on necromancy - from one of the Red Wizards of Thay. Once read, the book will be bound to whoever tried to read it. Some origins will demand you let them read it, while others will want the book burned. If you read the book, you'll hear strange, distant whispers. The more you read, the stronger the voices will become, and the greater the chance that you'll be driven mad.",
         "how_to_trigger": "Repro steps:1. loadlevel WLD_Main_A2. goto -648.75, -1.51, -361.753. Interact with Necromancy of ThayTo open book:1. Select Player Character2. In ReCon enter: SetCharacterOsirisFlag FOR_DangerousBook_State_HasTomeKey3. Interact with the Tome again."
       },
-      "VB_BookDestroyed": {
-        "synopsis": "Companion reaction to the player destroying the DangerousBook ('The Necromancy of Thay'). This book was clearly magical, whispering offers of dark power. You destroyed it by dropping it on the ground and blasting it with radiant damage. When you destroyed it, there were some spooky vfx. Most characters would see this as a good thing. Gale, Astarion wanted the book for themselves, however.",
+      "PAD_FindBook": {
+        "synopsis": "PAD when you pick up 'The Necromancy of Thay' (DangerousBook_Tome.lsj). Character might have a sense that the book is evil or just be curious about what it might contain.",
         "how_to_trigger": ""
       },
       "PAD_PlayerTriedToTakeTome": {
         "synopsis": "Plays if the player tries to take DangerousBook (The Necromancy of Thay) out of their companion's inventory when the book is bound to that companion (and therefore locked to their inventory). The PAD will play and the tome won't be removed. Only valid for Astarion, Gale, who want to keep the book and won't let anyone take it from them.",
         "how_to_trigger": ""
+      },
+      "VB_BookDestroyed": {
+        "synopsis": "Companion reaction to the player destroying the DangerousBook ('The Necromancy of Thay'). This book was clearly magical, whispering offers of dark power. You destroyed it by dropping it on the ground and blasting it with radiant damage. When you destroyed it, there were some spooky vfx. Most characters would see this as a good thing. Gale, Astarion wanted the book for themselves, however.",
+        "how_to_trigger": ""
       }
     },
     "source_files": [
-      "FOR_DangerousBook_PAD_FindBook.json",
       "FOR_DangerousBook_Tome.json",
-      "FOR_DangerousBook_VB_BookDestroyed.json",
-      "FOR_DangerousBook_PAD_PlayerTriedToTakeTome.json"
+      "FOR_DangerousBook_PAD_FindBook.json",
+      "FOR_DangerousBook_PAD_PlayerTriedToTakeTome.json",
+      "FOR_DangerousBook_VB_BookDestroyed.json"
     ],
     "automatic_ordering": {
-      "reasoning": "The sequence starts when the player finds the book (PAD_FindBook). After picking it up, the player can trigger the reading event (Tome), which binds the book to whoever reads it. Once the book is bound (typically to a companion such as Astarion or Gale), if the player tries to remove it from the companion's inventory, PAD_PlayerTriedToTakeTome is triggered. Alternatively, if the player destroys the book (through actions like dropping and blasting it with radiant damage), the VB_BookDestroyed session is played. Thus, the act of destroying the book is mutually exclusive with reading it (Tome) or attempting to take it from a companion (PAD_PlayerTriedToTakeTome), since once the book is destroyed, neither reading nor theft is possible.",
+      "reasoning": "When analyzing the sessions, we note that picking up the book (PAD_FindBook) happens first, since it is the trigger when the player obtains the book on the ground. Once the book is picked up, the player can read it (Tome), which binds the book to the character. After the book is bound, two distinct narrative branches occur: one where a companion stops the player from taking the bound book (PAD_PlayerTriedToTakeTome), and one where the book is destroyed (VB_BookDestroyed), prompting a companion reaction. Since the player\u2019s decision leads to one or the other, PAD_PlayerTriedToTakeTome and VB_BookDestroyed are mutually exclusive.",
       "order": [
         {
           "predecessor": [
@@ -38,13 +38,15 @@
             "Tome"
           ],
           "successor": "PAD_PlayerTriedToTakeTome"
+        },
+        {
+          "predecessor": [
+            "Tome"
+          ],
+          "successor": "VB_BookDestroyed"
         }
       ],
       "exclusive": [
-        [
-          "Tome",
-          "VB_BookDestroyed"
-        ],
         [
           "PAD_PlayerTriedToTakeTome",
           "VB_BookDestroyed"
@@ -53,46 +55,6 @@
     }
   },
   "dialogue": {
-    "PAD_FindBook_0": {
-      "id": "PAD_FindBook_0",
-      "speaker": "Player",
-      "text": "'The Necromancy of Thay'? Sounds ominous.",
-      "context": "",
-      "checkflags": [
-        "ORI_Gale_Knows_NeedsMagicItems = False"
-      ],
-      "setflags": [
-        "FOR_DangerousBook_Found"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FindBook_1": {
-      "id": "PAD_FindBook_1",
-      "speaker": "Player",
-      "text": "'The Necromancy of Thay'? Ominous, but Gale might find it useful.",
-      "context": "",
-      "checkflags": [
-        "ORI_Gale_Knows_NeedsMagicItems"
-      ],
-      "setflags": [
-        "FOR_DangerousBook_Found"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
     "Tome_8": {
       "id": "Tome_8",
       "speaker": "Narrator",
@@ -108,7 +70,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "68",
+      "link": "Tome_68",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -140,7 +102,7 @@
               "ruletags": [],
               "approval": [],
               "rolls": "",
-              "goto": "88",
+              "goto": "Tome_88",
               "link": "",
               "is_end": false,
               "node_type": "jump",
@@ -175,7 +137,7 @@
               "ruletags": [],
               "approval": [],
               "rolls": "",
-              "goto": "11",
+              "goto": "Tome_11",
               "link": "",
               "is_end": false,
               "node_type": "jump",
@@ -191,7 +153,7 @@
               "ruletags": [],
               "approval": [],
               "rolls": "",
-              "goto": "61",
+              "goto": "Tome_61",
               "link": "",
               "is_end": false,
               "node_type": "jump",
@@ -226,7 +188,7 @@
               "ruletags": [],
               "approval": [],
               "rolls": "",
-              "goto": "123",
+              "goto": "Tome_123",
               "link": "",
               "is_end": false,
               "node_type": "jump",
@@ -253,7 +215,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "68",
+      "link": "Tome_68",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -268,7 +230,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "68",
+          "link": "Tome_68",
           "is_end": false,
           "node_type": "normal",
           "children": {
@@ -283,7 +245,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "68",
+              "link": "Tome_68",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -298,7 +260,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "68",
+                  "link": "Tome_68",
                   "is_end": false,
                   "node_type": "rollresult",
                   "children": {
@@ -386,7 +348,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "68",
+                  "link": "Tome_68",
                   "is_end": false,
                   "node_type": "rollresult",
                   "children": {
@@ -401,7 +363,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "68",
+                      "link": "Tome_68",
                       "is_end": false,
                       "node_type": "alias",
                       "children": {
@@ -418,7 +380,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "19",
+                          "link": "Tome_19",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {}
@@ -463,7 +425,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "89",
+      "link": "Tome_89",
       "is_end": false,
       "node_type": "normal",
       "children": {}
@@ -538,7 +500,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "88",
+      "link": "Tome_88",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -553,7 +515,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "88",
+          "link": "Tome_88",
           "is_end": false,
           "node_type": "normal",
           "children": {
@@ -570,7 +532,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "88",
+              "link": "Tome_88",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -587,7 +549,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "88",
+                  "link": "Tome_88",
                   "is_end": false,
                   "node_type": "taganswer",
                   "children": {
@@ -606,7 +568,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "88",
+                      "link": "Tome_88",
                       "is_end": false,
                       "node_type": "normal",
                       "children": {
@@ -624,7 +586,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "88",
+                          "link": "Tome_88",
                           "is_end": false,
                           "node_type": "taganswer",
                           "children": {
@@ -643,7 +605,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "88",
+                              "link": "Tome_88",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -661,7 +623,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "88",
+                                  "link": "Tome_88",
                                   "is_end": false,
                                   "node_type": "taganswer",
                                   "children": {
@@ -680,7 +642,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "88",
+                                      "link": "Tome_88",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {
@@ -698,7 +660,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "88",
+                                          "link": "Tome_88",
                                           "is_end": false,
                                           "node_type": "taganswer",
                                           "children": {
@@ -717,7 +679,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "88",
+                                              "link": "Tome_88",
                                               "is_end": false,
                                               "node_type": "normal",
                                               "children": {
@@ -734,7 +696,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "88",
+                                                  "link": "Tome_88",
                                                   "is_end": false,
                                                   "node_type": "taganswer",
                                                   "children": {
@@ -753,7 +715,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "88",
+                                                      "link": "Tome_88",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -768,7 +730,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "88",
+                                                          "link": "Tome_88",
                                                           "is_end": false,
                                                           "node_type": "tagcinematic",
                                                           "children": {
@@ -785,7 +747,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "88",
+                                                              "link": "Tome_88",
                                                               "is_end": false,
                                                               "node_type": "taganswer",
                                                               "children": {
@@ -806,7 +768,7 @@
                                                                   "approval": [],
                                                                   "rolls": "",
                                                                   "goto": "",
-                                                                  "link": "88",
+                                                                  "link": "Tome_88",
                                                                   "is_end": false,
                                                                   "node_type": "normal",
                                                                   "children": {
@@ -848,7 +810,7 @@
                                                                   ],
                                                                   "rolls": "",
                                                                   "goto": "",
-                                                                  "link": "88",
+                                                                  "link": "Tome_88",
                                                                   "is_end": false,
                                                                   "node_type": "normal",
                                                                   "children": {
@@ -865,7 +827,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "88",
+                                                                      "link": "Tome_88",
                                                                       "is_end": false,
                                                                       "node_type": "normal",
                                                                       "children": {
@@ -882,7 +844,7 @@
                                                                           "approval": [],
                                                                           "rolls": "",
                                                                           "goto": "",
-                                                                          "link": "88",
+                                                                          "link": "Tome_88",
                                                                           "is_end": false,
                                                                           "node_type": "normal",
                                                                           "children": {
@@ -900,7 +862,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "88",
+                                                                              "link": "Tome_88",
                                                                               "is_end": false,
                                                                               "node_type": "alias",
                                                                               "children": {
@@ -943,7 +905,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "11",
+                                                                              "link": "Tome_11",
                                                                               "is_end": false,
                                                                               "node_type": "normal",
                                                                               "children": {
@@ -958,7 +920,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "11",
+                                                                                  "link": "Tome_11",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -973,7 +935,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "11",
+                                                                                      "link": "Tome_11",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -990,7 +952,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "11",
+                                                                                          "link": "Tome_11",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -1008,7 +970,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "11",
+                                                                                      "link": "Tome_11",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1026,7 +988,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "11",
+                                                                                          "link": "Tome_11",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -1048,7 +1010,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "78",
+                                                                                  "link": "Tome_78",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -1063,7 +1025,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "78",
+                                                                                      "link": "Tome_78",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1078,7 +1040,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "78",
+                                                                                          "link": "Tome_78",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {
@@ -1095,7 +1057,7 @@
                                                                                               "approval": [],
                                                                                               "rolls": "",
                                                                                               "goto": "",
-                                                                                              "link": "115",
+                                                                                              "link": "Tome_115",
                                                                                               "is_end": false,
                                                                                               "node_type": "normal",
                                                                                               "children": {
@@ -1110,7 +1072,7 @@
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
                                                                                                   "goto": "",
-                                                                                                  "link": "115",
+                                                                                                  "link": "Tome_115",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "rollresult",
                                                                                                   "children": {
@@ -1125,7 +1087,7 @@
                                                                                                       "approval": [],
                                                                                                       "rolls": "",
                                                                                                       "goto": "",
-                                                                                                      "link": "115",
+                                                                                                      "link": "Tome_115",
                                                                                                       "is_end": false,
                                                                                                       "node_type": "normal",
                                                                                                       "children": {
@@ -1140,7 +1102,7 @@
                                                                                                           "approval": [],
                                                                                                           "rolls": "",
                                                                                                           "goto": "",
-                                                                                                          "link": "115",
+                                                                                                          "link": "Tome_115",
                                                                                                           "is_end": false,
                                                                                                           "node_type": "normal",
                                                                                                           "children": {
@@ -1155,7 +1117,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "115",
+                                                                                                              "link": "Tome_115",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -1169,8 +1131,8 @@
                                                                                                                   "ruletags": [],
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
-                                                                                                                  "goto": "18",
-                                                                                                                  "link": "115",
+                                                                                                                  "goto": "Tome_18",
+                                                                                                                  "link": "Tome_115",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "jump",
                                                                                                                   "children": {}
@@ -1185,8 +1147,8 @@
                                                                                                                   "ruletags": [],
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
-                                                                                                                  "goto": "11",
-                                                                                                                  "link": "115",
+                                                                                                                  "goto": "Tome_11",
+                                                                                                                  "link": "Tome_115",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "jump",
                                                                                                                   "children": {}
@@ -1204,7 +1166,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "115",
+                                                                                                                  "link": "Tome_115",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "normal",
                                                                                                                   "children": {
@@ -1219,7 +1181,7 @@
                                                                                                                       "approval": [],
                                                                                                                       "rolls": "",
                                                                                                                       "goto": "",
-                                                                                                                      "link": "115",
+                                                                                                                      "link": "Tome_115",
                                                                                                                       "is_end": false,
                                                                                                                       "node_type": "rollresult",
                                                                                                                       "children": {}
@@ -1266,7 +1228,7 @@
                                                                                                                               "ruletags": [],
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
-                                                                                                                              "goto": "101",
+                                                                                                                              "goto": "Tome_101",
                                                                                                                               "link": "",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "jump",
@@ -1282,7 +1244,7 @@
                                                                                                                               "ruletags": [],
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
-                                                                                                                              "goto": "18",
+                                                                                                                              "goto": "Tome_18",
                                                                                                                               "link": "",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "jump",
@@ -1308,7 +1270,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "14",
+                                                                                                                  "link": "Tome_14",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "normal",
                                                                                                                   "children": {
@@ -1485,7 +1447,7 @@
                                                                                                           "ruletags": [],
                                                                                                           "approval": [],
                                                                                                           "rolls": "",
-                                                                                                          "goto": "106",
+                                                                                                          "goto": "Tome_106",
                                                                                                           "link": "",
                                                                                                           "is_end": false,
                                                                                                           "node_type": "jump",
@@ -1512,7 +1474,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "78",
+                                                                                      "link": "Tome_78",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1530,7 +1492,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "78",
+                                                                                          "link": "Tome_78",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -1554,7 +1516,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "82",
+                                                                                  "link": "Tome_82",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -1569,7 +1531,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "82",
+                                                                                      "link": "Tome_82",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1584,7 +1546,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "82",
+                                                                                          "link": "Tome_82",
                                                                                           "is_end": false,
                                                                                           "node_type": "alias",
                                                                                           "children": {
@@ -1598,7 +1560,7 @@
                                                                                               "ruletags": [],
                                                                                               "approval": [],
                                                                                               "rolls": "",
-                                                                                              "goto": "106",
+                                                                                              "goto": "Tome_106",
                                                                                               "link": "",
                                                                                               "is_end": false,
                                                                                               "node_type": "jump",
@@ -1649,7 +1611,7 @@
                                                                                                       "ruletags": [],
                                                                                                       "approval": [],
                                                                                                       "rolls": "",
-                                                                                                      "goto": "138",
+                                                                                                      "goto": "Tome_138",
                                                                                                       "link": "",
                                                                                                       "is_end": false,
                                                                                                       "node_type": "jump",
@@ -1682,7 +1644,7 @@
                                                                                                       "ruletags": [],
                                                                                                       "approval": [],
                                                                                                       "rolls": "",
-                                                                                                      "goto": "91",
+                                                                                                      "goto": "Tome_91",
                                                                                                       "link": "",
                                                                                                       "is_end": false,
                                                                                                       "node_type": "jump",
@@ -1707,7 +1669,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "87",
+                                                                                      "link": "Tome_87",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1725,7 +1687,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "87",
+                                                                                          "link": "Tome_87",
                                                                                           "is_end": false,
                                                                                           "node_type": "alias",
                                                                                           "children": {}
@@ -1747,7 +1709,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "11",
+                                                                                  "link": "Tome_11",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -1762,7 +1724,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "11",
+                                                                                      "link": "Tome_11",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1779,7 +1741,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "11",
+                                                                                          "link": "Tome_11",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -1797,7 +1759,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "87",
+                                                                                      "link": "Tome_87",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1815,7 +1777,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "87",
+                                                                                          "link": "Tome_87",
                                                                                           "is_end": false,
                                                                                           "node_type": "alias",
                                                                                           "children": {}
@@ -1837,7 +1799,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "11",
+                                                                                  "link": "Tome_11",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -1852,7 +1814,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "11",
+                                                                                      "link": "Tome_11",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1869,7 +1831,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "11",
+                                                                                          "link": "Tome_11",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -1887,7 +1849,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "87",
+                                                                                      "link": "Tome_87",
                                                                                       "is_end": false,
                                                                                       "node_type": "rollresult",
                                                                                       "children": {
@@ -1905,7 +1867,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "87",
+                                                                                          "link": "Tome_87",
                                                                                           "is_end": false,
                                                                                           "node_type": "alias",
                                                                                           "children": {
@@ -1920,7 +1882,7 @@
                                                                                               "approval": [],
                                                                                               "rolls": "",
                                                                                               "goto": "",
-                                                                                              "link": "36",
+                                                                                              "link": "Tome_36",
                                                                                               "is_end": false,
                                                                                               "node_type": "normal",
                                                                                               "children": {
@@ -1935,7 +1897,7 @@
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
                                                                                                   "goto": "",
-                                                                                                  "link": "36",
+                                                                                                  "link": "Tome_36",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "rollresult",
                                                                                                   "children": {
@@ -1950,7 +1912,7 @@
                                                                                                       "approval": [],
                                                                                                       "rolls": "",
                                                                                                       "goto": "",
-                                                                                                      "link": "36",
+                                                                                                      "link": "Tome_36",
                                                                                                       "is_end": false,
                                                                                                       "node_type": "normal",
                                                                                                       "children": {
@@ -1968,7 +1930,7 @@
                                                                                                           "approval": [],
                                                                                                           "rolls": "",
                                                                                                           "goto": "",
-                                                                                                          "link": "36",
+                                                                                                          "link": "Tome_36",
                                                                                                           "is_end": false,
                                                                                                           "node_type": "normal",
                                                                                                           "children": {
@@ -1983,7 +1945,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "36",
+                                                                                                              "link": "Tome_36",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -1998,7 +1960,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "36",
+                                                                                                                  "link": "Tome_36",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "rollresult",
                                                                                                                   "children": {
@@ -2074,7 +2036,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "36",
+                                                                                                                  "link": "Tome_36",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "rollresult",
                                                                                                                   "children": {
@@ -2091,7 +2053,7 @@
                                                                                                                       "approval": [],
                                                                                                                       "rolls": "",
                                                                                                                       "goto": "",
-                                                                                                                      "link": "36",
+                                                                                                                      "link": "Tome_36",
                                                                                                                       "is_end": false,
                                                                                                                       "node_type": "normal",
                                                                                                                       "children": {}
@@ -2111,7 +2073,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "140",
+                                                                                                              "link": "Tome_140",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -2126,7 +2088,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "140",
+                                                                                                                  "link": "Tome_140",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "rollresult",
                                                                                                                   "children": {}
@@ -2215,7 +2177,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "59",
+                                                                                                              "link": "Tome_59",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {}
@@ -2235,7 +2197,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "59",
+                                                                                                              "link": "Tome_59",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {}
@@ -2269,7 +2231,7 @@
                                                                                                                   "ruletags": [],
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
-                                                                                                                  "goto": "101",
+                                                                                                                  "goto": "Tome_101",
                                                                                                                   "link": "",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "jump",
@@ -2294,7 +2256,7 @@
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
                                                                                                   "goto": "",
-                                                                                                  "link": "123",
+                                                                                                  "link": "Tome_123",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "rollresult",
                                                                                                   "children": {
@@ -2311,7 +2273,7 @@
                                                                                                       "approval": [],
                                                                                                       "rolls": "",
                                                                                                       "goto": "",
-                                                                                                      "link": "123",
+                                                                                                      "link": "Tome_123",
                                                                                                       "is_end": false,
                                                                                                       "node_type": "normal",
                                                                                                       "children": {}
@@ -2402,7 +2364,7 @@
                                                                   ],
                                                                   "rolls": "",
                                                                   "goto": "",
-                                                                  "link": "149",
+                                                                  "link": "Tome_149",
                                                                   "is_end": false,
                                                                   "node_type": "normal",
                                                                   "children": {
@@ -2417,7 +2379,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "149",
+                                                                      "link": "Tome_149",
                                                                       "is_end": false,
                                                                       "node_type": "normal",
                                                                       "children": {
@@ -2434,7 +2396,7 @@
                                                                           "approval": [],
                                                                           "rolls": "",
                                                                           "goto": "",
-                                                                          "link": "149",
+                                                                          "link": "Tome_149",
                                                                           "is_end": false,
                                                                           "node_type": "taganswer",
                                                                           "children": {
@@ -2451,7 +2413,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "149",
+                                                                              "link": "Tome_149",
                                                                               "is_end": false,
                                                                               "node_type": "normal",
                                                                               "children": {
@@ -2522,7 +2484,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "149",
+                                                                              "link": "Tome_149",
                                                                               "is_end": false,
                                                                               "node_type": "taganswer",
                                                                               "children": {
@@ -2539,7 +2501,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "149",
+                                                                                  "link": "Tome_149",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -2556,7 +2518,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "149",
+                                                                                      "link": "Tome_149",
                                                                                       "is_end": false,
                                                                                       "node_type": "taganswer",
                                                                                       "children": {}
@@ -2770,7 +2732,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "92",
+              "link": "Tome_92",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -2789,7 +2751,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "92",
+              "link": "Tome_92",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -2826,7 +2788,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "74",
+          "goto": "Tome_74",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -2929,13 +2891,37 @@
       "node_type": "normal",
       "children": {}
     },
-    "VB_BookDestroyed_0": {
-      "id": "VB_BookDestroyed_0",
+    "PAD_FindBook_0": {
+      "id": "PAD_FindBook_0",
       "speaker": "Player",
-      "text": "Well done. The world's better off without it.",
+      "text": "'The Necromancy of Thay'? Sounds ominous.",
       "context": "",
-      "checkflags": [],
-      "setflags": [],
+      "checkflags": [
+        "ORI_Gale_Knows_NeedsMagicItems = False"
+      ],
+      "setflags": [
+        "FOR_DangerousBook_Found"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FindBook_1": {
+      "id": "PAD_FindBook_1",
+      "speaker": "Player",
+      "text": "'The Necromancy of Thay'? Ominous, but Gale might find it useful.",
+      "context": "",
+      "checkflags": [
+        "ORI_Gale_Knows_NeedsMagicItems"
+      ],
+      "setflags": [
+        "FOR_DangerousBook_Found"
+      ],
       "ruletags": [],
       "approval": [],
       "rolls": "",
@@ -2955,6 +2941,22 @@
       "ruletags": [
         "REALLY_GALE"
       ],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "VB_BookDestroyed_0": {
+      "id": "VB_BookDestroyed_0",
+      "speaker": "Player",
+      "text": "Well done. The world's better off without it.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
       "approval": [],
       "rolls": "",
       "goto": "",

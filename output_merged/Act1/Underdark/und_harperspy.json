@@ -1,35 +1,40 @@
 {
   "metadata": {
     "individual_metadata": {
-      "PAD_RecogniseStashLocation": {
-        "synopsis": "The party has read a Harper's letter and has arrived where they expect their stash to be.",
-        "how_to_trigger": "Approach the location of the hidden Harper stash (-681; -6; 377) after reading the Sharran Inquisitor's diary (S_UND_HarperSpy_InquisitorDiary)."
-      },
-      "PAD_FoundRune": {
-        "synopsis": "Party discovers a strange marking. They may or may not recognise it as a Harper symbol.",
-        "how_to_trigger": "go to -681; -6; 377 on WLD_Main_A"
-      },
       "PAD_RecogniseWatchword": {
         "synopsis": "The Sharran Inquisitor's diary documents the Harper Spy's interrogation. The spy is quoted reciting a Harper Watchword during the interrogation. Players that pass a History Check will recognise the watchword, and understand that the Light spell is required to bypass the spy's trap",
         "how_to_trigger": "read S_UND_HarperSpy_InquisitorDiary"
       },
+      "PAD_RecogniseStashLocation": {
+        "synopsis": "The party has read a Harper's letter and has arrived where they expect their stash to be.",
+        "how_to_trigger": "Approach the location of the hidden Harper stash (-681; -6; 377) after reading the Sharran Inquisitor's diary (S_UND_HarperSpy_InquisitorDiary)."
+      },
       "PAD_KnowStashIsHidden": {
         "synopsis": "Note: this PAD follows directly from either RecogniseStashLocation or FoundRune. See Kevin V. with any questions, I know it is a bit weird.--------When the player recognises that the Harper rune in Ketheric City is marking a hidden stash, they make an Investigation check. On success, they realise that the Harpers would be smart enough not to leave their stash in plain sight - the goal of this hint is to deter the player from interacting with the mimics in the area and to instead look around for a hidden stash somewhere",
         "how_to_trigger": "Successfully recognise the Harper rune at -686; -6; 374 using a History check, or by reading S_UND_HarperSpy_InquisitorDiary_d28ea463-d12a-4474-aea9-ee923382af83"
+      },
+      "PAD_FoundRune": {
+        "synopsis": "Party discovers a strange marking. They may or may not recognise it as a Harper symbol.",
+        "how_to_trigger": "go to -681; -6; 377 on WLD_Main_A"
       }
     },
     "source_files": [
-      "UND_HarperSpy_PAD_RecogniseStashLocation.json",
-      "UND_HarperSpy_PAD_FoundRune.json",
       "UND_HarperSpy_PAD_RecogniseWatchword.json",
-      "UND_HarperSpy_PAD_KnowStashIsHidden.json"
+      "UND_HarperSpy_PAD_RecogniseStashLocation.json",
+      "UND_HarperSpy_PAD_KnowStashIsHidden.json",
+      "UND_HarperSpy_PAD_FoundRune.json"
     ],
     "automatic_ordering": {
-      "reasoning": "There are two branches for discovering the hidden Harper stash. One branch (PAD_RecogniseStashLocation) is reached when the party has read the Harper\u2019s letter and goes to where the stash is expected, while the other branch (PAD_FoundRune) occurs when the party instead notices a strange marking that might be recognised as a Harper symbol. The synopsis for PAD_KnowStashIsHidden explicitly states that it follows directly from either of these two sessions \u2013 meaning that, logically, one of them must occur before PAD_KnowStashIsHidden is triggered. This indicates an order constraint: PAD_KnowStashIsHidden should come after either PAD_RecogniseStashLocation or PAD_FoundRune. Since these two sessions represent alternative branches (one or the other is triggered based on the player\u2019s actions), they are mutually exclusive; if one branch happens, the other does not appear in that same playthrough. PAD_RecogniseWatchword does not interact with the order between the stash sessions as it is simply triggered by reading the diary, so no ordering or exclusivity constraints are defined for it here.",
+      "reasoning": "After examining the session descriptions and their trigger conditions, two key relationships emerge. First, the session PAD_KnowStashIsHidden is described as following directly from either PAD_RecogniseStashLocation or PAD_FoundRune \u2013 meaning that the event confirming that the stash is hidden only occurs if one of these two sessions has already been triggered. This establishes ordering constraints: PAD_RecogniseStashLocation should come before PAD_KnowStashIsHidden, and PAD_FoundRune should come before PAD_KnowStashIsHidden. Second, both PAD_RecogniseStashLocation and PAD_FoundRune are triggered based on visiting the same area (their coordinate targets are identical) and represent alternative ways for the party to learn about the stash (one by reading a Harper letter and the other by discovering a mysterious marking). Because only one of these approaches is expected to occur in a given playthrough, these two sessions are mutually exclusive. The PAD_RecogniseWatchword session, although triggered by reading the same diary that underlies PAD_RecogniseStashLocation, serves a different narrative purpose (recognizing a watchword) and does not impose additional ordering constraints with respect to the stash-location-related sessions (other than the common requirement of having read the diary), so it is not included in the ordering or exclusiveness rules here.",
       "order": [
         {
           "predecessor": [
-            "PAD_RecogniseStashLocation",
+            "PAD_RecogniseStashLocation"
+          ],
+          "successor": "PAD_KnowStashIsHidden"
+        },
+        {
+          "predecessor": [
             "PAD_FoundRune"
           ],
           "successor": "PAD_KnowStashIsHidden"
@@ -44,56 +49,6 @@
     }
   },
   "dialogue": {
-    "PAD_RecogniseStashLocation_0": {
-      "id": "PAD_RecogniseStashLocation_0",
-      "speaker": "Player",
-      "text": "Looks like the place the Dark Justiciar's letter mentioned. But where's the stash?",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundRune_0": {
-      "id": "PAD_FoundRune_0",
-      "speaker": "Player",
-      "text": "This is a Harper rune. There must be a stockpile nearby.",
-      "context": "",
-      "checkflags": [
-        "UND_HarperSpy_State_UnderstoodRune"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundRune_1": {
-      "id": "PAD_FoundRune_1",
-      "speaker": "Player",
-      "text": "Strange marking. What's it mean?",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
     "PAD_RecogniseWatchword_1": {
       "id": "PAD_RecogniseWatchword_1",
       "speaker": "Player",
@@ -145,6 +100,22 @@
         }
       }
     },
+    "PAD_RecogniseStashLocation_0": {
+      "id": "PAD_RecogniseStashLocation_0",
+      "speaker": "Player",
+      "text": "Looks like the place the Dark Justiciar's letter mentioned. But where's the stash?",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "PAD_KnowStashIsHidden_0": {
       "id": "PAD_KnowStashIsHidden_0",
       "speaker": "Player",
@@ -171,6 +142,40 @@
       "checkflags": [
         "UND_HarperSpy_State_RecognisedReplicaChest"
       ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundRune_0": {
+      "id": "PAD_FoundRune_0",
+      "speaker": "Player",
+      "text": "This is a Harper rune. There must be a stockpile nearby.",
+      "context": "",
+      "checkflags": [
+        "UND_HarperSpy_State_UnderstoodRune"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundRune_1": {
+      "id": "PAD_FoundRune_1",
+      "speaker": "Player",
+      "text": "Strange marking. What's it mean?",
+      "context": "",
+      "checkflags": [],
       "setflags": [],
       "ruletags": [],
       "approval": [],

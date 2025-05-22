@@ -141,7 +141,7 @@ if __name__ == "__main__":
         filepath = sys.argv[1]
     else:
         # Default to the filename mentioned in the problem description if no argument is provided.
-        filepath = "Goals/Act1_ORI_Gale_PostEA.txt"#"Goals/Act1_UND_SharFort.txt"#"Goals/Act1_DEN_Training.txt"#"Goals/Act1_PLA_ZhentShipment.txt"#"Goals/Act1_CHA_LaezelRecruit.txt"#"Goals/Act1_CRA_AstarionRecruitment.txt"#
+        filepath = "Goals/Act1_CHA_LaezelRecruit.txt"#"Goals/Act1_CRA_AstarionRecruitment.txt"#"Goals/Act1_ORI_Gale_PostEA.txt"#"Goals/Act1_UND_SharFort.txt"#"Goals/Act1_DEN_Training.txt"#"Goals/Act1_PLA_ZhentShipment.txt"#"Goals/Act1_CHA_LaezelRecruit.txt"#"Goals/Act1_CRA_AstarionRecruitment.txt"#
         prefix = filepath.rsplit("/", 1)[1].replace(".txt", "").split("_")[1] + "_"
     try:
         with open(filepath, "r", encoding="utf-8") as f:

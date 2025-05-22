@@ -5,22 +5,22 @@
         "synopsis": "An SwD dialog for the Gnome leader at the Duergar Camp. He can be killed during combat either trying to escape or helping players fight Duergar first, and Nere later.",
         "how_to_trigger": ""
       },
-      "Saved": {
-        "synopsis": "Dialog for gnome foreman on the other side of the ebon lake after they were saved by player. Mentions the other gnomes being kept at moonrise towers.",
-        "how_to_trigger": "Repro steps:1. Start the game.2. loadlevel WLD_Main_A3. goto -634, 15, 3104. Ctrl+Shift+K the Cave-In (Nere will speak to you automatically)5. Select dialogue options \"Stop! No more...\", \"I act on...\", \"You wouldn't dare...\", then \"You so much...\"6. killcombat7. Speak with Beldron"
-      },
       "": {
         "synopsis": "The gnome leader's main dialogue. He thanks you for saving them, and tells you what brought his people to the Underdark to begin with - an expedition led by their charismatic leader Wulbren, to find a forgotten gnomish explosive of awesome power - runepowder.",
         "how_to_trigger": "Resolve the cave-in situation in Grymforge by removing the rubble. A conflict ensues - this dialogue picks up on the various outcomes of that conflict.Repro steps:1. Start the game.2. loadlevel WLD_Main_A3. goto -635.141; 14.738; 3104. CTRL-Shift_K on the cave-in5. Resolve the dialog by killing NERE and the Duerqars6. Speak with Beldron"
+      },
+      "Saved": {
+        "synopsis": "Dialog for gnome foreman on the other side of the ebon lake after they were saved by player. Mentions the other gnomes being kept at moonrise towers.",
+        "how_to_trigger": "Repro steps:1. Start the game.2. loadlevel WLD_Main_A3. goto -634, 15, 3104. Ctrl+Shift+K the Cave-In (Nere will speak to you automatically)5. Select dialogue options \"Stop! No more...\", \"I act on...\", \"You wouldn't dare...\", then \"You so much...\"6. killcombat7. Speak with Beldron"
       }
     },
     "source_files": [
       "UND_GnomeForeman_Dead.json",
-      "UND_GnomeForeman_Saved.json",
-      "UND_GnomeForeman.json"
+      "UND_GnomeForeman.json",
+      "UND_GnomeForeman_Saved.json"
     ],
     "automatic_ordering": {
-      "reasoning": "There is a shared narrative event here: the cave\u2010in conflict. The gnome leader is central to this event and can either survive or be killed in combat. When he survives, the player can trigger his main dialogue (shown as the session with the empty key) in which he thanks you for saving his people, and later a conversation with the gnome foreman (the 'Saved' session) is available \u2013 implying that the leader\u2019s survival and ensuing discussion is a prerequisite for the foreman dialogue. On the other hand, if the gnome leader is killed during the combat (using either an escape attempt or while helping fight Duergar/Nere), the dialogue designated as 'Dead' is triggered. This means that the two outcomes for the leader \u2013 his main dialogue versus his death dialogue \u2013 are mutually exclusive.",
+      "reasoning": "Analyzing the sessions, it appears that the gnome leader has two mutually exclusive outcomes. One branch is that he dies during combat (the 'Dead' session) which happens when he is killed while trying to escape or during the fight. The other branch is that he survives, in which case his main dialogue (the session with the empty string key) is triggered. Furthermore, if he survives and delivers his thanks dialogue, a subsequent conversation with the gnome foreman (the 'Saved' session) can occur on the other side of the ebon lake. Therefore, if the leader survives, his main dialogue must occur before the foreman dialogue. At the same time, the death branch ('Dead') is mutually exclusive with both the main dialogue (empty key) and the foreman dialogue ('Saved').",
       "order": [
         {
           "predecessor": [
@@ -33,6 +33,10 @@
         [
           "Dead",
           ""
+        ],
+        [
+          "Dead",
+          "Saved"
         ]
       ]
     }
@@ -459,119 +463,6 @@
       "is_end": true,
       "node_type": "normal",
       "children": {}
-    },
-    "Saved_0": {
-      "id": "Saved_0",
-      "speaker": "Beldron",
-      "text": "We're moving on. There's... there's nothing left for us here.",
-      "context": "",
-      "checkflags": [
-        "UND_GnomeForeman_Saved_HasMet",
-        "UND_InjuredGnome_State_SporeServant"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Saved_1": {
-      "id": "Saved_1",
-      "speaker": "Beldron",
-      "text": "I knew little Thulla would survive all this. But... not like that.",
-      "context": "",
-      "checkflags": [
-        "UND_GnomeForeman_Saved_HasMet = False",
-        "UND_InjuredGnome_State_SporeServant"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Saved_2": {
-      "id": "Saved_2",
-      "speaker": "Beldron",
-      "text": "Never thought I'd owe a bunch o' mushrooms my life. Only wish the rest of my people were here.",
-      "context": "",
-      "checkflags": [
-        "UND_GnomeForeman_Saved_HasMet",
-        "UND_MyconidCircle_State_BothSovereignsDead = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Saved_3": {
-      "id": "Saved_3",
-      "speaker": "Beldron",
-      "text": "What a bloodbath. Safer here than in Grymforge though, no doubt about it.",
-      "context": "",
-      "checkflags": [
-        "UND_GnomeForeman_Saved_HasMet",
-        "UND_MyconidCircle_State_BothSovereignsDead"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Saved_4": {
-      "id": "Saved_4",
-      "speaker": "Beldron",
-      "text": "Thanks again for offing that drow. Only made it here 'cause of you. But I can't stop thinking about the rest of us...",
-      "context": "",
-      "checkflags": [
-        "UND_GnomeForeman_Saved_HasMet = False"
-      ],
-      "setflags": [
-        "UND_GnomeForeman_Saved_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Saved_5": {
-          "id": "Saved_5",
-          "speaker": "Beldron",
-          "text": "... stuck in Moonrise with a bunch of sadists. Poor bastards.",
-          "context": "",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
     },
     "10": {
       "id": "10",
@@ -3047,6 +2938,119 @@
       "is_end": true,
       "node_type": "normal",
       "children": {}
+    },
+    "Saved_0": {
+      "id": "Saved_0",
+      "speaker": "Beldron",
+      "text": "We're moving on. There's... there's nothing left for us here.",
+      "context": "",
+      "checkflags": [
+        "UND_GnomeForeman_Saved_HasMet",
+        "UND_InjuredGnome_State_SporeServant"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Saved_1": {
+      "id": "Saved_1",
+      "speaker": "Beldron",
+      "text": "I knew little Thulla would survive all this. But... not like that.",
+      "context": "",
+      "checkflags": [
+        "UND_GnomeForeman_Saved_HasMet = False",
+        "UND_InjuredGnome_State_SporeServant"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Saved_2": {
+      "id": "Saved_2",
+      "speaker": "Beldron",
+      "text": "Never thought I'd owe a bunch o' mushrooms my life. Only wish the rest of my people were here.",
+      "context": "",
+      "checkflags": [
+        "UND_GnomeForeman_Saved_HasMet",
+        "UND_MyconidCircle_State_BothSovereignsDead = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Saved_3": {
+      "id": "Saved_3",
+      "speaker": "Beldron",
+      "text": "What a bloodbath. Safer here than in Grymforge though, no doubt about it.",
+      "context": "",
+      "checkflags": [
+        "UND_GnomeForeman_Saved_HasMet",
+        "UND_MyconidCircle_State_BothSovereignsDead"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Saved_4": {
+      "id": "Saved_4",
+      "speaker": "Beldron",
+      "text": "Thanks again for offing that drow. Only made it here 'cause of you. But I can't stop thinking about the rest of us...",
+      "context": "",
+      "checkflags": [
+        "UND_GnomeForeman_Saved_HasMet = False"
+      ],
+      "setflags": [
+        "UND_GnomeForeman_Saved_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Saved_5": {
+          "id": "Saved_5",
+          "speaker": "Beldron",
+          "text": "... stuck in Moonrise with a bunch of sadists. Poor bastards.",
+          "context": "",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
     }
   }
 }

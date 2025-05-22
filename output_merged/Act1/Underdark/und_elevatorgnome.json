@@ -1,49 +1,101 @@
 {
   "metadata": {
     "individual_metadata": {
-      "": {
-        "synopsis": "Skickpit has a foul mouth to match the duergar. He runs their errands for them and brings them drinks. You can ask if he wants freed, attack him, or leave him be.",
-        "how_to_trigger": "Repro steps:1. Start the game.2. loadlevel WLD_Main_A3. goto -606.315; 5.317; 382.6464. Speak to either of the 3 NPCS and wait for UND_ElevatorGuards options to leave.5. Speaker to Stickpit - Gnome."
+      "CaveIn": {
+        "synopsis": "Elevator gnome one-liner if you sent him to be with the others after the mutiny.",
+        "how_to_trigger": ""
       },
       "Saved": {
         "synopsis": "Foul-mouthed elevator gnome has been saved and is now in the myconid circle.",
         "how_to_trigger": ""
       },
-      "CaveIn": {
-        "synopsis": "Elevator gnome one-liner if you sent him to be with the others after the mutiny.",
-        "how_to_trigger": ""
+      "": {
+        "synopsis": "Skickpit has a foul mouth to match the duergar. He runs their errands for them and brings them drinks. You can ask if he wants freed, attack him, or leave him be.",
+        "how_to_trigger": "Repro steps:1. Start the game.2. loadlevel WLD_Main_A3. goto -606.315; 5.317; 382.6464. Speak to either of the 3 NPCS and wait for UND_ElevatorGuards options to leave.5. Speaker to Stickpit - Gnome."
       }
     },
     "source_files": [
-      "UND_ElevatorGnome.json",
+      "UND_ElevatorGnome_CaveIn.json",
       "UND_ElevatorGnome_Saved.json",
-      "UND_ElevatorGnome_CaveIn.json"
+      "UND_ElevatorGnome.json"
     ],
     "automatic_ordering": {
-      "reasoning": "The initial session (denoted by an empty string as its key) occurs when the player first encounters Skickpit and can choose different options. Depending on the player's choice, the conversation diverges into either the 'Saved' session (if you choose to save him) or the 'CaveIn' session (if you send him to be with the others after the mutiny). Therefore, the starting session must occur before either outcome, and the two outcomes are mutually exclusive because only one can result from the initial encounter.",
+      "reasoning": "There is a branching sequence here. The unnamed session (its synopsis mentions 'Skickpit' and describes the initial encounter where you can choose to free, attack, or leave him) is the starting interaction. Depending on the choice made during that session, two different outcomes occur. If you choose to let him join the others after the mutiny, then the 'CaveIn' session is triggered later (as it is a one\u2010liner delivered once he is with the group). Alternatively, if you choose to save him, then the 'Saved' session is triggered, showing that he is now found as part of the myconid circle. Since these outcomes are mutually exclusive (the gnome cannot be both saved and sent to join the others), the 'CaveIn' and 'Saved' sessions cannot both occur in the same playthrough. In summary, the unnamed (Skickpit) session must occur before either 'CaveIn' or 'Saved', and the two outcomes are exclusive.",
       "order": [
         {
           "predecessor": [
-            ""
+            "(Unnamed - Skickpit)"
           ],
-          "successor": "Saved"
+          "successor": "CaveIn"
         },
         {
           "predecessor": [
-            ""
+            "(Unnamed - Skickpit)"
           ],
-          "successor": "CaveIn"
+          "successor": "Saved"
         }
       ],
       "exclusive": [
         [
-          "Saved",
-          "CaveIn"
+          "CaveIn",
+          "Saved"
         ]
       ]
     }
   },
   "dialogue": {
+    "CaveIn_0": {
+      "id": "CaveIn_0",
+      "speaker": "Skickpit",
+      "text": "You've done more than I'd have hoped for. I should never have doubted.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Saved_0": {
+      "id": "Saved_0",
+      "speaker": "Skickpit",
+      "text": "Shit. Still can't believe you got me out of there. Sorry I told you to piss off.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [
+        "UND_ELevatorGnomeSaved_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Saved_1": {
+      "id": "Saved_1",
+      "speaker": "Skickpit",
+      "text": "Could use a stiff drink, if I'm being honest. The duergar ale wasn't half bad.",
+      "context": "",
+      "checkflags": [
+        "UND_ELevatorGnomeSaved_HasMet"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "3": {
       "id": "3",
       "speaker": "",
@@ -2379,58 +2431,6 @@
       "link": "27",
       "is_end": false,
       "node_type": "alias",
-      "children": {}
-    },
-    "Saved_0": {
-      "id": "Saved_0",
-      "speaker": "Skickpit",
-      "text": "Shit. Still can't believe you got me out of there. Sorry I told you to piss off.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [
-        "UND_ELevatorGnomeSaved_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Saved_1": {
-      "id": "Saved_1",
-      "speaker": "Skickpit",
-      "text": "Could use a stiff drink, if I'm being honest. The duergar ale wasn't half bad.",
-      "context": "",
-      "checkflags": [
-        "UND_ELevatorGnomeSaved_HasMet"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "CaveIn_0": {
-      "id": "CaveIn_0",
-      "speaker": "Skickpit",
-      "text": "You've done more than I'd have hoped for. I should never have doubted.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
       "children": {}
     }
   }

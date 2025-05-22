@@ -1,66 +1,40 @@
 {
   "metadata": {
     "individual_metadata": {
-      "PAD_DiscoverBurrow": {
-        "synopsis": "When the player discovers the burrow where the ring is hidden. An animal dug up the ring from the grave and hid it here.",
-        "how_to_trigger": "Successfully pass the hidden perception check where the ring is hidden."
-      },
       "PAD_FoundFootprints": {
         "synopsis": "This PAD occurs when the player approaches a set of tracks near a ledge. If the player jumps down, they will find a burrow with a ring inside.",
         "how_to_trigger": "teleport S_SCL_SkepticalRobber_Grave the animal tracks are neaby near the ledge"
+      },
+      "AD_ReadTombstone": {
+        "synopsis": "When the player reads the tombstone, they make out the name of the woman buried there. This is connected to the skeptical robber situation.",
+        "how_to_trigger": "Interact with the Tombstone at the wife's grave."
       },
       "PAD_ReadRobbersNote": {
         "synopsis": "When the player reads the Skeptical Robber's note after having already discovered the grave or found the ring, they are reminded about that with this dialog. The top node is if you already found the ring. The bottom is if you read the tombstone but HAVEN'T found the ring.",
         "how_to_trigger": "Read the SkepticalRobber's note for the first time after having already read the wife's tombstone or found the ring."
       },
+      "PAD_DiscoverBurrow": {
+        "synopsis": "When the player discovers the burrow where the ring is hidden. An animal dug up the ring from the grave and hid it here.",
+        "how_to_trigger": "Successfully pass the hidden perception check where the ring is hidden."
+      },
       "PAD_DiscoverGrave": {
         "synopsis": "Player finds the grave of Ellie May. It's been dug up with her bones scattered,",
         "how_to_trigger": "|Pass a perception check when near the grave.|"
-      },
-      "AD_ReadTombstone": {
-        "synopsis": "When the player reads the tombstone, they make out the name of the woman buried there. This is connected to the skeptical robber situation.",
-        "how_to_trigger": "Interact with the Tombstone at the wife's grave."
       }
     },
     "source_files": [
-      "SCL_SkepticalRobber_PAD_DiscoverBurrow.json",
       "SCL_SkepticalRobber_PAD_FoundFootprints.json",
+      "SCL_SkepticalRobber_AD_ReadTombstone.json",
       "SCL_SkepticalRobber_PAD_ReadRobbersNote.json",
-      "SCL_SkepticalRobber_PAD_DiscoverGrave.json",
-      "SCL_SkepticalRobber_AD_ReadTombstone.json"
-    ],
-    "automatic_ordering": {
-      "reasoning": "From the session descriptions we can infer some cause\u2010and\u2010effect relationships and alternative routes. First, the grave and tombstone scenes are connected: the player must find the grave (PAD_DiscoverGrave) before being in a position to examine its tombstone (AD_ReadTombstone). When reading the Skeptical Robber\u2019s note (PAD_ReadRobbersNote), the game checks if the player already discovered the grave or already found the ring \u2013 that is, if the player has triggered either the grave/tombstone events (PAD_DiscoverGrave and AD_ReadTombstone) or one of the ring discovery events. There are two ways to find the ring: either by discovering the burrow directly (PAD_DiscoverBurrow) or by following the footprints (PAD_FoundFootprints), and since obtaining the ring by one route means the other isn\u2019t triggered in that playthrough, these two are mutually exclusive. Therefore, the ordering constraints are: (1) PAD_DiscoverGrave must occur before AD_ReadTombstone. (2) PAD_ReadRobbersNote is only triggered after the player has either discovered the grave (or its tombstone) or obtained the ring (via PAD_DiscoverBurrow or PAD_FoundFootprints). Finally, because the ring\u2013related actions come from two exclusive methods, PAD_DiscoverBurrow and PAD_FoundFootprints cannot both happen in the same storyline.",
-      "order": [
-        {
-          "predecessor": [
-            "PAD_DiscoverGrave"
-          ],
-          "successor": "AD_ReadTombstone"
-        },
-        {
-          "predecessor": [
-            "PAD_DiscoverGrave",
-            "AD_ReadTombstone",
-            "PAD_DiscoverBurrow",
-            "PAD_FoundFootprints"
-          ],
-          "successor": "PAD_ReadRobbersNote"
-        }
-      ],
-      "exclusive": [
-        [
-          "PAD_DiscoverBurrow",
-          "PAD_FoundFootprints"
-        ]
-      ]
-    }
+      "SCL_SkepticalRobber_PAD_DiscoverBurrow.json",
+      "SCL_SkepticalRobber_PAD_DiscoverGrave.json"
+    ]
   },
   "dialogue": {
-    "PAD_DiscoverBurrow_0": {
-      "id": "PAD_DiscoverBurrow_0",
+    "PAD_FoundFootprints_0": {
+      "id": "PAD_FoundFootprints_0",
       "speaker": "Player",
-      "text": "Something's buried in the dirt. Is that a femur?",
+      "text": "Paw prints? Where do they lead?<br>",
       "context": "",
       "checkflags": [],
       "setflags": [],
@@ -73,12 +47,34 @@
       "node_type": "normal",
       "children": {}
     },
-    "PAD_FoundFootprints_0": {
-      "id": "PAD_FoundFootprints_0",
-      "speaker": "Player",
-      "text": "Paw prints? Where do they lead?<br>",
-      "context": "",
-      "checkflags": [],
+    "AD_ReadTombstone_0": {
+      "id": "AD_ReadTombstone_0",
+      "speaker": "Narrator",
+      "text": "*'Ellie May'? You've seen this name before.*",
+      "context": "InternalNodeContext: Plays only the first time you interact with the grave after reading the robber's note, if you haven't found the ring yet.\rNodeContext: player has seen the name in a letter before",
+      "checkflags": [
+        "SCL_SkepticalRobber_State_TombstoneVariation"
+      ],
+      "setflags": [
+        "SCL_SkepticalRobber_State_TombstoneVariation = False"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_ReadTombstone_1": {
+      "id": "AD_ReadTombstone_1",
+      "speaker": "Narrator",
+      "text": "*Ellie May: my light, my hope, my joy.*",
+      "context": "NodeContext: reading a tombstone",
+      "checkflags": [
+        "SCL_SkepticalRobber_State_TombstoneVariation = False"
+      ],
       "setflags": [],
       "ruletags": [],
       "approval": [],
@@ -125,6 +121,22 @@
       "node_type": "normal",
       "children": {}
     },
+    "PAD_DiscoverBurrow_0": {
+      "id": "PAD_DiscoverBurrow_0",
+      "speaker": "Player",
+      "text": "Something's buried in the dirt. Is that a femur?",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "PAD_DiscoverGrave_0": {
       "id": "PAD_DiscoverGrave_0",
       "speaker": "Player",
@@ -134,44 +146,6 @@
       "setflags": [
         "SCL_SkepticalRobber_Knows_GraveRobbed"
       ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_ReadTombstone_0": {
-      "id": "AD_ReadTombstone_0",
-      "speaker": "Narrator",
-      "text": "*'Ellie May'? You've seen this name before.*",
-      "context": "InternalNodeContext: Plays only the first time you interact with the grave after reading the robber's note, if you haven't found the ring yet.\rNodeContext: player has seen the name in a letter before",
-      "checkflags": [
-        "SCL_SkepticalRobber_State_TombstoneVariation"
-      ],
-      "setflags": [
-        "SCL_SkepticalRobber_State_TombstoneVariation = False"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_ReadTombstone_1": {
-      "id": "AD_ReadTombstone_1",
-      "speaker": "Narrator",
-      "text": "*Ellie May: my light, my hope, my joy.*",
-      "context": "NodeContext: reading a tombstone",
-      "checkflags": [
-        "SCL_SkepticalRobber_State_TombstoneVariation = False"
-      ],
-      "setflags": [],
       "ruletags": [],
       "approval": [],
       "rolls": "",

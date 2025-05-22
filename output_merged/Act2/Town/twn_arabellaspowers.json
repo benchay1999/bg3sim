@@ -1,75 +1,97 @@
 {
   "metadata": {
     "individual_metadata": {
+      "PAD_FoundParents": {
+        "synopsis": "PAD when seeing Arabella's parents. One version if it is the mother, one if it is the father, and one if you never met them.",
+        "how_to_trigger": "Approach the dead bodies near -180; 17"
+      },
       "ZombieArabella_Dead": {
         "synopsis": "Arabella has been found dead. This means player refused to find her parents earlier, and she then ran off.",
         "how_to_trigger": "goto -150; 31; 18, ctrl-k Arabella to kill her and test SWD.Alternatively, go to -150; 31; 18, speak with Arabella, say that you aren't going to help her. She will disappear out of sight - then go to-157; 21; -85, find her corpse and SwD"
-      },
-      "TownIntroduction": {
-        "synopsis": "Player comes upon a familiar face in the cursed land: Arabella, the girl they rescued from the snake in act 1. She has developed powers and is rooting shadow-creatures. She promises you to teach you this entangling power if you save her parents, who are lost.",
-        "how_to_trigger": "ReCon (commands must be done in this order):\n- SetGlobalOsirisFlag DEN_ShadowDruid_State_SnakeCourtStarted- \nloadlevel SCL_Main_A\n- addTag ACT2_SHADOW_CURSE_IMMUNE:b47643e0-583c-4808-b108-f6d3b605b0a9  (so we don't die of shadowcurse)\n- goto -150; 31; 18\n\nThen talk to Arabella"
       },
       "AD_Arabella": {
         "synopsis": "Arabella calls out for her parents from within the cursed land, or speaks to herself to calm herself down.",
         "how_to_trigger": ""
       },
+      "TownIntroduction": {
+        "synopsis": "Player comes upon a familiar face in the cursed land: Arabella, the girl they rescued from the snake in act 1. She has developed powers and is rooting shadow-creatures. She promises you to teach you this entangling power if you save her parents, who are lost.",
+        "how_to_trigger": "ReCon (commands must be done in this order):\n- SetGlobalOsirisFlag DEN_ShadowDruid_State_SnakeCourtStarted- \nloadlevel SCL_Main_A\n- addTag ACT2_SHADOW_CURSE_IMMUNE:b47643e0-583c-4808-b108-f6d3b605b0a9  (so we don't die of shadowcurse)\n- goto -150; 31; 18\n\nThen talk to Arabella"
+      },
       "ParentA_Dead": {
         "synopsis": "Arabella's dead father, corpse found in the surgeon's general vicinity.",
         "how_to_trigger": "- Load SCL_Main- Debug book - act 2 set up - Teifling path- give QUEST_SCL_Moonlantern_000  (so we don't die of shadowcurse) and equip- goto -150; 31; 18- Talk to Arabella / or not- teleport S_DEN_ParentA- oe debugbook > useful spells > speak with dead - debug- use spell on corpse."
-      },
-      "PAD_FoundParents": {
-        "synopsis": "PAD when seeing Arabella's parents. One version if it is the mother, one if it is the father, and one if you never met them.",
-        "how_to_trigger": "Approach the dead bodies near -180; 17"
       }
     },
     "source_files": [
+      "TWN_ArabellasPowers_PAD_FoundParents.json",
       "TWN_ArabellasPowers_ZombieArabella_Dead.json",
-      "TWN_ArabellasPowers_TownIntroduction.json",
       "TWN_ArabellasPowers_AD_Arabella.json",
-      "TWN_ArabellasPowers_ParentA_Dead.json",
-      "TWN_ArabellasPowers_PAD_FoundParents.json"
-    ],
-    "automatic_ordering": {
-      "reasoning": "Based on the supplied session data, we can deduce a few logical narrative constraints. The TownIntroduction session is the first encounter with Arabella, where she is alive and promises to teach the player if her parents are saved. If the player refuses to help her find her parents, then later the session ZombieArabella_Dead is triggered, meaning Arabella dies. Conversely, if the player does engage with the subplot of rescuing her parents, then sessions PAD_FoundParents (the encounter with her parents) and ParentA_Dead (the event of encountering her father\u2019s corpse) are triggered. In this light, TownIntroduction must precede both the rescue branch (PAD_FoundParents and ParentA_Dead) and the negative branch (ZombieArabella_Dead). Also, since ParentA_Dead is a more specific event (concerning the father\u2019s corpse) within the broader context of encountering her parents, it is reasonable to assume that PAD_FoundParents should occur before ParentA_Dead. Finally, because these branches represent mutually exclusive narrative outcomes \u2013 the player\u2019s decision either leads to Arabella surviving (and thus encountering her parents) or to her death \u2013 the sessions ZombieArabella_Dead, PAD_FoundParents, and ParentA_Dead cannot all occur in the same playthrough.",
-      "order": [
-        {
-          "predecessor": [
-            "TownIntroduction"
-          ],
-          "successor": "ZombieArabella_Dead"
-        },
-        {
-          "predecessor": [
-            "TownIntroduction"
-          ],
-          "successor": "PAD_FoundParents"
-        },
-        {
-          "predecessor": [
-            "TownIntroduction"
-          ],
-          "successor": "ParentA_Dead"
-        },
-        {
-          "predecessor": [
-            "PAD_FoundParents"
-          ],
-          "successor": "ParentA_Dead"
-        }
-      ],
-      "exclusive": [
-        [
-          "ZombieArabella_Dead",
-          "PAD_FoundParents"
-        ],
-        [
-          "ZombieArabella_Dead",
-          "ParentA_Dead"
-        ]
-      ]
-    }
+      "TWN_ArabellasPowers_TownIntroduction.json",
+      "TWN_ArabellasPowers_ParentA_Dead.json"
+    ]
   },
   "dialogue": {
+    "PAD_FoundParents_0": {
+      "id": "PAD_FoundParents_0",
+      "speaker": "Player",
+      "text": "That corpse - it's Arabella's mother.",
+      "context": "",
+      "checkflags": [
+        "TWN_ArabellaPowers_State_Reacted_Mother"
+      ],
+      "setflags": [
+        "TWN_ArabellasPowers_State_RecognisedParents"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundParents_1": {
+      "id": "PAD_FoundParents_1",
+      "speaker": "Player",
+      "text": "That corpse - a tiefling. But not one I recognise.",
+      "context": "",
+      "checkflags": [
+        "DEN_GuardedEntrance_State_ParentsSceneStarted = False",
+        "DEN_GuardedEntrance_HasMet_Parents = False"
+      ],
+      "setflags": [
+        "TWN_ArabellasPowers_State_RecognisedParents"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundParents_2": {
+      "id": "PAD_FoundParents_2",
+      "speaker": "Player",
+      "text": "I - I know that corpse. Arabella's father.",
+      "context": "",
+      "checkflags": [
+        "TWN_ArabellaPowers_State_Reacted_Father"
+      ],
+      "setflags": [
+        "TWN_ArabellasPowers_State_RecognisedParents"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "ZombieArabella_Dead_24": {
       "id": "ZombieArabella_Dead_24",
       "speaker": "Narrator",
@@ -101,7 +123,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "17",
+      "link": "ZombieArabella_Dead_17",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -121,7 +143,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "17",
+          "link": "ZombieArabella_Dead_17",
           "is_end": false,
           "node_type": "taganswer",
           "children": {
@@ -139,7 +161,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "17",
+              "link": "ZombieArabella_Dead_17",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -158,7 +180,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "17",
+              "link": "ZombieArabella_Dead_17",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -177,7 +199,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "17",
+              "link": "ZombieArabella_Dead_17",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -581,7 +603,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "17",
+              "link": "ZombieArabella_Dead_17",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -600,7 +622,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "17",
+              "link": "ZombieArabella_Dead_17",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -619,7 +641,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "17",
+              "link": "ZombieArabella_Dead_17",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -646,6 +668,133 @@
       "node_type": "normal",
       "children": {}
     },
+    "AD_Arabella_3": {
+      "id": "AD_Arabella_3",
+      "speaker": "Arabella",
+      "text": "Mum, pops - can you hear me?",
+      "context": "NodeContext: Calling out, trying to find her parents.",
+      "checkflags": [],
+      "setflags": [
+        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_A"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "AD_Arabella_2": {
+          "id": "AD_Arabella_2",
+          "speaker": "Arabella",
+          "text": "It's me, Arabella.",
+          "context": "NodeContext: Calling out, trying to find her parents.",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "AD_Arabella_1": {
+              "id": "AD_Arabella_1",
+              "speaker": "Arabella",
+              "text": "Answer me, please!",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": true,
+              "node_type": "normal",
+              "children": {}
+            }
+          }
+        }
+      }
+    },
+    "AD_Arabella_4": {
+      "id": "AD_Arabella_4",
+      "speaker": "Arabella",
+      "text": "Hello? Pops, are you out there?",
+      "context": "NodeContext: Calling out, trying to find her parents.",
+      "checkflags": [
+        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_A"
+      ],
+      "setflags": [
+        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_B"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "AD_Arabella_0": {
+          "id": "AD_Arabella_0",
+          "speaker": "Arabella",
+          "text": "Please, please, please be all right...",
+          "context": "NodeContext: Muttered to herself",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "AD_Arabella_5": {
+      "id": "AD_Arabella_5",
+      "speaker": "Arabella",
+      "text": "Pops? Say something - anything!",
+      "context": "NodeContext: Calling out, trying to find her parents.",
+      "checkflags": [
+        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_B"
+      ],
+      "setflags": [
+        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_A = False",
+        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_B = False"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "AD_Arabella_6": {
+          "id": "AD_Arabella_6",
+          "speaker": "Arabella",
+          "text": "Mum? Where are you? Mum??",
+          "context": "NodeContext: Calling out, trying to find her parents.",
+          "checkflags": [],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
     "TownIntroduction_75": {
       "id": "TownIntroduction_75",
       "speaker": "Arabella",
@@ -661,7 +810,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "137",
+      "link": "TownIntroduction_137",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -676,7 +825,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "137",
+          "link": "TownIntroduction_137",
           "is_end": false,
           "node_type": "tagcinematic",
           "children": {
@@ -691,7 +840,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "137",
+              "link": "TownIntroduction_137",
               "is_end": false,
               "node_type": "visualstate",
               "children": {
@@ -708,7 +857,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "137",
+                  "link": "TownIntroduction_137",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -723,7 +872,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "137",
+                      "link": "TownIntroduction_137",
                       "is_end": false,
                       "node_type": "tagcinematic",
                       "children": {
@@ -738,7 +887,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "137",
+                          "link": "TownIntroduction_137",
                           "is_end": false,
                           "node_type": "visualstate",
                           "children": {
@@ -755,7 +904,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "137",
+                              "link": "TownIntroduction_137",
                               "is_end": false,
                               "node_type": "taganswer",
                               "children": {
@@ -773,7 +922,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "137",
+                                  "link": "TownIntroduction_137",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -792,7 +941,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "57",
+                                  "link": "TownIntroduction_57",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {
@@ -809,7 +958,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "57",
+                                      "link": "TownIntroduction_57",
                                       "is_end": false,
                                       "node_type": "taganswer",
                                       "children": {
@@ -824,7 +973,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "57",
+                                          "link": "TownIntroduction_57",
                                           "is_end": false,
                                           "node_type": "tagcinematic",
                                           "children": {
@@ -839,7 +988,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "57",
+                                              "link": "TownIntroduction_57",
                                               "is_end": false,
                                               "node_type": "visualstate",
                                               "children": {
@@ -854,7 +1003,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "57",
+                                                  "link": "TownIntroduction_57",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {
@@ -869,7 +1018,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "57",
+                                                      "link": "TownIntroduction_57",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -884,7 +1033,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "57",
+                                                          "link": "TownIntroduction_57",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -903,7 +1052,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "57",
+                                                              "link": "TownIntroduction_57",
                                                               "is_end": false,
                                                               "node_type": "normal",
                                                               "children": {}
@@ -925,7 +1074,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "131",
+                                                      "link": "TownIntroduction_131",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -944,7 +1093,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "131",
+                                                          "link": "TownIntroduction_131",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -959,7 +1108,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "131",
+                                                              "link": "TownIntroduction_131",
                                                               "is_end": false,
                                                               "node_type": "normal",
                                                               "children": {
@@ -974,7 +1123,7 @@
                                                                   "approval": [],
                                                                   "rolls": "",
                                                                   "goto": "",
-                                                                  "link": "131",
+                                                                  "link": "TownIntroduction_131",
                                                                   "is_end": false,
                                                                   "node_type": "normal",
                                                                   "children": {
@@ -993,7 +1142,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "131",
+                                                                      "link": "TownIntroduction_131",
                                                                       "is_end": false,
                                                                       "node_type": "normal",
                                                                       "children": {
@@ -1008,7 +1157,7 @@
                                                                           "approval": [],
                                                                           "rolls": "",
                                                                           "goto": "",
-                                                                          "link": "131",
+                                                                          "link": "TownIntroduction_131",
                                                                           "is_end": false,
                                                                           "node_type": "normal",
                                                                           "children": {
@@ -1023,7 +1172,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "131",
+                                                                              "link": "TownIntroduction_131",
                                                                               "is_end": false,
                                                                               "node_type": "rollresult",
                                                                               "children": {
@@ -1038,7 +1187,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "131",
+                                                                                  "link": "TownIntroduction_131",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -1060,7 +1209,7 @@
                                                                                       ],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "131",
+                                                                                      "link": "TownIntroduction_131",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -1074,7 +1223,7 @@
                                                                                           "ruletags": [],
                                                                                           "approval": [],
                                                                                           "rolls": "",
-                                                                                          "goto": "136",
+                                                                                          "goto": "TownIntroduction_136",
                                                                                           "link": "",
                                                                                           "is_end": false,
                                                                                           "node_type": "jump",
@@ -1093,7 +1242,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "131",
+                                                                                      "link": "TownIntroduction_131",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -1108,7 +1257,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "131",
+                                                                                          "link": "TownIntroduction_131",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {
@@ -1130,7 +1279,7 @@
                                                                                               ],
                                                                                               "rolls": "",
                                                                                               "goto": "",
-                                                                                              "link": "131",
+                                                                                              "link": "TownIntroduction_131",
                                                                                               "is_end": false,
                                                                                               "node_type": "normal",
                                                                                               "children": {
@@ -1147,7 +1296,7 @@
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
                                                                                                   "goto": "",
-                                                                                                  "link": "131",
+                                                                                                  "link": "TownIntroduction_131",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "normal",
                                                                                                   "children": {
@@ -1162,7 +1311,7 @@
                                                                                                       "approval": [],
                                                                                                       "rolls": "",
                                                                                                       "goto": "",
-                                                                                                      "link": "131",
+                                                                                                      "link": "TownIntroduction_131",
                                                                                                       "is_end": false,
                                                                                                       "node_type": "normal",
                                                                                                       "children": {
@@ -1177,7 +1326,7 @@
                                                                                                           "approval": [],
                                                                                                           "rolls": "",
                                                                                                           "goto": "",
-                                                                                                          "link": "131",
+                                                                                                          "link": "TownIntroduction_131",
                                                                                                           "is_end": false,
                                                                                                           "node_type": "normal",
                                                                                                           "children": {
@@ -1195,7 +1344,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "131",
+                                                                                                              "link": "TownIntroduction_131",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -1382,7 +1531,7 @@
                                                                                                                                           "ruletags": [],
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
-                                                                                                                                          "goto": "66",
+                                                                                                                                          "goto": "TownIntroduction_66",
                                                                                                                                           "link": "",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "jump",
@@ -1439,7 +1588,7 @@
                                                                                                                                           "ruletags": [],
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
-                                                                                                                                          "goto": "83",
+                                                                                                                                          "goto": "TownIntroduction_83",
                                                                                                                                           "link": "",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "jump",
@@ -1461,7 +1610,7 @@
                                                                                                                               "ruletags": [],
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
-                                                                                                                              "goto": "13",
+                                                                                                                              "goto": "TownIntroduction_13",
                                                                                                                               "link": "",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "jump",
@@ -1499,7 +1648,7 @@
                                                                                                                                   "ruletags": [],
                                                                                                                                   "approval": [],
                                                                                                                                   "rolls": "",
-                                                                                                                                  "goto": "114",
+                                                                                                                                  "goto": "TownIntroduction_114",
                                                                                                                                   "link": "",
                                                                                                                                   "is_end": false,
                                                                                                                                   "node_type": "jump",
@@ -1551,7 +1700,7 @@
                                                                                                                               "ruletags": [],
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
-                                                                                                                              "goto": "149",
+                                                                                                                              "goto": "TownIntroduction_149",
                                                                                                                               "link": "",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "jump",
@@ -1588,7 +1737,7 @@
                                                                                                               ],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "131",
+                                                                                                              "link": "TownIntroduction_131",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {}
@@ -1616,7 +1765,7 @@
                                                                                                               ],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "131",
+                                                                                                              "link": "TownIntroduction_131",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {}
@@ -1641,7 +1790,7 @@
                                                                                                               ],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "117",
+                                                                                                              "link": "TownIntroduction_117",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -1698,7 +1847,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "117",
+                                                                                                              "link": "TownIntroduction_117",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {}
@@ -1719,7 +1868,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "165",
+                                                                                                              "link": "TownIntroduction_165",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -1810,7 +1959,7 @@
                                                                                                               ],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "165",
+                                                                                                              "link": "TownIntroduction_165",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -1825,7 +1974,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "165",
+                                                                                                                  "link": "TownIntroduction_165",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "normal",
                                                                                                                   "children": {
@@ -1842,7 +1991,7 @@
                                                                                                                       "approval": [],
                                                                                                                       "rolls": "",
                                                                                                                       "goto": "",
-                                                                                                                      "link": "165",
+                                                                                                                      "link": "TownIntroduction_165",
                                                                                                                       "is_end": false,
                                                                                                                       "node_type": "normal",
                                                                                                                       "children": {
@@ -1859,7 +2008,7 @@
                                                                                                                           "approval": [],
                                                                                                                           "rolls": "",
                                                                                                                           "goto": "",
-                                                                                                                          "link": "165",
+                                                                                                                          "link": "TownIntroduction_165",
                                                                                                                           "is_end": false,
                                                                                                                           "node_type": "taganswer",
                                                                                                                           "children": {
@@ -1877,7 +2026,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "165",
+                                                                                                                              "link": "TownIntroduction_165",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "normal",
                                                                                                                               "children": {}
@@ -1896,7 +2045,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "165",
+                                                                                                                              "link": "TownIntroduction_165",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "normal",
                                                                                                                               "children": {}
@@ -1915,7 +2064,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "165",
+                                                                                                                              "link": "TownIntroduction_165",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "normal",
                                                                                                                               "children": {
@@ -1973,7 +2122,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "165",
+                                                                                                                              "link": "TownIntroduction_165",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "normal",
                                                                                                                               "children": {}
@@ -1993,7 +2142,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "165",
+                                                                                                                              "link": "TownIntroduction_165",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "normal",
                                                                                                                               "children": {}
@@ -2012,7 +2161,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "165",
+                                                                                                                              "link": "TownIntroduction_165",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "normal",
                                                                                                                               "children": {}
@@ -2038,7 +2187,7 @@
                                                                                                               "approval": [],
                                                                                                               "rolls": "",
                                                                                                               "goto": "",
-                                                                                                              "link": "34",
+                                                                                                              "link": "TownIntroduction_34",
                                                                                                               "is_end": false,
                                                                                                               "node_type": "normal",
                                                                                                               "children": {
@@ -2055,7 +2204,7 @@
                                                                                                                   "approval": [],
                                                                                                                   "rolls": "",
                                                                                                                   "goto": "",
-                                                                                                                  "link": "34",
+                                                                                                                  "link": "TownIntroduction_34",
                                                                                                                   "is_end": false,
                                                                                                                   "node_type": "normal",
                                                                                                                   "children": {
@@ -2070,7 +2219,7 @@
                                                                                                                       "approval": [],
                                                                                                                       "rolls": "",
                                                                                                                       "goto": "",
-                                                                                                                      "link": "34",
+                                                                                                                      "link": "TownIntroduction_34",
                                                                                                                       "is_end": false,
                                                                                                                       "node_type": "visualstate",
                                                                                                                       "children": {
@@ -2094,7 +2243,7 @@
                                                                                                                           ],
                                                                                                                           "rolls": "",
                                                                                                                           "goto": "",
-                                                                                                                          "link": "34",
+                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                           "is_end": false,
                                                                                                                           "node_type": "normal",
                                                                                                                           "children": {
@@ -2123,7 +2272,7 @@
                                                                                                                                   "ruletags": [],
                                                                                                                                   "approval": [],
                                                                                                                                   "rolls": "",
-                                                                                                                                  "goto": "66",
+                                                                                                                                  "goto": "TownIntroduction_66",
                                                                                                                                   "link": "",
                                                                                                                                   "is_end": false,
                                                                                                                                   "node_type": "jump",
@@ -2144,7 +2293,7 @@
                                                                                                                           "approval": [],
                                                                                                                           "rolls": "",
                                                                                                                           "goto": "",
-                                                                                                                          "link": "34",
+                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                           "is_end": false,
                                                                                                                           "node_type": "normal",
                                                                                                                           "children": {
@@ -2159,7 +2308,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "34",
+                                                                                                                              "link": "TownIntroduction_34",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "rollresult",
                                                                                                                               "children": {
@@ -2252,7 +2401,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "34",
+                                                                                                                              "link": "TownIntroduction_34",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "rollresult",
                                                                                                                               "children": {
@@ -2276,7 +2425,7 @@
                                                                                                                                   ],
                                                                                                                                   "rolls": "",
                                                                                                                                   "goto": "",
-                                                                                                                                  "link": "34",
+                                                                                                                                  "link": "TownIntroduction_34",
                                                                                                                                   "is_end": false,
                                                                                                                                   "node_type": "normal",
                                                                                                                                   "children": {
@@ -2293,7 +2442,7 @@
                                                                                                                                       "approval": [],
                                                                                                                                       "rolls": "",
                                                                                                                                       "goto": "",
-                                                                                                                                      "link": "34",
+                                                                                                                                      "link": "TownIntroduction_34",
                                                                                                                                       "is_end": false,
                                                                                                                                       "node_type": "taganswer",
                                                                                                                                       "children": {
@@ -2311,7 +2460,7 @@
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
                                                                                                                                           "goto": "",
-                                                                                                                                          "link": "34",
+                                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "normal",
                                                                                                                                           "children": {
@@ -2366,7 +2515,7 @@
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
                                                                                                                                           "goto": "",
-                                                                                                                                          "link": "34",
+                                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "normal",
                                                                                                                                           "children": {}
@@ -2385,7 +2534,7 @@
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
                                                                                                                                           "goto": "",
-                                                                                                                                          "link": "34",
+                                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "normal",
                                                                                                                                           "children": {}
@@ -2404,7 +2553,7 @@
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
                                                                                                                                           "goto": "",
-                                                                                                                                          "link": "34",
+                                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "normal",
                                                                                                                                           "children": {}
@@ -2423,7 +2572,7 @@
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
                                                                                                                                           "goto": "",
-                                                                                                                                          "link": "34",
+                                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "normal",
                                                                                                                                           "children": {}
@@ -2442,7 +2591,7 @@
                                                                                                                                           "approval": [],
                                                                                                                                           "rolls": "",
                                                                                                                                           "goto": "",
-                                                                                                                                          "link": "34",
+                                                                                                                                          "link": "TownIntroduction_34",
                                                                                                                                           "is_end": false,
                                                                                                                                           "node_type": "normal",
                                                                                                                                           "children": {}
@@ -2466,7 +2615,7 @@
                                                                                                                           "approval": [],
                                                                                                                           "rolls": "",
                                                                                                                           "goto": "",
-                                                                                                                          "link": "141",
+                                                                                                                          "link": "TownIntroduction_141",
                                                                                                                           "is_end": false,
                                                                                                                           "node_type": "normal",
                                                                                                                           "children": {
@@ -2481,7 +2630,7 @@
                                                                                                                               "approval": [],
                                                                                                                               "rolls": "",
                                                                                                                               "goto": "",
-                                                                                                                              "link": "141",
+                                                                                                                              "link": "TownIntroduction_141",
                                                                                                                               "is_end": false,
                                                                                                                               "node_type": "rollresult",
                                                                                                                               "children": {
@@ -2503,7 +2652,7 @@
                                                                                                                                   ],
                                                                                                                                   "rolls": "",
                                                                                                                                   "goto": "",
-                                                                                                                                  "link": "141",
+                                                                                                                                  "link": "TownIntroduction_141",
                                                                                                                                   "is_end": false,
                                                                                                                                   "node_type": "normal",
                                                                                                                                   "children": {
@@ -2518,7 +2667,7 @@
                                                                                                                                       "approval": [],
                                                                                                                                       "rolls": "",
                                                                                                                                       "goto": "",
-                                                                                                                                      "link": "141",
+                                                                                                                                      "link": "TownIntroduction_141",
                                                                                                                                       "is_end": false,
                                                                                                                                       "node_type": "alias",
                                                                                                                                       "children": {
@@ -2595,7 +2744,7 @@
                                                                                                                                       "ruletags": [],
                                                                                                                                       "approval": [],
                                                                                                                                       "rolls": "",
-                                                                                                                                      "goto": "130",
+                                                                                                                                      "goto": "TownIntroduction_130",
                                                                                                                                       "link": "",
                                                                                                                                       "is_end": false,
                                                                                                                                       "node_type": "jump",
@@ -2742,7 +2891,7 @@
                                                                                                                                   "ruletags": [],
                                                                                                                                   "approval": [],
                                                                                                                                   "rolls": "",
-                                                                                                                                  "goto": "11",
+                                                                                                                                  "goto": "TownIntroduction_11",
                                                                                                                                   "link": "",
                                                                                                                                   "is_end": false,
                                                                                                                                   "node_type": "jump",
@@ -2835,7 +2984,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "1",
+                                                                                                  "goto": "TownIntroduction_1",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -2871,7 +3020,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "2",
+                                                                                                  "goto": "TownIntroduction_2",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -2896,7 +3045,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "154",
+                                                                                      "link": "TownIntroduction_154",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -2911,7 +3060,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "154",
+                                                                                          "link": "TownIntroduction_154",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -2931,7 +3080,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "147",
+                                                                                      "link": "TownIntroduction_147",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -3005,7 +3154,7 @@
                                                                                       ],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "147",
+                                                                                      "link": "TownIntroduction_147",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -3059,7 +3208,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "147",
+                                                                                      "link": "TownIntroduction_147",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -3073,7 +3222,7 @@
                                                                                           "ruletags": [],
                                                                                           "approval": [],
                                                                                           "rolls": "",
-                                                                                          "goto": "1",
+                                                                                          "goto": "TownIntroduction_1",
                                                                                           "link": "",
                                                                                           "is_end": false,
                                                                                           "node_type": "jump",
@@ -3095,7 +3244,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "147",
+                                                                                      "link": "TownIntroduction_147",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -3109,7 +3258,7 @@
                                                                                           "ruletags": [],
                                                                                           "approval": [],
                                                                                           "rolls": "",
-                                                                                          "goto": "2",
+                                                                                          "goto": "TownIntroduction_2",
                                                                                           "link": "",
                                                                                           "is_end": false,
                                                                                           "node_type": "jump",
@@ -3133,7 +3282,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "147",
+                                                                                      "link": "TownIntroduction_147",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {}
@@ -3154,7 +3303,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "147",
+                                                                                      "link": "TownIntroduction_147",
                                                                                       "is_end": false,
                                                                                       "node_type": "normal",
                                                                                       "children": {
@@ -3169,7 +3318,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "147",
+                                                                                          "link": "TownIntroduction_147",
                                                                                           "is_end": false,
                                                                                           "node_type": "normal",
                                                                                           "children": {}
@@ -3306,7 +3455,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "123",
+                                                                                                  "goto": "TownIntroduction_123",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -3322,7 +3471,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "0",
+                                                                                                  "goto": "TownIntroduction_0",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -3338,7 +3487,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "31",
+                                                                                                  "goto": "TownIntroduction_31",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -3354,7 +3503,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "162",
+                                                                                                  "goto": "TownIntroduction_162",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -3370,7 +3519,7 @@
                                                                                                   "ruletags": [],
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
-                                                                                                  "goto": "84",
+                                                                                                  "goto": "TownIntroduction_84",
                                                                                                   "link": "",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "jump",
@@ -3411,7 +3560,7 @@
                                                                                   "ruletags": [],
                                                                                   "approval": [],
                                                                                   "rolls": "",
-                                                                                  "goto": "45",
+                                                                                  "goto": "TownIntroduction_45",
                                                                                   "link": "",
                                                                                   "is_end": false,
                                                                                   "node_type": "jump",
@@ -3438,7 +3587,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "54",
+                                                                      "link": "TownIntroduction_54",
                                                                       "is_end": false,
                                                                       "node_type": "alias",
                                                                       "children": {
@@ -3452,7 +3601,7 @@
                                                                           "ruletags": [],
                                                                           "approval": [],
                                                                           "rolls": "",
-                                                                          "goto": "45",
+                                                                          "goto": "TownIntroduction_45",
                                                                           "link": "",
                                                                           "is_end": false,
                                                                           "node_type": "jump",
@@ -3479,7 +3628,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "57",
+                                                      "link": "TownIntroduction_57",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -3498,7 +3647,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "57",
+                                                          "link": "TownIntroduction_57",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {}
@@ -3520,7 +3669,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "57",
+                                                      "link": "TownIntroduction_57",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -3535,7 +3684,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "57",
+                                                          "link": "TownIntroduction_57",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -3554,7 +3703,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "57",
+                                                              "link": "TownIntroduction_57",
                                                               "is_end": false,
                                                               "node_type": "normal",
                                                               "children": {}
@@ -3593,7 +3742,7 @@
                                                           "ruletags": [],
                                                           "approval": [],
                                                           "rolls": "",
-                                                          "goto": "147",
+                                                          "goto": "TownIntroduction_147",
                                                           "link": "",
                                                           "is_end": false,
                                                           "node_type": "jump",
@@ -3631,7 +3780,7 @@
                                                           "ruletags": [],
                                                           "approval": [],
                                                           "rolls": "",
-                                                          "goto": "119",
+                                                          "goto": "TownIntroduction_119",
                                                           "link": "",
                                                           "is_end": false,
                                                           "node_type": "jump",
@@ -3667,7 +3816,7 @@
                                                           "ruletags": [],
                                                           "approval": [],
                                                           "rolls": "",
-                                                          "goto": "153",
+                                                          "goto": "TownIntroduction_153",
                                                           "link": "",
                                                           "is_end": false,
                                                           "node_type": "jump",
@@ -3705,7 +3854,7 @@
                                                           "ruletags": [],
                                                           "approval": [],
                                                           "rolls": "",
-                                                          "goto": "70",
+                                                          "goto": "TownIntroduction_70",
                                                           "link": "",
                                                           "is_end": false,
                                                           "node_type": "jump",
@@ -3775,7 +3924,7 @@
                                                                   "ruletags": [],
                                                                   "approval": [],
                                                                   "rolls": "",
-                                                                  "goto": "57",
+                                                                  "goto": "TownIntroduction_57",
                                                                   "link": "",
                                                                   "is_end": false,
                                                                   "node_type": "jump",
@@ -3811,7 +3960,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "137",
+                                  "link": "TownIntroduction_137",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -3830,7 +3979,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "137",
+                                  "link": "TownIntroduction_137",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -3849,7 +3998,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "137",
+                                  "link": "TownIntroduction_137",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -3868,7 +4017,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "137",
+                                  "link": "TownIntroduction_137",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -3884,7 +4033,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "137",
+                                  "link": "TownIntroduction_137",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -3930,137 +4079,10 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "128",
+          "goto": "TownIntroduction_128",
           "link": "",
           "is_end": false,
           "node_type": "jump",
-          "children": {}
-        }
-      }
-    },
-    "AD_Arabella_3": {
-      "id": "AD_Arabella_3",
-      "speaker": "Arabella",
-      "text": "Mum, pops - can you hear me?",
-      "context": "NodeContext: Calling out, trying to find her parents.",
-      "checkflags": [],
-      "setflags": [
-        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_A"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "AD_Arabella_2": {
-          "id": "AD_Arabella_2",
-          "speaker": "Arabella",
-          "text": "It's me, Arabella.",
-          "context": "NodeContext: Calling out, trying to find her parents.",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "AD_Arabella_1": {
-              "id": "AD_Arabella_1",
-              "speaker": "Arabella",
-              "text": "Answer me, please!",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": true,
-              "node_type": "normal",
-              "children": {}
-            }
-          }
-        }
-      }
-    },
-    "AD_Arabella_4": {
-      "id": "AD_Arabella_4",
-      "speaker": "Arabella",
-      "text": "Hello? Pops, are you out there?",
-      "context": "NodeContext: Calling out, trying to find her parents.",
-      "checkflags": [
-        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_A"
-      ],
-      "setflags": [
-        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_B"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "AD_Arabella_0": {
-          "id": "AD_Arabella_0",
-          "speaker": "Arabella",
-          "text": "Please, please, please be all right...",
-          "context": "NodeContext: Muttered to herself",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "AD_Arabella_5": {
-      "id": "AD_Arabella_5",
-      "speaker": "Arabella",
-      "text": "Pops? Say something - anything!",
-      "context": "NodeContext: Calling out, trying to find her parents.",
-      "checkflags": [
-        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_B"
-      ],
-      "setflags": [
-        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_A = False",
-        "c9c257a7-1e86-9882-6aaf-7dbf63a33da4_B = False"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "AD_Arabella_6": {
-          "id": "AD_Arabella_6",
-          "speaker": "Arabella",
-          "text": "Mum? Where are you? Mum??",
-          "context": "NodeContext: Calling out, trying to find her parents.",
-          "checkflags": [],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
           "children": {}
         }
       }
@@ -4096,7 +4118,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "31",
+      "link": "ParentA_Dead_31",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -4116,7 +4138,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "31",
+          "link": "ParentA_Dead_31",
           "is_end": false,
           "node_type": "taganswer",
           "children": {
@@ -4136,7 +4158,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "31",
+              "link": "ParentA_Dead_31",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4157,7 +4179,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "31",
+              "link": "ParentA_Dead_31",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4178,7 +4200,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "29",
+              "link": "ParentA_Dead_29",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -4195,7 +4217,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "29",
+                  "link": "ParentA_Dead_29",
                   "is_end": false,
                   "node_type": "taganswer",
                   "children": {
@@ -4215,7 +4237,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "29",
+                      "link": "ParentA_Dead_29",
                       "is_end": false,
                       "node_type": "normal",
                       "children": {
@@ -4235,7 +4257,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "29",
+                          "link": "ParentA_Dead_29",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {}
@@ -4630,7 +4652,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "8",
+                      "link": "ParentA_Dead_8",
                       "is_end": false,
                       "node_type": "normal",
                       "children": {}
@@ -4665,7 +4687,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "9",
+                          "goto": "ParentA_Dead_9",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -4693,7 +4715,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "31",
+              "link": "ParentA_Dead_31",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4714,7 +4736,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "31",
+              "link": "ParentA_Dead_31",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4735,7 +4757,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "31",
+              "link": "ParentA_Dead_31",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4758,7 +4780,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "18",
+          "link": "ParentA_Dead_18",
           "is_end": false,
           "node_type": "taganswer",
           "children": {
@@ -4778,7 +4800,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "18",
+              "link": "ParentA_Dead_18",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4799,7 +4821,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "18",
+              "link": "ParentA_Dead_18",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4820,7 +4842,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "18",
+              "link": "ParentA_Dead_18",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4841,7 +4863,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "18",
+              "link": "ParentA_Dead_18",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4862,7 +4884,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "18",
+              "link": "ParentA_Dead_18",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -4914,7 +4936,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "31",
+                      "goto": "ParentA_Dead_31",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -4936,7 +4958,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "31",
+          "goto": "ParentA_Dead_31",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -4953,67 +4975,6 @@
         "GLO_SpeakWithDead_State_Killer"
       ],
       "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundParents_0": {
-      "id": "PAD_FoundParents_0",
-      "speaker": "Player",
-      "text": "That corpse - it's Arabella's mother.",
-      "context": "",
-      "checkflags": [
-        "TWN_ArabellaPowers_State_Reacted_Mother"
-      ],
-      "setflags": [
-        "TWN_ArabellasPowers_State_RecognisedParents"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundParents_1": {
-      "id": "PAD_FoundParents_1",
-      "speaker": "Player",
-      "text": "That corpse - a tiefling. But not one I recognise.",
-      "context": "",
-      "checkflags": [
-        "DEN_GuardedEntrance_State_ParentsSceneStarted = False",
-        "DEN_GuardedEntrance_HasMet_Parents = False"
-      ],
-      "setflags": [
-        "TWN_ArabellasPowers_State_RecognisedParents"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundParents_2": {
-      "id": "PAD_FoundParents_2",
-      "speaker": "Player",
-      "text": "I - I know that corpse. Arabella's father.",
-      "context": "",
-      "checkflags": [
-        "TWN_ArabellaPowers_State_Reacted_Father"
-      ],
-      "setflags": [
-        "TWN_ArabellasPowers_State_RecognisedParents"
-      ],
       "ruletags": [],
       "approval": [],
       "rolls": "",

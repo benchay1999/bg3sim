@@ -1,8 +1,16 @@
 {
   "metadata": {
     "individual_metadata": {
-      "PAD_NoticeShrine": {
-        "synopsis": "The party comments on a little shrine they've discovered in a cavern - a grotto containing a statue and some prayers and offerings left by worshippers. Players may or may not recognise that the statue is the goddess Sel\u00fbne. Shadowheart, as well as certain cleric/paladin tags, will recognise the statue always.",
+      "PAD_OpenStashWithPrayer": {
+        "synopsis": "The player passes comment after they manage to open a magically sealed chest by reciting a prayer they found. If Shadowheart or a worshipper of Shar is speaking, the prayer does nothing.",
+        "how_to_trigger": ""
+      },
+      "PAD_OpenStashAsSelunite": {
+        "synopsis": "A Sel\u00fbne-worshipping player manages to unseal a magically locked chest after reading a prayer.",
+        "how_to_trigger": ""
+      },
+      "PAD_NoticeStashSeal": {
+        "synopsis": "Following a passive arcana check, the player comments that a chest discovered at a shrine has a spell cast over it, protecting its contents.",
         "how_to_trigger": ""
       },
       "PAD_PickupPrayerSheet": {
@@ -13,43 +21,22 @@
         "synopsis": "The player reacts to a magically-locked chest injuring them upon attempting to open it without disabling the protections.",
         "how_to_trigger": ""
       },
-      "PAD_NoticeStashSeal": {
-        "synopsis": "Following a passive arcana check, the player comments that a chest discovered at a shrine has a spell cast over it, protecting its contents.",
-        "how_to_trigger": ""
-      },
-      "PAD_OpenStashWithPrayer": {
-        "synopsis": "The player passes comment after they manage to open a magically sealed chest by reciting a prayer they found. If Shadowheart or a worshipper of Shar is speaking, the prayer does nothing.",
-        "how_to_trigger": ""
-      },
-      "PAD_OpenStashAsSelunite": {
-        "synopsis": "A Sel\u00fbne-worshipping player manages to unseal a magically locked chest after reading a prayer.",
+      "PAD_NoticeShrine": {
+        "synopsis": "The party comments on a little shrine they've discovered in a cavern - a grotto containing a statue and some prayers and offerings left by worshippers. Players may or may not recognise that the statue is the goddess Sel\u00fbne. Shadowheart, as well as certain cleric/paladin tags, will recognise the statue always.",
         "how_to_trigger": ""
       }
     },
     "source_files": [
-      "FOR_SeluneStash_PAD_NoticeShrine.json",
+      "FOR_SeluneStash_PAD_OpenStashWithPrayer.json",
+      "FOR_SeluneStash_PAD_OpenStashAsSelunite.json",
+      "FOR_SeluneStash_PAD_NoticeStashSeal.json",
       "FOR_SeluneStash_PAD_PickupPrayerSheet.json",
       "FOR_SeluneStash_PAD_TriggeredTrap.json",
-      "FOR_SeluneStash_PAD_NoticeStashSeal.json",
-      "FOR_SeluneStash_PAD_OpenStashWithPrayer.json",
-      "FOR_SeluneStash_PAD_OpenStashAsSelunite.json"
+      "FOR_SeluneStash_PAD_NoticeShrine.json"
     ],
     "automatic_ordering": {
-      "reasoning": "First, the shrine is noted (PAD_NoticeShrine) and then the player can pick up the prayer sheet (PAD_PickupPrayerSheet), implying that noticing the shrine is a precursor to interacting further with its elements. The player then is likely to evaluate the chest: an arcana check reveals the magical seal on the chest (PAD_NoticeStashSeal), which logically must come before any attempt to open the chest. Once the seal is noticed, the player can either attempt to open the chest by reciting the prayer (successfully unlocking it) or open it improperly. If the player uses the prayer properly, the outcome splits: if they are a follower of Sel\u00fbne (or have a Sel\u00fbne affiliation), the session PAD_OpenStashAsSelunite is triggered; otherwise, PAD_OpenStashWithPrayer is triggered. These two sessions are mutually exclusive since they represent alternative outcomes based on the protagonist\u2019s religious alignment. On the other hand, if the chest is attempted to be opened without using the prayer (or without having picked up the prayer sheet), the trap is triggered (PAD_TriggeredTrap), which acts as a consequence of neglecting the proper procedure. Thus, the ordering constraints are: notice shrine comes first, followed by picking up the prayer sheet, and then noticing the seal; after noticing the seal, the outcomes (successful opening using prayer or triggering the trap) can occur, with the successful openings further split into two mutually exclusive paths.",
+      "reasoning": "Looking at the sessions, we can see that some events logically lead into others. For example, before a player can successfully unseal the chest (either via a generic prayer or a Sel\u00fbne\u2010specific prayer), they would likely have encountered clues about the chest\u2019s magical protection \u2013 via noticing the seal (PAD_NoticeStashSeal) or picking up a prayer sheet (PAD_PickupPrayerSheet) that hints at the proper method. In other words, both PAD_NoticeStashSeal and PAD_PickupPrayerSheet should occur before the chest-opening events. Also, the two chest-opening sessions (PAD_OpenStashWithPrayer and PAD_OpenStashAsSelunite) are mutually exclusive: if the player is a worshipper of Sel\u00fbne they trigger PAD_OpenStashAsSelunite, otherwise they may trigger PAD_OpenStashWithPrayer. Furthermore, if the player attempts to open the chest without disabling or understanding the spell \u2013 that is, without having read the prayer sheet or noticed the arcane seal \u2013 they might trigger the trap (PAD_TriggeredTrap), which again represents an alternative path and is mutually exclusive with successful chest openings. The notice of the shrine (PAD_NoticeShrine) is an independent observation and does not tie in with these specific chase sequences, so it is left out of our ordering/exclusiveness constraints.",
       "order": [
-        {
-          "predecessor": [
-            "PAD_NoticeShrine"
-          ],
-          "successor": "PAD_PickupPrayerSheet"
-        },
-        {
-          "predecessor": [
-            "PAD_NoticeShrine",
-            "PAD_PickupPrayerSheet"
-          ],
-          "successor": "PAD_NoticeStashSeal"
-        },
         {
           "predecessor": [
             "PAD_PickupPrayerSheet",
@@ -63,23 +50,169 @@
             "PAD_NoticeStashSeal"
           ],
           "successor": "PAD_OpenStashAsSelunite"
-        },
-        {
-          "predecessor": [
-            "PAD_NoticeStashSeal"
-          ],
-          "successor": "PAD_TriggeredTrap"
         }
       ],
       "exclusive": [
         [
           "PAD_OpenStashWithPrayer",
           "PAD_OpenStashAsSelunite"
+        ],
+        [
+          "PAD_TriggeredTrap",
+          "PAD_OpenStashWithPrayer"
+        ],
+        [
+          "PAD_TriggeredTrap",
+          "PAD_OpenStashAsSelunite"
         ]
       ]
     }
   },
   "dialogue": {
+    "PAD_OpenStashWithPrayer_0": {
+      "id": "PAD_OpenStashWithPrayer_0",
+      "speaker": "Player",
+      "text": "Chest's unlocked. My prayers are answered.",
+      "context": "NodeContext: Reacting to a prayer unlocking a magically sealed chest.",
+      "checkflags": [
+        "FOR_SeluneStash_State_SuccessfullyReadPrayer"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_OpenStashWithPrayer_1": {
+      "id": "PAD_OpenStashWithPrayer_1",
+      "speaker": "Player",
+      "text": "Well praying didn't help...",
+      "context": "NodeContext: Unimpressed",
+      "checkflags": [
+        "FOR_SeluneStash_State_SuccessfullyReadPrayer = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_OpenStashAsSelunite_0": {
+      "id": "PAD_OpenStashAsSelunite_0",
+      "speaker": "Player",
+      "text": "Moonmaiden's grace! It's open!",
+      "context": "NodeContext: Hushed awe. A good omen from their goddess.",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_NoticeStashSeal_0": {
+      "id": "PAD_NoticeStashSeal_0",
+      "speaker": "Player",
+      "text": "There's magic keeping this chest sealed; I can feel its aura.",
+      "context": "",
+      "checkflags": [
+        "FOR_SeluneStash_State_StashSealCheckSuccess"
+      ],
+      "setflags": [
+        "FOR_SeluneStash_NoticeStashSeal_CommentedOnSeal"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_PickupPrayerSheet_0": {
+      "id": "PAD_PickupPrayerSheet_0",
+      "speaker": "Player",
+      "text": "A prayer sheet. What's this symbol on it?",
+      "context": "",
+      "checkflags": [
+        "FOR_SeluneStash_State_PrayerSheetCheckSuccess",
+        "FOR_SeluneStash_NoticeStashSeal_CommentedOnSeal = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_PickupPrayerSheet_1": {
+      "id": "PAD_PickupPrayerSheet_1",
+      "speaker": "Player",
+      "text": "A prayer sheet. With the same symbol as the one on the chest.",
+      "context": "",
+      "checkflags": [
+        "FOR_SeluneStash_State_PrayerSheetCheckSuccess",
+        "FOR_SeluneStash_NoticeStashSeal_CommentedOnSeal"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_PickupPrayerSheet_2": {
+      "id": "PAD_PickupPrayerSheet_2",
+      "speaker": "Player",
+      "text": "Just an old prayer.",
+      "context": "",
+      "checkflags": [
+        "FOR_SeluneStash_State_PrayerSheetCheckSuccess = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_TriggeredTrap_0": {
+      "id": "PAD_TriggeredTrap_0",
+      "speaker": "Player",
+      "text": "Agh! This thing won't yield its contents easily...",
+      "context": "NodeContext: Reacting to a moderate jolt of pain.",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "PAD_NoticeShrine_0": {
       "id": "PAD_NoticeShrine_0",
       "speaker": "Player",
@@ -163,150 +296,6 @@
         "ShadowHeart_InParty_Knows_SharWorshipper",
         "REALLY_SHADOWHEART"
       ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_PickupPrayerSheet_0": {
-      "id": "PAD_PickupPrayerSheet_0",
-      "speaker": "Player",
-      "text": "A prayer sheet. What's this symbol on it?",
-      "context": "",
-      "checkflags": [
-        "FOR_SeluneStash_State_PrayerSheetCheckSuccess",
-        "FOR_SeluneStash_NoticeStashSeal_CommentedOnSeal = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_PickupPrayerSheet_1": {
-      "id": "PAD_PickupPrayerSheet_1",
-      "speaker": "Player",
-      "text": "A prayer sheet. With the same symbol as the one on the chest.",
-      "context": "",
-      "checkflags": [
-        "FOR_SeluneStash_State_PrayerSheetCheckSuccess",
-        "FOR_SeluneStash_NoticeStashSeal_CommentedOnSeal"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_PickupPrayerSheet_2": {
-      "id": "PAD_PickupPrayerSheet_2",
-      "speaker": "Player",
-      "text": "Just an old prayer.",
-      "context": "",
-      "checkflags": [
-        "FOR_SeluneStash_State_PrayerSheetCheckSuccess = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_TriggeredTrap_0": {
-      "id": "PAD_TriggeredTrap_0",
-      "speaker": "Player",
-      "text": "Agh! This thing won't yield its contents easily...",
-      "context": "NodeContext: Reacting to a moderate jolt of pain.",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_NoticeStashSeal_0": {
-      "id": "PAD_NoticeStashSeal_0",
-      "speaker": "Player",
-      "text": "There's magic keeping this chest sealed; I can feel its aura.",
-      "context": "",
-      "checkflags": [
-        "FOR_SeluneStash_State_StashSealCheckSuccess"
-      ],
-      "setflags": [
-        "FOR_SeluneStash_NoticeStashSeal_CommentedOnSeal"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_OpenStashWithPrayer_0": {
-      "id": "PAD_OpenStashWithPrayer_0",
-      "speaker": "Player",
-      "text": "Chest's unlocked. My prayers are answered.",
-      "context": "NodeContext: Reacting to a prayer unlocking a magically sealed chest.",
-      "checkflags": [
-        "FOR_SeluneStash_State_SuccessfullyReadPrayer"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_OpenStashWithPrayer_1": {
-      "id": "PAD_OpenStashWithPrayer_1",
-      "speaker": "Player",
-      "text": "Well praying didn't help...",
-      "context": "NodeContext: Unimpressed",
-      "checkflags": [
-        "FOR_SeluneStash_State_SuccessfullyReadPrayer = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_OpenStashAsSelunite_0": {
-      "id": "PAD_OpenStashAsSelunite_0",
-      "speaker": "Player",
-      "text": "Moonmaiden's grace! It's open!",
-      "context": "NodeContext: Hushed awe. A good omen from their goddess.",
-      "checkflags": [],
       "setflags": [],
       "ruletags": [],
       "approval": [],

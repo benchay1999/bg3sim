@@ -1,13 +1,13 @@
 {
   "metadata": {
     "individual_metadata": {
-      "NoticedPoisoning": {
-        "synopsis": "A nearby goblin saw the player poison the vat of beer and confronts them.",
-        "how_to_trigger": ""
-      },
       "": {
         "synopsis": "A goblin comes up to you after you've poisoned the beer and gives you a glass of newly poisoned alcohol, proposing a toast. She's standing on a cage (about 2m high) together with the player.",
         "how_to_trigger": "- In DebugBook: GoToRegion -> Act1 -> GOB - GoblinCamp -> Teleport to Festivities Area (anything)- In DebugBook: Set quest flags & option -> Act1 -> GOB - Goblin Camp -> Goblin Toast -> Poison the beer tub- Get near the goblin stage"
+      },
+      "NoticedPoisoning": {
+        "synopsis": "A nearby goblin saw the player poison the vat of beer and confronts them.",
+        "how_to_trigger": ""
       },
       "PoisoningInterrogation": {
         "synopsis": "One of the goblins stops the player and accusses them of poisoning their beer and thus killing some of the goblins.",
@@ -15,876 +15,24 @@
       }
     },
     "source_files": [
-      "GOB_GoblinToast_NoticedPoisoning.json",
       "GOB_GoblinToast.json",
+      "GOB_GoblinToast_NoticedPoisoning.json",
       "GOB_GoblinToast_PoisoningInterrogation.json"
     ],
     "automatic_ordering": {
-      "reasoning": "All three sessions arise from the player poisoning the beer tub. In one branch a goblin witnesses the poisoning and immediately confronts the player (NoticedPoisoning), while in another branch a goblin\u2014standing on a high cage\u2014cheers the act by offering a toast (the session with the empty key). In the toast branch, a later goblin confrontation (PoisoningInterrogation) is triggered as a consequence (its trigger instructions even mention it as GOB_GoblinToast_PoisoningInterrogation, implying that it follows after the toast session has occurred). Because these branches represent alternative outcomes of the poisoning event (either being spotted immediately or celebrated before being formally interrogated), the NoticedPoisoning session is logically mutually exclusive with the toast branch (i.e. both the toast session and its follow\u2010up, PoisoningInterrogation). The only clear ordering constraint is within the toast branch \u2013 the toast (empty key) must come before PoisoningInterrogation.",
+      "reasoning": "To determine the order and exclusiveness of the sessions, we analyze the synopses and triggering conditions. The session 'NoticedPoisoning' indicates that a goblin sees the player poison the beer, which implies it must occur before 'PoisoningInterrogation' since the latter involves confrontation about the act of poisoning. Therefore, 'NoticedPoisoning' is a predecessor to 'PoisoningInterrogation'. Additionally, 'PoisoningInterrogation' cannot happen without the act of poisoning being noticed first, establishing a clear sequence. As for 'Goblin Toast', it can occur independently of 'NoticedPoisoning' and 'PoisoningInterrogation' but is a consequence of the poisoning action, thus it does not need to be ordered with the others since it's not directly dependent on them. There are no explicit mutual exclusivity conditions based on the provided data, so the exclusive list remains empty.",
       "order": [
         {
           "predecessor": [
-            ""
+            "NoticedPoisoning"
           ],
           "successor": "PoisoningInterrogation"
         }
       ],
-      "exclusive": [
-        [
-          "NoticedPoisoning",
-          ""
-        ],
-        [
-          "NoticedPoisoning",
-          "PoisoningInterrogation"
-        ]
-      ]
+      "exclusive": []
     }
   },
   "dialogue": {
-    "NoticedPoisoning_10": {
-      "id": "NoticedPoisoning_10",
-      "speaker": "",
-      "text": "Hey! You tryin' to slip us somethin'?",
-      "context": "",
-      "checkflags": [],
-      "setflags": [
-        "GOB_GoblinToast_PlayerWasNoticedPoisoning",
-        "GOB_GoblinToast_GoblinNoticedPoisoning"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "27",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "NoticedPoisoning_42": {
-          "id": "NoticedPoisoning_42",
-          "speaker": "Narrator",
-          "text": "*The mark glows, but you feel nothing in response. Your illithid power is beyond reach until you rest.*",
-          "context": "",
-          "checkflags": [
-            "GLO_Tadpoled_UsedToday1"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "27",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {}
-        },
-        "NoticedPoisoning_25": {
-          "id": "NoticedPoisoning_25",
-          "speaker": "Narrator",
-          "text": "*A strange symbol glows, marked on their flesh, and something within you stirs in response.*",
-          "context": "",
-          "checkflags": [
-            "GLO_TadpoleIntro_NPC = False"
-          ],
-          "setflags": [
-            "GLO_TadpoleIntro_NPC"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "27",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {}
-        },
-        "NoticedPoisoning_1": {
-          "id": "NoticedPoisoning_1",
-          "speaker": "Narrator",
-          "text": "*As the symbol glows, power courses through you. Authority.*",
-          "context": "",
-          "checkflags": [
-            "GLO_TadpoleIntro_NPC"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "33",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "NoticedPoisoning_27": {
-              "id": "NoticedPoisoning_27",
-              "speaker": "Player",
-              "text": "Don't be stupid. You can barely see straight.",
-              "context": "",
-              "checkflags": [
-                "ee2a8342-0aad-ed4e-a7b1-811c6cc527a8_MindHasBeenRead"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "33",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_8": {
-                  "id": "NoticedPoisoning_8",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "44",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "jump",
-                  "children": {}
-                }
-              }
-            },
-            "NoticedPoisoning_40": {
-              "id": "NoticedPoisoning_40",
-              "speaker": "Player",
-              "text": "A lethal poison. Enough to take the lot of you down.",
-              "context": "NodeContext: Tnak means",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "33",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_4": {
-                  "id": "NoticedPoisoning_4",
-                  "speaker": "",
-                  "text": "Tnak. I'll feckin' kill you!",
-                  "context": "NodeContext: tnak means 'damn it', pronounced tuh-NACK.",
-                  "checkflags": [],
-                  "setflags": [
-                    "GOB_GoblinToast_PoisoningRedHanded"
-                  ],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": true,
-                  "node_type": "normal",
-                  "children": {}
-                }
-              }
-            },
-            "NoticedPoisoning_15": {
-              "id": "NoticedPoisoning_15",
-              "speaker": "Player",
-              "text": "Just a drop of firewine. It'll give the brew a real kick.",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "33",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_36": {
-                  "id": "NoticedPoisoning_36",
-                  "speaker": "",
-                  "text": "True",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "33",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_18": {
-                      "id": "NoticedPoisoning_18",
-                      "speaker": "",
-                      "text": "Eh. Heh. Now that's an idea. Should've thought of that myself!",
-                      "context": "",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": true,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                },
-                "NoticedPoisoning_31": {
-                  "id": "NoticedPoisoning_31",
-                  "speaker": "",
-                  "text": "False",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "33",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_37": {
-                      "id": "NoticedPoisoning_37",
-                      "speaker": "",
-                      "text": "Like hells. That ain't firewine!",
-                      "context": "",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "33",
-                      "is_end": false,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                }
-              }
-            },
-            "NoticedPoisoning_26": {
-              "id": "NoticedPoisoning_26",
-              "speaker": "Player",
-              "text": "I'll slip a knife between your ribs if you don't piss off.",
-              "context": "",
-              "checkflags": [
-                "BARBARIAN = False"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "21",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {}
-            },
-            "NoticedPoisoning_0": {
-              "id": "NoticedPoisoning_0",
-              "speaker": "Player",
-              "text": "You saw nothing, or I'll crush your eyes like grapes. Got it?",
-              "context": "",
-              "checkflags": [
-                "BARBARIAN"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "16",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_21": {
-                  "id": "NoticedPoisoning_21",
-                  "speaker": "",
-                  "text": "True",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_13": {
-                      "id": "NoticedPoisoning_13",
-                      "speaker": "",
-                      "text": "Tnak. Fine. Hope Gribbo drinks it. At least then she'll shut up 'bout her bloody pigeon!",
-                      "context": "NodeContext: Tnak (pronounced tuh-NACK) means damn it. This is spoken after the player successfully threatened them into keeping their mouth shut about the poisoning.",
-                      "checkflags": [
-                        "dbbe75f1-6854-f245-1ce5-6a999d1b6b24_TEMP"
-                      ],
-                      "setflags": [
-                        "GOB_GoblinToast_GoblinBulliedAway"
-                      ],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": true,
-                      "node_type": "normal",
-                      "children": {}
-                    },
-                    "NoticedPoisoning_6": {
-                      "id": "NoticedPoisoning_6",
-                      "speaker": "",
-                      "text": "Listen, uh, I got me some business over on the other side of yonder mountain. See you never, yeah?",
-                      "context": "",
-                      "checkflags": [
-                        "dbbe75f1-6854-f245-1ce5-6a999d1b6b24_TEMP = False"
-                      ],
-                      "setflags": [
-                        "GOB_GoblinToast_GoblinBulliedAway"
-                      ],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": true,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                },
-                "NoticedPoisoning_35": {
-                  "id": "NoticedPoisoning_35",
-                  "speaker": "",
-                  "text": "False",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_22": {
-                      "id": "NoticedPoisoning_22",
-                      "speaker": "",
-                      "text": "You don't know who you're messin with. I'll kill you and eat you like that dwarf!",
-                      "context": "",
-                      "checkflags": [],
-                      "setflags": [
-                        "GOB_GoblinToast_PoisoningRedHanded"
-                      ],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": true,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                }
-              }
-            },
-            "NoticedPoisoning_3": {
-              "id": "NoticedPoisoning_3",
-              "speaker": "Player",
-              "text": "Palm the poison vial and feign innocence.",
-              "context": "",
-              "checkflags": [
-                "ROGUE"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "16",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_11": {
-                  "id": "NoticedPoisoning_11",
-                  "speaker": "",
-                  "text": "True",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_44": {
-                      "id": "NoticedPoisoning_44",
-                      "speaker": "",
-                      "text": "Drink must be tellin' on me. Guess I need some more. Heh.",
-                      "context": "",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": true,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                },
-                "NoticedPoisoning_39": {
-                  "id": "NoticedPoisoning_39",
-                  "speaker": "",
-                  "text": "False",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_23": {
-                      "id": "NoticedPoisoning_23",
-                      "speaker": "",
-                      "text": "Don't think I didn't see that with yer slippery fingers.",
-                      "context": "",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": false,
-                      "node_type": "normal",
-                      "children": {
-                        "NoticedPoisoning_33": {
-                          "id": "NoticedPoisoning_33",
-                          "speaker": "",
-                          "text": "This one's tryin' to poison us! Kill 'em!",
-                          "context": "",
-                          "checkflags": [],
-                          "setflags": [
-                            "GOB_GoblinToast_PoisoningRedHanded"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "NoticedPoisoning_43": {
-              "id": "NoticedPoisoning_43",
-              "speaker": "Player",
-              "text": "Turn around and walk away. Do not question the will of the Absolute.",
-              "context": "",
-              "checkflags": [
-                "GLO_Tadpoled_UsedToday1 = False",
-                "TRUESOUL"
-              ],
-              "setflags": [
-                "GLO_Tadpoled_UsedToday1"
-              ],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "16",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_41": {
-                  "id": "NoticedPoisoning_41",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": true,
-                  "node_type": "alias",
-                  "children": {}
-                }
-              }
-            },
-            "NoticedPoisoning_12": {
-              "id": "NoticedPoisoning_12",
-              "speaker": "Player",
-              "text": "Turn around and walk away. Do not question the will of the Absolute.",
-              "context": "",
-              "checkflags": [
-                "GLO_Tadpoled_UsedToday1 = False",
-                "TRUESOUL = False",
-                "ILLITHID"
-              ],
-              "setflags": [
-                "GLO_Tadpoled_UsedToday1"
-              ],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_5": {
-                  "id": "NoticedPoisoning_5",
-                  "speaker": "",
-                  "text": "True",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_16": {
-                      "id": "NoticedPoisoning_16",
-                      "speaker": "",
-                      "text": "O-of course. I'd never!",
-                      "context": "NodeContext: the player just revieled themself to be of much higher standing and told the goblin not to question them.",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": false,
-                      "node_type": "normal",
-                      "children": {
-                        "NoticedPoisoning_2": {
-                          "id": "NoticedPoisoning_2",
-                          "speaker": "Narrator",
-                          "text": "*A shiver runs across your mind... You feel sated.*",
-                          "context": "",
-                          "checkflags": [
-                            "GLO_TadpoledCount1 = False",
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "GLO_TadpoledCount1"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_14": {
-                          "id": "NoticedPoisoning_14",
-                          "speaker": "Narrator",
-                          "text": "*Something stirs deep within you, hungry and alert... it's taking something you'll never get back.*",
-                          "context": "",
-                          "checkflags": [
-                            "GLO_TadpoledCount2 = False",
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "GLO_TadpoledCount2"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_17": {
-                          "id": "NoticedPoisoning_17",
-                          "speaker": "Narrator",
-                          "text": "*Your mind lurches, reeling suddenly as if... bitten.*",
-                          "context": "",
-                          "checkflags": [
-                            "GLO_TadpoledCount3 = False",
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "GLO_TadpoledCount3"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_30": {
-                          "id": "NoticedPoisoning_30",
-                          "speaker": "Narrator",
-                          "text": "*A shadow swims across your vision, and a familiar voice tells you to be calm. You are loved.*",
-                          "context": "",
-                          "checkflags": [
-                            "GLO_TadpoledCount4 = False",
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "GLO_TadpoledCount4"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_29": {
-                          "id": "NoticedPoisoning_29",
-                          "speaker": "Narrator",
-                          "text": "*Your blood runs quicker, feeding the gnawing absence at the centre of your mind.*",
-                          "context": "",
-                          "checkflags": [
-                            "GLO_TadpoledCount5 = False",
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "GLO_TadpoledCount5"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_19": {
-                          "id": "NoticedPoisoning_19",
-                          "speaker": "Narrator",
-                          "text": "*The presence deep in your mind is awake, unblinking. This is it. A single word pervades your consciousness: 'Soon'.*",
-                          "context": "",
-                          "checkflags": [
-                            "GLO_TadpoledCount6 = False",
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "GLO_TadpoledCount6"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_7": {
-                          "id": "NoticedPoisoning_7",
-                          "speaker": "Narrator",
-                          "text": "*Your mind is full, bursting with ecstasy and terror. Finally, it is coming. You are becoming.*",
-                          "context": "",
-                          "checkflags": [
-                            "TRUESOUL = False"
-                          ],
-                          "setflags": [
-                            "TRUESOUL"
-                          ],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "",
-                          "link": "",
-                          "is_end": true,
-                          "node_type": "normal",
-                          "children": {}
-                        },
-                        "NoticedPoisoning_20": {
-                          "id": "NoticedPoisoning_20",
-                          "speaker": "",
-                          "text": "",
-                          "context": "",
-                          "checkflags": [],
-                          "setflags": [],
-                          "ruletags": [],
-                          "approval": [],
-                          "rolls": "",
-                          "goto": "2",
-                          "link": "",
-                          "is_end": false,
-                          "node_type": "jump",
-                          "children": {}
-                        }
-                      }
-                    }
-                  }
-                },
-                "NoticedPoisoning_24": {
-                  "id": "NoticedPoisoning_24",
-                  "speaker": "",
-                  "text": "False",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_32": {
-                      "id": "NoticedPoisoning_32",
-                      "speaker": "",
-                      "text": "Like hells. I don't know what you're gettin' at, but answer the question. What were you doin'?",
-                      "context": "",
-                      "checkflags": [],
-                      "setflags": [],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": false,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                }
-              }
-            },
-            "NoticedPoisoning_34": {
-              "id": "NoticedPoisoning_34",
-              "speaker": "Player",
-              "text": "Read their mind.",
-              "context": "",
-              "checkflags": [
-                "ee2a8342-0aad-ed4e-a7b1-811c6cc527a8_MindHasBeenRead = False",
-                "44f9fbf3-735d-8eaf-94dc-6c1d1cf5382d"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "NoticedPoisoning_9": {
-                  "id": "NoticedPoisoning_9",
-                  "speaker": "",
-                  "text": "True",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_38": {
-                      "id": "NoticedPoisoning_38",
-                      "speaker": "",
-                      "text": "Urk. The world's spinnin'... Heh. The stones look alive, all wriggly. Damn, this is some good beer.",
-                      "context": "NodeContext: We are reading the goblin's mind, so these are their thoughts.",
-                      "checkflags": [],
-                      "setflags": [
-                        "ee2a8342-0aad-ed4e-a7b1-811c6cc527a8_MindHasBeenRead"
-                      ],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": false,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                },
-                "NoticedPoisoning_45": {
-                  "id": "NoticedPoisoning_45",
-                  "speaker": "",
-                  "text": "False",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "rollresult",
-                  "children": {
-                    "NoticedPoisoning_28": {
-                      "id": "NoticedPoisoning_28",
-                      "speaker": "",
-                      "text": "What-cha... this'n's some booyahg! They're tryna magick me!",
-                      "context": "NodeContext: BOO-yawg. (w is silent, as in yawn) Booyahg means magic user",
-                      "checkflags": [],
-                      "setflags": [
-                        "GOB_GoblinToast_PoisoningRedHanded"
-                      ],
-                      "ruletags": [],
-                      "approval": [],
-                      "rolls": "",
-                      "goto": "",
-                      "link": "",
-                      "is_end": true,
-                      "node_type": "normal",
-                      "children": {}
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "0": {
       "id": "0",
       "speaker": "",
@@ -2772,9 +1920,852 @@
         }
       }
     },
+    "NoticedPoisoning_10": {
+      "id": "NoticedPoisoning_10",
+      "speaker": "GROUP_Act1_GOB_Festivities",
+      "text": "Hey! You tryin' to slip us somethin'?",
+      "context": "",
+      "checkflags": [],
+      "setflags": [
+        "GOB_GoblinToast_PlayerWasNoticedPoisoning",
+        "GOB_GoblinToast_GoblinNoticedPoisoning"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "NoticedPoisoning_27",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "NoticedPoisoning_42": {
+          "id": "NoticedPoisoning_42",
+          "speaker": "Narrator",
+          "text": "*The mark glows, but you feel nothing in response. Your illithid power is beyond reach until you rest.*",
+          "context": "",
+          "checkflags": [
+            "GLO_Tadpoled_UsedToday1"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "NoticedPoisoning_27",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {}
+        },
+        "NoticedPoisoning_25": {
+          "id": "NoticedPoisoning_25",
+          "speaker": "Narrator",
+          "text": "*A strange symbol glows, marked on their flesh, and something within you stirs in response.*",
+          "context": "",
+          "checkflags": [
+            "GLO_TadpoleIntro_NPC = False"
+          ],
+          "setflags": [
+            "GLO_TadpoleIntro_NPC"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "NoticedPoisoning_27",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {}
+        },
+        "NoticedPoisoning_1": {
+          "id": "NoticedPoisoning_1",
+          "speaker": "Narrator",
+          "text": "*As the symbol glows, power courses through you. Authority.*",
+          "context": "",
+          "checkflags": [
+            "GLO_TadpoleIntro_NPC"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "NoticedPoisoning_33",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "NoticedPoisoning_27": {
+              "id": "NoticedPoisoning_27",
+              "speaker": "Player",
+              "text": "Don't be stupid. You can barely see straight.",
+              "context": "",
+              "checkflags": [
+                "ee2a8342-0aad-ed4e-a7b1-811c6cc527a8_MindHasBeenRead"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_33",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_8": {
+                  "id": "NoticedPoisoning_8",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "NoticedPoisoning_44",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "jump",
+                  "children": {}
+                }
+              }
+            },
+            "NoticedPoisoning_40": {
+              "id": "NoticedPoisoning_40",
+              "speaker": "Player",
+              "text": "A lethal poison. Enough to take the lot of you down.",
+              "context": "NodeContext: Tnak means",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_33",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_4": {
+                  "id": "NoticedPoisoning_4",
+                  "speaker": "GROUP_Act1_GOB_Festivities",
+                  "text": "Tnak. I'll feckin' kill you!",
+                  "context": "NodeContext: tnak means 'damn it', pronounced tuh-NACK.",
+                  "checkflags": [],
+                  "setflags": [
+                    "GOB_GoblinToast_PoisoningRedHanded"
+                  ],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": true,
+                  "node_type": "normal",
+                  "children": {}
+                }
+              }
+            },
+            "NoticedPoisoning_15": {
+              "id": "NoticedPoisoning_15",
+              "speaker": "Player",
+              "text": "Just a drop of firewine. It'll give the brew a real kick.",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_33",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_36": {
+                  "id": "NoticedPoisoning_36",
+                  "speaker": "",
+                  "text": "True",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "NoticedPoisoning_33",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_18": {
+                      "id": "NoticedPoisoning_18",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Eh. Heh. Now that's an idea. Should've thought of that myself!",
+                      "context": "",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": true,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                },
+                "NoticedPoisoning_31": {
+                  "id": "NoticedPoisoning_31",
+                  "speaker": "",
+                  "text": "False",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "NoticedPoisoning_33",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_37": {
+                      "id": "NoticedPoisoning_37",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Like hells. That ain't firewine!",
+                      "context": "",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "NoticedPoisoning_33",
+                      "is_end": false,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                }
+              }
+            },
+            "NoticedPoisoning_26": {
+              "id": "NoticedPoisoning_26",
+              "speaker": "Player",
+              "text": "I'll slip a knife between your ribs if you don't piss off.",
+              "context": "",
+              "checkflags": [
+                "BARBARIAN = False"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_21",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {}
+            },
+            "NoticedPoisoning_0": {
+              "id": "NoticedPoisoning_0",
+              "speaker": "Player",
+              "text": "You saw nothing, or I'll crush your eyes like grapes. Got it?",
+              "context": "",
+              "checkflags": [
+                "BARBARIAN"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_16",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_21": {
+                  "id": "NoticedPoisoning_21",
+                  "speaker": "",
+                  "text": "True",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_13": {
+                      "id": "NoticedPoisoning_13",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Tnak. Fine. Hope Gribbo drinks it. At least then she'll shut up 'bout her bloody pigeon!",
+                      "context": "NodeContext: Tnak (pronounced tuh-NACK) means damn it. This is spoken after the player successfully threatened them into keeping their mouth shut about the poisoning.",
+                      "checkflags": [
+                        "dbbe75f1-6854-f245-1ce5-6a999d1b6b24_TEMP"
+                      ],
+                      "setflags": [
+                        "GOB_GoblinToast_GoblinBulliedAway"
+                      ],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": true,
+                      "node_type": "normal",
+                      "children": {}
+                    },
+                    "NoticedPoisoning_6": {
+                      "id": "NoticedPoisoning_6",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Listen, uh, I got me some business over on the other side of yonder mountain. See you never, yeah?",
+                      "context": "",
+                      "checkflags": [
+                        "dbbe75f1-6854-f245-1ce5-6a999d1b6b24_TEMP = False"
+                      ],
+                      "setflags": [
+                        "GOB_GoblinToast_GoblinBulliedAway"
+                      ],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": true,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                },
+                "NoticedPoisoning_35": {
+                  "id": "NoticedPoisoning_35",
+                  "speaker": "",
+                  "text": "False",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_22": {
+                      "id": "NoticedPoisoning_22",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "You don't know who you're messin with. I'll kill you and eat you like that dwarf!",
+                      "context": "",
+                      "checkflags": [],
+                      "setflags": [
+                        "GOB_GoblinToast_PoisoningRedHanded"
+                      ],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": true,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                }
+              }
+            },
+            "NoticedPoisoning_3": {
+              "id": "NoticedPoisoning_3",
+              "speaker": "Player",
+              "text": "Palm the poison vial and feign innocence.",
+              "context": "",
+              "checkflags": [
+                "ROGUE"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_16",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_11": {
+                  "id": "NoticedPoisoning_11",
+                  "speaker": "",
+                  "text": "True",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_44": {
+                      "id": "NoticedPoisoning_44",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Drink must be tellin' on me. Guess I need some more. Heh.",
+                      "context": "",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": true,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                },
+                "NoticedPoisoning_39": {
+                  "id": "NoticedPoisoning_39",
+                  "speaker": "",
+                  "text": "False",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_23": {
+                      "id": "NoticedPoisoning_23",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Don't think I didn't see that with yer slippery fingers.",
+                      "context": "",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": false,
+                      "node_type": "normal",
+                      "children": {
+                        "NoticedPoisoning_33": {
+                          "id": "NoticedPoisoning_33",
+                          "speaker": "GROUP_Act1_GOB_Festivities",
+                          "text": "This one's tryin' to poison us! Kill 'em!",
+                          "context": "",
+                          "checkflags": [],
+                          "setflags": [
+                            "GOB_GoblinToast_PoisoningRedHanded"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "NoticedPoisoning_43": {
+              "id": "NoticedPoisoning_43",
+              "speaker": "Player",
+              "text": "Turn around and walk away. Do not question the will of the Absolute.",
+              "context": "",
+              "checkflags": [
+                "GLO_Tadpoled_UsedToday1 = False",
+                "TRUESOUL"
+              ],
+              "setflags": [
+                "GLO_Tadpoled_UsedToday1"
+              ],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "NoticedPoisoning_16",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_41": {
+                  "id": "NoticedPoisoning_41",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": true,
+                  "node_type": "alias",
+                  "children": {}
+                }
+              }
+            },
+            "NoticedPoisoning_12": {
+              "id": "NoticedPoisoning_12",
+              "speaker": "Player",
+              "text": "Turn around and walk away. Do not question the will of the Absolute.",
+              "context": "",
+              "checkflags": [
+                "GLO_Tadpoled_UsedToday1 = False",
+                "TRUESOUL = False",
+                "ILLITHID"
+              ],
+              "setflags": [
+                "GLO_Tadpoled_UsedToday1"
+              ],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_5": {
+                  "id": "NoticedPoisoning_5",
+                  "speaker": "",
+                  "text": "True",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_16": {
+                      "id": "NoticedPoisoning_16",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "O-of course. I'd never!",
+                      "context": "NodeContext: the player just revieled themself to be of much higher standing and told the goblin not to question them.",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": false,
+                      "node_type": "normal",
+                      "children": {
+                        "NoticedPoisoning_2": {
+                          "id": "NoticedPoisoning_2",
+                          "speaker": "Narrator",
+                          "text": "*A shiver runs across your mind... You feel sated.*",
+                          "context": "",
+                          "checkflags": [
+                            "GLO_TadpoledCount1 = False",
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "GLO_TadpoledCount1"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_14": {
+                          "id": "NoticedPoisoning_14",
+                          "speaker": "Narrator",
+                          "text": "*Something stirs deep within you, hungry and alert... it's taking something you'll never get back.*",
+                          "context": "",
+                          "checkflags": [
+                            "GLO_TadpoledCount2 = False",
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "GLO_TadpoledCount2"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_17": {
+                          "id": "NoticedPoisoning_17",
+                          "speaker": "Narrator",
+                          "text": "*Your mind lurches, reeling suddenly as if... bitten.*",
+                          "context": "",
+                          "checkflags": [
+                            "GLO_TadpoledCount3 = False",
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "GLO_TadpoledCount3"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_30": {
+                          "id": "NoticedPoisoning_30",
+                          "speaker": "Narrator",
+                          "text": "*A shadow swims across your vision, and a familiar voice tells you to be calm. You are loved.*",
+                          "context": "",
+                          "checkflags": [
+                            "GLO_TadpoledCount4 = False",
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "GLO_TadpoledCount4"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_29": {
+                          "id": "NoticedPoisoning_29",
+                          "speaker": "Narrator",
+                          "text": "*Your blood runs quicker, feeding the gnawing absence at the centre of your mind.*",
+                          "context": "",
+                          "checkflags": [
+                            "GLO_TadpoledCount5 = False",
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "GLO_TadpoledCount5"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_19": {
+                          "id": "NoticedPoisoning_19",
+                          "speaker": "Narrator",
+                          "text": "*The presence deep in your mind is awake, unblinking. This is it. A single word pervades your consciousness: 'Soon'.*",
+                          "context": "",
+                          "checkflags": [
+                            "GLO_TadpoledCount6 = False",
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "GLO_TadpoledCount6"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_7": {
+                          "id": "NoticedPoisoning_7",
+                          "speaker": "Narrator",
+                          "text": "*Your mind is full, bursting with ecstasy and terror. Finally, it is coming. You are becoming.*",
+                          "context": "",
+                          "checkflags": [
+                            "TRUESOUL = False"
+                          ],
+                          "setflags": [
+                            "TRUESOUL"
+                          ],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "",
+                          "link": "",
+                          "is_end": true,
+                          "node_type": "normal",
+                          "children": {}
+                        },
+                        "NoticedPoisoning_20": {
+                          "id": "NoticedPoisoning_20",
+                          "speaker": "",
+                          "text": "",
+                          "context": "",
+                          "checkflags": [],
+                          "setflags": [],
+                          "ruletags": [],
+                          "approval": [],
+                          "rolls": "",
+                          "goto": "NoticedPoisoning_2",
+                          "link": "",
+                          "is_end": false,
+                          "node_type": "jump",
+                          "children": {}
+                        }
+                      }
+                    }
+                  }
+                },
+                "NoticedPoisoning_24": {
+                  "id": "NoticedPoisoning_24",
+                  "speaker": "",
+                  "text": "False",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_32": {
+                      "id": "NoticedPoisoning_32",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Like hells. I don't know what you're gettin' at, but answer the question. What were you doin'?",
+                      "context": "",
+                      "checkflags": [],
+                      "setflags": [],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": false,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                }
+              }
+            },
+            "NoticedPoisoning_34": {
+              "id": "NoticedPoisoning_34",
+              "speaker": "Player",
+              "text": "Read their mind.",
+              "context": "",
+              "checkflags": [
+                "ee2a8342-0aad-ed4e-a7b1-811c6cc527a8_MindHasBeenRead = False",
+                "44f9fbf3-735d-8eaf-94dc-6c1d1cf5382d"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "NoticedPoisoning_9": {
+                  "id": "NoticedPoisoning_9",
+                  "speaker": "",
+                  "text": "True",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_38": {
+                      "id": "NoticedPoisoning_38",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "Urk. The world's spinnin'... Heh. The stones look alive, all wriggly. Damn, this is some good beer.",
+                      "context": "NodeContext: We are reading the goblin's mind, so these are their thoughts.",
+                      "checkflags": [],
+                      "setflags": [
+                        "ee2a8342-0aad-ed4e-a7b1-811c6cc527a8_MindHasBeenRead"
+                      ],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": false,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                },
+                "NoticedPoisoning_45": {
+                  "id": "NoticedPoisoning_45",
+                  "speaker": "",
+                  "text": "False",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "rollresult",
+                  "children": {
+                    "NoticedPoisoning_28": {
+                      "id": "NoticedPoisoning_28",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
+                      "text": "What-cha... this'n's some booyahg! They're tryna magick me!",
+                      "context": "NodeContext: BOO-yawg. (w is silent, as in yawn) Booyahg means magic user",
+                      "checkflags": [],
+                      "setflags": [
+                        "GOB_GoblinToast_PoisoningRedHanded"
+                      ],
+                      "ruletags": [],
+                      "approval": [],
+                      "rolls": "",
+                      "goto": "",
+                      "link": "",
+                      "is_end": true,
+                      "node_type": "normal",
+                      "children": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "PoisoningInterrogation_8": {
       "id": "PoisoningInterrogation_8",
-      "speaker": "Narrator",
+      "speaker": "GROUP_Act1_GOB_Festivities",
       "text": "You! I knew you'd been mucking with our beer! You poisoned us!",
       "context": "NodeContext: Spotting the player and accusing them of being the one who poisoned their beer (and comrades)",
       "checkflags": [
@@ -2786,7 +2777,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "10",
+      "link": "PoisoningInterrogation_10",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -2810,7 +2801,7 @@
     },
     "PoisoningInterrogation_31": {
       "id": "PoisoningInterrogation_31",
-      "speaker": "Narrator",
+      "speaker": "GROUP_Act1_GOB_Festivities",
       "text": "You! Outsider! You poisoned us!",
       "context": "NodeContext: Spotting the player and accusing them of being the one who poisoned their beer (and comrades)",
       "checkflags": [
@@ -2822,14 +2813,14 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "10",
+      "link": "PoisoningInterrogation_10",
       "is_end": false,
       "node_type": "normal",
       "children": {}
     },
     "PoisoningInterrogation_40": {
       "id": "PoisoningInterrogation_40",
-      "speaker": "",
+      "speaker": "GROUP_Act1_GOB_Festivities",
       "text": "You! You poisoned us!",
       "context": "NodeContext: Spotting the player and accusing them of being the one who poisoned their beer (and comrades)",
       "checkflags": [],
@@ -2838,7 +2829,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "7",
+      "link": "PoisoningInterrogation_7",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -2855,7 +2846,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "7",
+          "link": "PoisoningInterrogation_7",
           "is_end": false,
           "node_type": "normal",
           "children": {}
@@ -2875,7 +2866,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "11",
+          "link": "PoisoningInterrogation_11",
           "is_end": false,
           "node_type": "normal",
           "children": {
@@ -2892,13 +2883,13 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "11",
+              "link": "PoisoningInterrogation_11",
               "is_end": false,
               "node_type": "normal",
               "children": {
                 "PoisoningInterrogation_36": {
                   "id": "PoisoningInterrogation_36",
-                  "speaker": "",
+                  "speaker": "GROUP_Act1_GOB_Festivities",
                   "text": "A-allergic? You mean just the beer can kill us?! G-get out of my way. I need some fresh air.",
                   "context": "NodeContext: surprised and scared. We just said goblins are allergic to the beer they've been drinking the whole time.",
                   "checkflags": [],
@@ -2927,7 +2918,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "11",
+              "link": "PoisoningInterrogation_11",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -2948,7 +2939,7 @@
                   "children": {
                     "PoisoningInterrogation_18": {
                       "id": "PoisoningInterrogation_18",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "Tnak, you're right. Whoever did this could be anywhere by now.",
                       "context": "NodeContext: Tnak means damn it, pronounced tuh-NACK. Annoyed and disappointed. they think they'll never find the killer.",
                       "checkflags": [],
@@ -2983,7 +2974,7 @@
                   "children": {
                     "PoisoningInterrogation_20": {
                       "id": "PoisoningInterrogation_20",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "Or you just thought we'd be stupid enough to believe ya!",
                       "context": "NodeContext: We gave a lousy excuse and they're seeing right through it. They're going to attack us now.",
                       "checkflags": [],
@@ -3018,7 +3009,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "11",
+              "link": "PoisoningInterrogation_11",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -3039,7 +3030,7 @@
                   "children": {
                     "PoisoningInterrogation_32": {
                       "id": "PoisoningInterrogation_32",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "P-please don't! I won't rat you out, I swear! J-just leave me be.",
                       "context": "NodeContext: We intimidated them and confessed we killed their comrades, but this goblin doesn't want to risk his own hide for revenge.",
                       "checkflags": [],
@@ -3054,7 +3045,7 @@
                       "children": {
                         "PoisoningInterrogation_16": {
                           "id": "PoisoningInterrogation_16",
-                          "speaker": "",
+                          "speaker": "GROUP_Act1_GOB_Festivities",
                           "text": "Th-this one's all right, lads! Knows nothin' about no poisonin'!",
                           "context": "",
                           "checkflags": [],
@@ -3091,7 +3082,7 @@
                   "children": {
                     "PoisoningInterrogation_0": {
                       "id": "PoisoningInterrogation_0",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "Yeah? We'll see 'bout that!",
                       "context": "NodeContext: We admitted to killing their comrades and threatened to kill them too, but they aren't intimidated and want to kill us.",
                       "checkflags": [],
@@ -3125,7 +3116,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "11",
+              "link": "PoisoningInterrogation_11",
               "is_end": false,
               "node_type": "normal",
               "children": {}
@@ -3157,7 +3148,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "12",
+                  "goto": "PoisoningInterrogation_12",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -3204,7 +3195,7 @@
                   "children": {
                     "PoisoningInterrogation_4": {
                       "id": "PoisoningInterrogation_4",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "V-very sorry - I didn't know. I swear I didn't know!",
                       "context": "NodeContext: They just realised they are talking to someone of higher rank.",
                       "checkflags": [],
@@ -3375,7 +3366,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "38",
+                          "goto": "PoisoningInterrogation_38",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -3402,7 +3393,7 @@
                   "children": {
                     "PoisoningInterrogation_14": {
                       "id": "PoisoningInterrogation_14",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "You, a True Soul? I'd be shakin' in my boots if you were, but all I'm feelin' is the urge to see your guts.",
                       "context": "NodeContext: We tried to confince them we are of higher rank, but they think the notion is laughable.",
                       "checkflags": [],
@@ -3454,7 +3445,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "4",
+                  "goto": "PoisoningInterrogation_4",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -3499,7 +3490,7 @@
                   "children": {
                     "PoisoningInterrogation_3": {
                       "id": "PoisoningInterrogation_3",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "I knew we shouldn'tve taken that fancy berry beer. Could've tasted the poison if it hadn't been so sweet.",
                       "context": "NodeContext: We are hearing the goblin's thoughts. The goblin is despairing because it thinks they would have tasted the poison (and thus the others wouldn't have died) if they hadn't stolen the fancy berry beer.",
                       "checkflags": [],
@@ -3534,7 +3525,7 @@
                   "children": {
                     "PoisoningInterrogation_34": {
                       "id": "PoisoningInterrogation_34",
-                      "speaker": "",
+                      "speaker": "GROUP_Act1_GOB_Festivities",
                       "text": "What are you... this one's tryin' to control my mind or somethin'!",
                       "context": "NodeContext: The goblin felt the player poking around in their head and is freaked out and angry.",
                       "checkflags": [],
@@ -3570,7 +3561,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "7",
+          "link": "PoisoningInterrogation_7",
           "is_end": false,
           "node_type": "normal",
           "children": {}

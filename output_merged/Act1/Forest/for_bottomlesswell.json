@@ -1,6 +1,14 @@
 {
   "metadata": {
     "individual_metadata": {
+      "AD_EttercapDisturbanceWarning": {
+        "synopsis": "The ettercap feels that someone stepped on its web and lets out a warning screech.",
+        "how_to_trigger": ""
+      },
+      "VB_EnterNest": {
+        "synopsis": "The player sees the gigantic spider in the spider nest.",
+        "how_to_trigger": ""
+      },
       "InteractWithWell": {
         "synopsis": "Dialogue when first interacting with the well.",
         "how_to_trigger": "- goto 20, 398 (beside well in village)- killcombat (to end goblin fight that triggers when you teleport in)- Click on well"
@@ -12,32 +20,18 @@
       "PAD_WebWarning": {
         "synopsis": "PAD when seeing webs. Either just complaining about the fact that the spiderwebs are everywhere, or realising touching them could be dangerous.",
         "how_to_trigger": ""
-      },
-      "AD_EttercapDisturbanceWarning": {
-        "synopsis": "The ettercap feels that someone stepped on its web and lets out a warning screech.",
-        "how_to_trigger": ""
-      },
-      "VB_EnterNest": {
-        "synopsis": "The player sees the gigantic spider in the spider nest.",
-        "how_to_trigger": ""
       }
     },
     "source_files": [
+      "FOR_BottomlessWell_AD_EttercapDisturbanceWarning.json",
+      "FOR_BottomlessWell_VB_EnterNest.json",
       "FOR_BottomlessWell_InteractWithWell.json",
       "FOR_BottomlessWell_VB_DiscoverUnderdarkEntrance.json",
-      "FOR_BottomlessWell_PAD_WebWarning.json",
-      "FOR_BottomlessWell_AD_EttercapDisturbanceWarning.json",
-      "FOR_BottomlessWell_VB_EnterNest.json"
+      "FOR_BottomlessWell_PAD_WebWarning.json"
     ],
     "automatic_ordering": {
-      "reasoning": "There are two groups of session events. On one hand, 'InteractWithWell' and 'VB_DiscoverUnderdarkEntrance' appear to be independent events in Baldur\u2019s Gate 3 with no clear causal relationship between them. On the other hand, three sessions relate to the spider encounters. 'PAD_WebWarning' is a dialogue that occurs when the player notices that spider webs are prevalent, warning them about the danger of touching them. 'AD_EttercapDisturbanceWarning' is instead triggered when the player inadvertently steps on these webs, provoking a warning screech from an ettercap. Because these two represent alternative reactions\u2014the player either observes the webs and comments on them (PAD) or accidentally disturbs them and gets a reactive warning (AD)\u2014they should be considered mutually exclusive in the same playthrough. In either case, however, proceeding further in the area leads the player to see the gigantic spider nest in 'VB_EnterNest', which is logically a subsequent event. This means whichever spider-related session (PAD or AD) is encountered first, it must occur before 'VB_EnterNest'.",
+      "reasoning": "Looking through the sessions, we see that three of them are related to spider and web motifs. In 'AD_EttercapDisturbanceWarning' the ettercap reacts to someone disturbing its web, while in 'VB_EnterNest' the player then sees the gigantic spider in its nest \u2013 this suggests that disturbing the web (triggering the warning) comes before entering (and witnessing) the nest. 'PAD_WebWarning' is a dialogue triggered on seeing spiderwebs; its synopsis hints at an either/or reaction \u2013 either the character comments casually on the webs or becomes cautious after disturbing them. This indicates that if the player triggers the more critical response (the ettercap warning), they will not get the generic PAD observation about webs. Thus, 'AD_EttercapDisturbanceWarning' and 'PAD_WebWarning' appear to be mutually exclusive. The sessions 'InteractWithWell' and 'VB_DiscoverUnderdarkEntrance' seem independent and do not share any ordering or exclusiveness constraints with the spider-related sessions.",
       "order": [
-        {
-          "predecessor": [
-            "PAD_WebWarning"
-          ],
-          "successor": "VB_EnterNest"
-        },
         {
           "predecessor": [
             "AD_EttercapDisturbanceWarning"
@@ -47,13 +41,45 @@
       ],
       "exclusive": [
         [
-          "PAD_WebWarning",
-          "AD_EttercapDisturbanceWarning"
+          "AD_EttercapDisturbanceWarning",
+          "PAD_WebWarning"
         ]
       ]
     }
   },
   "dialogue": {
+    "AD_EttercapDisturbanceWarning_0": {
+      "id": "AD_EttercapDisturbanceWarning_0",
+      "speaker": "GROUP_Act1_FOR_BottomlessEttercaps",
+      "text": "*Screech.*",
+      "context": "NodeContext: A bit like a spider chirp, but a bit louder, if possible.",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "VB_EnterNest_0": {
+      "id": "VB_EnterNest_0",
+      "speaker": "Player",
+      "text": "Oh, hells.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "InteractWithWell_5": {
       "id": "InteractWithWell_5",
       "speaker": "Narrator",
@@ -119,7 +145,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "9",
+                  "goto": "InteractWithWell_9",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -155,7 +181,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "11",
+                  "goto": "InteractWithWell_11",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -171,7 +197,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "3",
+                  "goto": "InteractWithWell_3",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -187,7 +213,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "17",
+                  "goto": "InteractWithWell_17",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -281,7 +307,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "2",
+                      "goto": "InteractWithWell_2",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -297,7 +323,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "17",
+                      "goto": "InteractWithWell_17",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -388,7 +414,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "11",
+          "goto": "InteractWithWell_11",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -404,7 +430,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "2",
+          "goto": "InteractWithWell_2",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -420,7 +446,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "3",
+          "goto": "InteractWithWell_3",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -436,7 +462,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "17",
+          "goto": "InteractWithWell_17",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -539,38 +565,6 @@
       "checkflags": [
         "FOR_Bottomless_State_SurvivalCheckSuccess = False"
       ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_EttercapDisturbanceWarning_0": {
-      "id": "AD_EttercapDisturbanceWarning_0",
-      "speaker": "",
-      "text": "*Screech.*",
-      "context": "NodeContext: A bit like a spider chirp, but a bit louder, if possible.",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "VB_EnterNest_0": {
-      "id": "VB_EnterNest_0",
-      "speaker": "Player",
-      "text": "Oh, hells.",
-      "context": "",
-      "checkflags": [],
       "setflags": [],
       "ruletags": [],
       "approval": [],

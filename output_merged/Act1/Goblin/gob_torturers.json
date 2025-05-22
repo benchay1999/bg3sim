@@ -1,51 +1,45 @@
 {
   "metadata": {
     "individual_metadata": {
-      "Torture": {
-        "synopsis": "One of the goblins is torturing a prisoner, either to find out where the grove is, or just because he wants to. The player can try to get rid of him - if Shadowheart is present, she gives some advice on how to do so. If Shadowheart is the avatar, she has unique options criticising the goblin's techniques.",
-        "how_to_trigger": "from crashsite:goto 318.94, 40.81, -19.95walk towards liam on torture rackdialogue triggers automatically"
+      "Rat_001": {
+        "synopsis": "Rat in the torture cell who is full of menace and going crazy because of how hungry she is.",
+        "how_to_trigger": "Repro steps:Start the game2. loadlevel WLD_Main_A3. teleport S_GOB_Torturers_Rat_0014. leave torture dialogue that starts automatically5. debug book - useful spells - petpalclick on rat"
       },
       "Spike_Dead": {
         "synopsis": "Speak with dead: goblin torturer in camp. Non-Wyll version.",
-        "how_to_trigger": ""
-      },
-      "Spike": {
-        "synopsis": "The torturer that is/was torturing the adventurer.",
         "how_to_trigger": ""
       },
       "Rat_000": {
         "synopsis": "Rat in the torture cell who is starving because all the prisoners have been carted away.",
         "how_to_trigger": "From crashsiteIn reCon: teleport S_GOB_Torturers_Rat_000leave torture dialogue that starts automaticallydebug book - useful spells - petpalclick on local rat"
       },
+      "Spike": {
+        "synopsis": "The torturer that is/was torturing the adventurer.",
+        "how_to_trigger": ""
+      },
+      "Torture": {
+        "synopsis": "One of the goblins is torturing a prisoner, either to find out where the grove is, or just because he wants to. The player can try to get rid of him - if Shadowheart is present, she gives some advice on how to do so. If Shadowheart is the avatar, she has unique options criticising the goblin's techniques.",
+        "how_to_trigger": "from crashsite:goto 318.94, 40.81, -19.95walk towards liam on torture rackdialogue triggers automatically"
+      },
       "Goblet": {
         "synopsis": "One of the guards standing next to the torture. He's mean (and a cannibal).",
         "how_to_trigger": ""
-      },
-      "Rat_001": {
-        "synopsis": "Rat in the torture cell who is full of menace and going crazy because of how hungry she is.",
-        "how_to_trigger": "Repro steps:Start the game2. loadlevel WLD_Main_A3. teleport S_GOB_Torturers_Rat_0014. leave torture dialogue that starts automatically5. debug book - useful spells - petpalclick on rat"
       }
     },
     "source_files": [
-      "GOB_Torturers_Torture.json",
+      "GOB_Torturers_Rat_001.json",
       "GOB_Torturers_Spike_Dead.json",
-      "GOB_Torturers_Spike.json",
       "GOB_Torturers_Rat_000.json",
-      "GOB_Torturers_Goblet.json",
-      "GOB_Torturers_Rat_001.json"
+      "GOB_Torturers_Spike.json",
+      "GOB_Torturers_Torture.json",
+      "GOB_Torturers_Goblet.json"
     ],
     "automatic_ordering": {
-      "reasoning": "First, we note that the Torture session is the core event in which a goblin is torturing a prisoner, and several sessions are related to what happens in or after this event. The Rat_000 and Rat_001 sessions both take place in the torture cell after the prisoners have been moved \u2013 they represent alternative outcomes: one rat is merely starving, while the other is aggressively menacing, implying they are mutually exclusive variants for the torture cell's state. Similarly, the Spike and Spike_Dead sessions both concern the goblin torturer. The live version (Spike) is encountered during the active torture, while the Spike_Dead session is a post-mortem encounter (and noted as the non\u2010Wyll version), meaning that if Spike is alive you cannot later trigger the dead version in the same narrative path. Lastly, while Goblet is simply a guard present near the torture event and does not change the narrative order significantly, his occurrence logically follows the Torture event. Therefore, we define the ordering constraints as follows: (1) the Torture session should come before any rat encounters (Rat_000 and Rat_001) and the Goblet session, and (2) the live Spike session should precede the Spike_Dead session if that branch is chosen. The mutual exclusiveness constraints are that the two rat sessions (Rat_000 and Rat_001) cannot both be encountered in the same playthrough (they represent alternative outcomes for the same location) and that the Spike (alive) and Spike_Dead sessions should not both appear in a single narrative path.",
+      "reasoning": "To determine the order and mutual exclusivity of the sessions, I analyzed the relationships and logical flow of events described in their synopses. The session 'Torture' is pivotal as it involves the goblin torturer actively engaging with a prisoner. The presence of 'Spike' or 'Spike_Dead' suggests a focus on the goblin torturer either being alive or dead, which would naturally lead to mutually exclusive scenarios. Additionally, the sessions involving 'Rat_000' and 'Rat_001' both relate to rats in the torture cell, but 'Rat_001' appears to be the more advanced state of the scenario where the rat is driven mad, which implies it should follow 'Rat_000'. Thus, I established a sequential order and identified mutual exclusivity between 'Spike' and 'Spike_Dead'.",
       "order": [
         {
           "predecessor": [
-            "Torture"
-          ],
-          "successor": "Rat_000"
-        },
-        {
-          "predecessor": [
-            "Torture"
+            "Rat_000"
           ],
           "successor": "Rat_001"
         },
@@ -53,20 +47,16 @@
           "predecessor": [
             "Torture"
           ],
-          "successor": "Goblet"
+          "successor": "Spike"
         },
         {
           "predecessor": [
-            "Spike"
+            "Torture"
           ],
           "successor": "Spike_Dead"
         }
       ],
       "exclusive": [
-        [
-          "Rat_000",
-          "Rat_001"
-        ],
         [
           "Spike",
           "Spike_Dead"
@@ -75,6 +65,802 @@
     }
   },
   "dialogue": {
+    "Rat_001_0": {
+      "id": "Rat_001_0",
+      "speaker": "Rat",
+      "text": "Let this one be! My prisoner, drow, not yours. Not this one. I am hungry... starving...",
+      "context": "",
+      "checkflags": [
+        "GOB_Torturers_Rat_001_HasMet = False",
+        "GOB_Torturers_State_MovedOut = False",
+        "DROWELF",
+        "PETPAL"
+      ],
+      "setflags": [
+        "GOB_Torturers_Rat_001_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_001_1": {
+      "id": "Rat_001_1",
+      "speaker": "Rat",
+      "text": "Rotting - he's rotting. Already turning green... Sweet and juicy, all for me. All for me.",
+      "context": "NodeContext: She's contemplating eating her old master. She's mad because he didn't feed her.",
+      "checkflags": [
+        "GOB_Torturers_Rat_001_HasMet = False",
+        "GOB_Torturers_State_SpikeIsDead",
+        "GOB_Torturers_State_MovedOut = False",
+        "PETPAL"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_001_2": {
+      "id": "Rat_001_2",
+      "speaker": "Rat",
+      "text": "*Squeak.*",
+      "context": "",
+      "checkflags": [
+        "PETPAL = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_001_3": {
+      "id": "Rat_001_3",
+      "speaker": "Narrator",
+      "text": "*The rat's nose twitches impatiently. Her teeth bite air as though it is flesh, but it doesn't sate her hunger.*",
+      "context": "",
+      "checkflags": [
+        "PETPAL"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_001_4": {
+      "id": "Rat_001_4",
+      "speaker": "Rat",
+      "text": "Let me kill - let me eat him. Nice, red red prisoner, full of meat. Let me eat - I am hungry, so hungry.",
+      "context": "",
+      "checkflags": [
+        "GOB_Torturers_Rat_001_HasMet = False",
+        "GOB_Torturers_State_MovedOut = False",
+        "PETPAL"
+      ],
+      "setflags": [
+        "GOB_Torturers_Rat_001_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_Dead_7": {
+      "id": "Spike_Dead_7",
+      "speaker": "Narrator",
+      "text": "*The corpse does not stir. It will answer no more questions.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_QuestionsLimitReached"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_Dead_11": {
+      "id": "Spike_Dead_11",
+      "speaker": "Narrator",
+      "text": "*The corpse seems willing to speak - but not to its killer.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_Killer"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_Dead_23": {
+      "id": "Spike_Dead_23",
+      "speaker": "Narrator",
+      "text": "*The corpse regards you lifelessly.*",
+      "context": "",
+      "checkflags": [
+        "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "Spike_Dead_27",
+      "is_end": false,
+      "node_type": "normal",
+      "children": {
+        "Spike_Dead_17": {
+          "id": "Spike_Dead_17",
+          "speaker": "Player",
+          "text": "Who were you in life?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "Spike_Dead_27",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_15": {
+              "id": "Spike_Dead_15",
+              "speaker": "Torturer Spike",
+              "text": "... bruiser chief... beat-drum slash-sword... flame-smoke...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_2": {
+                  "id": "Spike_Dead_2",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_8": {
+          "id": "Spike_Dead_8",
+          "speaker": "Player",
+          "text": "Tell me about the Absolute.",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "Spike_Dead_27",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_25": {
+              "id": "Spike_Dead_25",
+              "speaker": "Torturer Spike",
+              "text": "... speaks through True Souls... scour the land... find weapon...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_21": {
+                  "id": "Spike_Dead_21",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_16": {
+          "id": "Spike_Dead_16",
+          "speaker": "Player",
+          "text": "Are there any valuables hidden nearby?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "Spike_Dead_27",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_13": {
+              "id": "Spike_Dead_13",
+              "speaker": "Torturer Spike",
+              "text": "... bushes outside... kids were playing...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_4": {
+                  "id": "Spike_Dead_4",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_12": {
+          "id": "Spike_Dead_12",
+          "speaker": "Player",
+          "text": "Who killed you?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "Spike_Dead_27",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_24": {
+              "id": "Spike_Dead_24",
+              "speaker": "Torturer Spike",
+              "text": "... you... Blade of Frontiers... seeking your lady...",
+              "context": "",
+              "checkflags": [
+                "GLO_SpeakWithDead_State_Killer",
+                "WYLL"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "Spike_Dead_27",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {}
+            },
+            "Spike_Dead_5": {
+              "id": "Spike_Dead_5",
+              "speaker": "Torturer Spike",
+              "text": "... you... you... youyouyou...",
+              "context": "",
+              "checkflags": [
+                "GLO_SpeakWithDead_State_Killer"
+              ],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "Spike_Dead_27",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {}
+            },
+            "Spike_Dead_0": {
+              "id": "Spike_Dead_0",
+              "speaker": "Torturer Spike",
+              "text": "... warrior... had Absolute's touch...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_27": {
+                  "id": "Spike_Dead_27",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_14": {
+          "id": "Spike_Dead_14",
+          "speaker": "Player",
+          "text": "Where are you from?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_26": {
+              "id": "Spike_Dead_26",
+              "speaker": "Torturer Spike",
+              "text": "... born here stay here...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_9": {
+                  "id": "Spike_Dead_9",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_1": {
+          "id": "Spike_Dead_1",
+          "speaker": "Player",
+          "text": "What was your purpose?",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_22": {
+              "id": "Spike_Dead_22",
+              "speaker": "Torturer Spike",
+              "text": "... gold... blood... Absolute's blessing...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_18": {
+                  "id": "Spike_Dead_18",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_20": {
+          "id": "Spike_Dead_20",
+          "speaker": "Player",
+          "text": "Tell me about your life.",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [
+            "GLO_SpeakWithDead_Event_QuestionAsked"
+          ],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": false,
+          "node_type": "normal",
+          "children": {
+            "Spike_Dead_6": {
+              "id": "Spike_Dead_6",
+              "speaker": "Torturer Spike",
+              "text": "... crush-smash... burn-whip-scream... give pain get answer...",
+              "context": "",
+              "checkflags": [],
+              "setflags": [],
+              "ruletags": [],
+              "approval": [],
+              "rolls": "",
+              "goto": "",
+              "link": "",
+              "is_end": false,
+              "node_type": "normal",
+              "children": {
+                "Spike_Dead_19": {
+                  "id": "Spike_Dead_19",
+                  "speaker": "",
+                  "text": "",
+                  "context": "",
+                  "checkflags": [],
+                  "setflags": [],
+                  "ruletags": [],
+                  "approval": [],
+                  "rolls": "",
+                  "goto": "",
+                  "link": "",
+                  "is_end": false,
+                  "node_type": "taganswer",
+                  "children": {}
+                }
+              }
+            }
+          }
+        },
+        "Spike_Dead_3": {
+          "id": "Spike_Dead_3",
+          "speaker": "Player",
+          "text": "Leave.",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        },
+        "Spike_Dead_10": {
+          "id": "Spike_Dead_10",
+          "speaker": "Narrator",
+          "text": "*The corpse does not stir. It will answer no more questions.*",
+          "context": "",
+          "checkflags": [
+            "GLO_SpeakWithDead_State_QuestionsLimitReached"
+          ],
+          "setflags": [],
+          "ruletags": [],
+          "approval": [],
+          "rolls": "",
+          "goto": "",
+          "link": "",
+          "is_end": true,
+          "node_type": "normal",
+          "children": {}
+        }
+      }
+    },
+    "Rat_000_0": {
+      "id": "Rat_000_0",
+      "speaker": "Rat",
+      "text": "*Squeak!*",
+      "context": "",
+      "checkflags": [
+        "PETPAL = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_000_1": {
+      "id": "Rat_000_1",
+      "speaker": "Rat",
+      "text": "A little bite... he don't look like he'd mind...",
+      "context": "NodeContext: He's contemplating eating his dead master.",
+      "checkflags": [
+        "GOB_Torturers_Rat_000_HasMet = False",
+        "GOB_Torturers_State_SpikeIsDead",
+        "GOB_Torturers_State_MovedOut = False",
+        "PETPAL"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_000_2": {
+      "id": "Rat_000_2",
+      "speaker": "Narrator",
+      "text": "*The rat's eyes follow you, shining. Its stomach grumbles.*",
+      "context": "",
+      "checkflags": [
+        "GOB_Torturers_Rat_000_HasMet",
+        "PETPAL"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Rat_000_3": {
+      "id": "Rat_000_3",
+      "speaker": "Rat",
+      "text": "Hands off! This one's ours.",
+      "context": "",
+      "checkflags": [
+        "GOB_Torturers_Rat_000_HasMet = False",
+        "PETPAL"
+      ],
+      "setflags": [
+        "GOB_Torturers_Rat_000_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_0": {
+      "id": "Spike_0",
+      "speaker": "Torturer Spike",
+      "text": "Torture's over, but ya can get a beer if yer lookin' for some fun.",
+      "context": "InternalNodeContext: Player (but not this character) tortured the prisoner enough for the goblins to be satisfied.\rNodeContext: pleased. He watched another player torture the prisoner until the latter fainted. He's in a good mood.",
+      "checkflags": [
+        "GOB_Torturers_Assisted = False",
+        "GOB_Torturers_State_TorturedEnough"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_1": {
+      "id": "Spike_1",
+      "speaker": "Torturer Spike",
+      "text": "Had a little sadist in ya after all, didn'tcha?",
+      "context": "InternalNodeContext: Player tortured the prisoner enough for the goblins to be satisfied.\rNodeContext: Cruel and pleased. He watched the player torture the prisoner until the prisoner fainted,",
+      "checkflags": [
+        "GOB_Torturers_Assisted",
+        "GOB_Torturers_State_TorturedEnough"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_2": {
+      "id": "Spike_2",
+      "speaker": "Torturer Spike",
+      "text": "Ya still 'ere? Go find the other slaves if ya like hangin' 'round 'ere so much.",
+      "context": "InternalNodeContext: Player made long rest, goblins finished torture.\rNodeContext: a little surprised. He's mean because he's mean by nature, not because the player gave him a reason to be.",
+      "checkflags": [
+        "GOB_Torturers_State_AfterLongRest"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_3": {
+      "id": "Spike_3",
+      "speaker": "",
+      "text": "",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "alias",
+      "children": {}
+    },
+    "Spike_4": {
+      "id": "Spike_4",
+      "speaker": "Torturer Spike",
+      "text": "Bet ya couldn't make 'im sing either, could ya? I'd swear 'e was mute, if I hadn't heard 'im scream so much.",
+      "context": "InternalNodeContext: Player persuaded goblins to go away and let him finish the torture.\rNodeContext: A little bit boastful. The player sent him away to continue the torture himself, and the torturer doesn't want to lose face because he wasn't able to extract the information from the prisoner.",
+      "checkflags": [
+        "GOB_Torturers_State_Persuaded"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Spike_5": {
+      "id": "Spike_5",
+      "speaker": "Torturer Spike",
+      "text": "Look who's 'ere. The little party-pooper. At least let me enjoy the beer.",
+      "context": "InternalNodeContext: Player persuaded goblins to go away and let him finish the torture.\rNodeContext: Not too pleased. The player forced him to stop torturing the prisoner (and he liked torturing the prisoner).",
+      "checkflags": [
+        "GOB_Torturers_State_KnowDen",
+        "GOB_Torturers_State_Persuaded"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "Torture_74": {
       "id": "Torture_74",
       "speaker": "Torturer Spike",
@@ -92,7 +878,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "137",
+      "link": "Torture_137",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -109,7 +895,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "137",
+          "link": "Torture_137",
           "is_end": false,
           "node_type": "alias",
           "children": {
@@ -127,7 +913,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "32",
+              "link": "Torture_32",
               "is_end": false,
               "node_type": "alias",
               "children": {
@@ -141,7 +927,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "226",
+                  "goto": "Torture_226",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -162,7 +948,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "200",
+              "link": "Torture_200",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -176,7 +962,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "83",
+                  "goto": "Torture_83",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -197,7 +983,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "200",
+              "link": "Torture_200",
               "is_end": false,
               "node_type": "alias",
               "children": {
@@ -211,7 +997,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "166",
+                  "goto": "Torture_166",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -244,7 +1030,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "171",
+                  "goto": "Torture_171",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -270,7 +1056,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "173",
+      "link": "Torture_173",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -284,7 +1070,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "166",
+          "goto": "Torture_166",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -305,7 +1091,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "173",
+      "link": "Torture_173",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -323,7 +1109,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "173",
+          "link": "Torture_173",
           "is_end": false,
           "node_type": "normal",
           "children": {
@@ -337,7 +1123,7 @@
               "ruletags": [],
               "approval": [],
               "rolls": "",
-              "goto": "95",
+              "goto": "Torture_95",
               "link": "",
               "is_end": false,
               "node_type": "jump",
@@ -355,8 +1141,8 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "90",
-          "link": "173",
+          "goto": "Torture_90",
+          "link": "Torture_173",
           "is_end": false,
           "node_type": "jump",
           "children": {}
@@ -374,7 +1160,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "173",
+          "link": "Torture_173",
           "is_end": false,
           "node_type": "taganswer",
           "children": {
@@ -395,7 +1181,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "173",
+              "link": "Torture_173",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -414,7 +1200,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "173",
+                  "link": "Torture_173",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -431,7 +1217,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "173",
+                      "link": "Torture_173",
                       "is_end": false,
                       "node_type": "taganswer",
                       "children": {
@@ -445,8 +1231,8 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "125",
-                          "link": "173",
+                          "goto": "Torture_125",
+                          "link": "Torture_173",
                           "is_end": false,
                           "node_type": "jump",
                           "children": {}
@@ -466,7 +1252,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "173",
+                          "link": "Torture_173",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -480,7 +1266,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "1",
+                              "goto": "Torture_1",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -503,7 +1289,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "173",
+                          "link": "Torture_173",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {}
@@ -519,7 +1305,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "72",
+                          "link": "Torture_72",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -536,7 +1322,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "72",
+                              "link": "Torture_72",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -555,7 +1341,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "72",
+                                  "link": "Torture_72",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {
@@ -572,7 +1358,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "72",
+                                      "link": "Torture_72",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {
@@ -835,7 +1621,7 @@
                                           "ruletags": [],
                                           "approval": [],
                                           "rolls": "",
-                                          "goto": "61",
+                                          "goto": "Torture_61",
                                           "link": "",
                                           "is_end": false,
                                           "node_type": "jump",
@@ -873,7 +1659,7 @@
                                   "ruletags": [],
                                   "approval": [],
                                   "rolls": "",
-                                  "goto": "189",
+                                  "goto": "Torture_189",
                                   "link": "",
                                   "is_end": false,
                                   "node_type": "jump",
@@ -893,7 +1679,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "159",
+                          "goto": "Torture_159",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -909,7 +1695,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "228",
+                          "goto": "Torture_228",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -925,7 +1711,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "185",
+                          "goto": "Torture_185",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -941,7 +1727,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "49",
+                          "goto": "Torture_49",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -975,7 +1761,7 @@
                           "ruletags": [],
                           "approval": [],
                           "rolls": "",
-                          "goto": "189",
+                          "goto": "Torture_189",
                           "link": "",
                           "is_end": false,
                           "node_type": "jump",
@@ -1004,7 +1790,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "83",
+              "link": "Torture_83",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -1018,7 +1804,7 @@
                   "ruletags": [],
                   "approval": [],
                   "rolls": "",
-                  "goto": "83",
+                  "goto": "Torture_83",
                   "link": "",
                   "is_end": false,
                   "node_type": "jump",
@@ -1037,7 +1823,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "83",
+              "link": "Torture_83",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -1054,7 +1840,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "83",
+                  "link": "Torture_83",
                   "is_end": false,
                   "node_type": "alias",
                   "children": {
@@ -1130,7 +1916,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "28",
+      "link": "Torture_28",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -1147,7 +1933,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "28",
+          "link": "Torture_28",
           "is_end": false,
           "node_type": "taganswer",
           "children": {
@@ -1162,7 +1948,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "28",
+              "link": "Torture_28",
               "is_end": false,
               "node_type": "normal",
               "children": {
@@ -1177,7 +1963,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "28",
+                  "link": "Torture_28",
                   "is_end": false,
                   "node_type": "normal",
                   "children": {
@@ -1197,7 +1983,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "28",
+                      "link": "Torture_28",
                       "is_end": false,
                       "node_type": "normal",
                       "children": {
@@ -1212,7 +1998,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "28",
+                          "link": "Torture_28",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -1231,7 +2017,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "28",
+                              "link": "Torture_28",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1245,7 +2031,7 @@
                                   "ruletags": [],
                                   "approval": [],
                                   "rolls": "",
-                                  "goto": "9",
+                                  "goto": "Torture_9",
                                   "link": "",
                                   "is_end": false,
                                   "node_type": "jump",
@@ -1301,7 +2087,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "28",
+                              "link": "Torture_28",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1316,7 +2102,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "28",
+                                  "link": "Torture_28",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {
@@ -1333,7 +2119,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "28",
+                                      "link": "Torture_28",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {}
@@ -1360,7 +2146,7 @@
                               ],
                               "rolls": "",
                               "goto": "",
-                              "link": "28",
+                              "link": "Torture_28",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1378,7 +2164,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "28",
+                                  "link": "Torture_28",
                                   "is_end": false,
                                   "node_type": "normal",
                                   "children": {}
@@ -1485,7 +2271,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "189",
+                              "goto": "Torture_189",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -1508,7 +2294,7 @@
                       "approval": [],
                       "rolls": "",
                       "goto": "",
-                      "link": "147",
+                      "link": "Torture_147",
                       "is_end": false,
                       "node_type": "taganswer",
                       "children": {
@@ -1528,7 +2314,7 @@
                           "approval": [],
                           "rolls": "",
                           "goto": "",
-                          "link": "147",
+                          "link": "Torture_147",
                           "is_end": false,
                           "node_type": "normal",
                           "children": {
@@ -1547,7 +2333,7 @@
                               "approval": [],
                               "rolls": "",
                               "goto": "",
-                              "link": "147",
+                              "link": "Torture_147",
                               "is_end": false,
                               "node_type": "normal",
                               "children": {
@@ -1564,7 +2350,7 @@
                                   "approval": [],
                                   "rolls": "",
                                   "goto": "",
-                                  "link": "147",
+                                  "link": "Torture_147",
                                   "is_end": false,
                                   "node_type": "taganswer",
                                   "children": {
@@ -1581,7 +2367,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "147",
+                                      "link": "Torture_147",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {}
@@ -1601,7 +2387,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "199",
+                                      "link": "Torture_199",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {
@@ -1621,7 +2407,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "199",
+                                          "link": "Torture_199",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1650,7 +2436,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "125",
+                                                  "goto": "Torture_125",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -1673,7 +2459,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "199",
+                                          "link": "Torture_199",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1687,7 +2473,7 @@
                                               "ruletags": [],
                                               "approval": [],
                                               "rolls": "",
-                                              "goto": "69",
+                                              "goto": "Torture_69",
                                               "link": "",
                                               "is_end": false,
                                               "node_type": "jump",
@@ -1711,7 +2497,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "199",
+                                          "link": "Torture_199",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1798,7 +2584,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "97",
+                                                  "goto": "Torture_97",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -1822,7 +2608,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "199",
+                                          "link": "Torture_199",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -1837,7 +2623,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "199",
+                                              "link": "Torture_199",
                                               "is_end": false,
                                               "node_type": "normal",
                                               "children": {
@@ -1852,7 +2638,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "199",
+                                                  "link": "Torture_199",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {
@@ -1867,7 +2653,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "199",
+                                                      "link": "Torture_199",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -1884,7 +2670,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "199",
+                                                          "link": "Torture_199",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -1899,7 +2685,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "199",
+                                                              "link": "Torture_199",
                                                               "is_end": false,
                                                               "node_type": "normal",
                                                               "children": {}
@@ -1921,7 +2707,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "88",
+                                                          "link": "Torture_88",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -1936,7 +2722,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "88",
+                                                              "link": "Torture_88",
                                                               "is_end": false,
                                                               "node_type": "normal",
                                                               "children": {}
@@ -1958,7 +2744,7 @@
                                                           "approval": [],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "199",
+                                                          "link": "Torture_199",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {}
@@ -1984,7 +2770,7 @@
                                                           ],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "213",
+                                                          "link": "Torture_213",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -2003,7 +2789,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "213",
+                                                              "link": "Torture_213",
                                                               "is_end": false,
                                                               "node_type": "alias",
                                                               "children": {
@@ -2018,7 +2804,7 @@
                                                                   "approval": [],
                                                                   "rolls": "",
                                                                   "goto": "",
-                                                                  "link": "186",
+                                                                  "link": "Torture_186",
                                                                   "is_end": false,
                                                                   "node_type": "normal",
                                                                   "children": {
@@ -2035,7 +2821,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "186",
+                                                                      "link": "Torture_186",
                                                                       "is_end": false,
                                                                       "node_type": "normal",
                                                                       "children": {
@@ -2054,7 +2840,7 @@
                                                                           "approval": [],
                                                                           "rolls": "",
                                                                           "goto": "",
-                                                                          "link": "186",
+                                                                          "link": "Torture_186",
                                                                           "is_end": false,
                                                                           "node_type": "alias",
                                                                           "children": {
@@ -2071,7 +2857,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "73",
+                                                                              "link": "Torture_73",
                                                                               "is_end": false,
                                                                               "node_type": "alias",
                                                                               "children": {
@@ -2096,7 +2882,7 @@
                                                                                   ],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "213",
+                                                                                  "link": "Torture_213",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -2115,7 +2901,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "213",
+                                                                                      "link": "Torture_213",
                                                                                       "is_end": false,
                                                                                       "node_type": "alias",
                                                                                       "children": {
@@ -2257,7 +3043,7 @@
                                                                                   ],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "213",
+                                                                                  "link": "Torture_213",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -2276,7 +3062,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "213",
+                                                                                      "link": "Torture_213",
                                                                                       "is_end": false,
                                                                                       "node_type": "alias",
                                                                                       "children": {
@@ -2291,7 +3077,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "99",
+                                                                                          "link": "Torture_99",
                                                                                           "is_end": false,
                                                                                           "node_type": "alias",
                                                                                           "children": {}
@@ -2319,7 +3105,7 @@
                                                                                   ],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "213",
+                                                                                  "link": "Torture_213",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -2338,7 +3124,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "213",
+                                                                                      "link": "Torture_213",
                                                                                       "is_end": false,
                                                                                       "node_type": "alias",
                                                                                       "children": {
@@ -2353,7 +3139,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "20",
+                                                                                          "link": "Torture_20",
                                                                                           "is_end": false,
                                                                                           "node_type": "tagcinematic",
                                                                                           "children": {}
@@ -2375,7 +3161,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "213",
+                                                                                  "link": "Torture_213",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -2394,7 +3180,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "213",
+                                                                                      "link": "Torture_213",
                                                                                       "is_end": false,
                                                                                       "node_type": "alias",
                                                                                       "children": {
@@ -2409,7 +3195,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "148",
+                                                                                          "link": "Torture_148",
                                                                                           "is_end": false,
                                                                                           "node_type": "tagcinematic",
                                                                                           "children": {
@@ -2429,7 +3215,7 @@
                                                                                               "approval": [],
                                                                                               "rolls": "",
                                                                                               "goto": "",
-                                                                                              "link": "161",
+                                                                                              "link": "Torture_161",
                                                                                               "is_end": false,
                                                                                               "node_type": "normal",
                                                                                               "children": {}
@@ -2448,7 +3234,7 @@
                                                                                               "approval": [],
                                                                                               "rolls": "",
                                                                                               "goto": "",
-                                                                                              "link": "192",
+                                                                                              "link": "Torture_192",
                                                                                               "is_end": false,
                                                                                               "node_type": "normal",
                                                                                               "children": {}
@@ -2513,7 +3299,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "186",
+                                                                      "link": "Torture_186",
                                                                       "is_end": false,
                                                                       "node_type": "normal",
                                                                       "children": {
@@ -2532,7 +3318,7 @@
                                                                           "approval": [],
                                                                           "rolls": "",
                                                                           "goto": "",
-                                                                          "link": "186",
+                                                                          "link": "Torture_186",
                                                                           "is_end": false,
                                                                           "node_type": "alias",
                                                                           "children": {
@@ -2549,7 +3335,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "73",
+                                                                              "link": "Torture_73",
                                                                               "is_end": false,
                                                                               "node_type": "alias",
                                                                               "children": {}
@@ -2585,7 +3371,7 @@
                                                           ],
                                                           "rolls": "",
                                                           "goto": "",
-                                                          "link": "2",
+                                                          "link": "Torture_2",
                                                           "is_end": false,
                                                           "node_type": "normal",
                                                           "children": {
@@ -2604,7 +3390,7 @@
                                                               "approval": [],
                                                               "rolls": "",
                                                               "goto": "",
-                                                              "link": "2",
+                                                              "link": "Torture_2",
                                                               "is_end": false,
                                                               "node_type": "taganswer",
                                                               "children": {
@@ -2619,7 +3405,7 @@
                                                                   "approval": [],
                                                                   "rolls": "",
                                                                   "goto": "",
-                                                                  "link": "2",
+                                                                  "link": "Torture_2",
                                                                   "is_end": false,
                                                                   "node_type": "normal",
                                                                   "children": {
@@ -2634,7 +3420,7 @@
                                                                       "approval": [],
                                                                       "rolls": "",
                                                                       "goto": "",
-                                                                      "link": "2",
+                                                                      "link": "Torture_2",
                                                                       "is_end": false,
                                                                       "node_type": "normal",
                                                                       "children": {
@@ -2653,7 +3439,7 @@
                                                                           "approval": [],
                                                                           "rolls": "",
                                                                           "goto": "",
-                                                                          "link": "2",
+                                                                          "link": "Torture_2",
                                                                           "is_end": false,
                                                                           "node_type": "normal",
                                                                           "children": {
@@ -2670,7 +3456,7 @@
                                                                               "approval": [],
                                                                               "rolls": "",
                                                                               "goto": "",
-                                                                              "link": "2",
+                                                                              "link": "Torture_2",
                                                                               "is_end": false,
                                                                               "node_type": "normal",
                                                                               "children": {
@@ -2690,7 +3476,7 @@
                                                                                   "approval": [],
                                                                                   "rolls": "",
                                                                                   "goto": "",
-                                                                                  "link": "213",
+                                                                                  "link": "Torture_213",
                                                                                   "is_end": false,
                                                                                   "node_type": "normal",
                                                                                   "children": {
@@ -2709,7 +3495,7 @@
                                                                                       "approval": [],
                                                                                       "rolls": "",
                                                                                       "goto": "",
-                                                                                      "link": "213",
+                                                                                      "link": "Torture_213",
                                                                                       "is_end": false,
                                                                                       "node_type": "alias",
                                                                                       "children": {
@@ -2724,7 +3510,7 @@
                                                                                           "approval": [],
                                                                                           "rolls": "",
                                                                                           "goto": "",
-                                                                                          "link": "99",
+                                                                                          "link": "Torture_99",
                                                                                           "is_end": false,
                                                                                           "node_type": "alias",
                                                                                           "children": {
@@ -2741,7 +3527,7 @@
                                                                                               "approval": [],
                                                                                               "rolls": "",
                                                                                               "goto": "",
-                                                                                              "link": "161",
+                                                                                              "link": "Torture_161",
                                                                                               "is_end": false,
                                                                                               "node_type": "normal",
                                                                                               "children": {
@@ -2758,7 +3544,7 @@
                                                                                                   "approval": [],
                                                                                                   "rolls": "",
                                                                                                   "goto": "",
-                                                                                                  "link": "161",
+                                                                                                  "link": "Torture_161",
                                                                                                   "is_end": false,
                                                                                                   "node_type": "normal",
                                                                                                   "children": {}
@@ -2929,7 +3715,7 @@
                                           ],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "4",
+                                          "link": "Torture_4",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -2946,7 +3732,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "4",
+                                              "link": "Torture_4",
                                               "is_end": false,
                                               "node_type": "normal",
                                               "children": {}
@@ -2964,7 +3750,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "4",
+                                              "link": "Torture_4",
                                               "is_end": false,
                                               "node_type": "normal",
                                               "children": {
@@ -2979,7 +3765,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "4",
+                                                  "link": "Torture_4",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3003,7 +3789,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "202",
+                                          "link": "Torture_202",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {}
@@ -3025,7 +3811,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "168",
+                                          "link": "Torture_168",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -3040,7 +3826,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "168",
+                                              "link": "Torture_168",
                                               "is_end": false,
                                               "node_type": "rollresult",
                                               "children": {
@@ -3060,7 +3846,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {
@@ -3118,7 +3904,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3139,7 +3925,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3160,7 +3946,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3181,7 +3967,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3202,7 +3988,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3222,7 +4008,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "168",
+                                                  "link": "Torture_168",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {}
@@ -3237,7 +4023,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "26",
+                                                  "goto": "Torture_26",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -3293,7 +4079,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "122",
+                                          "link": "Torture_122",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -3424,7 +4210,7 @@
                                                           "ruletags": [],
                                                           "approval": [],
                                                           "rolls": "",
-                                                          "goto": "1",
+                                                          "goto": "Torture_1",
                                                           "link": "",
                                                           "is_end": false,
                                                           "node_type": "jump",
@@ -3442,7 +4228,7 @@
                                                       "ruletags": [],
                                                       "approval": [],
                                                       "rolls": "",
-                                                      "goto": "159",
+                                                      "goto": "Torture_159",
                                                       "link": "",
                                                       "is_end": false,
                                                       "node_type": "jump",
@@ -3458,7 +4244,7 @@
                                                       "ruletags": [],
                                                       "approval": [],
                                                       "rolls": "",
-                                                      "goto": "159",
+                                                      "goto": "Torture_159",
                                                       "link": "",
                                                       "is_end": false,
                                                       "node_type": "jump",
@@ -3529,7 +4315,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "45",
+                                                  "goto": "Torture_45",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -3552,7 +4338,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "122",
+                                          "link": "Torture_122",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -3567,7 +4353,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "122",
+                                              "link": "Torture_122",
                                               "is_end": false,
                                               "node_type": "rollresult",
                                               "children": {
@@ -3602,7 +4388,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "80",
+                                                  "link": "Torture_80",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {
@@ -3617,7 +4403,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "80",
+                                                      "link": "Torture_80",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -3648,7 +4434,7 @@
                                                               "ruletags": [],
                                                               "approval": [],
                                                               "rolls": "",
-                                                              "goto": "141",
+                                                              "goto": "Torture_141",
                                                               "link": "",
                                                               "is_end": false,
                                                               "node_type": "jump",
@@ -3669,7 +4455,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "80",
+                                                      "link": "Torture_80",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {}
@@ -3716,7 +4502,7 @@
                                                               "ruletags": [],
                                                               "approval": [],
                                                               "rolls": "",
-                                                              "goto": "4",
+                                                              "goto": "Torture_4",
                                                               "link": "",
                                                               "is_end": false,
                                                               "node_type": "jump",
@@ -3772,7 +4558,7 @@
                                                       "ruletags": [],
                                                       "approval": [],
                                                       "rolls": "",
-                                                      "goto": "4",
+                                                      "goto": "Torture_4",
                                                       "link": "",
                                                       "is_end": false,
                                                       "node_type": "jump",
@@ -3790,7 +4576,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "45",
+                                                  "goto": "Torture_45",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -3813,7 +4599,7 @@
                                           "approval": [],
                                           "rolls": "",
                                           "goto": "",
-                                          "link": "121",
+                                          "link": "Torture_121",
                                           "is_end": false,
                                           "node_type": "normal",
                                           "children": {
@@ -3828,7 +4614,7 @@
                                               "approval": [],
                                               "rolls": "",
                                               "goto": "",
-                                              "link": "121",
+                                              "link": "Torture_121",
                                               "is_end": false,
                                               "node_type": "rollresult",
                                               "children": {
@@ -3843,7 +4629,7 @@
                                                   "approval": [],
                                                   "rolls": "",
                                                   "goto": "",
-                                                  "link": "121",
+                                                  "link": "Torture_121",
                                                   "is_end": false,
                                                   "node_type": "normal",
                                                   "children": {
@@ -3858,7 +4644,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "121",
+                                                      "link": "Torture_121",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {
@@ -3948,7 +4734,7 @@
                                                       "approval": [],
                                                       "rolls": "",
                                                       "goto": "",
-                                                      "link": "121",
+                                                      "link": "Torture_121",
                                                       "is_end": false,
                                                       "node_type": "normal",
                                                       "children": {}
@@ -3999,7 +4785,7 @@
                                                       "ruletags": [],
                                                       "approval": [],
                                                       "rolls": "",
-                                                      "goto": "4",
+                                                      "goto": "Torture_4",
                                                       "link": "",
                                                       "is_end": false,
                                                       "node_type": "jump",
@@ -4017,7 +4803,7 @@
                                                   "ruletags": [],
                                                   "approval": [],
                                                   "rolls": "",
-                                                  "goto": "45",
+                                                  "goto": "Torture_45",
                                                   "link": "",
                                                   "is_end": false,
                                                   "node_type": "jump",
@@ -4147,7 +4933,7 @@
                                               "ruletags": [],
                                               "approval": [],
                                               "rolls": "",
-                                              "goto": "168",
+                                              "goto": "Torture_168",
                                               "link": "",
                                               "is_end": false,
                                               "node_type": "jump",
@@ -4186,7 +4972,7 @@
                                       "approval": [],
                                       "rolls": "",
                                       "goto": "",
-                                      "link": "147",
+                                      "link": "Torture_147",
                                       "is_end": false,
                                       "node_type": "normal",
                                       "children": {}
@@ -4227,7 +5013,7 @@
                               "ruletags": [],
                               "approval": [],
                               "rolls": "",
-                              "goto": "171",
+                              "goto": "Torture_171",
                               "link": "",
                               "is_end": false,
                               "node_type": "jump",
@@ -4294,7 +5080,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "95",
+          "goto": "Torture_95",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -4331,7 +5117,7 @@
           "ruletags": [],
           "approval": [],
           "rolls": "",
-          "goto": "95",
+          "goto": "Torture_95",
           "link": "",
           "is_end": false,
           "node_type": "jump",
@@ -4348,700 +5134,6 @@
         "GOB_Torturers_Failed"
       ],
       "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_Dead_7": {
-      "id": "Spike_Dead_7",
-      "speaker": "Narrator",
-      "text": "*The corpse does not stir. It will answer no more questions.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_QuestionsLimitReached"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_Dead_11": {
-      "id": "Spike_Dead_11",
-      "speaker": "Narrator",
-      "text": "*The corpse seems willing to speak - but not to its killer.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_Killer"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_Dead_23": {
-      "id": "Spike_Dead_23",
-      "speaker": "Narrator",
-      "text": "*The corpse regards you lifelessly.*",
-      "context": "",
-      "checkflags": [
-        "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "27",
-      "is_end": false,
-      "node_type": "normal",
-      "children": {
-        "Spike_Dead_17": {
-          "id": "Spike_Dead_17",
-          "speaker": "Player",
-          "text": "Who were you in life?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "27",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_15": {
-              "id": "Spike_Dead_15",
-              "speaker": "Torturer Spike",
-              "text": "... bruiser chief... beat-drum slash-sword... flame-smoke...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_2": {
-                  "id": "Spike_Dead_2",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_8": {
-          "id": "Spike_Dead_8",
-          "speaker": "Player",
-          "text": "Tell me about the Absolute.",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "27",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_25": {
-              "id": "Spike_Dead_25",
-              "speaker": "Torturer Spike",
-              "text": "... speaks through True Souls... scour the land... find weapon...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_21": {
-                  "id": "Spike_Dead_21",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_16": {
-          "id": "Spike_Dead_16",
-          "speaker": "Player",
-          "text": "Are there any valuables hidden nearby?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "27",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_13": {
-              "id": "Spike_Dead_13",
-              "speaker": "Torturer Spike",
-              "text": "... bushes outside... kids were playing...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_4": {
-                  "id": "Spike_Dead_4",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_12": {
-          "id": "Spike_Dead_12",
-          "speaker": "Player",
-          "text": "Who killed you?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "27",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_24": {
-              "id": "Spike_Dead_24",
-              "speaker": "Torturer Spike",
-              "text": "... you... Blade of Frontiers... seeking your lady...",
-              "context": "",
-              "checkflags": [
-                "GLO_SpeakWithDead_State_Killer",
-                "WYLL"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "27",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {}
-            },
-            "Spike_Dead_5": {
-              "id": "Spike_Dead_5",
-              "speaker": "Torturer Spike",
-              "text": "... you... you... youyouyou...",
-              "context": "",
-              "checkflags": [
-                "GLO_SpeakWithDead_State_Killer"
-              ],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "27",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {}
-            },
-            "Spike_Dead_0": {
-              "id": "Spike_Dead_0",
-              "speaker": "Torturer Spike",
-              "text": "... warrior... had Absolute's touch...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_27": {
-                  "id": "Spike_Dead_27",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_14": {
-          "id": "Spike_Dead_14",
-          "speaker": "Player",
-          "text": "Where are you from?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_26": {
-              "id": "Spike_Dead_26",
-              "speaker": "Torturer Spike",
-              "text": "... born here stay here...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_9": {
-                  "id": "Spike_Dead_9",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_1": {
-          "id": "Spike_Dead_1",
-          "speaker": "Player",
-          "text": "What was your purpose?",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_22": {
-              "id": "Spike_Dead_22",
-              "speaker": "Torturer Spike",
-              "text": "... gold... blood... Absolute's blessing...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_18": {
-                  "id": "Spike_Dead_18",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_20": {
-          "id": "Spike_Dead_20",
-          "speaker": "Player",
-          "text": "Tell me about your life.",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [
-            "GLO_SpeakWithDead_Event_QuestionAsked"
-          ],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": false,
-          "node_type": "normal",
-          "children": {
-            "Spike_Dead_6": {
-              "id": "Spike_Dead_6",
-              "speaker": "Torturer Spike",
-              "text": "... crush-smash... burn-whip-scream... give pain get answer...",
-              "context": "",
-              "checkflags": [],
-              "setflags": [],
-              "ruletags": [],
-              "approval": [],
-              "rolls": "",
-              "goto": "",
-              "link": "",
-              "is_end": false,
-              "node_type": "normal",
-              "children": {
-                "Spike_Dead_19": {
-                  "id": "Spike_Dead_19",
-                  "speaker": "",
-                  "text": "",
-                  "context": "",
-                  "checkflags": [],
-                  "setflags": [],
-                  "ruletags": [],
-                  "approval": [],
-                  "rolls": "",
-                  "goto": "",
-                  "link": "",
-                  "is_end": false,
-                  "node_type": "taganswer",
-                  "children": {}
-                }
-              }
-            }
-          }
-        },
-        "Spike_Dead_3": {
-          "id": "Spike_Dead_3",
-          "speaker": "Player",
-          "text": "Leave.",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached = False"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        },
-        "Spike_Dead_10": {
-          "id": "Spike_Dead_10",
-          "speaker": "Narrator",
-          "text": "*The corpse does not stir. It will answer no more questions.*",
-          "context": "",
-          "checkflags": [
-            "GLO_SpeakWithDead_State_QuestionsLimitReached"
-          ],
-          "setflags": [],
-          "ruletags": [],
-          "approval": [],
-          "rolls": "",
-          "goto": "",
-          "link": "",
-          "is_end": true,
-          "node_type": "normal",
-          "children": {}
-        }
-      }
-    },
-    "Spike_0": {
-      "id": "Spike_0",
-      "speaker": "Torturer Spike",
-      "text": "Torture's over, but ya can get a beer if yer lookin' for some fun.",
-      "context": "InternalNodeContext: Player (but not this character) tortured the prisoner enough for the goblins to be satisfied.\rNodeContext: pleased. He watched another player torture the prisoner until the latter fainted. He's in a good mood.",
-      "checkflags": [
-        "GOB_Torturers_Assisted = False",
-        "GOB_Torturers_State_TorturedEnough"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_1": {
-      "id": "Spike_1",
-      "speaker": "Torturer Spike",
-      "text": "Had a little sadist in ya after all, didn'tcha?",
-      "context": "InternalNodeContext: Player tortured the prisoner enough for the goblins to be satisfied.\rNodeContext: Cruel and pleased. He watched the player torture the prisoner until the prisoner fainted,",
-      "checkflags": [
-        "GOB_Torturers_Assisted",
-        "GOB_Torturers_State_TorturedEnough"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_2": {
-      "id": "Spike_2",
-      "speaker": "Torturer Spike",
-      "text": "Ya still 'ere? Go find the other slaves if ya like hangin' 'round 'ere so much.",
-      "context": "InternalNodeContext: Player made long rest, goblins finished torture.\rNodeContext: a little surprised. He's mean because he's mean by nature, not because the player gave him a reason to be.",
-      "checkflags": [
-        "GOB_Torturers_State_AfterLongRest"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_3": {
-      "id": "Spike_3",
-      "speaker": "",
-      "text": "",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "alias",
-      "children": {}
-    },
-    "Spike_4": {
-      "id": "Spike_4",
-      "speaker": "Torturer Spike",
-      "text": "Bet ya couldn't make 'im sing either, could ya? I'd swear 'e was mute, if I hadn't heard 'im scream so much.",
-      "context": "InternalNodeContext: Player persuaded goblins to go away and let him finish the torture.\rNodeContext: A little bit boastful. The player sent him away to continue the torture himself, and the torturer doesn't want to lose face because he wasn't able to extract the information from the prisoner.",
-      "checkflags": [
-        "GOB_Torturers_State_Persuaded"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Spike_5": {
-      "id": "Spike_5",
-      "speaker": "Torturer Spike",
-      "text": "Look who's 'ere. The little party-pooper. At least let me enjoy the beer.",
-      "context": "InternalNodeContext: Player persuaded goblins to go away and let him finish the torture.\rNodeContext: Not too pleased. The player forced him to stop torturing the prisoner (and he liked torturing the prisoner).",
-      "checkflags": [
-        "GOB_Torturers_State_KnowDen",
-        "GOB_Torturers_State_Persuaded"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_000_0": {
-      "id": "Rat_000_0",
-      "speaker": "Rat",
-      "text": "*Squeak!*",
-      "context": "",
-      "checkflags": [
-        "PETPAL = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_000_1": {
-      "id": "Rat_000_1",
-      "speaker": "Rat",
-      "text": "A little bite... he don't look like he'd mind...",
-      "context": "NodeContext: He's contemplating eating his dead master.",
-      "checkflags": [
-        "GOB_Torturers_Rat_000_HasMet = False",
-        "GOB_Torturers_State_SpikeIsDead",
-        "GOB_Torturers_State_MovedOut = False",
-        "PETPAL"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_000_2": {
-      "id": "Rat_000_2",
-      "speaker": "Narrator",
-      "text": "*The rat's eyes follow you, shining. Its stomach grumbles.*",
-      "context": "",
-      "checkflags": [
-        "GOB_Torturers_Rat_000_HasMet",
-        "PETPAL"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_000_3": {
-      "id": "Rat_000_3",
-      "speaker": "Rat",
-      "text": "Hands off! This one's ours.",
-      "context": "",
-      "checkflags": [
-        "GOB_Torturers_Rat_000_HasMet = False",
-        "PETPAL"
-      ],
-      "setflags": [
-        "GOB_Torturers_Rat_000_HasMet"
-      ],
       "ruletags": [],
       "approval": [],
       "rolls": "",
@@ -5101,108 +5193,6 @@
       ],
       "setflags": [
         "GOB_Torturers_HasMet_Goblet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_001_0": {
-      "id": "Rat_001_0",
-      "speaker": "Rat",
-      "text": "Let this one be! My prisoner, drow, not yours. Not this one. I am hungry... starving...",
-      "context": "",
-      "checkflags": [
-        "GOB_Torturers_Rat_001_HasMet = False",
-        "GOB_Torturers_State_MovedOut = False",
-        "DROWELF",
-        "PETPAL"
-      ],
-      "setflags": [
-        "GOB_Torturers_Rat_001_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_001_1": {
-      "id": "Rat_001_1",
-      "speaker": "Rat",
-      "text": "Rotting - he's rotting. Already turning green... Sweet and juicy, all for me. All for me.",
-      "context": "NodeContext: She's contemplating eating her old master. She's mad because he didn't feed her.",
-      "checkflags": [
-        "GOB_Torturers_Rat_001_HasMet = False",
-        "GOB_Torturers_State_SpikeIsDead",
-        "GOB_Torturers_State_MovedOut = False",
-        "PETPAL"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_001_2": {
-      "id": "Rat_001_2",
-      "speaker": "Rat",
-      "text": "*Squeak.*",
-      "context": "",
-      "checkflags": [
-        "PETPAL = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_001_3": {
-      "id": "Rat_001_3",
-      "speaker": "Narrator",
-      "text": "*The rat's nose twitches impatiently. Her teeth bite air as though it is flesh, but it doesn't sate her hunger.*",
-      "context": "",
-      "checkflags": [
-        "PETPAL"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Rat_001_4": {
-      "id": "Rat_001_4",
-      "speaker": "Rat",
-      "text": "Let me kill - let me eat him. Nice, red red prisoner, full of meat. Let me eat - I am hungry, so hungry.",
-      "context": "",
-      "checkflags": [
-        "GOB_Torturers_Rat_001_HasMet = False",
-        "GOB_Torturers_State_MovedOut = False",
-        "PETPAL"
-      ],
-      "setflags": [
-        "GOB_Torturers_Rat_001_HasMet"
       ],
       "ruletags": [],
       "approval": [],

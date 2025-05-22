@@ -5,55 +5,52 @@
         "synopsis": "Toron notices you speaking with the strabge ox, but he's not too concerned, just curious.",
         "how_to_trigger": "1. Go to WLD_Main_A2. Go to Druid's Grove, at the tiefling cave3. Speak with the strange ox4. When dialog with the ox ends, this AD plays on Toron"
       },
-      "PAD_FirstInsight": {
-        "synopsis": "The player walks past and, if they notice (pass an insight check), responds to the ox looking at them strangely.",
-        "how_to_trigger": "Walk to the tiefling cave, past Rolan and to the right. There will be two ox and Toron standing closeby. When close enough, a passive insight check will trigger."
+      "MeetAtDruidsGrove": {
+        "synopsis": "The player comes across some ox in the Tieflings cave at Druid's Grove. The player may notice the ox acting strangely.",
+        "how_to_trigger": "Speak with S_GLO_DevilishOx_ac37baa6-624a-418d-a6ca-52ed9a77f00c"
       },
       "AD_OxReaction": {
         "synopsis": "This AD plays after you have spoken with the ox with SwA, if you linger or pass by the ox again.",
         "how_to_trigger": "1. Go to WLD_Main_A2. Go to Druid's Grove, at the tiefling cave3. Speak with the strange ox4. When dialog with the ox ends, this AD plays on the ox if you linger or pass by the ox again"
       },
-      "MeetAtDruidsGrove": {
-        "synopsis": "The player comes across some ox in the Tieflings cave at Druid's Grove. The player may notice the ox acting strangely.",
-        "how_to_trigger": "Speak with S_GLO_DevilishOx_ac37baa6-624a-418d-a6ca-52ed9a77f00c"
+      "PAD_FirstInsight": {
+        "synopsis": "The player walks past and, if they notice (pass an insight check), responds to the ox looking at them strangely.",
+        "how_to_trigger": "Walk to the tiefling cave, past Rolan and to the right. There will be two ox and Toron standing closeby. When close enough, a passive insight check will trigger."
       }
     },
     "source_files": [
       "DEN_DevilishOx_AD_ToronCurious.json",
-      "DEN_DevilishOx_PAD_FirstInsight.json",
+      "DEN_DevilishOx_MeetAtDruidsGrove.json",
       "DEN_DevilishOx_AD_OxReaction.json",
-      "DEN_DevilishOx_MeetAtDruidsGrove.json"
+      "DEN_DevilishOx_PAD_FirstInsight.json"
     ],
     "automatic_ordering": {
-      "reasoning": "PAD_FirstInsight is triggered when the player passes by the cave and notices the ox through an insight check, which represents a more observational path. If instead the player engages more directly with the ox, the dialogue chain is triggered: first the player speaks with the strange ox, after which Toron comments (AD_ToronCurious) that he noticed the interaction. Later, if the player lingers or comes back, the ox reacts (AD_OxReaction). Thus, PAD_FirstInsight \u2192 AD_ToronCurious \u2192 AD_OxReaction forms a natural ordered chain. In contrast, the session MeetAtDruidsGrove is triggered by directly speaking with S_GLO_DevilishOx at the cave and appears to serve as an alternate path to encountering the ox. This alternate branch would be mutually exclusive with the chain of sessions (PAD_FirstInsight, AD_ToronCurious, and AD_OxReaction) since a playthrough would normally follow one approach (the passive insight and subsequent dialogue) or directly engage via MeetAtDruidsGrove.",
+      "reasoning": "To determine the order and exclusivity of the sessions, we analyze the triggering conditions and the synopsis of each session. The session 'MeetAtDruidsGrove' describes the initial encounter with the ox, which is a prerequisite for the other sessions that involve interaction with the ox. The session 'AD_ToronCurious' can occur after 'MeetAtDruidsGrove', as it indicates that Toron is aware of the player's interaction with the ox. The session 'AD_OxReaction' specifically states that it plays after speaking with the ox, indicating it can only occur after 'MeetAtDruidsGrove'. The session 'PAD_FirstInsight' also triggers upon noticing the ox, but this is a separate interaction that does not exclude the others but might happen before any further interactions. Thus, the order is established based on the need to first meet the ox before any further reactions or insights occur. There are no mutually exclusive sessions identified in the provided data.",
       "order": [
         {
+          "predecessor": [],
+          "successor": "MeetAtDruidsGrove"
+        },
+        {
           "predecessor": [
-            "PAD_FirstInsight"
+            "MeetAtDruidsGrove"
           ],
           "successor": "AD_ToronCurious"
         },
         {
           "predecessor": [
-            "AD_ToronCurious"
+            "MeetAtDruidsGrove"
           ],
           "successor": "AD_OxReaction"
+        },
+        {
+          "predecessor": [
+            "MeetAtDruidsGrove"
+          ],
+          "successor": "PAD_FirstInsight"
         }
       ],
-      "exclusive": [
-        [
-          "PAD_FirstInsight",
-          "MeetAtDruidsGrove"
-        ],
-        [
-          "AD_ToronCurious",
-          "MeetAtDruidsGrove"
-        ],
-        [
-          "AD_OxReaction",
-          "MeetAtDruidsGrove"
-        ]
-      ]
+      "exclusive": []
     }
   },
   "dialogue": {
@@ -61,38 +58,6 @@
       "id": "AD_ToronCurious_0",
       "speaker": "Toron",
       "text": "Huh. Funny.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FirstInsight_0": {
-      "id": "PAD_FirstInsight_0",
-      "speaker": "Player",
-      "text": "I'd swear that ox's gaze is following me.",
-      "context": "",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_OxReaction_0": {
-      "id": "AD_OxReaction_0",
-      "speaker": "Phasm",
-      "text": "Tick tock.",
       "context": "",
       "checkflags": [],
       "setflags": [],
@@ -159,7 +124,7 @@
       "approval": [],
       "rolls": "",
       "goto": "",
-      "link": "42",
+      "link": "MeetAtDruidsGrove_42",
       "is_end": false,
       "node_type": "normal",
       "children": {
@@ -178,7 +143,7 @@
           "approval": [],
           "rolls": "",
           "goto": "",
-          "link": "42",
+          "link": "MeetAtDruidsGrove_42",
           "is_end": false,
           "node_type": "normal",
           "children": {
@@ -193,7 +158,7 @@
               "approval": [],
               "rolls": "",
               "goto": "",
-              "link": "42",
+              "link": "MeetAtDruidsGrove_42",
               "is_end": false,
               "node_type": "rollresult",
               "children": {
@@ -208,7 +173,7 @@
                   "approval": [],
                   "rolls": "",
                   "goto": "",
-                  "link": "42",
+                  "link": "MeetAtDruidsGrove_42",
                   "is_end": false,
                   "node_type": "alias",
                   "children": {
@@ -600,7 +565,7 @@
                                       "ruletags": [],
                                       "approval": [],
                                       "rolls": "",
-                                      "goto": "30",
+                                      "goto": "MeetAtDruidsGrove_30",
                                       "link": "",
                                       "is_end": false,
                                       "node_type": "jump",
@@ -633,7 +598,7 @@
                                       "ruletags": [],
                                       "approval": [],
                                       "rolls": "",
-                                      "goto": "34",
+                                      "goto": "MeetAtDruidsGrove_34",
                                       "link": "",
                                       "is_end": false,
                                       "node_type": "jump",
@@ -698,7 +663,7 @@
                                           "ruletags": [],
                                           "approval": [],
                                           "rolls": "",
-                                          "goto": "30",
+                                          "goto": "MeetAtDruidsGrove_30",
                                           "link": "",
                                           "is_end": false,
                                           "node_type": "jump",
@@ -792,7 +757,7 @@
                       "ruletags": [],
                       "approval": [],
                       "rolls": "",
-                      "goto": "31",
+                      "goto": "MeetAtDruidsGrove_31",
                       "link": "",
                       "is_end": false,
                       "node_type": "jump",
@@ -924,6 +889,38 @@
           "children": {}
         }
       }
+    },
+    "AD_OxReaction_0": {
+      "id": "AD_OxReaction_0",
+      "speaker": "Phasm",
+      "text": "Tick tock.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FirstInsight_0": {
+      "id": "PAD_FirstInsight_0",
+      "speaker": "Player",
+      "text": "I'd swear that ox's gaze is following me.",
+      "context": "",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
     }
   }
 }

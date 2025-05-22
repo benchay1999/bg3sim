@@ -1,38 +1,32 @@
 {
   "metadata": {
     "individual_metadata": {
-      "Permitted": {
-        "synopsis": "",
-        "how_to_trigger": "- goto -113.81, 37.42, 616.04- pass the skillchecks with Salazon- speak to him again after that to trigger scene"
-      },
-      "AD_PerceptionSucceeded": {
-        "synopsis": "Player line that triggers on encountering the Zhentarim hideout - in case of successful perception roll, failed perception roll, or having been told of the hideout in advance",
+      "": {
+        "synopsis": "Salazon is preparing a fire-trap at the entrance to his gang's hideout. We can either sneak up on him or be sneaked up on in turn - either way we have to convince him we should be there or he'll get skittish and blow us all up. In general he's jumpy and suspicious of us, but relieved when we convince him we're a friend. Think an inexperienced guard pointing a gun at us when he's been told to be on alert.",
         "how_to_trigger": ""
       },
       "AD_Backup": {
         "synopsis": "Plays when Salazon spots an NPC he can't have a dialogue with (summon, animal, party follower)",
         "how_to_trigger": ""
       },
-      "": {
-        "synopsis": "Salazon is preparing a fire-trap at the entrance to his gang's hideout. We can either sneak up on him or be sneaked up on in turn - either way we have to convince him we should be there or he'll get skittish and blow us all up. In general he's jumpy and suspicious of us, but relieved when we convince him we're a friend. Think an inexperienced guard pointing a gun at us when he's been told to be on alert.",
+      "AD_PerceptionSucceeded": {
+        "synopsis": "Player line that triggers on encountering the Zhentarim hideout - in case of successful perception roll, failed perception roll, or having been told of the hideout in advance",
         "how_to_trigger": ""
+      },
+      "Permitted": {
+        "synopsis": "",
+        "how_to_trigger": "- goto -113.81, 37.42, 616.04- pass the skillchecks with Salazon- speak to him again after that to trigger scene"
       }
     },
     "source_files": [
-      "PLA_EscapingZhentarim_Permitted.json",
-      "PLA_EscapingZhentarim_AD_PerceptionSucceeded.json",
+      "PLA_EscapingZhentarim.json",
       "PLA_EscapingZhentarim_AD_Backup.json",
-      "PLA_EscapingZhentarim.json"
+      "PLA_EscapingZhentarim_AD_PerceptionSucceeded.json",
+      "PLA_EscapingZhentarim_Permitted.json"
     ],
     "automatic_ordering": {
-      "reasoning": "1. The session 'AD_PerceptionSucceeded' is triggered when the player first encounters the Zhentarim hideout. This makes it a logical precursor to any events that take place at the hideout. 2. The unnamed session (with an empty key) describes Salazon preparing a fire-trap at the entrance to his gang\u2019s hideout. Since the player must first notice or be informed about the hideout (via AD_PerceptionSucceeded) before approaching it, this trap-preparation session happens after AD_PerceptionSucceeded. 3. The 'Permitted' session is triggered after the player goes to a specific location, passes skillchecks with Salazon, and speaks to him again. This dialogue follows the encounter with Salazon in his trap-preparation phase. Therefore, the trap session (the unnamed session) is a necessary predecessor to the 'Permitted' session. 4. The 'AD_Backup' session plays if Salazon spots an NPC (such as a summoned creature, an animal or a party follower) that he cannot have a dialogue with. This condition creates an alternative branch: if AD_Backup is triggered, then the proper dialogue path that leads to the Permitted session is disrupted. Hence, AD_Backup and Permitted are mutually exclusive in the overall narrative progression.",
+      "reasoning": "Examining the data, one clearly defined progression is that the main encounter with Salazon \u2013 the session with an empty-string key \u2013 sets up the situation at his gang\u2019s hideout (with the fire-trap and skill checks). Only after you have encountered him in this way and passed the necessary checks (as indicated in the trigger for the 'Permitted' session) can you speak with him again to trigger the 'Permitted' scene. Thus, the encounter (session \"\") should occur before the 'Permitted' session. The two additional sessions \u2013 'AD_Backup' (triggered when Salazon spots an NPC he cannot speak with) and 'AD_PerceptionSucceeded' (triggered when encountering the Zhentarim hideout based on perception roll or prior knowledge) \u2013 appear to be independent branch triggers that do not directly lead into or require the main trap encounter or its follow\u2010up. In other words, aside from the chain between the main trap session and the 'Permitted' session, no strict ordering or mutual exclusivity is imposed between the AD_ sessions and the main sessions. (It is possible in the game that these AD_ sessions represent alternative dialogue lines or additional commentary in certain conditions, but with the information given no explicit exclusiveness rule can be inferred.)",
       "order": [
-        {
-          "predecessor": [
-            "AD_PerceptionSucceeded"
-          ],
-          "successor": ""
-        },
         {
           "predecessor": [
             ""
@@ -40,197 +34,10 @@
           "successor": "Permitted"
         }
       ],
-      "exclusive": [
-        [
-          "AD_Backup",
-          "Permitted"
-        ]
-      ]
+      "exclusive": []
     }
   },
   "dialogue": {
-    "Permitted_0": {
-      "id": "Permitted_0",
-      "speaker": "Salazon",
-      "text": "Said you could pass, didn't I?",
-      "context": "CinematicNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task\rNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task",
-      "checkflags": [
-        "PLA_ZhentDungeon_Zhent01_HasMet"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "Permitted_1": {
-      "id": "Permitted_1",
-      "speaker": "Salazon",
-      "text": "Said your friend could pass - goes for you too.",
-      "context": "CinematicNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task\rNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task",
-      "checkflags": [
-        "PLA_ZhentDungeon_Zhent01_HasMet = False"
-      ],
-      "setflags": [
-        "PLA_ZhentDungeon_Zhent01_HasMet"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_PerceptionSucceeded_0": {
-      "id": "AD_PerceptionSucceeded_0",
-      "speaker": "Player",
-      "text": "What was... hm. Never mind.",
-      "context": "",
-      "checkflags": [
-        "PLA_EscapingZhentarim_Event_Spotted = False"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_PerceptionSucceeded_1": {
-      "id": "AD_PerceptionSucceeded_1",
-      "speaker": "Player",
-      "text": "Someone's moving around in there.",
-      "context": "",
-      "checkflags": [
-        "PLA_EscapingZhentarim_Event_Spotted"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_PerceptionSucceeded_2": {
-      "id": "AD_PerceptionSucceeded_2",
-      "speaker": "Player",
-      "text": "This is the spot Rugan marked. Doesn't look like much.",
-      "context": "",
-      "checkflags": [
-        "GotPassword"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_Backup_0": {
-      "id": "AD_Backup_0",
-      "speaker": "Salazon",
-      "text": "Is someone out there?<br>",
-      "context": "",
-      "checkflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
-      ],
-      "setflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_Backup_1": {
-      "id": "AD_Backup_1",
-      "speaker": "Salazon",
-      "text": "You're not meant to be here.<br>",
-      "context": "",
-      "checkflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
-      ],
-      "setflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A = False"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_Backup_2": {
-      "id": "AD_Backup_2",
-      "speaker": "Salazon",
-      "text": "What is this?<br>",
-      "context": "",
-      "checkflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
-      ],
-      "setflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_Backup_3": {
-      "id": "AD_Backup_3",
-      "speaker": "Salazon",
-      "text": "What in Ilmater's broken bones are you doing here?",
-      "context": "",
-      "checkflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A = False"
-      ],
-      "setflags": [
-        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
-      ],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
     "36": {
       "id": "36",
       "speaker": "Narrator",
@@ -1671,6 +1478,188 @@
           "children": {}
         }
       }
+    },
+    "AD_Backup_0": {
+      "id": "AD_Backup_0",
+      "speaker": "Salazon",
+      "text": "Is someone out there?<br>",
+      "context": "",
+      "checkflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
+      ],
+      "setflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_Backup_1": {
+      "id": "AD_Backup_1",
+      "speaker": "Salazon",
+      "text": "You're not meant to be here.<br>",
+      "context": "",
+      "checkflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
+      ],
+      "setflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A = False"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_Backup_2": {
+      "id": "AD_Backup_2",
+      "speaker": "Salazon",
+      "text": "What is this?<br>",
+      "context": "",
+      "checkflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
+      ],
+      "setflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_Backup_3": {
+      "id": "AD_Backup_3",
+      "speaker": "Salazon",
+      "text": "What in Ilmater's broken bones are you doing here?",
+      "context": "",
+      "checkflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_B = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_C = False",
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A = False"
+      ],
+      "setflags": [
+        "e74f6ddb-4a5a-c9f3-d445-a206a597125a_A"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_PerceptionSucceeded_0": {
+      "id": "AD_PerceptionSucceeded_0",
+      "speaker": "Player",
+      "text": "What was... hm. Never mind.",
+      "context": "",
+      "checkflags": [
+        "PLA_EscapingZhentarim_Event_Spotted = False"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_PerceptionSucceeded_1": {
+      "id": "AD_PerceptionSucceeded_1",
+      "speaker": "Player",
+      "text": "Someone's moving around in there.",
+      "context": "",
+      "checkflags": [
+        "PLA_EscapingZhentarim_Event_Spotted"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "AD_PerceptionSucceeded_2": {
+      "id": "AD_PerceptionSucceeded_2",
+      "speaker": "Player",
+      "text": "This is the spot Rugan marked. Doesn't look like much.",
+      "context": "",
+      "checkflags": [
+        "GotPassword"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Permitted_0": {
+      "id": "Permitted_0",
+      "speaker": "Salazon",
+      "text": "Said you could pass, didn't I?",
+      "context": "CinematicNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task\rNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task",
+      "checkflags": [
+        "PLA_ZhentDungeon_Zhent01_HasMet"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "Permitted_1": {
+      "id": "Permitted_1",
+      "speaker": "Salazon",
+      "text": "Said your friend could pass - goes for you too.",
+      "context": "CinematicNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task\rNodeContext: Salazon is crouching behind shelves, focused on the entrance. Impatient, wanting to get back to his task",
+      "checkflags": [
+        "PLA_ZhentDungeon_Zhent01_HasMet = False"
+      ],
+      "setflags": [
+        "PLA_ZhentDungeon_Zhent01_HasMet"
+      ],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
     }
   }
 }

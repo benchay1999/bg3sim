@@ -1,16 +1,20 @@
 {
   "metadata": {
     "individual_metadata": {
-      "PAD_FoundKey": {
-        "synopsis": "Lines spoken when the player spots a key in the undergrowth near a tollhouse. Different variations depending on what the player already knows about the key.",
-        "how_to_trigger": ""
-      },
       "PAD_GnollsDead": {
         "synopsis": "Player comment spoken when seeing a pack of dead gnolls",
         "how_to_trigger": ""
       },
       "AD_Refugees": {
         "synopsis": "Dialogue between two refugees who are secretly cultists of Zariel. This dialogue is spoken before the player enters the tollhouse where they are hiding out. If a player enters during the dialogue, they stop talking to address the newcomer.",
+        "how_to_trigger": ""
+      },
+      "AD_RefugeeAlarm": {
+        "synopsis": "A paladin calls to their companions when they see hostile players.",
+        "how_to_trigger": ""
+      },
+      "PAD_FoundKey": {
+        "synopsis": "Lines spoken when the player spots a key in the undergrowth near a tollhouse. Different variations depending on what the player already knows about the key.",
         "how_to_trigger": ""
       },
       "PAD_CorpseSmell": {
@@ -20,34 +24,24 @@
       "AD_RefugeeGreeting": {
         "synopsis": "A warm greeting as players enter the tollhouse controlled by the faux-paladin's group",
         "how_to_trigger": ""
-      },
-      "AD_RefugeeAlarm": {
-        "synopsis": "A paladin calls to their companions when they see hostile players.",
-        "how_to_trigger": ""
       }
     },
     "source_files": [
-      "PLA_KarlachRecruitmentTollhouse_PAD_FoundKey.json",
       "PLA_KarlachRecruitmentTollhouse_PAD_GnollsDead.json",
       "PLA_KarlachRecruitmentTollhouse_AD_Refugees.json",
+      "PLA_KarlachRecruitmentTollhouse_AD_RefugeeAlarm.json",
+      "PLA_KarlachRecruitmentTollhouse_PAD_FoundKey.json",
       "PLA_KarlachRecruitmentTollhouse_PAD_CorpseSmell.json",
-      "PLA_KarlachRecruitmentTollhouse_AD_RefugeeGreeting.json",
-      "PLA_KarlachRecruitmentTollhouse_AD_RefugeeAlarm.json"
+      "PLA_KarlachRecruitmentTollhouse_AD_RefugeeGreeting.json"
     ],
     "automatic_ordering": {
-      "reasoning": "After a close look at the descriptions, we can see that some sessions are clearly tied by cause\u2010and\u2010effect or situational triggers. The 'AD_Refugees' scene happens before the player enters the tollhouse, and its dialogue is interrupted if the player enters early. Entering the tollhouse then triggers either a warm greeting (AD_RefugeeGreeting) or, if the player is hostile, an alarm (AD_RefugeeAlarm). Therefore, both AD_RefugeeGreeting and AD_RefugeeAlarm are meant to follow AD_Refugees. Moreover, because these two outcomes are context\u2010dependent (friendly or alarmed), they cannot both occur in the same play\u2010through -- they are mutually exclusive. In addition, once the player is welcomed through AD_RefugeeGreeting, if they continue inside the tollhouse (descending into the cellar), the PAD_CorpseSmell dialogue is triggered. Other sessions (like PAD_FoundKey and PAD_GnollsDead) are triggered by independent events and lack ordering constraints relative to the tollhouse/undergrowth events. Thus, the ordering constraints we can extract are: (1) AD_Refugees before AD_RefugeeGreeting; (2) AD_Refugees before AD_RefugeeAlarm; and (3) AD_RefugeeGreeting must come before PAD_CorpseSmell. Also, AD_RefugeeGreeting and AD_RefugeeAlarm are mutually exclusive.",
+      "reasoning": "Based on the provided synopses, we can infer that some sessions occur in a particular context or location (namely, the tollhouse and its surroundings) and have trigger conditions that imply a loose temporal order. The AD_Refugees dialogue occurs before the player enters the tollhouse, while the AD_RefugeeGreeting is explicitly triggered when entering the tollhouse controlled by the faux-paladin\u2019s group. In addition, the PAD_CorpseSmell session is triggered when entering the cellar of the tollhouse, which naturally places it after the tollhouse greeting. The AD_RefugeeAlarm is triggered when the paladin perceives hostility. Since the alarm is a reaction to player hostility, it should replace or prevent the normal welcoming dialogue (AD_RefugeeGreeting). Therefore, AD_RefugeeGreeting and AD_RefugeeAlarm are mutually exclusive. The other sessions (PAD_GnollsDead and PAD_FoundKey) are more situational comments and do not seem to demand an ordering constraint with any other session.",
       "order": [
         {
           "predecessor": [
             "AD_Refugees"
           ],
           "successor": "AD_RefugeeGreeting"
-        },
-        {
-          "predecessor": [
-            "AD_Refugees"
-          ],
-          "successor": "AD_RefugeeAlarm"
         },
         {
           "predecessor": [
@@ -65,58 +59,6 @@
     }
   },
   "dialogue": {
-    "PAD_FoundKey_0": {
-      "id": "PAD_FoundKey_0",
-      "speaker": "Player",
-      "text": "A key. Wonder what it opens?",
-      "context": "NodeContext: curious",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundKey_1": {
-      "id": "PAD_FoundKey_1",
-      "speaker": "Player",
-      "text": "The corpse mentioned a key... this must be the one.",
-      "context": "NodeContext: spotting a key",
-      "checkflags": [
-        "PLA_KarlachRecruitmentTollhouse_Knows_CollectorHadKey"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "PAD_FoundKey_2": {
-      "id": "PAD_FoundKey_2",
-      "speaker": "Player",
-      "text": "A key - it might open the tollhouse vault.",
-      "context": "NodeContext: curious",
-      "checkflags": [
-        "PLA_KarlachRecruitmentTollhouse_Knows_VaultDoor"
-      ],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
     "PAD_GnollsDead_0": {
       "id": "PAD_GnollsDead_0",
       "speaker": "Player",
@@ -217,6 +159,74 @@
         }
       }
     },
+    "AD_RefugeeAlarm_0": {
+      "id": "AD_RefugeeAlarm_0",
+      "speaker": "GROUP_ZarielCultists",
+      "text": "To arms - we've got trouble!",
+      "context": "NodeContext: Calling for help to companions nearby",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundKey_0": {
+      "id": "PAD_FoundKey_0",
+      "speaker": "Player",
+      "text": "A key. Wonder what it opens?",
+      "context": "NodeContext: curious",
+      "checkflags": [],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundKey_1": {
+      "id": "PAD_FoundKey_1",
+      "speaker": "Player",
+      "text": "The corpse mentioned a key... this must be the one.",
+      "context": "NodeContext: spotting a key",
+      "checkflags": [
+        "PLA_KarlachRecruitmentTollhouse_Knows_CollectorHadKey"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
+    "PAD_FoundKey_2": {
+      "id": "PAD_FoundKey_2",
+      "speaker": "Player",
+      "text": "A key - it might open the tollhouse vault.",
+      "context": "NodeContext: curious",
+      "checkflags": [
+        "PLA_KarlachRecruitmentTollhouse_Knows_VaultDoor"
+      ],
+      "setflags": [],
+      "ruletags": [],
+      "approval": [],
+      "rolls": "",
+      "goto": "",
+      "link": "",
+      "is_end": true,
+      "node_type": "normal",
+      "children": {}
+    },
     "PAD_CorpseSmell_0": {
       "id": "PAD_CorpseSmell_0",
       "speaker": "Player",
@@ -259,22 +269,6 @@
       "speaker": "Anders",
       "text": "At ease, friend. You're welcome to rest here.",
       "context": "NodeContext: warm greeting as players enter a building where this man's companions are resting",
-      "checkflags": [],
-      "setflags": [],
-      "ruletags": [],
-      "approval": [],
-      "rolls": "",
-      "goto": "",
-      "link": "",
-      "is_end": true,
-      "node_type": "normal",
-      "children": {}
-    },
-    "AD_RefugeeAlarm_0": {
-      "id": "AD_RefugeeAlarm_0",
-      "speaker": "",
-      "text": "To arms - we've got trouble!",
-      "context": "NodeContext: Calling for help to companions nearby",
       "checkflags": [],
       "setflags": [],
       "ruletags": [],

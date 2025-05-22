@@ -34,6 +34,22 @@ def extract_parts_from_filename(filename):
     # Return None if parsing failed for validation purposes
     return None, None, None
 
+def _collect_all_node_ids_recursively(node_data, all_ids_set):
+    """
+    Recursively collects all 'id' field values from a node and its children.
+    """
+    if not isinstance(node_data, dict):
+        return
+    
+    current_id = node_data.get('id')
+    if current_id: # Ensure there is an ID and it's not empty/None
+        all_ids_set.add(current_id)
+        
+    children = node_data.get('children')
+    if isinstance(children, dict):
+        for child_node in children.values():
+            _collect_all_node_ids_recursively(child_node, all_ids_set)
+
 def update_node_ids_recursive(node, id_prefix, original_file_node_ids):
     """
     Recursively updates node IDs, goto, link, and children keys with a prefix.
@@ -209,7 +225,7 @@ def merge_json_files(file_group, output_dir, target_scenario=None):
 
             dialogue_data = data.get('dialogue', {})
             if should_log_file:
-                print(f"  DEBUG - Dialogue data has {len(dialogue_data)} nodes")
+                print(f"  DEBUG - Dialogue data has {len(dialogue_data)} nodes before processing.") # Clarified log
             
             # THIS IS THE KEY CHECK - is dialogue empty?
             if not dialogue_data:
@@ -225,10 +241,16 @@ def merge_json_files(file_group, output_dir, target_scenario=None):
                 # Skip the node processing part since there are no nodes
                 continue
 
-            # Get IDs of all nodes in the current file *before* modifying them
-            original_node_ids = set(dialogue_data.keys())
+            # Get ALL IDs of all nodes in the current file *before* modifying them
+            # original_node_ids = set(dialogue_data.keys()) # Old method
+            all_original_node_ids_in_file = set()
+            if isinstance(dialogue_data, dict):
+                for top_level_node_content in dialogue_data.values():
+                    _collect_all_node_ids_recursively(top_level_node_content, all_original_node_ids_in_file)
+            
             if should_log_file:
-                print(f"  DEBUG - Original node IDs: {original_node_ids}")
+                # print(f"  DEBUG - Original node IDs (top-level keys): {original_node_ids}") # Old log line
+                print(f"  DEBUG - All original node IDs collected from structure: {all_original_node_ids_in_file}")
 
             # Make a deep copy to avoid modifying the original data dict while iterating
             dialogue_data_copy = copy.deepcopy(dialogue_data)
@@ -236,7 +258,7 @@ def merge_json_files(file_group, output_dir, target_scenario=None):
 
             for node_id, node_data in dialogue_data_copy.items():
                 # Update IDs recursively within this node structure
-                update_node_ids_recursive(node_data, id_prefix, original_node_ids)
+                update_node_ids_recursive(node_data, id_prefix, all_original_node_ids_in_file) # Use the comprehensive set
 
                 # Add the processed node (with updated IDs) to the merged dialogue
                 new_node_key = node_data['id'] # The ID should now be prefixed

@@ -271,20 +271,18 @@ class DialogSimulator:
         if approvals:
             print(f"{Fore.BLUE}[Companion reactions: {', '.join(approvals)}]{Style.RESET_ALL}")
     
-    def get_available_options(self, node_data):
+    def get_available_options(self, node_data, test_mode_active=False):
         """Get available dialog options from a node's direct children"""
         children = node_data.get('children', {})
         
-        # Include all direct child nodes, not just ones with text
         meaningful_options = {}
         for child_id, child_data in children.items():
             child_node = self._get_node(child_id)
             if not child_node:
                 continue
                 
-            # Include any child node that meets flag requirements, even if it has no text
-            # (such as jump nodes which might not have text)
-            if self._check_flags(child_node):  # Check if flags requirements are met
+            # If in test mode, include all children. Otherwise, check flags.
+            if test_mode_active or self._check_flags(child_node):
                 meaningful_options[child_id] = child_node
         
         return meaningful_options
@@ -537,7 +535,7 @@ class DialogSimulator:
                             else:
                                 self.active_flags.add(flag)
             
-            options = self.get_available_options(current_node)
+            options = self.get_available_options(current_node, test_mode)
                 
             # If there are no options, end the dialog
             if not options:
@@ -657,8 +655,9 @@ class DialogSimulator:
         return False
     
     def _simulate_paths_from_node(self, node_id, current_path, depth, max_depth, test_mode=False, verbose=False):
-        """Recursively simulate all paths from a node, always following jump nodes and goto for nodes without children"""
-        # Prevent excessive recursion depth
+        """Recursively simulate all paths from a node, always following jump nodes and goto for nodes without children.
+        Modifies self.active_flags based on setflags encountered and respects test_mode for flag checking via get_available_options.
+        """
         if depth >= max_depth:
             return [current_path + [node_id] + ["MAX_DEPTH_REACHED"]]
         
@@ -666,10 +665,11 @@ class DialogSimulator:
         if not node:
             return [current_path + [node_id] + ["NODE_NOT_FOUND"]]
         
-        # Add current node to path
         current_path = current_path + [node_id]
         
-        # ALWAYS follow jump nodes first
+        # Process setflags for the current node, modifying self.active_flags
+        self._process_setflags(node)
+        
         node_type = node.get('node_type', 'normal')
         if node_type == 'jump' and node.get('goto'):
             goto_id = node.get('goto')
@@ -677,14 +677,12 @@ class DialogSimulator:
                 print(f"{Fore.MAGENTA}  [During simulation: Node {node_id} is a jump node, jumping to {goto_id}]{Style.RESET_ALL}")
             return self._simulate_paths_from_node(goto_id, current_path, depth, max_depth, test_mode, verbose)
         
-        # For nodes with goto but no children, follow the goto
         if not node.get('children') and node.get('goto'):
             goto_id = node.get('goto')
             if verbose:
                 print(f"{Fore.MAGENTA}  [During simulation: Node {node_id} has no children, following goto to {goto_id}]{Style.RESET_ALL}")
             return self._simulate_paths_from_node(goto_id, current_path, depth, max_depth, test_mode, verbose)
             
-        # For nodes with link but no children and no goto, follow the link
         if not node.get('children') and not node.get('goto') and node.get('link'):
             link_id = node.get('link')
             if verbose:
@@ -692,55 +690,32 @@ class DialogSimulator:
             return self._simulate_paths_from_node(link_id, current_path, depth, max_depth, test_mode, verbose)
         
         # Check if we've reached a leaf node (that has no goto or link)
-        # Since we've already checked for goto and link above, if it's a leaf node here, it truly is an end
-        if self._is_leaf_node(node_id) and not test_mode:
-            if verbose:
-                print(f"{Fore.RED}  [During simulation: Node {node_id} is a true leaf node]{Style.RESET_ALL}")
-            return [current_path]
-        
-        # In test mode, temporarily add any required flags for children
-        original_flags = None
-        if test_mode:
-            original_flags = self.active_flags.copy()
-            # Add all required flags for the child nodes
-            children = node.get('children', {})
-            for child_id, child_data in children.items():
-                child_node = self._get_node(child_id)
-                if child_node:
-                    for flag in child_node.get('checkflags', []):
-                        if "= False" in flag:
-                            pass
-                        else:
-                            self.active_flags.add(flag)
-        
-        # Get all available options based on direct children
-        children = self.get_available_options(node)
-        
-        # If in test mode, restore original flags
-        if test_mode and original_flags is not None:
-            self.active_flags = original_flags
+        # self._is_leaf_node internally calls get_available_options, which now needs test_mode.
+        # However, the primary check for leaf status in the simulation loop is having no children from get_available_options call below.
+        # For the explicit check here, we should also pass test_mode if we want it to align.
+        # Let's refine _is_leaf_node or rely on the children check primarily.
+        # For now, let's assume the children check below is the main gatekeeper for ending paths.
+
+        # Get all available options based on direct children, respecting test_mode
+        children = self.get_available_options(node, test_mode_active=test_mode)
             
         if not children:
-            # This is a leaf node with no options, no goto, and no link (already checked above)
             if verbose:
-                print(f"{Fore.RED}  [During simulation: Node {node_id} has no children, goto, or link - ending path]{Style.RESET_ALL}")
+                print(f"{Fore.RED}  [During simulation: Node {node_id} has no valid children options (considering flags/test_mode) - ending path]{Style.RESET_ALL}")
             return [current_path]
         
-        # Explore all child paths
-        all_paths = []
+        all_child_paths = []
         for child_id in children:
-            child_paths = self._simulate_paths_from_node(child_id, current_path, depth + 1, max_depth, test_mode, verbose)
-            all_paths.extend(child_paths)
+            # Recursive call. self.active_flags has been modified by the current 'node' (and previous nodes in DFS).
+            # These modifications will persist for the child's simulation and subsequent siblings.
+            child_paths_segment = self._simulate_paths_from_node(child_id, current_path, depth + 1, max_depth, test_mode, verbose)
+            all_child_paths.extend(child_paths_segment)
         
-        # If no children produced paths (shouldn't happen), return current path
-        if not all_paths:
-            return [current_path]
-            
-        return all_paths
+        return all_child_paths if all_child_paths else [current_path]
     
     def simulate_all_paths(self, max_depth=20, print_paths=True, test_mode=False, export_txt=False, export_json=False, export_dict=False, verbose=False):
-        """Simulate all possible dialog paths for each root node
-        
+        """Simulate all possible dialog paths for each root node, processing root nodes in a random order.
+        self.active_flags are initialized and then modified by the traversal process.
         Args:
             max_depth (int): Maximum depth to traverse
             print_paths (bool): Whether to print paths to console
@@ -764,16 +739,19 @@ class DialogSimulator:
         if verbose:
             print(f"{Fore.BLUE}Verbose mode enabled - Detailed simulation logs will be shown{Style.RESET_ALL}")
         
-        # Store original flags to restore later if in test mode
-        original_flags = self.active_flags.copy() if test_mode else None
+        # Initialize active_flags for this simulation run. These will be modified by _simulate_paths_from_node.
+        self.active_flags = set(self.default_flags) # Or some other initial state if needed
         
         all_paths = []
         total_leaf_paths = 0
         
-        for root_id, root_data in self.root_nodes.items():
+        # Get root node items and shuffle them
+        root_node_items = list(self.root_nodes.items())
+        random.shuffle(root_node_items) # Ensure random is imported
+
+        for root_id, root_data in root_node_items: # Iterate through the shuffled list
             print(f"\n{Fore.YELLOW}Root Node: {root_id} - {root_data.get('speaker', 'Unknown')}{Style.RESET_ALL}")
             paths = self._simulate_paths_from_node(root_id, [], 0, max_depth, test_mode, verbose)
-            
             # Count how many of these paths ended at true leaf nodes
             leaf_paths = [p for p in paths if self._is_leaf_node(p[-1])]
             total_leaf_paths += len(leaf_paths)
@@ -799,14 +777,11 @@ class DialogSimulator:
             print(f"Total paths from root {root_id}: {len(paths)}")
             print(f"Paths ending at leaf nodes: {len(leaf_paths)}")
             all_paths.extend(paths)
+            import pdb; pdb.set_trace()
         
         print(f"\nTotal dialog paths: {len(all_paths)}")
         print(f"Total paths ending at leaf nodes: {total_leaf_paths}")
         
-        # Restore original flags if in test mode
-        if test_mode and original_flags is not None:
-            self.active_flags = original_flags
-            
         # Export results if requested
         txt_file = None
         json_file = None
@@ -822,7 +797,6 @@ class DialogSimulator:
             
         if export_dict:
             dict_file = self.export_paths_to_dict(all_paths)
-            
         return all_paths, txt_file, json_file, dict_file
 
     def show_companion_status(self):
@@ -906,7 +880,7 @@ class DialogSimulator:
             f.write(f"How to trigger: {self.metadata.get('how_to_trigger', '')}\n\n")
             
             for i, path in enumerate(all_paths, 1):
-                f.write(f"Path {i}:\n")
+                #f.write(f"Path {i}:\n")
                 
                 # Add custom formatted output for each node in the path
                 for node_id in path:
@@ -1120,9 +1094,7 @@ class DialogSimulator:
         dialog_dict = {}
         
         for i, path in enumerate(all_paths, 1):
-            path_key = f"path_{i}"
             dialog_text = []
-            
             # Process each node in the path with custom formatting
             for node_id in path:
                 if node_id in ["MAX_DEPTH_REACHED", "NODE_NOT_FOUND"]:
@@ -1147,7 +1119,7 @@ class DialogSimulator:
                 
                 # Handle speaker/text part based on node type
                 if node.get('node_type') == 'tagcinematic':
-                    line = f"[description] {text}"
+                    line = f"[cinematic description] {text}"
                 else:
                     line = f"{speaker}: {text}"
                 
@@ -1162,7 +1134,7 @@ class DialogSimulator:
                 dialog_text.append(line)
             
             # Join all lines with newlines to create a single string for this path
-            dialog_dict[path_key] = "\n".join(dialog_text)
+            dialog_dict["appended_paths"] = "\n".join(dialog_text)
         
         # Write the dictionary to a Python file
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -1198,7 +1170,6 @@ class DialogSimulator:
             return [], initial_flags if initial_flags else set(self.default_flags)
 
         # Reset state but keep initial flags
-        self.reset_state() # Resets approvals and visited nodes
         if initial_flags is not None:
              self.set_initial_flags(initial_flags)
         else:
@@ -1222,6 +1193,7 @@ class DialogSimulator:
             node_data = self._get_node(node_id)
 
             if not node_data:
+                import pdb; pdb.set_trace()
                 print(f"{Fore.RED}Node {node_id} not found during path execution. Skipping.{Style.RESET_ALL}")
                 traversed_nodes_data.append({
                     "id": node_id,
@@ -1350,95 +1322,7 @@ class DialogSimulator:
                 dot.node(link_id, label=f"{link_id}\n(Link Target Not Found)", shape='box', style='filled', fillcolor='red')
                 visited.add(link_id)
 
-    def visualize_structure(self, output_filename='dialog_structure', start_node_id=None, max_depth=10, render_format='pdf'):
-        """
-        Generates a visualization of the dialog tree structure using Graphviz.
-
-        Args:
-            output_filename (str): The base name for the output file (without extension).
-            start_node_id (str, optional): The node ID to start visualization from. If None, visualizes from all root nodes. Defaults to None.
-            max_depth (int): Maximum depth to visualize. Defaults to 10.
-            render_format (str): The output format (e.g., 'pdf', 'png', 'svg'). Defaults to 'pdf'.
-
-        Returns:
-            str: The path to the generated visualization file, or None if generation failed.
-        """
-        if not GRAPHVIZ_AVAILABLE:
-            print(f"{Fore.RED}Graphviz is not available. Cannot generate visualization.{Style.RESET_ALL}")
-            return None
-
-        print(f"\n{Fore.CYAN}Generating dialog structure visualization (max depth: {max_depth}, format: {render_format})...{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Output base filename: {output_filename}{Style.RESET_ALL}")
-
-        # Extract directory from filename if present
-        output_dir = os.path.dirname(output_filename)
-        if output_dir and not os.path.exists(output_dir):
-             try:
-                 os.makedirs(output_dir)
-                 print(f"{Fore.GREEN}Created output directory: {output_dir}{Style.RESET_ALL}")
-             except OSError as e:
-                 print(f"{Fore.RED}Error creating directory {output_dir}: {e}{Style.RESET_ALL}")
-                 return None
-        elif not output_dir:
-            output_dir = '.' # Ensure filename has a directory part for graphviz
-
-        # Graphviz uses filename for the .gv file, needs directory
-        gv_filepath_base = os.path.join(output_dir, os.path.basename(output_filename))
-
-
-        dot = graphviz.Digraph(
-            comment=f'Dialog Structure - {self.metadata.get("synopsis", "Unknown Dialog")}',
-            graph_attr={'rankdir': 'TB', 'splines': 'ortho'}, # Try ortho splines
-            node_attr={'fontsize': '10'},
-            edge_attr={'fontsize': '8'}
-        )
-
-        visited = set()
-
-        try:
-            if start_node_id:
-                if self._get_node(start_node_id):
-                    print(f"Starting visualization from node: {start_node_id}")
-                    self._add_nodes_to_graph(dot, start_node_id, visited, 0, max_depth)
-                else:
-                    print(f"{Fore.RED}Error: Start node ID '{start_node_id}' not found.{Style.RESET_ALL}")
-                    return None
-            else:
-                print(f"Starting visualization from {len(self.root_nodes)} root nodes.")
-                for root_id in self.root_nodes:
-                    self._add_nodes_to_graph(dot, root_id, visited, 0, max_depth)
-
-            # Render the graph
-            # 'cleanup=True' removes the intermediate .gv file
-            rendered_path = dot.render(gv_filepath_base, format=render_format, view=False, cleanup=True)
-
-            print(f"{Fore.GREEN}Visualization successfully generated: {rendered_path}{Style.RESET_ALL}")
-            return rendered_path
-
-        except graphviz.backend.execute.ExecutableNotFound:
-            print(f"{Fore.RED}Error: Graphviz executable not found.{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Please ensure Graphviz is installed and in your system's PATH.{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Download: https://graphviz.org/download/{Style.RESET_ALL}")
-            # Optionally save the .gv source file for manual rendering
-            gv_source_path = gv_filepath_base + '.gv'
-            try:
-                dot.save(gv_source_path)
-                print(f"{Fore.YELLOW}Graphviz source file saved: {gv_source_path}. You can render it manually.{Style.RESET_ALL}")
-            except Exception as e_save:
-                 print(f"{Fore.RED}Failed to save Graphviz source file: {e_save}{Style.RESET_ALL}")
-
-            return None
-        except Exception as e:
-            print(f"{Fore.RED}An error occurred during visualization generation:{Style.RESET_ALL}")
-            print(traceback.format_exc())
-             # Optionally save the .gv source file for debugging
-            gv_source_path = gv_filepath_base + '.gv'
-            try:
-                dot.save(gv_source_path)
-                print(f"{Fore.YELLOW}Graphviz source file saved for debugging: {gv_source_path}{Style.RESET_ALL}")
-            except Exception as e_save:
-                 print(f"{Fore.RED}Failed to save Graphviz source file: {e_save}{Style.RESET_ALL}")
-            return None
+    
 
 
 def main():
@@ -1502,7 +1386,7 @@ def main():
                     if sim_choice == 1:
                         # Quick simulation with limited depth
                         print("\nRunning quick simulation (max depth 5)...")
-                        _, txt_file, json_file, dict_file = simulator.simulate_all_paths(
+                        all_paths, txt_file, json_file, dict_file = simulator.simulate_all_paths(
                             max_depth=5, 
                             test_mode=test_mode,
                             export_txt=export_txt,
@@ -1523,7 +1407,7 @@ def main():
                     elif sim_choice == 2:
                         # Full simulation with high max depth to ensure all paths are found
                         print("\nRunning full simulation (this may take a while)...")
-                        _, txt_file, json_file, dict_file = simulator.simulate_all_paths(
+                        all_paths, txt_file, json_file, dict_file = simulator.simulate_all_paths(
                             max_depth=50, 
                             test_mode=test_mode,
                             export_txt=export_txt,
@@ -1551,18 +1435,15 @@ def main():
                         except ValueError:
                             print(f"{Fore.YELLOW}Using default depth of 10.{Style.RESET_ALL}")
                         
-                        print_detailed = input("Print all paths? (y/n, default n): ").lower() == 'y'
-                        
-                        _, txt_file, json_file, dict_file = simulator.simulate_all_paths(
+                        all_paths, txt_file, json_file, dict_file = simulator.simulate_all_paths(
                             max_depth=depth, 
-                            print_paths=print_detailed, 
+                            print_paths=False, 
                             test_mode=test_mode,
                             export_txt=export_txt,
                             export_json=export_json,
                             export_dict=export_dict,
                             verbose=verbose
                         )
-                        
                         if txt_file or json_file or dict_file:
                             print(f"{Fore.GREEN}Export completed:{Style.RESET_ALL}")
                             if txt_file:
@@ -1576,6 +1457,7 @@ def main():
                         print(f"{Fore.RED}Invalid choice. Returning to main menu.{Style.RESET_ALL}")
                 except ValueError:
                     print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
+                
             elif choice == 3:
                 try:
                     node_id = input("\nEnter node ID to test (e.g., 134): ")
@@ -1717,11 +1599,4 @@ def main():
             print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
 
 if __name__ == "__main__":
-    # Add creation of visualization directory if it doesn't exist
-    if not os.path.exists('visualizations'):
-        try:
-            os.makedirs('visualizations')
-            print(f"{Fore.GREEN}Created directory 'visualizations' for graph output.{Style.RESET_ALL}")
-        except OSError as e:
-            print(f"{Fore.RED}Could not create directory 'visualizations': {e}{Style.RESET_ALL}")
     main()
