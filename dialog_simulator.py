@@ -747,8 +747,10 @@ class DialogSimulator:
         
         # Get root node items and shuffle them
         root_node_items = list(self.root_nodes.items())
+        
         random.shuffle(root_node_items) # Ensure random is imported
-
+        root_node_items = root_node_items[:3] # TODO: cheap move to limit the number of root nodes -- most dialogs are novel up to 3 consecutive interactions
+        #import pdb; pdb.set_trace()
         for root_id, root_data in root_node_items: # Iterate through the shuffled list
             print(f"\n{Fore.YELLOW}Root Node: {root_id} - {root_data.get('speaker', 'Unknown')}{Style.RESET_ALL}")
             paths = self._simulate_paths_from_node(root_id, [], 0, max_depth, test_mode, verbose)
@@ -777,7 +779,6 @@ class DialogSimulator:
             print(f"Total paths from root {root_id}: {len(paths)}")
             print(f"Paths ending at leaf nodes: {len(leaf_paths)}")
             all_paths.extend(paths)
-            import pdb; pdb.set_trace()
         
         print(f"\nTotal dialog paths: {len(all_paths)}")
         print(f"Total paths ending at leaf nodes: {total_leaf_paths}")
@@ -1193,7 +1194,7 @@ class DialogSimulator:
             node_data = self._get_node(node_id)
 
             if not node_data:
-                import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
                 print(f"{Fore.RED}Node {node_id} not found during path execution. Skipping.{Style.RESET_ALL}")
                 traversed_nodes_data.append({
                     "id": node_id,
@@ -1337,12 +1338,12 @@ def main():
     print(f"{Fore.BLUE}Export options: Save dialog paths to text and JSON files{Style.RESET_ALL}")
     
     # Check if dialog_tree.json exists
-    if not os.path.isfile('output/Act1/Crash/CRA_ShadowheartRecruitment_AD.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
+    if not os.path.isfile('output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'): # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
         print(f"{Fore.RED}Error: dialog_tree.json not found.{Style.RESET_ALL}")
         print("Please run the parser script first to generate the dialog tree.")
         return
     
-    simulator = DialogSimulator('output/Act1/Crash/CRA_ShadowheartRecruitment_AD.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
+    simulator = DialogSimulator('output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json') # 'output/Act2/MoonriseTowers/MOO_Jailbreak_Wulbren.json'
     
     while True:
         print("\nSelect mode:")

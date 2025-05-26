@@ -80,7 +80,7 @@ class ActSimulator:
     def simulate_act(self, num_traversals=1, export_txt=False, export_json=False,
                        initial_flags_set=None, final_flags_export_dir=None,
                        # --- Chapter Simulation Args ---
-                       min_utterances_per_session=3,
+                       #min_utterances_per_session=3,
                        prioritize_approval=True,
                        include_all_scenarios=True,
                        include_all_sessions=True,
@@ -95,7 +95,7 @@ class ActSimulator:
             export_json (bool): Export each Act traversal to a JSON file.
             initial_flags_set (set, optional): Initial flags for the Act. Defaults to empty set.
             final_flags_export_dir (str, optional): Directory to export the final flags JSON file for each traversal.
-            min_utterances_per_session (int): Passed to ChapterSimulator.
+            #min_utterances_per_session (int): Passed to ChapterSimulator.
             prioritize_approval (bool): Passed to ChapterSimulator.
             include_all_scenarios (bool): Passed to ChapterSimulator.
             include_all_sessions (bool): Passed to ChapterSimulator.
@@ -148,7 +148,7 @@ class ActSimulator:
                         num_traversals=1, # Crucial: Only one traversal per chapter within an act run
                         export_txt=chapter_export_txt,   # Pass down export flags if needed
                         export_json=chapter_export_json,
-                        min_utterances_per_session=min_utterances_per_session,
+                        #min_utterances_per_session=min_utterances_per_session,
                         prioritize_approval=prioritize_approval,
                         include_all_scenarios=include_all_scenarios,
                         include_all_sessions=include_all_sessions,
@@ -468,7 +468,7 @@ def main():
         initial_flags_set=initial_flags,
         final_flags_export_dir=export_final_flags_path, # Pass the directory path
         # Chapter Sim Args
-        min_utterances_per_session=min_utterances,
+        #min_utterances_per_session=min_utterances,
         prioritize_approval=prioritize_approval,
         include_all_scenarios=include_all_scenarios,
         include_all_sessions=include_all_sessions,
