@@ -254,12 +254,12 @@ def process_file(json_file):
     html_files = find_html_files(source_files, json_file, prefix)
 
     show_source_files(short_names)
-
-    labels = data.get("human_labels", {"order": [], "exclusive": []})
+    labels = data.get("metadata", {}).get("human_labels", {"order": [], "exclusive": []})
     
-    if "human_labels" in data:
+    if "human_labels" in data.get("metadata", {}):
         print("Existing human labels found.")
         print_labels(labels, short_names)
+        return -1
 
     while True:
         print("\nMenu:")
@@ -325,8 +325,9 @@ def main():
     print(f"Found {len(json_files)} JSON files to process.")
 
     for json_file in json_files:
-        process_file(json_file)
-        
+        process_file_return_value = process_file(json_file)
+        if process_file_return_value == -1:
+            continue
         while True:
             cont = input("\nProceed to next file? (y/n) or 'q' to quit: ").lower()
             if cont in ['y', 'yes', '']:
