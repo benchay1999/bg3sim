@@ -105,7 +105,7 @@ def open_in_chrome(html_files):
         return
 
     try:
-        browser = webbrowser.get('google-chrome')
+        browser = webbrowser.get('chrome')
     except webbrowser.Error:
         print("Could not find Google Chrome. Ensure it's installed and in your PATH.")
         print("Alternatively, your environment may not support remote browser opening.")
@@ -118,6 +118,17 @@ def open_in_chrome(html_files):
             print(f"Attempting to open {abs_path} in Google Chrome.")
         except Exception as e:
             print(f"Error opening {html_file} in Chrome: {e}")
+
+def print_synopses(data, short_names):
+    """Prints the synopsis for each source file."""
+    print("\nFile Synopses:")
+    individual_metadata = data.get("metadata", {}).get("individual_metadata", {})
+    for i, name in enumerate(short_names):
+        synopsis = individual_metadata.get(name, {}).get("synopsis", "No synopsis available.")
+        print(f"  {i+1}: {name}")
+        print(f"    Synopsis: {synopsis}")
+    print("-" * 20)
+
 
 def print_labels(labels, short_names):
     """Prints the current labels."""
@@ -258,6 +269,7 @@ def process_file(json_file):
         print("4. Delete exclusive group")
         print("5. Show current labels")
         print("f. Show available source files")
+        print("p. Show file synopses")
         print("v. View HTML in default browser")
         print("c. View HTML in Chrome (requires local setup)")
         print("s. Save and continue to next file")
@@ -277,6 +289,8 @@ def process_file(json_file):
             print_labels(labels, short_names)
         elif choice == 'f':
             show_source_files(short_names)
+        elif choice == 'p':
+            print_synopses(data, short_names)
         elif choice == 'v':
             open_html_files_default(html_files)
         elif choice == 'c':
