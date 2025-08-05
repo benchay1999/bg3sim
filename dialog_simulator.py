@@ -18,9 +18,9 @@ class DialogSimulator:
         with open(json_file, 'r', encoding='utf-8') as f:
             self.dialog_tree = json.load(f)
         
-        self.root_nodes = {}
+        self.root_nodes = self.dialog_tree.get("root_nodes", {})
         self.metadata = self.dialog_tree["metadata"]
-        self.all_nodes = self.dialog_tree["dialogue"]  # All nodes including children
+        self.all_nodes = self.dialog_tree["dialogue"] # All nodes including children
         # Load the flags file if it exists
         self.entire_flags = {}
         if os.path.exists(flags_file):
@@ -42,9 +42,9 @@ class DialogSimulator:
             except Exception as e:
                 print(f"Error loading tags file {tags_file}: {e}")
         # Extract root nodes from the dialog tree
-        self.root_nodes = {node_id: node_data for node_id, node_data in self.dialog_tree["dialogue"].items() 
-                           if not self._is_child_node(node_id)}
-                
+        #self.root_nodes = {node_id: node_data for node_id, node_data in self.dialog_tree["dialogue"].items() 
+        #                   if not self._is_child_node(node_id)}
+        
         print(f"Loaded dialog tree with {len(self.all_nodes)} nodes, {len(self.root_nodes)} root nodes")
         
         # Companion states to track approval changes
@@ -91,14 +91,16 @@ class DialogSimulator:
             self.active_flags = set(self.default_flags) # Fallback
         # print(f"{Fore.BLUE}Initial flags set: {len(self.active_flags)}{Style.RESET_ALL}") # Optional debug
     
-    def _is_child_node(self, node_id):
+    def _is_child_node(self, node_id): # DEPRECATEE
         """Check if a node is a child node of any other node"""
-        for other_id, other_data in self.all_nodes.items():
-            if other_id != node_id:
-                children = other_data.get('children', {})
-                if node_id in children:
-                    return True
-        return False
+        #for other_id, other_data in self.all_nodes.items():
+        #    if other_id != node_id:
+        #        children = other_data.get('children', {})
+        #        if node_id in children:
+        #            return True
+        
+        return node_id not in self.root_nodes
+    
     
     def _get_node(self, node_id):
         """Get a node by its ID, searching in the entire dialog tree structure"""
@@ -749,9 +751,12 @@ class DialogSimulator:
         root_node_items = list(self.root_nodes.items())
         
         random.shuffle(root_node_items) # Ensure random is imported
-        root_node_items = root_node_items[:3] # TODO: cheap move to limit the number of root nodes -- most dialogs are novel up to 3 consecutive interactions
-        #import pdb; pdb.set_trace()
+        root_node_items = root_node_items[:2] # TODO: cheap move to limit the number of root nodes -- most dialogs are novel up to 3 consecutive interactions
+        
+        
         for root_id, root_data in root_node_items: # Iterate through the shuffled list
+            #if len(root_node_items) > 1:
+            #    import pdb; pdb.set_trace()
             print(f"\n{Fore.YELLOW}Root Node: {root_id} - {root_data.get('speaker', 'Unknown')}{Style.RESET_ALL}")
             paths = self._simulate_paths_from_node(root_id, [], 0, max_depth, test_mode, verbose)
             # Count how many of these paths ended at true leaf nodes
@@ -778,7 +783,7 @@ class DialogSimulator:
             
             print(f"Total paths from root {root_id}: {len(paths)}")
             print(f"Paths ending at leaf nodes: {len(leaf_paths)}")
-            all_paths.extend(paths)
+            all_paths.extend(leaf_paths) # paths
         
         print(f"\nTotal dialog paths: {len(all_paths)}")
         print(f"Total paths ending at leaf nodes: {total_leaf_paths}")

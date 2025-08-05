@@ -452,9 +452,9 @@ class ScenarioSimulator:
                 "synopsis": self.metadata.get("individual_metadata", {}).get(session_id, {}).get("synopsis", ""),
                 "how_to_trigger": self.metadata.get("individual_metadata", {}).get(session_id, {}).get("how_to_trigger", "")
             },
+            "root_nodes": {node_id: node_data for node_id, node_data in session_dialog.items()},
             "dialogue": flat_session_dialog # Use the flattened dictionary here
         }
-        
         with open(temp_file, 'w', encoding='utf-8') as f:
             json.dump(temp_data, f, indent=2)
         
@@ -467,10 +467,10 @@ class ScenarioSimulator:
             max_depth=20,
             print_paths=False,
             test_mode=False,  # True: Ignore flag requirements for simulation
-            verbose=True
+            verbose=False
         )
         # Store the paths for this session
-        self.session_path_options[session_id] = paths[:5] # TODO: paths ? or paths[:5] ?
+        self.session_path_options[session_id] = paths
         
         # Clean up temp file
         os.remove(temp_file)
@@ -1109,7 +1109,7 @@ def main():
     
     # --- Add Approval Path Analysis ---
     # Perform analysis after simulator init (which calls _simulate_session for all)
-    approval_analysis_results = simulator.analyze_approval_paths()
+    #approval_analysis_results = simulator.analyze_approval_paths()
     # Optional: Print detailed results if needed
     # for session_id, paths in approval_analysis_results.items():
     #     print(f"\n--- Approval Paths for Session: {session_id} ---")

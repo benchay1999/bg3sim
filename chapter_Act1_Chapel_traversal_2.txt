@@ -1,26 +1,12 @@
 Baldur's Gate 3 Chapter Traversal
 
 Chapter: Chapel (Act1_Chapel)
-Scenario Sequence: cha_shadowheartrecruitment -> cha_outpost -> cha_outside -> cha_laezelrecruitment -> cha_bronzeplaque -> cha_forest -> cha_crypt
-Final Flags: ['305d2a0a-166d-c52e-dc57-c1cf434333d0_Step1', '4c78f756-720d-a285-a3e6-8f69a6069abc_Step2', '9b693c09-49f2-8f76-b5a5-986e6570cfd8_C', 'CHA_Chapel_Event_OpenedJergalsTomb', 'CHA_Crypt_Event_JergalAppears', 'CHA_FL1_Event_CrashBanterOver', 'CHA_Jergal_HasMet', 'Exit', 'GLO_Jergal_State_OutOfTomb', 'OpenedSarcophagus', 'bcbd9a44-62a4-994e-5a04-748aa51666e4_B']
+Scenario Sequence: cha_outside -> cha_forest -> cha_outpost -> cha_laezelrecruitment -> cha_bronzeplaque -> cha_crypt -> cha_shadowheartrecruitment
+Final Flags: []
 
 --- Traversal Details ---
-================ Scenario: cha_shadowheartrecruitment ================
-Session Sequence: AD
------ Session: AD -----
-Synopsis: Utterances by Shadowheart as she tries to bash through a locked door leading into an ancient chapel.
-
-Shadowheart: Why?! Why won't you just open?!
-
-================ Scenario: cha_outpost ================
-Session Sequence: PAD_Jewelry
------ Session: PAD_Jewelry -----
-Synopsis: Player finds a necklace at the watchtower. If they pass a History check, they recognize it as belonging to the Harpers. If they encountered the Harper documents hidden in the CRA cave, the player senses a pattern.
-
-Player: Necklace has a Harper sigil. Why were they here?
-
 ================ Scenario: cha_outside ================
-Session Sequence: AD_BanditReaction -> VB_Fissure_1 -> EntranceDoor -> AD_BanditsDiscussion -> AD_Boulder -> BanditWestInteraction -> AD_Bandit_Melee_02_CrushedReaction -> BanditBackInteraction_Spotted
+Session Sequence: AD_BanditReaction -> VB_Fissure_1 -> EntranceDoor -> AD_BanditsDiscussion -> AD_Boulder -> VB_LockpickingShadowheart_1_WithShadowheart -> BanditInteraction -> BanditBackInteraction_Spotted -> AD_Bandit_Caster_01_CrushedReaction -> VB_BanditsLeaveReaction
 ----- Session: AD_BanditReaction -----
 Synopsis: A bandit exclaims in alarm/indignity upon spotting the player 'trespassing' near a tomb they intended to loot.
 
@@ -53,22 +39,20 @@ Synopsis: Players are investigating a loose boulder outside a chapel that can be
 
 Player: Wouldn't take much to send that stone crashing downwards... || [context] NodeContext: Investigating a large piece of masonry suspended from a wooden crane.
 
------ Session: BanditWestInteraction -----
-Synopsis: Alternate version of the confrontation scene between Gimblebock and his bandits at the crypt - triggers if the player approaches the scene from the side, alerting Warryn first.
+----- Session: VB_LockpickingShadowheart_1_WithShadowheart -----
+Synopsis: Shadowheart lockpicked the crypt door that she usually try to bash.
 
-Warryn: You! Not another step, hear me? || [context] NodeContext: Sharp ultimatum mixed with a little surprise. Found the player approaching from the side of the structure.
-Warryn: Boss! Got company up here. || [context] CinematicNodeContext: Hollering down to Gimblebock, his leader (down some steps behind Warryn, out of view).NodeContext: Hollering down to Gimblebock, his leader (down some steps behind Warryn, out of view)
-[description] CinematicNodeContext: Alerted by Warryn, Gimblebock hurries up to confront the player || [context] CinematicNodeContext: Alerted by Warryn, Gimblebock hurries up to confront the player
-Gimblebock: What's this then - trying to creep around us and loot the crypt? Not happening. || [context] NodeContext: Suspicious
-Gimblebock: Or is it the ship you're after? Don't matter either way - it's ours, all of it. || [context] NodeContext: Threatening
-Player: I mean no harm - I'm just looking around.
-Gimblebock: First you look, then you touch, then you take! || [context] NodeContext: He's not happy with the player saying they're just looking around, and he's going to attack soon.
-Gimblebock: The only thing we're sharing with you is our pointy ends - get 'em! || [context] NodeContext: He's going to attack the player, who just said they were just looking around.
+Shadowheart: There! Not so impregnable after all. || [context] NodeContext: Satisfied. She's just successfully lockpicked a large, heavy set of doors.
 
------ Session: AD_Bandit_Melee_02_CrushedReaction -----
-Synopsis: A bandit sees the corpse of one of his companions, killed by a falling boulder
+----- Session: BanditInteraction -----
+Synopsis: The bandits are encountered near an abandoned chapel and are in the middle of an argument among themselves about whether or not to investigate (and loot) the crashed nautoloid (a spaceship) when the player approaches them. The player can convince them to clear off via lies or threats, or else is forced to fight them. A gnome named Gimblebock is in charge of this group, with his underlings, Quelanna and/or Taman, chiming in at points with their concerns.
 
-Taman: We'd have been safer in the crypt! || [context] NodeContext: reacting with shock on seeing a dead friend
+Gimblebock: ...You're both twice as tall as me but have half the bloody backbone! || [context] CinematicNodeContext: Custom scene setupNodeContext: bandit leader speaking to his crew - annoyed with them. He's a gnome, braver than the taller characters
+Taman: But we don't know what that thing even is! And what about the crypt? || [context] NodeContext: Arguing for caution - they've never seen the likes of the ship that crashed before. It could be dangerous.
+Gimblebock: I'm telling you - it's a ship. || [context] NodeContext: the 'crypt' is inside the chapel they're standing outside. 'Thing' refers back to that. 'STOP!" is him interrupting himself because he's just seen the players approaching
+Gimblebock: And the crypt can wait! Mari and Barton have been trying to break in for days. Now we - Stop!
+Gimblebock: Got ourselves competition already! That's our ship! || [context] NodeContext: 'competition' refers to the players. He's seen them coming
+Player: Attack. || [approval] ['Astarion 1', "Lae'zel 1", 'Wyll 1', 'Karlach 1']
 
 ----- Session: BanditBackInteraction_Spotted -----
 Synopsis: Right outside of the abandonned chapel of Selune you encounter a few bandits arguing among themselves. They are rightfully surprise to see you get out of the ruins and worried about the fate of their friend inside.
@@ -77,14 +61,44 @@ Gimblebock: ...You're both twice as tall as me but have half the bloody backbone
 Gimblebock: Whoever was flying that thing can't have survived - whatever's left is up for grabs! || [context] CinematicNodeContext: Giimblebock addresses his nearby minionsNodeContext: Angry pep talk.
 Gimblebock: Now we're going to - Wait! Who're you? And how did you get in there?! || [context] CinematicNodeContext: Giimblebock addresses his nearby minions - but turns to you when he realises you're near.NodeContext: Cut off mid sentence by the realisation that the player is nearby. Challenges them. They just appeared through a door that was supposedly secure.
 Gimblebock: That crypt's ours - we've got people guarding it! Tryin' to off us and swipe the loot, is it? || [context] NodeContext: Anger, with a little confusion. Assumes we're rivals trying to poach his loot.
-Player: Attack. || [approval] ['Astarion 1', "Lae'zel 1", 'Wyll 1']
+Player: It's mine now. Leave, before things get ugly.
+Gimblebock: C-c'mon, you lot, let's get out of here! || [context] CinematicNodeContext: Gimblebock addresses his minions, telling them to flee.NodeContext: Nerves showing a little as he orders his underlings to retreat. He's bottled it. || [approval] ['Gale 1', 'Shadowheart 1', 'Wyll 1', 'Karlach 1']
+
+----- Session: AD_Bandit_Caster_01_CrushedReaction -----
+Synopsis: A bandit reacts to finding one of her companions dead in an apparent accident. She looks on the bright side.
+
+Quelenna: Well, that's one less greedy bastard to share the loot with. || [context] NodeContext: with a shrug - found a dead companion and sees the bright side
+
+----- Session: VB_BanditsLeaveReaction -----
+Synopsis: The player comments on how they talked the bandits into leaving (or companions react to the player's successful persuasion).
+
+Player: Good work. Thought we had a fight on our hands. || [context] NodeContext: pleased that the player just managed to avoid a fight, except the Laezel option in which she thinks the player was weak for avoiding the fight
+
+================ Scenario: cha_forest ================
+Session Sequence: VB_Trap
+----- Session: VB_Trap -----
+Synopsis: You click on a broken trap on the ground and find it useless.
+
+Player: And yet another. Hardly the warmest of welcomes.<br>
+
+================ Scenario: cha_outpost ================
+Session Sequence: PAD_Jewelry -> Crevice
+----- Session: PAD_Jewelry -----
+Synopsis: Player finds a necklace at the watchtower. If they pass a History check, they recognize it as belonging to the Harpers. If they encountered the Harper documents hidden in the CRA cave, the player senses a pattern.
+
+Player: Necklace has a Harper sigil. Why were they here?
+
+----- Session: Crevice -----
+Synopsis: The player peeks into a crevice to see a coin pouch covered in small spiders.
+
+Narrator: *This crevice is empty, save a bit of dust.* || [context] CinematicNodeContext: The player looks into the crevice. We see it is empty.
 
 ================ Scenario: cha_laezelrecruitment ================
-Session Sequence: AD_ReturnAnyCombat2 -> AD_LaezelCombatComment -> TieflingsScene -> AD_LaeZelDead -> AD_TieflingsLeaving -> AD_LeavingAnyCombat1 -> AD_OtherDied1 -> PickASide -> AD_EscortStart -> AD_LaezelReactsToAttack -> AD_OpenCageLaezel
+Session Sequence: AD_ReturnAnyCombat2 -> AD_LaezelCombatComment -> TieflingsScene -> AD_LaeZelDead -> AD_TieflingsLeaving -> AD_LeavingAnyCombat2 -> AD_OpenCage1 -> AD_OtherDied1 -> AD_LaeZelTieflingsIntro -> PickASide -> AD_LaezelReactsToAttack -> LaezelDead
 ----- Session: AD_ReturnAnyCombat2 -----
 Synopsis: Damays (and Nymessa) got dragged into a combat from another situation (ex.: the brains at the crash site, the bandits at the chapel). Damays plays this AD when the combat ends, while he returns to the cage.
 
-Damays: Back to the toad-freak. I can't risk it escaping.
+Damays: Eyes on the toad-freak. We can't risk it escaping.
 
 ----- Session: AD_LaezelCombatComment -----
 Synopsis: A random combat was dragged up to Lae'zel Recruitment (bandits, brains, etc.); Lae'zel is still in the cage. She says  this AD only once, after a player's turn.
@@ -97,13 +111,17 @@ Synopsis: You come upon Lae'zel, an alien-looking githyanki trapped in a cage, w
 Nymessa: Zorru was right. Yellow as a toad, and twice as ugly. || [context] CinematicNodeContext: Custom scene viewer/cameras for cage shots.
 Nymessa: You're coming with me, 'fore... Oh! Looks like I've got company. || [context] CinematicNodeContext: Turns and notices player.
 Lae'zel: Get rid of her. || [context] CinematicNodeContext: Laezel should speak this line telepathically. Her lips should not move.InternalNodeContext: Laezel should speak this line telepathically. Her lips should not move.
-Player: Why should I help you?
-Shadowheart: We can't trust her - her kin nearly got us killed when they attacked the nautiloid.
+[description] CinematicNodeContext: The tieflings turn and notice you || [context] CinematicNodeContext: The tieflings turn and notice you
+Nymessa: Holy hells. Under-dwarf.
+Damays: Blades high, Nymessa. || [context] CinematicNodeContext: Tieflings raise weapons, ready to fight.
+Player: If you value your life, walk away.
+Nymessa: Not happening. Damays - now!
 
 ----- Session: AD_LaeZelDead -----
 Synopsis: Two tieflings that faced a strange creature (Lae'zel) comment that it is finally dead after battle.
 
-Damays: Nymessa. Are you all right? || [context] InternalNodeContext: Lae'zel is defeated but not dead
+Damays: Dead. Finally.
+Damays: Nymessa. Are you all right?
 Nymessa: I - I think so.
 Damays: Hold it together. We've got to finish what we started.
 Nymessa: Yes. Of course, of course.
@@ -114,54 +132,64 @@ Synopsis: Two tieflings discussing goblins, who might be nearby.
 Damays: Observe - and listen. You'll hear goblins before you see them.
 Nymessa: As you say.
 
------ Session: AD_LeavingAnyCombat1 -----
+----- Session: AD_LeavingAnyCombat2 -----
 Synopsis: |Tieflings joined a random combat and were dragged far from Lae'zel Recruitment. They will leave out of stage while saying this instead of going back to the scene.|
 
-Nymessa: I can't stay here. It's too dangerous.
+Damays: We can't remain here. It's too dangerous.
+
+----- Session: AD_OpenCage1 -----
+Synopsis: A tiefling encourages you to shoot down a cage containing a strange creaturfe (Lae'zel).
+
+Nymessa: Shoot it down. Let's kill this thing.
 
 ----- Session: AD_OtherDied1 -----
 Synopsis: Nymessa reacts to the death of Damayhs at Teifling scene
 
 Nymessa: Damays - no!
 
+----- Session: AD_LaeZelTieflingsIntro -----
+Synopsis: Two tieflings argue about what to do with Lae'zel. Nymessa thinks to leave her alone. Damays wants to take her back to camp.
+
+Nymessa: Just leave it.
+Damays: And when the goblins ally with it?
+Nymessa: We'll be on the road to Baldur's Gate.
+Damays: Don't be naive.
+Damays: When this thing strikes, there will be no soldiers to protect you. This isn't Elturel.
+
 ----- Session: PickASide -----
 Synopsis: Occurs if the player tells the tieflings to lower Lae'zel and kill her, or if player lets the tieflings try to take her away. One last chance to choose a side.
 
 Lae'zel: You've but one chance. Join me, or die. || [context] InternalNodeContext: The player persuaded the tieflings that they should kill the creature
-Player: Attack the tieflings. || [approval] ['Astarion 1', "Lae'zel 5", 'Shadowheart -5', 'Karlach -1']
-
------ Session: AD_EscortStart -----
-Synopsis: Tieflings have shot down Lae'zel from her cage thinking the would tie her up and take her to the grove. They shoul dhave thought it through. Lae'zel is not going quietly.
-
-Damays: Hold it still - I'll tie it up.
-Lae'zel: You expect a githyanki to surrender? Imbeciles.
+Player: Attack Lae'zel. || [approval] ["Lae'zel -10", 'Shadowheart 5']
+Lae'zel: Coward.
 
 ----- Session: AD_LaezelReactsToAttack -----
 Synopsis: Lae'zel is in the cage. The player attacked her.
 
 Lae'zel: Stand down! || [context] NodeContext: k'chakhi = ke-CHOCK-ee
 
------ Session: AD_OpenCageLaezel -----
-Synopsis: Lae'zel is still hanging in her cage. She calls to you to let her down.
+----- Session: LaezelDead -----
+Synopsis: You helped two tieflings kill a strange creature. (Lae'zel.) You talk to them, and they tell you about a blast they heard. (The ship crash.)
 
-Lae'zel: Enough dawdling. Get me down.
+Damays: Th-thank you. I couldn't have done it without you.
+Damays: But I've got to go. I need to check out that blast.
+Player: A blast? Care to be more specific?
+Damays: You didn't hear it? Shook our camp good, so I came for a look.
 
 ================ Scenario: cha_bronzeplaque ================
-Session Sequence: AD_TrappedTomb
------ Session: AD_TrappedTomb -----
-Synopsis: The player tries to read a bronze plaque in a tomb.
+Session Sequence: AD_SanctumStatue -> PAD_RichSarcophagus
+----- Session: AD_SanctumStatue -----
+Synopsis: Reading a bronze plaque at the feet of an unidentified statue.
 
-Narrator: *The text on the plaque is a mystery to you.*<br> || [context] NodeContext: Commenting on a plaque written in an unknown language.
+Narrator: *You do not recognise the language on the plaque.* || [context] NodeContext: Reading a plaque Selûne pronounced seh-LOON-eh
 
-================ Scenario: cha_forest ================
-Session Sequence: VB_TrapReuse
------ Session: VB_TrapReuse -----
-Synopsis: You click on a broken trap on the ground and find it useless.
+----- Session: PAD_RichSarcophagus -----
+Synopsis: Player reads the inscription on a plaque in an abandoned chapel dedicated to the god Jergal.
 
-Player: Not much use anymore.
+Narrator: *Here lies the Guardian of Tombs. Through knowledge comes atonement.* || [context] NodeContext: Reading the inscription on a sarcophagus.
 
 ================ Scenario: cha_crypt ================
-Session Sequence: AD_BanditGuardCallHelp -> AD_BanditLockpickerSurprised -> AD_BanditsSanctumWaitingAlert -> VB_Skeleton_1 -> AD_BanditLockpickerSpotting -> AD_BanditGuardWarning -> VB_Artefact_1 -> Jergal -> AD_UpDownDoorInvestigation -> AD_BanditGuardSpotting -> PAD_GasPit -> VB_Sanctum_1 -> AD_BanditGuardSurprised -> PAD_SuccessfulGraverobbing -> AD_BanditLockpickerCallHelp -> PAD_ButtonBlocked -> AD_JergalWandering -> VB_SideChamber_1 -> AD_BanditSanctumSearching -> AD_BanditLockpickerLockpicking -> SkeletonRisingCinematic -> PAD_JergalStatueReaction -> VB_TakingTheArtefact_1 -> AD_BanditCrashBanter -> PAD_FoundCoins -> AD_BanditLockpickerUnlocked -> VB_Sanctum_2_WithMysticShadowheart -> AD_BanditLockpickerWander -> AD_BanditSanctumSpotting -> JergalWandering -> AD_BanditLockpickerFoundDeadBandit
+Session Sequence: AD_BanditGuardCallHelp -> AD_BanditLockpickerSurprised -> AD_BanditsSanctumWaitingAlert -> VB_Skeleton_1 -> AD_BanditLockpickerSpotting -> AD_BanditGuardWarning -> VB_Artefact_1 -> Jergal -> AD_UpDownDoorInvestigation -> AD_BanditGuardSpotting -> PAD_GasPit -> VB_Sanctum_1 -> AD_BanditGuardSurprised -> PAD_SuccessfulGraverobbing -> AD_BanditLockpickerCallHelp -> PAD_ButtonBlocked -> AD_JergalWandering -> VB_SideChamber_1 -> AD_BanditSanctumSearching -> AD_BanditLockpickerLockpicking -> SkeletonRisingCinematic -> PAD_JergalStatueReaction -> VB_TakingTheArtefact_1 -> AD_BanditCrashBanter -> PAD_FoundCoins -> AD_BanditLockpickerOpenDoor -> VB_LowerFloor_1 -> AD_BanditSanctumSpotting -> JergalWandering -> AD_BanditLockpickerFoundDeadBandit
 ----- Session: AD_BanditGuardCallHelp -----
 Synopsis: One of a group of bandits looting an abandoned chapel. He's just been surprised by the players who have infiltrated the same chapel. He's twitchy and on edge, and now he's in a fight and needs his friends.
 
@@ -175,9 +203,9 @@ Mari: Hells! Something's coming out of the crypt! || [context] NodeContext: Terr
 ----- Session: AD_BanditsSanctumWaitingAlert -----
 Synopsis: Three bandits - Barton, Mari and Haseid - are on alert in a crypt they're attempting to rob. They heard a commotion (falling masonry) and are braced for threats.
 
-Barton: What're Gimblebock and the others doing up there? || [context] NodeContext: Wondering out loud - something's amiss.
-Mari: Maybe we should go take a look.
-Haseid: Not a chance - could be a trap. Just keep your eyes peeled. || [context] NodeContext: Paranoid, on alert
+Barton: Something's rotten about this. || [context] NodeContext: Suspicious
+Mari: Well it is a crypt, ain't it? Rot's to be expected. || [context] NodeContext: Cracking a bad joke during a tense moment
+Haseid: Shut it. This is no time for joking around. || [context] NodeContext: Terse, serious
 
 ----- Session: VB_Skeleton_1 -----
 Synopsis: Player characters are commenting on skeletons in a chapel. Even though the corpses look like they are scribes, they are all armed.
@@ -206,13 +234,14 @@ Synopsis: After the party has slain a group of undead scholars, the judge of dea
 Withers: So he has spoken, and so thou standest before me. Right as always.
 Withers: What a curious way to awaken.
 Withers: Now I have a question for thee: what is the worth of a single mortal's life?
-Player: Quite the question. What's the reason for it?
-Withers: Curiosity. Nothing more.
+Player: You feel familiar. Do I know you?
+Withers: Yes, but I imagine it is not the way thee believe.
+Withers: Thou walk with death, child of Myrkul. That is enough for an understanding between us.
 Withers: Wilt thou answer my question?
 Player: Yes. Ask away.
 Withers: So I ask again: what is the worth of a single mortal life?
-Player: Each life is of infinite value and merits sacrificing everything for.
-Withers: And thus balance is achieved. If all are at war, none can win.
+Player: That depends on a person's deeds.
+Withers: I am sure thou believest as such.
 Withers: Very well. I am satisfied.
 Withers: We have met and I know thy face.
 Withers: We will see each other again at the proper time and place. Farewell.
@@ -245,7 +274,7 @@ Andorn: You're dead! || [context] NodeContext: he's part of a crew looting an ab
 ----- Session: PAD_SuccessfulGraverobbing -----
 Synopsis: Voicebark dialog after robbing the amulet from Jergal chapel, about whether it was right to loot the place. Its guardians might have been killed by the player. Or the guardians might have engaged the player, but they found a way to get out without killing them all, by fleeing or distracting them. Or the player might have sneakily escape the guardians.This is played on the party after they leave an area, so Speakers are roughly interchangeable here, the undertaking is assumed to be a party effort.
 
-Player: I pity anyone caught by those things. We were lucky to get out with the loot.
+Player: They didn't want to surrender their valuables, even after death.
 
 ----- Session: AD_BanditLockpickerCallHelp -----
 Synopsis: A bandit is surprised by the players who have found a secret entry into an abandoned chapel she was looting with her companions. She calls for help.
@@ -260,7 +289,7 @@ Player: Hmm. It won't move.
 ----- Session: AD_JergalWandering -----
 Synopsis: Jergal wanders around after his conversation with the player, waiting for them to leave so he can teleport to camp and speak to them again later.
 
-Withers: Parchment and bone dust. Still comforting after all this time.
+Withers: How long has it been?
 
 ----- Session: VB_SideChamber_1 -----
 Synopsis: VB upon noticing the book chained and padlocked to the table in the side room.
@@ -275,7 +304,7 @@ Barton: At least there's no skeletons this time. || [context] NodeContext: Refer
 ----- Session: AD_BanditLockpickerLockpicking -----
 Synopsis: A bandit in an abandoned chapel - she's trying and failing to open a door to the lower level of the chapel, searching for loot. Talking to herself as she struggles - confused by the fact the door doesn't have a lock.
 
-Mari: Where's the bloody lock? || [context] NodeContext: Confused - trying to unlock a door in an abandoned chapel that doesn't actually have a lock. She's struggling and muttering to herself
+Mari: Gods, I need a drink. || [context] NodeContext: Dreaming of a beer at the end of a long work day - she's trying to open a door to a crypt in an abandoned chapel and there's no handle or lock. She's struggling and muttering to herself
 
 ----- Session: SkeletonRisingCinematic -----
 Synopsis: 
@@ -294,29 +323,24 @@ Player: Oh, hells. Something just woke up... || [context] NodeContext: just pick
 ----- Session: AD_BanditCrashBanter -----
 Synopsis: A group of bandits in an abandoned chapel - they're hoping to loot the place and are a little on edge. Abandoned chapels often have traps or undead guardians. they're startled by a loud noise from one of the side-chambers. The roof just caved in, and the bandit are trying to figure out a plan of action. What they don't know is that the roof collapse was caused by the players who just broke in.
 
-Barton: Shall we rush 'em? || [context] NodeContext: in an abandoned chapel, hearing noises that sound like living things in the room next door. ready to rush into danger, but not confident - speaking in hushed tones
-Andorn: Nah, let 'em come to us. Then stick 'em in the guts. || [context] NodeContext: hushed tones - trying to set up an ambush in an abandoned chapel, not sure WHAT they're ambushing. twitchy and undisciplined
+Barton: What the hells was that? || [context] NodeContext: Panicking - these characters are robbing an abandoned chapel and the roof in one of the rooms just collapsed. They don't know what's happening and are VERY twitchy. The roof in an adjacent room just collapsed, startling them
+Mari: The roof caved in - this place is a deathtrap! || [context] NodeContext: Panicking - these characters are robbing an abandoned chapel and the roof in one of the rooms just collapsed. They don't know what's happening and are VERY twitchy. The roof in one of the rooms just collapsed, and they're reacting to the sound
+Andorn: Relax! Just stick together. || [context] NodeContext: these characters are robbing an abandoned chapel and the roof in one of the rooms just collapsed. They don't know what's happening and are VERY twitchy. The roof in one of the rooms just collapsed, and they're reacting to the sound, this guy is trying to take control of the situation and calm his companions
 
 ----- Session: PAD_FoundCoins -----
 Synopsis: Player finds a soul coin inside Jergal's chapel.
 
 Player: A strange coin. I wonder what it's worth.
 
------ Session: AD_BanditLockpickerUnlocked -----
-Synopsis: A bandit in an abandoned chapel calls to her companions for help upon spotting the player
+----- Session: AD_BanditLockpickerOpenDoor -----
+Synopsis: Mari realises that the door she was trying to unlock is suddenly opened, but she has not unlocked it.
 
-Mari: Someone's here! || [context] NodeContext: spotted the player - shouting to alert her companions as she becomes hostile
+Mari: It's... open? Could've sworn I hadn't cracked it.
 
------ Session: VB_Sanctum_2_WithMysticShadowheart -----
-Synopsis: A mystic comments that they feel the power that once resided in an abandoned chapel. Shadowheart responds. Neither of them recognise which god this place is dedicated to.
+----- Session: VB_LowerFloor_1 -----
+Synopsis: This triggers has the player unlocks a door and enters a secret and, until now, hidden crypt.
 
-Player: I feel a presence here - a power. The patron god of this place? || [context] NodeContext: Player is stepping into an abandoned chapel and still feels the holy presence of the goddess Selune (seh-LOON-eh). She is a tranquil, protective deity.
-Shadowheart: Whoever that even is. No intact symbols here, no dedications - nothing. || [context] NodeContext: Mocking her companion's pious reference to the moon goddess, of whom she is no fan.
-
------ Session: AD_BanditLockpickerWander -----
-Synopsis: Mari has found the door she is trying to lockpick open. She went to tell Barton, but found him dead. Now, she is looking in the room to find his killer.
-
-Mari: Come on, coward! Let's get this over with! || [context] NodeContext: Searching. Calling out angrily to whoever killed her comrade.
+Player: This place wasn't built for the living. || [context] NodeContext: Karlach: She's enjoying exploring here.
 
 ----- Session: AD_BanditSanctumSpotting -----
 Synopsis: The bandit in the chapel's inner sanctum spots the player and starts combat.
@@ -328,12 +352,24 @@ Synopsis: death--Jergal--climbs out of his sarcophagus to greet them. He has bee
 
 Withers: Ah, thou as well? It is noted.
 Withers: I must attend this place, after so many years away. We will see each other again soon.
-Player: You seem very certain of that. How?
-Withers: The mechanics of fate would be difficult to explain to one such as thyself.
-Withers: Regardless, it will occur.
+Player: 'Soon' is rather vague. When, exactly?
+Withers: When the time is proper. I do not know that hour any more than dost thou.
+Withers: But I do know that the longer thou standest here, the farther away our second meeting becomes.
 
 ----- Session: AD_BanditLockpickerFoundDeadBandit -----
 Synopsis: A bandit in an abandoned chapel finds one of her companions dead
 
 Mari: Barton? Oh gods, somebody killed Barton! || [context] NodeContext: just found a dead friend - Barton - and is furious as she starts to hunt for the killer
+
+================ Scenario: cha_shadowheartrecruitment ================
+Session Sequence: PAD_Door -> PAD_Return
+----- Session: PAD_Door -----
+Synopsis: Shadowheart comments as a companion on another character trying to open the exterior door to Jergal's crypt.
+
+Shadowheart: Won't get that open easily. Maybe there's another entrance.
+
+----- Session: PAD_Return -----
+Synopsis: Arriving at a juncture in a path, companion Shadowheart points out an opportunity to look for supplies.
+
+Shadowheart: Dead goblins over there. Worth checking for supplies maybe.
 
