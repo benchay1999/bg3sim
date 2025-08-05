@@ -55,8 +55,6 @@ def find_html_files(source_files, json_file_path, prefix):
     html_files = []
     dialog_dir = Path("data/Dialogs")
     json_path = Path(json_file_path)
-    # This assumes the structure is output_merged/Act/Area/file.json
-    # and we want data/Dialogs/Act/Area/...
     try:
         relative_path = json_path.relative_to("output_merged")
         search_dir = dialog_dir / relative_path.parent
@@ -67,36 +65,16 @@ def find_html_files(source_files, json_file_path, prefix):
         print(f"Warning: Could not find corresponding dialog directory: {search_dir}")
         return []
 
-    # Create a lowercase mapping of all html files in the search directory
     all_html_files = {f.name.lower(): f for f in search_dir.glob('*.html')}
     
     for source_file in source_files:
-        # Construct the expected html file name from the source file.
         base_source_name = os.path.splitext(source_file)[0]
-        
-        # We need to construct the expected HTML file name. Based on the user's
-        # description: <name of the json file>_<source file name>.
-        # The source_file already contains most of what we need. Let's try to match it.
-        # Example: CHA_BronzePlaque_AD_FL1Mural.html
-        
-        # Let's try a direct match first
         potential_name = f"{base_source_name}.html"
         
         if potential_name.lower() in all_html_files:
             html_files.append(all_html_files[potential_name.lower()])
             continue
 
-        # If direct match fails, let's try to be more clever.
-        # The user said the format is <json_file_name>_<source_file_name>.
-        # Let's try to build that.
-        json_base_name = Path(json_file_path).stem
-        
-        # The source_file from json might be like "CHA_Crypt_AD_BanditGuardCallHelp.json"
-        # and short name is "AD_BanditGuardCallHelp"
-        # The prefix is "CHA_Crypt_"
-        # We can reconstruct the name.
-        
-        # Let's use the original source file name which is more complete.
         target_html_name = f"{os.path.splitext(source_file)[0]}.html".lower()
 
         if target_html_name in all_html_files:
@@ -106,7 +84,7 @@ def find_html_files(source_files, json_file_path, prefix):
 
     return html_files
 
-def open_html_files(html_files):
+def open_html_files_default(html_files):
     """Opens a list of HTML files in the default web browser."""
     if not html_files:
         print("No HTML files to open.")
@@ -114,12 +92,32 @@ def open_html_files(html_files):
     
     for html_file in html_files:
         try:
-            # Resolve to an absolute path before creating the URI
             abs_path = html_file.resolve()
             webbrowser.open(abs_path.as_uri())
-            print(f"Opened {abs_path}")
+            print(f"Opened {abs_path} in default browser.")
         except Exception as e:
             print(f"Error opening {html_file}: {e}")
+
+def open_in_chrome(html_files):
+    """Attempts to open a list of HTML files in Google Chrome."""
+    if not html_files:
+        print("No HTML files to open.")
+        return
+
+    try:
+        browser = webbrowser.get('google-chrome')
+    except webbrowser.Error:
+        print("Could not find Google Chrome. Ensure it's installed and in your PATH.")
+        print("Alternatively, your environment may not support remote browser opening.")
+        return
+
+    for html_file in html_files:
+        try:
+            abs_path = html_file.resolve()
+            browser.open(abs_path.as_uri())
+            print(f"Attempting to open {abs_path} in Google Chrome.")
+        except Exception as e:
+            print(f"Error opening {html_file} in Chrome: {e}")
 
 def print_labels(labels, short_names):
     """Prints the current labels."""
@@ -260,7 +258,8 @@ def process_file(json_file):
         print("4. Delete exclusive group")
         print("5. Show current labels")
         print("f. Show available source files")
-        print("v. View HTML visualizations")
+        print("v. View HTML in default browser")
+        print("c. View HTML in Chrome (requires local setup)")
         print("s. Save and continue to next file")
         print("q. Quit without saving")
 
@@ -279,7 +278,9 @@ def process_file(json_file):
         elif choice == 'f':
             show_source_files(short_names)
         elif choice == 'v':
-            open_html_files(html_files)
+            open_html_files_default(html_files)
+        elif choice == 'c':
+            open_in_chrome(html_files)
         elif choice == 's':
             if "metadata" not in data:
                 data["metadata"] = {}
