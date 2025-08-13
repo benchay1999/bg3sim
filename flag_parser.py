@@ -1,6 +1,7 @@
 import re
 import sys
 import json
+import os
 
 def parse_osiris_flags(script_content: str) -> list[str]:
     """
@@ -59,62 +60,52 @@ def parse_osiris_flags(script_content: str) -> list[str]:
     return ordered_flags
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        filepath = sys.argv[1]
-    else:
-        # Default to the filename mentioned in the problem description if no argument is provided.
-        filepath = "Goals/Act1_CHA_LaezelRecruit.txt"
+    goals_dir = "Goals/"
+    all_flags_path = "all_flags.json"
+    output_filename = "goals_to_json_paths.json"
+
+    results = {}
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            script_content = f.read()
-        
-        osiris_flags = parse_osiris_flags(script_content)
-        
-        if osiris_flags:
-            print(f"Found {len(osiris_flags)} unique flags in chronological order in '{filepath}':")
-            # Print flags on one line for brevity
-            print(f"{osiris_flags}")
-
-            # --- Find matching JSON files ---
-            all_flags_path = "all_flags.json"
-            matching_files_order = {}
-            try:
-                with open(all_flags_path, "r", encoding="utf-8") as f_json:
-                    all_json_flags_data = json.load(f_json)
-                
-                print(f"\nSearching for these flags in '{all_flags_path}'...")
-
-                for idx, flag_from_osiris in enumerate(osiris_flags):
-                    for json_filepath, flags_in_json in all_json_flags_data.items():
-                        if flag_from_osiris in flags_in_json:
-                            # Record the index of the first match for this file
-                            if json_filepath not in matching_files_order:
-                                matching_files_order[json_filepath] = idx
-                
-                if matching_files_order:
-                    # Sort the files based on the index of the first flag found
-                    sorted_json_files = sorted(matching_files_order, key=matching_files_order.get)
-                    print("\n--- Matching JSON files (ordered by first flag appearance) ---")
-                    for i, match_file in enumerate(sorted_json_files, 1):
-                        first_match_flag = osiris_flags[matching_files_order[match_file]]
-                        print(f"{i}. {match_file} (first match: flag '{first_match_flag}' at index {matching_files_order[match_file]}) ")
-                else:
-                    print("\nNo JSON files found containing the extracted flags.")
-
-            except FileNotFoundError:
-                print(f"\nError: Could not find '{all_flags_path}'. Please run parse_every_flag.py first.")
-            except json.JSONDecodeError:
-                print(f"\nError: Could not decode JSON from '{all_flags_path}'.")
-            except Exception as e_json:
-                print(f"\nAn error occurred while processing '{all_flags_path}': {e_json}")
-            # --- End find matching JSON files ---
-
-        else:
-            print(f"No flags found in '{filepath}' matching the specified criteria.")
-            
+        with open(all_flags_path, "r", encoding="utf-8") as f_json:
+            all_json_flags_data = json.load(f_json)
     except FileNotFoundError:
-        print(f"Error: File not found at '{filepath}'")
-        print("Please provide a valid path as a command-line argument or ensure the default file exists.")
-    except Exception as e:
-        print(f"An error occurred: {e}") 
+        print(f"Error: Could not find '{all_flags_path}'. Please ensure this file exists.")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from '{all_flags_path}'.")
+        sys.exit(1)
+
+    if not os.path.isdir(goals_dir):
+        print(f"Error: Directory '{goals_dir}' not found.")
+        sys.exit(1)
+
+    for filename in os.listdir(goals_dir):
+        if filename.endswith(".txt"):
+            filepath = os.path.join(goals_dir, filename)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    script_content = f.read()
+
+                osiris_flags = parse_osiris_flags(script_content)
+
+                if osiris_flags:
+                    matching_files_order = {}
+                    for idx, flag_from_osiris in enumerate(osiris_flags):
+                        for json_filepath, flags_in_json in all_json_flags_data.items():
+                            if flag_from_osiris in flags_in_json:
+                                if json_filepath not in matching_files_order:
+                                    matching_files_order[json_filepath] = idx
+
+                    if matching_files_order:
+                        sorted_json_files = sorted(matching_files_order, key=matching_files_order.get)
+                        result_key = filename.replace(".txt", "")
+                        results[result_key] = sorted_json_files
+
+            except Exception as e:
+                print(f"An error occurred while processing {filepath}: {e}")
+
+    with open(output_filename, "w", encoding="utf-8") as f_out:
+        json.dump(results, f_out, indent=4)
+
+    print(f"Processing complete. Results saved to '{output_filename}'") 

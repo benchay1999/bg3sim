@@ -4,6 +4,7 @@ import os
 import random
 from colorama import init, Fore, Back, Style
 from dialog_simulator import DialogSimulator
+from tqdm import tqdm
 
 # Initialize colorama for colored terminal output
 init()
@@ -162,7 +163,7 @@ class ScenarioSimulator:
         """
         # Use a set to store distinct sequences efficiently
         distinct_sequences_set = set()
-        sequence_limit = 2000
+        sequence_limit = 3
         
         # Identify sessions with approval effects
         sessions_with_approval = self._identify_sessions_with_approval() if prioritize_approval else {}
@@ -348,17 +349,17 @@ class ScenarioSimulator:
         if not valid_sequences:
             print(f"{Fore.RED}No valid session sequences found even after fallback! Check constraints.{Style.RESET_ALL}")
             return []
-
         print(f"{Fore.GREEN}Found {len(valid_sequences)} valid session sequences{Style.RESET_ALL}")
+        
         non_empty_sequences = [seq for seq in valid_sequences if seq]
         if not non_empty_sequences:
-            print(f"{Fore.YELLOW}All valid sequences are empty. Cannot generate traversals.{Style.RESET_ALL}")
+            # print(f"{Fore.YELLOW}All valid sequences are empty. Cannot generate traversals.{Style.RESET_ALL}")
             return []
 
         for i in range(num_traversals):
             sequence = random.choice(non_empty_sequences)
             
-            print(f"\n{Fore.CYAN}For Traversal Run {i+1} / {num_traversals}: Getting all path combinations for sequence {sequence}{Style.RESET_ALL}")
+            # print(f"\n{Fore.CYAN}For Traversal Run {i+1} / {num_traversals}: Getting all path combinations for sequence {sequence}{Style.RESET_ALL}")
             
             initial_flags_for_this_run = set() # Example: Use a base set of flags
             
@@ -371,7 +372,7 @@ class ScenarioSimulator:
             for trav_dict, final_flags in traversal_combinations_for_sequence:
                 all_traversal_data_with_flags.append((trav_dict, final_flags))
             
-            print(f"{Fore.MAGENTA}Traversal Run {i+1}: Generated {len(traversal_combinations_for_sequence)} path combinations for sequence {sequence}.{Style.RESET_ALL}")
+            # print(f"{Fore.MAGENTA}Traversal Run {i+1}: Generated {len(traversal_combinations_for_sequence)} path combinations for sequence {sequence}.{Style.RESET_ALL}")
 
         # Sort the generated traversals by the total number of approval nodes visited (descending)
         # Sorting a list of (traversal_dict, final_flags_for_combo) tuples.
@@ -386,7 +387,7 @@ class ScenarioSimulator:
         
         # Export logic needs careful consideration due to potentially many combinations.
         if (export_txt or export_json) and all_traversal_data_with_flags:
-            print(f"\n{Fore.YELLOW}Exporting top {min(5, len(all_traversal_data_with_flags))} combinations as an example...{Style.RESET_ALL}")
+            # print(f"\n{Fore.YELLOW}Exporting top {min(5, len(all_traversal_data_with_flags))} combinations as an example...{Style.RESET_ALL}")
             os.makedirs(f"output_scenario_traversals/{self.scenario_name}", exist_ok=True)
             for i, (trav_dict, final_flags) in enumerate(all_traversal_data_with_flags[:min(5, len(all_traversal_data_with_flags))]): 
                 # We might want to include final_flags in the export if relevant, or just export trav_dict.
@@ -436,7 +437,7 @@ class ScenarioSimulator:
         flat_session_dialog = self._flatten_dialog_nodes(session_dialog)
 
         if not flat_session_dialog:
-             print(f"{Fore.YELLOW}Flattening resulted in empty dialog for session {session_id}. Initial dialog had {len(session_dialog)} nodes.{Style.RESET_ALL}")
+             # print(f"{Fore.YELLOW}Flattening resulted in empty dialog for session {session_id}. Initial dialog had {len(session_dialog)} nodes.{Style.RESET_ALL}")
              # Fallback or further investigation needed here potentially
              # For now, let's try proceeding with the original session_dialog if flattening fails unexpectedly
              if not session_dialog:
@@ -465,7 +466,7 @@ class ScenarioSimulator:
         # Simulate all possible paths for this session
         paths, _, _, _ = simulator.simulate_all_paths(
             max_depth=20,
-            print_paths=False,
+            print_paths=True,
             test_mode=False,  # True: Ignore flag requirements for simulation
             verbose=False
         )
@@ -475,7 +476,7 @@ class ScenarioSimulator:
         # Clean up temp file
         os.remove(temp_file)
         
-        print(f"{Fore.GREEN}Found {len(paths)} possible paths for session {session_id}{Style.RESET_ALL}")
+        # print(f"{Fore.GREEN}Found {len(paths)} possible paths for session {session_id}{Style.RESET_ALL}")
         
         return paths
     
@@ -995,7 +996,7 @@ class ScenarioSimulator:
         # print(f"Initial flags for this sequence: {initial_flags}") # Optional debug
 
         # Ensure all sessions in the chosen sequence have their paths pre-simulated
-        for session_id in chosen_sequence:
+        for session_id in tqdm(chosen_sequence):
             if session_id not in self.session_path_options:
                 self._simulate_session(session_id) # This populates self.session_path_options
         

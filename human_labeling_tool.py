@@ -3,7 +3,7 @@ import json
 import re
 import webbrowser
 from pathlib import Path
-
+from dialog_simulator import DialogSimulator
 def find_json_files(root_dir):
     """Find all JSON files in a directory and its subdirectories."""
     json_files = []
@@ -159,15 +159,15 @@ def add_ordering_rule(labels, short_names):
     """Adds a new ordering rule."""
     while True:
         try:
-            succ_idx_str = input(f"Enter successor number (1-{len(short_names)}): ")
-            if not succ_idx_str: return
+            succ_idx_str = input(f"Enter successor number (1-{len(short_names)}) (or 'q' to go back): ")
+            if not succ_idx_str or succ_idx_str.lower() in ['q', 'back']: return
             succ_idx = int(succ_idx_str) - 1
             if not 0 <= succ_idx < len(short_names):
                 print("Invalid number.")
                 continue
 
-            pred_idx_str = input(f"Enter predecessor numbers (e.g., 1,2,3): ")
-            if not pred_idx_str: return
+            pred_idx_str = input(f"Enter predecessor numbers (e.g., 1,2,3) (or 'q' to go back): ")
+            if not pred_idx_str or pred_idx_str.lower() in ['q', 'back']: return
             pred_indices = [int(x.strip()) - 1 for x in pred_idx_str.split(',')]
             
             if any(not (0 <= i < len(short_names)) for i in pred_indices):
@@ -191,8 +191,8 @@ def add_exclusive_group(labels, short_names):
     """Adds a new exclusive group."""
     while True:
         try:
-            group_idx_str = input(f"Enter numbers for exclusive group (e.g., 1,2,3): ")
-            if not group_idx_str: return
+            group_idx_str = input(f"Enter numbers for exclusive group (e.g., 1,2,3) (or 'q' to go back): ")
+            if not group_idx_str or group_idx_str.lower() in ['q', 'back']: return
             group_indices = [int(x.strip()) - 1 for x in group_idx_str.split(',')]
 
             if any(not (0 <= i < len(short_names)) for i in group_indices):
@@ -219,8 +219,8 @@ def delete_rule(labels, rule_type):
 
     while True:
         try:
-            idx_str = input(f"Enter number of {rule_type} rule to delete: ")
-            if not idx_str: return
+            idx_str = input(f"Enter number of {rule_type} rule to delete (or 'q' to go back): ")
+            if not idx_str or idx_str.lower() in ['q', 'back']: return
             idx = int(idx_str) - 1
             if 0 <= idx < len(labels[key]):
                 del labels[key][idx]
@@ -231,10 +231,10 @@ def delete_rule(labels, rule_type):
         except ValueError:
             print("Invalid input. Please use a number.")
 
-def process_file(json_file):
+def process_file(json_file, file_index, total_files):
     """Main interactive loop for labeling a single JSON file."""
     print("\n" + "="*50)
-    print(f"Processing: {json_file}")
+    print(f"Processing file {file_index + 1} of {total_files}: {json_file}")
     print("="*50)
 
     try:
@@ -272,6 +272,7 @@ def process_file(json_file):
         print("p. Show file synopses")
         print("v. View HTML in default browser")
         print("c. View HTML in Chrome (requires local setup)")
+        print("t. Traverse this file")
         print("s. Save and continue to next file")
         print("q. Quit without saving")
 
@@ -295,6 +296,8 @@ def process_file(json_file):
             open_html_files_default(html_files)
         elif choice == 'c':
             open_in_chrome(html_files)
+        elif choice == 't':
+            traverse_file(json_file, source_files)
         elif choice == 's':
             if "metadata" not in data:
                 data["metadata"] = {}
@@ -313,6 +316,47 @@ def process_file(json_file):
             print("Invalid choice. Please try again.")
 
 
+def traverse_file(json_file, source_files):
+    """Allows the user to select a source file to traverse using the dialog simulator."""
+    print("\nSelect a source file to traverse:")
+    for i, src_file in enumerate(source_files, 1):
+        print(f"  {i}: {src_file}")
+    
+    while True:
+        try:
+            choice_str = input(f"Enter number (1-{len(source_files)}) or 'q' to return: ")
+            if not choice_str or choice_str.lower() == 'q':
+                return
+            
+            choice_idx = int(choice_str) - 1
+            if not 0 <= choice_idx < len(source_files):
+                print("Invalid number.")
+                continue
+            
+            selected_file = source_files[choice_idx]
+            
+            # Construct the path to the individual JSON file
+            relative_dir = Path(json_file).relative_to('output_merged').parent
+            target_file = Path('output') / relative_dir / selected_file
+            
+            if not target_file.exists():
+                print(f"Error: Could not find the file: {target_file}")
+                print("Please ensure the file exists in the 'output' directory.")
+                continue
+
+            print(f"Attempting to run simulator on: {target_file}")
+            
+            try:
+                simulator = DialogSimulator(str(target_file))
+                simulator.interactive_mode()
+            except Exception as e:
+                print(f"Error running dialog simulator: {e}")
+
+            break # Exit loop after successful run or error
+            
+        except ValueError:
+            print("Invalid input. Please use numbers.")
+
 def main():
     """Main function to run the labeling tool."""
     output_dir = 'output_merged'
@@ -322,10 +366,11 @@ def main():
         print(f"No JSON files found in '{output_dir}'.")
         return
     
-    print(f"Found {len(json_files)} JSON files to process.")
+    total_files = len(json_files)
+    print(f"Found {total_files} JSON files to process.")
 
-    for json_file in json_files:
-        process_file_return_value = process_file(json_file)
+    for i, json_file in enumerate(json_files):
+        process_file_return_value = process_file(json_file, i, total_files)
         if process_file_return_value == -1:
             continue
         while True:
